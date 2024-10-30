@@ -10,7 +10,7 @@ import { defineComponent } from 'vue';
 import type { UserPermission } from '@authup/core-kit';
 import {
     createResourceManager,
-    defineEntityManagerEvents,
+    defineResourceVEmitOptions,
     renderEntityAssignAction,
 } from '../../core';
 
@@ -19,7 +19,7 @@ export const AUserPermissionAssignment = defineComponent({
         userId: String,
         permissionId: String,
     },
-    emits: defineEntityManagerEvents<UserPermission>(),
+    emits: defineResourceVEmitOptions<UserPermission>(),
     async setup(props, setup) {
         const manager = createResourceManager({
             type: `${DomainType.USER_PERMISSION}`,

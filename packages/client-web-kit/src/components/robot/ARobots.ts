@@ -13,13 +13,13 @@ import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup, TranslatorTranslationVuecsKey, createResourceCollectionManager,
-    defineListEvents, defineListProps, useTranslation,
+    defineResourceCollectionVEmitOptions, defineResourceCollectionVProps, useTranslation,
 } from '../../core';
 
 export const ARobots = defineComponent({
-    props: defineListProps<Robot>(),
+    props: defineResourceCollectionVProps<Robot>(),
     slots: Object as SlotsType<ResourceCollectionVSlots<Robot>>,
-    emits: defineListEvents<Robot>(),
+    emits: defineResourceCollectionVEmitOptions<Robot>(),
     setup(props, ctx) {
         const { render } = createResourceCollectionManager({
             type: `${DomainType.ROBOT}`,

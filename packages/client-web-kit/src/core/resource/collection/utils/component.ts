@@ -10,9 +10,9 @@ import type { PropType } from 'vue';
 import type {
     ListBodyOptions,
     ListFooterOptions, ListHeaderOptions, ListLoadingOptions, ListNoMoreOptions, ResourceCollectionVEmitOptions,
-} from '../type';
+} from '../types';
 
-export function defineListEvents<T>() : ResourceCollectionVEmitOptions<T> {
+export function defineResourceCollectionVEmitOptions<T>() : ResourceCollectionVEmitOptions<T> {
     return {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         created: (_item: T) => true,
@@ -22,7 +22,7 @@ export function defineListEvents<T>() : ResourceCollectionVEmitOptions<T> {
         updated: (_item: T) => true,
     };
 }
-export function defineListProps<T>() {
+export function defineResourceCollectionVProps<T>() {
     return {
         query: {
             type: Object as PropType<BuildInput<T extends Record<string, any> ? T : never>>,

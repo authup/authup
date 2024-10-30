@@ -25,7 +25,7 @@ import {
     TranslatorTranslationGroup, buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource, renderEntityAssignAction,
+    defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource, renderEntityAssignAction,
     useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealms } from '../realm';
@@ -45,7 +45,7 @@ export const AUserForm = defineComponent({
             default: true,
         },
     },
-    emits: defineEntityManagerEvents<User>(),
+    emits: defineResourceVEmitOptions<User>(),
     async setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({

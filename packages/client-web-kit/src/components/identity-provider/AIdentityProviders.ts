@@ -15,15 +15,15 @@ import {
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createResourceCollectionManager,
-    defineListEvents,
-    defineListProps,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
     useTranslation,
 } from '../../core';
 
 export const AIdentityProviders = defineComponent({
-    props: defineListProps<IdentityProvider>(),
+    props: defineResourceCollectionVProps<IdentityProvider>(),
     slots: Object as SlotsType<ResourceCollectionVSlots<IdentityProvider>>,
-    emits: defineListEvents<IdentityProvider>(),
+    emits: defineResourceCollectionVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
         const { render } = createResourceCollectionManager({
             type: `${DomainType.IDENTITY_PROVIDER}`,

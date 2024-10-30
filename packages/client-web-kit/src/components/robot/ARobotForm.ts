@@ -40,7 +40,7 @@ import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineEntityManagerEvents,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
@@ -61,7 +61,7 @@ export const ARobotForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineEntityManagerEvents<Robot>(),
+    emits: defineResourceVEmitOptions<Robot>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({

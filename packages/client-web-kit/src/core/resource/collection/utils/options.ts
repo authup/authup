@@ -6,7 +6,7 @@
  */
 
 import { merge } from 'smob';
-import type { ResourceCollectionRenderOptions, ResourceCollectionVProps } from '../type';
+import type { ResourceCollectionRenderOptions, ResourceCollectionVProps } from '../types';
 
 function mergeListOption<T extends boolean | Record<string, any> | undefined>(
     primary: T,

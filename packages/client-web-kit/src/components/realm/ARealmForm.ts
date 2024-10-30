@@ -28,7 +28,7 @@ import {
     TranslatorTranslationGroup,
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
-    createResourceManager, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
+    createResourceManager, defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource,
     useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 
@@ -40,7 +40,7 @@ export const ARealmForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineEntityManagerEvents<Realm>(),
+    emits: defineResourceVEmitOptions<Realm>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({

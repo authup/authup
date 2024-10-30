@@ -31,7 +31,7 @@ import type {
     ResourceCollectionManager,
     ResourceCollectionManagerCreateContext,
     ResourceCollectionRenderOptions,
-} from './type';
+} from './types';
 import {
     buildListCreatedHandler,
     buildListDeletedHandler,

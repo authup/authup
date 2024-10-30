@@ -9,17 +9,17 @@ import { DomainType } from '@authup/core-kit';
 import type { Role } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ResourceManagerSlots } from '../../core';
+import type { ResourceVSlots } from '../../core';
 import {
     createResourceManager,
-    defineEntityManagerEvents,
-    defineEntityManagerProps,
+    defineResourceVEmitOptions,
+    defineResourceVProps,
 } from '../../core';
 
 export const ARole = defineComponent({
-    props: defineEntityManagerProps<Role>(),
-    emits: defineEntityManagerEvents<Role>(),
-    slots: Object as SlotsType<ResourceManagerSlots<Role>>,
+    props: defineResourceVProps<Role>(),
+    emits: defineResourceVEmitOptions<Role>(),
+    slots: Object as SlotsType<ResourceVSlots<Role>>,
     async setup(props, setup) {
         const manager = createResourceManager({
             type: `${DomainType.ROLE}`,

@@ -15,15 +15,15 @@ import {
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createResourceCollectionManager,
-    defineListEvents,
-    defineListProps,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
     useTranslation,
 } from '../../core';
 
 export const AScopes = defineComponent({
-    props: defineListProps<Scope>(),
+    props: defineResourceCollectionVProps<Scope>(),
     slots: Object as SlotsType<ResourceCollectionVSlots<Scope>>,
-    emits: defineListEvents<Scope>(),
+    emits: defineResourceCollectionVEmitOptions<Scope>(),
     setup(props, ctx) {
         const { render } = createResourceCollectionManager({
             type: DomainType.SCOPE,

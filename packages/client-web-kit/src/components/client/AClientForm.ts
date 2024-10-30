@@ -40,7 +40,7 @@ import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineEntityManagerEvents,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
     renderEntityAssignAction,
@@ -66,7 +66,7 @@ export const AClientForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineEntityManagerEvents<Client>(),
+    emits: defineResourceVEmitOptions<Client>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({

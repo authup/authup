@@ -14,15 +14,15 @@ import {
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createResourceCollectionManager,
-    defineListEvents,
-    defineListProps,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
     useTranslation,
 } from '../../core';
 
 export const APermissions = defineComponent({
-    props: defineListProps<Permission>(),
+    props: defineResourceCollectionVProps<Permission>(),
     slots: Object as SlotsType<ResourceCollectionVSlots<Permission>>,
-    emits: defineListEvents<Permission>(),
+    emits: defineResourceCollectionVEmitOptions<Permission>(),
     setup(props, setup) {
         const { render } = createResourceCollectionManager({
             type: `${DomainType.PERMISSION}`,

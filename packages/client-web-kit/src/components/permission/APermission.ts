@@ -9,17 +9,17 @@ import { DomainType } from '@authup/core-kit';
 import type { Permission } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ResourceManagerSlots } from '../../core';
+import type { ResourceVSlots } from '../../core';
 import {
     createResourceManager,
-    defineEntityManagerEvents,
-    defineEntityManagerProps,
+    defineResourceVEmitOptions,
+    defineResourceVProps,
 } from '../../core';
 
 export const APermission = defineComponent({
-    props: defineEntityManagerProps<Permission>(),
-    emits: defineEntityManagerEvents<Permission>(),
-    slots: Object as SlotsType<ResourceManagerSlots<Permission>>,
+    props: defineResourceVProps<Permission>(),
+    emits: defineResourceVEmitOptions<Permission>(),
+    slots: Object as SlotsType<ResourceVSlots<Permission>>,
     async setup(props, setup) {
         const manager = createResourceManager({
             type: `${DomainType.PERMISSION}`,

@@ -13,13 +13,13 @@ import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup, TranslatorTranslationVuecsKey, createResourceCollectionManager,
-    defineListEvents, defineListProps, useTranslation,
+    defineResourceCollectionVEmitOptions, defineResourceCollectionVProps, useTranslation,
 } from '../../core';
 
 export const AClients = defineComponent({
-    props: defineListProps<Client>(),
+    props: defineResourceCollectionVProps<Client>(),
     slots: Object as SlotsType<ResourceCollectionVSlots<Client>>,
-    emits: defineListEvents<Client>(),
+    emits: defineResourceCollectionVEmitOptions<Client>(),
     setup(props, ctx) {
         const { render } = createResourceCollectionManager({
             type: `${DomainType.CLIENT}`,

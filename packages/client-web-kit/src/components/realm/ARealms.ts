@@ -15,15 +15,15 @@ import {
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
     createResourceCollectionManager,
-    defineListEvents,
-    defineListProps,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
     useTranslation,
 } from '../../core';
 
 export const ARealms = defineComponent({
-    props: defineListProps<Realm>(),
+    props: defineResourceCollectionVProps<Realm>(),
     slots: Object as SlotsType<ResourceCollectionVSlots<Realm>>,
-    emits: defineListEvents<Realm>(),
+    emits: defineResourceCollectionVEmitOptions<Realm>(),
     setup(props, ctx) {
         const { render } = createResourceCollectionManager({
             type: `${DomainType.REALM}`,

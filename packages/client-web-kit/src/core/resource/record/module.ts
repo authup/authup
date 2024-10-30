@@ -22,12 +22,12 @@ import { hasNormalizedSlot, normalizeSlot } from '../../slot';
 import { ResourceRecordError } from './error';
 import type {
     EntityID,
-    EntityManagerRenderFn,
     ResourceManager,
     ResourceManagerCreateContext,
+    ResourceManagerRenderFn,
     ResourceManagerResolveContext,
-} from './type';
-import { buildEntityManagerSlotProps } from './utils';
+} from './types';
+import { buildResourceVSlotProps } from './utils';
 
 function create<
     TYPE extends keyof DomainTypeMap,
@@ -423,7 +423,7 @@ function create<
         renderError: () => undefined,
     };
 
-    manager.render = (content?: VNodeChild | EntityManagerRenderFn): VNodeChild => {
+    manager.render = (content?: VNodeChild | ResourceManagerRenderFn): VNodeChild => {
         if (!ctx.setup || !ctx.setup.slots) {
             return typeof content === 'function' ?
                 content() :
@@ -433,7 +433,7 @@ function create<
         if (hasNormalizedSlot('default', ctx.setup.slots)) {
             return normalizeSlot(
                 'default',
-                buildEntityManagerSlotProps(manager),
+                buildResourceVSlotProps(manager),
                 ctx.setup.slots,
             );
         }

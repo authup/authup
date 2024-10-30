@@ -16,7 +16,7 @@ import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineEntityManagerEvents,
+    defineResourceVEmitOptions,
     extractVuelidateResultsFromChild,
 } from '../../core';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
@@ -39,7 +39,7 @@ export const AIdentityProviderLdapForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineEntityManagerEvents<IdentityProvider>(),
+    emits: defineResourceVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
         const manager = createResourceManager({
             type: `${DomainType.IDENTITY_PROVIDER}`,

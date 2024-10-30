@@ -12,7 +12,7 @@ import {
 import type { RobotRole } from '@authup/core-kit';
 import {
     createResourceManager,
-    defineEntityManagerEvents,
+    defineResourceVEmitOptions,
     renderEntityAssignAction,
 } from '../../core';
 
@@ -21,7 +21,7 @@ export const ARobotRoleAssignment = defineComponent({
         roleId: String,
         robotId: String,
     },
-    emits: defineEntityManagerEvents<RobotRole>(),
+    emits: defineResourceVEmitOptions<RobotRole>(),
     async setup(props, setup) {
         const manager = createResourceManager({
             type: `${DomainType.ROBOT_ROLE}`,

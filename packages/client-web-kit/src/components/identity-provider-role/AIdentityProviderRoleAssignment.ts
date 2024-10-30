@@ -18,7 +18,7 @@ import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     createResourceManager,
-    defineEntityManagerEvents,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
     useTranslationsForGroup,
@@ -36,7 +36,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             required: true,
         },
     },
-    emits: defineEntityManagerEvents<IdentityProviderRoleMapping>(),
+    emits: defineResourceVEmitOptions<IdentityProviderRoleMapping>(),
     async setup(props, setup) {
         const display = ref(false);
         const toggleDisplay = () => {

@@ -39,7 +39,7 @@ import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineEntityManagerEvents,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
     injectStore,
@@ -59,7 +59,7 @@ export const AScopeForm = defineComponent({
             type: Object as PropType<Scope>,
         },
     },
-    emits: defineEntityManagerEvents<Scope>(),
+    emits: defineResourceVEmitOptions<Scope>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({

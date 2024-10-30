@@ -26,7 +26,7 @@ import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineEntityManagerEvents,
+    defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
     injectStore,
@@ -40,7 +40,7 @@ export const APermissionForm = defineComponent({
             type: Object as PropType<Permission>,
         },
     },
-    emits: defineEntityManagerEvents<Permission>(),
+    emits: defineResourceVEmitOptions<Permission>(),
     setup(props, ctx) {
         const busy = ref(false);
 

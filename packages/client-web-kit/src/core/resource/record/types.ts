@@ -21,7 +21,7 @@ export type EntityID<T> = T extends EntityWithID ?
     T['id'] :
     never;
 
-export type EntityManagerRenderFn = () => VNodeChild;
+export type ResourceManagerRenderFn = () => VNodeChild;
 
 export type ResourceManagerResolveContext<T> = {
     id?: EntityID<T>,
@@ -43,29 +43,29 @@ export type ResourceManager<T> = {
     failed(e: Error) : void;
     resolve(ctx?: ResourceManagerResolveContext<T>) : Promise<void>;
     resolveOrFail(ctx?: ResourceManagerResolveContext<T>) : Promise<void>;
-    render(content?: VNodeChild | EntityManagerRenderFn) : VNodeChild;
+    render(content?: VNodeChild | ResourceManagerRenderFn) : VNodeChild;
     renderError(error: unknown) : VNodeChild;
 };
 
-export type ResourceProps<T> = {
+export type ResourceVProps<T> = {
     entity?: T,
     entityId?: EntityID<T>,
     queryFilters?: T extends Record<string, any> ? FiltersBuildInput<T> : never,
     queryFields?: T extends Record<string, any> ? FieldsBuildInput<T> : never
 };
 
-export type ResourceManagerSlotProps<T> = {
+export type ResourceVSlotProps<T> = {
     [K in keyof ResourceManager<T>]: ResourceManager<T>[K] extends Ref<infer U> ?
         U :
         ResourceManager<T>[K]
 };
 
-export type ResourceManagerSlots<T> = {
-    default?: ResourceManagerSlotProps<T>,
+export type ResourceVSlots<T> = {
+    default?: ResourceVSlotProps<T>,
     error?: Error
 };
 
-export type ResourceEmitEvents<T> = {
+export type ResourceVEmitOptions<T> = {
     failed: (item: Error) => true,
     created: (item: T) => true,
     deleted: (item: T) => true,
@@ -79,10 +79,10 @@ export type ResourceManagerCreateContext<
 > = {
     type: A,
     setup?: Partial<SetupContext<
-    ResourceEmitEvents<T>,
-    SlotsType<ResourceManagerSlots<T>>
+    ResourceVEmitOptions<T>,
+    SlotsType<ResourceVSlots<T>>
     >>,
-    props?: ResourceProps<T>,
+    props?: ResourceVProps<T>,
     realmId?: MaybeRef<string> | ((entity: T | undefined) => string | undefined),
     onResolved?(entity?: T) : any,
     onCreated?(entity: T): any,

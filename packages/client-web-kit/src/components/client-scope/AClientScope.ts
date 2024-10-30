@@ -9,17 +9,17 @@ import { DomainType } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ResourceManagerSlots } from '../../core';
+import type { ResourceVSlots } from '../../core';
 import {
     createResourceManager,
-    defineEntityManagerEvents,
-    defineEntityManagerProps,
+    defineResourceVEmitOptions,
+    defineResourceVProps,
 } from '../../core';
 
 export const AClientScope = defineComponent({
-    props: defineEntityManagerProps<ClientScope>(),
-    emits: defineEntityManagerEvents<ClientScope>(),
-    slots: Object as SlotsType<ResourceManagerSlots<ClientScope>>,
+    props: defineResourceVProps<ClientScope>(),
+    emits: defineResourceVEmitOptions<ClientScope>(),
+    slots: Object as SlotsType<ResourceVSlots<ClientScope>>,
     async setup(props, setup) {
         const manager = createResourceManager({
             type: `${DomainType.CLIENT_SCOPE}`,

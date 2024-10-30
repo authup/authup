@@ -24,7 +24,7 @@ import {
     TranslatorTranslationGroup,
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
-    createResourceManager, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
+    createResourceManager, defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource,
     injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { createRealmFormPicker } from '../realm/helpers';
@@ -36,7 +36,7 @@ export const ARoleForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineEntityManagerEvents<Role>(),
+    emits: defineResourceVEmitOptions<Role>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
