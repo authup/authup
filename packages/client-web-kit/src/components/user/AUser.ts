@@ -9,9 +9,9 @@ import { DomainType } from '@authup/core-kit';
 import type { User } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityManagerSlotsType } from '../../core';
+import type { ResourceManagerSlots } from '../../core';
 import {
-    createEntityManager,
+    createResourceManager,
     defineEntityManagerEvents,
     defineEntityManagerProps,
 } from '../../core';
@@ -19,9 +19,9 @@ import {
 export const AUser = defineComponent({
     props: defineEntityManagerProps<User>(),
     emits: defineEntityManagerEvents<User>(),
-    slots: Object as SlotsType<EntityManagerSlotsType<User>>,
+    slots: Object as SlotsType<ResourceManagerSlots<User>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.USER}`,
             props,
             setup,

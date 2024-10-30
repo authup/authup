@@ -23,8 +23,8 @@ import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup, buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
+    createResourceManager,
     defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource, renderEntityAssignAction,
     useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
@@ -83,7 +83,7 @@ export const AUserForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.USER}`,
             setup: ctx,
             props,

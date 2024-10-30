@@ -11,7 +11,7 @@ import {
 } from 'vue';
 import type { RobotRole } from '@authup/core-kit';
 import {
-    createEntityManager,
+    createResourceManager,
     defineEntityManagerEvents,
     renderEntityAssignAction,
 } from '../../core';
@@ -23,7 +23,7 @@ export const ARobotRoleAssignment = defineComponent({
     },
     emits: defineEntityManagerEvents<RobotRole>(),
     async setup(props, setup) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.ROBOT_ROLE}`,
             setup,
             socket: {

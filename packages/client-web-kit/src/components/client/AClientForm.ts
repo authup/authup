@@ -38,8 +38,8 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
+    createResourceManager,
     defineEntityManagerEvents,
     getVuelidateSeverity,
     initFormAttributesFromSource,
@@ -114,7 +114,7 @@ export const AClientForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.CLIENT}`,
             setup: ctx,
             props,

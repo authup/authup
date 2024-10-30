@@ -17,7 +17,7 @@ import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/f
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    createEntityManager,
+    createResourceManager,
     defineEntityManagerEvents,
     getVuelidateSeverity,
     initFormAttributesFromSource,
@@ -71,7 +71,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             ],
         );
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
             setup,
             socket: {

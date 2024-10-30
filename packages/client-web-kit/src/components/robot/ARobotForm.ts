@@ -38,8 +38,8 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
+    createResourceManager,
     defineEntityManagerEvents,
     getVuelidateSeverity,
     initFormAttributesFromSource, renderEntityAssignAction, useTranslationsForGroup, useTranslationsForNestedValidation,
@@ -92,7 +92,7 @@ export const ARobotForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.ROBOT}`,
             setup: ctx,
             props,

@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core-kit';
-import type { ListSlotsType } from '../../core';
+import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
-    createList,
+    createResourceCollectionManager,
     defineListEvents,
     defineListProps,
     useTranslation,
@@ -22,10 +22,10 @@ import {
 
 export const AIdentityProviders = defineComponent({
     props: defineListProps<IdentityProvider>(),
-    slots: Object as SlotsType<ListSlotsType<IdentityProvider>>,
+    slots: Object as SlotsType<ResourceCollectionVSlots<IdentityProvider>>,
     emits: defineListEvents<IdentityProvider>(),
     setup(props, ctx) {
-        const { render } = createList({
+        const { render } = createResourceCollectionManager({
             type: `${DomainType.IDENTITY_PROVIDER}`,
             props,
             setup: ctx,

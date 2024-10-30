@@ -9,19 +9,19 @@ import { DomainType } from '@authup/core-kit';
 import type { Realm } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { EntityManagerSlotsType } from '../../core/entity-manager';
+import type { ResourceManagerSlots } from '../../core/resource/record';
 import {
-    createEntityManager,
+    createResourceManager,
     defineEntityManagerEvents,
     defineEntityManagerProps,
-} from '../../core/entity-manager';
+} from '../../core/resource/record';
 
 export const ARealm = defineComponent({
     props: defineEntityManagerProps<Realm>(),
     emits: defineEntityManagerEvents<Realm>(),
-    slots: Object as SlotsType<EntityManagerSlotsType<Realm>>,
+    slots: Object as SlotsType<ResourceManagerSlots<Realm>>,
     async setup(props, setup) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.REALM}`,
             props,
             setup,

@@ -9,7 +9,7 @@ import { DomainType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { RolePermission } from '@authup/core-kit';
 import {
-    createEntityManager,
+    createResourceManager,
     defineEntityManagerEvents,
     renderEntityAssignAction,
 } from '../../core';
@@ -21,7 +21,7 @@ export const ARolePermissionAssignment = defineComponent({
     },
     emits: defineEntityManagerEvents<RolePermission>(),
     async setup(props, setup) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.ROLE_PERMISSION}`,
             setup,
             socket: {

@@ -9,7 +9,7 @@ import { DomainType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { RobotPermission } from '@authup/core-kit';
 import {
-    createEntityManager,
+    createResourceManager,
     defineEntityManagerEvents,
     renderEntityAssignAction,
 } from '../../core';
@@ -21,7 +21,7 @@ export const ARobotPermissionAssignment = defineComponent({
     },
     emits: defineEntityManagerEvents<RobotPermission>(),
     async setup(props, setup) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.ROBOT_PERMISSION}`,
             setup,
             socket: {

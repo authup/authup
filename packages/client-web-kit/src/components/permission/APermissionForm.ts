@@ -24,8 +24,8 @@ import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
+    createResourceManager,
     defineEntityManagerEvents,
     getVuelidateSeverity,
     initFormAttributesFromSource,
@@ -73,7 +73,7 @@ export const APermissionForm = defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.PERMISSION}`,
             setup: ctx,
             props,

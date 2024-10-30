@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2022-2023.
+ * Copyright (c) 2022-2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainTypeMap } from '@authup/core-kit';
 import type {
     ListBodyBuildOptionsInput,
     ListBodySlotProps,
@@ -19,30 +18,24 @@ import type {
 } from '@vuecs/list-controls';
 import type {
     BuildInput,
-    FieldsBuildInput,
+    BuildParameterInput,
     FiltersBuildInput,
-    ObjectLiteral,
-    PaginationBuildInput,
-    Parameter, RelationsBuildInput,
-    SortBuildInput,
+    Parameter,
 } from 'rapiq';
 import type {
     MaybeRef,
     Ref, SetupContext, VNodeChild,
 } from 'vue';
-import type { EntitySocketContext } from '../entity-socket';
+import type { ResourceSocketManagerCreateContext } from '../socket';
 import type { EntityListSlotName } from './constants';
 
 type Entity<T> = T extends Record<string, any> ? T : never;
 
-export type ListMeta<T> = {
+export type ListMeta<T extends Record<string, any>> = {
     total?: number,
-    busy?: boolean,
-    [Parameter.PAGINATION]?: PaginationBuildInput,
-    [Parameter.FILTERS]?: FiltersBuildInput<T extends ObjectLiteral ? T : never>,
-    [Parameter.SORT]?: SortBuildInput<T extends ObjectLiteral ? T : never>,
-    [Parameter.FIELDS]?: FieldsBuildInput<T extends ObjectLiteral ? T : never>,
-    [Parameter.RELATIONS]?: RelationsBuildInput<T extends ObjectLiteral ? T : never>
+    busy?: boolean
+} & {
+    [K in Parameter as `${K}`]?: BuildParameterInput<K, T>
 };
 
 export type ListHeaderOptions<T> = {
@@ -63,7 +56,7 @@ export type ListBodyOptions<T> = {
     item?: ListItemOptions<T>
 };
 
-export type ListRenderOptions<T> = {
+export type ResourceCollectionRenderOptions<T> = {
     header?: ListHeaderOptions<T> | boolean,
     body?: ListBodyOptions<T>,
     item?: ListItemOptions<T>,
@@ -72,14 +65,14 @@ export type ListRenderOptions<T> = {
     loading?: ListLoadingOptions<T> | boolean
 };
 
-export type ListProps<T> = {
+export type ResourceCollectionVProps<T> = {
     realmId?: string,
     query?: BuildInput<Entity<T>>,
     loadOnSetup?: boolean,
-} & ListRenderOptions<T>;
+} & ResourceCollectionRenderOptions<T>;
 
-export type List<T> = {
-    render(defaults?: ListRenderOptions<T>) : VNodeChild;
+export type ResourceCollectionManager<T extends Record<string, any>> = {
+    render(defaults?: ResourceCollectionRenderOptions<T>) : VNodeChild;
     load: ListLoadFn<ListMeta<T>>,
     handleCreated(item: T) : void;
     handleDeleted(item: T) : void;
@@ -90,7 +83,7 @@ export type List<T> = {
     total: Ref<number>,
 };
 
-export type ListSlotsType<T> = {
+export type ResourceCollectionVSlots<T extends Record<string, any>> = {
     [EntityListSlotName.BODY]: ListBodySlotProps<T, ListMeta<T>>,
     [EntityListSlotName.DEFAULT]: ListSlotProps<T, ListMeta<T>>,
     [EntityListSlotName.ITEM]: ListItemSlotProps<T>, // todo: add generic
@@ -102,23 +95,23 @@ export type ListSlotsType<T> = {
     [EntityListSlotName.LOADING]: undefined
 };
 
-export type ListEventsType<T> = {
+export type ResourceCollectionVEmitOptions<T> = {
     created: (item: T) => true,
     deleted: (item: T) => true,
     updated: (item: T) => true
 };
 
-export type ListCreateContext<
-    A extends keyof DomainTypeMap,
-    T = DomainTypeMap[A],
+export type ResourceCollectionManagerCreateContext<
+    TYPE extends string,
+    RECORD extends Record<string, any>,
 > = {
-    type: A,
+    type: TYPE,
     realmId?: MaybeRef<string>,
-    setup: SetupContext<ListEventsType<T>>,
-    props: ListProps<T>,
+    setup: SetupContext<ResourceCollectionVEmitOptions<RECORD>>,
+    props: ResourceCollectionVProps<RECORD>,
     loadAll?: boolean,
-    query?: BuildInput<Entity<T>> | (() => BuildInput<Entity<T>>),
-    queryFilters?: ((q: string) => FiltersBuildInput<Entity<T>>),
-    onCreated?: (entity: T, meta: ListMeta<T>) => void | Promise<void>,
-    socket?: boolean | Omit<EntitySocketContext<A, T>, 'type'>
+    query?: BuildInput<Entity<RECORD>> | (() => BuildInput<Entity<RECORD>>),
+    queryFilters?: ((q: string) => FiltersBuildInput<Entity<RECORD>>),
+    onCreated?: (entity: RECORD, meta: ListMeta<RECORD>) => void | Promise<void>,
+    socket?: boolean | Omit<ResourceSocketManagerCreateContext<TYPE, RECORD>, 'type'>
 };

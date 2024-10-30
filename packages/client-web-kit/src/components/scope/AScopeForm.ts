@@ -37,8 +37,8 @@ import {
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
     buildFormSubmitWithTranslations,
-    createEntityManager,
     createFormSubmitTranslations,
+    createResourceManager,
     defineEntityManagerEvents,
     getVuelidateSeverity,
     initFormAttributesFromSource,
@@ -94,7 +94,7 @@ export const AScopeForm = defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.SCOPE}`,
             setup: ctx,
             props,

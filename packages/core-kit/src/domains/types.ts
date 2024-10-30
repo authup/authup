@@ -56,12 +56,13 @@ export type DomainTypeMap = {
     [K in keyof DomainTypeMapRaw as `${K}`]: DomainTypeMapRaw[K]
 };
 
-export type DomainTypeEventMap = {
-    [K in keyof DomainTypeMap]: {
-        type: `${K}`,
-        data: DomainTypeMap[K],
-        event: string,
-    }
+export type EventRecord<
+    T extends string,
+    D extends Record<string, any>,
+> = {
+    type: T,
+    data: D,
+    event: string,
 };
 
 export type SingleResourceResponse<R> = R;

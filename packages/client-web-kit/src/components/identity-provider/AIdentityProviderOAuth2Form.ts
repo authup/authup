@@ -30,7 +30,7 @@ import {
 import { onChange, useIsEditing } from '../../composables';
 import {
     buildFormSubmitWithTranslations,
-    createEntityManager, createFormSubmitTranslations, defineEntityManagerEvents,
+    createFormSubmitTranslations, createResourceManager, defineEntityManagerEvents,
     extractVuelidateResultsFromChild,
     injectHTTPClient,
 } from '../../core';
@@ -72,7 +72,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
     emits: defineEntityManagerEvents<IdentityProvider>(),
     setup(props, ctx) {
         const apiClient = injectHTTPClient();
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.IDENTITY_PROVIDER}`,
             setup: ctx,
             props,

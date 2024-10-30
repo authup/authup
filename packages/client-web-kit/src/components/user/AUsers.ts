@@ -9,12 +9,12 @@ import { DomainType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { User } from '@authup/core-kit';
-import type { ListSlotsType } from '../../core';
+import type { ResourceCollectionVSlots } from '../../core';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
-    createList,
+    createResourceCollectionManager,
     defineListEvents,
     defineListProps,
     useTranslation,
@@ -22,10 +22,10 @@ import {
 
 export const AUsers = defineComponent({
     props: defineListProps<User>(),
-    slots: Object as SlotsType<ListSlotsType<User>>,
+    slots: Object as SlotsType<ResourceCollectionVSlots<User>>,
     emits: defineListEvents<User>(),
     setup(props, ctx) {
-        const { render } = createList({
+        const { render } = createResourceCollectionManager({
             type: `${DomainType.USER}`,
             props,
             setup: ctx,

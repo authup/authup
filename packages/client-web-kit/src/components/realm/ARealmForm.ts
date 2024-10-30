@@ -27,8 +27,8 @@ import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     buildFormSubmitWithTranslations,
-    createEntityManager,
-    createFormSubmitTranslations, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
+    createFormSubmitTranslations,
+    createResourceManager, defineEntityManagerEvents, getVuelidateSeverity, initFormAttributesFromSource,
     useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 
@@ -65,7 +65,7 @@ export const ARealmForm = defineComponent({
             },
         }, form);
 
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.REALM}`,
             setup: ctx,
             props,

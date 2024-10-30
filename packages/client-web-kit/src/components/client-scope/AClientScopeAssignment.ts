@@ -9,7 +9,7 @@ import { DomainType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core-kit';
 import {
-    createEntityManager,
+    createResourceManager,
     defineEntityManagerEvents,
     renderEntityAssignAction,
 } from '../../core';
@@ -21,7 +21,7 @@ export const AClientScopeAssignment = defineComponent({
     },
     emits: defineEntityManagerEvents<ClientScope>(),
     async setup(props, setup) {
-        const manager = createEntityManager({
+        const manager = createResourceManager({
             type: `${DomainType.CLIENT_SCOPE}`,
             setup,
             socket: {

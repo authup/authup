@@ -9,10 +9,10 @@ import type { BuildInput } from 'rapiq';
 import type { PropType } from 'vue';
 import type {
     ListBodyOptions,
-    ListEventsType, ListFooterOptions, ListHeaderOptions, ListLoadingOptions, ListNoMoreOptions,
+    ListFooterOptions, ListHeaderOptions, ListLoadingOptions, ListNoMoreOptions, ResourceCollectionVEmitOptions,
 } from '../type';
 
-export function defineListEvents<T>() : ListEventsType<T> {
+export function defineListEvents<T>() : ResourceCollectionVEmitOptions<T> {
     return {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         created: (_item: T) => true,

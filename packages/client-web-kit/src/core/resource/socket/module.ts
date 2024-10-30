@@ -10,8 +10,8 @@ import {
 } from '@authup/core-kit';
 import type {
     DomainType,
-    DomainTypeEventMap,
     DomainTypeMap,
+    EventRecord,
 } from '@authup/core-kit';
 import type { EventFullName } from '@authup/kit';
 import { EventNameSuffix, buildEventFullName } from '@authup/kit';
@@ -19,16 +19,16 @@ import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
 import type { STCEventContext } from '@authup/core-realtime-kit';
-import { injectStore, storeToRefs } from '../store';
-import type { EntitySocket, EntitySocketContext } from './type';
-import { injectSocketManager, isSocketManagerUsable } from '../socket-manager';
+import { injectStore, storeToRefs } from '../../store';
+import type { ResourceSocketManager, ResourceSocketManagerCreateContext } from './type';
+import { injectSocketManager, isSocketManagerUsable } from '../../socket-manager';
 
-export function createEntitySocket<
-    A extends keyof DomainTypeMap,
-    T = DomainTypeMap[A],
+function create<
+    TYPE extends string,
+    RECORD extends Record<string, any>,
 >(
-    ctx: EntitySocketContext<A, T>,
-) : EntitySocket {
+    ctx: ResourceSocketManagerCreateContext<TYPE, RECORD>,
+) : ResourceSocketManager {
     if (!isSocketManagerUsable()) {
         return {
             mount() {
@@ -60,12 +60,24 @@ export function createEntitySocket<
         return storeRefs.realmId.value;
     });
 
-    const targetId = computed(() => (isRef(ctx.targetId) ? ctx.targetId.value : ctx.targetId));
+    const targetId = computed(
+        () => (
+            isRef(ctx.targetId) ?
+                ctx.targetId.value :
+                ctx.targetId
+        ),
+    );
 
-    const lockId = computed(() => (isRef(ctx.lockId) ? ctx.lockId.value : ctx.lockId));
+    const lockId = computed(
+        () => (
+            isRef(ctx.lockId) ?
+                ctx.lockId.value :
+                ctx.lockId
+        ),
+    );
 
     const processEvent = (
-        event: STCEventContext<DomainTypeEventMap[A]>,
+        event: STCEventContext<EventRecord<TYPE, RECORD>>,
     ) : boolean => {
         if (
             ctx.processEvent &&
@@ -90,37 +102,37 @@ export function createEntitySocket<
     };
 
     const handleCreated = (
-        event: STCEventContext<DomainTypeEventMap[A]>,
+        event: STCEventContext<EventRecord<TYPE, RECORD>>,
     ) => {
         if (!processEvent(event)) {
             return;
         }
 
         if (ctx.onCreated) {
-            ctx.onCreated(event.data as T);
+            ctx.onCreated(event.data as RECORD);
         }
     };
 
     const handleUpdated = (
-        event: STCEventContext<DomainTypeEventMap[A]>,
+        event: STCEventContext<EventRecord<TYPE, RECORD>>,
     ) => {
         if (!processEvent(event)) {
             return;
         }
 
         if (ctx.onUpdated) {
-            ctx.onUpdated(event.data as T);
+            ctx.onUpdated(event.data as RECORD);
         }
     };
     const handleDeleted = (
-        event: STCEventContext<DomainTypeEventMap[A]>,
+        event: STCEventContext<EventRecord<TYPE, RECORD>>,
     ) => {
         if (!processEvent(event)) {
             return;
         }
 
         if (ctx.onDeleted) {
-            ctx.onDeleted(event.data as T);
+            ctx.onDeleted(event.data as RECORD);
         }
     };
 
@@ -134,12 +146,12 @@ export function createEntitySocket<
 
         const socket = await socketManager.connect(`/resources#${realmId.value}`);
 
-        let event : EventFullName<A, `${EventNameSuffix.SUBSCRIBE}`> | undefined;
+        let event : EventFullName<TYPE, `${EventNameSuffix.SUBSCRIBE}`> | undefined;
         if (ctx.buildSubscribeEventName) {
             event = ctx.buildSubscribeEventName();
         } else {
             event = buildEventFullName(
-                ctx.type as A,
+                ctx.type as TYPE,
                 EventNameSuffix.SUBSCRIBE,
             );
         }
@@ -180,12 +192,12 @@ export function createEntitySocket<
 
         const socket = await socketManager.connect(`/resources#${realmId.value}`);
 
-        let event : EventFullName<A, `${EventNameSuffix.UNSUBSCRIBE}`>;
+        let event : EventFullName<TYPE, `${EventNameSuffix.UNSUBSCRIBE}`>;
         if (ctx.buildUnsubscribeEventName) {
             event = ctx.buildUnsubscribeEventName();
         } else {
             event = buildEventFullName(
-                ctx.type as A,
+                ctx.type as TYPE,
                 EventNameSuffix.UNSUBSCRIBE,
             );
         }
@@ -232,4 +244,12 @@ export function createEntitySocket<
         mount,
         unmount,
     };
+}
+
+export function createResourceSocketManager<
+    A extends keyof DomainTypeMap,
+>(
+    ctx: ResourceSocketManagerCreateContext<A, DomainTypeMap[A]>,
+) : ResourceSocketManager {
+    return create(ctx);
 }
