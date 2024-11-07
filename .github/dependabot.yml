@@ -18,3 +18,21 @@ updates:
           prefix: "fix"
           prefix-development: "build"
           include: "scope"
+      groups:
+          majorProd:
+                applies-to: version-updates
+                dependency-type: production
+                update-types:
+                    - "major"
+          majorDev:
+              applies-to: version-updates
+              dependency-type: development
+              exclude-patterns:
+                  - "eslint"
+              update-types:
+                  - "major"
+          minorAndPatch:
+                applies-to: version-updates
+                update-types:
+                    - "patch"
+                    - "minor"
