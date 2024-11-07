@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidator } from '@validup/adapter-validator';
-import type { ContainerOptions } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type { ScopeEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
@@ -14,43 +13,61 @@ import { RequestHandlerOperation } from '../../../request';
 export class ScopeRequestValidator extends Container<
 ScopeEntity
 > {
-    constructor(options: ContainerOptions<ScopeEntity> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
-        this.mount(
-            'name',
-            { group: RequestHandlerOperation.UPDATE },
-            createValidator((chain) => chain
+        const nameValidator = createValidator(() => {
+            const chain = createValidationChain();
+            return chain
                 .isString()
-                .isLength({ min: 3, max: 256 })
-                .optional({ values: 'undefined' })),
-        );
+                .isLength({ min: 3, max: 128 });
+        });
 
         this.mount(
             'name',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .isString()
-                .isLength({ min: 3, max: 256 })),
+            nameValidator,
+        );
+        this.mount(
+            'name',
+            { group: RequestHandlerOperation.UPDATE, optional: true },
+            nameValidator,
         );
 
-        this.mount('display_name', createValidator((chain) => chain
-            .isString()
-            .isLength({ min: 3, max: 256 })
-            .optional({ values: 'null' })));
+        this.mount(
+            'display_name',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isString()
+                    .isLength({ min: 3, max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('description', createValidator((chain) => chain
-            .optional({ nullable: true })
-            .notEmpty()
-            .isString()
-            .isLength({ min: 5, max: 4096 })));
+        this.mount(
+            'description',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .optional({ values: 'null' })
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 5, max: 4096 });
+            }),
+        );
 
-        this.mount('realm_id', { group: RequestHandlerOperation.CREATE }, createValidator((chain) => chain
-            .isUUID()
-            .optional({ values: 'null' })));
+        this.mount(
+            'realm_id',
+            { group: RequestHandlerOperation.CREATE, optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isUUID()
+                    .optional({ values: 'null' });
+            }),
+        );
     }
 }

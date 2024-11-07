@@ -9,8 +9,7 @@ import {
     isValidUserName,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
-import { createValidator } from '@validup/adapter-validator';
-import type { ContainerOptions } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type { UserEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
@@ -18,90 +17,171 @@ import { RequestHandlerOperation } from '../../../request';
 export class UserRequestValidator extends Container<
 UserEntity
 > {
-    constructor(options: ContainerOptions<UserEntity> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
+        const nameValidator = createValidator(() => {
+            const chain = createValidationChain();
+            return chain
+                .exists()
+                .notEmpty()
+                .isLength({ min: 3, max: 128 })
+                .custom((value) => {
+                    const isValid = isValidUserName(value);
+                    if (!isValid) {
+                        throw new BadRequestError('Only the characters [A-Za-z0-9-_.]+ are allowed.');
+                    }
 
-    mountAll() {
-        this.mount('name', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .custom((value) => {
-                const isValid = isValidUserName(value);
-                if (!isValid) {
-                    throw new BadRequestError('Only the characters [A-Za-z0-9-_.]+ are allowed.');
-                }
+                    return isValid;
+                });
+        });
+        this.mount(
+            'name',
+            { group: RequestHandlerOperation.CREATE },
+            nameValidator,
+        );
+        this.mount(
+            'name',
+            { group: RequestHandlerOperation.UPDATE, optional: true },
+            nameValidator,
+        );
 
-                return isValid;
-            })
-            .optional({ nullable: true })));
-
-        this.mount('name_locked', createValidator((chain) => chain
-            .isBoolean()
-            .optional()));
-
-        // ----------------------------------------------
-
-        this.mount('first_name', createValidator((chain) => chain
-            .notEmpty()
-            .isLength({ min: 3, max: 128 })
-            .optional({ nullable: true })));
-
-        this.mount('last_name', createValidator((chain) => chain
-            .notEmpty()
-            .isLength({ min: 3, max: 128 })
-            .optional({ nullable: true })));
-
-        // ----------------------------------------------
-
-        this.mount('display_name', createValidator((chain) => chain
-            .isString()
-            .isLength({ min: 3, max: 256 })
-            .optional({ values: 'null' })));
+        this.mount(
+            'name_locked',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isBoolean()
+                    .exists();
+            }),
+        );
 
         // ----------------------------------------------
 
-        this.mount('email', createValidator((chain) => chain
-            .exists()
-            .isEmail()
-            .optional({ nullable: true })));
+        this.mount(
+            'first_name',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .notEmpty()
+                    .isLength({ min: 3, max: 128 })
+                    .optional({ values: 'null' });
+            }),
+        );
+
+        this.mount(
+            'last_name',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .notEmpty()
+                    .isLength({ min: 3, max: 128 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
         // ----------------------------------------------
 
-        this.mount('password', createValidator((chain) => chain
-            .exists()
-            .isLength({ min: 5, max: 512 })
-            .optional({ nullable: true })));
+        this.mount(
+            'display_name',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isString()
+                    .isLength({ min: 3, max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
         // ----------------------------------------------
 
-        this.mount('active', createValidator((chain) => chain
-            .isBoolean()
-            .optional()));
+        this.mount(
+            'email',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isEmail()
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('name_locked', createValidator((chain) => chain
-            .isBoolean()
-            .optional()));
+        // ----------------------------------------------
+
+        this.mount(
+            'password',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isLength({ min: 5, max: 512 })
+                    .optional({ values: 'null' });
+            }),
+        );
+
+        // ----------------------------------------------
+
+        this.mount(
+            'active',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isBoolean();
+            }),
+        );
+
+        this.mount(
+            'name_locked',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isBoolean()
+                    .exists();
+            }),
+        );
 
         this.mount(
             'realm_id',
-            { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .isUUID()
-                .optional()),
+            { group: RequestHandlerOperation.CREATE, optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID();
+            }),
         );
 
-        this.mount('status', createValidator((chain) => chain
-            .exists()
-            .isLength({ min: 5, max: 256 })
-            .optional({ nullable: true })));
+        this.mount(
+            'status',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isLength({ min: 5, max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('status_message', createValidator((chain) => chain
-            .exists()
-            .isLength({ min: 5, max: 256 })
-            .optional({ nullable: true })));
+        this.mount(
+            'status_message',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isLength({ min: 5, max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
     }
 }

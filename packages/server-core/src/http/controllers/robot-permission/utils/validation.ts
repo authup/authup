@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidator } from '@validup/adapter-validator';
-import type { ContainerOptions } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type {
     RobotPermissionEntity,
@@ -16,32 +15,40 @@ import { RequestHandlerOperation } from '../../../request';
 export class RobotPermissionRequestValidator extends Container<
 RobotPermissionEntity
 > {
-    constructor(options: ContainerOptions<RobotPermissionEntity> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
         this.mount(
             'robot_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .isUUID()),
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID();
+            }),
         );
 
         this.mount(
             'permission_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .isUUID()),
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID();
+            }),
         );
 
-        this.mount('policy_id', createValidator((chain) => chain
-            .isUUID()
-            .optional({ values: 'null' })
-            .default(null)));
+        this.mount(
+            'policy_id',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isUUID()
+                    .optional({ values: 'null' });
+            }),
+        );
     }
 }

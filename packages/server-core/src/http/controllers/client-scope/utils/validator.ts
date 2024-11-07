@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidator } from '@validup/adapter-validator';
-import type { ContainerOptions } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type {
     ClientScopeEntity,
@@ -14,27 +13,29 @@ import type {
 import { RequestHandlerOperation } from '../../../request';
 
 export class ClientScopeRequestValidator extends Container<ClientScopeEntity> {
-    constructor(options: ContainerOptions<ClientScopeEntity> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
         this.mount(
             'client_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .isUUID()),
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID();
+            }),
         );
 
         this.mount(
             'scope_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .isUUID()),
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID();
+            }),
         );
     }
 }

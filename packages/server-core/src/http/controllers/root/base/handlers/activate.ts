@@ -6,7 +6,7 @@
  */
 
 import { NotFoundError } from '@ebec/http';
-import { createValidator } from '@validup/adapter-validator';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -15,12 +15,18 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { UserRepository } from '../../../../../database/domains';
 
 export class AuthActiveRequestValidator extends Container<{ token: string}> {
-    constructor() {
-        super();
+    protected initialize() {
+        super.initialize();
 
-        this.mount('token', createValidator((chain) => chain.exists()
-            .notEmpty()
-            .isLength({ min: 3, max: 256 })));
+        this.mount(
+            'token',
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain.exists()
+                    .notEmpty()
+                    .isLength({ min: 3, max: 256 });
+            }),
+        );
     }
 }
 

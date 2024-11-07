@@ -13,17 +13,17 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { useLogger } from '@authup/server-kit';
-import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
 import { UserEntity, UserRepository, resolveRealm } from '../../../../../database/domains';
 import { useConfig } from '../../../../../config';
 import { EnvironmentName } from '../../../../../env';
+import { RequestHandlerOperation } from '../../../../request';
 import { UserRequestValidator } from '../../../user';
 
 export class AuthRegisterRequestValidator extends Container<User> {
-    constructor(options: ContainerOptions<User> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
         this.mount(new UserRequestValidator({
             pathsToInclude: ['email', 'name', 'password', 'realm_id'],
@@ -48,7 +48,9 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
 
     const validator = new AuthRegisterRequestValidator();
     const validatorWrapper = new RoutupContainerAdapter(validator);
-    const data = await validatorWrapper.run(req);
+    const data = await validatorWrapper.run(req, {
+        group: RequestHandlerOperation.CREATE,
+    });
 
     const dataSource = await useDataSource();
     await validateEntityJoinColumns(data, {

@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidator } from '@validup/adapter-validator';
-import type { ContainerOptions } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type { RoleAttributeEntity } from '../../../../database/domains';
 import { RequestHandlerOperation } from '../../../request';
@@ -14,36 +13,45 @@ import { RequestHandlerOperation } from '../../../request';
 export class RoleAttributeRequestValidator extends Container<
 RoleAttributeEntity
 > {
-    constructor(options: ContainerOptions<RoleAttributeEntity> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
         this.mount(
             'name',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .notEmpty()
-                .isString()
-                .isLength({ min: 3, max: 255 })),
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 3, max: 255 });
+            }),
         );
 
         this.mount(
             'role_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .isUUID()),
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID();
+            }),
         );
 
-        this.mount('value', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 512 })
-            .optional({ nullable: true })));
+        this.mount(
+            'value',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 3, max: 512 })
+                    .optional({ values: 'null' });
+            }),
+        );
     }
 }

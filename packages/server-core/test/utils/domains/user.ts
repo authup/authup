@@ -12,7 +12,7 @@ import type { TestAgent } from '../supertest';
 
 export function createFakeUser(data: Partial<User> = {}) {
     return {
-        name: faker.internet.userName(),
+        name: faker.internet.username(),
         display_name: faker.internet.displayName(),
         email: faker.internet.email(),
         name_locked: false,
