@@ -117,9 +117,6 @@ export default defineNuxtComponent({
             }
         };
 
-        Promise.resolve()
-            .then(store.logout);
-
         const buildIdentityProviderURL = (id: string) => apiClient.identityProvider.getAuthorizeUri(
             runtimeConfig.public.apiUrl,
             id,
