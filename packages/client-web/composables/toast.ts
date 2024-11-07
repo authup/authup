@@ -7,10 +7,10 @@
 
 import { isObject } from '@authup/kit';
 import type { OrchestratedToast } from 'bootstrap-vue-next';
-import { useToast as _useToast } from 'bootstrap-vue-next';
+import { useToastController } from 'bootstrap-vue-next';
 
 export function useToast() {
-    const toast = _useToast();
+    const toast = useToastController();
 
     return {
         hide(el: symbol) {
