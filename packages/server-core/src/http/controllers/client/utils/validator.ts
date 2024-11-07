@@ -6,8 +6,7 @@
  */
 
 import { BadRequestError } from '@ebec/http';
-import { createValidator } from '@validup/adapter-validator';
-import type { ContainerOptions } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import zod from 'zod';
 import type { ClientEntity } from '../../../../database/domains';
@@ -15,97 +14,156 @@ import { buildErrorMessageForAttribute } from '../../../../utils';
 import { RequestHandlerOperation } from '../../../request';
 
 export class ClientRequestValidator extends Container<ClientEntity> {
-    constructor(options: ContainerOptions<ClientEntity> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
+        const nameValidator = createValidator(() => {
+            const chain = createValidationChain();
+            return chain
+                .isString()
+                .isLength({ min: 3, max: 256 });
+        });
 
-    mountAll() {
         this.mount(
             'name',
-            { group: RequestHandlerOperation.UPDATE },
-            createValidator((chain) => chain
-                .isString()
-                .isLength({ min: 3, max: 256 })
-                .optional({ values: 'undefined' })),
+            { group: RequestHandlerOperation.UPDATE, optional: true },
+            nameValidator,
         );
 
         this.mount(
             'name',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .isString()
-                .isLength({ min: 3, max: 256 })),
+            nameValidator,
         );
 
-        this.mount('display_name', createValidator((chain) => chain
-            .isString()
-            .isLength({ min: 3, max: 256 })
-            .optional({ values: 'null' })));
+        this.mount(
+            'display_name',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isString()
+                    .isLength({ min: 3, max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('secret', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 256 })
-            .optional({ nullable: true })));
+        this.mount(
+            'secret',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 3, max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('redirect_uri', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()
-            .custom((value) => {
-                const validator = zod.string().url();
-                const urls = value.split(',');
-                for (let i = 0; i < urls.length; i++) {
-                    const output = validator.safeParse(urls[i]);
-                    if (!output.success) {
-                        throw new BadRequestError(buildErrorMessageForAttribute('redirect_uri'));
-                    }
-                }
+        this.mount(
+            'redirect_uri',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .custom((value) => {
+                        const validator = zod.string().url();
+                        const urls = value.split(',');
+                        for (let i = 0; i < urls.length; i++) {
+                            const output = validator.safeParse(urls[i]);
+                            if (!output.success) {
+                                throw new BadRequestError(buildErrorMessageForAttribute('redirect_uri'));
+                            }
+                        }
 
-                return true;
-            })
-            .optional({ nullable: true })));
+                        return true;
+                    })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('base_url', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isURL()
-            .isLength({ min: 3, max: 2000 })
-            .optional({ nullable: true })));
+        this.mount(
+            'base_url',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isURL()
+                    .isLength({ min: 3, max: 2000 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('root_url', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isURL()
-            .isLength({ min: 3, max: 2000 })
-            .optional({ nullable: true })));
+        this.mount(
+            'root_url',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isURL()
+                    .isLength({ min: 3, max: 2000 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('grant_types', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 512 })
-            .optional({ nullable: true })));
+        this.mount(
+            'grant_types',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 3, max: 512 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('scope', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 512 })
-            .optional({ nullable: true })));
+        this.mount(
+            'scope',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 3, max: 512 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('is_confidential', createValidator((chain) => chain
-            .exists()
-            .isBoolean()
-            .optional()));
+        this.mount(
+            'is_confidential',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isBoolean();
+            }),
+        );
 
-        this.mount('realm_id', { group: RequestHandlerOperation.CREATE }, createValidator((chain) => chain
-            .exists()
-            .isUUID()
-            .optional({ nullable: true })
-            .default(null)));
+        this.mount(
+            'realm_id',
+            { group: RequestHandlerOperation.CREATE, optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID()
+                    .optional({ nullable: true });
+            }),
+        );
     }
 }

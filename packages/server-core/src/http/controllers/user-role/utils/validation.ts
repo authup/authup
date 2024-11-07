@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidator } from '@validup/adapter-validator';
-import type { ContainerOptions } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type {
     UserRoleEntity,
@@ -17,27 +16,29 @@ import { RequestHandlerOperation } from '../../../request';
 export class UserRoleRequestValidator extends Container<
 UserRoleEntity
 > {
-    constructor(options: ContainerOptions<UserRoleEntity> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
         this.mount(
             'user_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .isUUID()),
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID();
+            }),
         );
 
         this.mount(
             'role_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator((chain) => chain
-                .exists()
-                .isUUID()),
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID();
+            }),
         );
     }
 }

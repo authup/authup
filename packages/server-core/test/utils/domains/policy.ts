@@ -17,7 +17,7 @@ type TimePolicyExtended = TimePolicy & PolicyEntity & {
 
 export function createFakeTimePolicy(data: Partial<TimePolicyExtended> = {}) {
     return {
-        name: faker.internet.userName(),
+        name: faker.internet.username(),
         display_name: faker.internet.displayName(),
         type: BuiltInPolicyType.TIME,
         start: '08:00',

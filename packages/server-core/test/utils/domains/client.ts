@@ -12,7 +12,7 @@ import type { TestAgent } from '../supertest';
 
 export function createFakeClient(data: Partial<Client> = {}) {
     return {
-        name: faker.internet.userName(),
+        name: faker.internet.username(),
         display_name: faker.internet.displayName(),
         secret: faker.string.alpha({ length: 10 }),
         redirect_uri: faker.internet.url(),

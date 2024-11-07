@@ -14,7 +14,7 @@ import {
     isOAuth2ScopeAllowed,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
-import { createValidator } from '@validup/adapter-validator';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import type { Request } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { Container } from 'validup';
@@ -26,50 +26,81 @@ type AuthorizeValidationResult = OAuth2AuthorizationCodeRequest & {
 };
 
 export class AuthorizeRequestValidator extends Container<AuthorizeValidationResult> {
-    constructor() {
-        super();
+    protected initialize() {
+        super.initialize();
 
-        this.mount('response_type', createValidator((chain) => chain
-            .exists()
-            .isString()
-            .notEmpty()
-            .custom((value) => {
-                const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
-                const responseTypes = value.split(' ');
+        this.mount(
+            'response_type',
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isString()
+                    .notEmpty()
+                    .custom((value) => {
+                        const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
+                        const responseTypes = value.split(' ');
 
-                for (let i = 0; i < responseTypes.length; i++) {
-                    if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
-                        throw TokenError.responseTypeUnsupported();
-                    }
-                }
+                        for (let i = 0; i < responseTypes.length; i++) {
+                            if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
+                                throw TokenError.responseTypeUnsupported();
+                            }
+                        }
 
-                return true;
-            })));
+                        return true;
+                    });
+            }),
+        );
 
-        this.mount('redirect_uri', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isURL()
-            .isLength({ min: 3, max: 2000 })));
+        this.mount(
+            'redirect_uri',
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isURL()
+                    .isLength({ min: 3, max: 2000 });
+            }),
+        );
 
-        this.mount('scope', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 3, max: 512 })));
+        this.mount(
+            'scope',
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 3, max: 512 });
+            }),
+        );
 
-        this.mount('state', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()
-            .isLength({ min: 5, max: 2048 })
-            .optional({ nullable: true })));
+        this.mount(
+            'state',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 5, max: 2048 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('client_id', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()
-            .isUUID()));
+        this.mount(
+            'client_id',
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString()
+                    .isUUID();
+            }),
+        );
     }
 }
 

@@ -6,7 +6,7 @@
  */
 
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { createValidator } from '@validup/adapter-validator';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { randomBytes } from 'node:crypto';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { User } from '@authup/core-kit';
@@ -14,7 +14,6 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import {
     isSMTPClientUsable, useSMTPClient,
@@ -24,30 +23,43 @@ import { useConfig } from '../../../../../config';
 import { EnvironmentName } from '../../../../../env';
 
 export class AuthPasswordForgotRequestValidator extends Container<User> {
-    constructor(options: ContainerOptions<User> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
         const container = new Container({
             oneOf: true,
         });
 
-        container.mount('email', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isEmail()));
+        container.mount('email', createValidator(() => {
+            const chain = createValidationChain();
+            return chain
+                .exists()
+                .notEmpty()
+                .isEmail();
+        }));
 
-        container.mount('name', createValidator((chain) => chain
-            .exists()
-            .notEmpty()
-            .isString()));
+        container.mount(
+            'name',
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString();
+            }),
+        );
 
         this.mount(container);
 
         this.mount(
             'realm_id',
-            createValidator((chain) => chain.exists()
-                .isUUID()
-                .optional({ nullable: true })),
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain.exists()
+                    .isUUID()
+                    .optional({ values: 'null' });
+            }),
         );
     }
 }

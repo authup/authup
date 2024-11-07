@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidator } from '@validup/adapter-validator';
-import type { ContainerOptions } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type {
     PolicyEntity,
@@ -18,17 +17,12 @@ type PolicyValidationResult = Omit<PolicyEntity, 'children'> & {
 };
 
 export class PolicyValidator extends Container<PolicyValidationResult> {
-    constructor(options: ContainerOptions<PolicyValidationResult> = {}) {
-        super(options);
+    protected initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
-        const nameValidator = (
-            optional?: boolean,
-        ) => createValidator((chain) => {
-            const output = chain
+        const nameValidator = createValidator(() => {
+            const chain = createValidationChain();
+            return chain
                 .exists()
                 .notEmpty()
                 .isString()
@@ -36,39 +30,67 @@ export class PolicyValidator extends Container<PolicyValidationResult> {
                     min: 3,
                     max: 128,
                 });
-
-            if (optional) {
-                return output.optional({ values: 'null' });
-            }
-
-            return output;
         });
 
-        this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator());
-        this.mount('name', { group: RequestHandlerOperation.UPDATE }, nameValidator(true));
+        this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator);
+        this.mount('name', { group: RequestHandlerOperation.UPDATE, optional: true }, nameValidator);
 
-        this.mount('display_name', createValidator((chain) => chain
-            .isString()
-            .isLength({ min: 3, max: 256 })
-            .optional({ values: 'null' })));
+        this.mount(
+            'display_name',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isString()
+                    .isLength({ min: 3, max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('invert', createValidator((chain) => chain
-            .isBoolean()
-            .optional({ values: 'undefined' })));
+        this.mount(
+            'invert',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isBoolean();
+            }),
+        );
 
-        this.mount('type', createValidator((chain) => chain
-            .exists()
-            .isString()
-            .isLength({ min: 3, max: 128 })));
+        this.mount(
+            'type',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isString()
+                    .isLength({ min: 3, max: 128 });
+            }),
+        );
 
-        this.mount('parent_id', createValidator((chain) => chain
-            .exists()
-            .isUUID()
-            .optional({ nullable: true })));
+        this.mount(
+            'parent_id',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID()
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('realm_id', { group: RequestHandlerOperation.CREATE }, createValidator((chain) => chain
-            .exists()
-            .isUUID()
-            .optional({ nullable: true })));
+        this.mount(
+            'realm_id',
+            { group: RequestHandlerOperation.CREATE },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID()
+                    .optional({ values: 'null' });
+            }),
+        );
     }
 }

@@ -7,7 +7,7 @@
 
 import { isRealmNameValid } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
-import { createValidator } from '@validup/adapter-validator';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import type { RealmEntity } from '../../../../database/domains';
@@ -23,8 +23,9 @@ RealmEntity
     }
 
     mountAll() {
-        const nameChain = (optional?: boolean) => createValidator((chain) => {
-            const output = chain
+        const nameValidator = createValidator(() => {
+            const chain = createValidationChain();
+            return chain
                 .exists()
                 .notEmpty()
                 .isString()
@@ -40,26 +41,34 @@ RealmEntity
 
                     return isValid;
                 });
-
-            if (optional) {
-                return output.optional({ values: 'null' });
-            }
-
-            return output;
         });
 
-        this.mount('name', { group: RequestHandlerOperation.CREATE }, nameChain());
-        this.mount('name', { group: RequestHandlerOperation.UPDATE }, nameChain(true));
+        this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator);
+        this.mount('name', { group: RequestHandlerOperation.UPDATE, optional: true }, nameValidator);
 
-        this.mount('display_name', createValidator((chain) => chain
-            .isString()
-            .isLength({ min: 3, max: 256 })
-            .optional({ values: 'null' })));
+        this.mount(
+            'display_name',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .isString()
+                    .isLength({ min: 3, max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
 
-        this.mount('description', createValidator((chain) => chain
-            .optional({ nullable: true })
-            .notEmpty()
-            .isString()
-            .isLength({ min: 5, max: 4096 })));
+        this.mount(
+            'description',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .optional({ values: 'null' })
+                    .notEmpty()
+                    .isString()
+                    .isLength({ min: 5, max: 4096 });
+            }),
+        );
     }
 }
