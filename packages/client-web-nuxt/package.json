@@ -38,11 +38,11 @@
     "devDependencies": {
         "@nuxt/module-builder": "^0.8.4",
         "@pinia/nuxt": "^0.7.0",
-        "nuxt": "^3.13.2",
-        "pinia": "^2.2.4"
+        "nuxt": "^3.14.159",
+        "pinia": "^2.2.6"
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
-        "pinia": "^2.2.4"
+        "pinia": "^2.2.6"
     }
 }
