@@ -58,7 +58,7 @@
         "@socket.io/redis-emitter": "^5.1.0",
         "@types/nodemailer": "^6.4.16",
         "locter": "^2.1.4",
-        "redis-extension": "^2.0.0",
+        "redis-extension": "^2.0.1",
         "smob": "^1.5.0",
         "singa": "^1.0.0",
         "winston": "^3.15.0"
