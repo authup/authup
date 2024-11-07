@@ -71,10 +71,21 @@ export default defineNuxtPlugin({
         const storeDispatcher = injectStoreDispatcher(ctx.vueApp);
         storeDispatcher.on(
             StoreDispatcherEventName.ACCESS_TOKEN_UPDATED,
-            () => navigationManager.build({
-                reset: true,
-                path: ctx._route.fullPath,
-            }),
+            async (token) => {
+                let path = ctx._route.fullPath;
+                if (
+                    !!token &&
+                    ctx._route.query &&
+                    ctx._route.query.redirect
+                ) {
+                    path = `${ctx._route.query.redirect}`;
+                }
+
+                return navigationManager.build({
+                    reset: true,
+                    path,
+                });
+            },
         );
 
         ctx.vueApp.use(installPagination);
