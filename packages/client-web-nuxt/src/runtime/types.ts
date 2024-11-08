@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type AuthupRuntimeOptions = {
+export type RuntimeOptions = {
     apiURL?: string,
     apiURLRuntimeKey?: string,
 
@@ -15,4 +15,13 @@ export type AuthupRuntimeOptions = {
     homeRoute?: string,
     loginRoute?: string,
     logoutRoute?: string
+};
+
+export type MiddlewareHookPayload = {
+    to: {
+        fullPath: string
+    },
+    from: {
+        fullPath: string
+    },
 };

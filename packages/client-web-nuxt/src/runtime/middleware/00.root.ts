@@ -6,7 +6,7 @@
  */
 
 import { defineNuxtRouteMiddleware, navigateTo, useNuxtApp } from '#imports';
-import type { MiddlewareHookPayload } from '../../types';
+import type { MiddlewareHookPayload } from '../types';
 import { RoutingInterceptor } from '../helpers';
 
 export default defineNuxtRouteMiddleware(

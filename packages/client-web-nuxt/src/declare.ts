@@ -6,7 +6,7 @@
  */
 
 import type { HookResult } from '@nuxt/schema';
-import type { MiddlewareHookPayload } from './types';
+import type { MiddlewareHookPayload } from './runtime/types';
 
 declare module '#app' {
     interface RuntimeNuxtHooks {

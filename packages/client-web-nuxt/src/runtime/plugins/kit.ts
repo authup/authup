@@ -12,10 +12,10 @@ import type { Pinia } from 'pinia';
 import {
     defineNuxtPlugin, tryUseNuxtApp, useCookie, useRuntimeConfig,
 } from '#imports';
-import type { AuthupRuntimeOptions } from '../types';
+import type { RuntimeOptions } from '../types';
 
 function buildCookieOptions(runtimeConfig: RuntimeConfig) : CookieOptions {
-    const options = runtimeConfig.public.authup as AuthupRuntimeOptions;
+    const options = runtimeConfig.public.authup as RuntimeOptions;
 
     let domain : string | undefined;
     if (options.cookieDomain) {
@@ -42,7 +42,7 @@ function buildCookieOptions(runtimeConfig: RuntimeConfig) : CookieOptions {
 }
 
 function buildApiUrl(runtimeConfig: RuntimeConfig) : string {
-    const options = runtimeConfig.public.authup as AuthupRuntimeOptions;
+    const options = runtimeConfig.public.authup as RuntimeOptions;
 
     let url: string | undefined;
 

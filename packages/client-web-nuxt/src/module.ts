@@ -12,7 +12,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { merge } from 'smob';
 import './declare';
-import type { AuthupRuntimeOptions } from './runtime/types';
+import type { RuntimeOptions } from './runtime/types';
 import type { ModuleOptions } from './types';
 
 export default defineNuxtModule<ModuleOptions>({
@@ -27,7 +27,7 @@ export default defineNuxtModule<ModuleOptions>({
         const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url));
         nuxt.options.build.transpile.push(runtimeDir);
 
-        const runtimeOptions : AuthupRuntimeOptions = {
+        const runtimeOptions : RuntimeOptions = {
             apiURL: options.apiURL,
             apiURLRuntimeKey: options.apiURLRuntimeKey,
 

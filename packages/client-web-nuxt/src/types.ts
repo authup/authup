@@ -5,12 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RouteLocationNormalized } from 'vue-router';
-import type { AuthupRuntimeOptions } from './runtime/types';
+import type { RuntimeOptions } from './runtime/types';
 
-export type ModuleOptions = AuthupRuntimeOptions;
-
-export type MiddlewareHookPayload = {
-    to: RouteLocationNormalized,
-    from: RouteLocationNormalized,
-};
+export type ModuleOptions = RuntimeOptions;
