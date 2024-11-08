@@ -159,6 +159,45 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
+    const cleanup = async () => {
+        const tempAccessToken = accessToken.value;
+        const tempRefreshToken = refreshToken.value;
+
+        setAccessToken(null);
+        setAccessTokenExpireDate(null);
+        setRefreshToken(null);
+        setUser(null);
+        setRealm(null);
+        setRealmManagement(null);
+
+        permissionRepository.setMany([]);
+
+        tokenResolved.value = false;
+        userResolved.value = false;
+
+        try {
+            if (tempAccessToken) {
+                await client.token.revoke({
+                    token: tempAccessToken,
+                });
+            }
+        } catch (e) {
+            // ...
+        }
+
+        try {
+            if (tempRefreshToken) {
+                await client.token.revoke({
+                    token: tempRefreshToken,
+                });
+            }
+        } catch (e) {
+            // ...
+        }
+    };
+
+    // --------------------------------------------------------------------
+
     const userResolved = ref(false);
     const resolveUser = async () : Promise<void> => {
         if (!accessToken.value || userResolved.value) {
@@ -242,24 +281,26 @@ export function createStore(context: StoreCreateContext) {
                 throw new TokenError('The access token can not be renewed.');
             }
 
-            return client.token.createWithRefreshToken({
-                refresh_token: refreshToken.value,
-            })
-                .then((r) => applyTokenGrantResponse(r))
-                .catch((e) => {
-                    reset();
-
-                    return Promise.reject(e);
-                })
-                .finally(() => {
-                    tokenResolved.value = false;
-                    userResolved.value = false;
+            try {
+                const response = await client.token.createWithRefreshToken({
+                    refresh_token: refreshToken.value,
                 });
+
+                applyTokenGrantResponse(response);
+            } catch (e) {
+                await cleanup();
+
+                throw e;
+            } finally {
+                tokenResolved.value = false;
+                userResolved.value = false;
+            }
         },
     );
 
     // --------------------------------------------------------------------
 
+    // todo: rename to reload() ?
     const resolveInternal = async () : Promise<void> => {
         context.dispatcher.emit(StoreDispatcherEventName.RESOLVING);
 
@@ -284,15 +325,14 @@ export function createStore(context: StoreCreateContext) {
                 refreshToken.value
             ) {
                 await refreshSession();
-                return resolveInternal();
+                await resolveToken();
+                await resolveUser();
+            } else {
+                throw e;
             }
-
-            throw e;
         }
 
         context.dispatcher.emit(StoreDispatcherEventName.RESOLVED);
-
-        return Promise.resolve();
     };
 
     const resolve = createPromiseShareWrapperFn(resolveInternal);
@@ -309,55 +349,16 @@ export function createStore(context: StoreCreateContext) {
 
         applyTokenGrantResponse(response);
 
-        try {
-            await resolve();
-        } catch (e) {
-            await logout();
-
-            throw e;
-        }
+        await resolveToken();
+        await resolveUser();
 
         context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
-    };
-
-    const reset = () => {
-        setAccessToken(null);
-        setAccessTokenExpireDate(null);
-        setRefreshToken(null);
-        setUser(null);
-        setRealm(null);
-        setRealmManagement(null);
-
-        permissionRepository.setMany([]);
-
-        tokenResolved.value = false;
-        userResolved.value = false;
     };
 
     const logout = async () => {
         context.dispatcher.emit(StoreDispatcherEventName.LOGGING_OUT);
 
-        try {
-            if (accessToken.value) {
-                await client.token.revoke({
-                    token: accessToken.value,
-                });
-            }
-        } catch (e) {
-            // ...
-        }
-
-        try {
-            if (refreshToken.value) {
-                await client.token.revoke({
-                    token: refreshToken.value,
-                });
-            }
-        } catch (e) {
-            // ...
-        }
-
-        reset();
+        await cleanup();
 
         context.dispatcher.emit(StoreDispatcherEventName.LOGGED_OUT);
     };
