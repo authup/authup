@@ -13,8 +13,6 @@ export default defineNuxtPlugin((ctx) => {
     ctx.vueApp.component('BDropdownItem', BDropdownItem);
 
     ctx.vueApp.use(createBootstrap({
-        plugins: {
-            toast: true,
-        },
+        toast: true,
     }));
 });

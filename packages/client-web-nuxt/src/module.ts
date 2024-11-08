@@ -11,6 +11,7 @@ import {
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { merge } from 'smob';
+import './declare';
 import type { AuthupRuntimeOptions } from './runtime/types';
 import type { ModuleOptions } from './types';
 
@@ -54,8 +55,8 @@ export default defineNuxtModule<ModuleOptions>({
         addPlugin(path.resolve(runtimeDir, 'plugins/root'));
 
         addRouteMiddleware({
-            name: 'loggedIn',
-            path: path.resolve(runtimeDir, 'middleware/00.session'),
+            name: 'authup',
+            path: path.resolve(runtimeDir, 'middleware/00.root'),
             global: true,
         });
     },

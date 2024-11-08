@@ -9,8 +9,8 @@ import {
     type Store, type StoreToRefs, injectStore, storeToRefs,
 } from '@authup/client-web-kit';
 import { type PolicyIdentity, hasOwnProperty } from '@authup/kit';
-import type { RouteLocationNormalized, RouteLocationRaw } from 'vue-router';
-import { useRuntimeConfig } from '#imports';
+import type { RouteLocationAsPathGeneric, RouteLocationNormalized } from 'vue-router';
+import type { NuxtApp } from '#app';
 import { RouteMetaKey } from '../constants';
 import type { AuthupRuntimeOptions } from '../types';
 
@@ -23,13 +23,11 @@ export class RoutingInterceptor {
 
     protected loginRoute : string;
 
-    constructor() {
-        this.store = injectStore();
+    constructor(nuxtApp: NuxtApp) {
+        this.store = injectStore(nuxtApp.$pinia, nuxtApp.vueApp);
         this.storeRefs = storeToRefs(this.store);
 
-        const runtimeConfig = useRuntimeConfig();
-
-        const runtimeOptions = runtimeConfig.public.authup as AuthupRuntimeOptions;
+        const runtimeOptions = nuxtApp.$config.public.authup as AuthupRuntimeOptions;
 
         this.homeRoute = runtimeOptions.homeRoute || '/';
         this.loginRoute = runtimeOptions.loginRoute || '/login';
@@ -38,7 +36,7 @@ export class RoutingInterceptor {
     async execute(
         to: RouteLocationNormalized,
         from: RouteLocationNormalized,
-    ) : Promise<RouteLocationRaw | undefined> {
+    ) : Promise<RouteLocationAsPathGeneric | undefined> {
         try {
             await this.store.resolve();
         } catch (e) {
