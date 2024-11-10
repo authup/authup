@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
+
+
+### Features
+
+* refactored client resource management ([#2450](https://github.com/authup/authup/issues/2450)) ([17f81fa](https://github.com/authup/authup/commit/17f81fabe90e19422774899aeeefa1fe9b46d7fc))
+* simplify domain type to shape mapping ([6b267d6](https://github.com/authup/authup/commit/6b267d6ddb42c05c0fb9969aa1f6f34c84a28337))
+
+
+### Bug Fixes
+
+* cleanup obsolete typings ([693d48b](https://github.com/authup/authup/commit/693d48b7b617d3a119626819f2563a0683bdadbb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.22 to ^1.0.0-beta.23
+
 ## [1.0.0-beta.22](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2024-10-23)
 
 

@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
+
+
+### Bug Fixes
+
+* **deps:** bump redis-extension from 2.0.0 to 2.0.1 ([#2453](https://github.com/authup/authup/issues/2453)) ([f20c5b6](https://github.com/authup/authup/commit/f20c5b64cf1eb6cf57e610746d28306a7ec56c63))
+* update copyright & adjusted eslint configuration ([c7ddfbf](https://github.com/authup/authup/commit/c7ddfbfab886d5fd1c05cfb2e9eb32f21bdf1d8c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.22 to ^1.0.0-beta.23
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.22 to ^1.0.0-beta.23
+
 ## [1.0.0-beta.22](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2024-10-23)
 
 

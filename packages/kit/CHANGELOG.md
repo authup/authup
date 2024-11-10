@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
+
+
+### Bug Fixes
+
+* update copyright & adjusted eslint configuration ([c7ddfbf](https://github.com/authup/authup/commit/c7ddfbfab886d5fd1c05cfb2e9eb32f21bdf1d8c))
+
 ## [1.0.0-beta.22](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2024-10-23)
 
 
