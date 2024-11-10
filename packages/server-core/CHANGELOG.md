@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
+
+
+### Bug Fixes
+
+* **deps:** bump better-sqlite3 from 11.3.0 to 11.5.0 ([#2422](https://github.com/authup/authup/issues/2422)) ([ba8a783](https://github.com/authup/authup/commit/ba8a7831533007275925e9ed5f4c15e9e43fc6e2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.22 to ^1.0.0-beta.23
+    * @authup/core-kit bumped from ^1.0.0-beta.22 to ^1.0.0-beta.23
+    * @authup/core-http-kit bumped from ^1.0.0-beta.22 to ^1.0.0-beta.23
+    * @authup/server-kit bumped from ^1.0.0-beta.22 to ^1.0.0-beta.23
+
 ## [1.0.0-beta.22](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2024-10-23)
 
 

@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
+
+
+### Features
+
+* emit hooks in module middleware & refactored navigation building ([#2480](https://github.com/authup/authup/issues/2480)) ([ffa8d7e](https://github.com/authup/authup/commit/ffa8d7eb01a164525f0533def455b8c5f0032373))
+* refactored client resource management ([#2450](https://github.com/authup/authup/issues/2450)) ([17f81fa](https://github.com/authup/authup/commit/17f81fabe90e19422774899aeeefa1fe9b46d7fc))
+* simplify domain type to shape mapping ([6b267d6](https://github.com/authup/authup/commit/6b267d6ddb42c05c0fb9969aa1f6f34c84a28337))
+
+
+### Bug Fixes
+
+* cleanup obsolete typings ([693d48b](https://github.com/authup/authup/commit/693d48b7b617d3a119626819f2563a0683bdadbb))
+* **deps:** bump @vueuse/integrations from 11.1.0 to 11.2.0 ([#2452](https://github.com/authup/authup/issues/2452)) ([03dec7c](https://github.com/authup/authup/commit/03dec7ce8671b2c27bb4da6f04b3b987b2ff9868))
+* **deps:** bump better-sqlite3 from 11.3.0 to 11.5.0 ([#2422](https://github.com/authup/authup/issues/2422)) ([ba8a783](https://github.com/authup/authup/commit/ba8a7831533007275925e9ed5f4c15e9e43fc6e2))
+* **deps:** bump redis-extension from 2.0.0 to 2.0.1 ([#2453](https://github.com/authup/authup/issues/2453)) ([f20c5b6](https://github.com/authup/authup/commit/f20c5b64cf1eb6cf57e610746d28306a7ec56c63))
+* renamed useStore to injectStore ([e57e13b](https://github.com/authup/authup/commit/e57e13bc7bd26f28b8873fc9d4507346cf7293fd))
+* update copyright & adjusted eslint configuration ([c7ddfbf](https://github.com/authup/authup/commit/c7ddfbfab886d5fd1c05cfb2e9eb32f21bdf1d8c))
+
 ## [1.0.0-beta.22](https://github.com/authup/authup/compare/v1.0.0-beta.21...v1.0.0-beta.22) (2024-10-23)
 
 
