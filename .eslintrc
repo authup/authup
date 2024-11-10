@@ -31,6 +31,7 @@
         "no-underscore-dangle": "off",
         "no-shadow": "off",
         "no-constant-condition": "off",
+        "import/extensions": "off",
 
         "@typescript-eslint/no-throw-literal": "off",
         "@typescript-eslint/no-use-before-define": "off",
