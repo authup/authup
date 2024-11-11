@@ -58,7 +58,7 @@
         "@ucast/mongo2js": "^1.3.4",
         "@validup/adapter-zod": "^0.1.8",
         "destr": "^2.0.3",
-        "nanoid": "^3.3.4",
+        "nanoid": "^5.0.8",
         "pathtrace": "^1.1.0",
         "smob": "^1.5.0",
         "validup": "^0.1.8",
