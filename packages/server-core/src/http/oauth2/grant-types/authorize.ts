@@ -7,6 +7,7 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/kit';
 import {
+    OAuth2AuthorizationCodeChallengeMethod,
     OAuth2SubKind, TokenError,
 } from '@authup/kit';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
@@ -17,6 +18,7 @@ import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
+import { buildOauth2CodeChallenge } from '../authorize';
 import { OAuth2AuthorizationCodeRepository } from '../authorize/repository';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
@@ -67,7 +69,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
     }
 
     async validate(request: Request) : Promise<OAuth2AuthorizationCode> {
-        const code = this.extractCode(request);
+        const code = this.extractCodeParam(request);
 
         const entity = await this.codeRepository.get(code);
         if (!entity) {
@@ -75,41 +77,61 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
         }
 
         if (entity.redirect_uri) {
-            const redirectUri = this.extractRedirectURI(request);
+            const redirectUri = this.extractRedirectURIParam(request);
 
             if (!redirectUri || entity.redirect_uri !== redirectUri) {
                 throw TokenError.redirectUriMismatch();
             }
         }
 
+        if (entity.code_challenge) {
+            const codeVerifier = this.extractParam(request, 'code_verifier');
+            if (entity.code_challenge_method === OAuth2AuthorizationCodeChallengeMethod.PLAIN) {
+                if (codeVerifier !== entity.code_challenge) {
+                    throw TokenError.grantInvalid('PKCE code_verifier mismatch.');
+                }
+            } else {
+                const codeVerifierHash = buildOauth2CodeChallenge(codeVerifier);
+                if (codeVerifierHash !== entity.code_challenge) {
+                    throw TokenError.grantInvalid('PKCE code_verifier mismatch.');
+                }
+            }
+        }
+
         return entity;
     }
 
-    protected extractRedirectURI(request: Request) : string {
-        let redirectUri = useRequestBody(request, 'redirect_uri');
-
+    protected extractRedirectURIParam(request: Request) : string {
+        const redirectUri = this.extractParam(request, 'redirect_uri');
         if (!redirectUri) {
-            redirectUri = useRequestQuery(request, 'redirect_uri');
-        }
-
-        if (typeof redirectUri !== 'string' || redirectUri.length === 0) {
             throw TokenError.redirectUriMismatch();
         }
 
         return redirectUri;
     }
 
-    protected extractCode(request: Request) : string {
-        let code = useRequestBody(request, 'code');
-
+    protected extractCodeParam(request: Request) : string {
+        const code = this.extractParam(request, 'code');
         if (!code) {
-            code = useRequestQuery(request, 'code');
-        }
-
-        if (typeof code !== 'string' || code.length === 0) {
             throw TokenError.requestInvalid();
         }
 
         return code;
+    }
+
+    protected extractParam(req: Request, key: string) : string | undefined {
+        let value = useRequestBody(req, key);
+        if (!value) {
+            value = useRequestQuery(req, key);
+        }
+
+        if (
+            typeof value === 'string' &&
+            value.length > 0
+        ) {
+            return value;
+        }
+
+        return undefined;
     }
 }

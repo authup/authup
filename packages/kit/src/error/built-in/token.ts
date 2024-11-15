@@ -88,9 +88,9 @@ export class TokenError extends AuthupError {
         });
     }
 
-    static grantInvalid() {
+    static grantInvalid(message?: string) {
         return new TokenError({
-            message: 'The provided authorization grant (e.g., authorization code, resource owner credentials) or refresh token ' +
+            message: message || 'The provided authorization grant (e.g., authorization code, resource owner credentials) or refresh token ' +
                 'is invalid, expired, revoked, does not match the redirection URI used in the authorization request, ' +
                 'or was issued to another client.',
             code: ErrorCode.TOKEN_GRANT_INVALID,
