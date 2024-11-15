@@ -8,15 +8,19 @@
 import type { Client, RequestBaseOptions } from 'hapic';
 import type { BuildInput } from 'rapiq';
 
-export type SingleResourceResponse<R> = R;
-export type CollectionResourceResponse<R> = {
+type Res<T> = globalThis.Response & {
+    data: T
+};
+
+export type ResourceResponse<R> = Res<R>;
+export type ResourceCollectionResponse<R> = Res<{
     data: R[],
     meta: {
         limit: number,
         offset: number,
         total: number
     }
-};
+}>;
 
 export type DomainEntityWithID = {
     [key: string]: any,
@@ -27,14 +31,14 @@ export type DomainEntityID<T> = T extends DomainEntityWithID ?
     never;
 
 export interface DomainAPISlim<T> {
-    getMany(record?: BuildInput<T>) : Promise<CollectionResourceResponse<T>>;
-    getOne(id: DomainEntityID<T>, record?: BuildInput<T>) : Promise<SingleResourceResponse<T>>;
-    delete(id: DomainEntityID<T>) : Promise<SingleResourceResponse<T>>;
-    create(data: Partial<T>) : Promise<SingleResourceResponse<T>>;
+    getMany(record?: BuildInput<T>) : Promise<ResourceCollectionResponse<T>>;
+    getOne(id: DomainEntityID<T>, record?: BuildInput<T>) : Promise<ResourceResponse<T>>;
+    delete(id: DomainEntityID<T>) : Promise<ResourceResponse<T>>;
+    create(data: Partial<T>) : Promise<ResourceResponse<T>>;
 }
 
 export interface DomainAPI<T> extends DomainAPISlim<T> {
-    update(id: DomainEntityID<T>, data: Partial<T>) : Promise<SingleResourceResponse<T>>;
+    update(id: DomainEntityID<T>, data: Partial<T>) : Promise<ResourceResponse<T>>;
 }
 
 export type BaseAPIContext = {

@@ -9,55 +9,42 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { IdentityProvider } from '@authup/core-kit';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
-import { cleanDoubleSlashes } from '../../utils/duplicate-slashes';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
+import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../utils';
+import type { DomainAPI, ResourceCollectionResponse, ResourceResponse } from '../types-base';
 import { BaseAPI } from '../base';
-import { nullifyEmptyObjectProperties } from '../../utils';
 
 export class IdentityProviderAPI extends BaseAPI implements DomainAPI<IdentityProvider> {
     getAuthorizeUri(baseUrl: string, id: IdentityProvider['id']): string {
         return cleanDoubleSlashes(`${baseUrl}/${buildIdentityProviderAuthorizePath(id)}`);
     }
 
-    async getMany(record?: BuildInput<IdentityProvider>): Promise<CollectionResourceResponse<IdentityProvider>> {
-        const response = await this.client.get(`identity-providers${buildQuery(record)}`);
-
-        return response.data;
+    async getMany(record?: BuildInput<IdentityProvider>): Promise<ResourceCollectionResponse<IdentityProvider>> {
+        return this.client.get(`identity-providers${buildQuery(record)}`);
     }
 
     async getOne(
         id: IdentityProvider['id'],
         record?: BuildInput<IdentityProvider>,
-    ): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.get(`identity-providers/${id}${buildQuery(record)}`);
-
-        return response.data;
+    ): Promise<ResourceResponse<IdentityProvider>> {
+        return this.client.get(`identity-providers/${id}${buildQuery(record)}`);
     }
 
-    async delete(id: IdentityProvider['id']): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.delete(`identity-providers/${id}`);
-
-        return response.data;
+    async delete(id: IdentityProvider['id']): Promise<ResourceResponse<IdentityProvider>> {
+        return this.client.delete(`identity-providers/${id}`);
     }
 
-    async create(data: Partial<IdentityProvider>): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.post('identity-providers', nullifyEmptyObjectProperties(data));
-
-        return response.data;
+    async create(data: Partial<IdentityProvider>): Promise<ResourceResponse<IdentityProvider>> {
+        return this.client.post('identity-providers', nullifyEmptyObjectProperties(data));
     }
 
-    async update(id: IdentityProvider['id'], data: Partial<IdentityProvider>): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data));
-
-        return response.data;
+    async update(id: IdentityProvider['id'], data: Partial<IdentityProvider>): Promise<ResourceResponse<IdentityProvider>> {
+        return this.client.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data));
     }
 
     async createOrUpdate(
         idOrName: string,
         data: Partial<IdentityProvider>,
-    ): Promise<SingleResourceResponse<IdentityProvider>> {
-        const response = await this.client.put(`identity-providers/${idOrName}`, nullifyEmptyObjectProperties(data));
-
-        return response.data;
+    ): Promise<ResourceResponse<IdentityProvider>> {
+        return this.client.put(`identity-providers/${idOrName}`, nullifyEmptyObjectProperties(data));
     }
 }
