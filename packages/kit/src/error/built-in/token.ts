@@ -131,8 +131,15 @@ export class TokenError extends AuthupError {
 
     static scopeInvalid() {
         return new TokenError({
-            message: ' The requested scope is invalid, unknown or malformed.',
+            message: 'The requested scope is invalid, unknown or malformed.',
             code: ErrorCode.TOKEN_SCOPE_INVALID,
+        });
+    }
+
+    static scopeInsufficient() {
+        return new TokenError({
+            message: 'The request requires higher privileges than provided by the access token.',
+            code: ErrorCode.TOKEN_SCOPE_INSUFFICIENT,
         });
     }
 

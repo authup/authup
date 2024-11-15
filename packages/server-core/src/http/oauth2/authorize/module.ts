@@ -1,119 +1,167 @@
 /*
- * Copyright (c) 2023.
+ * Copyright (c) 2024.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { randomBytes } from 'node:crypto';
+import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
 import type { OAuth2SubKind } from '@authup/kit';
-import {
-    OAuth2AuthorizationResponseType,
-} from '@authup/kit';
-import {
-    hasOAuth2OpenIDScope,
-} from '@authup/core-kit';
+import { OAuth2AuthorizationResponseType } from '@authup/kit';
+import { BadRequestError } from '@ebec/http';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2AuthorizationCodeEntity } from '../../../database/domains';
+import { ClientEntity, ClientScopeEntity } from '../../../database/domains';
 import { useRequestIdentityOrFail } from '../../request';
-import type {
-    OAuth2AccessTokenBuildContext,
-    OAuth2OpenIdTokenBuildContext,
-} from '../token';
-import {
-    OAuth2TokenManager,
-    buildOAuth2AccessTokenPayload,
-    buildOpenIdTokenPayload,
-    extendOpenIdTokenPayload,
-} from '../token';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
-import type { AuthorizeRequestOptions, AuthorizeRequestResult } from './type';
-import { validateAuthorizeRequest } from './validation';
+import type { OAuth2AccessTokenBuildContext, OAuth2OpenIdTokenBuildContext } from '../token';
+import {
+    OAuth2TokenManager, buildOAuth2AccessTokenPayload, buildOpenIdTokenPayload, extendOpenIdTokenPayload,
+} from '../token';
+import { OAuth2AuthorizationCodeRepository } from './repository';
+import type { OAuth2AuthorizationResult, OAuth2AuthorizationServiceOptions } from './types';
+import { AuthorizeRequestValidator } from './validation';
 
-export async function runOAuth2Authorization(
-    req: Request,
-    options: AuthorizeRequestOptions,
-) : Promise<AuthorizeRequestResult> {
-    const accessTokenMaxAge = options.accessTokenMaxAge || 7200;
-    const authorizationCodeMaxAge = options.authorizationCodeMaxAge || 300;
-    const idTokenMaxAge = options.idTokenMaxAge || 7200;
+export class OAuth2AuthorizationService {
+    protected options: OAuth2AuthorizationServiceOptions;
 
-    const data = await validateAuthorizeRequest(req);
+    protected codeRepository : OAuth2AuthorizationCodeRepository;
 
-    const responseTypes = getOauth2AuthorizeResponseTypesByRequest(req);
+    protected tokenManager : OAuth2TokenManager;
 
-    const output : AuthorizeRequestResult = {
-        redirectUri: data.redirect_uri,
-        ...(data.state ? { state: data.state } : {}),
-    };
+    protected validatorAdapter : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
 
-    const identity = useRequestIdentityOrFail(req);
+    constructor(options: OAuth2AuthorizationServiceOptions) {
+        this.options = options;
 
-    const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(OAuth2AuthorizationCodeEntity);
+        this.codeRepository = new OAuth2AuthorizationCodeRepository();
+        this.tokenManager = new OAuth2TokenManager();
 
-    const entity = repository.create({
-        content: randomBytes(10).toString('hex'),
-        expires: new Date(Date.now() + (1000 * authorizationCodeMaxAge)).toISOString(),
-        redirect_uri: data.redirect_uri,
-        client_id: data.client_id,
-        realm_id: identity.realmId,
-        scope: data.scope,
-    });
-
-    if (identity.type === 'user') {
-        entity.user_id = identity.id;
+        const validator = new AuthorizeRequestValidator();
+        this.validatorAdapter = new RoutupContainerAdapter(validator);
     }
 
-    if (identity.type === 'robot') {
-        entity.robot_id = identity.id;
-    }
+    async execute(req: Request) {
+        const data = await this.validate(req);
 
-    const tokenManager = new OAuth2TokenManager();
-    const tokenBuildContext : OAuth2AccessTokenBuildContext | OAuth2OpenIdTokenBuildContext = {
-        issuer: options.issuer,
-        remoteAddress: getRequestIP(req, { trustProxy: true }),
-        sub: identity.id,
-        subKind: identity.type as `${OAuth2SubKind}`,
-        realmId: identity.realmId,
-        realmName: identity.realmName,
-        clientId: data.client_id,
-        ...(data.scope ? { scope: data.scope } : {}),
-    };
+        const responseTypes = getOauth2AuthorizeResponseTypesByRequest(req);
 
-    if (
-        responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
-        hasOAuth2OpenIDScope(entity.scope)
-    ) {
-        tokenBuildContext.maxAge = idTokenMaxAge;
+        const output : OAuth2AuthorizationResult = {
+            redirectUri: data.redirect_uri,
+            ...(data.state ? { state: data.state } : {}),
+        };
 
-        const signingResult = await tokenManager.sign(
-            await extendOpenIdTokenPayload(buildOpenIdTokenPayload(tokenBuildContext)),
-        );
-        entity.id_token = signingResult.token;
+        const identity = useRequestIdentityOrFail(req);
 
-        if (responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
-            output.idToken = entity.id_token;
+        const tokenBuildContext : OAuth2AccessTokenBuildContext | OAuth2OpenIdTokenBuildContext = {
+            issuer: this.options.issuer,
+            remoteAddress: getRequestIP(req, { trustProxy: true }),
+            sub: identity.id,
+            subKind: identity.type as `${OAuth2SubKind}`,
+            realmId: identity.realmId,
+            realmName: identity.realmName,
+            clientId: data.client_id,
+            ...(data.scope ? { scope: data.scope } : {}),
+        };
+
+        let idToken : string | undefined;
+        if (
+            responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
+            hasOAuth2OpenIDScope(data.scope)
+        ) {
+            tokenBuildContext.maxAge = this.options.idTokenMaxAge;
+
+            const signingResult = await this.tokenManager.sign(
+                await extendOpenIdTokenPayload(buildOpenIdTokenPayload(tokenBuildContext)),
+            );
+
+            idToken = signingResult.token;
+
+            if (responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
+                output.idToken = signingResult.token;
+            }
         }
+
+        if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
+            tokenBuildContext.maxAge = this.options.accessTokenMaxAge;
+
+            const signingResult = await this.tokenManager.sign(
+                buildOAuth2AccessTokenPayload(tokenBuildContext),
+            );
+
+            output.accessToken = signingResult.token;
+        }
+
+        if (responseTypes[OAuth2AuthorizationResponseType.CODE]) {
+            const entity: OAuth2AuthorizationCode = {
+                id: randomBytes(10).toString('hex'),
+                redirect_uri: data.redirect_uri,
+                client_id: data.client_id,
+                realm_id: identity.realmId,
+                realm_name: identity.realmName,
+                scope: data.scope,
+                user_id: null,
+                robot_id: null,
+                id_token: null,
+            };
+
+            if (identity.type === 'user') {
+                entity.user_id = identity.id;
+            }
+
+            if (identity.type === 'robot') {
+                entity.robot_id = identity.id;
+            }
+
+            if (idToken) {
+                entity.id_token = idToken;
+            }
+
+            await this.codeRepository.set(entity, 1000 * this.options.authorizationCodeMaxAge);
+
+            output.authorizationCode = entity.id;
+        }
+
+        return output;
     }
 
-    if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
-        tokenBuildContext.maxAge = accessTokenMaxAge;
+    protected async validate(
+        req: Request,
+    ) : Promise<OAuth2AuthorizationCodeRequest> {
+        const data = await this.validatorAdapter.run(req);
 
-        const signingResult = await tokenManager.sign(
-            buildOAuth2AccessTokenPayload(tokenBuildContext),
-        );
+        const dataSource = await useDataSource();
+        const clientRepository = dataSource.getRepository(ClientEntity);
+        const client = await clientRepository.findOneBy({ id: data.client_id });
+        if (!client) {
+            throw new BadRequestError('The referenced client does not exist.');
+        }
 
-        output.accessToken = signingResult.token;
+        const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
+        const clientScopes = await clientScopeRepository.find({
+            where: {
+                client_id: data.client_id,
+            },
+            relations: {
+                scope: true,
+            },
+        });
+
+        const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
+        if (data.scope) {
+            if (!isOAuth2ScopeAllowed(scopeNames, data.scope)) {
+                throw new BadRequestError('The requested scope is not covered by the client scope.');
+            }
+        }
+
+        if (!data.scope) {
+            data.scope = scopeNames.join(' ');
+        }
+
+        return data;
     }
-
-    await repository.save(entity);
-
-    if (responseTypes[OAuth2AuthorizationResponseType.CODE]) {
-        output.authorizationCode = entity.content;
-    }
-
-    return output;
 }
