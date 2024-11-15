@@ -7,6 +7,7 @@
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
+    OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
     TokenError,
 } from '@authup/kit';
@@ -74,6 +75,32 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
                     .notEmpty()
                     .isString()
                     .isLength({ min: 5, max: 2048 })
+                    .optional({ values: 'null' });
+            }),
+        );
+
+        this.mount(
+            'code_challenge',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+
+                return chain
+                    .isString()
+                    .isLength({ max: 256 })
+                    .optional({ values: 'null' });
+            }),
+        );
+
+        this.mount(
+            'code_challenge_method',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+
+                return chain
+                    .isString()
+                    .isIn(Object.values(OAuth2AuthorizationCodeChallengeMethod))
                     .optional({ values: 'null' });
             }),
         );

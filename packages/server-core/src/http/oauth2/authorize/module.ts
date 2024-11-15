@@ -104,9 +104,8 @@ export class OAuth2AuthorizationService {
                 realm_id: identity.realmId,
                 realm_name: identity.realmName,
                 scope: data.scope,
-                user_id: null,
-                robot_id: null,
-                id_token: null,
+                code_challenge: data.code_challenge,
+                code_challenge_method: data.code_challenge_method,
             };
 
             if (identity.type === 'user') {

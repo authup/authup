@@ -14,17 +14,21 @@ import type { Realm } from '../realm';
 export interface OAuth2AuthorizationCode {
     id: string,
 
-    scope: string | null,
+    code_challenge?: string | null,
 
-    redirect_uri: string | null,
+    code_challenge_method?: string | null,
 
-    id_token: string | null,
+    scope?: string | null,
 
-    client_id: Client['id'] | null,
+    redirect_uri?: string | null,
 
-    user_id: User['id'] | null,
+    id_token?: string | null,
 
-    robot_id: Robot['id'] | null,
+    client_id?: Client['id'] | null,
+
+    user_id?: User['id'] | null,
+
+    robot_id?: Robot['id'] | null,
 
     realm_id: Realm['id'],
 
@@ -36,5 +40,7 @@ export type OAuth2AuthorizationCodeRequest = {
     client_id: string,
     redirect_uri?: string,
     scope?: string,
-    state?: string
+    state?: string,
+    code_challenge?: string,
+    code_challenge_method?: string,
 };

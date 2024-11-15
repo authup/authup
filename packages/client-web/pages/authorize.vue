@@ -19,10 +19,10 @@ export default defineNuxtComponent({
         });
 
         const toast = useToast();
-
         const route = useRoute();
-
+        const httpClient = injectHTTPClient();
         const store = injectStore();
+
         const { loggedIn } = storeToRefs(store);
         if (!loggedIn.value) {
             await navigateTo({
@@ -38,12 +38,10 @@ export default defineNuxtComponent({
 
         const parameters = extractOAuth2QueryParameters(route.query);
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const entity : Ref<Client> = ref(null);
+        const entity : Ref<Client | null> = ref(null);
 
         try {
-            entity.value = await useAPI()
+            entity.value = await httpClient
                 .client
                 .getOne(parameters.client_id as string);
         } catch (e: any) {
@@ -57,8 +55,13 @@ export default defineNuxtComponent({
             throw createError({ });
         }
 
-        const redirectUriPatterns = (entity.value.redirect_uri || '')
-            .split(',');
+        const redirectUriPatterns : string[] = [];
+        if (
+            entity.value &&
+            entity.value.redirect_uri
+        ) {
+            redirectUriPatterns.push(...entity.value.redirect.uri.split(','));
+        }
 
         if (!isGlobMatch(parameters.redirect_uri, redirectUriPatterns)) {
             await navigateTo({
@@ -87,7 +90,7 @@ export default defineNuxtComponent({
             relations: ['scope'],
         };
 
-        const { data: clientScopes } = await injectHTTPClient().clientScope.getMany(clientScopeQuery);
+        const { data: clientScopes } = await httpClient.clientScope.getMany(clientScopeQuery);
 
         const abort = () => {
             const url = new URL(`${parameters.redirect_uri}`);
@@ -109,7 +112,7 @@ export default defineNuxtComponent({
 
         const authorize = async () => {
             try {
-                const response = await injectHTTPClient()
+                const response = await httpClient
                     .post('authorize', {
                         response_type: parameters.response_type,
                         client_id: entity.value.id,
@@ -139,7 +142,10 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <div class="d-flex align-items-center justify-content-center h-100">
+    <div
+        v-if="entity"
+        class="d-flex align-items-center justify-content-center h-100"
+    >
         <div class="oauth2-wrapper panel-card p-3 flex-column">
             <div class="flex-column d-flex">
                 <div class="text-center text-secondary">

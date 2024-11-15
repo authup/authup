@@ -31,3 +31,8 @@ export enum OAuth2AuthorizationResponseType {
     TOKEN = 'token',
     ID_TOKEN = 'id_token',
 }
+
+export enum OAuth2AuthorizationCodeChallengeMethod {
+    SHA_256 = 'S256',
+    PLAIN = 'plain',
+}
