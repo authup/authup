@@ -21,6 +21,7 @@ export enum ErrorCode {
     TOKEN_GRANT_INVALID = 'invalid_grant',
     TOKEN_GRANT_TYPE_UNSUPPORTED = 'unsupported_token_grant_type',
     TOKEN_SCOPE_INVALID = 'invalid_scope',
+    TOKEN_SCOPE_INSUFFICIENT = 'insufficient_scope',
     TOKEN_SUB_KIND_INVALID = 'invalid_token_sub_kind',
 
     PERMISSION_NOT_FOUND = 'permission_not_found',

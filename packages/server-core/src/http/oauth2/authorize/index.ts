@@ -6,5 +6,6 @@
  */
 
 export * from './module';
-export * from './type';
+export * from './singleton';
+export * from './types';
 export * from './validation';

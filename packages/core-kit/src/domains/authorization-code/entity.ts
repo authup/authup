@@ -6,16 +6,13 @@
  */
 
 import type { OAuth2AuthorizationResponseType } from '@authup/kit';
+import type { Robot } from '../robot';
 import type { User } from '../user';
 import type { Client } from '../client';
 import type { Realm } from '../realm';
 
 export interface OAuth2AuthorizationCode {
     id: string,
-
-    content: string,
-
-    expires: string,
 
     scope: string | null,
 
@@ -25,20 +22,18 @@ export interface OAuth2AuthorizationCode {
 
     client_id: Client['id'] | null,
 
-    client: Client | null,
-
     user_id: User['id'] | null,
 
-    user: User | null,
+    robot_id: Robot['id'] | null,
 
     realm_id: Realm['id'],
 
-    realm: Realm,
+    realm_name: Realm['name'],
 }
 
 export type OAuth2AuthorizationCodeRequest = {
     response_type?: `${OAuth2AuthorizationResponseType}`,
-    client_id?: string,
+    client_id: string,
     redirect_uri?: string,
     scope?: string,
     state?: string

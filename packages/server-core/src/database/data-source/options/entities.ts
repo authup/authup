@@ -17,7 +17,6 @@ import {
     IdentityProviderPermissionMappingEntity,
     IdentityProviderRoleMappingEntity,
     KeyEntity,
-    OAuth2AuthorizationCodeEntity,
     OAuth2RefreshTokenEntity,
     PermissionEntity,
     PolicyAttributeEntity,
@@ -40,7 +39,6 @@ export function extendDataSourceOptionsWithEntities<T extends DataSourceOptions>
         entities: [
             KeyEntity,
 
-            OAuth2AuthorizationCodeEntity,
             OAuth2RefreshTokenEntity,
 
             ClientEntity,

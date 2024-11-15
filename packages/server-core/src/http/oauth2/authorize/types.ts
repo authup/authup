@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type AuthorizeRequestOptions = {
+export type OAuth2AuthorizationServiceOptions = {
     issuer: string,
 
-    accessTokenMaxAge?: number,
+    accessTokenMaxAge: number,
 
-    authorizationCodeMaxAge?: number,
+    authorizationCodeMaxAge: number,
 
-    idTokenMaxAge?: number
+    idTokenMaxAge: number
 };
 
-export type AuthorizeRequestResult = {
+export type OAuth2AuthorizationResult = {
     authorizationCode?: string,
     accessToken?: string,
     idToken?: string,

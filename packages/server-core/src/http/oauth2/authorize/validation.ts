@@ -10,22 +10,10 @@ import {
     OAuth2AuthorizationResponseType,
     TokenError,
 } from '@authup/kit';
-import {
-    isOAuth2ScopeAllowed,
-} from '@authup/core-kit';
-import { BadRequestError } from '@ebec/http';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
-import type { Request } from 'routup';
-import { useDataSource } from 'typeorm-extension';
 import { Container } from 'validup';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { ClientEntity, ClientScopeEntity } from '../../../database/domains';
 
-type AuthorizeValidationResult = OAuth2AuthorizationCodeRequest & {
-    client_id: string
-};
-
-export class AuthorizeRequestValidator extends Container<AuthorizeValidationResult> {
+export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCodeRequest> {
     protected initialize() {
         super.initialize();
 
@@ -102,43 +90,4 @@ export class AuthorizeRequestValidator extends Container<AuthorizeValidationResu
             }),
         );
     }
-}
-
-export async function validateAuthorizeRequest(
-    req: Request,
-) : Promise<AuthorizeValidationResult> {
-    const validator = new AuthorizeRequestValidator();
-    const validatorWrapper = new RoutupContainerAdapter(validator);
-    const data = await validatorWrapper.run(req);
-
-    const dataSource = await useDataSource();
-    const clientRepository = dataSource.getRepository(ClientEntity);
-    const client = await clientRepository.findOneBy({ id: data.client_id });
-    if (!client) {
-        throw new BadRequestError('The referenced client does not exist.');
-    }
-
-    const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
-    const clientScopes = await clientScopeRepository.find({
-        where: {
-            client_id: data.client_id,
-        },
-        relations: {
-            scope: true,
-        },
-    });
-
-    const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
-
-    if (data.scope) {
-        if (!isOAuth2ScopeAllowed(scopeNames, data.scope)) {
-            throw new BadRequestError('The requested scope is not covered by the client scope.');
-        }
-    }
-
-    if (!data.scope) {
-        data.scope = scopeNames.join(' ');
-    }
-
-    return data;
 }
