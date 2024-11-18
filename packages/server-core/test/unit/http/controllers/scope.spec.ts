@@ -6,147 +6,132 @@
  */
 
 import type { Scope } from '@authup/core-kit';
-import { createFakeScope } from '../../../utils/domains';
-import { expectPropertiesEqualToSrc } from '../../../utils/properties';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import { isClientError } from 'hapic';
+import { createFakeScope, createTestSuite, expectPropertiesEqualToSrc } from '../../../utils';
 
 describe('src/http/controllers/scope', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
     const details = createFakeScope();
 
     it('should create resource', async () => {
-        const response = await superTest
-            .post('/scopes')
-            .send(details)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .scope
+            .create(details);
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        details.id = response.body.id;
+        details.id = response.id;
     });
 
     it('should not create same resource', async () => {
-        const response = await superTest
-            .post('/scopes')
-            .send({
-                name: details.name,
-            } satisfies Partial<Scope>)
-            .auth('admin', 'start123');
+        expect.assertions(1);
 
-        expect(response.statusCode).toEqual(409);
+        try {
+            await suite.client
+                .scope
+                .create({
+                    name: details.name,
+                } satisfies Partial<Scope>);
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.statusCode).toEqual(409);
+            }
+        }
     });
 
     it('should read collection', async () => {
-        const response = await superTest
-            .get('/scopes')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .scope
+            .getMany();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/scopes/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .scope
+            .getOne(details.id);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should read resource by name', async () => {
-        const response = await superTest
-            .get(`/scopes/${details.name}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .scope
+            .getOne(details.name);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should update resource', async () => {
-        const response = await superTest
-            .post(`/scopes/${details.id}`)
-            .send({
+        const response = await suite.client
+            .scope
+            .update(details.id, {
                 ...details,
                 name: 'TestA',
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('TestA');
+        expect(response.name).toEqual('TestA');
 
         details.name = 'TestA';
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should update resource by name', async () => {
-        const response = await superTest
-            .post(`/scopes/${details.name}`)
-            .send({
+        const response = await suite.client
+            .scope
+            .update(details.name, {
                 ...details,
                 name: 'TestB',
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('TestB');
+        expect(response).toBeDefined();
+        expect(response.name).toEqual('TestB');
 
         details.name = 'TestB';
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/scopes/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .scope
+            .delete(details.id);
 
-        expect(response.status).toEqual(202);
+        expect(response.id).toBeDefined();
     });
 
     it('should create and update resource with put', async () => {
         const name : string = 'PutA';
-        let response = await superTest
-            .put(`/scopes/${name}`)
-            .send({
+        let response = await suite.client
+            .scope
+            .createOrUpdate(name, {
                 name,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('PutA');
+        expect(response.name).toEqual('PutA');
 
-        const { id } = response.body;
+        const { id } = response;
 
-        response = await superTest
-            .put(`/scopes/${name}`)
-            .send({
+        response = await suite.client
+            .scope
+            .createOrUpdate(name, {
                 name: 'PutB',
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('PutB');
-        expect(response.body.id).toEqual(id);
+        expect(response).toBeDefined();
+        expect(response.name).toEqual('PutB');
+        expect(response.id).toEqual(id);
     });
 });

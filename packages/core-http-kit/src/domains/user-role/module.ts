@@ -12,7 +12,7 @@ import { BaseAPI } from '../base';
 import type { CollectionResourceResponse, DomainAPISlim, SingleResourceResponse } from '../types-base';
 
 export class UserRoleAPI extends BaseAPI implements DomainAPISlim<UserRole> {
-    async getMany(data: BuildInput<UserRole>): Promise<CollectionResourceResponse<UserRole>> {
+    async getMany(data: BuildInput<UserRole> = {}): Promise<CollectionResourceResponse<UserRole>> {
         const response = await this.client.get(`user-roles${buildQuery(data)}`);
 
         return response.data;

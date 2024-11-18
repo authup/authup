@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { faker } from '@faker-js/faker';
 import { IdentityProviderProtocol, type OAuth2IdentityProvider } from '@authup/core-kit';
 

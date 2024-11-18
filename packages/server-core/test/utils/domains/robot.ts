@@ -7,7 +7,6 @@
 
 import { faker } from '@faker-js/faker';
 import type { Robot } from '@authup/core-kit';
-import type { TestAgent } from '../supertest';
 
 export function createFakeRobot(data: Partial<Robot> = {}) {
     return {
@@ -17,20 +16,4 @@ export function createFakeRobot(data: Partial<Robot> = {}) {
         active: true,
         ...data,
     } satisfies Partial<Robot>;
-}
-
-export async function createSuperTestRobot(superTest: TestAgent, entity?: Partial<Robot>) {
-    return superTest
-        .post('/robots')
-        .send(createFakeRobot(entity))
-        .auth('admin', 'start123');
-}
-
-export async function updateSuperTestRobot(superTest: TestAgent, id: Robot['id'], entity?: Partial<Robot>) {
-    return superTest
-        .post(`/robots/${id}`)
-        .send({
-            ...(entity || {}),
-        })
-        .auth('admin', 'start123');
 }

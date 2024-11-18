@@ -8,71 +8,61 @@
 import type {
     RobotPermission,
 } from '@authup/core-kit';
-import { createSuperTestPermission, createSuperTestRobot } from '../../../utils/domains';
+import { createFakePermission, createFakeRobot, createTestSuite } from '../../../utils';
 import { expectPropertiesEqualToSrc } from '../../../utils/properties';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
 
 describe('src/http/controllers/robot-permission', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
-    const details : Partial<RobotPermission> = {};
+    let entity : RobotPermission | undefined;
 
     it('should create resource', async () => {
-        const { body: robot } = await createSuperTestRobot(superTest);
-        const { body: permission } = await createSuperTestPermission(superTest);
+        const robot = await suite.client.robot.create(createFakeRobot());
+        const permission = await suite.client.permission.create(createFakePermission());
 
-        const response = await superTest
-            .post('/robot-permissions')
-            .send({
+        entity = await suite.client
+            .robotPermission
+            .create({
                 robot_id: robot.id,
                 permission_id: permission.id,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-
-        details.id = response.body.id;
-        details.robot_id = response.body.robot_id;
-        details.permission_id = response.body.permission_id;
+        expect(entity.robot_id).toEqual(robot.id);
+        expect(entity.permission_id).toEqual(permission.id);
     });
 
     it('should read collection', async () => {
-        const response = await superTest
-            .get('/robot-permissions')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robotPermission
+            .getMany();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/robot-permissions/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robotPermission
+            .getOne(entity.id);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(entity, response, ['robot', 'permission']);
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/robot-permissions/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robotPermission
+            .delete(entity.id);
 
-        expect(response.status).toEqual(202);
+        expect(response.id).toBeDefined();
     });
 });

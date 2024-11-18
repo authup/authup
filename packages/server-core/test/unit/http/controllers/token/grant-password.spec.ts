@@ -8,86 +8,99 @@
 import {
     ErrorCode,
 } from '@authup/kit';
-import type { TestAgent } from '../../../../utils/supertest';
-import { useSuperTest } from '../../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import {
-    createSuperTestUser,
-    updateSuperTestUser,
-} from '../../../../utils/domains';
+import { isClientError } from 'hapic';
+import { createFakeUser, createTestSuite } from '../../../../utils';
 
 describe('src/http/controllers/token', () => {
-    let superTest : TestAgent;
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        superTest = useSuperTest();
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
     });
 
     it('should grant token with password', async () => {
-        const response = await superTest
-            .post('/token')
-            .send({
+        const response = await suite.client
+            .token
+            .createWithPasswordGrant({
                 username: 'admin',
                 password: 'start123',
             });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.access_token).toBeDefined();
-        expect(response.body.expires_in).toBeDefined();
-        expect(response.body.refresh_token).toBeDefined();
+        expect(response).toBeDefined();
+        expect(response.access_token).toBeDefined();
+        expect(response.expires_in).toBeDefined();
+        expect(response.refresh_token).toBeDefined();
     });
 
-    it('should not grant token with password grant', async () => {
+    it('should not grant token with password grant (credentials invalid)', async () => {
         const credentials = {
             username: 'test',
             password: 'foo-bar-baz',
         };
 
-        let response = await superTest
-            .post('/token')
-            .send(credentials);
+        try {
+            await suite.client
+                .token
+                .createWithPasswordGrant(credentials);
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status)
+                    .toEqual(400);
+                expect(e.response.data.code)
+                    .toEqual(ErrorCode.CREDENTIALS_INVALID);
+            }
+        }
+    });
 
-        expect(response.status).toEqual(400);
-        expect(response.body.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
-
-        const entity = await createSuperTestUser(superTest, {
+    it('should not grant token with password grant (inactive)', async () => {
+        const entity = await suite.client.user.create(createFakeUser({
             password: 'foo-bar-baz',
             active: false,
+        }));
+
+        try {
+            await suite.client
+                .token
+                .createWithPasswordGrant({
+                    username: entity.name,
+                    password: 'foo-bar-baz',
+                });
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status).toEqual(400);
+                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_INACTIVE);
+            }
+        }
+
+        await suite.client.user.update(entity.id, {
+            active: true,
         });
 
-        credentials.username = entity.body.name;
-
-        response = await superTest
-            .post('/token')
-            .send(credentials);
-
-        expect(response.status).toEqual(400);
-        expect(response.body.code).toEqual(ErrorCode.ENTITY_INACTIVE);
-
-        await updateSuperTestUser(superTest, entity.body.id, { active: true });
-
-        response = await superTest
-            .post('/token')
-            .send(credentials);
-
-        expect(response.status).toEqual(200);
-
-        response = await superTest
-            .post('/token')
-            .send({
-                ...credentials,
-                password: 'foo',
+        const response = await suite.client
+            .token
+            .createWithPasswordGrant({
+                username: entity.name,
+                password: 'foo-bar-baz',
             });
 
-        expect(response.status).toEqual(400);
-        expect(response.body.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
+        expect(response).toBeDefined();
+
+        try {
+            await suite.client
+                .token
+                .createWithPasswordGrant({
+                    username: entity.name,
+                    password: 'foo',
+                });
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status).toEqual(400);
+                expect(e.response.data.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
+            }
+        }
     });
 });

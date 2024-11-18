@@ -7,8 +7,6 @@
 
 import { faker } from '@faker-js/faker';
 import type { Client } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
-import type { TestAgent } from '../supertest';
 
 export function createFakeClient(data: Partial<Client> = {}) {
     return {
@@ -19,32 +17,4 @@ export function createFakeClient(data: Partial<Client> = {}) {
         is_confidential: true,
         ...data,
     } satisfies Partial<Client>;
-}
-
-export async function createSuperTestClient(superTest: TestAgent, entity?: Partial<Client>) {
-    return superTest
-        .post('/clients')
-        .send(createFakeClient(entity))
-        .auth('admin', 'start123');
-}
-
-export async function createSuperTestClientWithScope(
-    superTest: TestAgent,
-    entity?: Partial<Client>,
-) {
-    const client = await createSuperTestClient(superTest, entity);
-
-    const { body: scope } = await superTest
-        .get(`/scopes/${ScopeName.GLOBAL}`)
-        .auth('admin', 'start123');
-
-    await superTest
-        .post('/client-scopes')
-        .send({
-            client_id: client.body.id,
-            scope_id: scope.id,
-        })
-        .auth('admin', 'start123');
-
-    return client;
 }

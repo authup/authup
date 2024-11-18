@@ -5,35 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { UserAttribute } from '@authup/core-kit';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import { createTestSuite } from '../../../utils';
 
 describe('src/http/controllers/user-attribute', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
     it('should create, read, update, delete resource', async () => {
-        const response = await superTest
-            .post('/user-attributes')
-            .send({
-                name: 'foo',
-                value: 'bar',
-            } as UserAttribute)
-            .auth('admin', 'start123');
+        const response = await suite.client.userAttribute.create({
+            name: 'foo',
+            value: 'bar',
+        });
 
-        expect(response.status).toEqual(201);
-
-        const body = response.body as UserAttribute;
-        expect(body).toBeDefined();
-        expect(body.name).toEqual('foo');
-        expect(body.value).toEqual('bar');
+        expect(response.name).toEqual('foo');
+        expect(response.value).toEqual('bar');
     });
 });

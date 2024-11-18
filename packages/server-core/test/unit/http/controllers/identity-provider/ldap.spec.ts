@@ -7,17 +7,16 @@
 
 import type { LdapIdentityProvider } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
+import { createTestSuite } from '../../../../utils';
 import {
     createLdapTestClient, createLdapTestClientURL, createLdapTestUserAccount, dropLdapTestUserAccount,
 } from '../../../../utils/ldap';
-import { useSuperTest } from '../../../../utils/supertest';
 
 describe('src/http/controllers/identity-provider', () => {
-    let superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
 
         const client = createLdapTestClient();
         await client.bind();
@@ -26,9 +25,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
 
         const client = createLdapTestClient();
         await client.bind();
@@ -48,24 +45,18 @@ describe('src/http/controllers/identity-provider', () => {
             base_dn: 'dc=example,dc=com',
             user_name_attribute: 'cn',
         };
-        let response = await superTest
-            .post('/identity-providers')
-            .send(data)
-            .auth('admin', 'start123');
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
+        const response = await suite.client
+            .identityProvider
+            .create(data);
 
-        response = await superTest
-            .post('/token')
-            .send({
-                grant_type: 'password',
-                username: 'foo',
-                password: 'foo',
-            });
+        expect(response).toBeDefined();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.access_token).toBeDefined();
+        const grantResponse = await suite.client
+            .token
+            .createWithPasswordGrant({ username: 'foo', password: 'foo' });
+
+        expect(grantResponse).toBeDefined();
+        expect(grantResponse.access_token).toBeDefined();
     });
 });

@@ -18,64 +18,60 @@ import {
     ScopeName,
 } from '@authup/core-kit';
 import { extractTokenPayload } from '@authup/server-kit';
-import type { SuperTest, Test } from 'supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import { createSuperTestClientWithScope } from '../../../../utils/domains';
-import { useSuperTest } from '../../../../utils/supertest';
+import { createFakeClient, createTestSuite } from '../../../../utils';
 
 describe('src/http/controllers/token', () => {
-    let superTest: SuperTest<Test>;
-
     let payload : OAuth2AuthorizationCodeRequest;
 
-    beforeAll(async () => {
-        superTest = useSuperTest();
-        await useTestDatabase();
+    const suite = createTestSuite();
 
-        const response = await createSuperTestClientWithScope(superTest);
+    beforeAll(async () => {
+        await suite.up();
+
+        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        const client = await suite.client.client.create(createFakeClient());
+
+        await suite.client.clientScope.create({
+            scope_id: scope.id,
+            client_id: client.id,
+        });
 
         payload = {
-            client_id: response.body.id,
+            client_id: client.id,
             redirect_uri: 'https://example.com/redirect',
             scope: ScopeName.GLOBAL,
         };
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
     it('should authorize with response_type: code', async () => {
-        const response = await superTest
-            .post('/authorize')
-            .send({
+        const response = await suite.client
+            .sendAuthorize({
                 ...payload,
                 response_type: `${OAuth2AuthorizationResponseType.CODE}`,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.body.url).toBeDefined();
+        expect(response.url).toBeDefined();
 
-        const url = new URL(response.body.url);
+        const url = new URL(response.url);
         expect(url.searchParams.get('access_token')).toBeFalsy();
         expect(url.searchParams.get('code')).toBeDefined();
         expect(url.searchParams.get('id_token')).toBeFalsy();
     });
 
     it('should authorize with response_type: id_token', async () => {
-        const response = await superTest
-            .post('/authorize')
-            .send({
+        const response = await suite.client
+            .sendAuthorize({
                 ...payload,
                 response_type: `${OAuth2AuthorizationResponseType.ID_TOKEN}`,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.body.url).toBeDefined();
+        expect(response.url).toBeDefined();
 
-        const url = new URL(response.body.url);
+        const url = new URL(response.url);
         expect(url.searchParams.get('access_token')).toBeFalsy();
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeDefined();
@@ -97,18 +93,15 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should authorize with response_type: token', async () => {
-        const response = await superTest
-            .post('/authorize')
-            .send({
+        const response = await suite.client
+            .sendAuthorize({
                 ...payload,
                 response_type: `${OAuth2AuthorizationResponseType.TOKEN}`,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.body.url).toBeDefined();
+        expect(response.url).toBeDefined();
 
-        const url = new URL(response.body.url);
+        const url = new URL(response.url);
         expect(url.searchParams.get('access_token')).toBeDefined();
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeFalsy();
@@ -124,18 +117,15 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should authorize with response_type: id_token & token', async () => {
-        const response = await superTest
-            .post('/authorize')
-            .send({
+        const response = await suite.client
+            .sendAuthorize({
                 ...payload,
                 response_type: `${OAuth2AuthorizationResponseType.ID_TOKEN} ${OAuth2AuthorizationResponseType.TOKEN}`,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.statusCode).toEqual(200);
-        expect(response.body.url).toBeDefined();
+        expect(response.url).toBeDefined();
 
-        const url = new URL(response.body.url);
+        const url = new URL(response.url);
         expect(url.searchParams.get('access_token')).toBeDefined();
         expect(url.searchParams.get('code')).toBeFalsy();
         expect(url.searchParams.get('id_token')).toBeDefined();

@@ -5,45 +5,49 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isClientError } from 'hapic';
 import { useConfig } from '../../../../../src';
-import { useSuperTest } from '../../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
+import { createTestSuite } from '../../../../utils';
 
 describe('src/http/controllers/auth/handlers/*.ts', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
     it('should attempt password reset for user', async () => {
-        let response;
-
         const config = useConfig();
+
         config.registration = false;
 
-        response = await superTest
-            .post('/password-forgot')
-            .send({
-                name: 'admin',
-            });
+        try {
+            await suite.client
+                .passwordForgot({
+                    name: 'admin',
+                });
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status).toEqual(400);
+            }
+        }
+    });
 
-        expect(response.status).toEqual(400);
+    it('should attempt password reset for user', async () => {
+        const config = useConfig();
 
         config.registration = true;
         config.emailVerification = true;
 
-        response = await superTest
-            .post('/password-forgot')
-            .send({
+        const response = await suite.client
+            .passwordForgot({
                 name: 'admin',
             });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
     });
 });

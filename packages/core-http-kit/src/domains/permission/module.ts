@@ -54,9 +54,9 @@ export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
 
     async check(
         idOrName: string,
-        data: Record<string, any>,
+        data: Record<string, any> = {},
     ) : Promise<PermissionAPICheckResponse> {
-        const response = await this.client.put(
+        const response = await this.client.post(
             `permissions/${idOrName}/check`,
             nullifyEmptyObjectProperties(data),
         );

@@ -8,31 +8,23 @@
 import {
     BuiltInPolicyType, createNanoID,
 } from '@authup/kit';
-import type { DataSource } from 'typeorm';
-import { useDataSource } from 'typeorm-extension';
+import { isClientError } from 'hapic';
 import type { UserEntity } from '../../../../../src';
 import {
     PermissionEntity,
     PolicyRepository, UserPermissionEntity, UserRepository,
 } from '../../../../../src';
-import { setupTestConfig } from '../../../../utils/config';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import { useSuperTest } from '../../../../utils/supertest';
+import { createTestSuite } from '../../../../utils';
 
 describe('src/security/permission/checker', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     let adminUser : UserEntity;
 
-    let dataSource : DataSource;
-
     beforeAll(async () => {
-        setupTestConfig();
+        await suite.up();
 
-        await useTestDatabase();
-
-        dataSource = await useDataSource();
-        const repository = new UserRepository(dataSource);
+        const repository = new UserRepository(suite.dataSource);
 
         adminUser = await repository.findOneBy({
             name: 'admin',
@@ -40,7 +32,7 @@ describe('src/security/permission/checker', () => {
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
     /*
@@ -76,16 +68,20 @@ describe('src/security/permission/checker', () => {
     it('should not verify invalid permission', async () => {
         expect.assertions(1);
 
-        const name = createNanoID();
-        const response = await superTest
-            .post(`/permissions/${name}/check`)
-            .auth('admin', 'start123');
-
-        expect(response.statusCode).toEqual(404);
+        try {
+            const name = createNanoID();
+            await suite.client
+                .permission
+                .check(name);
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.statusCode).toEqual(404);
+            }
+        }
     });
 
     it('should verify with permission-binding and existing relation', async () => {
-        const policyRepository = new PolicyRepository(dataSource);
+        const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
             name: BuiltInPolicyType.PERMISSION_BINDING,
@@ -94,7 +90,7 @@ describe('src/security/permission/checker', () => {
 
         await policyRepository.save(policy);
 
-        const permissionRepository = dataSource.getRepository(PermissionEntity);
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const name = createNanoID();
         const permission = permissionRepository.create({
             name,
@@ -105,7 +101,7 @@ describe('src/security/permission/checker', () => {
 
         await permissionRepository.save(permission);
 
-        const userPermissionRepository = dataSource.getRepository(UserPermissionEntity);
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
         const userPermission = userPermissionRepository.create({
             user_id: adminUser.id,
             user_realm_id: adminUser.realm_id,
@@ -115,17 +111,16 @@ describe('src/security/permission/checker', () => {
 
         await userPermissionRepository.save(userPermission);
 
-        const response = await superTest
-            .post(`/permissions/${name}/check`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .permission
+            .check(permission.id);
 
-        expect(response.statusCode).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.status).toEqual('success');
+        expect(response).toBeDefined();
+        expect(response.status).toEqual('success');
     });
 
     it('should not verify with permission-binding and non existing relation', async () => {
-        const policyRepository = new PolicyRepository(dataSource);
+        const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
             name: BuiltInPolicyType.PERMISSION_BINDING,
@@ -136,19 +131,18 @@ describe('src/security/permission/checker', () => {
 
         const name = createNanoID();
 
-        const permissionRepository = dataSource.getRepository(PermissionEntity);
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permission = permissionRepository.create({ name });
 
         permission.policy = policy;
 
         await permissionRepository.save(permission);
 
-        const response = await superTest
-            .post(`/permissions/${name}/check`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .permission
+            .check(name);
 
-        expect(response.statusCode).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.status).toEqual('error');
+        expect(response).toBeDefined();
+        expect(response.status).toEqual('error');
     });
 });

@@ -5,152 +5,143 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Role } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { createFakePermission } from '../../../../utils/domains';
-import { expectPropertiesEqualToSrc } from '../../../../utils/properties';
-import { useSuperTest } from '../../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
+import { isClientError } from 'hapic';
+import {
+    createFakePermission,
+    createTestSuite,
+    expectPropertiesEqualToSrc,
+} from '../../../../utils';
 
 describe('src/http/controllers/permission', () => {
-    let superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
     });
 
     const details = createFakePermission();
 
     it('should create collection', async () => {
-        const response = await superTest
-            .post('/permissions')
-            .send(details)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .permission
+            .create(details);
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        details.id = response.body.id;
+        details.id = response.id;
     });
 
     it('should not create same resource', async () => {
-        const response = await superTest
-            .post('/permissions')
-            .send({
-                name: details.name,
-            } satisfies Partial<Role>)
-            .auth('admin', 'start123');
+        expect.assertions(1);
 
-        expect(response.statusCode).toEqual(409);
+        try {
+            await suite.client
+                .permission
+                .create({
+                    name: details.name,
+                });
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.statusCode).toEqual(409);
+            }
+        }
     });
 
     it('should read collection', async () => {
-        const response = await superTest
-            .get('/permissions')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .permission
+            .getMany();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(Object.values(PermissionName).length + 1);
+        expect(response).toBeDefined();
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toEqual(Object.values(PermissionName).length + 1);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/permissions/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .permission
+            .getOne(details.id);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should read resource by name', async () => {
-        const response = await superTest
-            .get(`/permissions/${details.name}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .permission
+            .getOne(details.name);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should update resource', async () => {
-        const response = await superTest
-            .post(`/permissions/${details.id}`)
-            .send({
+        const response = await suite.client
+            .permission
+            .update(details.id, {
                 ...details,
                 name: 'TestA',
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('TestA');
+        expect(response).toBeDefined();
+        expect(response.name).toEqual('TestA');
         details.name = 'TestA';
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should update resource by name', async () => {
-        const response = await superTest
-            .post(`/permissions/${details.name}`)
-            .send({
+        const response = await suite.client
+            .permission
+            .update(details.name, {
                 ...details,
                 name: 'TestB',
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('TestB');
+        expect(response).toBeDefined();
+        expect(response.name).toEqual('TestB');
 
         details.name = 'TestB';
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/permissions/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .permission
+            .delete(details.id);
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
     });
 
     it('should create and update resource with put', async () => {
         const name : string = 'PutA';
-        let response = await superTest
-            .put(`/permissions/${name}`)
-            .send({
+
+        let response = await suite.client
+            .permission
+            .createOrUpdate(name, {
                 name,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('PutA');
+        expect(response).toBeDefined();
+        expect(response.name).toEqual('PutA');
 
-        const { id } = response.body;
+        const { id } = response;
 
-        response = await superTest
-            .put(`/permissions/${name}`)
-            .send({
+        response = await suite.client
+            .permission
+            .createOrUpdate(name, {
                 name: 'PutB',
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('PutB');
-        expect(response.body.id).toEqual(id);
+        expect(response).toBeDefined();
+        expect(response.name).toEqual('PutB');
+        expect(response.id).toEqual(id);
     });
 });

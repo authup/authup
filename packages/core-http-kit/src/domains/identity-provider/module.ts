@@ -9,10 +9,9 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { IdentityProvider } from '@authup/core-kit';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
-import { cleanDoubleSlashes } from '../../utils/duplicate-slashes';
+import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../utils';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../types-base';
 import { BaseAPI } from '../base';
-import { nullifyEmptyObjectProperties } from '../../utils';
 
 export class IdentityProviderAPI extends BaseAPI implements DomainAPI<IdentityProvider> {
     getAuthorizeUri(baseUrl: string, id: IdentityProvider['id']): string {

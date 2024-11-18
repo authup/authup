@@ -5,136 +5,117 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createFakeRobot } from '../../../utils/domains';
-import { expectPropertiesEqualToSrc } from '../../../utils/properties';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import { createFakeRobot, createTestSuite, expectPropertiesEqualToSrc } from '../../../utils';
 
 describe('src/http/controllers/robot', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
     const details = createFakeRobot();
 
     it('should create resource', async () => {
-        const response = await superTest
-            .post('/robots')
-            .send(details)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robot
+            .create(details);
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
 
-        details.id = response.body.id;
+        details.id = response.id;
     });
 
     it('should create resource with no initial secret', async () => {
         const data = createFakeRobot();
         delete data.secret;
 
-        const response = await superTest
-            .post('/robots')
-            .send(data)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robot
+            .create(data);
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-        expect(response.body.secret).toBeDefined();
+        expect(response).toBeDefined();
+        expect(response.secret).toBeDefined();
 
-        expectPropertiesEqualToSrc(data, response.body, ['secret']);
+        expectPropertiesEqualToSrc(data, response, ['secret']);
     });
 
     it('should read collection', async () => {
-        const response = await superTest
-            .get('/robots')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robot
+            .getMany();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toBeGreaterThanOrEqual(3);
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toBeGreaterThanOrEqual(3);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/robots/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robot
+            .getOne(details.id);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body, ['secret']);
+        expect(response).toBeDefined();
+        expectPropertiesEqualToSrc(details, response, ['secret']);
     });
 
     it('should read resource by name', async () => {
-        const response = await superTest
-            .get(`/robots/${details.name}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robot
+            .getOne(details.name);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body, ['secret']);
+        expectPropertiesEqualToSrc(details, response, ['secret']);
     });
 
     it('should update resource', async () => {
         details.name = 'baz';
         details.description = 'bar';
 
-        const response = await superTest
-            .post(`/robots/${details.id}`)
-            .send(details)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robot
+            .update(details.id, details);
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body);
+        expect(response).toBeDefined();
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/robots/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robot
+            .delete(details.id);
 
-        expect(response.status).toEqual(202);
+        expect(response.id).toBeDefined();
     });
 
     it('should create and update resource with put', async () => {
         const name : string = 'PutA';
-        let response = await superTest
-            .put(`/robots/${name}`)
-            .send({
+        let response = await suite.client
+            .robot
+            .create({
                 name,
                 secret: 'start123',
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('PutA');
+        expect(response).toBeDefined();
+        expect(response.name).toEqual('PutA');
 
-        const { id } = response.body;
+        const { id } = response;
 
-        response = await superTest
-            .put(`/robots/${name}`)
-            .send({
+        response = await suite.client
+            .robot
+            .createOrUpdate(name, {
                 name: 'PutB',
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual('PutB');
-        expect(response.body.id).toEqual(id);
+        expect(response).toBeDefined();
+        expect(response.name).toEqual('PutB');
+        expect(response.id).toEqual(id);
     });
 });

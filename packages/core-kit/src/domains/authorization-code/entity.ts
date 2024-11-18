@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationResponseType } from '@authup/kit';
 import type { Robot } from '../robot';
 import type { User } from '../user';
 import type { Client } from '../client';
@@ -36,7 +35,7 @@ export interface OAuth2AuthorizationCode {
 }
 
 export type OAuth2AuthorizationCodeRequest = {
-    response_type?: `${OAuth2AuthorizationResponseType}`,
+    response_type?: string,
     client_id: string,
     redirect_uri?: string,
     scope?: string,

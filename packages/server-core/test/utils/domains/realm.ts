@@ -6,7 +6,6 @@
  */
 
 import { faker } from '@faker-js/faker';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import type { Realm } from '@authup/core-kit';
 
 export function createFakeRealm(data: Partial<Realm> = {}) {

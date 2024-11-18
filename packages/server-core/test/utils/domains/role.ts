@@ -6,8 +6,6 @@
  */
 
 import { faker } from '@faker-js/faker';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import type { SuperTest, Test } from 'supertest';
 import type { Role } from '@authup/core-kit';
 
 export function createFakeRole(data: Partial<Role> = {}) {
@@ -17,11 +15,4 @@ export function createFakeRole(data: Partial<Role> = {}) {
         description: faker.string.alpha({ length: 256 }),
         ...data,
     } satisfies Partial<Role>;
-}
-
-export async function createSuperTestRole(superTest: SuperTest<Test>, entity?: Partial<Role>) {
-    return superTest
-        .post('/roles')
-        .send(createFakeRole(entity))
-        .auth('admin', 'start123');
 }
