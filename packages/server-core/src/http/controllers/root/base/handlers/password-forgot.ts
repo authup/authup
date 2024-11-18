@@ -121,5 +121,5 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
         });
     }
 
-    return sendAccepted(res);
+    return sendAccepted(res, entity);
 }

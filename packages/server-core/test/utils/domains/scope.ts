@@ -6,7 +6,6 @@
  */
 
 import { faker } from '@faker-js/faker';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import type { Scope } from '@authup/core-kit';
 
 export function createFakeScope(data: Partial<Scope> = {}) {

@@ -6,69 +6,64 @@
  */
 
 import type { User } from '@authup/core-kit';
-import { expectPropertiesEqualToSrc } from '../../../utils/properties';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
-import { createFakeUser } from '../../../utils/domains';
+import { createFakeUser, createTestSuite, expectPropertiesEqualToSrc } from '../../../utils';
 
 describe('src/http/controllers/user', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
     const details : Partial<User> = createFakeUser();
 
     it('should create resource', async () => {
-        const response = await superTest
-            .post('/users')
-            .send(details)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .user
+            .create(details);
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
 
-        details.id = response.body.id;
+        details.id = response.id;
     });
 
     it('should read collection', async () => {
-        const collectionResponse = await superTest
-            .get('/users')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .user
+            .getMany();
 
-        expect(collectionResponse.status).toEqual(200);
-        expect(collectionResponse.body).toBeDefined();
-        expect(collectionResponse.body.data).toBeDefined();
-        expect(collectionResponse.body.data.length).toEqual(2);
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toEqual(2);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/users/${details.id}?fields=%2Bemail`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .user
+            .getOne(details.id, {
+                fields: ['+email'],
+            });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body, ['password']);
+        expectPropertiesEqualToSrc(details, response, ['password']);
     });
 
     it('should read resource by name', async () => {
-        const response = await superTest
-            .get(`/users/${details.name}?fields=%2Bemail`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .user
+            .getOne(details.name, {
+                fields: ['+email'],
+            });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body, ['password']);
+        expectPropertiesEqualToSrc(details, response, ['password']);
     });
 
     it('should update resource', async () => {
@@ -76,51 +71,43 @@ describe('src/http/controllers/user', () => {
         details.first_name = 'bar';
         details.last_name = 'baz';
 
-        const response = await superTest
-            .post(`/users/${details.id}`)
-            .send(details)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .user
+            .update(details.id, details);
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body);
+        expect(response).toBeDefined();
+        expectPropertiesEqualToSrc(details, response, ['realm']);
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/users/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .user
+            .delete(details.id);
 
-        expect(response.status).toEqual(202);
+        expect(response.id).toBeDefined();
     });
 
     it('should create and update resource with put', async () => {
         const entity = createFakeUser();
-        let response = await superTest
-            .put(`/users/${entity.name}`)
-            .send(entity)
-            .auth('admin', 'start123');
+        let response = await suite.client
+            .user
+            .createOrUpdate(entity.name, entity);
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual(entity.name);
+        expect(response).toBeDefined();
+        expect(response.name).toEqual(entity.name);
 
-        const { id } = response.body;
+        const { id } = response;
 
         const { name } = createFakeUser();
 
-        response = await superTest
-            .put(`/users/${entity.name}`)
-            .send({
+        response = await suite.client
+            .user
+            .createOrUpdate(entity.name, {
                 ...entity,
                 name,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual(name);
-        expect(response.body.id).toEqual(id);
+        expect(response.name).toEqual(name);
+        expect(response.id).toEqual(id);
     });
 });

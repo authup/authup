@@ -6,32 +6,22 @@
  */
 
 import { BuiltInPolicyType } from '@authup/kit';
-import type { DataSource } from 'typeorm';
-import { useDataSource } from 'typeorm-extension';
 import { PolicyRepository } from '../../../../../src';
-import { setupTestConfig } from '../../../../utils/config';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import { useSuperTest } from '../../../../utils/supertest';
+import { createTestSuite } from '../../../../utils';
 
 describe('src/security/permission/checker', () => {
-    const superTest = useSuperTest();
-
-    let dataSource: DataSource;
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        setupTestConfig();
-
-        await useTestDatabase();
-
-        dataSource = await useDataSource();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
     it('should verify valid policy', async () => {
-        const policyRepository = new PolicyRepository(dataSource);
+        const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,
             name: BuiltInPolicyType.IDENTITY,
@@ -40,10 +30,10 @@ describe('src/security/permission/checker', () => {
 
         await policyRepository.save(policy);
 
-        const response = await superTest
-            .post(`/policies/${policy.id}/check`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .policy
+            .check(policy.id);
 
-        expect(response.statusCode).toEqual(202);
+        expect(response.status).toEqual('success');
     });
 });

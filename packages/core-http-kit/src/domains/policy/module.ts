@@ -54,9 +54,9 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
 
     async check(
         idOrName: string,
-        data: Record<string, any>,
+        data: Record<string, any> = {},
     ) : Promise<PolicyAPICheckResponse> {
-        const response = await this.client.put(
+        const response = await this.client.post(
             `policies/${idOrName}/check`,
             nullifyEmptyObjectProperties(data),
         );

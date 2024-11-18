@@ -8,71 +8,63 @@
 import type {
     RobotRole,
 } from '@authup/core-kit';
-import { createSuperTestRobot, createSuperTestRole } from '../../../utils/domains';
-import { expectPropertiesEqualToSrc } from '../../../utils/properties';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import {
+    createFakeRobot, createFakeRole, createTestSuite, expectPropertiesEqualToSrc,
+} from '../../../utils';
 
 describe('src/http/controllers/robot-role', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
-    const details : Partial<RobotRole> = {};
+    let entity : RobotRole | undefined;
 
     it('should create resource', async () => {
-        const { body: robot } = await createSuperTestRobot(superTest);
-        const { body: role } = await createSuperTestRole(superTest);
+        const robot = await suite.client.robot.create(createFakeRobot());
+        const role = await suite.client.role.create(createFakeRole());
 
-        const response = await superTest
-            .post('/robot-roles')
-            .send({
+        entity = await suite.client
+            .robotRole
+            .create({
                 robot_id: robot.id,
                 role_id: role.id,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-
-        details.id = response.body.id;
-        details.robot_id = response.body.robot_id;
-        details.role_id = response.body.role_id;
+        expect(entity).toBeDefined();
+        expect(entity.robot_id).toEqual(robot.id);
+        expect(entity.role_id).toEqual(role.id);
     });
 
     it('should read collection', async () => {
-        const response = await superTest
-            .get('/robot-roles')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robotRole
+            .getMany();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/robot-roles/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robotRole
+            .getOne(entity.id);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(entity, response, ['robot', 'role']);
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/robot-roles/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .robotRole
+            .delete(entity.id);
 
-        expect(response.status).toEqual(202);
+        expect(response.id).toBeDefined();
     });
 });

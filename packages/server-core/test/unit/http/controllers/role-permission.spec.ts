@@ -8,71 +8,62 @@
 import type {
     RolePermission,
 } from '@authup/core-kit';
-import { createSuperTestPermission, createSuperTestRole } from '../../../utils/domains';
-import { expectPropertiesEqualToSrc } from '../../../utils/properties';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import {
+    createFakePermission, createFakeRole, createTestSuite,
+    expectPropertiesEqualToSrc,
+} from '../../../utils';
 
 describe('src/http/controllers/role-permission', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
-    const details : Partial<RolePermission> = {};
+    let entity : RolePermission | undefined;
 
     it('should create resource', async () => {
-        const { body: role } = await createSuperTestRole(superTest);
-        const { body: permission } = await createSuperTestPermission(superTest);
+        const role = await suite.client.role.create(createFakeRole());
+        const permission = await suite.client.permission.create(createFakePermission());
 
-        const response = await superTest
-            .post('/role-permissions')
-            .send({
+        entity = await suite.client
+            .rolePermission
+            .create({
                 role_id: role.id,
                 permission_id: permission.id,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-
-        details.id = response.body.id;
-        details.role_id = response.body.role_id;
-        details.permission_id = response.body.permission_id;
+        expect(entity.role_id).toEqual(role.id);
+        expect(entity.permission_id).toEqual(permission.id);
     });
 
     it('should read collection', async () => {
-        const response = await superTest
-            .get('/role-permissions')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .rolePermission
+            .getMany();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/role-permissions/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .rolePermission
+            .getOne(entity.id);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body);
+        expect(response).toBeDefined();
+        expectPropertiesEqualToSrc(entity, response, ['role', 'permission']);
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/role-permissions/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .rolePermission
+            .delete(entity.id);
 
-        expect(response.status).toEqual(202);
+        expect(response.id).toBeDefined();
     });
 });

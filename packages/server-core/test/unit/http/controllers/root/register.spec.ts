@@ -5,60 +5,58 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { User } from '@authup/core-kit';
+import { isClientError } from 'hapic';
 import { useConfig } from '../../../../../src';
-import { useSuperTest } from '../../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
+import { createTestSuite } from '../../../../utils';
 
 describe('src/http/controllers/auth/handlers/*.ts', () => {
-    let superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
     });
 
-    it('should register a new user', async () => {
-        let response;
+    it('should not register a new user', async () => {
+        expect.assertions(1);
 
         const config = useConfig();
         config.registration = false;
 
-        response = await superTest
-            .post('/register')
-            .send({
-                name: 'test',
-                email: 'test@example.com',
-                password: 'my-password',
-            });
+        try {
+            await suite.client
+                .register({
+                    name: 'test',
+                    email: 'test@example.com',
+                    password: 'my-password',
+                });
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status).toEqual(400);
+            }
+        }
+    });
 
-        expect(response.status).toEqual(400);
+    it('should register a new user', async () => {
+        const config = useConfig();
 
         config.registration = true;
         config.emailVerification = true;
 
-        response = await superTest
-            .post('/register')
-            .send({
+        const response = await suite.client
+            .register({
                 name: 'test',
                 email: 'test@example.com',
                 password: 'my-password',
             });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-
-        const data = response.body as User;
-
-        expect(data.name).toEqual('test');
-        expect(data.email).toEqual('test@example.com');
-        expect(data.id).toBeDefined();
-        expect(data.created_at).toBeDefined();
-        expect(data.updated_at).toBeDefined();
+        expect(response.name).toEqual('test');
+        expect(response.email).toEqual('test@example.com');
+        expect(response.id).toBeDefined();
+        expect(response.created_at).toBeDefined();
+        expect(response.updated_at).toBeDefined();
     });
 });

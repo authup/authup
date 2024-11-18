@@ -8,71 +8,64 @@
 import type {
     UserRole,
 } from '@authup/core-kit';
-import { createSuperTestRole, createSuperTestUser } from '../../../utils/domains';
-import { expectPropertiesEqualToSrc } from '../../../utils/properties';
-import { useSuperTest } from '../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../utils/database/connection';
+import {
+    createFakeRole,
+    createFakeUser,
+    createTestSuite,
+    expectPropertiesEqualToSrc,
+} from '../../../utils';
 
 describe('src/http/controllers/user-role', () => {
-    const superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
     });
 
-    const details : Partial<UserRole> = {};
+    let details : UserRole | undefined;
 
     it('should create resource', async () => {
-        const { body: user } = await createSuperTestUser(superTest);
-        const { body: role } = await createSuperTestRole(superTest);
+        const user = await suite.client.user.create(createFakeUser());
+        const role = await suite.client.role.create(createFakeRole());
 
-        const response = await superTest
-            .post('/user-roles')
-            .send({
+        details = await suite.client
+            .userRole
+            .create({
                 user_id: user.id,
                 role_id: role.id,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-
-        details.id = response.body.id;
-        details.user_id = response.body.user_id;
-        details.role_id = response.body.role_id;
+        expect(details.user_id).toEqual(user.id);
+        expect(details.role_id).toEqual(role.id);
     });
 
     it('should read collection', async () => {
-        const response = await superTest
-            .get('/user-roles')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .userRole
+            .getMany();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toEqual(2);
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toEqual(2);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/user-roles/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .userRole
+            .getOne(details.id);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-
-        expectPropertiesEqualToSrc(details, response.body);
+        expect(response).toBeDefined();
+        expectPropertiesEqualToSrc(details, response, ['user', 'role']);
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/user-roles/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .userRole
+            .getOne(details.id);
 
-        expect(response.status).toEqual(202);
+        expect(response.id).toEqual(details.id);
     });
 });

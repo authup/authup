@@ -5,87 +5,70 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import type { TestAgent } from '../../../../utils/supertest';
-import { useSuperTest } from '../../../../utils/supertest';
+import { createTestSuite } from '../../../../utils';
 
 describe('token-revoke', () => {
-    let superTest: TestAgent;
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        superTest = useSuperTest();
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
     });
 
     it('should revoke access token', async () => {
-        let response = await superTest
-            .post('/token')
-            .send({
+        const response = await suite.client
+            .token
+            .createWithPasswordGrant({
                 username: 'admin',
                 password: 'start123',
             });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
+        expect(response.access_token).toBeDefined();
 
-        const accessToken = response.body.access_token;
-        expect(accessToken).toBeDefined();
-
-        response = await superTest
-            .post('/token/revoke')
-            .send({
-                token: accessToken,
+        await suite.client
+            .token
+            .revoke({
+                token: response.access_token,
             });
 
-        expect(response.status).toEqual(200);
-
-        response = await superTest
-            .post('/token/introspect')
-            .send({
-                token: accessToken,
+        const introspectResponse = await suite.client
+            .token
+            .introspect({
+                token: response.access_token,
             });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.active).toBeFalsy();
+        expect(introspectResponse).toBeDefined();
+        expect(introspectResponse.active).toBeFalsy();
     });
 
     it('should revoke refresh token', async () => {
-        let response = await superTest
-            .post('/token')
-            .send({
+        const response = await suite.client
+            .token
+            .createWithPasswordGrant({
                 username: 'admin',
                 password: 'start123',
             });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
+        expect(response.refresh_token).toBeDefined();
 
-        const refreshToken = response.body.refresh_token;
-        expect(refreshToken).toBeDefined();
-
-        response = await superTest
-            .post('/token/revoke')
-            .send({
-                token: refreshToken,
+        await suite.client
+            .token
+            .revoke({
+                token: response.refresh_token,
             });
 
-        expect(response.status).toEqual(200);
-
-        response = await superTest
-            .post('/token/introspect')
-            .send({
-                token: refreshToken,
+        const introspectResponse = await suite.client
+            .token
+            .introspect({
+                token: response.refresh_token,
             });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.active).toBeFalsy();
+        expect(introspectResponse).toBeDefined();
+        expect(introspectResponse.active).toBeFalsy();
     });
 });

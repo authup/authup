@@ -8,8 +8,6 @@
 import type { IdentityProvider, OAuth2IdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import type { DataSource } from 'typeorm';
-import { useDataSource } from 'typeorm-extension';
 import { undefined } from 'zod';
 import claims from '../../data/jwt.json';
 import type { IdentityProviderIdentity } from '../../../src';
@@ -24,11 +22,10 @@ import {
     UserRoleEntity,
     resolveRealm,
 } from '../../../src';
-import { setupTestConfig } from '../../utils/config';
-import { dropTestDatabase, useTestDatabase } from '../../utils/database/connection';
+import { createTestSuite } from '../../utils';
 
 describe('idp-manager-service', () => {
-    let dataSource : DataSource;
+    const suite = createTestSuite();
 
     let realm : Realm;
 
@@ -43,15 +40,11 @@ describe('idp-manager-service', () => {
     };
 
     beforeAll(async () => {
-        setupTestConfig();
-
-        await useTestDatabase();
-
-        dataSource = await useDataSource();
+        await suite.up();
 
         realm = await resolveRealm('', true);
 
-        const repository = new IdentityProviderRepository(dataSource);
+        const repository = new IdentityProviderRepository(suite.dataSource);
         idp = {
             authorize_url: '',
             token_url: '',
@@ -66,13 +59,12 @@ describe('idp-manager-service', () => {
 
         await repository.save(idp);
 
-        idpAccountService = new IdentityProviderAccountService(dataSource, idp as IdentityProvider);
+        idpAccountService = new IdentityProviderAccountService(suite.dataSource, idp as IdentityProvider);
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
+        await suite.down();
 
-        dataSource = undefined;
         realm = undefined;
         idpAccountService = undefined;
     });
@@ -101,14 +93,14 @@ describe('idp-manager-service', () => {
     });
 
     it('should synchronize roles', async () => {
-        const roleRepository = new RoleRepository(dataSource);
+        const roleRepository = new RoleRepository(suite.dataSource);
         const role = roleRepository.create({
             name: createNanoID(),
         });
 
         await roleRepository.save(role);
 
-        const idpRoleMappingRepository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
+        const idpRoleMappingRepository = suite.dataSource.getRepository(IdentityProviderRoleMappingEntity);
         const idpRoleMapping = idpRoleMappingRepository.create({
             synchronization_mode: 'always',
             name: 'realm_access.roles.*',
@@ -124,7 +116,7 @@ describe('idp-manager-service', () => {
         const account = await idpAccountService.save(identity);
         expect(account).toBeDefined();
 
-        const userRoleRepository = dataSource.getRepository(UserRoleEntity);
+        const userRoleRepository = suite.dataSource.getRepository(UserRoleEntity);
         const userRole = await userRoleRepository.find({
             where: {
                 role_id: role.id,
@@ -136,14 +128,14 @@ describe('idp-manager-service', () => {
     });
 
     it('should not synchronize roles', async () => {
-        const roleRepository = new RoleRepository(dataSource);
+        const roleRepository = new RoleRepository(suite.dataSource);
         const role = roleRepository.create({
             name: createNanoID(),
         });
 
         await roleRepository.save(role);
 
-        const idpRoleMappingRepository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
+        const idpRoleMappingRepository = suite.dataSource.getRepository(IdentityProviderRoleMappingEntity);
         const idpRoleMapping = idpRoleMappingRepository.create({
             synchronization_mode: 'always',
             name: 'realm_access.roles.*',
@@ -159,7 +151,7 @@ describe('idp-manager-service', () => {
         const account = await idpAccountService.save(identity);
         expect(account).toBeDefined();
 
-        const userRoleRepository = dataSource.getRepository(UserRoleEntity);
+        const userRoleRepository = suite.dataSource.getRepository(UserRoleEntity);
         const userRole = await userRoleRepository.findOne({
             where: {
                 role_id: role.id,
@@ -171,14 +163,14 @@ describe('idp-manager-service', () => {
     });
 
     it('should synchronize permissions', async () => {
-        const permissionRepository = dataSource.getRepository(PermissionEntity);
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permission = permissionRepository.create({
             name: createNanoID(),
         });
 
         await permissionRepository.save(permission);
 
-        const idpPermissionMappingRepository = dataSource.getRepository(IdentityProviderPermissionMappingEntity);
+        const idpPermissionMappingRepository = suite.dataSource.getRepository(IdentityProviderPermissionMappingEntity);
         const idpPermissionMapping = idpPermissionMappingRepository.create({
             synchronization_mode: 'always',
             name: 'realm_access.roles.*',
@@ -194,7 +186,7 @@ describe('idp-manager-service', () => {
         const account = await idpAccountService.save(identity);
         expect(account).toBeDefined();
 
-        const userPermissionRepository = dataSource.getRepository(UserPermissionEntity);
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
         const userPermission = await userPermissionRepository.findOne({
             where: {
                 permission_id: permission.id,
@@ -206,14 +198,20 @@ describe('idp-manager-service', () => {
     });
 
     it('should not synchronize roles', async () => {
-        const permissionRepository = dataSource.getRepository(PermissionEntity);
+        const permissionRepository = suite
+            .dataSource
+            .getRepository(PermissionEntity);
+
         const permission = permissionRepository.create({
             name: createNanoID(),
         });
 
         await permissionRepository.save(permission);
 
-        const idpPermissionMappingRepository = dataSource.getRepository(IdentityProviderPermissionMappingEntity);
+        const idpPermissionMappingRepository = suite
+            .dataSource
+            .getRepository(IdentityProviderPermissionMappingEntity);
+
         const idpPermissionMapping = idpPermissionMappingRepository.create({
             synchronization_mode: 'always',
             name: 'realm_access.roles.*',
@@ -229,7 +227,7 @@ describe('idp-manager-service', () => {
         const account = await idpAccountService.save(identity);
         expect(account).toBeDefined();
 
-        const userPermissionRepository = dataSource.getRepository(UserPermissionEntity);
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
         const userPermission = await userPermissionRepository.findOne({
             where: {
                 permission_id: permission.id,

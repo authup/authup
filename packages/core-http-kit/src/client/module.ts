@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2AuthorizationCodeRequest, User } from '@authup/core-kit';
 import { Client as BaseClient, HookName, isClientError } from 'hapic';
 import type {
     Options,
@@ -14,7 +15,7 @@ import {
     TokenAPI,
     UserInfoAPI,
 } from '@hapic/oauth2';
-import type { OAuth2JsonWebKey } from '@authup/kit';
+import type { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/kit';
 import {
     ClientAPI,
     ClientScopeAPI,
@@ -35,6 +36,7 @@ import {
     UserPermissionAPI,
     UserRoleAPI,
 } from '../domains';
+import { nullifyEmptyObjectProperties } from '../utils';
 import type { ClientOptions } from './type';
 
 export class Client extends BaseClient {
@@ -143,6 +145,12 @@ export class Client extends BaseClient {
         }));
     }
 
+    async sendAuthorize(data: OAuth2AuthorizationCodeRequest) : Promise<{ url: string }> {
+        const response = await this.post('authorize', nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
+
     async getJwks() : Promise<OAuth2JsonWebKey[]> {
         const response = await this.get('jwks');
 
@@ -151,6 +159,46 @@ export class Client extends BaseClient {
 
     async getJwk(id: string) : Promise<OAuth2JsonWebKey> {
         const response = await this.get(`jwks/${id}`);
+
+        return response.data;
+    }
+
+    async getWellKnownOpenIDConfiguration() : Promise<OAuth2OpenIDProviderMetadata> {
+        const response = await this.get('/.well-known/openid-configuration');
+        return response.data;
+    }
+
+    async activate(
+        token: string,
+    ): Promise<User> {
+        const response = await this.post('activate', {
+            token,
+        });
+
+        return response.data;
+    }
+
+    async register(
+        data: Partial<Pick<User, 'email' | 'name' | 'password' | 'realm_id'>>,
+    ): Promise<User> {
+        const response = await this.post('register', nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
+
+    async passwordForgot(
+        data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>>,
+    ) : Promise<User> {
+        const response = await this.post('password-forgot', nullifyEmptyObjectProperties(data));
+
+        return response.data;
+    }
+
+    async passwordReset(
+        data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>> &
+        { token: string, password: string },
+    ) : Promise<User> {
+        const response = await this.post('password-reset', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }

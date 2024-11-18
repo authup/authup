@@ -8,20 +8,17 @@
 import type { OAuth2IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderPreset } from '@authup/core-kit';
 import { createOAuth2IdentityProviderFlow } from '../../../../../src';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import { useSuperTest } from '../../../../utils/supertest';
+import { createTestSuite } from '../../../../utils';
 
 describe('src/http/controllers/identity-provider', () => {
-    let superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
     });
 
     it('should work with protocol config', async () => {
@@ -33,15 +30,14 @@ describe('src/http/controllers/identity-provider', () => {
             client_id: 'client',
             client_secret: 'start123',
         };
-        const response = await superTest
-            .post('/identity-providers')
-            .send(data)
-            .auth('admin', 'start123');
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
+        const response = await suite.client
+            .identityProvider
+            .create(data);
 
-        const flow = createOAuth2IdentityProviderFlow(response.body);
+        expect(response).toBeDefined();
+
+        const flow = createOAuth2IdentityProviderFlow(response);
         expect(flow.buildAuthorizeURL()).toMatch(/^https:\/\/accounts.google.com\/o\/oauth2\/v2\//);
     });
 });

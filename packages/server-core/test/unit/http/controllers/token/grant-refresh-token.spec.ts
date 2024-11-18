@@ -5,44 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import type { TestAgent } from '../../../../utils/supertest';
-import { useSuperTest } from '../../../../utils/supertest';
+import { createTestSuite } from '../../../../utils';
 
 describe('refresh-token', () => {
-    let superTest: TestAgent;
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        superTest = useSuperTest();
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
     });
 
     it('should grant token with refresh token', async () => {
-        let response = await superTest
-            .post('/token')
-            .send({
+        let response = await suite.client
+            .token
+            .createWithPasswordGrant({
                 username: 'admin',
                 password: 'start123',
             });
 
-        expect(response.status).toEqual(200);
+        expect(response.access_token).toBeDefined();
 
-        response = await superTest
-            .post('/token')
-            .send({
-                refresh_token: response.body.refresh_token,
+        response = await suite.client
+            .token
+            .createWithRefreshToken({
+                refresh_token: response.refresh_token,
             });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.access_token).toBeDefined();
-        expect(response.body.expires_in).toBeDefined();
-        expect(response.body.refresh_token).toBeDefined();
+        expect(response).toBeDefined();
+        expect(response.access_token).toBeDefined();
+        expect(response.expires_in).toBeDefined();
+        expect(response.refresh_token).toBeDefined();
     });
 });

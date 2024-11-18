@@ -14,7 +14,7 @@ import type {
 } from '../types-base';
 
 export class RobotRoleAPI extends BaseAPI implements DomainAPISlim<RobotRole> {
-    async getMany(data: BuildInput<RobotRole>): Promise<CollectionResourceResponse<RobotRole>> {
+    async getMany(data: BuildInput<RobotRole> = {}): Promise<CollectionResourceResponse<RobotRole>> {
         const response = await this.client.get(`robot-roles${buildQuery(data)}`);
 
         return response.data;

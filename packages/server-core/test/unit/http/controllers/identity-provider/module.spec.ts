@@ -10,135 +10,126 @@ import {
     buildIdentityProviderAuthorizePath,
 } from '@authup/core-kit';
 import { createOAuth2IdentityProviderFlow } from '../../../../../src';
-import { createFakeOAuth2IdentityProvider } from '../../../../utils/domains';
-import { expectPropertiesEqualToSrc } from '../../../../utils/properties';
-import { useSuperTest } from '../../../../utils/supertest';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
+import {
+    createFakeOAuth2IdentityProvider,
+    createTestSuite,
+    expectPropertiesEqualToSrc,
+} from '../../../../utils';
 
 describe('src/http/controllers/identity-provider', () => {
-    let superTest = useSuperTest();
+    const suite = createTestSuite();
 
     beforeAll(async () => {
-        await useTestDatabase();
+        await suite.up();
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
     });
 
     const details = createFakeOAuth2IdentityProvider();
 
     it('should create resource', async () => {
-        const response = await superTest
-            .post('/identity-providers')
-            .send(details)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .identityProvider
+            .create(details);
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
 
-        details.id = response.body.id;
+        details.id = response.id;
     });
 
     it('should read collection', async () => {
-        const response = await superTest
-            .get('/identity-providers')
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .identityProvider
+            .getMany();
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.data).toBeDefined();
-        expect(response.body.data.length).toBeGreaterThanOrEqual(1);
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read resource', async () => {
-        const response = await superTest
-            .get(`/identity-providers/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .identityProvider
+            .getOne(details.id);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should read resource by slug', async () => {
-        const response = await superTest
-            .get(`/identity-providers/${details.slug}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .identityProvider
+            .getOne(details.slug);
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should update resource', async () => {
         details.name = 'TestA';
         details.client_secret = 'start1234';
 
-        const response = await superTest
-            .post(`/identity-providers/${details.id}`)
-            .send(details)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .identityProvider
+            .update(details.id, details);
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
+        expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response.body);
+        expectPropertiesEqualToSrc(details, response);
     });
 
     it('should build authorize url', async () => {
-        const response = await superTest
-            .get(buildIdentityProviderAuthorizePath(details.id))
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .get(
+                buildIdentityProviderAuthorizePath(details.id),
+                {
+                    redirect: 'manual',
+                },
+            );
 
         expect(response.status).toEqual(302);
-        expect(response.header.location).toBeDefined();
+        expect(response.headers.get('location')).toBeDefined();
 
         const flow = createOAuth2IdentityProviderFlow(details as IdentityProvider);
 
-        expect(response.header.location).toEqual(flow.buildAuthorizeURL());
+        expect(response.headers.get('location'))
+            .toEqual(flow.buildAuthorizeURL());
     });
 
     it('should delete resource', async () => {
-        const response = await superTest
-            .delete(`/identity-providers/${details.id}`)
-            .auth('admin', 'start123');
+        const response = await suite.client
+            .identityProvider
+            .delete(details.id);
 
-        expect(response.status).toEqual(202);
+        expect(response.id).toBeDefined();
     });
 
     it('should create and update resource with put', async () => {
         const entity = createFakeOAuth2IdentityProvider();
-        let response = await superTest
-            .put(`/identity-providers/${entity.name}`)
-            .send(entity)
-            .auth('admin', 'start123');
+        let response = await suite.client
+            .identityProvider
+            .createOrUpdate(entity.name, entity);
 
-        expect(response.status).toEqual(201);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual(entity.name);
+        expect(response.name).toEqual(entity.name);
 
-        const { id } = response.body;
+        const { id } = response;
 
         const { name } = createFakeOAuth2IdentityProvider();
 
-        response = await superTest
-            .put(`/identity-providers/${entity.name}`)
-            .send({
+        response = await suite.client
+            .identityProvider
+            .createOrUpdate(entity.name, {
                 ...entity,
                 name,
-            })
-            .auth('admin', 'start123');
+            });
 
-        expect(response.status).toEqual(202);
-        expect(response.body).toBeDefined();
-        expect(response.body.name).toEqual(name);
-        expect(response.body.id).toEqual(id);
+        expect(response).toBeDefined();
+        expect(response.name).toEqual(name);
+        expect(response.id).toEqual(id);
     });
 });

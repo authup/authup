@@ -5,73 +5,77 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Robot } from '@authup/core-kit';
 import { ErrorCode } from '@authup/kit';
-import type { DatabaseRootSeederResult } from '../../../../../src';
-import { dropTestDatabase, useTestDatabase } from '../../../../utils/database/connection';
-import { updateSuperTestRobot } from '../../../../utils/domains';
-import type { TestAgent } from '../../../../utils/supertest';
-import { useSuperTest } from '../../../../utils/supertest';
+import { isClientError } from 'hapic';
+import { createFakeRobot, createTestSuite } from '../../../../utils';
 
 describe('refresh-token', () => {
-    let superTest: TestAgent;
+    const suite = createTestSuite();
 
-    let seederResponse : DatabaseRootSeederResult | undefined;
-    let robotCredentials : { id: string, secret: string };
+    let robot : Robot;
 
     beforeAll(async () => {
-        superTest = useSuperTest();
-        seederResponse = await useTestDatabase();
-        robotCredentials = {
-            id: seederResponse.robot.id,
-            secret: seederResponse.robot.secret,
-        };
+        await suite.up();
+
+        robot = await suite.client.robot.create(createFakeRobot());
     });
 
     afterAll(async () => {
-        await dropTestDatabase();
-
-        superTest = undefined;
+        await suite.down();
     });
 
     it('should grant token with robot credentials', async () => {
-        const response = await superTest
-            .post('/token')
-            .send({
-                id: seederResponse.robot.id,
-                secret: seederResponse.robot.secret,
+        const response = await suite.client
+            .token
+            .createWithRobotCredentials({
+                id: robot.id,
+                secret: robot.secret,
             });
 
-        expect(response.status).toEqual(200);
-        expect(response.body).toBeDefined();
-        expect(response.body.access_token).toBeDefined();
-        expect(response.body.expires_in).toBeDefined();
-        expect(response.body.refresh_token).toBeUndefined();
+        expect(response.access_token).toBeDefined();
+        expect(response.expires_in).toBeDefined();
+        expect(response.refresh_token).toBeUndefined();
     });
 
     it('should not grant with robot-credentials (inactive)', async () => {
-        await updateSuperTestRobot(superTest, seederResponse.robot.id, {
+        await suite.client.robot.update(robot.id, {
             active: false,
         });
 
-        const response = await superTest
-            .post('/token')
-            .send(robotCredentials);
+        expect.assertions(2);
 
-        expect(response.status).toEqual(400);
-        expect(response.body.code).toEqual(ErrorCode.ENTITY_INACTIVE);
+        try {
+            await suite.client
+                .token
+                .createWithRobotCredentials(robot);
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status).toEqual(400);
+                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_INACTIVE);
+            }
+        }
     });
 
     it('should not grant with robot-credentials (invalid credentials)', async () => {
-        await updateSuperTestRobot(superTest, seederResponse.robot.id, { active: true });
+        await suite.client.robot.update(robot.id, {
+            active: true,
+        });
 
-        const response = await superTest
-            .post('/token')
-            .send({
-                ...robotCredentials,
-                secret: 'foo',
-            });
+        expect.assertions(2);
 
-        expect(response.status).toEqual(400);
-        expect(response.body.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
+        try {
+            await suite.client
+                .token
+                .createWithRobotCredentials({
+                    ...robot,
+                    secret: 'foo',
+                });
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status).toEqual(400);
+                expect(e.response.data.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
+            }
+        }
     });
 });
