@@ -38,6 +38,13 @@ export async function getManyUserRoleRouteHandler(req: Request, res: Response) :
         relations: {
             allowed: ['user', 'role'],
         },
+        sort: {
+            allowed: [
+                'id',
+                'created_at',
+                'updated_at',
+            ],
+        },
         pagination: {
             maxLimit: 50,
         },

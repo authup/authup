@@ -38,6 +38,13 @@ export async function getManyRobotRoleRouteHandler(req: Request, res: Response) 
         relations: {
             allowed: ['robot', 'role'],
         },
+        sort: {
+            allowed: [
+                'id',
+                'created_at',
+                'updated_at',
+            ],
+        },
         pagination: {
             maxLimit: 50,
         },

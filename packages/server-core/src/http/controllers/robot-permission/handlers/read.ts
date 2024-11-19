@@ -40,6 +40,13 @@ export async function getManyRobotPermissionRouteHandler(req: Request, res: Resp
                 'permission',
             ],
         },
+        sort: {
+            allowed: [
+                'id',
+                'created_at',
+                'updated_at',
+            ],
+        },
         pagination: {
             maxLimit: 50,
         },
