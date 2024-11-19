@@ -51,17 +51,17 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@hapic/vault": "^2.3.3",
+        "@hapic/vault": "^2.3.5",
         "@isaacs/ttlcache": "^1.4.1",
         "@node-rs/bcrypt": "^1.10.5",
         "@node-rs/jsonwebtoken": "^0.5.7",
         "@socket.io/redis-emitter": "^5.1.0",
-        "@types/nodemailer": "^6.4.16",
+        "@types/nodemailer": "^6.4.17",
         "locter": "^2.1.4",
         "redis-extension": "^2.0.1",
         "smob": "^1.5.0",
         "singa": "^1.0.0",
-        "winston": "^3.15.0"
+        "winston": "^3.17.0"
     },
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.23"
