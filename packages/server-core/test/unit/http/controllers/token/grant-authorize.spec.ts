@@ -9,7 +9,7 @@ import type { Client, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { ErrorCode, OAuth2AuthorizationResponseType } from '@authup/kit';
 import { isClientError } from 'hapic';
-import { buildOauth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../src';
+import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../src';
 import { createFakeClient, createTestSuite } from '../../../../utils';
 
 describe('refresh-token', () => {
@@ -33,6 +33,12 @@ describe('refresh-token', () => {
 
     afterAll(async () => {
         await suite.down();
+    });
+
+    it('should build oauth2 code challenge', async () => {
+        const codeVerifier = 'Li5PBcECIXmMuuDsWHjexHnr6LNK6BWKKkcuJaAjeSkeux7p';
+        const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
+        expect(codeChallenge).toEqual('lFtvTpirsB96UMQJgoRhKofsa0w7ShdPkJ3eJ6MgYVY');
     });
 
     it('should work with authorize grant', async () => {
@@ -73,7 +79,7 @@ describe('refresh-token', () => {
     it('should work with authorize grant and PKCE', async () => {
         const state = generateOAuth2CodeVerifier();
         const codeVerifier = generateOAuth2CodeVerifier();
-        const codeChallenge = buildOauth2CodeChallenge(codeVerifier);
+        const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
 
         const payload : OAuth2AuthorizationCodeRequest = {
             response_type: OAuth2AuthorizationResponseType.CODE,
@@ -107,7 +113,7 @@ describe('refresh-token', () => {
     it('should not work with authorize grant and invalid PKCE', async () => {
         const state = generateOAuth2CodeVerifier();
         const codeVerifier = generateOAuth2CodeVerifier();
-        const codeChallenge = buildOauth2CodeChallenge(codeVerifier);
+        const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
 
         const payload : OAuth2AuthorizationCodeRequest = {
             state,

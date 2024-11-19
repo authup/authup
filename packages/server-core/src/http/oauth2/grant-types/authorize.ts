@@ -18,7 +18,7 @@ import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { buildOauth2CodeChallenge } from '../authorize';
+import { buildOAuth2CodeChallenge } from '../authorize';
 import { OAuth2AuthorizationCodeRepository } from '../authorize/repository';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
@@ -91,7 +91,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
                     throw TokenError.grantInvalid('PKCE code_verifier mismatch.');
                 }
             } else {
-                const codeVerifierHash = buildOauth2CodeChallenge(codeVerifier);
+                const codeVerifierHash = await buildOAuth2CodeChallenge(codeVerifier);
                 if (codeVerifierHash !== entity.code_challenge) {
                     throw TokenError.grantInvalid('PKCE code_verifier mismatch.');
                 }
