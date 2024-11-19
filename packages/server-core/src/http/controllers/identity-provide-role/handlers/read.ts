@@ -35,10 +35,23 @@ export async function getManyIdentityProviderRoleRouteHandler(req: Request, res:
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'providerRole',
         filters: {
-            allowed: ['role_id', 'provider_id'],
+            allowed: [
+                'role_id',
+                'provider_id',
+            ],
         },
         sort: {
-            allowed: ['id', 'created_at', 'updated_at'],
+            allowed: [
+                'id',
+                'created_at',
+                'updated_at',
+            ],
+        },
+        relations: {
+            allowed: [
+                'role',
+                'provider',
+            ],
         },
         pagination: {
             maxLimit: 50,

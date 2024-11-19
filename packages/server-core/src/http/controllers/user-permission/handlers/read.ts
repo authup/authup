@@ -39,7 +39,16 @@ export async function getManyUserPermissionRouteHandler(req: Request, res: Respo
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userPermission',
         filters: {
-            allowed: ['user_id', 'permission_id'],
+            allowed: [
+                'user_id',
+                'permission_id',
+            ],
+        },
+        relations: {
+            allowed: [
+                'user',
+                'permission',
+            ],
         },
         pagination: {
             maxLimit: 50,

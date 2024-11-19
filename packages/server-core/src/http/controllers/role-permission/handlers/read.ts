@@ -40,6 +40,12 @@ export async function getManyRolePermissionRouteHandler(req: Request, res: Respo
         filters: {
             allowed: ['role_id', 'permission_id'],
         },
+        relations: {
+            allowed: [
+                'role',
+                'permission',
+            ],
+        },
         pagination: {
             maxLimit: 50,
         },

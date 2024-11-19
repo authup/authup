@@ -35,6 +35,9 @@ export async function getManyUserRoleRouteHandler(req: Request, res: Response) :
         filters: {
             allowed: ['role_id', 'user_id'],
         },
+        relations: {
+            allowed: ['user', 'role'],
+        },
         pagination: {
             maxLimit: 50,
         },

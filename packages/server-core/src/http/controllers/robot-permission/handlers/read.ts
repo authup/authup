@@ -34,6 +34,12 @@ export async function getManyRobotPermissionRouteHandler(req: Request, res: Resp
         filters: {
             allowed: ['robot_id', 'permission_id'],
         },
+        relations: {
+            allowed: [
+                'robot',
+                'permission',
+            ],
+        },
         pagination: {
             maxLimit: 50,
         },

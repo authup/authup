@@ -35,6 +35,9 @@ export async function getManyRobotRoleRouteHandler(req: Request, res: Response) 
         filters: {
             allowed: ['robot_id', 'role_id'],
         },
+        relations: {
+            allowed: ['robot', 'role'],
+        },
         pagination: {
             maxLimit: 50,
         },
