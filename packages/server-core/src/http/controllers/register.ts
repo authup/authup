@@ -17,25 +17,30 @@ import {
 import {
     useRequestQuery,
 } from '@routup/basic/query';
-import { ClientScopeController } from './client-scope';
-import { PolicyController } from './policy';
-import { RobotController } from './robot';
-import { OAuth2ProviderRoleController } from './identity-provide-role';
-import { IdentityProviderController, registerIdentityProviderController } from './identity-provider';
-import { PermissionController } from './permission';
-import { RealmController } from './realm';
-import { RoleController } from './role';
-import { RolePermissionController } from './role-permission';
-import { ScopeController } from './scope';
-import { UserController } from './user';
-import { UserRoleController } from './user-role';
-import { AuthTokenController, RootController } from './root';
-import { RobotPermissionController } from './robot-permission';
-import { RobotRoleController } from './robot-role';
-import { UserPermissionController } from './user-permission';
-import { RoleAttributeController } from './role-attribute';
-import { UserAttributeController } from './user-attribute';
-import { ClientController } from './client';
+import {
+    ClientController,
+    ClientScopeController,
+    IdentityProviderController,
+    OAuth2ProviderRoleController,
+    PermissionController,
+    PolicyController,
+    RealmController,
+    RobotController,
+    RobotPermissionController,
+    RobotRoleController,
+    RoleAttributeController,
+    RoleController,
+    RolePermissionController,
+    ScopeController,
+    UserAttributeController,
+    UserController,
+    UserPermissionController,
+    UserRoleController,
+    registerIdentityProviderController,
+} from './entities';
+import {
+    AuthorizeController, JwkController, OpenIDController, StatusController, TokenController,
+} from './workflows';
 
 export function registerControllers(
     router: Router,
@@ -44,8 +49,12 @@ export function registerControllers(
 
     router.use(decorators({
         controllers: [
-            RootController,
-            AuthTokenController,
+            AuthorizeController,
+            JwkController,
+            OpenIDController,
+            StatusController,
+            TokenController,
+
             ClientController,
             ClientScopeController,
             OAuth2ProviderRoleController,

@@ -206,9 +206,9 @@ export function createStore(context: StoreCreateContext) {
 
         userResolved.value = true;
 
-        return client.userInfo.get(`Bearer ${accessToken.value}`)
+        return client.userInfo.get<User>(`Bearer ${accessToken.value}`)
             .then((response) => {
-                setUser(response as User);
+                setUser(response);
             });
     };
 

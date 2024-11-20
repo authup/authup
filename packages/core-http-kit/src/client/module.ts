@@ -5,15 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCodeRequest, User } from '@authup/core-kit';
 import { Client as BaseClient, HookName, isClientError } from 'hapic';
 import type {
     Options,
-} from '@hapic/oauth2';
-import {
-    AuthorizeAPI,
-    TokenAPI,
-    UserInfoAPI,
 } from '@hapic/oauth2';
 import type { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/kit';
 import {
@@ -21,6 +15,9 @@ import {
     ClientScopeAPI,
     IdentityProviderAPI,
     IdentityProviderRoleMappingAPI,
+    OAuth2AuthorizeAPI,
+    OAuth2TokenAPI,
+    OAuth2UserInfoAPI,
     PermissionAPI,
     PolicyAPI,
     RealmAPI,
@@ -36,13 +33,12 @@ import {
     UserPermissionAPI,
     UserRoleAPI,
 } from '../domains';
-import { nullifyEmptyObjectProperties } from '../utils';
 import type { ClientOptions } from './type';
 
 export class Client extends BaseClient {
-    public readonly token : TokenAPI;
+    public readonly token : OAuth2TokenAPI;
 
-    public readonly authorize : AuthorizeAPI;
+    public readonly authorize : OAuth2AuthorizeAPI;
 
     public readonly client : ClientAPI;
 
@@ -74,7 +70,7 @@ export class Client extends BaseClient {
 
     public readonly user : UserAPI;
 
-    public readonly userInfo : UserInfoAPI;
+    public readonly userInfo : OAuth2UserInfoAPI;
 
     public readonly userAttribute: UserAttributeAPI;
 
@@ -101,8 +97,8 @@ export class Client extends BaseClient {
             }
         }
 
-        this.authorize = new AuthorizeAPI({ client: this, options });
-        this.token = new TokenAPI({ client: this, options });
+        this.authorize = new OAuth2AuthorizeAPI({ client: this, options });
+        this.token = new OAuth2TokenAPI({ client: this, options });
 
         this.client = new ClientAPI({ client: this });
         this.clientScope = new ClientScopeAPI({ client: this });
@@ -126,7 +122,8 @@ export class Client extends BaseClient {
         this.scope = new ScopeAPI({ client: this });
 
         this.user = new UserAPI({ client: this });
-        this.userInfo = new UserInfoAPI({ client: this, options });
+
+        this.userInfo = new OAuth2UserInfoAPI({ client: this, options });
         this.userAttribute = new UserAttributeAPI({ client: this });
         this.userPermission = new UserPermissionAPI({ client: this });
         this.userRole = new UserRoleAPI({ client: this });
@@ -145,12 +142,6 @@ export class Client extends BaseClient {
         }));
     }
 
-    async sendAuthorize(data: OAuth2AuthorizationCodeRequest) : Promise<{ url: string }> {
-        const response = await this.post('authorize', nullifyEmptyObjectProperties(data));
-
-        return response.data;
-    }
-
     async getJwks() : Promise<OAuth2JsonWebKey[]> {
         const response = await this.get('jwks');
 
@@ -165,41 +156,6 @@ export class Client extends BaseClient {
 
     async getWellKnownOpenIDConfiguration() : Promise<OAuth2OpenIDProviderMetadata> {
         const response = await this.get('/.well-known/openid-configuration');
-        return response.data;
-    }
-
-    async activate(
-        token: string,
-    ): Promise<User> {
-        const response = await this.post('activate', {
-            token,
-        });
-
-        return response.data;
-    }
-
-    async register(
-        data: Partial<Pick<User, 'email' | 'name' | 'password' | 'realm_id'>>,
-    ): Promise<User> {
-        const response = await this.post('register', nullifyEmptyObjectProperties(data));
-
-        return response.data;
-    }
-
-    async passwordForgot(
-        data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>>,
-    ) : Promise<User> {
-        const response = await this.post('password-forgot', nullifyEmptyObjectProperties(data));
-
-        return response.data;
-    }
-
-    async passwordReset(
-        data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>> &
-        { token: string, password: string },
-    ) : Promise<User> {
-        const response = await this.post('password-reset', nullifyEmptyObjectProperties(data));
-
         return response.data;
     }
 }

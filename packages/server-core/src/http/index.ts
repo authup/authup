@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './controllers';
+export * from './controllers/entities';
 export * from './middleware';
 export * from './request';
 export * from './router';
