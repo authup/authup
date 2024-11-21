@@ -23,13 +23,12 @@ export class GoogleIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
     }
 
     async getIdentityForRequest(request: Request): Promise<IdentityProviderIdentity> {
-        const { code, state } = useRequestQuery(request);
+        const { code } = useRequestQuery(request);
 
         // todo additional parameter like hd required
         // read: https://developers.google.com/identity/openid-connect/openid-connect?hl=de#createxsrftoken
-        const token = await this.client.token.createWithAuthorizeGrant({
+        const token = await this.client.token.createWithAuthorizationCode({
             code: code as string,
-            state: state as string,
         });
 
         // eslint-disable-next-line @typescript-eslint/no-unused-vars

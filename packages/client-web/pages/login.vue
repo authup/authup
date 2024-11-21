@@ -1,6 +1,6 @@
 <script lang="ts">
 import { IVuelidate } from '@ilingo/vuelidate';
-import { isClientError } from '@hapic/oauth2';
+import { isClientError } from '@authup/core-http-kit';
 import type { BuildInput } from 'rapiq';
 import {
     AIdentityProviderIcon,

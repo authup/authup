@@ -54,7 +54,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@hapic/oauth2": "^2.4.2",
+        "@hapic/oauth2": "^3.1.0",
         "@hapic/vault": "^2.3.5",
         "hapic": "^2.5.1",
         "rapiq": "^0.9.0"

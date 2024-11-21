@@ -20,7 +20,7 @@ const tokenGrantResponse : TokenGrantResponse = {
 jest.spyOn(TokenAPI.prototype, 'createWithRobotCredentials')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
-jest.spyOn(TokenAPI.prototype, 'createWithPasswordGrant')
+jest.spyOn(TokenAPI.prototype, 'createWithPassword')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
 jest.spyOn(KeyValueV1API.prototype, 'getOne')

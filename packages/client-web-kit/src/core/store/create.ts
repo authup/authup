@@ -341,7 +341,7 @@ export function createStore(context: StoreCreateContext) {
     const login = async (ctx: StoreLoginContext) => {
         context.dispatcher.emit(StoreDispatcherEventName.LOGGING_IN);
 
-        const response = await client.token.createWithPasswordGrant({
+        const response = await client.token.createWithPassword({
             username: ctx.name,
             password: ctx.password,
             ...(realmId.value ? { realm_id: ctx.realmId } : {}),

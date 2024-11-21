@@ -64,10 +64,9 @@ describe('refresh-token', () => {
 
         const tokenResponse = await suite.client
             .token
-            .createWithAuthorizeGrant({
+            .createWithAuthorizationCode({
                 redirect_uri: 'https://example.com/redirect',
                 code,
-                state,
             });
 
         expect(tokenResponse).toBeDefined();
@@ -101,8 +100,7 @@ describe('refresh-token', () => {
 
         const tokenResponse = await suite.client
             .token
-            .createWithAuthorizeGrant({
-                state,
+            .createWithAuthorizationCode({
                 redirect_uri: 'https://example.com/redirect',
                 code,
                 code_verifier: codeVerifier,
@@ -138,8 +136,7 @@ describe('refresh-token', () => {
         try {
             await suite.client
                 .token
-                .createWithAuthorizeGrant({
-                    state,
+                .createWithAuthorizationCode({
                     redirect_uri: 'https://example.com/redirect',
                     code,
                     code_verifier: generateOAuth2CodeVerifier(),

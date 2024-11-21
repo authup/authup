@@ -60,7 +60,7 @@ export default defineNuxtComponent({
             entity.value &&
             entity.value.redirect_uri
         ) {
-            redirectUriPatterns.push(...entity.value.redirect.uri.split(','));
+            redirectUriPatterns.push(...entity.value.redirect_uri.split(','));
         }
 
         if (!isGlobMatch(parameters.redirect_uri, redirectUriPatterns)) {
@@ -113,7 +113,8 @@ export default defineNuxtComponent({
         const authorize = async () => {
             try {
                 const response = await httpClient
-                    .post('authorize', {
+                    .authorize
+                    .confirm({
                         response_type: parameters.response_type,
                         client_id: entity.value.id,
                         redirect_uri: parameters.redirect_uri,
@@ -121,7 +122,7 @@ export default defineNuxtComponent({
                         scope: clientScopes.map((item) => item.scope.name).join(' '),
                     });
 
-                const { url } = response.data;
+                const { url } = response;
 
                 window.location.href = url;
             } catch (e) {

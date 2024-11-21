@@ -20,6 +20,7 @@ import type { SMTPOptions } from '../core';
 
 export type Config = {
     /**
+     * Application environment (e.g., 'production').
      * default: 'development'
      */
     env: string,
@@ -68,29 +69,37 @@ export type Config = {
     // ----------------------------------------------------
 
     /**
+     * Application port number.
      * default: 3001
      */
     port: number,
 
     /**
+     * Application host.
      * default: localhost
      */
     host: string,
 
     /**
+     * API base URL.
      * default: http://localhost:3001
      */
     publicUrl: string,
 
     /**
+     * Domain for setting cookies after authorization.
      * default: undefined
      */
     cookieDomain?: string,
 
     /**
+     * Redirect URL after successful login with
+     * external identity provider.
      * default: http://localhost:3000
      */
     authorizeRedirectUrl: string,
+
+    // ----------------------------------------------------
 
     /**
      * use body middleware
@@ -98,18 +107,21 @@ export type Config = {
      * default: true
      */
     middlewareBody: boolean | BodyOptions,
+
     /**
      * use cors middleware
      *
      * default: true
      */
     middlewareCors: boolean | CorsOptions,
+
     /**
      * use cookie middleware
      *
      * default: true
      */
     middlewareCookie: boolean | CookieOptions,
+
     /**
      * Prometheus middleware (options)
      */
@@ -119,10 +131,12 @@ export type Config = {
      * Query middleware (options)
      */
     middlewareQuery: boolean | QueryOptions,
+
     /**
      * Rate limit middleware (options).
      */
     middlewareRateLimit: boolean | RateLimitOptions,
+
     /**
      * Swagger middleware (options)
      *
@@ -130,33 +144,36 @@ export type Config = {
      */
     middlewareSwagger: boolean | SwaggerUIOptions,
 
+    // ----------------------------------------------------
+
     /**
-     * default: 259.200s (3d)
+     * Refresh token validity in seconds (default: 259,200s / 3 days).
+     * default: 259_200s (3days)
      */
     tokenRefreshMaxAge: number,
 
     /**
-     * default: 3.600s (1h)
+     * Access token validity in seconds (default: 3600s / 1 hour).
+     * default: 3_600s (1h)
      */
     tokenAccessMaxAge: number,
 
+    // ----------------------------------------------------
+
     /**
-     * Enable registration.
-     *
+     * Enable user registration?
      * default: false
      */
     registration: boolean,
 
     /**
-     * Email verification required for registration or login with identity provider.
-     *
+     * Require email verification for registration or login?
      * default: false
      */
     emailVerification: boolean,
 
     /**
      * Allow password reset via email?
-     *
      * default: false
      */
     forgotPassword: boolean,
@@ -174,19 +191,27 @@ export type Config = {
      * default: false
      */
     userAuthBasic: boolean,
+
     /**
+     * Enable default admin user.
      * default: true
      */
     userAdminEnabled: boolean,
+
     /**
+     * The name of the default admin user.
      * default: 'admin'
      */
     userAdminName: string,
+
     /**
+     * The password of the default admin user.
      * default: 'start123'
      */
     userAdminPassword: string,
+
     /**
+     * Reset admin password on application startup.
      * default: undefined
      */
     userAdminPasswordReset?: boolean,
@@ -197,20 +222,28 @@ export type Config = {
      * default: false
      */
     robotAuthBasic: boolean,
+
     /**
+     * Enable a global robot account.
      * default: false
      */
     robotAdminEnabled: boolean,
+
     /**
+     * The name of the default robot.
      * default: system
      */
     robotAdminName?: string,
+
     /**
-     * default: undefined
+     * The secret of the default admin user.
+     * default: (**generated**)
      */
     robotAdminSecret?: string,
+
     /**
-     * default: undefined
+     * Reset the robot secret on application startup.
+     * default: false
      */
     robotAdminSecretReset?: boolean,
 

@@ -25,7 +25,7 @@ describe('src/http/controllers/token', () => {
     it('should grant token with password', async () => {
         const response = await suite.client
             .token
-            .createWithPasswordGrant({
+            .createWithPassword({
                 username: 'admin',
                 password: 'start123',
             });
@@ -45,7 +45,7 @@ describe('src/http/controllers/token', () => {
         try {
             await suite.client
                 .token
-                .createWithPasswordGrant(credentials);
+                .createWithPassword(credentials);
         } catch (e) {
             if (isClientError(e)) {
                 expect(e.status)
@@ -65,7 +65,7 @@ describe('src/http/controllers/token', () => {
         try {
             await suite.client
                 .token
-                .createWithPasswordGrant({
+                .createWithPassword({
                     username: entity.name,
                     password: 'foo-bar-baz',
                 });
@@ -82,7 +82,7 @@ describe('src/http/controllers/token', () => {
 
         const response = await suite.client
             .token
-            .createWithPasswordGrant({
+            .createWithPassword({
                 username: entity.name,
                 password: 'foo-bar-baz',
             });
@@ -92,7 +92,7 @@ describe('src/http/controllers/token', () => {
         try {
             await suite.client
                 .token
-                .createWithPasswordGrant({
+                .createWithPassword({
                     username: entity.name,
                     password: 'foo',
                 });

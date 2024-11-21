@@ -11,7 +11,7 @@ import type { TokenCreator, TokenCreatorUserOptions } from '../type';
 export function createTokenCreatorWithUser(options: Omit<TokenCreatorUserOptions, 'type'>) : TokenCreator {
     const client = new Client({ baseURL: options.baseURL });
 
-    return async () => client.token.createWithPasswordGrant({
+    return async () => client.token.createWithPassword({
         username: options.name,
         password: options.password,
         ...(options.realmId ? { realm_id: options.realmId } : {}),

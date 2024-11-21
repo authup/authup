@@ -21,7 +21,7 @@ describe('token-revoke', () => {
     it('should revoke access token', async () => {
         const response = await suite.client
             .token
-            .createWithPasswordGrant({
+            .createWithPassword({
                 username: 'admin',
                 password: 'start123',
             });
@@ -48,7 +48,7 @@ describe('token-revoke', () => {
     it('should revoke refresh token', async () => {
         const response = await suite.client
             .token
-            .createWithPasswordGrant({
+            .createWithPassword({
                 username: 'admin',
                 password: 'start123',
             });

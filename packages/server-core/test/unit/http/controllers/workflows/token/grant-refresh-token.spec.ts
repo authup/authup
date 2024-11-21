@@ -21,7 +21,7 @@ describe('refresh-token', () => {
     it('should grant token with refresh token', async () => {
         let response = await suite.client
             .token
-            .createWithPasswordGrant({
+            .createWithPassword({
                 username: 'admin',
                 password: 'start123',
             });

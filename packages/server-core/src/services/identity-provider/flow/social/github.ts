@@ -22,11 +22,10 @@ export class GithubIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
     }
 
     async getIdentityForRequest(request: Request): Promise<IdentityProviderIdentity> {
-        const { code, state } = useRequestQuery(request);
+        const { code } = useRequestQuery(request);
 
-        const token = await this.client.token.createWithAuthorizeGrant({
+        const token = await this.client.token.createWithAuthorizationCode({
             code: code as string,
-            state: state as string,
         });
 
         const userInfo = await this.client.userInfo.get({
