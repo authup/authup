@@ -53,7 +53,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@vueuse/integrations": "^11.2.0"
+        "@vueuse/integrations": "^11.3.0"
     },
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.23",
@@ -62,7 +62,7 @@
         "@authup/core-realtime-kit": "^1.0.0-beta.23",
         "@ilingo/vuelidate": "^5.0.3",
         "@posva/event-emitter": "^1.0.2",
-        "@types/node": "^22.9.1",
+        "@types/node": "^22.9.4",
         "@vitejs/plugin-vue": "^5.2.0",
         "@vuecs/form-controls": "^2.3.1",
         "@vuecs/list-controls": "^2.0.0",
