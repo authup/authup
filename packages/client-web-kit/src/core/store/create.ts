@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { TokenError } from '@authup/errors';
 import {
     PermissionChecker,
-    PermissionMemoryProvider, TokenError,
+    PermissionMemoryProvider,
 } from '@authup/kit';
 import { computed, ref } from 'vue';
 import type {

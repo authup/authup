@@ -2,7 +2,8 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "paths": {
-            "@authup/kit": ["./packages/kit/src"]
+            "@authup/kit": ["./packages/kit/src"],
+            "@authup/errors": ["./packages/errors/src"]
         }
     }
 }

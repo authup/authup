@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode } from '@authup/kit';
+import { ErrorCode } from '@authup/errors';
 import { createResponseError } from '../utils';
 import {
     Client,

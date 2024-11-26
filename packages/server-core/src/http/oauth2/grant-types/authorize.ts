@@ -8,8 +8,9 @@
 import type { OAuth2TokenGrantResponse } from '@authup/kit';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
-    OAuth2SubKind, TokenError,
+    OAuth2SubKind,
 } from '@authup/kit';
+import { TokenError } from '@authup/errors';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import {
     hasOAuth2OpenIDScope,

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './error';
 export * from './event';
 export * from './json-web-key';
 export * from './json-web-token';

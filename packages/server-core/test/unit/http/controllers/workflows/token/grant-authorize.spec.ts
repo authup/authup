@@ -7,7 +7,8 @@
 
 import type { Client, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import { ErrorCode, OAuth2AuthorizationResponseType } from '@authup/kit';
+import { OAuth2AuthorizationResponseType } from '@authup/kit';
+import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';
 import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src';
 import { createFakeClient, createTestSuite } from '../../../../../utils';

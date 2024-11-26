@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ErrorCode } from '@authup/errors';
 import type { AttributeNamesPolicy, PermissionItem, PolicyWithType } from '../../../src';
 import {
     BuiltInPolicyType,
-    ErrorCode,
     PermissionChecker,
     PermissionError,
     PermissionMemoryProvider,

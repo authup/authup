@@ -6,7 +6,7 @@
  */
 
 import type { JWTClaims, JWTHeader } from '@authup/kit';
-import { TokenError } from '@authup/kit';
+import { TokenError } from '@authup/errors';
 
 /**
  * Decode a JWT token with no verification.

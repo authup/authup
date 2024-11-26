@@ -7,8 +7,9 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/kit';
 import {
-    OAuth2SubKind, TokenError,
+    OAuth2SubKind,
 } from '@authup/kit';
+import { TokenError } from '@authup/errors';
 import {
     ScopeName, UserError,
 } from '@authup/core-kit';

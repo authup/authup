@@ -6,7 +6,7 @@
  */
 
 import type { JWTClaims } from '@authup/kit';
-import { TokenError } from '@authup/kit';
+import { TokenError } from '@authup/errors';
 import path from 'node:path';
 import type { KeyPairOptions } from '../../src';
 import {

@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/kit';
-import { TokenError } from '@authup/kit';
+import { TokenError } from '@authup/errors';
 import type {
     Cache,
     CacheSetOptions,

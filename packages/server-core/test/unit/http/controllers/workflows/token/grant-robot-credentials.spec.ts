@@ -6,7 +6,7 @@
  */
 
 import type { Robot } from '@authup/core-kit';
-import { ErrorCode } from '@authup/kit';
+import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';
 import { createFakeRobot, createTestSuite } from '../../../../../utils';
 

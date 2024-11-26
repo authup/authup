@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, TokenError } from '@authup/kit';
+import { TokenError } from '@authup/errors';
+import { JWKType } from '@authup/kit';
 import type { JWTClaims, OAuth2TokenPayload } from '@authup/kit';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
 import { isKeyPairWithPublicKey, useKeyPair } from '../../key-pair';

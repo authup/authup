@@ -1,7 +1,7 @@
 {
-    "name": "@authup/server-kit",
+    "name": "@authup/errors",
     "version": "1.0.0-beta.23",
-    "description": "A toolkit for server-side services.",
+    "description": "Package containing error codes and basic error classes.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",
@@ -21,21 +21,9 @@
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "rollup -c",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
-        "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js",
-        "test:coverage": "npm run test -- --coverage"
+        "build:watch": "npm run build -- --watch"
     },
-    "keywords": [
-        "auth",
-        "kit",
-        "utils",
-        "jwt",
-        "token",
-        "sign",
-        "verify",
-        "password",
-        "hash",
-        "crypto"
-    ],
+    "keywords": [],
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",
@@ -44,32 +32,14 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/server-kit"
+        "directory": "packages/errors"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@hapic/vault": "^2.3.5",
-        "@isaacs/ttlcache": "^1.4.1",
-        "@node-rs/bcrypt": "^1.10.5",
-        "@node-rs/jsonwebtoken": "^0.5.7",
-        "@socket.io/redis-emitter": "^5.1.0",
-        "@types/nodemailer": "^6.4.17",
-        "locter": "^2.1.4",
-        "redis-extension": "^2.0.1",
-        "smob": "^1.5.0",
-        "singa": "^1.0.0",
-        "winston": "^3.17.0"
-    },
-    "devDependencies": {
-        "@authup/kit": "^1.0.0-beta.23",
-        "@authup/errors": "^1.0.0-beta.23"
-    },
-    "peerDependencies": {
-        "@authup/kit": "^1.0.0-beta.23",
-        "@authup/errors": "^1.0.0-beta.23"
+        "@ebec/http": "^2.3.0"
     },
     "publishConfig": {
         "access": "public"

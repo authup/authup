@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { HeaderError } from '@authup/kit';
+import { HeaderError } from '@authup/errors';
 import type { AuthorizationHeader } from 'hapic';
 import { AuthorizationHeaderType } from 'hapic';
 import type { Request } from 'routup';
