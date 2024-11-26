@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTClaims, JWTHeader } from '@authup/kit';
+import type { JWTClaims, JWTHeader } from '@authup/schema';
 import { TokenError } from '@authup/errors';
 
 /**

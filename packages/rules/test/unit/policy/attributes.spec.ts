@@ -6,10 +6,12 @@
  */
 
 import {
-    AttributesPolicyEvaluator,
-    AttributesPolicyValidator,
     deserialize,
     serialize,
+} from '@authup/kit';
+import {
+    AttributesPolicyEvaluator,
+    AttributesPolicyValidator,
 } from '../../../src';
 import type { AttributesPolicy } from '../../../src';
 import { buildTestPolicyEvaluateContext } from '../../utils';

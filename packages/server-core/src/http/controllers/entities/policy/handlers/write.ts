@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, isPropertySet, isUUID } from '@authup/kit';
+import { BuiltInPolicyType } from '@authup/rules';
+import { isPropertySet, isUUID } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';

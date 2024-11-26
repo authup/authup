@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '../utils';
+import { isObject } from '@authup/kit';
 import type { OAuth2OpenIDProviderMetadata } from './type';
 
 export function isOAuth2OpenIDProviderMetadata(input: unknown) : input is OAuth2OpenIDProviderMetadata {

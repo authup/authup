@@ -10,8 +10,8 @@ import {
     verifyToken,
     wrapPrivateKeyPem, wrapPublicKeyPem,
 } from '@authup/server-kit';
-import type { OAuth2TokenPayload } from '@authup/kit';
-import { JWKType } from '@authup/kit';
+import type { OAuth2TokenPayload } from '@authup/schema';
+import { JWKType } from '@authup/schema';
 import type { KeyEntity } from '../entity';
 
 export async function verifyOAuth2TokenWithKey(

@@ -6,8 +6,8 @@
  */
 
 import { TokenError } from '@authup/errors';
-import type { JWTClaims } from '@authup/kit';
-import { JWKType } from '@authup/kit';
+import type { JWTClaims } from '@authup/schema';
+import { JWKType } from '@authup/schema';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
 import { isKeyPair, useKeyPair } from '../../key-pair';
 import { transformJWTAlgorithmToInternal } from '../utils';

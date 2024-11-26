@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PermissionError } from '@authup/rules';
 import {
-    BuiltInPolicyType, PermissionError, isObject,
+    isObject,
 } from '@authup/kit';
 import type {
     Router,

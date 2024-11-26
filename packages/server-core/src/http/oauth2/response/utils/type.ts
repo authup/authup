@@ -6,7 +6,7 @@
  */
 
 import { TokenError } from '@authup/errors';
-import { OAuth2AuthorizationResponseType } from '@authup/kit';
+import { OAuth2AuthorizationResponseType } from '@authup/schema';
 import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';

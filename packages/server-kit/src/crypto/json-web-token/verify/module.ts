@@ -6,8 +6,8 @@
  */
 
 import { TokenError } from '@authup/errors';
-import { JWKType } from '@authup/kit';
-import type { JWTClaims, OAuth2TokenPayload } from '@authup/kit';
+import { JWKType } from '@authup/schema';
+import type { JWTClaims, OAuth2TokenPayload } from '@authup/schema';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
 import { isKeyPairWithPublicKey, useKeyPair } from '../../key-pair';
 import { createErrorForJWTError, transformJWTAlgorithmToInternal } from '../utils';

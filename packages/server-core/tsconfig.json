@@ -9,7 +9,9 @@
             "@authup/kit": ["./packages/kit/src"],
             "@authup/errors": ["./packages/errors/src"],
             "@authup/core-kit": ["./packages/core-kit/src"],
-            "@authup/core-http-kit": ["./packages/core-http-kit/src"]
+            "@authup/core-http-kit": ["./packages/core-http-kit/src"],
+            "@authup/rules": ["./packages/rules/src"],
+            "@authup/schema": ["./packages/schema/src"],
         }
     }
 }

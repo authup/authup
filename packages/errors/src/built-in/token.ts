@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenKind } from '../../oauth2';
-import type { OAuth2SubKind } from '../../oauth2';
+import { OAuth2TokenKind } from '@authup/schema';
+import type { OAuth2SubKind } from '@authup/schema';
 import { ErrorCode } from '../constants';
 import { AuthupError } from '../module';
 import type { AuthupErrorOptionsInput } from '../types';

@@ -9,12 +9,13 @@ import { TokenError } from '@authup/errors';
 import {
     PermissionChecker,
     PermissionMemoryProvider,
-} from '@authup/kit';
+    PolicyEngine,
+} from '@authup/rules';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
-} from '@authup/kit';
+} from '@authup/schema';
 import type {
     Realm,
     User,
@@ -23,7 +24,6 @@ import { REALM_MASTER_NAME } from '@authup/core-kit';
 import {
     Client, isClientTokenExpiredError,
 } from '@authup/core-http-kit';
-import { PolicyEngine } from '../../security';
 import { StoreDispatcherEventName } from './dispatcher';
 import type { StoreCreateContext, StoreLoginContext } from './types';
 

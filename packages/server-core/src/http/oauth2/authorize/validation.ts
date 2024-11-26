@@ -9,7 +9,7 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
-} from '@authup/kit';
+} from '@authup/schema';
 
 import { TokenError } from '@authup/errors';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';

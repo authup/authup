@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildEventFullName } from '@authup/kit';
+import { buildEventFullName } from '@authup/schema';
 import { Emitter } from '@socket.io/redis-emitter';
 import type { Client } from 'redis-extension';
 import type { DomainEventPublishContext, IDomainEventPublisher } from '../type';

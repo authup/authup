@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType } from '@authup/kit';
+import { JWKType } from '@authup/schema';
 import type { JsonWebKey } from 'node:crypto';
 import { createPublicKey } from 'node:crypto';
 import type { Request, Response } from 'routup';

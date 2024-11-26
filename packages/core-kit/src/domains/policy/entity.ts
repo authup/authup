@@ -5,8 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyWithType } from '@authup/kit';
 import type { Realm } from '../realm';
+
+type PolicyWithType = {
+    [key: string]: any,
+    type: string
+};
 
 export interface Policy {
     id: string;

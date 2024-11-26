@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from 'smob';
-import { flattenObject } from '../../../utils';
+import { flattenObject, isObject } from '@authup/kit';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { OAuth2SubKind } from '@authup/schema';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
@@ -13,9 +14,7 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import {
-    OAuth2SubKind, isUUID,
-} from '@authup/kit';
+import { isUUID } from '@authup/kit';
 import {
     PermissionName,
 } from '@authup/core-kit';

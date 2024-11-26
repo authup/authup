@@ -9,8 +9,8 @@ import type {
     TokenECAlgorithm, TokenRSAAlgorithm, TokenSignECOptions, TokenSignOCTOptions, TokenSignOptions, TokenSignRSAOptions,
 } from '@authup/server-kit';
 import { signToken, wrapPrivateKeyPem, wrapPublicKeyPem } from '@authup/server-kit';
-import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/kit';
-import { JWKType } from '@authup/kit';
+import type { OAuth2OpenIdTokenPayload, OAuth2TokenPayload } from '@authup/schema';
+import { JWKType } from '@authup/schema';
 import type { KeyEntity } from '../entity';
 
 export async function signOAuth2TokenWithKey(

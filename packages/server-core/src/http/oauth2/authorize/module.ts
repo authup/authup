@@ -7,8 +7,8 @@
 
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
-import type { OAuth2SubKind } from '@authup/kit';
-import { OAuth2AuthorizationResponseType } from '@authup/kit';
+import type { OAuth2SubKind } from '@authup/schema';
+import { OAuth2AuthorizationResponseType } from '@authup/schema';
 import { BadRequestError } from '@ebec/http';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';

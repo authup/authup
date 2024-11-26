@@ -6,7 +6,7 @@
  */
 
 import { TokenError } from '@authup/errors';
-import { JWTAlgorithm } from '@authup/kit';
+import { JWTAlgorithm } from '@authup/schema';
 import { Algorithm } from '@node-rs/jsonwebtoken';
 import { isObject } from 'smob';
 

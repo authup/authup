@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from 'smob';
+import { isObject } from '@authup/kit';
 import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import type { PolicyData, PolicyWithType } from '../../types';
 import { maybeInvertPolicyOutcome } from '../../helpers';

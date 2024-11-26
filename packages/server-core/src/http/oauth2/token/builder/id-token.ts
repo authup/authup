@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIdTokenPayload } from '@authup/kit';
-import { OAuth2TokenKind } from '@authup/kit';
+import type { OAuth2OpenIdTokenPayload } from '@authup/schema';
+import { OAuth2TokenKind } from '@authup/schema';
 import { resolveOpenIdClaimsFromSubEntity } from '../../openid';
 import { loadOAuth2SubEntity } from '../sub';
 import { buildOAuth2AccessTokenPayload } from './access-token';

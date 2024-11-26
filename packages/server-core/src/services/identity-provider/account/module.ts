@@ -18,12 +18,12 @@ import {
 } from '@authup/core-kit';
 import {
     createNanoID,
-    getJWTClaimByPattern,
     isScalar,
     toArray,
     toArrayElement,
     toStringArray,
 } from '@authup/kit';
+import { getJWTClaimByPattern } from '@authup/schema';
 import { BadRequestError } from '@ebec/http';
 import type { DataSource, Repository } from 'typeorm';
 import type {

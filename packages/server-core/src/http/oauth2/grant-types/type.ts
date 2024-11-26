@@ -7,7 +7,7 @@
 
 import type {
     OAuth2SubKind, OAuth2TokenGrantResponse, OAuth2TokenPayload,
-} from '@authup/kit';
+} from '@authup/schema';
 import type { Request } from 'routup';
 
 export type TokenIssueResult = {

@@ -9,7 +9,7 @@ import { Client as BaseClient, HookName, isClientError } from 'hapic';
 import type {
     Options,
 } from '@hapic/oauth2';
-import type { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/kit';
+import type { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/schema';
 import {
     ClientAPI,
     ClientScopeAPI,

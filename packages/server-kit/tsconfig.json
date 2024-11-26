@@ -3,7 +3,8 @@
     "compilerOptions": {
         "paths": {
             "@authup/kit": ["./packages/kit/src"],
-            "@authup/errors": ["./packages/errors/src"]
+            "@authup/errors": ["./packages/errors/src"],
+            "@authup/schema": ["./packages/schema/src"]
         }
     }
 }

@@ -65,11 +65,13 @@
     },
     "devDependencies": {
         "@authup/kit": "^1.0.0-beta.23",
-        "@authup/errors": "^1.0.0-beta.23"
+        "@authup/errors": "^1.0.0-beta.23",
+        "@authup/schema": "^1.0.0-beta.23"
     },
     "peerDependencies": {
         "@authup/kit": "^1.0.0-beta.23",
-        "@authup/errors": "^1.0.0-beta.23"
+        "@authup/errors": "^1.0.0-beta.23",
+        "@authup/schema": "^1.0.0-beta.23"
     },
     "publishConfig": {
         "access": "public"

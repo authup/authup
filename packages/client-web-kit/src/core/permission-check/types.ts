@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionCheckerCheckContext } from '@authup/kit';
+import type { PermissionCheckerCheckContext } from '@authup/rules';
 import type { Pinia } from 'pinia';
 import type { App, Ref } from 'vue';
 import type { Store } from '../store';

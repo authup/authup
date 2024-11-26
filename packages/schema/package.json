@@ -1,7 +1,7 @@
 {
-    "name": "@authup/errors",
+    "name": "@authup/schema",
     "version": "1.0.0-beta.23",
-    "description": "Package containing error codes and basic error classes.",
+    "description": "Package containing schema for oauth2, openid, ...",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",
@@ -21,7 +21,9 @@
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "rollup -c",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
-        "build:watch": "npm run build -- --watch"
+        "build:watch": "npm run build -- --watch",
+        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
+        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage"
     },
     "keywords": [],
     "author": {
@@ -32,14 +34,21 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/errors"
+        "directory": "packages/schema"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@ebec/http": "^2.3.0"
+        "pathtrace": "^1.1.0",
+        "smob": "^1.5.0"
+    },
+    "devDependencies": {
+        "@authup/kit": "^1.0.0-beta.23"
+    },
+    "peerDependencies": {
+        "@authup/kit": "^1.0.0-beta.23"
     },
     "publishConfig": {
         "access": "public"
