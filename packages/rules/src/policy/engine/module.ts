@@ -10,7 +10,7 @@ import {
     AttributesPolicyEvaluator,
     BuiltInPolicyType,
     CompositePolicyEvaluator,
-    DatePolicyEvaluator, IdentityPolicyEvaluator,
+    DatePolicyEvaluator, IdentityPolicyEvaluator, PermissionBindingPolicyEvaluator,
     RealmMatchPolicyEvaluator,
     TimePolicyEvaluator,
 } from '../built-in';
@@ -53,6 +53,7 @@ export class PolicyEngine {
         this.registerEvaluator(BuiltInPolicyType.ATTRIBUTE_NAMES, new AttributeNamesPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.DATE, new DatePolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.IDENTITY, new IdentityPolicyEvaluator());
+        this.registerEvaluator(BuiltInPolicyType.PERMISSION_BINDING, new PermissionBindingPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.REALM_MATCH, new RealmMatchPolicyEvaluator());
         this.registerEvaluator(BuiltInPolicyType.TIME, new TimePolicyEvaluator());
     }
