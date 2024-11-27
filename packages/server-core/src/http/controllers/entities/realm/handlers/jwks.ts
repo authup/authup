@@ -6,12 +6,12 @@
  */
 
 import { JWKType } from '@authup/schema';
+import { encodeSPKIToPem } from '@authup/server-kit';
 import type { JsonWebKey } from 'node:crypto';
 import { createPublicKey } from 'node:crypto';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { In } from 'typeorm';
-import { wrapPublicKeyPem } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../database/domains';
 import { useRequestParamID } from '../../../../request';
@@ -34,7 +34,7 @@ export async function getRealmJwksRouteHandler(req: Request, res: Response) : Pr
 
     const keys : JsonWebKey[] = entities.map((entity) => {
         const keyObject = createPublicKey({
-            key: wrapPublicKeyPem(entity.encryption_key),
+            key: encodeSPKIToPem(entity.encryption_key),
             format: 'pem',
             type: 'pkcs1',
         });

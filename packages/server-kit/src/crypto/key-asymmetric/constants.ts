@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './hash';
-export * from './key';
-export * from './key-symmetric';
-export * from './key-asymmetric';
-export * from './json-web-token';
+export enum CryptoAsymmetricAlgorithm {
+    RSA_PSS = 'RSA-PSS',
+    RSASSA_PKCS1_V1_5 = 'RSASSA-PKCS1-v1_5',
+    RSA_OAEP = 'RSA-OAEP',
+    ECDSA = 'ECDSA',
+    ECDH = 'ECDH',
+}

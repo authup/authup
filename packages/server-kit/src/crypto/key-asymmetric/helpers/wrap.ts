@@ -5,35 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-function wrapPem(
+function enc(
     type: 'PRIVATE KEY' | 'PUBLIC KEY',
-    input: string | ArrayBuffer | Buffer,
+    input: string,
 ) {
-    if (typeof input !== 'string') {
-        input = Buffer.from(input).toString('base64');
-    }
-
     return `-----BEGIN ${type}-----\n${input}\n-----END ${type}-----`;
 }
 
-export function wrapPrivateKeyPem(input: string | ArrayBuffer | Buffer) {
-    return wrapPem('PRIVATE KEY', input);
+export function encodePKCS8ToPEM(base64: string) {
+    return enc('PRIVATE KEY', base64);
 }
 
-export function wrapPublicKeyPem(input: string | ArrayBuffer | Buffer) {
-    return wrapPem('PUBLIC KEY', input);
+export function encodeSPKIToPem(input: string) {
+    return enc('PUBLIC KEY', input);
 }
 
 // ------------------------------------------------------------
 
-function unwrapPem(
+function dec(
     type: 'PRIVATE KEY' | 'PUBLIC KEY',
     input: string,
 ) {
-    if (typeof input !== 'string') {
-        input = Buffer.from(input).toString('base64');
-    }
-
     input = input.replace(`-----BEGIN ${type}-----\n`, '');
 
     input = input.replace(`\n-----END ${type}-----\n`, '');
@@ -43,10 +35,10 @@ function unwrapPem(
     return input;
 }
 
-export function unwrapPrivateKeyPem(input: string) {
-    return unwrapPem('PRIVATE KEY', input);
+export function decodePemToPKCS8(input: string) {
+    return dec('PRIVATE KEY', input);
 }
 
-export function unwrapPublicKeyPem(input: string) {
-    return unwrapPem('PUBLIC KEY', input);
+export function decodePemToSpki(input: string) {
+    return dec('PUBLIC KEY', input);
 }

@@ -9,7 +9,8 @@ import { TokenError } from '@authup/errors';
 import type { JWTClaims } from '@authup/schema';
 import { JWKType } from '@authup/schema';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
-import { isKeyPair, useKeyPair } from '../../key-pair';
+import { encodePKCS8ToPEM } from '../../key-asymmetric';
+import { CryptoKeyContainer } from '../../key';
 import { transformJWTAlgorithmToInternal } from '../utils';
 import type { TokenSignOptions } from './types';
 
@@ -26,11 +27,15 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
     switch (context.type) {
         case JWKType.RSA:
         case JWKType.EC: {
-            const { privateKey } = isKeyPair(context.keyPair) ?
-                context.keyPair :
-                await useKeyPair(context.keyPair);
-
             let algorithm : Algorithm;
+
+            let key : string;
+            if (typeof context.key === 'string') {
+                key = encodePKCS8ToPEM(context.key);
+            } else {
+                const keyContainer = new CryptoKeyContainer(context.key);
+                key = await keyContainer.toPem('pkcs8');
+            }
 
             if (context.type === JWKType.RSA) {
                 algorithm = context.algorithm ?
@@ -42,7 +47,7 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
                     Algorithm.ES256;
             }
 
-            return sign(claims, privateKey, {
+            return sign(claims, key, {
                 algorithm,
                 keyId: context.keyId,
             });
@@ -52,7 +57,15 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
                 transformJWTAlgorithmToInternal(context.algorithm) :
                 Algorithm.HS256;
 
-            return sign(claims, context.key, {
+            let key : string | Uint8Array;
+            if (typeof context.key === 'string') {
+                key = context.key;
+            } else {
+                const keyContainer = new CryptoKeyContainer(context.key);
+                key = await keyContainer.toUint8Array('raw');
+            }
+
+            return sign(claims, key, {
                 algorithm,
                 keyId: context.keyId,
             });

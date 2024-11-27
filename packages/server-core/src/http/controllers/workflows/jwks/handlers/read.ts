@@ -6,15 +6,13 @@
  */
 
 import { JWKType } from '@authup/schema';
-import type { JsonWebKey } from 'node:crypto';
-import { createPublicKey } from 'node:crypto';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { In } from 'typeorm';
-import { wrapPublicKeyPem } from '@authup/server-kit';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../database/domains';
+import { transformEncryptionKeyToJsonWebKey } from '../../../../../domains';
 import { useRequestParamID } from '../../../../request';
 
 export async function getJwksRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -30,19 +28,11 @@ export async function getJwksRouteHandler(req: Request, res: Response) : Promise
         },
     });
 
-    const keys : JsonWebKey[] = entities.map((entity) => {
-        const keyObject = createPublicKey({
-            key: wrapPublicKeyPem(entity.encryption_key),
-            format: 'pem',
-            type: 'pkcs1',
-        });
+    const promises = entities.map(
+        (entity) => transformEncryptionKeyToJsonWebKey(entity),
+    );
 
-        const jwk = keyObject.export({
-            format: 'jwk',
-        });
-
-        return { ...jwk, alg: entity.signature_algorithm, kid: entity.id };
-    });
+    const keys = await Promise.all(promises);
 
     return send(res, {
         keys,
@@ -66,17 +56,7 @@ export async function getJwkRouteHandler(req: Request, res: Response) : Promise<
         throw new NotFoundError();
     }
 
-    const keyObject = createPublicKey({
-        key: wrapPublicKeyPem(entity.encryption_key),
-        format: 'pem',
-        type: 'pkcs1',
-    });
+    const jsonWebKey = await transformEncryptionKeyToJsonWebKey(entity);
 
-    let jwk = keyObject.export({
-        format: 'jwk',
-    });
-
-    jwk = { ...jwk, alg: entity.signature_algorithm, kid: entity.id };
-
-    return send(res, jwk);
+    return send(res, jsonWebKey);
 }
