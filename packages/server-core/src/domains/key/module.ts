@@ -13,7 +13,7 @@ import {
     CryptoSymmetricAlgorithm,
 } from '@authup/server-kit';
 
-function buildImportOptionsForSigningAlgorithm(
+function buildImportOptionsForJWTAlgorithm(
     signingAlgorithm: `${JWTAlgorithm}`,
 ) : KeyPairImportOptions | KeyImportOptions {
     if (signingAlgorithm === JWTAlgorithm.HS256) {
@@ -85,16 +85,16 @@ function buildImportOptionsForSigningAlgorithm(
 export async function transformBase64KeyToJsonWebKey(
     format: Exclude<KeyFormat, 'jwk'>,
     key: string,
-    signingAlgorithm: `${JWTAlgorithm}`,
+    jwtAlgorithm: `${JWTAlgorithm}`,
 ) : Promise<JsonWebKey> {
     const keyContainer = await CryptoKeyContainer.fromBase64(
         format,
         key,
-        buildImportOptionsForSigningAlgorithm(signingAlgorithm),
+        buildImportOptionsForJWTAlgorithm(jwtAlgorithm),
     );
 
     const jwk = await keyContainer.toJWK();
-    jwk.alg = signingAlgorithm;
+    jwk.alg = jwtAlgorithm;
 
     return jwk;
 }
