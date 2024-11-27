@@ -12,16 +12,23 @@ import { In } from 'typeorm';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../database/domains';
-import { transformEncryptionKeyToJsonWebKey } from '../../../../../domains';
-import { useRequestParamID } from '../../../../request';
+import { transformBase64KeyToJsonWebKey } from '../../../../../domains';
+import { getRequestStringParam, getRequestStringParamOrFail } from '../../../../request';
 
-export async function getJwksRouteHandler(req: Request, res: Response) : Promise<any> {
+export async function getJwksRouteHandler(
+    req: Request,
+    res: Response,
+    realmIdParamKey?: string,
+) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);
+
+    const realmId = getRequestStringParam(req, realmIdParamKey || 'realmId');
 
     const entities = await repository.find({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
+            ...(realmId ? { realm_id: realmId } : {}),
         },
         order: {
             priority: 'DESC',
@@ -29,7 +36,15 @@ export async function getJwksRouteHandler(req: Request, res: Response) : Promise
     });
 
     const promises = entities.map(
-        (entity) => transformEncryptionKeyToJsonWebKey(entity),
+        (entity) => transformBase64KeyToJsonWebKey(
+            'spki',
+            entity.encryption_key,
+            entity.signature_algorithm,
+        )
+            .then((key) => ({
+                ...key,
+                kid: entity.id,
+            })),
     );
 
     const keys = await Promise.all(promises);
@@ -39,8 +54,12 @@ export async function getJwksRouteHandler(req: Request, res: Response) : Promise
     });
 }
 
-export async function getJwkRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParamID(req);
+export async function getJwkRouteHandler(
+    req: Request,
+    res: Response,
+    idParamKey?: string,
+) : Promise<any> {
+    const id = getRequestStringParamOrFail(req, idParamKey || 'id');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);
@@ -56,7 +75,14 @@ export async function getJwkRouteHandler(req: Request, res: Response) : Promise<
         throw new NotFoundError();
     }
 
-    const jsonWebKey = await transformEncryptionKeyToJsonWebKey(entity);
+    const jsonWebKey = await transformBase64KeyToJsonWebKey(
+        'spki',
+        entity.encryption_key,
+        entity.signature_algorithm,
+    );
 
-    return send(res, jsonWebKey);
+    return send(res, {
+        ...jsonWebKey,
+        kid: entity.id,
+    });
 }

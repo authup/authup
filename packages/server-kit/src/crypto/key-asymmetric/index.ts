@@ -6,6 +6,7 @@
  */
 
 export * from './constants';
+export * from './check';
 export * from './create';
 export * from './helpers';
 export * from './key-usages';

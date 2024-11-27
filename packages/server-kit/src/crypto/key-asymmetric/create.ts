@@ -6,7 +6,7 @@
  */
 
 import { CryptoAsymmetricAlgorithm } from './constants';
-import { getDefaultKeyUsagesForAsymmetricAlgorithm } from './key-usages';
+import { getKeyUsagesForAsymmetricAlgorithm } from './key-usages';
 import type { KeyPairCreateOptions, KeyPairCreateOptionsInput } from './types';
 
 export async function createKeyPair(options?: KeyPairCreateOptionsInput) : Promise<CryptoKeyPair> {
@@ -44,6 +44,6 @@ export async function createKeyPair(options?: KeyPairCreateOptionsInput) : Promi
     return crypto.subtle.generateKey(
         optionsNormalized,
         true,
-        getDefaultKeyUsagesForAsymmetricAlgorithm(optionsNormalized.name),
+        getKeyUsagesForAsymmetricAlgorithm(optionsNormalized.name),
     );
 }

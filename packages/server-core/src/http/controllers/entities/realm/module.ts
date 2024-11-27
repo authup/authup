@@ -10,11 +10,11 @@ import {
 } from '@routup/decorators';
 import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/schema';
 import type { Realm } from '@authup/core-kit';
+import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows';
 import {
     deleteRealmRouteHandler,
     getManyRealmRouteHandler,
     getOneRealmRouteHandler,
-    getRealmJwksRouteHandler,
     getRealmOpenIdConfigurationRouteHandler,
     writeRealmRouteHandler,
 } from './handlers';
@@ -66,7 +66,17 @@ export class RealmController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey[]> {
-        return getRealmJwksRouteHandler(req, res);
+        return getJwksRouteHandler(req, res, 'id');
+    }
+
+    @DGet('/:id/jwks/:keyId', [])
+    async getCert(
+        @DPath('id') id: string,
+            @DPath('keyId') keyId: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<OAuth2JsonWebKey> {
+        return getJwkRouteHandler(req, res, 'keyId');
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

@@ -11,9 +11,8 @@ import {
     decodePemToSpki,
     encodePKCS8ToPEM,
     encodeSPKIToPem,
-    getDefaultKeyUsagesForAsymmetricAlgorithm,
 } from '../key-asymmetric';
-import { getDefaultKeyUsagesForSymmetricAlgorithm } from '../key-symmetric';
+import { getKeyUsagesForAlgorithm } from './key-usages';
 
 export class CryptoKeyContainer {
     protected key : CryptoKey;
@@ -80,16 +79,12 @@ export class CryptoKeyContainer {
         key: ArrayBuffer,
         options: Algorithm | RsaHashedImportParams | EcKeyImportParams | HmacImportParams | AesKeyAlgorithm,
     ) : Promise<CryptoKeyContainer> {
-        let keyUsages = getDefaultKeyUsagesForAsymmetricAlgorithm(options.name);
-        if (!keyUsages) {
-            keyUsages = getDefaultKeyUsagesForSymmetricAlgorithm(options.name);
-        }
         const cryptoKey = await crypto.subtle.importKey(
             format,
             key,
             options,
             true,
-            keyUsages || [],
+            getKeyUsagesForAlgorithm(options.name, format),
         );
 
         return new CryptoKeyContainer(cryptoKey);

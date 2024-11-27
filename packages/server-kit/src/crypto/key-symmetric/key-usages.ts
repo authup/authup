@@ -7,29 +7,27 @@
 
 import { CryptoSymmetricAlgorithm } from './constants';
 
-export function getDefaultKeyUsagesForSymmetricAlgorithm(name: string) : KeyUsage[] | undefined {
+export function getKeyUsagesForSymmetricAlgorithm(name: string) : KeyUsage[] | undefined {
     /**
      * @see https://nodejs.org/api/webcrypto.html#cryptokeyusages
      */
-    let keyUsages : KeyUsage[] | undefined;
-    switch (name) {
-        case CryptoSymmetricAlgorithm.HMAC: {
-            keyUsages = [
-                'sign',
-                'verify',
-            ];
-            break;
-        }
-        case CryptoSymmetricAlgorithm.AES_CBC:
-        case CryptoSymmetricAlgorithm.AES_GCM:
-        case CryptoSymmetricAlgorithm.AES_CTR: {
-            keyUsages = [
-                'encrypt',
-                'decrypt',
-            ];
-            break;
-        }
+    if (name === CryptoSymmetricAlgorithm.HMAC) {
+        return [
+            'sign',
+            'verify',
+        ];
     }
 
-    return keyUsages;
+    if (
+        name === CryptoSymmetricAlgorithm.AES_CBC ||
+        name === CryptoSymmetricAlgorithm.AES_GCM ||
+        name === CryptoSymmetricAlgorithm.AES_CTR
+    ) {
+        return [
+            'encrypt',
+            'decrypt',
+        ];
+    }
+
+    throw new SyntaxError(`Key usages can not be determined for symmetric algorithm: ${name}`);
 }

@@ -7,36 +7,47 @@
 
 import { CryptoAsymmetricAlgorithm } from './constants';
 
-export function getDefaultKeyUsagesForAsymmetricAlgorithm(name: string) : KeyUsage[] | undefined {
-    /**
-     * @see https://nodejs.org/api/webcrypto.html#cryptokeyusages
-     */
-    let keyUsages : KeyUsage[] | undefined;
+/**
+ * @see https://nodejs.org/api/webcrypto.html#cryptokeyusages
+ */
+export function getKeyUsagesForAsymmetricAlgorithm(
+    name: string,
+    format?: Exclude<KeyFormat, 'jwk'>,
+) : KeyUsage[] {
+    if (
+        name === CryptoAsymmetricAlgorithm.RSA_PSS ||
+        name === CryptoAsymmetricAlgorithm.ECDSA ||
+        name === CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5
+    ) {
+        if (format === 'spki') {
+            return ['verify'];
+        } if (format === 'pkcs8') {
+            return ['sign'];
+        }
 
-    switch (name) {
-        case CryptoAsymmetricAlgorithm.RSA_PSS:
-        case CryptoAsymmetricAlgorithm.ECDSA:
-        case CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5: {
-            keyUsages = [
-                'sign',
-                'verify',
-            ];
-            break;
-        }
-        case CryptoAsymmetricAlgorithm.ECDH: {
-            keyUsages = [
-                'deriveKey',
-                'deriveBits',
-            ];
-            break;
-        }
-        case CryptoAsymmetricAlgorithm.RSA_OAEP: {
-            keyUsages = [
-                'encrypt',
-                'decrypt',
-            ];
-        }
+        return ['sign', 'verify'];
     }
 
-    return keyUsages;
+    if (name === CryptoAsymmetricAlgorithm.ECDH) {
+        if (format === 'spki') {
+            return [];
+        }
+
+        return [
+            'deriveKey',
+            'deriveBits',
+        ];
+    }
+
+    if (name === CryptoAsymmetricAlgorithm.RSA_OAEP) {
+        if (format === 'spki') {
+            return ['encrypt'];
+        } if (format === 'pkcs8') {
+            return ['decrypt'];
+        }
+
+        return ['encrypt', 'decrypt'];
+    }
+
+    throw new SyntaxError(`Key usages can not be determined for asymmetric algorithm: ${name}`);
 }
