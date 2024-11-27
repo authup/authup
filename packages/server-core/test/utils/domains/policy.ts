@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TimePolicy } from '@authup/kit';
-import { BuiltInPolicyType } from '@authup/kit';
-// eslint-disable-next-line import/no-extraneous-dependencies
+import type { TimePolicy } from '@authup/rules';
+import { BuiltInPolicyType } from '@authup/rules';
 import { faker } from '@faker-js/faker';
 import type { PolicyEntity } from '../../../src';
 

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError, ErrorCode } from '@authup/kit';
+import { AuthupError, ErrorCode } from '@authup/errors';
 
 export class RobotError extends AuthupError {
     static credentialsInvalid() {

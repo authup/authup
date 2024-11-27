@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIDProviderMetadata } from '@authup/kit';
-import { OAuth2AuthorizationResponseType } from '@authup/kit';
+import type { OAuth2OpenIDProviderMetadata } from '@authup/schema';
+import { OAuth2AuthorizationResponseType } from '@authup/schema';
 import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';

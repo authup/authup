@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, TokenError } from '@authup/kit';
+import { ErrorCode, TokenError } from '@authup/errors';
 
 type Context = {
     code?: `${ErrorCode}`,
@@ -14,6 +14,7 @@ type Context = {
 };
 export function createResponseError(context: Context) : Error {
     const error = new TokenError();
+
     Object.assign(error, {
         response: {
             data: {

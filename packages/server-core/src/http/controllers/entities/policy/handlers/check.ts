@@ -6,8 +6,9 @@
  */
 
 import type { PolicyAPICheckResponse } from '@authup/core-http-kit';
-import type { PolicyEngineEvaluateContext } from '@authup/kit';
-import { PolicyDataValidator, isUUID } from '@authup/kit';
+import type { PolicyEngineEvaluateContext } from '@authup/rules';
+import { isUUID } from '@authup/kit';
+import { PolicyDataValidator } from '@authup/rules';
 import { NotFoundError } from '@ebec/http';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';

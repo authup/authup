@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ErrorCode } from '@authup/errors';
 import type { RequestOptions } from 'hapic';
-import { ErrorCode, isObject } from '@authup/kit';
+import { isObject } from '@authup/kit';
 
 export function isClientErrorWithCode(err: unknown, code: `${ErrorCode}`) : boolean {
     if (!isObject(err) || !isObject(err.response)) {

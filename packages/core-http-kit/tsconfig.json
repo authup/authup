@@ -4,6 +4,8 @@
         "paths": {
             "@authup/kit": ["./packages/kit/src"],
             "@authup/core-kit": ["./packages/core-kit/src"],
+            "@authup/errors": ["./packages/errors/src"],
+            "@authup/schema": ["./packages/schema/src"]
         }
     }
 }

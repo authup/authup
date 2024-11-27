@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenPayload } from '@authup/kit';
-import { OAuth2SubKind } from '@authup/kit';
+import type { OAuth2TokenPayload } from '@authup/schema';
+import { OAuth2SubKind } from '@authup/schema';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../database/domains';
 import type { Config } from '../../../config';

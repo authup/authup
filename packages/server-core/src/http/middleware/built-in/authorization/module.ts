@@ -10,7 +10,7 @@ import { coreHandler, getRequestHostName } from 'routup';
 import type { Router } from 'routup';
 import { type SerializeOptions, unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
-import { PermissionChecker } from '@authup/kit';
+import { PermissionChecker } from '@authup/rules';
 import { useConfig } from '../../../../config';
 import { useDataSourceSync } from '../../../../database';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';

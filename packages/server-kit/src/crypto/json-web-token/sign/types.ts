@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWKType } from '@authup/kit';
-import type Buffer from 'node:buffer';
+import type { JWKType } from '@authup/schema';
 import type { KeyPair, KeyPairOptions } from '../../key-pair';
 import type { TokenECAlgorithm, TokenOCTAlgorithm, TokenRSAAlgorithm } from '../type';
 

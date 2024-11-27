@@ -13,8 +13,8 @@ import type {
     DomainTypeMap,
     EventRecord,
 } from '@authup/core-kit';
-import type { EventFullName } from '@authup/kit';
-import { EventNameSuffix, buildEventFullName } from '@authup/kit';
+import type { EventFullName } from '@authup/schema';
+import { EventNameSuffix, buildEventFullName } from '@authup/schema';
 import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';

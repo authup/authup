@@ -9,7 +9,7 @@ import { ScopeName } from '@authup/core-kit';
 import type {
     PermissionChecker,
     PermissionCheckerCheckContext,
-} from '@authup/kit';
+} from '@authup/rules';
 import type { Request } from 'routup';
 import { useRequestIdentity, useRequestScopes } from '../helpers';
 

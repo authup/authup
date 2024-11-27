@@ -11,7 +11,7 @@ import {
 
     unwrapPublicKeyPem,
 } from '@authup/server-kit';
-import { JWKType } from '@authup/kit';
+import { JWKType } from '@authup/schema';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../entity';

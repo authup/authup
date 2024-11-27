@@ -6,8 +6,9 @@
  */
 
 import type { Client, Robot, User } from '@authup/core-kit';
-import { OAuth2SubKind, hasOwnProperty } from '@authup/kit';
+import { hasOwnProperty } from '@authup/kit';
 import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
+import { OAuth2SubKind } from '@authup/schema';
 
 const userFields = {
     [ScopeName.IDENTITY]: ['name', 'display_name', 'last_name', 'first_name'] satisfies (keyof User)[],

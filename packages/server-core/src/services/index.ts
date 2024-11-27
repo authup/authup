@@ -7,5 +7,4 @@
 
 export * from './identity-permission';
 export * from './identity-provider';
-export * from './policy-default';
 export * from './robot-synchronization';

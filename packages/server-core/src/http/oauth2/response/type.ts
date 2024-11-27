@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenPayload } from '@authup/kit';
+import type { OAuth2TokenPayload } from '@authup/schema';
 
 export type OAuth2BearerResponseBuildContext = {
     accessToken: string,

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenGrant } from '@authup/kit';
+import { OAuth2TokenGrant } from '@authup/schema';
 import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';

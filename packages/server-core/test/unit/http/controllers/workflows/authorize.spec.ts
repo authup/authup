@@ -8,12 +8,12 @@
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import type {
     OAuth2TokenPayload,
-} from '@authup/kit';
+} from '@authup/schema';
 import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,
     OAuth2TokenKind,
-} from '@authup/kit';
+} from '@authup/schema';
 import {
     ScopeName,
 } from '@authup/core-kit';

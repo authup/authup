@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/kit';
+import type { OAuth2TokenGrantResponse } from '@authup/schema';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
-    OAuth2SubKind, TokenError,
-} from '@authup/kit';
+    OAuth2SubKind,
+} from '@authup/schema';
+import { TokenError } from '@authup/errors';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import {
     hasOAuth2OpenIDScope,

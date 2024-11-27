@@ -44,6 +44,7 @@ export default defineNuxtConfig({
         '@authup/core-http-kit': path.join(__dirname, '..', 'core-http-kit', 'src'),
         '@authup/kit': path.join(__dirname, '..', 'kit', 'src'),
         '@authup/client-web-kit': path.join(__dirname, '..', 'client-web-kit', 'src'),
+        '@authup/rules': path.join(__dirname, '..', 'rules', 'src'),
     },
     runtimeConfig: {
         apiUrl: process.env.API_URL_SERVER,

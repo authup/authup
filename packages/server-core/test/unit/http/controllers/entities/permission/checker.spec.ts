@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType } from '@authup/rules';
 import {
-    BuiltInPolicyType, createNanoID,
+    createNanoID,
 } from '@authup/kit';
 import { isClientError } from 'hapic';
 import type { UserEntity } from '../../../../../../src';

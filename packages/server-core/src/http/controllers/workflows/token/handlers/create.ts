@@ -6,9 +6,9 @@
  */
 
 import { CookieName } from '@authup/core-http-kit';
-/* istanbul ignore next */
-import type { OAuth2TokenGrantResponse } from '@authup/kit';
-import { OAuth2TokenGrant, TokenError } from '@authup/kit';
+import { TokenError } from '@authup/errors';
+import type { OAuth2TokenGrantResponse } from '@authup/schema';
+import { OAuth2TokenGrant } from '@authup/schema';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';

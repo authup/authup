@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/kit';
+import type { OAuth2TokenGrantResponse } from '@authup/schema';
 import {
     DController, DGet, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';

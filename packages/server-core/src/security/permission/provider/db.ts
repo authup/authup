@@ -14,8 +14,8 @@ import type {
     PermissionProvider,
     PolicyWithType,
     RealmMatchPolicy,
-} from '@authup/kit';
-import { BuiltInPolicyType, DecisionStrategy } from '@authup/kit';
+} from '@authup/rules';
+import { BuiltInPolicyType, DecisionStrategy } from '@authup/rules';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
 import { CachePrefix, PermissionEntity } from '../../../database/domains';

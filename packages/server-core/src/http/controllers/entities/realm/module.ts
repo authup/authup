@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/kit';
+import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/schema';
 import type { Realm } from '@authup/core-kit';
 import {
     deleteRealmRouteHandler,

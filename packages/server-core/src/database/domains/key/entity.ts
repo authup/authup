@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import {
     JWKType,
-} from '@authup/kit';
+} from '@authup/schema';
 import type {
     Key,
     Realm,
