@@ -16,6 +16,7 @@ type RequestIDParamOptions = {
      */
     isUUID?: boolean
 };
+
 export function useRequestParamID(req: Request, options: RequestIDParamOptions = {}) : string {
     const id = getRequestParamID(req, options);
     if (typeof id === 'undefined') {
@@ -26,8 +27,8 @@ export function useRequestParamID(req: Request, options: RequestIDParamOptions =
 }
 
 export function getRequestParamID(req: Request, options: RequestIDParamOptions = {}) : string | undefined {
-    const id = useRequestParam(req, 'id');
-    if (typeof id !== 'string') {
+    const id = getRequestStringParam(req, 'id');
+    if (!id) {
         return undefined;
     }
 
@@ -36,9 +37,23 @@ export function getRequestParamID(req: Request, options: RequestIDParamOptions =
         return undefined;
     }
 
-    if (id.length === 0) {
+    return id;
+}
+
+export function getRequestStringParam(req: Request, key: string) : string | undefined {
+    const value = useRequestParam(req, key);
+    if (typeof value !== 'string' || value.length === 0) {
         return undefined;
     }
 
-    return id;
+    return value;
+}
+
+export function getRequestStringParamOrFail(req: Request, key: string) : string | undefined {
+    const value = getRequestStringParam(req, key);
+    if (typeof value === 'undefined') {
+        throw new ValidupNestedError({ message: 'The request id param is not valid.' });
+    }
+
+    return value;
 }

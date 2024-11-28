@@ -6,23 +6,30 @@
  */
 
 import type { JWKType } from '@authup/schema';
-import type { KeyPair, KeyPairOptions } from '../../key-pair';
 import type { TokenECAlgorithm, TokenOCTAlgorithm, TokenRSAAlgorithm } from '../type';
 
 export type TokenVerifyRSAOptions = {
     type: `${JWKType.RSA}` | JWKType.RSA,
     algorithms?: TokenRSAAlgorithm[],
-    keyPair: Omit<KeyPair, 'privateKey'> | KeyPair | Partial<KeyPairOptions> | string,
+    /**
+     * base64 encoded public key.
+     */
+    key: string | CryptoKey,
 };
+
 export type TokenVerifyECOptions = {
     type: `${JWKType.EC}` | JWKType.EC,
     algorithms?: TokenECAlgorithm[],
-    keyPair: Omit<KeyPair, 'privateKey'> | KeyPair | Partial<KeyPairOptions> | string,
+    /**
+     * base64 encoded public key.
+     */
+    key: string | CryptoKey,
 };
+
 export type TokenVerifyOCTOptions = {
     type: `${JWKType.OCT}` | JWKType.OCT,
     algorithms?: TokenOCTAlgorithm[],
-    key: string | Buffer
+    key: string | CryptoKey
 };
 
 export type TokenVerifyOptions = TokenVerifyRSAOptions | TokenVerifyECOptions | TokenVerifyOCTOptions;

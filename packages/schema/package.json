@@ -1,7 +1,7 @@
 {
     "name": "@authup/schema",
     "version": "1.0.0-beta.23",
-    "description": "Package containing schema for oauth2, openid, ...",
+    "description": "A package containing schema for oauth2, jwk, jwt, openid, ...",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",

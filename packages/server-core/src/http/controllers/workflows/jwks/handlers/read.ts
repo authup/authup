@@ -6,51 +6,60 @@
  */
 
 import { JWKType } from '@authup/schema';
-import type { JsonWebKey } from 'node:crypto';
-import { createPublicKey } from 'node:crypto';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { In } from 'typeorm';
-import { wrapPublicKeyPem } from '@authup/server-kit';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../database/domains';
-import { useRequestParamID } from '../../../../request';
+import { transformBase64KeyToJsonWebKey } from '../../../../../domains';
+import { getRequestStringParam, getRequestStringParamOrFail } from '../../../../request';
 
-export async function getJwksRouteHandler(req: Request, res: Response) : Promise<any> {
+export async function getJwksRouteHandler(
+    req: Request,
+    res: Response,
+    realmIdParamKey?: string,
+) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);
+
+    const realmId = getRequestStringParam(req, realmIdParamKey || 'realmId');
 
     const entities = await repository.find({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
+            ...(realmId ? { realm_id: realmId } : {}),
         },
         order: {
             priority: 'DESC',
         },
     });
 
-    const keys : JsonWebKey[] = entities.map((entity) => {
-        const keyObject = createPublicKey({
-            key: wrapPublicKeyPem(entity.encryption_key),
-            format: 'pem',
-            type: 'pkcs1',
-        });
+    const promises = entities.map(
+        (entity) => transformBase64KeyToJsonWebKey(
+            'spki',
+            entity.encryption_key,
+            entity.signature_algorithm,
+        )
+            .then((key) => ({
+                ...key,
+                kid: entity.id,
+            })),
+    );
 
-        const jwk = keyObject.export({
-            format: 'jwk',
-        });
-
-        return { ...jwk, alg: entity.signature_algorithm, kid: entity.id };
-    });
+    const keys = await Promise.all(promises);
 
     return send(res, {
         keys,
     });
 }
 
-export async function getJwkRouteHandler(req: Request, res: Response) : Promise<any> {
-    const id = useRequestParamID(req);
+export async function getJwkRouteHandler(
+    req: Request,
+    res: Response,
+    idParamKey?: string,
+) : Promise<any> {
+    const id = getRequestStringParamOrFail(req, idParamKey || 'id');
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(KeyEntity);
@@ -66,17 +75,14 @@ export async function getJwkRouteHandler(req: Request, res: Response) : Promise<
         throw new NotFoundError();
     }
 
-    const keyObject = createPublicKey({
-        key: wrapPublicKeyPem(entity.encryption_key),
-        format: 'pem',
-        type: 'pkcs1',
+    const jsonWebKey = await transformBase64KeyToJsonWebKey(
+        'spki',
+        entity.encryption_key,
+        entity.signature_algorithm,
+    );
+
+    return send(res, {
+        ...jsonWebKey,
+        kid: entity.id,
     });
-
-    let jwk = keyObject.export({
-        format: 'jwk',
-    });
-
-    jwk = { ...jwk, alg: entity.signature_algorithm, kid: entity.id };
-
-    return send(res, jwk);
 }

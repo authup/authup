@@ -5,8 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './check';
-export * from './options';
-export * from './file-name';
-export * from './private-key';
 export * from './wrap';

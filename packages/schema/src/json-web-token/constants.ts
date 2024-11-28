@@ -13,7 +13,7 @@ export enum JWTAlgorithm {
     'RS512' = 'RS512',
     'ES256' = 'ES256',
     'ES384' = 'ES384',
-    // 'ES512' = 'ES512',
+    'ES512' = 'ES512',
     'PS256' = 'PS256',
     'PS384' = 'PS384',
     'PS512' = 'PS512',

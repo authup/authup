@@ -5,63 +5,59 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTClaims } from '@authup/kit';
 import { TokenError } from '@authup/errors';
-import path from 'node:path';
-import type { KeyPairOptions } from '../../src';
+import type { JWTClaims } from '@authup/schema';
 import {
-    deleteKeyPair,
+    CryptoAsymmetricAlgorithm,
+    CryptoSymmetricAlgorithm,
+    createKey,
+    createKeyPair,
     extractTokenHeader,
     extractTokenPayload,
-    signToken,
-    verifyToken,
+    signToken, verifyToken,
 } from '../../src';
 
 describe('src/json-web-token', () => {
-    const directory = path.join(__dirname, '..', '..', 'writable');
+    let keyPair : CryptoKeyPair;
+    let key : CryptoKey;
 
-    it('should sign and decrypt', async () => {
+    beforeAll(async () => {
+        keyPair = await createKeyPair({
+            name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
+        });
+        key = await createKey({
+            name: CryptoSymmetricAlgorithm.HMAC,
+        });
+    });
+
+    it('should sign and decrypt with asymmetric keyPair', async () => {
         const data : JWTClaims = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             type: 'rsa',
-            keyPair: {
-                directory,
-            },
+            key: keyPair.privateKey,
         });
 
         const decoded = await verifyToken(signedText, {
             type: 'rsa',
-            keyPair: {
-                directory,
-            },
+            key: keyPair.publicKey,
         });
 
         expect(decoded).toBeDefined();
         expect(decoded.text).toEqual(data.text);
-
-        await deleteKeyPair({
-            directory,
-        });
     });
 
-    it('should sign and decrypt with passphrase', async () => {
+    it('should sign and decrypt with symmetric key', async () => {
         const data : JWTClaims = { text: 'secretText', foo_bar: 'baz' };
-        const keyPairOptions : Partial<KeyPairOptions> = {
-            passphrase: 'start123',
-            privateName: 'private-passphrase',
-            publicName: 'public-passphrase',
-            directory,
-        };
 
         const signedText = await signToken(data, {
-            type: 'rsa',
-            keyPair: keyPairOptions,
+            type: 'oct',
+            key,
         });
 
         const decoded = await verifyToken(signedText, {
-            type: 'rsa',
-            keyPair: keyPairOptions,
+            type: 'oct',
+            key,
         });
 
         expect(decoded).toBeDefined();
@@ -70,8 +66,6 @@ describe('src/json-web-token', () => {
 
         expect(decoded).toHaveProperty('iat');
         expect(decoded).toHaveProperty('exp');
-
-        await deleteKeyPair(keyPairOptions);
     });
 
     it('sign and not verify token (expired)', async () => {
@@ -81,17 +75,13 @@ describe('src/json-web-token', () => {
 
         const signedText = await signToken(data, {
             type: 'rsa',
-            keyPair: {
-                directory,
-            },
+            key: keyPair.privateKey,
         });
 
         await expect(async () => {
             await verifyToken(signedText, {
                 type: 'rsa',
-                keyPair: {
-                    directory,
-                },
+                key: keyPair.publicKey,
             });
         }).rejects.toThrow(TokenError.expired());
     });
@@ -103,17 +93,13 @@ describe('src/json-web-token', () => {
 
         const signedText = await signToken(data, {
             type: 'rsa',
-            keyPair: {
-                directory,
-            },
+            key: keyPair.privateKey,
         });
 
         await expect(async () => {
             await verifyToken(signedText, {
                 type: 'rsa',
-                keyPair: {
-                    directory,
-                },
+                key: keyPair.publicKey,
             });
         }).rejects.toThrow(TokenError.notActiveBefore());
     });
@@ -122,9 +108,7 @@ describe('src/json-web-token', () => {
         await expect(async () => {
             await verifyToken('foo.bar.baz', {
                 type: 'rsa',
-                keyPair: {
-                    directory,
-                },
+                key: keyPair.publicKey,
             });
         }).rejects.toThrow(TokenError);
     });
@@ -134,9 +118,7 @@ describe('src/json-web-token', () => {
 
         const signedText = await signToken(data, {
             type: 'rsa',
-            keyPair: {
-                directory,
-            },
+            key: keyPair.privateKey,
             keyId: 'foo',
         });
 
@@ -145,10 +127,6 @@ describe('src/json-web-token', () => {
         expect(header.typ).toEqual('JWT');
         expect(header.alg).toEqual('RS256');
         expect(header.kid).toEqual('foo');
-
-        await deleteKeyPair({
-            directory,
-        });
     });
 
     it('should sign and decode payload', async () => {
@@ -156,9 +134,7 @@ describe('src/json-web-token', () => {
 
         const signedText = await signToken(data, {
             type: 'rsa',
-            keyPair: {
-                directory,
-            },
+            key: keyPair.privateKey,
         });
 
         const header = extractTokenPayload(signedText);
@@ -166,10 +142,6 @@ describe('src/json-web-token', () => {
         expect(header.text).toEqual(data.text);
         expect(header.exp).toBeDefined();
         expect(header.iat).toBeDefined();
-
-        await deleteKeyPair({
-            directory,
-        });
     });
 
     it('not decode header', async () => {

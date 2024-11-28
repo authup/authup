@@ -6,7 +6,6 @@
  */
 
 import type { JWKType } from '@authup/schema';
-import type { KeyPair, KeyPairOptions } from '../../key-pair';
 import type { TokenECAlgorithm, TokenOCTAlgorithm, TokenRSAAlgorithm } from '../type';
 
 export type TokenSignBaseOptions = {
@@ -15,17 +14,24 @@ export type TokenSignBaseOptions = {
 export type TokenSignRSAOptions = TokenSignBaseOptions & {
     type: `${JWKType.RSA}` | JWKType.RSA,
     algorithm?: TokenRSAAlgorithm,
-    keyPair: KeyPair | Partial<KeyPairOptions> | string
+    /**
+     * base64 encoded private key.
+     */
+    key: string | CryptoKey,
 };
 export type TokenSignECOptions = TokenSignBaseOptions & {
     type: `${JWKType.EC}` | JWKType.EC,
     algorithm?: TokenECAlgorithm,
-    keyPair: KeyPair | Partial<KeyPairOptions> | string
+    /**
+     * base64 encoded private key.
+     */
+    key: string | CryptoKey
 };
+
 export type TokenSignOCTOptions = TokenSignBaseOptions & {
     type: `${JWKType.OCT}` | JWKType.OCT,
     algorithm?: TokenOCTAlgorithm,
-    key: string | Buffer
+    key: string | CryptoKey
 };
 
 export type TokenSignOptions = TokenSignRSAOptions | TokenSignECOptions | TokenSignOCTOptions;

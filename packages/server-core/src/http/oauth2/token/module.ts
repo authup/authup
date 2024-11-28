@@ -5,18 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { JWKType, JWTAlgorithm } from '@authup/schema';
 import type { OAuth2TokenPayload } from '@authup/schema';
 import { TokenError } from '@authup/errors';
 import type {
     Cache,
     CacheSetOptions,
+    TokenECAlgorithm,
+    TokenRSAAlgorithm,
 } from '@authup/server-kit';
 import {
+    CryptoAsymmetricAlgorithm,
+    CryptoKeyContainer,
     buildCacheKey,
+    createKeyPair,
     extractTokenHeader,
+    signToken,
     useCache,
+    verifyToken,
 } from '@authup/server-kit';
-import { signOAuth2TokenWithKey, useKey, verifyOAuth2TokenWithKey } from '../../../database/domains';
+import type { FindOptionsWhere } from 'typeorm';
+import { useDataSource } from 'typeorm-extension';
+import { KeyEntity } from '../../../database/domains';
 import { OAuth2CachePrefix } from '../constants';
 
 type OAuth2TokenManagerVerifyOptions = {
@@ -52,7 +62,7 @@ export class OAuth2TokenManager {
             }
         }
 
-        const payload = await this.getPayloadFromCache(token);
+        let payload = await this.getPayloadFromCache(token);
         if (payload) {
             return payload;
         }
@@ -62,24 +72,58 @@ export class OAuth2TokenManager {
             throw TokenError.payloadInvalid('The jwk (kid) is invalid.');
         }
 
-        const entity = await useKey({
+        const entity = await this.useKey({
             id: header.kid,
         });
-        if (entity) {
-            const payload = await verifyOAuth2TokenWithKey(token, entity);
-
-            await this.addPayloadToCache(token, payload);
-
-            return payload;
+        if (!entity) {
+            throw TokenError.payloadInvalid('The referenced jwk (kid) does not exist.');
         }
 
-        throw TokenError.payloadInvalid('The referenced jwk (kid) does not exist.');
+        if (entity.type === JWKType.OCT) {
+            payload = await verifyToken(
+                token,
+                {
+                    type: JWKType.OCT,
+                    key: entity.decryption_key,
+                },
+            );
+        } else if (entity.type === JWKType.EC) {
+            payload = await verifyToken(
+                token,
+                {
+                    type: entity.type,
+                    key: entity.encryption_key,
+                    ...(
+                        entity.signature_algorithm ?
+                            { algorithms: [entity.signature_algorithm] } :
+                            []
+                    ) as TokenECAlgorithm[],
+                },
+            );
+        } else {
+            payload = await verifyToken(
+                token,
+                {
+                    type: entity.type,
+                    key: entity.encryption_key,
+                    ...(
+                        entity.signature_algorithm ?
+                            { algorithms: [entity.signature_algorithm] } :
+                            []
+                    ) as TokenRSAAlgorithm[],
+                },
+            );
+        }
+
+        await this.addPayloadToCache(token, payload);
+
+        return payload;
     }
 
     async sign<T extends OAuth2TokenPayload>(
         payload: T,
     ) : Promise<OAuth2TokenManagerSingResult<T>> {
-        const key = await useKey({
+        const key = await this.useKey({
             realm_id: payload.realm_id,
         });
 
@@ -91,7 +135,37 @@ export class OAuth2TokenManager {
             payload.exp = Math.floor(new Date().getTime() / 1000) + 3600;
         }
 
-        const token = await signOAuth2TokenWithKey(payload, key, { keyId: key.id });
+        let token : string;
+        if (key.type === JWKType.OCT) {
+            token = await signToken(
+                payload,
+                {
+                    type: JWKType.OCT,
+                    key: key.decryption_key,
+                    keyId: key.id,
+                },
+            );
+        } else if (key.type === JWKType.EC) {
+            token = await signToken(
+                payload,
+                {
+                    type: key.type,
+                    key: key.decryption_key,
+                    algorithm: key.signature_algorithm as TokenECAlgorithm,
+                    keyId: key.id,
+                },
+            );
+        } else {
+            token = await signToken(
+                payload,
+                {
+                    type: key.type,
+                    key: key.decryption_key,
+                    algorithm: key.signature_algorithm as TokenRSAAlgorithm,
+                    keyId: key.id,
+                },
+            );
+        }
 
         await this.addPayloadToCache(token, payload);
 
@@ -99,6 +173,49 @@ export class OAuth2TokenManager {
             payload,
             token,
         };
+    }
+
+    async useKey(where: FindOptionsWhere<KeyEntity>) {
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(KeyEntity);
+
+        let entity = await repository.findOne({
+            select: {
+                id: true,
+                type: true,
+                signature_algorithm: true,
+                encryption_key: true,
+                decryption_key: true,
+            },
+            where,
+        });
+
+        if (entity) {
+            return entity;
+        }
+
+        if (typeof where.realm_id !== 'string') {
+            return undefined;
+        }
+
+        const keyPair = await createKeyPair({
+            name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
+        });
+
+        const privateKeyContainer = new CryptoKeyContainer(keyPair.privateKey);
+        const publicKeyContainer = new CryptoKeyContainer(keyPair.publicKey);
+
+        entity = repository.create({
+            type: JWKType.RSA,
+            decryption_key: await privateKeyContainer.toBase64('pkcs8'),
+            encryption_key: await publicKeyContainer.toBase64('spki'),
+            realm_id: where.realm_id,
+            signature_algorithm: `${JWTAlgorithm.RS256}`,
+        });
+
+        await repository.save(entity);
+
+        return entity;
     }
 
     // -----------------------------------------------------

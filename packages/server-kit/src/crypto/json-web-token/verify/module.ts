@@ -9,7 +9,8 @@ import { TokenError } from '@authup/errors';
 import { JWKType } from '@authup/schema';
 import type { JWTClaims, OAuth2TokenPayload } from '@authup/schema';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
-import { isKeyPairWithPublicKey, useKeyPair } from '../../key-pair';
+import { encodeSPKIToPem } from '../../key-asymmetric';
+import { CryptoKeyContainer } from '../../key';
 import { createErrorForJWTError, transformJWTAlgorithmToInternal } from '../utils';
 import type { TokenVerifyOptions } from './types';
 
@@ -33,10 +34,6 @@ export async function verifyToken(
         switch (context.type) {
             case JWKType.RSA:
             case JWKType.EC: {
-                const { publicKey } = isKeyPairWithPublicKey(context.keyPair) ?
-                    context.keyPair :
-                    await useKeyPair(context.keyPair);
-
                 let algorithms : Algorithm[];
 
                 if (context.type === JWKType.RSA) {
@@ -59,7 +56,15 @@ export async function verifyToken(
                         ];
                 }
 
-                promise = verify(token, publicKey, {
+                let key : string;
+                if (typeof context.key === 'string') {
+                    key = encodeSPKIToPem(context.key);
+                } else {
+                    const keyContainer = new CryptoKeyContainer(context.key);
+                    key = await keyContainer.toPem('spki');
+                }
+
+                promise = verify(token, key, {
                     algorithms,
                     validateNbf: true,
                 });
@@ -74,7 +79,15 @@ export async function verifyToken(
                         Algorithm.HS512,
                     ];
 
-                promise = verify(token, context.key, {
+                let key : string | Uint8Array;
+                if (typeof context.key === 'string') {
+                    key = context.key;
+                } else {
+                    const keyContainer = new CryptoKeyContainer(context.key);
+                    key = await keyContainer.toUint8Array('raw');
+                }
+
+                promise = verify(token, key, {
                     algorithms,
                     validateNbf: true,
                 });
