@@ -86,16 +86,21 @@ This will lunch the following application with default settings:
 ## Packages
 The repository contains the following packages:
 
-| Name                                            | Type        | Description                                                                                           |
-|-------------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
-| [authup](packages/authup)                       | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
-| [client-web](packages/client-web)               | Application | A web application interface for end users.                                                            |
-| [client-web-kit](packages/client-web-kit)       | Library     | A toolkit containing reusable components, composition aids and utilities for the web application.     |
-| [core-kit](packages/core-kit)                   | Library     | A toolkit providing functions, interfaces and utilities for the core service.                         |
-| [core-realtime-kit](packages/core-realtime-kit) | Library     | A toolkit for the core socket service.                                                                |
-| [kit](packages/kit)                             | Library     | A toolkit for the whole ecosystem.                                                                    |
-| [server-core](packages/server-core)             | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
-| [server-kit](packages/server-kit)               | Library     | A dedicated toolkit for server-side services.                                                         |
+| Name                                            | Type        | Description                                                                                               |
+|-------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------------------|
+| [authup](packages/authup)                       | CLI         | A command line interface for interacting with various applications and services within the ecosystem.     |
+| [client-web](packages/client-web)               | Application | A web application interface for end users.                                                                |
+| [client-web-kit](packages/client-web-kit)       | Library     | A package containing reusable components, composition aids and utilities for the web application.         |
+| [client-web-nuxt](packages/client-web-nuxt)     | Library     | A package for the integration in a nuxt web application.                                                  |
+| [core-kit](packages/core-kit)                   | Library     | A package providing functions, interfaces and utilities for the core service.                             |
+| [core-http-kit](packages/core-http-kit)         | Library     | A package providing a http client with different sub api clients for resources and workflows.             |
+| [core-realtime-kit](packages/core-realtime-kit) | Library     | A package for the core socket service.                                                                    |
+| [errors](packages/errors)                       | Library     | A package containing error codes and a basic error class.                                                 |
+| [kit](packages/kit)                             | Library     | A package containing general (context independent) utilities.                                             |
+| [rules](packages/rules)                         | Library     | A package for managing & evaluating permissions and policies.                                             |
+| [schema](packages/schema)                       | Library     | A package containing schema for oauth2, jwk, jwt, openid, etc.                                            |
+| [server-core](packages/server-core)             | Service     | A service that forms the backbone of the server-side ecosystem.                                           |
+| [server-kit](packages/server-kit)               | Library     | A package containing cryptographic algorithms, reusable abstractions for interacting with services, etc.. |
 
 ## Contributing
 

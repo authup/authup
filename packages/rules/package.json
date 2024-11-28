@@ -1,7 +1,7 @@
 {
     "name": "@authup/rules",
     "version": "1.0.0-beta.23",
-    "description": "Package for defining, managing, and evaluating permission and policy rules.",
+    "description": "A package for managing & evaluating permissions and policies.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",
