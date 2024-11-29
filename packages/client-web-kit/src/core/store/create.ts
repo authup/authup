@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/errors';
 import {
     PermissionChecker,
     PermissionMemoryProvider,
     PolicyEngine,
-} from '@authup/rules';
+    TokenError,
+} from '@authup/security';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
-} from '@authup/schema';
+} from '@authup/security';
 import type {
     Realm,
     User,

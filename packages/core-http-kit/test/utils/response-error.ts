@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode, TokenError } from '@authup/errors';
+import { TokenError } from '@authup/security';
+import { ErrorCode } from '@authup/errors';
 
 type Context = {
     code?: `${ErrorCode}`,

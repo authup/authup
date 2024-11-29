@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIdTokenPayload } from '@authup/schema';
-import { OAuth2SubKind } from '@authup/schema';
+import type { OAuth2OpenIdTokenPayload } from '@authup/security';
+import { OAuth2SubKind } from '@authup/security';
 import { hasOwnProperty } from '@authup/kit';
 import type {
     Client, Robot, User,

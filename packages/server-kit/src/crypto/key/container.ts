@@ -6,13 +6,16 @@
  */
 
 import { arrayBufferToBase64, base64ToArrayBuffer } from '@authup/kit';
+import type { AsymmetricKeyImportOptionsInput, AsymmetricKeyPairImportOptions } from '../key-asymmetric';
 import {
     decodePemToPKCS8,
-    decodePemToSpki,
-    encodePKCS8ToPEM,
-    encodeSPKIToPem,
+    decodePemToSpki, encodePKCS8ToPEM, encodeSPKIToPem, normalizeAsymmetricKeyImportOptions,
 } from '../key-asymmetric';
+import type { SymmetricKeyImportOptions, SymmetricKeyImportOptionsInput } from '../key-symmetric';
+import { SymmetricAlgorithm } from '../key-symmetric';
+import { normalizeSymmetricKeyImportOptions } from '../key-symmetric/normalize';
 import { getKeyUsagesForAlgorithm } from './key-usages';
+import type { KeyContainerFromOptions } from './types';
 
 export class CryptoKeyContainer {
     protected key : CryptoKey;
@@ -56,7 +59,7 @@ export class CryptoKeyContainer {
     static async fromPem(
         format: Exclude<KeyFormat, 'jwk' | 'raw'>,
         key: string,
-        options: Algorithm | RsaHashedImportParams | EcKeyImportParams | HmacImportParams | AesKeyAlgorithm,
+        options: AsymmetricKeyImportOptionsInput | SymmetricKeyImportOptionsInput,
     ): Promise<CryptoKeyContainer> {
         if (format === 'pkcs8') {
             return CryptoKeyContainer.fromBase64(format, decodePemToPKCS8(key), options);
@@ -67,22 +70,29 @@ export class CryptoKeyContainer {
     static async fromBase64(
         format: Exclude<KeyFormat, 'jwk'>,
         key: string,
-        options: Algorithm | RsaHashedImportParams | EcKeyImportParams | HmacImportParams | AesKeyAlgorithm,
+        options: AsymmetricKeyImportOptionsInput | SymmetricKeyImportOptionsInput,
     ) : Promise<CryptoKeyContainer> {
         const arrayBuffer = base64ToArrayBuffer(key);
 
         return CryptoKeyContainer.fromArrayBuffer(format, arrayBuffer, options);
     }
 
-    static async fromArrayBuffer(
-        format: Exclude<KeyFormat, 'jwk'>,
+    static async fromArrayBuffer<T extends Exclude<KeyFormat, 'jwk'>>(
+        format: T,
         key: ArrayBuffer,
-        options: Algorithm | RsaHashedImportParams | EcKeyImportParams | HmacImportParams | AesKeyAlgorithm,
+        options: KeyContainerFromOptions<T>,
     ) : Promise<CryptoKeyContainer> {
+        let normalizedOptions : AsymmetricKeyPairImportOptions | SymmetricKeyImportOptions;
+        if (format === 'spki' || format === 'pkcs8') {
+            normalizedOptions = normalizeAsymmetricKeyImportOptions(options);
+        } else {
+            normalizedOptions = normalizeSymmetricKeyImportOptions(options);
+        }
+
         const cryptoKey = await crypto.subtle.importKey(
             format,
             key,
-            options,
+            normalizedOptions,
             true,
             getKeyUsagesForAlgorithm(options.name, format),
         );

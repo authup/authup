@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, JWTAlgorithm } from '@authup/schema';
-import type { OAuth2TokenPayload } from '@authup/schema';
-import { TokenError } from '@authup/errors';
+import { JWKType, JWTAlgorithm, TokenError } from '@authup/security';
+import type { OAuth2TokenPayload } from '@authup/security';
 import type {
     Cache,
     CacheSetOptions,
@@ -18,7 +17,7 @@ import {
     CryptoAsymmetricAlgorithm,
     CryptoKeyContainer,
     buildCacheKey,
-    createKeyPair,
+    createAsymmetricKeyPair,
     extractTokenHeader,
     signToken,
     useCache,
@@ -198,7 +197,7 @@ export class OAuth2TokenManager {
             return undefined;
         }
 
-        const keyPair = await createKeyPair({
+        const keyPair = await createAsymmetricKeyPair({
             name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
         });
 

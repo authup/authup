@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenKind } from '@authup/schema';
+import { OAuth2TokenKind } from '@authup/security';
 import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';

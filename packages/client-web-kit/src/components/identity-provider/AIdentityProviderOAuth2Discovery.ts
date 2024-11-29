@@ -6,7 +6,7 @@
  */
 
 import { Client } from '@authup/core-http-kit';
-import { isOAuth2OpenIDProviderMetadata } from '@authup/schema';
+import { isOAuth2OpenIDProviderMetadata } from '@authup/security';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {

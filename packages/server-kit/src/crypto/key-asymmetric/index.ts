@@ -10,4 +10,5 @@ export * from './check';
 export * from './create';
 export * from './helpers';
 export * from './key-usages';
+export * from './normalize';
 export * from './types';

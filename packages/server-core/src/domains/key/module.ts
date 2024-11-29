@@ -5,34 +5,34 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWTAlgorithm } from '@authup/schema';
-import type { KeyImportOptions, KeyPairImportOptions } from '@authup/server-kit';
+import { JWTAlgorithm } from '@authup/security';
+import type { AsymmetricKeyPairImportOptions, SymmetricKeyImportOptions } from '@authup/server-kit';
 import {
     CryptoAsymmetricAlgorithm,
     CryptoKeyContainer,
-    CryptoSymmetricAlgorithm,
+    SymmetricAlgorithm,
 } from '@authup/server-kit';
 
 function buildImportOptionsForJWTAlgorithm(
     signingAlgorithm: `${JWTAlgorithm}`,
-) : KeyPairImportOptions | KeyImportOptions {
+) : AsymmetricKeyPairImportOptions | SymmetricKeyImportOptions {
     if (signingAlgorithm === JWTAlgorithm.HS256) {
         return {
-            name: CryptoSymmetricAlgorithm.HMAC,
+            name: SymmetricAlgorithm.HMAC,
             hash: 'SHA-256',
         };
     }
 
     if (signingAlgorithm === JWTAlgorithm.HS384) {
         return {
-            name: CryptoSymmetricAlgorithm.HMAC,
+            name: SymmetricAlgorithm.HMAC,
             hash: 'SHA-384',
         };
     }
 
     if (signingAlgorithm === JWTAlgorithm.HS512) {
         return {
-            name: CryptoSymmetricAlgorithm.HMAC,
+            name: SymmetricAlgorithm.HMAC,
             hash: 'SHA-512',
         };
     }

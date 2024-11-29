@@ -13,12 +13,11 @@ import type {
     DomainTypeMap,
     EventRecord,
 } from '@authup/core-kit';
-import type { EventFullName } from '@authup/schema';
-import { EventNameSuffix, buildEventFullName } from '@authup/schema';
+import type { EventFullName, STCEventContext } from '@authup/core-realtime-kit';
+import { EventNameSuffix, buildEventFullName } from '@authup/core-realtime-kit';
 import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
-import type { STCEventContext } from '@authup/core-realtime-kit';
 import { injectStore, storeToRefs } from '../../store';
 import type { ResourceSocketManager, ResourceSocketManagerCreateContext } from './type';
 import { injectSocketManager, isSocketManagerUsable } from '../../socket-manager';

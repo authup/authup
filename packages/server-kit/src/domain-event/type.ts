@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/schema';
+import type { EventPayload } from '@authup/core-realtime-kit';
 
 export type DomainEventChannelName = string | ((id?: string | number) => string);
 export type DomainEventDestination = {

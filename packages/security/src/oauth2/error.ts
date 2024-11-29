@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenKind } from '@authup/schema';
-import type { OAuth2SubKind } from '@authup/schema';
-import { ErrorCode } from '../constants';
-import { AuthupError } from '../module';
-import type { AuthupErrorOptionsInput } from '../types';
+import { AuthupError, ErrorCode } from '@authup/errors';
+import type { AuthupErrorOptionsInput } from '@authup/errors';
+import type { OAuth2SubKind } from './constants';
+import { OAuth2TokenKind } from './constants';
 
 export class TokenError extends AuthupError {
     constructor(...input: AuthupErrorOptionsInput[]) {

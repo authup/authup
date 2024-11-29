@@ -5,45 +5,45 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CryptoSymmetricAlgorithm } from './constants';
+import type { SymmetricAlgorithm } from './constants';
 
 export type AESKeyOptions = AesKeyGenParams & {
-    name: CryptoSymmetricAlgorithm.AES_CBC |
-    CryptoSymmetricAlgorithm.AES_CTR |
-    CryptoSymmetricAlgorithm.AES_GCM;
+    name: SymmetricAlgorithm.AES_CBC |
+    SymmetricAlgorithm.AES_CTR |
+    SymmetricAlgorithm.AES_GCM;
 };
 
 export type AESKeyOptionsInput = Partial<AesKeyGenParams> & {
-    name: CryptoSymmetricAlgorithm.AES_CBC |
-    CryptoSymmetricAlgorithm.AES_CTR |
-    CryptoSymmetricAlgorithm.AES_GCM;
+    name: SymmetricAlgorithm.AES_CBC |
+    SymmetricAlgorithm.AES_CTR |
+    SymmetricAlgorithm.AES_GCM;
 };
 
 export type HMACKeyOptions = HmacKeyGenParams & {
-    name: CryptoSymmetricAlgorithm.HMAC;
+    name: SymmetricAlgorithm.HMAC;
 };
 
 export type HMACKeyOptionsInput = Partial<HmacKeyGenParams> & {
-    name: CryptoSymmetricAlgorithm.HMAC;
+    name: SymmetricAlgorithm.HMAC;
 };
 
-export type KeyOptions = AESKeyOptions | HMACKeyOptions;
-export type KeyOptionsInput = AESKeyOptionsInput | HMACKeyOptionsInput;
+export type SymmetricKeyOptions = AESKeyOptions | HMACKeyOptions;
+export type SymmetricKeyCreateOptionsInput = AESKeyOptionsInput | HMACKeyOptionsInput;
 
 // -----------------------------------------------
 
-export type AESKeyImportOptions = {
-    name: CryptoSymmetricAlgorithm.AES_CBC |
-    CryptoSymmetricAlgorithm.AES_CTR |
-    CryptoSymmetricAlgorithm.AES_GCM;
+export type AESKeyImportOptions = AesKeyAlgorithm & {
+    name: SymmetricAlgorithm.AES_CBC |
+    SymmetricAlgorithm.AES_CTR |
+    SymmetricAlgorithm.AES_GCM;
 };
 
 export type HMACKeyImportOptions = HmacImportParams & {
-    name: CryptoSymmetricAlgorithm.HMAC;
+    name: SymmetricAlgorithm.HMAC;
 };
 export type HMACKeyImportOptionsInput = Partial<HmacImportParams> & {
-    name: CryptoSymmetricAlgorithm.HMAC;
+    name: SymmetricAlgorithm.HMAC;
 };
 
-export type KeyImportOptions = AESKeyImportOptions | HMACKeyImportOptions;
-export type KeyImportOptionsInput = AESKeyImportOptions | HMACKeyImportOptionsInput;
+export type SymmetricKeyImportOptions = AESKeyImportOptions | HMACKeyImportOptions;
+export type SymmetricKeyImportOptionsInput = AESKeyImportOptions | HMACKeyImportOptionsInput;

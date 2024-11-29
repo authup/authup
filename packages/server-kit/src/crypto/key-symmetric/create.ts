@@ -5,34 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CryptoSymmetricAlgorithm } from './constants';
 import { getKeyUsagesForSymmetricAlgorithm } from './key-usages';
-import type { KeyOptions, KeyOptionsInput } from './types';
+import { normalizeSymmetricKeyCreateOptions } from './normalize';
+import type { SymmetricKeyCreateOptionsInput } from './types';
 
-export async function createKey(input?: KeyOptionsInput) : Promise<CryptoKey> {
-    let optionsNormalized : KeyOptions;
-    if (input) {
-        switch (input.name) {
-            case CryptoSymmetricAlgorithm.HMAC: {
-                optionsNormalized = {
-                    hash: 'SHA-256',
-                    ...input,
-                };
-                break;
-            }
-            default: {
-                optionsNormalized = {
-                    length: 256,
-                    ...input,
-                };
-            }
-        }
-    } else {
-        optionsNormalized = {
-            name: CryptoSymmetricAlgorithm.HMAC,
-            hash: 'SHA-256',
-        };
-    }
+export async function createSymmetricKey(input: SymmetricKeyCreateOptionsInput) : Promise<CryptoKey> {
+    const optionsNormalized = normalizeSymmetricKeyCreateOptions(input);
 
     return crypto.subtle.generateKey(
         optionsNormalized,

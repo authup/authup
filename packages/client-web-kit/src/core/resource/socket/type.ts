@@ -6,9 +6,8 @@
  */
 
 import type { EventRecord } from '@authup/core-kit';
-import type { EventFullName, EventNameSuffix } from '@authup/schema';
+import type { EventFullName, EventNameSuffix, STCEventContext } from '@authup/core-realtime-kit';
 import type { MaybeRef } from 'vue';
-import type { STCEventContext } from '@authup/core-realtime-kit';
 import type { EntityID } from '../record';
 
 export type ResourceSocketManagerCreateContext<

@@ -14,8 +14,7 @@
             "@authup/core-kit": ["./packages/core-kit/src"],
             "@authup/core-http-kit": ["./packages/core-http-kit/src"],
             "@authup/core-realtime-kit": ["./packages/core-realtime-kit/src"],
-            "@authup/rules": ["./packages/rules/src"],
-            "@authup/schema": ["./packages/schema/src"],
+            "@authup/security": ["./packages/security/src"],
         }
     },
     "include": [

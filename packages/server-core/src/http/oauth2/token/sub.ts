@@ -8,8 +8,8 @@
 import { ScopeName } from '@authup/core-kit';
 import {
     OAuth2SubKind,
-} from '@authup/schema';
-import { TokenError } from '@authup/errors';
+    TokenError,
+} from '@authup/security';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';

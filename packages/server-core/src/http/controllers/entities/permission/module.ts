@@ -6,7 +6,7 @@
  */
 
 import { PermissionAPICheckResponse } from '@authup/core-http-kit';
-import { PolicyData } from '@authup/rules';
+import { PolicyData } from '@authup/security';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';

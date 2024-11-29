@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/schema';
+import type { EventPayload } from '@authup/core-realtime-kit';
 import { isRedisClientUsable, useRedisClient } from '../services';
 import { DomainEventRedisPublisher } from './redis';
 import { DomainEventSocketPublisher } from './socket';
