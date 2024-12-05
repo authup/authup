@@ -13,8 +13,7 @@
         "packages/core-realtime-kit": {"component": "core-realtime-kit"},
         "packages/errors": {"component": "errors"},
         "packages/kit": {"component": "kit"},
-        "packages/rules": {"component": "rules"},
-        "packages/schema": {"component": "schema"},
+        "packages/security": {"component": "security"},
         "packages/server-core": {"component": "server-core"},
         "packages/server-kit": {"component": "server-kit"}
     },
@@ -39,8 +38,7 @@
                 "core-realtime-kit",
                 "errors",
                 "kit",
-                "rules",
-                "schema",
+                "security",
                 "server-core",
                 "server-kit"
             ]
