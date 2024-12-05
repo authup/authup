@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyEngine as BasePolicyEngine, BuiltInPolicyType } from '@authup/rules';
+import { PolicyEngine as BasePolicyEngine, BuiltInPolicyType } from '@authup/security';
 import { PermissionBindingPolicyEvaluator } from '../variants';
 
 export class PolicyEngine extends BasePolicyEngine {

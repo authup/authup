@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase } from '@authup/core-kit';
-import type { JWTClaims } from '@authup/schema';
+import type { JWTClaims } from '@authup/security';
 import type { Request } from 'routup';
 
 export type IdentityProviderIdentityStatus = 'created' | 'updated';

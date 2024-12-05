@@ -7,8 +7,8 @@
 import { transformOAuth2ScopeToArray } from '@authup/core-kit';
 import {
     OAuth2TokenKind,
-} from '@authup/schema';
-import { TokenError } from '@authup/errors';
+    TokenError,
+} from '@authup/security';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { BearerAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';

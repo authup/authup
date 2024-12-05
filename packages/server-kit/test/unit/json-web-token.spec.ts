@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/errors';
-import type { JWTClaims } from '@authup/schema';
+import { TokenError } from '@authup/security';
+import type { JWTClaims } from '@authup/security';
 import {
     CryptoAsymmetricAlgorithm,
-    CryptoSymmetricAlgorithm,
-    createKey,
-    createKeyPair,
+    SymmetricAlgorithm,
+    createAsymmetricKeyPair,
+    createSymmetricKey,
     extractTokenHeader,
     extractTokenPayload,
     signToken, verifyToken,
@@ -22,11 +22,11 @@ describe('src/json-web-token', () => {
     let key : CryptoKey;
 
     beforeAll(async () => {
-        keyPair = await createKeyPair({
+        keyPair = await createAsymmetricKeyPair({
             name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
         });
-        key = await createKey({
-            name: CryptoSymmetricAlgorithm.HMAC,
+        key = await createSymmetricKey({
+            name: SymmetricAlgorithm.HMAC,
         });
     });
 

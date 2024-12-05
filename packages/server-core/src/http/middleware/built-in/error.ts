@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PermissionError } from '@authup/rules';
+import { BuiltInPolicyType, PermissionError } from '@authup/security';
 import {
     isObject,
 } from '@authup/kit';

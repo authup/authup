@@ -64,14 +64,16 @@
         "winston": "^3.17.0"
     },
     "devDependencies": {
+        "@authup/core-realtime-kit": "^1.0.0-beta.23",
         "@authup/kit": "^1.0.0-beta.23",
         "@authup/errors": "^1.0.0-beta.23",
-        "@authup/schema": "^1.0.0-beta.23"
+        "@authup/security": "^1.0.0-beta.23"
     },
     "peerDependencies": {
+        "@authup/core-realtime-kit": "^1.0.0-beta.23",
         "@authup/kit": "^1.0.0-beta.23",
         "@authup/errors": "^1.0.0-beta.23",
-        "@authup/schema": "^1.0.0-beta.23"
+        "@authup/security": "^1.0.0-beta.23"
     },
     "publishConfig": {
         "access": "public"

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType } from '@authup/rules';
-import type { CompositePolicy, TimePolicy } from '@authup/rules';
+import { BuiltInPolicyType } from '@authup/security';
+import type { CompositePolicy, TimePolicy } from '@authup/security';
 import { createTestSuite } from '../../../../../utils';
 import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
 

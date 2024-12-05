@@ -97,8 +97,7 @@ The repository contains the following packages:
 | [core-realtime-kit](packages/core-realtime-kit) | Library     | A package for the core socket service.                                                                    |
 | [errors](packages/errors)                       | Library     | A package containing error codes and a basic error class.                                                 |
 | [kit](packages/kit)                             | Library     | A package containing general (context independent) utilities.                                             |
-| [rules](packages/rules)                         | Library     | A package for managing & evaluating permissions and policies.                                             |
-| [schema](packages/schema)                       | Library     | A package containing schema for oauth2, jwk, jwt, openid, etc.                                            |
+| [schema](packages/security)                     | Library     | A package containing schema for oauth2, jwk, jwt, openid, etc.                                            |
 | [server-core](packages/server-core)             | Service     | A service that forms the backbone of the server-side ecosystem.                                           |
 | [server-kit](packages/server-kit)               | Library     | A package containing cryptographic algorithms, reusable abstractions for interacting with services, etc.. |
 

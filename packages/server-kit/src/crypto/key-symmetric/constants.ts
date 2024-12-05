@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum CryptoSymmetricAlgorithm {
+export enum SymmetricAlgorithm {
     HMAC = 'HMAC',
     AES_CTR = 'AES-CTR',
     AES_CBC = 'AES-CBC',

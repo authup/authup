@@ -5,42 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CryptoAsymmetricAlgorithm } from './constants';
 import { getKeyUsagesForAsymmetricAlgorithm } from './key-usages';
-import type { KeyPairCreateOptions, KeyPairCreateOptionsInput } from './types';
+import { normalizeAsymmetricKeyPairCreateOptions } from './normalize';
+import type { AsymmetricKeyPairCreateOptionsInput } from './types';
 
-export async function createKeyPair(options?: KeyPairCreateOptionsInput) : Promise<CryptoKeyPair> {
-    let optionsNormalized : KeyPairCreateOptions;
-    if (options) {
-        switch (options.name) {
-            case CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5:
-            case CryptoAsymmetricAlgorithm.RSA_PSS:
-            case CryptoAsymmetricAlgorithm.RSA_OAEP: {
-                optionsNormalized = {
-                    modulusLength: 2048,
-                    publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-                    hash: 'SHA-256',
-                    ...options,
-                };
-                break;
-            }
-            case CryptoAsymmetricAlgorithm.ECDSA:
-            case CryptoAsymmetricAlgorithm.ECDH: {
-                optionsNormalized = {
-                    namedCurve: 'P-256',
-                    ...options,
-                };
-            }
-        }
-    } else {
-        optionsNormalized = {
-            name: CryptoAsymmetricAlgorithm.RSA_OAEP,
-            modulusLength: 2048,
-            publicExponent: new Uint8Array([0x01, 0x00, 0x01]),
-            hash: 'SHA-256',
-        };
-    }
-
+export async function createAsymmetricKeyPair(options: AsymmetricKeyPairCreateOptionsInput) : Promise<CryptoKeyPair> {
+    const optionsNormalized = normalizeAsymmetricKeyPairCreateOptions(options);
     return crypto.subtle.generateKey(
         optionsNormalized,
         true,

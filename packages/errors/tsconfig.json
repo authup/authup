@@ -3,7 +3,7 @@
     "compilerOptions": {
         "strict": true,
         "paths": {
-            "@authup/schema": ["./packages/schema/src"]
+            "@authup/security": ["./packages/schema/src"]
         }
     }
 }

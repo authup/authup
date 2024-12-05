@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/errors';
-import type { JWTClaims } from '@authup/schema';
-import { JWKType } from '@authup/schema';
+import { JWKType, TokenError } from '@authup/security';
+import type { JWTClaims } from '@authup/security';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
 import { encodePKCS8ToPEM } from '../../key-asymmetric';
 import { CryptoKeyContainer } from '../../key';
@@ -34,7 +33,7 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
                 key = encodePKCS8ToPEM(context.key);
             } else {
                 const keyContainer = new CryptoKeyContainer(context.key);
-                key = await keyContainer.toPem('pkcs8');
+                key = await keyContainer.toPem();
             }
 
             if (context.type === JWKType.RSA) {
@@ -62,7 +61,7 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
                 key = context.key;
             } else {
                 const keyContainer = new CryptoKeyContainer(context.key);
-                key = await keyContainer.toUint8Array('raw');
+                key = await keyContainer.toUint8Array();
             }
 
             return sign(claims, key, {

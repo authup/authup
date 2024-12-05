@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIDProviderMetadata } from '@authup/schema';
+import type { OAuth2OpenIDProviderMetadata } from '@authup/security';
 import {
     DController, DGet, DRequest, DResponse,
 } from '@routup/decorators';

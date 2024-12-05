@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EventPayload } from '@authup/schema';
-import type { DomainType } from '../contstants';
 import type { IdentityProvider, IdentityProviderMappingRelation } from '../identity-provider';
 import type { Role } from '../role';
 import type { Realm } from '../realm';
@@ -42,8 +40,3 @@ export interface IdentityProviderRoleMapping extends IdentityProviderMappingRela
 
     provider_realm: Realm | null;
 }
-
-export type IdentityProviderRoleEventContext = EventPayload & {
-    type: `${DomainType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
-    data: IdentityProviderRoleMapping
-};

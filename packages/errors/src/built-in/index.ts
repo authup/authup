@@ -6,4 +6,3 @@
  */
 
 export * from './header';
-export * from './token';

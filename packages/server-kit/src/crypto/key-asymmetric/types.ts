@@ -33,10 +33,10 @@ export type ECKeyPairCreateOptionsInput = Partial<EcKeyGenParams> & {
     CryptoAsymmetricAlgorithm.ECDH
 };
 
-export type KeyPairCreateOptions = RSAKeyPairCreateOptions |
+export type AsymmetricKeyPairCreateOptions = RSAKeyPairCreateOptions |
 ECKeyPairCreateOptions;
 
-export type KeyPairCreateOptionsInput = RSAKeyPairCreateOptionsInput | ECKeyPairCreateOptionsInput;
+export type AsymmetricKeyPairCreateOptionsInput = RSAKeyPairCreateOptionsInput | ECKeyPairCreateOptionsInput;
 
 // ----------------------------------------------------------------
 
@@ -61,7 +61,7 @@ export type ECKeyPairImportOptionsInput = Partial<EcKeyImportParams> & {
     CryptoAsymmetricAlgorithm.ECDH
 };
 
-export type KeyPairImportOptions = RSAKeyPairImportOptions |
+export type AsymmetricKeyPairImportOptions = RSAKeyPairImportOptions |
 ECKeyPairImportOptions;
 
-export type KeyPairImportOptionsInput = RSAKeyPairImportOptionsInput | ECKeyPairImportOptionsInput;
+export type AsymmetricKeyImportOptionsInput = RSAKeyPairImportOptionsInput | ECKeyPairImportOptionsInput;

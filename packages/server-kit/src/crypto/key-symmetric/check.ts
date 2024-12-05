@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CryptoSymmetricAlgorithm } from './constants';
+import { SymmetricAlgorithm } from './constants';
 
-export function isSymmetricAlgorithm(input: string) : input is CryptoSymmetricAlgorithm {
-    return (Object.values(CryptoSymmetricAlgorithm) as string[]).indexOf(input) !== -1;
+export function isSymmetricAlgorithm(input: string) : input is SymmetricAlgorithm {
+    return (Object.values(SymmetricAlgorithm) as string[]).indexOf(input) !== -1;
 }

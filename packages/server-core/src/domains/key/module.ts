@@ -5,38 +5,44 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWTAlgorithm } from '@authup/schema';
-import type { KeyImportOptions, KeyPairImportOptions } from '@authup/server-kit';
+import { JWTAlgorithm } from '@authup/security';
+import type { AsymmetricKeyPairImportOptions, SymmetricKeyImportOptions } from '@authup/server-kit';
 import {
     CryptoAsymmetricAlgorithm,
     CryptoKeyContainer,
-    CryptoSymmetricAlgorithm,
+    SymmetricAlgorithm,
 } from '@authup/server-kit';
 
-function buildImportOptionsForJWTAlgorithm(
+function buildSymmetricImportOptionsForJWTAlgorithm(
     signingAlgorithm: `${JWTAlgorithm}`,
-) : KeyPairImportOptions | KeyImportOptions {
+) : SymmetricKeyImportOptions {
     if (signingAlgorithm === JWTAlgorithm.HS256) {
         return {
-            name: CryptoSymmetricAlgorithm.HMAC,
+            name: SymmetricAlgorithm.HMAC,
             hash: 'SHA-256',
         };
     }
 
     if (signingAlgorithm === JWTAlgorithm.HS384) {
         return {
-            name: CryptoSymmetricAlgorithm.HMAC,
+            name: SymmetricAlgorithm.HMAC,
             hash: 'SHA-384',
         };
     }
 
     if (signingAlgorithm === JWTAlgorithm.HS512) {
         return {
-            name: CryptoSymmetricAlgorithm.HMAC,
+            name: SymmetricAlgorithm.HMAC,
             hash: 'SHA-512',
         };
     }
 
+    throw new Error(`Signature algorithm ${this.key.signature_algorithm} is not supported.`);
+}
+
+function buildAsymmetricImportOptionsForJWTAlgorithm(
+    signingAlgorithm: `${JWTAlgorithm}`,
+) : AsymmetricKeyPairImportOptions {
     if (signingAlgorithm === JWTAlgorithm.RS256) {
         return {
             name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
@@ -87,11 +93,20 @@ export async function transformBase64KeyToJsonWebKey(
     key: string,
     jwtAlgorithm: `${JWTAlgorithm}`,
 ) : Promise<JsonWebKey> {
-    const keyContainer = await CryptoKeyContainer.fromBase64(
-        format,
-        key,
-        buildImportOptionsForJWTAlgorithm(jwtAlgorithm),
-    );
+    let keyContainer : CryptoKeyContainer;
+    if (format === 'spki' || format === 'pkcs8') {
+        keyContainer = await CryptoKeyContainer.fromBase64({
+            format,
+            key,
+            options: buildAsymmetricImportOptionsForJWTAlgorithm(jwtAlgorithm),
+        });
+    } else {
+        keyContainer = await CryptoKeyContainer.fromBase64({
+            format,
+            key,
+            options: buildSymmetricImportOptionsForJWTAlgorithm(jwtAlgorithm),
+        });
+    }
 
     const jwk = await keyContainer.toJWK();
     jwk.alg = jwtAlgorithm;

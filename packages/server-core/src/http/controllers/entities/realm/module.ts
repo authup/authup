@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/schema';
+import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/security';
 import type { Realm } from '@authup/core-kit';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows';
 import {

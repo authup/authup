@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/errors';
-import { JWTAlgorithm } from '@authup/schema';
+import { JWTAlgorithm, TokenError } from '@authup/security';
 import { Algorithm } from '@node-rs/jsonwebtoken';
 import { isObject } from 'smob';
 

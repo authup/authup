@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/errors';
-import { JWKType } from '@authup/schema';
-import type { JWTClaims, OAuth2TokenPayload } from '@authup/schema';
+import { JWKType, TokenError } from '@authup/security';
+import type { JWTClaims, OAuth2TokenPayload } from '@authup/security';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
 import { encodeSPKIToPem } from '../../key-asymmetric';
 import { CryptoKeyContainer } from '../../key';
@@ -61,7 +60,7 @@ export async function verifyToken(
                     key = encodeSPKIToPem(context.key);
                 } else {
                     const keyContainer = new CryptoKeyContainer(context.key);
-                    key = await keyContainer.toPem('spki');
+                    key = await keyContainer.toPem();
                 }
 
                 promise = verify(token, key, {
@@ -84,7 +83,7 @@ export async function verifyToken(
                     key = context.key;
                 } else {
                     const keyContainer = new CryptoKeyContainer(context.key);
-                    key = await keyContainer.toUint8Array('raw');
+                    key = await keyContainer.toUint8Array();
                 }
 
                 promise = verify(token, key, {

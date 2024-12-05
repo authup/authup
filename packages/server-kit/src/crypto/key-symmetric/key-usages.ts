@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { CryptoSymmetricAlgorithm } from './constants';
+import { SymmetricAlgorithm } from './constants';
 
 export function getKeyUsagesForSymmetricAlgorithm(name: string) : KeyUsage[] | undefined {
     /**
      * @see https://nodejs.org/api/webcrypto.html#cryptokeyusages
      */
-    if (name === CryptoSymmetricAlgorithm.HMAC) {
+    if (name === SymmetricAlgorithm.HMAC) {
         return [
             'sign',
             'verify',
@@ -19,9 +19,9 @@ export function getKeyUsagesForSymmetricAlgorithm(name: string) : KeyUsage[] | u
     }
 
     if (
-        name === CryptoSymmetricAlgorithm.AES_CBC ||
-        name === CryptoSymmetricAlgorithm.AES_GCM ||
-        name === CryptoSymmetricAlgorithm.AES_CTR
+        name === SymmetricAlgorithm.AES_CBC ||
+        name === SymmetricAlgorithm.AES_GCM ||
+        name === SymmetricAlgorithm.AES_CTR
     ) {
         return [
             'encrypt',
