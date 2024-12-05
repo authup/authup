@@ -14,5 +14,5 @@ export function base64ToArrayBuffer(base64: string) : ArrayBuffer {
         bytes[i] = bin.charCodeAt(i);
     }
 
-    return bytes;
+    return bytes.buffer;
 }
