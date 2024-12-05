@@ -7,42 +7,42 @@
 
 import type { SymmetricAlgorithm } from './constants';
 
-export type AESKeyOptions = AesKeyGenParams & {
-    name: SymmetricAlgorithm.AES_CBC |
-    SymmetricAlgorithm.AES_CTR |
-    SymmetricAlgorithm.AES_GCM;
+export type AESKeyCreateOptions = AesKeyGenParams & {
+    name: `${SymmetricAlgorithm.AES_CBC}` |
+        `${SymmetricAlgorithm.AES_CTR}` |
+        `${SymmetricAlgorithm.AES_GCM}`;
 };
 
-export type AESKeyOptionsInput = Partial<AesKeyGenParams> & {
-    name: SymmetricAlgorithm.AES_CBC |
-    SymmetricAlgorithm.AES_CTR |
-    SymmetricAlgorithm.AES_GCM;
+export type AESKeyCreateOptionsInput = Partial<AesKeyGenParams> & {
+    name: `${SymmetricAlgorithm.AES_CBC}` |
+    `${SymmetricAlgorithm.AES_CTR}` |
+    `${SymmetricAlgorithm.AES_GCM}`;
 };
 
-export type HMACKeyOptions = HmacKeyGenParams & {
-    name: SymmetricAlgorithm.HMAC;
+export type HMACKeyCreateOptions = HmacKeyGenParams & {
+    name: `${SymmetricAlgorithm.HMAC}`;
 };
 
-export type HMACKeyOptionsInput = Partial<HmacKeyGenParams> & {
-    name: SymmetricAlgorithm.HMAC;
+export type HMACKeyCreateOptionsInput = Partial<HmacKeyGenParams> & {
+    name: `${SymmetricAlgorithm.HMAC}`;
 };
 
-export type SymmetricKeyOptions = AESKeyOptions | HMACKeyOptions;
-export type SymmetricKeyCreateOptionsInput = AESKeyOptionsInput | HMACKeyOptionsInput;
+export type SymmetricKeyCreateOptions = AESKeyCreateOptions | HMACKeyCreateOptions;
+export type SymmetricKeyCreateOptionsInput = AESKeyCreateOptionsInput | HMACKeyCreateOptionsInput;
 
 // -----------------------------------------------
 
 export type AESKeyImportOptions = AesKeyAlgorithm & {
-    name: SymmetricAlgorithm.AES_CBC |
-    SymmetricAlgorithm.AES_CTR |
-    SymmetricAlgorithm.AES_GCM;
+    name: `${SymmetricAlgorithm.AES_CBC}` |
+        `${SymmetricAlgorithm.AES_CTR}` |
+        `${SymmetricAlgorithm.AES_GCM}`;
 };
 
 export type HMACKeyImportOptions = HmacImportParams & {
-    name: SymmetricAlgorithm.HMAC;
+    name: `${SymmetricAlgorithm.HMAC}`;
 };
 export type HMACKeyImportOptionsInput = Partial<HmacImportParams> & {
-    name: SymmetricAlgorithm.HMAC;
+    name: `${SymmetricAlgorithm.HMAC}`;
 };
 
 export type SymmetricKeyImportOptions = AESKeyImportOptions | HMACKeyImportOptions;

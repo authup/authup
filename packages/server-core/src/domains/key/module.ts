@@ -13,9 +13,9 @@ import {
     SymmetricAlgorithm,
 } from '@authup/server-kit';
 
-function buildImportOptionsForJWTAlgorithm(
+function buildSymmetricImportOptionsForJWTAlgorithm(
     signingAlgorithm: `${JWTAlgorithm}`,
-) : AsymmetricKeyPairImportOptions | SymmetricKeyImportOptions {
+) : SymmetricKeyImportOptions {
     if (signingAlgorithm === JWTAlgorithm.HS256) {
         return {
             name: SymmetricAlgorithm.HMAC,
@@ -37,6 +37,12 @@ function buildImportOptionsForJWTAlgorithm(
         };
     }
 
+    throw new Error(`Signature algorithm ${this.key.signature_algorithm} is not supported.`);
+}
+
+function buildAsymmetricImportOptionsForJWTAlgorithm(
+    signingAlgorithm: `${JWTAlgorithm}`,
+) : AsymmetricKeyPairImportOptions {
     if (signingAlgorithm === JWTAlgorithm.RS256) {
         return {
             name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
@@ -87,11 +93,20 @@ export async function transformBase64KeyToJsonWebKey(
     key: string,
     jwtAlgorithm: `${JWTAlgorithm}`,
 ) : Promise<JsonWebKey> {
-    const keyContainer = await CryptoKeyContainer.fromBase64(
-        format,
-        key,
-        buildImportOptionsForJWTAlgorithm(jwtAlgorithm),
-    );
+    let keyContainer : CryptoKeyContainer;
+    if (format === 'spki' || format === 'pkcs8') {
+        keyContainer = await CryptoKeyContainer.fromBase64({
+            format,
+            key,
+            options: buildAsymmetricImportOptionsForJWTAlgorithm(jwtAlgorithm),
+        });
+    } else {
+        keyContainer = await CryptoKeyContainer.fromBase64({
+            format,
+            key,
+            options: buildSymmetricImportOptionsForJWTAlgorithm(jwtAlgorithm),
+        });
+    }
 
     const jwk = await keyContainer.toJWK();
     jwk.alg = jwtAlgorithm;

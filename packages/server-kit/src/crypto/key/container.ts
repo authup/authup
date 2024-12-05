@@ -6,16 +6,15 @@
  */
 
 import { arrayBufferToBase64, base64ToArrayBuffer } from '@authup/kit';
-import type { AsymmetricKeyImportOptionsInput, AsymmetricKeyPairImportOptions } from '../key-asymmetric';
+import type { AsymmetricKeyPairImportOptions } from '../key-asymmetric';
 import {
     decodePemToPKCS8,
     decodePemToSpki, encodePKCS8ToPEM, encodeSPKIToPem, normalizeAsymmetricKeyImportOptions,
 } from '../key-asymmetric';
-import type { SymmetricKeyImportOptions, SymmetricKeyImportOptionsInput } from '../key-symmetric';
-import { SymmetricAlgorithm } from '../key-symmetric';
+import type { SymmetricKeyImportOptions } from '../key-symmetric';
 import { normalizeSymmetricKeyImportOptions } from '../key-symmetric/normalize';
 import { getKeyUsagesForAlgorithm } from './key-usages';
-import type { KeyContainerFromOptions } from './types';
+import type { KeyContainerAsymmetricImportOptions, KeyContainerImportOptions } from './types';
 
 export class CryptoKeyContainer {
     protected key : CryptoKey;
@@ -26,28 +25,40 @@ export class CryptoKeyContainer {
 
     // ----------------------------------------------
 
-    async toArrayBuffer(format: Exclude<KeyFormat, 'jwk'>): Promise<ArrayBuffer> {
-        return crypto.subtle.exportKey(format, this.key);
+    async toArrayBuffer(): Promise<ArrayBuffer> {
+        if (this.key.type === 'private') {
+            return crypto.subtle.exportKey('pkcs8', this.key);
+        }
+
+        if (this.key.type === 'public') {
+            return crypto.subtle.exportKey('spki', this.key);
+        }
+
+        return crypto.subtle.exportKey('raw', this.key);
     }
 
-    async toUint8Array(format: Exclude<KeyFormat, 'jwk'>): Promise<Uint8Array> {
-        const arrayBuffer = await this.toArrayBuffer(format);
+    async toUint8Array(): Promise<Uint8Array> {
+        const arrayBuffer = await this.toArrayBuffer();
         return new Uint8Array(arrayBuffer);
     }
 
-    async toBase64(format: Exclude<KeyFormat, 'jwk'>) : Promise<string> {
-        const arrayBuffer = await this.toArrayBuffer(format);
+    async toBase64() : Promise<string> {
+        const arrayBuffer = await this.toArrayBuffer();
         return arrayBufferToBase64(arrayBuffer);
     }
 
-    async toPem(format: Exclude<KeyFormat, 'jwk' | 'raw'>): Promise<string> {
-        const base64 = await this.toBase64(format);
+    async toPem(): Promise<string> {
+        const base64 = await this.toBase64();
 
-        if (format === 'spki') {
+        if (this.key.type === 'public') {
             return encodeSPKIToPem(base64);
         }
 
-        return encodePKCS8ToPEM(base64);
+        if (this.key.type === 'private') {
+            return encodePKCS8ToPEM(base64);
+        }
+
+        throw new Error('A symmetric key can not be encoded as PEM');
     }
 
     async toJWK() : Promise<JsonWebKey> {
@@ -56,45 +67,42 @@ export class CryptoKeyContainer {
 
     // ----------------------------------------------
 
-    static async fromPem(
-        format: Exclude<KeyFormat, 'jwk' | 'raw'>,
-        key: string,
-        options: AsymmetricKeyImportOptionsInput | SymmetricKeyImportOptionsInput,
-    ): Promise<CryptoKeyContainer> {
-        if (format === 'pkcs8') {
-            return CryptoKeyContainer.fromBase64(format, decodePemToPKCS8(key), options);
+    static async fromPem(ctx: KeyContainerAsymmetricImportOptions<string>): Promise<CryptoKeyContainer> {
+        if (ctx.format === 'pkcs8') {
+            return CryptoKeyContainer.fromBase64({ ...ctx, key: decodePemToPKCS8(ctx.key) });
         }
-        return CryptoKeyContainer.fromBase64(format, decodePemToSpki(key), options);
+        return CryptoKeyContainer.fromBase64({ ...ctx, key: decodePemToSpki(ctx.key) });
     }
 
     static async fromBase64(
-        format: Exclude<KeyFormat, 'jwk'>,
-        key: string,
-        options: AsymmetricKeyImportOptionsInput | SymmetricKeyImportOptionsInput,
+        ctx: KeyContainerImportOptions<string>,
     ) : Promise<CryptoKeyContainer> {
-        const arrayBuffer = base64ToArrayBuffer(key);
+        const arrayBuffer = base64ToArrayBuffer(ctx.key);
 
-        return CryptoKeyContainer.fromArrayBuffer(format, arrayBuffer, options);
+        return CryptoKeyContainer.fromArrayBuffer({
+            ...ctx,
+            key: arrayBuffer,
+        });
     }
 
-    static async fromArrayBuffer<T extends Exclude<KeyFormat, 'jwk'>>(
-        format: T,
-        key: ArrayBuffer,
-        options: KeyContainerFromOptions<T>,
+    static async fromArrayBuffer(
+        ctx: KeyContainerImportOptions<ArrayBuffer>,
     ) : Promise<CryptoKeyContainer> {
         let normalizedOptions : AsymmetricKeyPairImportOptions | SymmetricKeyImportOptions;
-        if (format === 'spki' || format === 'pkcs8') {
-            normalizedOptions = normalizeAsymmetricKeyImportOptions(options);
+        if (ctx.format === 'spki' || ctx.format === 'pkcs8') {
+            normalizedOptions = normalizeAsymmetricKeyImportOptions(ctx.options);
+        } else if (ctx.format === 'raw') {
+            normalizedOptions = normalizeSymmetricKeyImportOptions(ctx.options);
         } else {
-            normalizedOptions = normalizeSymmetricKeyImportOptions(options);
+            throw new SyntaxError(`Format ${ctx.format} is not supported.`);
         }
 
         const cryptoKey = await crypto.subtle.importKey(
-            format,
-            key,
+            ctx.format,
+            ctx.key,
             normalizedOptions,
             true,
-            getKeyUsagesForAlgorithm(options.name, format),
+            getKeyUsagesForAlgorithm(normalizedOptions.name, ctx.format),
         );
 
         return new CryptoKeyContainer(cryptoKey);

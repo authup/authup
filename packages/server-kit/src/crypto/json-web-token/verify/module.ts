@@ -60,7 +60,7 @@ export async function verifyToken(
                     key = encodeSPKIToPem(context.key);
                 } else {
                     const keyContainer = new CryptoKeyContainer(context.key);
-                    key = await keyContainer.toPem('spki');
+                    key = await keyContainer.toPem();
                 }
 
                 promise = verify(token, key, {
@@ -83,7 +83,7 @@ export async function verifyToken(
                     key = context.key;
                 } else {
                     const keyContainer = new CryptoKeyContainer(context.key);
-                    key = await keyContainer.toUint8Array('raw');
+                    key = await keyContainer.toUint8Array();
                 }
 
                 promise = verify(token, key, {

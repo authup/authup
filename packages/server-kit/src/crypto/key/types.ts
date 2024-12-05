@@ -8,12 +8,17 @@
 import type { AsymmetricKeyImportOptionsInput } from '../key-asymmetric';
 import type { SymmetricKeyImportOptionsInput } from '../key-symmetric';
 
-export type KeyContainerFromOptions<
-    T extends Exclude<KeyFormat, 'jwk'>,
-> = T extends 'spki' | 'pkcs8' ?
-    AsymmetricKeyImportOptionsInput :
-    T extends 'raw' ?
-        SymmetricKeyImportOptionsInput :
-        never;
+export type KeyContainerSymmetricImportOptions<T> = {
+    format: 'raw',
+    key: T,
+    options: SymmetricKeyImportOptionsInput
+};
 
-export type KeyContainerImportContext = {};
+export type KeyContainerAsymmetricImportOptions<T> = {
+    format: 'spki' | 'pkcs8',
+    key: T,
+    options: AsymmetricKeyImportOptionsInput
+};
+
+export type KeyContainerImportOptions<T> = KeyContainerAsymmetricImportOptions<T> |
+KeyContainerSymmetricImportOptions<T>;

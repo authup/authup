@@ -7,30 +7,23 @@
 
 import { SymmetricAlgorithm } from './constants';
 import type {
-    SymmetricKeyCreateOptionsInput, SymmetricKeyImportOptions, SymmetricKeyImportOptionsInput, SymmetricKeyOptions,
+    SymmetricKeyCreateOptions, SymmetricKeyCreateOptionsInput, SymmetricKeyImportOptions, SymmetricKeyImportOptionsInput,
 } from './types';
 
 export function normalizeSymmetricKeyCreateOptions(
-    input: SymmetricKeyImportOptionsInput,
-) : SymmetricKeyCreateOptionsInput {
-    let optionsNormalized : SymmetricKeyOptions;
-    switch (input.name) {
-        case SymmetricAlgorithm.HMAC: {
-            optionsNormalized = {
-                hash: 'SHA-256',
-                ...input,
-            };
-            break;
-        }
-        default: {
-            optionsNormalized = {
-                length: 256,
-                ...input,
-            };
-        }
+    input: SymmetricKeyCreateOptionsInput,
+) : SymmetricKeyCreateOptions {
+    if (input.name === SymmetricAlgorithm.HMAC) {
+        return {
+            hash: 'SHA-256',
+            ...input,
+        };
     }
 
-    return optionsNormalized;
+    return {
+        length: 256,
+        name: input.name,
+    };
 }
 
 export function normalizeSymmetricKeyImportOptions(

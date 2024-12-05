@@ -33,7 +33,7 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
                 key = encodePKCS8ToPEM(context.key);
             } else {
                 const keyContainer = new CryptoKeyContainer(context.key);
-                key = await keyContainer.toPem('pkcs8');
+                key = await keyContainer.toPem();
             }
 
             if (context.type === JWKType.RSA) {
@@ -61,7 +61,7 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
                 key = context.key;
             } else {
                 const keyContainer = new CryptoKeyContainer(context.key);
-                key = await keyContainer.toUint8Array('raw');
+                key = await keyContainer.toUint8Array();
             }
 
             return sign(claims, key, {

@@ -206,8 +206,8 @@ export class OAuth2TokenManager {
 
         entity = repository.create({
             type: JWKType.RSA,
-            decryption_key: await privateKeyContainer.toBase64('pkcs8'),
-            encryption_key: await publicKeyContainer.toBase64('spki'),
+            decryption_key: await privateKeyContainer.toBase64(),
+            encryption_key: await publicKeyContainer.toBase64(),
             realm_id: where.realm_id,
             signature_algorithm: `${JWTAlgorithm.RS256}`,
         });
