@@ -19,9 +19,9 @@ import { createOAuth2Cleaner } from './components';
 import type { Config } from './config';
 import { DatabaseSeeder, extendDataSourceOptions, setDataSourceSync } from './database';
 import {
+    Swagger,
     createHttpServer,
     createRouter,
-    generateSwaggerDocumentation,
 } from './http';
 import type { Component } from './components';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from './services';
@@ -58,15 +58,19 @@ export class Application {
         HTTP Server & Express App
         */
 
-        logger.info('Generating documentation...');
-
-        await generateSwaggerDocumentation({
-            rootPath: this.config.rootPath,
-            writableDirectoryPath: this.config.writableDirectoryPath,
-            baseUrl: this.config.publicUrl,
+        const swagger = new Swagger({
+            baseURL: this.config.publicUrl,
         });
 
-        logger.info('Generated documentation.');
+        const swaggerCanGenerate = await swagger.canGenerate();
+        const swaggerExists = await swagger.exists();
+        if (swaggerCanGenerate && !swaggerExists) {
+            logger.info('Generating documentation...');
+
+            await swagger.generate();
+
+            logger.info('Generated documentation.');
+        }
 
         const options = await useDataSourceOptions();
         extendDataSourceOptions(options);

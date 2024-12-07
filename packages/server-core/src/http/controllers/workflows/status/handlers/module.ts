@@ -10,7 +10,7 @@ import { load } from 'locter';
 import { send } from 'routup';
 import type { Request, Response } from 'routup';
 import { useConfig } from '../../../../../config';
-import { resolvePackagePath } from '../../../../path';
+import { resolvePackagePath } from '../../../../../path';
 
 export type EndpointInfo = {
     version: string,

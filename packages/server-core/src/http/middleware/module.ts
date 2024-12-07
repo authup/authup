@@ -8,6 +8,7 @@
 import path from 'node:path';
 import type { Router } from 'routup';
 import { useConfig } from '../../config';
+import { resolvePackagePath } from '../../path';
 import {
     registerAuthorizationMiddleware,
     registerBasicMiddleware,
@@ -47,7 +48,7 @@ export function registerMiddlewares(router: Router) {
     const swagger = config.middlewareSwagger;
     if (isBuiltInMiddlewareEnabled(swagger)) {
         registerSwaggerMiddleware(router, {
-            documentPath: path.join(config.writableDirectoryPath, 'swagger.json'),
+            documentPath: path.join(resolvePackagePath(), 'dist', 'swagger.json'),
             options: {
                 baseURL: config.publicUrl,
                 ...transformBoolToEmptyObject(swagger),
