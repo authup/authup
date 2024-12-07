@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.23) (2024-12-07)
+
+
+### Features
+
+* implemented oauth2 PKCE specification ([#2487](https://github.com/authup/authup/issues/2487)) ([d6f6e65](https://github.com/authup/authup/commit/d6f6e659ac0eb319183778ddeaa8dd03d2269bbd))
+* split kit package in errors, rules & schema package ([#2500](https://github.com/authup/authup/issues/2500)) ([ff5a6e7](https://github.com/authup/authup/commit/ff5a6e731f4ea71faaefd1cd6fe02fbc0dc398e6))
+* use web crypto api ([#2502](https://github.com/authup/authup/issues/2502)) ([b088ae4](https://github.com/authup/authup/commit/b088ae4fac82debecdd5da4b47967c77654c47cc))
+
+
+### Bug Fixes
+
+* return type of base64-to-array-buffer fn ([9fc4457](https://github.com/authup/authup/commit/9fc445720ee6653d31458301767c57b7187850ca))
+
 ## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
 
 

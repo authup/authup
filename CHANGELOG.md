@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.23) (2024-12-07)
+
+
+### Features
+
+* allow inlcusion of related relations for some http endpoints ([1b8e1b4](https://github.com/authup/authup/commit/1b8e1b48d1060648ce6cf963015051322d616769))
+* allow sorting by id, created_at & updated_at for relational entities via http endpoints ([1eb66b2](https://github.com/authup/authup/commit/1eb66b2c2748e3f96e5ba622f6d62c5d73952476))
+* don't always generate swagger documentation on startup ([#2511](https://github.com/authup/authup/issues/2511)) ([eb35d00](https://github.com/authup/authup/commit/eb35d0020d9d90aabeef9cb2ab086d506c24c8cf))
+* implemented oauth2 PKCE specification ([#2487](https://github.com/authup/authup/issues/2487)) ([d6f6e65](https://github.com/authup/authup/commit/d6f6e659ac0eb319183778ddeaa8dd03d2269bbd))
+* merge packages rules & schema to security ([#2506](https://github.com/authup/authup/issues/2506)) ([2ea6407](https://github.com/authup/authup/commit/2ea6407390cad4900416994e1af78dca1b36a170))
+* split kit package in errors, rules & schema package ([#2500](https://github.com/authup/authup/issues/2500)) ([ff5a6e7](https://github.com/authup/authup/commit/ff5a6e731f4ea71faaefd1cd6fe02fbc0dc398e6))
+* use web crypto api ([#2502](https://github.com/authup/authup/issues/2502)) ([b088ae4](https://github.com/authup/authup/commit/b088ae4fac82debecdd5da4b47967c77654c47cc))
+
+
+### Bug Fixes
+
+* **deps:** bump @hapic/oauth2 to v3.x ([c83f480](https://github.com/authup/authup/commit/c83f480cee897402d11ae701012ac7f239a5e566))
+* **deps:** bump the minorandpatch group across 1 directory with 18 updates ([#2494](https://github.com/authup/authup/issues/2494)) ([cc6562e](https://github.com/authup/authup/commit/cc6562eed230f76c984e1ee26942ce705dd03fdf))
+* generating oauth2 code challenge (base64 instead of hex) ([69201cd](https://github.com/authup/authup/commit/69201cde4c89127d830eacd0e446fdfa41be332b))
+* return type of base64-to-array-buffer fn ([9fc4457](https://github.com/authup/authup/commit/9fc445720ee6653d31458301767c57b7187850ca))
+
 ## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
 
 
