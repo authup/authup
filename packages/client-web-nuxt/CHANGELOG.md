@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.23) (2024-12-07)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 18 updates ([#2494](https://github.com/authup/authup/issues/2494)) ([cc6562e](https://github.com/authup/authup/commit/cc6562eed230f76c984e1ee26942ce705dd03fdf))
+
 ## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
 
 
