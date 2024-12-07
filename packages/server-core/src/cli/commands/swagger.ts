@@ -8,7 +8,7 @@
 import { defineCommand } from 'citty';
 import process from 'node:process';
 import { useConfig } from '../../config';
-import { SwaggerService } from '../../services';
+import { Swagger } from '../../http';
 
 export function defineCLISwaggerCommand() {
     return defineCommand({
@@ -27,8 +27,8 @@ export function defineCLISwaggerCommand() {
         async setup(context) {
             const config = useConfig();
 
-            const swagger = new SwaggerService({
-                baseUrl: config.publicUrl,
+            const swagger = new Swagger({
+                baseURL: config.publicUrl,
             });
 
             if (context.args.operation === 'generate') {

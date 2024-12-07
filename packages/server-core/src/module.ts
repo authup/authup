@@ -19,11 +19,12 @@ import { createOAuth2Cleaner } from './components';
 import type { Config } from './config';
 import { DatabaseSeeder, extendDataSourceOptions, setDataSourceSync } from './database';
 import {
+    Swagger,
     createHttpServer,
     createRouter,
 } from './http';
 import type { Component } from './components';
-import { SwaggerService, isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from './services';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from './services';
 
 export class Application {
     protected config : Config;
@@ -57,8 +58,8 @@ export class Application {
         HTTP Server & Express App
         */
 
-        const swagger = new SwaggerService({
-            baseUrl: this.config.publicUrl,
+        const swagger = new Swagger({
+            baseURL: this.config.publicUrl,
         });
 
         const swaggerCanGenerate = await swagger.canGenerate();

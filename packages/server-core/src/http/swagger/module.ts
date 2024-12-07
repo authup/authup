@@ -11,18 +11,18 @@ import {
 import fs from 'node:fs';
 import path from 'node:path';
 import { getDistPath, getSrcPath } from '../../path';
-import type { SwaggerServiceOptions } from './type';
+import type { SwaggerOptions } from './type';
 
-export class SwaggerService {
+export class Swagger {
     protected distPath : string;
 
     protected srcPath : string;
 
     protected entrypointPath : string;
 
-    protected options : SwaggerServiceOptions;
+    protected options : SwaggerOptions;
 
-    constructor(options: SwaggerServiceOptions = {}) {
+    constructor(options: SwaggerOptions = {}) {
         this.distPath = getDistPath();
         this.srcPath = getSrcPath();
 
@@ -63,7 +63,7 @@ export class SwaggerService {
                         '**/@authup/**',
                     ],
                 },
-                servers: [this.options.baseUrl],
+                servers: [this.options.baseURL],
                 name: 'API Documentation',
                 outputDirectory: this.distPath,
                 securityDefinitions: {
@@ -76,7 +76,7 @@ export class SwaggerService {
                         type: 'oauth2',
                         flows: {
                             password: {
-                                tokenUrl: `${new URL('token', this.options.baseUrl).href}`,
+                                tokenUrl: `${new URL('token', this.options.baseURL).href}`,
                             },
                         },
                     },

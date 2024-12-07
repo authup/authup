@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type SwaggerServiceOptions = {
-    baseUrl?: string
+export type SwaggerOptions = {
+    baseURL?: string
 };

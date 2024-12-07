@@ -10,4 +10,5 @@ export * from './middleware';
 export * from './request';
 export * from './router';
 export * from './server';
+export * from './swagger';
 export * from './oauth2';
