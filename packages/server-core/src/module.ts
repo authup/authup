@@ -21,10 +21,9 @@ import { DatabaseSeeder, extendDataSourceOptions, setDataSourceSync } from './da
 import {
     createHttpServer,
     createRouter,
-    generateSwaggerDocumentation,
 } from './http';
 import type { Component } from './components';
-import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from './services';
+import { SwaggerService, isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from './services';
 
 export class Application {
     protected config : Config;
@@ -58,15 +57,19 @@ export class Application {
         HTTP Server & Express App
         */
 
-        logger.info('Generating documentation...');
-
-        await generateSwaggerDocumentation({
-            rootPath: this.config.rootPath,
-            writableDirectoryPath: this.config.writableDirectoryPath,
+        const swagger = new SwaggerService({
             baseUrl: this.config.publicUrl,
         });
 
-        logger.info('Generated documentation.');
+        const swaggerCanGenerate = await swagger.canGenerate();
+        const swaggerExists = await swagger.exists();
+        if (swaggerCanGenerate && !swaggerExists) {
+            logger.info('Generating documentation...');
+
+            await swagger.generate();
+
+            logger.info('Generated documentation.');
+        }
 
         const options = await useDataSourceOptions();
         extendDataSourceOptions(options);

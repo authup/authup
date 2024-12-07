@@ -8,7 +8,7 @@
         "debug": "node --inspect dist/cli/index.js start",
         "cli": "node dist/cli/index.js",
         "cli-dev": "ts-node src/cli/index.ts",
-        "build": "rm -rf ./dist && tsc -p tsconfig.build.json",
+        "build": "rm -rf ./dist && tsc -p tsconfig.build.json && npm run cli -- swagger generate",
         "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --detectOpenHandles --runInBand --testTimeout=10000",
         "test:coverage": "npm run test -- --coverage"
     },
