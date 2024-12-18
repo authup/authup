@@ -53,8 +53,8 @@
     "dependencies": {
         "@hapic/vault": "^2.3.5",
         "@isaacs/ttlcache": "^1.4.1",
-        "@node-rs/bcrypt": "^1.10.5",
-        "@node-rs/jsonwebtoken": "^0.5.7",
+        "@node-rs/bcrypt": "^1.10.7",
+        "@node-rs/jsonwebtoken": "^0.5.9",
         "@socket.io/redis-emitter": "^5.1.0",
         "@types/nodemailer": "^6.4.17",
         "locter": "^2.1.4",
