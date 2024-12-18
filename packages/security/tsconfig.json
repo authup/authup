@@ -3,7 +3,7 @@
     "compilerOptions": {
         "strict": true,
         "paths": {
-            "@authup/security": ["./packages/security/src"],
+            "@authup/errors": ["./packages/errors/src"],
             "@authup/kit": ["./packages/kit/src"]
         }
     }

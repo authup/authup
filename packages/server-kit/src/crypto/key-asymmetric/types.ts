@@ -7,11 +7,6 @@
 
 import type { CryptoAsymmetricAlgorithm } from './constants';
 
-export type KeyPairFormatted<T = string> = {
-    privateKey: T,
-    publicKey: T
-};
-
 export type RSAKeyPairCreateOptions = RsaHashedKeyGenParams & {
     name: CryptoAsymmetricAlgorithm.RSA_OAEP |
     CryptoAsymmetricAlgorithm.RSA_PSS |
