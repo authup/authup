@@ -61,18 +61,18 @@
         "@validup/adapter-routup": "^0.1.9",
         "@validup/adapter-validator": "^0.2.0",
         "@validup/adapter-zod": "^0.1.8",
-        "better-sqlite3": "^11.5.0",
+        "better-sqlite3": "^11.7.0",
         "citty": "^0.1.6",
         "confinity": "^1.0.0-beta.1",
         "cors": "^2.8.5",
-        "dotenv": "^16.4.5",
+        "dotenv": "^16.4.7",
         "dycraft": "^1.1.0",
         "envix": "^1.5.0",
         "hapic": "^2.5.1",
         "ldapjs": "^3.0.7",
         "locter": "^2.1.4",
         "morgan": "^1.10.0",
-        "mysql2": "^3.11.4",
+        "mysql2": "^3.12.0",
         "node-cron": "^3.0.3",
         "nodemailer": "^6.9.16",
         "pg": "^8.13.1",
@@ -83,7 +83,7 @@
         "typeorm": "^0.3.20",
         "typeorm-extension": "^3.6.3",
         "validup": "^0.1.8",
-        "zod": "^3.23.8"
+        "zod": "^3.24.1"
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",
@@ -91,10 +91,10 @@
         "@types/morgan": "^1.9.9",
         "@types/node-cron": "^3.0.11",
         "@types/supertest": "^6.0.2",
-        "@faker-js/faker": "^9.2.0",
+        "@faker-js/faker": "^9.3.0",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.0.0",
-        "testcontainers": "^10.14.0",
+        "testcontainers": "^10.16.0",
         "ts-node": "^10.8.2"
     },
     "publishConfig": {
