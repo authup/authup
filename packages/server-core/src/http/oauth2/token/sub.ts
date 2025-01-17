@@ -9,7 +9,7 @@ import { ScopeName } from '@authup/core-kit';
 import {
     OAuth2SubKind,
     TokenError,
-} from '@authup/security';
+} from '@authup/protocols';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';

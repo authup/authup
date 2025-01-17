@@ -6,7 +6,7 @@
  */
 
 import { type Store } from '@authup/client-web-kit';
-import type { PolicyIdentity } from '@authup/security';
+import type { PolicyIdentity } from '@authup/protocols';
 import type {
     NavigationItem,
     NavigationItemNormalized,

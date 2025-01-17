@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenPayload } from '@authup/security';
-import { OAuth2TokenKind } from '@authup/security';
+import type { OAuth2TokenPayload } from '@authup/protocols';
+import { OAuth2TokenKind } from '@authup/protocols';
 import { buildOAuth2AccessTokenPayload } from './access-token';
 import type { OAuth2RefreshTokenBuildContext } from './type';
 

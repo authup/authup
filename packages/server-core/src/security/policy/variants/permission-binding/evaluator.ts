@@ -13,7 +13,7 @@ import type {
     PolicyEvaluateContext,
     PolicyEvaluator,
     PolicyWithType,
-} from '@authup/security';
+} from '@authup/protocols';
 import {
     BuiltInPolicyType,
     CompositePolicyEvaluator,
@@ -21,7 +21,7 @@ import {
     PolicyError,
     maybeInvertPolicyOutcome,
     mergePermissionItems,
-} from '@authup/security';
+} from '@authup/protocols';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityPermissionService } from '../../../../services';
 

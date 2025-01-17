@@ -50,7 +50,7 @@
         "@authup/core-http-kit": "^1.0.0-beta.23",
         "@authup/errors": "^1.0.0-beta.23",
         "@authup/server-kit": "^1.0.0-beta.23",
-        "@authup/security": "^1.0.0-beta.23",
+        "@authup/protocols": "^1.0.0-beta.23",
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^3.1.0",
         "@routup/basic": "^1.4.0",

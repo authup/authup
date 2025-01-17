@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AuthorizationResponseType } from '@authup/security';
+import { OAuth2AuthorizationResponseType } from '@authup/protocols';
 import { useConfig } from '../../../../../src';
 import { createTestSuite } from '../../../../utils';
 

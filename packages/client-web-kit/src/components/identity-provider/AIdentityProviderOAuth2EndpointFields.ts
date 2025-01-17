@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
-import type { OpenIDProviderMetadata } from '@authup/security';
+import type { OpenIDProviderMetadata } from '@authup/protocols';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {

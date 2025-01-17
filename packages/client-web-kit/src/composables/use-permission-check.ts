@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionCheckerCheckContext } from '@authup/security';
+import type { PermissionCheckerCheckContext } from '@authup/protocols';
 import type { Ref } from 'vue';
 import { createPermissionCheckerReactiveFn } from '../core';
 

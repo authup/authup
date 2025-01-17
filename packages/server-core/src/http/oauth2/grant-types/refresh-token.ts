@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2SubKind, OAuth2TokenKind, TokenError } from '@authup/security';
-import type { OAuth2TokenGrantResponse } from '@authup/security';
+import { OAuth2SubKind, OAuth2TokenKind, TokenError } from '@authup/protocols';
+import type { OAuth2TokenGrantResponse } from '@authup/protocols';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';

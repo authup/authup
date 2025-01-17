@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionCheckerCheckOptions, PolicyData } from '@authup/security';
+import type { PermissionCheckerCheckOptions, PolicyData } from '@authup/protocols';
 import { SlotName } from '@vuecs/list-controls';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/security';
-import { OAuth2SubKind } from '@authup/security';
+import type { OAuth2TokenGrantResponse } from '@authup/protocols';
+import { OAuth2SubKind } from '@authup/protocols';
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import {
     IdentityProviderProtocol, ScopeName, UserError,

@@ -6,8 +6,8 @@
  */
 
 import { CookieName } from '@authup/core-http-kit';
-import { OAuth2TokenGrant, TokenError } from '@authup/security';
-import type { OAuth2TokenGrantResponse } from '@authup/security';
+import { OAuth2TokenGrant, TokenError } from '@authup/protocols';
+import type { OAuth2TokenGrantResponse } from '@authup/protocols';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';

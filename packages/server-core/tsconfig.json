@@ -10,7 +10,7 @@
             "@authup/errors": ["./packages/errors/src"],
             "@authup/core-kit": ["./packages/core-kit/src"],
             "@authup/core-http-kit": ["./packages/core-http-kit/src"],
-            "@authup/security": ["./packages/security/src"]
+            "@authup/protocols": ["./packages/protocols/src"]
         }
     }
 }

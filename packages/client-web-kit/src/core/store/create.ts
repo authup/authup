@@ -10,12 +10,12 @@ import {
     PermissionMemoryProvider,
     PolicyEngine,
     TokenError,
-} from '@authup/security';
+} from '@authup/protocols';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
-} from '@authup/security';
+} from '@authup/protocols';
 import type {
     Realm,
     User,

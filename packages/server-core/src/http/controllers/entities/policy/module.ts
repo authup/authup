@@ -7,7 +7,7 @@
 
 import { PolicyAPICheckResponse } from '@authup/core-http-kit';
 import { Policy } from '@authup/core-kit';
-import { PolicyData } from '@authup/security';
+import { PolicyData } from '@authup/protocols';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';

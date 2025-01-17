@@ -11,7 +11,7 @@ import {
     BuiltInPolicyType,
     DatePolicyValidator,
     TimePolicyValidator,
-} from '@authup/security';
+} from '@authup/protocols';
 import { omitRecord } from '@authup/kit';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
