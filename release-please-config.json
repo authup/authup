@@ -4,6 +4,7 @@
     "release-as": "1.0.0-beta.24",
     "packages": {
         ".": {"component": "root"},
+        "packages/access": {"component": "access"},
         "packages/authup": {"component": "authup"},
         "packages/client-web": {"component": "client-web"},
         "packages/client-web-kit": {"component": "client-web-kit"},
@@ -13,7 +14,7 @@
         "packages/core-realtime-kit": {"component": "core-realtime-kit"},
         "packages/errors": {"component": "errors"},
         "packages/kit": {"component": "kit"},
-        "packages/security": {"component": "security"},
+        "packages/specs": {"component": "specs"},
         "packages/server-core": {"component": "server-core"},
         "packages/server-kit": {"component": "server-kit"}
     },
@@ -29,6 +30,7 @@
             "groupName": "main",
             "components": [
                 "root",
+                "access",
                 "authup",
                 "client-web",
                 "client-web-kit",
@@ -38,7 +40,7 @@
                 "core-realtime-kit",
                 "errors",
                 "kit",
-                "security",
+                "specs",
                 "server-core",
                 "server-kit"
             ]
