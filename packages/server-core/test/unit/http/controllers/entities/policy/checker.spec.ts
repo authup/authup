@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType } from '@authup/protocols';
+import { BuiltInPolicyType } from '@authup/access';
 import { PolicyRepository } from '../../../../../../src';
 import { createTestSuite } from '../../../../../utils';
 
