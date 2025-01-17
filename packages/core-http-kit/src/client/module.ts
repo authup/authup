@@ -9,7 +9,7 @@ import { Client as BaseClient, HookName, isClientError } from 'hapic';
 import type {
     Options,
 } from '@hapic/oauth2';
-import type { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/security';
+import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/security';
 import {
     ClientAPI,
     ClientScopeAPI,
@@ -154,7 +154,7 @@ export class Client extends BaseClient {
         return response.data;
     }
 
-    async getWellKnownOpenIDConfiguration() : Promise<OAuth2OpenIDProviderMetadata> {
+    async getWellKnownOpenIDConfiguration() : Promise<OpenIDProviderMetadata> {
         const response = await this.get('/.well-known/openid-configuration');
         return response.data;
     }

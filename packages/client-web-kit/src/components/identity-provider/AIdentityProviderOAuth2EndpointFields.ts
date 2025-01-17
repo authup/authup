@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
-import type { OAuth2OpenIDProviderMetadata } from '@authup/security';
+import type { OpenIDProviderMetadata } from '@authup/security';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
@@ -73,7 +73,7 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
             if (props.discovery) {
                 discoveryNode = [
                     h(AIdentityProviderOAuth2Discovery, {
-                        onLookup(data: OAuth2OpenIDProviderMetadata) {
+                        onLookup(data: OpenIDProviderMetadata) {
                             form.authorize_url = data.authorization_endpoint;
                             form.token_url = data.token_endpoint;
                         },

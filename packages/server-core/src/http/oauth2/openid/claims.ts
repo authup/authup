@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIdTokenPayload } from '@authup/security';
+import type { OpenIDTokenPayload } from '@authup/security';
 import { OAuth2SubKind } from '@authup/security';
 import { hasOwnProperty } from '@authup/kit';
 import type {
@@ -13,15 +13,15 @@ import type {
 } from '@authup/core-kit';
 
 type AttributeMap<T extends Record<string, any>> = Record<
-keyof OAuth2OpenIdTokenPayload,
+keyof OpenIDTokenPayload,
 keyof T | [keyof T, (value: unknown) => unknown]
 >;
 
 function extractAttributesByAttributeMap(
     attributeMap: AttributeMap<Record<string, any>>,
     attributes: Record<string, any>,
-) : Partial<OAuth2OpenIdTokenPayload> {
-    const result : Partial<OAuth2OpenIdTokenPayload> = {};
+) : Partial<OpenIDTokenPayload> {
+    const result : Partial<OpenIDTokenPayload> = {};
 
     const keys = Object.keys(attributeMap);
     for (let i = 0; i < keys.length; i++) {
@@ -45,7 +45,7 @@ function extractAttributesByAttributeMap(
 export function resolveOpenIdClaimsFromSubEntity(
     subKind: OAuth2SubKind | `${OAuth2SubKind}`,
     attributes: Record<string, any>,
-) : Partial<OAuth2OpenIdTokenPayload> {
+) : Partial<OpenIDTokenPayload> {
     switch (subKind) {
         case OAuth2SubKind.USER: {
             const attributeMap : AttributeMap<User> = {

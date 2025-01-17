@@ -6,9 +6,9 @@
  */
 
 import { isObject } from '@authup/kit';
-import type { OAuth2OpenIDProviderMetadata } from './type';
+import type { OpenIDProviderMetadata } from './type';
 
-export function isOAuth2OpenIDProviderMetadata(input: unknown) : input is OAuth2OpenIDProviderMetadata {
+export function isOpenIDProviderMetadata(input: unknown) : input is OpenIDProviderMetadata {
     if (!isObject(input)) {
         return false;
     }

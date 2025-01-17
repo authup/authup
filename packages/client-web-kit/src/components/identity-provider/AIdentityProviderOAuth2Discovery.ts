@@ -6,7 +6,7 @@
  */
 
 import { Client } from '@authup/core-http-kit';
-import { isOAuth2OpenIDProviderMetadata } from '@authup/security';
+import { isOpenIDProviderMetadata } from '@authup/security';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import {
@@ -45,7 +45,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
 
             try {
                 const response = await apiClient.get(form.url);
-                if (isOAuth2OpenIDProviderMetadata(response.data)) {
+                if (isOpenIDProviderMetadata(response.data)) {
                     setup.emit('lookup', response.data);
                     lookupValid.value = true;
                 }

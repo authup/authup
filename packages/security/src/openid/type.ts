@@ -7,7 +7,7 @@
 
 import type { OAuth2AuthorizationResponseType, OAuth2TokenPayload } from '../oauth2';
 
-export type OAuth2OpenIDProviderMetadata = {
+export type OpenIDProviderMetadata = {
     /**
      * The fully qualified issuer URL of the server
      */
@@ -70,7 +70,7 @@ export type OAuth2OpenIDProviderMetadata = {
     userinfo_endpoint?: string
 };
 
-export type OAuth2OpenIdTokenPayload = OAuth2TokenPayload & {
+export type OpenIDTokenPayload = OAuth2TokenPayload & {
     // -----------------------------------------------------------------
     // scope: email
     // -----------------------------------------------------------------

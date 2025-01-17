@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIDProviderMetadata } from '@authup/security';
+import type { OpenIDProviderMetadata } from '@authup/security';
 import { OAuth2AuthorizationResponseType } from '@authup/security';
 import { NotFoundError } from '@ebec/http';
 import type { Request, Response } from 'routup';
@@ -29,7 +29,7 @@ export async function getRealmOpenIdConfigurationRouteHandler(req: Request, res:
 
     const config = useConfig();
 
-    const configuration : OAuth2OpenIDProviderMetadata = {
+    const configuration : OpenIDProviderMetadata = {
         issuer: config.publicUrl,
 
         authorization_endpoint: new URL('authorize', config.publicUrl).href,
