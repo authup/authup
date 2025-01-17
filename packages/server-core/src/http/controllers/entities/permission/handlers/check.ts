@@ -6,8 +6,8 @@
  */
 
 import type { PermissionAPICheckResponse } from '@authup/core-http-kit';
-import type { PermissionCheckerCheckContext } from '@authup/protocols';
-import { PermissionChecker, PolicyDataValidator } from '@authup/protocols';
+import type { PermissionCheckerCheckContext } from '@authup/access';
+import { PermissionChecker, PolicyDataValidator } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';

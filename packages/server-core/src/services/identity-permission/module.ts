@@ -6,8 +6,8 @@
  */
 
 import type { Permission, Role } from '@authup/core-kit';
-import type { PolicyIdentity } from '@authup/protocols';
-import { isPermissionItemEqual } from '@authup/protocols';
+import type { PolicyIdentity } from '@authup/access';
+import { isPermissionItemEqual } from '@authup/access';
 import type { DataSource } from 'typeorm';
 import { RobotRepository, RoleRepository, UserRepository } from '../../database/domains';
 

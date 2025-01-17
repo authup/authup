@@ -9,6 +9,8 @@ import {
     PermissionChecker,
     PermissionMemoryProvider,
     PolicyEngine,
+} from '@authup/access';
+import {
     TokenError,
 } from '@authup/protocols';
 import { computed, ref } from 'vue';

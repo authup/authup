@@ -4,6 +4,7 @@
         "module": "CommonJS",
         "resolveJsonModule": true,
         "paths": {
+            "@authup/access": ["./packages/access/src"],
             "@authup/server-kit": ["./packages/server-kit/src"],
             "@authup/config": ["./packages/config/src"],
             "@authup/kit": ["./packages/kit/src"],
