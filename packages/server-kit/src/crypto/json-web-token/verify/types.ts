@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWKType } from '@authup/protocols';
+import type { JWKType } from '@authup/specs';
 import type { TokenECAlgorithm, TokenOCTAlgorithm, TokenRSAAlgorithm } from '../type';
 
 export type TokenVerifyRSAOptions = {

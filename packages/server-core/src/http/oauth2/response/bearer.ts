@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/protocols';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { OAuth2BearerResponseBuildContext } from './type';
 
 export function buildOAuth2BearerTokenResponse(

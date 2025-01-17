@@ -10,7 +10,7 @@ import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
     TokenError,
-} from '@authup/protocols';
+} from '@authup/specs';
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';

@@ -12,12 +12,12 @@ import {
 } from '@authup/access';
 import {
     TokenError,
-} from '@authup/protocols';
+} from '@authup/specs';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
-} from '@authup/protocols';
+} from '@authup/specs';
 import type {
     Realm,
     User,

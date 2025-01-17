@@ -23,7 +23,7 @@ import {
     toArrayElement,
     toStringArray,
 } from '@authup/kit';
-import { getJWTClaimByPattern } from '@authup/protocols';
+import { getJWTClaimByPattern } from '@authup/specs';
 import { BadRequestError } from '@ebec/http';
 import type { DataSource, Repository } from 'typeorm';
 import type {

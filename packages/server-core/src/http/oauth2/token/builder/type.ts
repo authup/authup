@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2SubKind } from '@authup/protocols';
+import type { OAuth2SubKind } from '@authup/specs';
 
 export type OAuth2AccessTokenBuildContext = {
     issuer: string,

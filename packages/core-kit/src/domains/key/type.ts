@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWKType, JWTAlgorithm } from '@authup/protocols';
+import type { JWKType, JWTAlgorithm } from '@authup/specs';
 import type { Realm } from '../realm';
 
 export interface Key {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/protocols';
+import { TokenError } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
 
 type Context = {

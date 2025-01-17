@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/protocols';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import {
     OAuth2SubKind,
     TokenError,
-} from '@authup/protocols';
+} from '@authup/specs';
 import {
     ScopeName, UserError,
 } from '@authup/core-kit';

@@ -48,7 +48,7 @@ export default defineNuxtConfig({
         '@authup/core-http-kit': path.join(__dirname, '..', 'core-http-kit', 'src'),
         '@authup/kit': path.join(__dirname, '..', 'kit', 'src'),
         '@authup/client-web-kit': path.join(__dirname, '..', 'client-web-kit', 'src'),
-        '@authup/protocols': path.join(__dirname, '..', 'protocols', 'src'),
+        '@authup/specs': path.join(__dirname, '..', 'specs', 'src'),
     },
 
     runtimeConfig: {
