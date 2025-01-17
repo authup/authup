@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIdTokenPayload } from '@authup/security';
-import { OAuth2TokenKind } from '@authup/security';
+import type { OpenIDTokenPayload } from '@authup/specs';
+import { OAuth2TokenKind } from '@authup/specs';
 import { resolveOpenIdClaimsFromSubEntity } from '../../openid';
 import { loadOAuth2SubEntity } from '../sub';
 import { buildOAuth2AccessTokenPayload } from './access-token';
@@ -14,7 +14,7 @@ import type { OAuth2OpenIdTokenBuildContext } from './type';
 
 export function buildOpenIdTokenPayload(
     context: OAuth2OpenIdTokenBuildContext,
-) : OAuth2OpenIdTokenPayload {
+) : OpenIDTokenPayload {
     const utc = Math.floor(new Date().getTime() / 1000);
 
     return {
@@ -27,13 +27,13 @@ export function buildOpenIdTokenPayload(
 }
 
 export async function extendOpenIdTokenPayload(
-    payload: OAuth2OpenIdTokenPayload,
-) : Promise<OAuth2OpenIdTokenPayload> {
+    payload: OpenIDTokenPayload,
+) : Promise<OpenIDTokenPayload> {
     if (!payload.sub_kind || !payload.sub) {
         return payload;
     }
 
-    const claims : Partial<OAuth2OpenIdTokenPayload> = resolveOpenIdClaimsFromSubEntity(
+    const claims : Partial<OpenIDTokenPayload> = resolveOpenIdClaimsFromSubEntity(
         payload.sub_kind,
         await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope),
     );

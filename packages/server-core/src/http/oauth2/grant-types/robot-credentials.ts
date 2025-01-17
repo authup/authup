@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/security';
-import { OAuth2SubKind } from '@authup/security';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import { OAuth2SubKind } from '@authup/specs';
 import {
     RobotError,
     ScopeName,

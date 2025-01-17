@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useLogger } from '@authup/server-kit';
 import type { DataSourceOptions } from 'typeorm';
 import {
     CodeTransformation, isCodeTransformation, transformFilePath,
 } from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import { isDatabaseTypeSupported } from '../../helpers';
+import { DatabaseLogger } from '../../logger';
 import { extendDataSourceOptionsWithEntities } from './entities';
 import { extendDataSourceOptionsWithSubscribers } from './subscribers';
 import { DatabaseQueryResultCache } from '../../cache';
@@ -25,8 +27,11 @@ export function extendDataSourceOptions(options: DataSourceOptions) : DataSource
         migrationPath = transformFilePath(migrationPath, './dist', './src');
     }
 
+    const logger = useLogger();
+
     Object.assign(options, {
         logging: ['error'],
+        logger: new DatabaseLogger(logger),
         migrations: [migrationPath],
         migrationsTransactionMode: 'each',
     } satisfies Partial<DataSourceOptions>);

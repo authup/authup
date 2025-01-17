@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { OAuth2JsonWebKey, OAuth2OpenIDProviderMetadata } from '@authup/security';
+import { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import type { Realm } from '@authup/core-kit';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows';
 import {
@@ -56,7 +56,7 @@ export class RealmController {
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<OAuth2OpenIDProviderMetadata> {
+    ): Promise<OpenIDProviderMetadata> {
         return getRealmOpenIdConfigurationRouteHandler(req, res);
     }
 

@@ -4,13 +4,14 @@
         "module": "CommonJS",
         "resolveJsonModule": true,
         "paths": {
+            "@authup/access": ["./packages/access/src"],
             "@authup/server-kit": ["./packages/server-kit/src"],
             "@authup/config": ["./packages/config/src"],
             "@authup/kit": ["./packages/kit/src"],
             "@authup/errors": ["./packages/errors/src"],
             "@authup/core-kit": ["./packages/core-kit/src"],
             "@authup/core-http-kit": ["./packages/core-http-kit/src"],
-            "@authup/security": ["./packages/security/src"]
+            "@authup/specs": ["./packages/specs/src"]
         }
     }
 }

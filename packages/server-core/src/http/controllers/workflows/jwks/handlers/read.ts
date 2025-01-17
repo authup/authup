@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType } from '@authup/security';
+import { JWKType } from '@authup/specs';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { In } from 'typeorm';

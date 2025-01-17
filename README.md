@@ -88,6 +88,7 @@ The repository contains the following packages:
 
 | Name                                            | Type        | Description                                                                                               |
 |-------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------------------|
+| [access](packages/access)                       | Library     | A package for evaluating permissions and policies.                                                        |
 | [authup](packages/authup)                       | CLI         | A command line interface for interacting with various applications and services within the ecosystem.     |
 | [client-web](packages/client-web)               | Application | A web application interface for end users.                                                                |
 | [client-web-kit](packages/client-web-kit)       | Library     | A package containing reusable components, composition aids and utilities for the web application.         |
@@ -97,7 +98,7 @@ The repository contains the following packages:
 | [core-realtime-kit](packages/core-realtime-kit) | Library     | A package for the core socket service.                                                                    |
 | [errors](packages/errors)                       | Library     | A package containing error codes and a basic error class.                                                 |
 | [kit](packages/kit)                             | Library     | A package containing general (context independent) utilities.                                             |
-| [security](packages/security)                   | Library     | A package containing security related schema and utilities.                                               |
+| [specs](packages/specs)                         | Library     | A package containing constants, interfaces, utils, ... for different specifications.                      |
 | [server-core](packages/server-core)             | Service     | A service that forms the backbone of the server-side ecosystem.                                           |
 | [server-kit](packages/server-kit)               | Library     | A package containing cryptographic algorithms, reusable abstractions for interacting with services, etc.. |
 

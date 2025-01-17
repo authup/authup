@@ -10,13 +10,16 @@ export default defineNuxtConfig({
             'vue-toastification',
         ],
     },
+
     devtools: {
         componentInspector: false,
     },
+
     experimental: {
         // todo: enable after v3.12.4
         scanPageMeta: false,
     },
+
     css: [
         '@authup/client-web-kit/../dist/index.css',
         '@vuecs/navigation/dist/index.css',
@@ -39,13 +42,15 @@ export default defineNuxtConfig({
         '@/assets/css/bootstrap-override.css',
         '@/assets/css/oauth2.css',
     ],
+
     alias: {
         '@authup/core-kit': path.join(__dirname, '..', 'core-kit', 'src'),
         '@authup/core-http-kit': path.join(__dirname, '..', 'core-http-kit', 'src'),
         '@authup/kit': path.join(__dirname, '..', 'kit', 'src'),
         '@authup/client-web-kit': path.join(__dirname, '..', 'client-web-kit', 'src'),
-        '@authup/security': path.join(__dirname, '..', 'security', 'src'),
+        '@authup/specs': path.join(__dirname, '..', 'specs', 'src'),
     },
+
     runtimeConfig: {
         apiUrl: process.env.API_URL_SERVER,
         public: {
@@ -54,6 +59,7 @@ export default defineNuxtConfig({
             cookieDomain: process.env.COOKIE_DOMAIN,
         },
     },
+
     modules: [
         '@pinia/nuxt',
         [
@@ -73,4 +79,6 @@ export default defineNuxtConfig({
             },
         ],
     ],
+
+    compatibilityDate: '2025-01-13',
 });

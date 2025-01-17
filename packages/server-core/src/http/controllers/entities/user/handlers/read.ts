@@ -7,7 +7,7 @@
 
 import { PermissionName, ScopeName } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import { OAuth2SubKind } from '@authup/security';
+import { OAuth2SubKind } from '@authup/specs';
 import { NotFoundError } from '@ebec/http';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';

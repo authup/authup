@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/security';
-import type { JWTClaims } from '@authup/security';
+import { TokenError } from '@authup/specs';
+import type { JWTClaims } from '@authup/specs';
 import {
     CryptoAsymmetricAlgorithm,
     SymmetricAlgorithm,

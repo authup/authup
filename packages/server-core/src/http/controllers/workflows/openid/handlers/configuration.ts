@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIDProviderMetadata } from '@authup/security';
-import { OAuth2AuthorizationResponseType } from '@authup/security';
+import type { OpenIDProviderMetadata } from '@authup/specs';
+import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useConfig } from '../../../../../config';
@@ -16,7 +16,7 @@ export async function getOpenIdConfigurationRouteHandler(req: Request, res: Resp
 
     // todo: this can be cached :)
 
-    const configuration : OAuth2OpenIDProviderMetadata = {
+    const configuration : OpenIDProviderMetadata = {
         issuer: config.publicUrl,
 
         authorization_endpoint: new URL('authorize', config.publicUrl).href,

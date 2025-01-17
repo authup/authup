@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenIntrospectionResponse } from '@authup/security';
+import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import {

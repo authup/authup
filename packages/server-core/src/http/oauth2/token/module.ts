@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, JWTAlgorithm, TokenError } from '@authup/security';
-import type { OAuth2TokenPayload } from '@authup/security';
+import { JWKType, JWTAlgorithm, TokenError } from '@authup/specs';
+import type { OAuth2TokenPayload } from '@authup/specs';
 import type {
     Cache,
     CacheSetOptions,

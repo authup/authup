@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TimePolicy } from '@authup/security';
-import { BuiltInPolicyType } from '@authup/security';
+import type { TimePolicy } from '@authup/access';
+import { BuiltInPolicyType } from '@authup/access';
 import { faker } from '@faker-js/faker';
 import type { PolicyEntity } from '../../../src';
 

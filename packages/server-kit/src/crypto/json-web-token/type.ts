@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { JWTAlgorithm } from '@authup/security';
+import type { JWTAlgorithm } from '@authup/specs';
 
 export type TokenRSAAlgorithm = `${JWTAlgorithm.RS256}` |
     `${JWTAlgorithm.RS384}` |

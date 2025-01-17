@@ -9,13 +9,15 @@ import {
     PermissionChecker,
     PermissionMemoryProvider,
     PolicyEngine,
+} from '@authup/access';
+import {
     TokenError,
-} from '@authup/security';
+} from '@authup/specs';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
-} from '@authup/security';
+} from '@authup/specs';
 import type {
     Realm,
     User,

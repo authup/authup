@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2OpenIDProviderMetadata } from '@authup/security';
+import type { OpenIDProviderMetadata } from '@authup/specs';
 import {
     DController, DGet, DRequest, DResponse,
 } from '@routup/decorators';
@@ -17,7 +17,7 @@ export class OpenIDController {
     async getOpenIdConfiguration(
         @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<OAuth2OpenIDProviderMetadata[]> {
+    ): Promise<OpenIDProviderMetadata[]> {
         return getOpenIdConfigurationRouteHandler(req, res);
     }
 }

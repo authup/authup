@@ -6,9 +6,11 @@
  */
 
 import path from 'node:path';
-import * as process from 'node:process';
+import process from 'node:process';
 import type { LoggerOptions } from 'winston';
-import { createLogger as create, format, transports } from 'winston';
+import {
+    createLogger as create, format, transports,
+} from 'winston';
 import type { Logger, LoggerCreateContext } from './types';
 
 export function createLogger(context: LoggerCreateContext) : Logger {
@@ -22,7 +24,7 @@ export function createLogger(context: LoggerCreateContext) : Logger {
                 level: 'info',
             }),
             new transports.File({
-                filename: path.join(cwd, 'access.log'),
+                filename: path.join(cwd, 'http.log'),
                 level: 'http',
                 maxsize: 10 * 1024 * 1024, // 10MB
                 maxFiles: 5,
@@ -42,6 +44,7 @@ export function createLogger(context: LoggerCreateContext) : Logger {
         ];
     }
 
+    // @see https://github.com/winstonjs/triple-beam/blob/master/config/npm.js
     return create({
         format: format.combine(
             format.errors({ stack: true }),

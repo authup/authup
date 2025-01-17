@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWTAlgorithm } from '@authup/security';
+import { JWTAlgorithm } from '@authup/specs';
 import type { AsymmetricKeyPairImportOptions, SymmetricKeyImportOptions } from '@authup/server-kit';
 import {
     CryptoAsymmetricAlgorithm,

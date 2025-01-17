@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, TokenError } from '@authup/security';
-import type { JWTClaims, OAuth2TokenPayload } from '@authup/security';
+import { JWKType, TokenError } from '@authup/specs';
+import type { JWTClaims, OAuth2TokenPayload } from '@authup/specs';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
 import { encodeSPKIToPem } from '../../key-asymmetric';
 import { CryptoKeyContainer } from '../../key';
