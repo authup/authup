@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 26 updates ([#2524](https://github.com/authup/authup/issues/2524)) ([0c9dd69](https://github.com/authup/authup/commit/0c9dd697705b0156412cb9c3bad09a83caea5948))
+* **deps:** bump the minorandpatch group with 12 updates ([#2554](https://github.com/authup/authup/issues/2554)) ([cbccab3](https://github.com/authup/authup/commit/cbccab35970ec9cc5d3a6e9950f932b773e07c07))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/kit bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/core-kit bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/server-core bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+
 ## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
 
 
