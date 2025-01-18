@@ -50,7 +50,7 @@
         "citty": "^0.1.6",
         "chalk": "^4.1.2",
         "confinity": "^1.0.0-beta.1",
-        "consola": "^3.3.1",
+        "consola": "^3.4.0",
         "dycraft": "^1.1.0",
         "envix": "^1.5.0",
         "resolve-package-path": "^4.0.3",
