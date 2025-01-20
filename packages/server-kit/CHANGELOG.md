@@ -1,5 +1,36 @@
 # Change Log
 
+## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
+
+
+### Features
+
+* merge packages rules & schema to security ([#2506](https://github.com/authup/authup/issues/2506)) ([2ea6407](https://github.com/authup/authup/commit/2ea6407390cad4900416994e1af78dca1b36a170))
+* refactor & split security package ([#2551](https://github.com/authup/authup/issues/2551)) ([1b38eed](https://github.com/authup/authup/commit/1b38eed204658cdde11b92f93027b843f47f43bf))
+* split kit package in errors, rules & schema package ([#2500](https://github.com/authup/authup/issues/2500)) ([ff5a6e7](https://github.com/authup/authup/commit/ff5a6e731f4ea71faaefd1cd6fe02fbc0dc398e6))
+* use web crypto api ([#2502](https://github.com/authup/authup/issues/2502)) ([b088ae4](https://github.com/authup/authup/commit/b088ae4fac82debecdd5da4b47967c77654c47cc))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 18 updates ([#2494](https://github.com/authup/authup/issues/2494)) ([cc6562e](https://github.com/authup/authup/commit/cc6562eed230f76c984e1ee26942ce705dd03fdf))
+* **deps:** bump the minorandpatch group across 1 directory with 26 updates ([#2524](https://github.com/authup/authup/issues/2524)) ([0c9dd69](https://github.com/authup/authup/commit/0c9dd697705b0156412cb9c3bad09a83caea5948))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/kit bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/errors bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/specs bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+  * peerDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/kit bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/errors bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+    * @authup/specs bumped from ^1.0.0-beta.23 to ^1.0.0-beta.24
+
 ## [1.0.0-beta.23](https://github.com/authup/authup/compare/v1.0.0-beta.22...v1.0.0-beta.23) (2024-11-10)
 
 
