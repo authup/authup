@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { subtle } from 'uncrypto';
 import { getKeyUsagesForSymmetricAlgorithm } from './key-usages';
 import { normalizeSymmetricKeyCreateOptions } from './normalize';
 import type { SymmetricKeyCreateOptionsInput } from './types';
@@ -12,7 +13,7 @@ import type { SymmetricKeyCreateOptionsInput } from './types';
 export async function createSymmetricKey(input: SymmetricKeyCreateOptionsInput) : Promise<CryptoKey> {
     const optionsNormalized = normalizeSymmetricKeyCreateOptions(input);
 
-    return crypto.subtle.generateKey(
+    return subtle.generateKey(
         optionsNormalized,
         true,
         getKeyUsagesForSymmetricAlgorithm(optionsNormalized.name),

@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { subtle } from 'uncrypto';
+
 export function generateOAuth2CodeVerifier() {
     const length = 64;
     const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
@@ -34,7 +36,7 @@ function base64URLEncode(arrayBuffer: ArrayBuffer) {
 export async function buildOAuth2CodeChallenge(codeVerifier: string) {
     const encoder = new TextEncoder();
     const data = encoder.encode(codeVerifier);
-    const arrayBuffer = await crypto.subtle.digest('SHA-256', data);
+    const arrayBuffer = await subtle.digest('SHA-256', data);
 
     return base64URLEncode(arrayBuffer);
 }

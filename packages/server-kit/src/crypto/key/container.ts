@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { subtle } from 'uncrypto';
 import { arrayBufferToBase64, base64ToArrayBuffer } from '@authup/kit';
 import type { AsymmetricKeyPairImportOptions } from '../key-asymmetric';
 import {
@@ -27,14 +28,14 @@ export class CryptoKeyContainer {
 
     async toArrayBuffer(): Promise<ArrayBuffer> {
         if (this.key.type === 'private') {
-            return crypto.subtle.exportKey('pkcs8', this.key);
+            return subtle.exportKey('pkcs8', this.key);
         }
 
         if (this.key.type === 'public') {
-            return crypto.subtle.exportKey('spki', this.key);
+            return subtle.exportKey('spki', this.key);
         }
 
-        return crypto.subtle.exportKey('raw', this.key);
+        return subtle.exportKey('raw', this.key);
     }
 
     async toUint8Array(): Promise<Uint8Array> {
@@ -62,7 +63,7 @@ export class CryptoKeyContainer {
     }
 
     async toJWK() : Promise<JsonWebKey> {
-        return crypto.subtle.exportKey('jwk', this.key);
+        return subtle.exportKey('jwk', this.key);
     }
 
     // ----------------------------------------------
@@ -97,7 +98,7 @@ export class CryptoKeyContainer {
             throw new SyntaxError(`Format ${ctx.format} is not supported.`);
         }
 
-        const cryptoKey = await crypto.subtle.importKey(
+        const cryptoKey = await subtle.importKey(
             ctx.format,
             ctx.key,
             normalizedOptions,
