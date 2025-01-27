@@ -87,14 +87,15 @@ export class ExtraAttributesRepositoryAdapter<
     async saveWithAttributes<E extends Record<string, any>>(
         input: T & E,
         attributes?: E,
-        options?: EARepositorySaveOptions,
+        options?: EARepositorySaveOptions<T>,
     ) : Promise<T & E> {
-        const internalProperties : string[] = [];
+        const columns : string[] = [];
+
         for (let i = 0; i < this.repository.metadata.columns.length; i++) {
-            internalProperties.push(this.repository.metadata.columns[i].propertyName);
+            columns.push(this.repository.metadata.columns[i].propertyName);
         }
         for (let i = 0; i < this.repository.metadata.relations.length; i++) {
-            internalProperties.push(this.repository.metadata.relations[i].propertyName);
+            columns.push(this.repository.metadata.relations[i].propertyName);
         }
 
         let extra : Record<string, any> = {};
@@ -107,14 +108,55 @@ export class ExtraAttributesRepositoryAdapter<
         const keys = Object.keys(input) as (keyof T)[];
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i] as string;
-            const index = internalProperties.indexOf(key);
+            const index = columns.indexOf(key);
             if (index === -1) {
                 extra[key] = input[key];
                 delete input[key];
             }
         }
 
+        const childColumnName = this.repository.metadata.treeChildrenRelation?.propertyName;
+        const parentColumnName = this.repository.metadata.treeParentRelation?.propertyName;
+
+        let children : T | T[] | undefined;
+
+        if (
+            childColumnName &&
+            parentColumnName
+        ) {
+            if (input[childColumnName]) {
+                children = input[childColumnName];
+                delete input[childColumnName];
+            }
+
+            if (options && options.parent) {
+                input[parentColumnName as keyof T] = options.parent as (T & E)[keyof T];
+            }
+        }
+
         await this.repository.save(input);
+
+        if (
+            childColumnName &&
+            parentColumnName &&
+            children
+        ) {
+            if (Array.isArray(children)) {
+                for (let i = 0; i < children.length; i++) {
+                    await this.saveWithAttributes(children[i], undefined, {
+                        ...(options || {}),
+                        parent: input,
+                    });
+                }
+            } else {
+                await this.saveWithAttributes(children, undefined, {
+                    ...(options || {}),
+                    parent: input,
+                });
+            }
+
+            input[childColumnName as keyof T] = children as (T & E)[keyof T];
+        }
 
         await this.saveExtraAttributes(
             input,
@@ -207,7 +249,7 @@ export class ExtraAttributesRepositoryAdapter<
     private async saveExtraAttributes(
         parent: T,
         input: Record<string, any>,
-        options: EARepositorySaveOptions = {},
+        options: EARepositorySaveOptions<T> = {},
     ) {
         const foreignColumn = this.attributeForeignColumn as keyof A;
         const foreignColumnValue = parent[this.primaryColumn] as unknown as A[keyof A];

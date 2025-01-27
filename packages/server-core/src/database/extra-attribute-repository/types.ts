@@ -41,9 +41,11 @@ export type EARepositoryFindOptions = {
     attributes?: string[]
 };
 
-export type EARepositorySaveOptions = {
+export type EARepositorySaveOptions<T> = {
     /**
      * Don't delete non passed attributes.
      */
-    keepAll?: boolean
+    keepAll?: boolean,
+
+    parent?: T
 };

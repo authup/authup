@@ -65,7 +65,7 @@ export class EATreeRepository<
     async saveWithAttributes<E extends Record<string, any>>(
         input: T & E,
         attributes?: E,
-        options?: EARepositorySaveOptions,
+        options?: EARepositorySaveOptions<T>,
     ) : Promise<T & E> {
         return this.adapter.saveWithAttributes(input, attributes, options);
     }
