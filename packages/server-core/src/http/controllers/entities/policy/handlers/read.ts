@@ -65,7 +65,7 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
 
     const [entities, total] = await query.getManyAndCount();
 
-    await repository.findAndAppendExtraAttributesToMany(entities);
+    await repository.extendManyWithExtraAttributes(entities);
 
     return send(res, {
         data: entities,
@@ -131,7 +131,7 @@ export async function getOnePolicyRouteHandler(req: Request, res: Response): Pro
         throw new NotFoundError();
     }
 
-    await repository.findAndAppendExtraAttributesTo(entity);
+    await repository.extendWithExtraAttributes(entity);
 
     return send(res, entity);
 }
