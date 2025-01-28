@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,17 +8,23 @@
 import type {
     DataSource, EntityManager, FindManyOptions, FindOneOptions,
 } from 'typeorm';
-import { InstanceChecker, Repository } from 'typeorm';
-import { ExtraAttributesRepositoryAdapter } from './adapter';
+import {
+    InstanceChecker,
+    TreeRepository,
+} from 'typeorm';
+import type { ExtraAttributesRepositoryAdapter } from '../adapter';
 import type {
     EARepositoryEntityBase, EARepositoryFindOptions, EARepositoryOptions, EARepositorySaveOptions, IEARepository,
-} from './types';
+} from '../types';
+import { ExtraAttributesTreeRepositoryAdapter } from './adapter';
 
-export class EARepository<
+export class EATreeRepository<
     T,
     A extends EARepositoryEntityBase,
-> extends Repository<T> implements IEARepository <T> {
+> extends TreeRepository<T> implements IEARepository<T> {
     protected adapter : ExtraAttributesRepositoryAdapter<T, A>;
+
+    protected options: EARepositoryOptions<T, A>;
 
     constructor(
         instance: DataSource | EntityManager,
@@ -35,12 +41,14 @@ export class EARepository<
             InstanceChecker.isDataSource(instance) ? instance.manager : instance,
         );
 
-        this.adapter = new ExtraAttributesRepositoryAdapter<T, A>({
+        this.options = options;
+        this.adapter = new ExtraAttributesTreeRepositoryAdapter<T, A>({
             ...ctx,
             repository: this,
             attributeRepository: this.manager.getRepository(attributeEntity),
         });
     }
+
     // ------------------------------------------------------------------------------
 
     async saveOneWithEA<E extends Record<string, any>>(
@@ -69,18 +77,15 @@ export class EARepository<
         return this.adapter.findWithEA(options, extraOptions);
     }
 
-    async findOneWithEAByPrimaryColumn<E extends Record<string, any>>(
-        value: T[keyof T],
-        extraOptions: EARepositoryFindOptions = {},
-    ) : Promise<E> {
-        return this.adapter.findOneWithEAByPrimaryColumn(value, extraOptions);
-    }
+    // ------------------------------------------------------------------------------
 
     async extendOneWithEA<E extends Record<string, any>>(
         entity: T,
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<T & E> {
-        return this.adapter.extendWithEA(entity, extraOptions);
+        const [output] = await this.extendManyWithEA([entity], extraOptions);
+
+        return output as (T & E);
     }
 
     async extendManyWithEA<E extends Record<string, any>>(

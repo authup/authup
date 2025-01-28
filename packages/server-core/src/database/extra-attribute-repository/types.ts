@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { Repository } from 'typeorm';
+import type { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import type { EntityTarget } from 'typeorm/common/EntityTarget';
 
 export type EARepositoryOptions<
@@ -49,3 +49,42 @@ export type EARepositorySaveOptions<T> = {
 
     parent?: T
 };
+
+export interface IEARepository<T > {
+    saveOneWithEA<E extends Record<string, any>>(
+        input: T & E,
+        attributes?: E,
+        options?: EARepositorySaveOptions<T>,
+    ) : Promise<T & E>;
+
+    // ------------------------------------------------------------------------------
+
+    findOneWithEAByPrimaryColumn<E extends Record<string, any>>(
+        value: T[keyof T],
+        extraOptions?: EARepositoryFindOptions,
+    ) : Promise<E>;
+
+    findOneWithEA(
+        options: FindOneOptions<T>,
+        extraOptions?: EARepositoryFindOptions,
+    ) : Promise<T | undefined>;
+
+    findManyWithEA<
+        E extends Record<string, any>,
+    >(
+        options: FindManyOptions<T>,
+        extraOptions?: EARepositoryFindOptions,
+    ) : Promise<(T & E)[]>;
+
+    // ------------------------------------------------------------------------------
+
+    extendOneWithEA<E extends Record<string, any>>(
+        entity: T,
+        extraOptions?: EARepositoryFindOptions,
+    ) : Promise<T & E>;
+
+    extendManyWithEA<E extends Record<string, any>>(
+        entities: T[],
+        extraOptions?: EARepositoryFindOptions,
+    ) : Promise<(T & E)[]>;
+}

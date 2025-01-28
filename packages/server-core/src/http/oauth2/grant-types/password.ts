@@ -113,7 +113,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             where.realm_id = realmId;
         }
 
-        const entities = await repository.findWithAttributes<LdapIdentityProviderFlowOptions>(
+        const entities = await repository.findManyWithEA<LdapIdentityProviderFlowOptions>(
             {
                 where,
             },

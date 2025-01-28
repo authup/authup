@@ -102,7 +102,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
         }
     }
 
-    await repository.findAndAppendExtraAttributesToMany(data);
+    await repository.extendManyWithEA(data);
 
     return send(res, {
         data,
@@ -194,7 +194,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
 
     if (isMe) {
         if (hasOAuth2Scope(scopes, ScopeName.GLOBAL)) {
-            await repository.findAndAppendExtraAttributesTo(entity);
+            await repository.extendOneWithEA(entity);
         }
     } else {
         await permissionChecker.checkOneOf({
@@ -206,7 +206,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
             data: { attributes: entity },
         });
 
-        await repository.findAndAppendExtraAttributesTo(entity);
+        await repository.extendOneWithEA(entity);
     }
 
     return send(res, entity);

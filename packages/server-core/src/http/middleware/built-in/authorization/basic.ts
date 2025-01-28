@@ -24,7 +24,7 @@ export async function verifyBasicAuthorizationHeader(
         const userRepository = new UserRepository(dataSource);
         const user = await userRepository.verifyCredentials(header.username, header.password);
         if (user) {
-            await userRepository.findAndAppendExtraAttributesTo(user);
+            await userRepository.extendOneWithEA(user);
             setRequestScopes(request, [ScopeName.GLOBAL]);
             setRequestIdentity(request, {
                 type: 'user',

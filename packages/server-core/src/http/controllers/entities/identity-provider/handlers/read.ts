@@ -67,7 +67,7 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
                     data: { attributes: entities[i] },
                 });
 
-                await repository.findAndAppendExtraAttributesTo(entities[i]);
+                await repository.extendOneWithEA(entities[i]);
             } catch (e) {
                 // do nothing
             }
@@ -137,7 +137,7 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
             name: PermissionName.IDENTITY_PROVIDER_READ,
             data: { attributes: entity },
         });
-        await repository.findAndAppendExtraAttributesTo(entity);
+        await repository.extendOneWithEA(entity);
     } catch (e) {
         // do nothing
     }

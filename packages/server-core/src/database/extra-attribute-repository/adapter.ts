@@ -58,7 +58,7 @@ export class ExtraAttributesRepositoryAdapter<
 
     // ------------------------------------------------------------------------------
 
-    async findOneWithExtraAttributes(
+    async findOneWithEA(
         options: FindOneOptions<T>,
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<T | undefined> {
@@ -67,12 +67,12 @@ export class ExtraAttributesRepositoryAdapter<
             return undefined;
         }
 
-        await this.findAndAppendExtraAttributesTo(entity, extraOptions);
+        await this.extendWithEA(entity, extraOptions);
 
         return entity;
     }
 
-    async findWithExtraAttributes<
+    async findWithEA<
         E extends Record<string, any>,
     >(
         options: FindManyOptions<T>,
@@ -80,10 +80,10 @@ export class ExtraAttributesRepositoryAdapter<
     ) : Promise<(T & E)[]> {
         const entities = await this.repository.find(options);
 
-        return this.findAndAppendExtraAttributesToMany(entities, extraOptions);
+        return this.extendManyWithEA(entities, extraOptions);
     }
 
-    async saveWithAttributes<E extends Record<string, any>>(
+    async saveWithEA<E extends Record<string, any>>(
         input: T & E,
         attributes?: E,
         options?: EARepositorySaveOptions<T>,
@@ -114,50 +114,9 @@ export class ExtraAttributesRepositoryAdapter<
             }
         }
 
-        const childColumnName = this.repository.metadata.treeChildrenRelation?.propertyName;
-        const parentColumnName = this.repository.metadata.treeParentRelation?.propertyName;
-
-        let children : T | T[] | undefined;
-
-        if (
-            childColumnName &&
-            parentColumnName
-        ) {
-            if (input[childColumnName]) {
-                children = input[childColumnName];
-                delete input[childColumnName];
-            }
-
-            if (options && options.parent) {
-                input[parentColumnName as keyof T] = options.parent as (T & E)[keyof T];
-            }
-        }
-
         await this.repository.save(input);
 
-        if (
-            childColumnName &&
-            parentColumnName &&
-            children
-        ) {
-            if (Array.isArray(children)) {
-                for (let i = 0; i < children.length; i++) {
-                    await this.saveWithAttributes(children[i], undefined, {
-                        ...(options || {}),
-                        parent: input,
-                    });
-                }
-            } else {
-                await this.saveWithAttributes(children, undefined, {
-                    ...(options || {}),
-                    parent: input,
-                });
-            }
-
-            input[childColumnName as keyof T] = children as (T & E)[keyof T];
-        }
-
-        await this.saveExtraAttributes(
+        await this.saveEA(
             input,
             extra,
             options,
@@ -171,19 +130,19 @@ export class ExtraAttributesRepositoryAdapter<
         return input;
     }
 
-    async findExtraAttributesByPrimaryColumn<E extends Record<string, any>>(
+    async findOneWithEAByPrimaryColumn<E extends Record<string, any>>(
         value: T[keyof T],
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<E> {
-        const attributesByPrimary = await this.findExtraAttributesForPrimaryKeys([value], extraOptions);
+        const attributesByPrimary = await this.findWithEAByPrimaryColumn([value], extraOptions);
         return (attributesByPrimary[value as string] || {}) as E;
     }
 
-    async findAndAppendExtraAttributesTo<E extends Record<string, any>>(
+    async extendWithEA<E extends Record<string, any>>(
         entity: T,
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<T & E> {
-        const attributes = await this.findExtraAttributesByPrimaryColumn(entity[this.primaryColumn], extraOptions);
+        const attributes = await this.findOneWithEAByPrimaryColumn(entity[this.primaryColumn], extraOptions);
         const attributeKeys = Object.keys(attributes);
         for (let i = 0; i < attributeKeys.length; i++) {
             entity[attributeKeys[i]] = attributes[attributeKeys[i]];
@@ -192,7 +151,7 @@ export class ExtraAttributesRepositoryAdapter<
         return entity as T & E;
     }
 
-    async findExtraAttributesForPrimaryKeys<E extends Record<string, any>>(
+    async findWithEAByPrimaryColumn<E extends Record<string, any>>(
         value: (T[keyof T])[],
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<Record<string, E>> {
@@ -221,11 +180,11 @@ export class ExtraAttributesRepositoryAdapter<
         return output;
     }
 
-    async findAndAppendExtraAttributesToMany<E extends Record<string, any>>(
+    async extendManyWithEA<E extends Record<string, any>>(
         entities: T[],
         extraOptions: EARepositoryFindOptions = {},
     ) : Promise<(T & E)[]> {
-        const attributesByPrimaryKey = await this.findExtraAttributesForPrimaryKeys(
+        const attributesByPrimaryKey = await this.findWithEAByPrimaryColumn(
             this.getPrimaryKeyValues(entities),
             extraOptions,
         );
@@ -247,7 +206,7 @@ export class ExtraAttributesRepositoryAdapter<
 
     // ------------------------------------------------------------------------------
 
-    private async saveExtraAttributes(
+    private async saveEA(
         parent: T,
         input: Record<string, any>,
         options: EARepositorySaveOptions<T> = {},
