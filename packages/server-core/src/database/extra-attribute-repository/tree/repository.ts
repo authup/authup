@@ -68,6 +68,13 @@ export class EATreeRepository<
         return this.adapter.findOneWithEA(options, extraOptions);
     }
 
+    async findOneWithEAByPrimaryColumn<E extends Record<string, any>>(
+        value: T[keyof T],
+        extraOptions?: EARepositoryFindOptions,
+    ): Promise<E> {
+        return this.adapter.findOneWithEAByPrimaryColumn(value, extraOptions);
+    }
+
     async findManyWithEA<
         E extends Record<string, any>,
     >(
