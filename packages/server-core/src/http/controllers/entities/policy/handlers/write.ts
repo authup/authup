@@ -153,13 +153,13 @@ export async function writePolicyRouteHandler(
 
     if (entity) {
         entity = repository.merge(entity, data);
-        await repository.saveWithAttributes(entity, attributes);
+        await repository.saveOneWithEA(entity, attributes);
 
         return sendAccepted(res, entity);
     }
 
     entity = repository.create(data);
-    await repository.saveWithAttributes(entity, attributes);
+    await repository.saveOneWithEA(entity, attributes);
 
     return sendCreated(res, entity);
 }

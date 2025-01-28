@@ -107,7 +107,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
 
             // todo: this might also be the case under other conditions :)
             if (scope === ScopeName.GLOBAL) {
-                await repository.findAndAppendExtraAttributesTo(entity);
+                await repository.extendOneWithEA(entity);
             }
 
             if (!entity.active) {

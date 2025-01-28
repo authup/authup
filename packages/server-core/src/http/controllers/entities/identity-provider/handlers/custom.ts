@@ -29,7 +29,7 @@ import { ConfigDefaults, useConfig } from '../../../../../config';
 
 async function resolve(dataSource: DataSource, id: string) {
     const repository = new IdentityProviderRepository(dataSource);
-    const entity = await repository.findOneWithAttributes({
+    const entity = await repository.findOneWithEA({
         relations: {
             realm: true,
         },

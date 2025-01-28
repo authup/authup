@@ -251,7 +251,7 @@ export class IdentityProviderAccountService {
         user: UserEntity,
     ) : Promise<UserEntity> {
         const claimAttributes = await this.getClaimAttributes(identity);
-        const extra = await this.userRepository.findExtraAttributesByPrimaryColumn(user.id);
+        const extra = await this.userRepository.findOneWithEAByPrimaryColumn(user.id);
 
         const columnPropertyNames = this.userRepository.metadata.columns.map((c) => c.propertyName);
         const relationPropertyNames = this.userRepository.metadata.relations.map((r) => r.propertyName);
@@ -300,7 +300,7 @@ export class IdentityProviderAccountService {
             }
         }
 
-        await this.userRepository.saveWithAttributes(user, extra);
+        await this.userRepository.saveOneWithEA(user, extra);
 
         return user;
     }
@@ -418,7 +418,7 @@ export class IdentityProviderAccountService {
             context.attributes.realm_id = this.provider.realm_id;
             context.attributes.active = true;
 
-            await this.userRepository.saveWithAttributes(context.attributes, context.attributesExtra);
+            await this.userRepository.saveOneWithEA(context.attributes, context.attributesExtra);
 
             return context.attributes;
         } catch (e) {
