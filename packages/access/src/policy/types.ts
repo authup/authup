@@ -15,9 +15,10 @@ export interface PolicyBase {
 }
 
 export type PolicyWithType<
-    T extends Record<string, any> = Record<string, any>,
-> = T & {
-    type: string
+    R extends Record<string, any> = Record<string, any>,
+    T = string,
+> = R & {
+    type: T
 };
 
 export type PolicyIdentity = {

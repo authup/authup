@@ -6,7 +6,6 @@
  */
 
 import { BuiltInPolicyType } from '@authup/access';
-import type { CompositePolicy, TimePolicy } from '@authup/access';
 import { createTestSuite } from '../../../../../utils';
 import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
 
@@ -23,28 +22,10 @@ describe('src/http/controllers/policy', () => {
 
     const ids : string[] = [];
 
-    const timePolicyWithParent = () => (createFakeTimePolicy({
-        parent_id: ids[0],
-    }));
-
-    it('should create group policy', async () => {
-        const response = await suite.client
-            .policy
-            .create({
-                name: 'group',
-                type: BuiltInPolicyType.COMPOSITE,
-                invert: false,
-            } as Partial<CompositePolicy>);
-
-        expect(response).toBeDefined();
-
-        ids.push(response.id);
-    });
-
     it('should create time policy', async () => {
         const response = await suite.client
             .policy
-            .create(timePolicyWithParent());
+            .create(createFakeTimePolicy());
 
         expect(response).toBeDefined();
 
@@ -58,11 +39,28 @@ describe('src/http/controllers/policy', () => {
                 name: 'foo',
                 type: 'foo',
                 bar: 'baz',
-                parent_id: ids[0],
             });
 
         expect(response).toBeDefined();
         expect(response.bar).toEqual('baz');
+        ids.push(response.id);
+    });
+
+    it('should create group policy', async () => {
+        const response = await suite.client
+            .policy
+            .createBuiltIn({
+                name: 'group',
+                type: BuiltInPolicyType.COMPOSITE,
+                invert: false,
+                children: [
+                    createFakeTimePolicy(),
+                ],
+            });
+
+        expect(response).toBeDefined();
+        expect(response.children).toHaveLength(1);
+
         ids.push(response.id);
     });
 
@@ -78,7 +76,7 @@ describe('src/http/controllers/policy', () => {
     it('should read time policy', async () => {
         const response = await suite.client
             .policy
-            .getOne(ids[1]);
+            .getOne(ids[0]);
 
         expect(response).toBeDefined();
     });
@@ -86,13 +84,13 @@ describe('src/http/controllers/policy', () => {
     it('should update resource', async () => {
         const response = await suite.client
             .policy
-            .update(ids[1], {
+            .updateBuiltIn(ids[0], {
                 name: 'time',
                 type: BuiltInPolicyType.TIME,
                 start: Date.now(),
                 end: Date.now(),
                 invert: false,
-            } satisfies Partial<TimePolicy> & { [key: string]: any });
+            });
 
         expect(response).toBeDefined();
     });

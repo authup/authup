@@ -5,18 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidationChain, createValidator } from '@validup/adapter-validator';
+import { BuiltInPolicyType } from '@authup/access';
+import { isObject } from 'smob';
+import type { ValidatorContext } from 'validup';
 import { Container } from 'validup';
+import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import type {
     PolicyEntity,
 } from '../../../../../database/domains';
 import { RequestHandlerOperation } from '../../../../request';
+import { PolicyAttributesValidator } from './attributes-validator';
 
-type PolicyValidationResult = Omit<PolicyEntity, 'children'> & {
-    parent_id?: string
-};
-
-export class PolicyValidator extends Container<PolicyValidationResult> {
+export class PolicyValidator extends Container<PolicyEntity> {
     protected initialize() {
         super.initialize();
 
@@ -70,18 +70,6 @@ export class PolicyValidator extends Container<PolicyValidationResult> {
         );
 
         this.mount(
-            'parent_id',
-            { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID()
-                    .optional({ values: 'null' });
-            }),
-        );
-
-        this.mount(
             'realm_id',
             { group: RequestHandlerOperation.CREATE },
             createValidator(() => {
@@ -91,6 +79,34 @@ export class PolicyValidator extends Container<PolicyValidationResult> {
                     .isUUID()
                     .optional({ values: 'null' });
             }),
+        );
+
+        this.mount({ optional: true }, new PolicyAttributesValidator({}));
+
+        this.mount(
+            'children',
+            { optional: true },
+            async (ctx: ValidatorContext) => {
+                if (!Array.isArray(ctx.value)) {
+                    // todo: throw error
+                    return undefined;
+                }
+
+                if (
+                    isObject(ctx.data) &&
+                    ctx.data.type !== BuiltInPolicyType.COMPOSITE
+                ) {
+                    return undefined;
+                }
+
+                const promises = ctx.value.map((child) => this.run(child, {
+                    group: ctx.group,
+                    flat: false,
+                    path: ctx.pathAbsolute,
+                }));
+
+                return Promise.all(promises);
+            },
         );
     }
 }

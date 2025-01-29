@@ -23,7 +23,7 @@ export async function deletePolicyRouteHandler(
     await permissionChecker.preCheck({ name: PermissionName.PERMISSION_DELETE });
 
     const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(PolicyEntity);
+    const repository = dataSource.getTreeRepository(PolicyEntity);
     const entity = await repository.findOneBy({ id });
 
     if (!entity) {
@@ -39,9 +39,10 @@ export async function deletePolicyRouteHandler(
 
     const { id: entityId } = entity;
 
-    await repository.remove(entity);
-
     entity.id = entityId;
+
+    // todo: remove after PolicyEntity - parent delete on cascade
+    delete entity.children;
 
     return sendAccepted(res, entity);
 }

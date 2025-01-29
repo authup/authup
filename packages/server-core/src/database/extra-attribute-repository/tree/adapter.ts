@@ -38,6 +38,14 @@ export class ExtraAttributesTreeRepositoryAdapter<T,
         await super.saveWithEA(input, attributes, options);
 
         if (
+            parentColumnName &&
+            options &&
+            options.parent
+        ) {
+            delete input[parentColumnName as keyof T];
+        }
+
+        if (
             childColumnName &&
             parentColumnName &&
             children

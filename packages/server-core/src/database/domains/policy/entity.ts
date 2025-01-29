@@ -53,8 +53,8 @@ export class PolicyEntity implements Policy {
     @TreeChildren()
         children: PolicyEntity[];
 
-    @TreeParent()
-        parent: PolicyEntity;
+    @TreeParent({ onDelete: 'CASCADE' })
+        parent: PolicyEntity | null;
 
     @CreateDateColumn()
         created_at: Date;

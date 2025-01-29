@@ -7,9 +7,11 @@
 
 import type { Realm } from '../realm';
 
-type PolicyWithType = {
-    [key: string]: any,
-    type: string
+export type PolicyWithType<
+    R extends Record<string, any> = Record<string, any>,
+    T = string,
+> = R & {
+    type: T
 };
 
 export interface Policy {
@@ -29,7 +31,7 @@ export interface Policy {
 
     children: PolicyWithType[];
 
-    parent_id?: string,
+    parent: PolicyWithType | null;
 
     // ------------------------------------------------------------------
 
@@ -43,7 +45,3 @@ export interface Policy {
 
     updated_at: Date;
 }
-
-export type ExtendedPolicy<
-    T extends Record<string, any> = Record<string, any>,
-> = Policy & T;
