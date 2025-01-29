@@ -15,4 +15,5 @@ export * from './realm-match';
 export * from './time';
 
 export * from './constants';
+export * from './define';
 export * from './types';

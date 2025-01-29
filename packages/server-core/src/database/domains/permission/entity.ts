@@ -16,7 +16,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import {
-    Client, Permission, Policy, Realm,
+    Client, Permission, Realm,
 } from '@authup/core-kit';
 import { PolicyEntity } from '../policy';
 import { RealmEntity } from '../realm';
@@ -49,7 +49,7 @@ export class PermissionEntity implements Permission {
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'policy_id' })
-        policy: Policy | null;
+        policy: PolicyEntity | null;
 
     // ------------------------------------------------------------------
 

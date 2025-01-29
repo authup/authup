@@ -18,16 +18,19 @@ import type {
 import { BuiltInPolicyType, DecisionStrategy } from '@authup/access';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
-import { CachePrefix, PermissionEntity } from '../../../database/domains';
+import { CachePrefix, PermissionEntity, PolicyRepository } from '../../../database/domains';
 
 export class PermissionDBProvider implements PermissionProvider {
     protected dataSource: DataSource;
 
     protected repository : Repository<PermissionEntity>;
 
+    protected policyRepository: PolicyRepository;
+
     constructor(dataSource: DataSource) {
         this.dataSource = dataSource;
         this.repository = this.dataSource.getRepository(PermissionEntity);
+        this.policyRepository = new PolicyRepository(this.dataSource);
     }
 
     async get(options: PermissionGetOptions) : Promise<PermissionItem | undefined> {
@@ -38,7 +41,6 @@ export class PermissionDBProvider implements PermissionProvider {
             },
             relations: [
                 'policy',
-                'policy.children',
             ],
             cache: {
                 id: buildCacheKey({
@@ -50,12 +52,18 @@ export class PermissionDBProvider implements PermissionProvider {
         });
 
         if (entity) {
+            let policy : PolicyWithType | undefined;
+            if (entity.policy) {
+                // todo: entity.policy and children need to be transformed
+                policy = await this.policyRepository.findDescendantsTree(entity.policy);
+            } else {
+                policy = this.getDefaultPolicy();
+            }
+
             return {
                 name: entity.name,
                 ...(entity.realm_id ? { realm_id: entity.realm_id } : {}),
-                // todo: fake policy should only be enabled for built_in
-                // todo: entity.policy and children need to be transformed
-                policy: entity.policy || this.getDefaultPolicy(),
+                policy,
             };
         }
 

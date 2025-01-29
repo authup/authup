@@ -7,49 +7,87 @@
 
 import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
-import type { ExtendedPolicy, Policy } from '@authup/core-kit';
+import type { Policy } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../../types-base';
-import type { PolicyAPICheckResponse } from './types';
+import type {
+    BuiltInPolicyCreateRequest,
+    BuiltInPolicyResponse, BuiltInPolicyUpdateRequest, PolicyAPICheckResponse, PolicyCreateRequest, PolicyResponse, PolicyUpdateRequest,
+} from './types';
 
 export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
-    async getMany(data?: BuildInput<Policy>): Promise<CollectionResourceResponse<ExtendedPolicy>> {
+    async getMany<
+        OUTPUT extends PolicyResponse = PolicyResponse,
+    >(data?: BuildInput<Policy>): Promise<CollectionResourceResponse<OUTPUT>> {
         const response = await this.client.get(`policies${buildQuery(data)}`);
         return response.data;
     }
 
-    async delete(id: Policy['id']): Promise<SingleResourceResponse<ExtendedPolicy>> {
+    async delete<
+        OUTPUT extends PolicyResponse = PolicyResponse,
+    >(id: Policy['id']): Promise<SingleResourceResponse<OUTPUT>> {
         const response = await this.client.delete(`policies/${id}`);
 
         return response.data;
     }
 
-    async getOne(id: Policy['id'], record?: BuildInput<Policy>) : Promise<SingleResourceResponse<ExtendedPolicy>> {
+    async getOne<
+        OUTPUT extends PolicyResponse = PolicyResponse,
+    >(id: Policy['id'], record?: BuildInput<Policy>) : Promise<SingleResourceResponse<OUTPUT>> {
         const response = await this.client.get(`policies/${id}${buildQuery(record)}`);
 
         return response.data;
     }
 
-    async create(data: Partial<ExtendedPolicy>): Promise<SingleResourceResponse<ExtendedPolicy>> {
+    async create<
+        INPUT extends PolicyCreateRequest = PolicyCreateRequest,
+        OUTPUT extends PolicyResponse = PolicyResponse,
+    >(data: INPUT): Promise<SingleResourceResponse<OUTPUT>> {
         const response = await this.client.post('policies', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Policy['id'], data: Partial<ExtendedPolicy>): Promise<SingleResourceResponse<ExtendedPolicy>> {
+    async createBuiltIn(
+        data: BuiltInPolicyCreateRequest,
+    ): Promise<SingleResourceResponse<BuiltInPolicyResponse>> {
+        return this.create(data);
+    }
+
+    async update<
+        INPUT extends PolicyUpdateRequest = PolicyUpdateRequest,
+        OUTPUT extends PolicyResponse = PolicyResponse,
+    >(id: Policy['id'], data: INPUT): Promise<SingleResourceResponse<OUTPUT>> {
         const response = await this.client.post(`policies/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async createOrUpdate(
+    async updateBuiltIn(
+        id: Policy['id'],
+        data: BuiltInPolicyUpdateRequest,
+    ): Promise<SingleResourceResponse<BuiltInPolicyResponse>> {
+        return this.update(id, data);
+    }
+
+    async createOrUpdate<
+        INPUT extends PolicyCreateRequest = PolicyCreateRequest,
+        OUTPUT extends PolicyResponse = PolicyResponse,
+    >(
         idOrName: string,
-        data: Partial<ExtendedPolicy>,
-    ): Promise<SingleResourceResponse<ExtendedPolicy>> {
+        data: INPUT,
+    ): Promise<SingleResourceResponse<OUTPUT>> {
         const response = await this.client.put(`policies/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
+    }
+
+    async createOrUpdateBuiltin(
+        idOrName: string,
+        data: BuiltInPolicyCreateRequest,
+    ): Promise<SingleResourceResponse<BuiltInPolicyResponse>> {
+        return this.createOrUpdate(idOrName, data);
     }
 
     async check(

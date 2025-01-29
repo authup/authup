@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { definePolicyWithType } from '@authup/access';
+import type { BuiltInPolicyTypeMap, PolicyWithType } from '@authup/access';
 import type { DataSource, EntityManager } from 'typeorm';
 import { CachePrefix } from '../constants';
 import { EATreeRepository } from '../../extra-attribute-repository';
@@ -25,6 +27,16 @@ export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttri
             attributeEntity: PolicyAttributeEntity,
             attributeForeignColumn: 'policy_id',
             cachePrefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
+        });
+    }
+
+    createByType<
+        K extends keyof BuiltInPolicyTypeMap,
+        D extends BuiltInPolicyTypeMap<any>[K] & Partial<Omit<PolicyEntity, 'type'>>,
+    >(type: K, data: D) : PolicyWithType<D, K> {
+        return definePolicyWithType(type, {
+            ...this.create(),
+            ...data,
         });
     }
 }

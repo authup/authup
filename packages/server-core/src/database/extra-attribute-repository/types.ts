@@ -38,7 +38,8 @@ export type EARepositoryAdapterOptions<
 };
 
 export type EARepositoryFindOptions = {
-    attributes?: string[]
+    attributes?: string[],
+    withTreeDescendents?: boolean
 };
 
 export type EARepositorySaveOptions<T> = {

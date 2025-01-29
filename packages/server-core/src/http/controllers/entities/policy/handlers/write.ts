@@ -5,22 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType } from '@authup/access';
-import { isPropertySet, isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { isUUID } from '@authup/kit';
+import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import {
-    getEntityPropertyNames, isEntityUnique, useDataSource, validateEntityJoinColumns,
+    isEntityUnique, useDataSource, validateEntityJoinColumns,
 } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../../database';
 import {
     PolicyEntity, PolicyRepository,
 } from '../../../../../database/domains';
-import { PolicyAttributesValidator, PolicyValidator } from '../utils';
+import { PolicyValidator } from '../utils';
 import {
     RequestHandlerOperation,
     getRequestBodyRealmID,
@@ -82,11 +81,6 @@ export async function writePolicyRouteHandler(
         group,
     });
 
-    const attributesValidator = new RoutupContainerAdapter(new PolicyAttributesValidator({
-        attributeNames: await getEntityPropertyNames(PolicyEntity, dataSource),
-    }));
-    const attributes = await attributesValidator.run(req);
-
     // ----------------------------------------------
 
     await validateEntityJoinColumns(data, {
@@ -134,32 +128,20 @@ export async function writePolicyRouteHandler(
         });
     }
 
-    if (isPropertySet(data, 'parent_id')) {
-        if (data.parent_id) {
-            const parent = await repository.findOneBy({ id: data.parent_id });
-            if (parent) {
-                if (parent.type !== BuiltInPolicyType.COMPOSITE) {
-                    throw new BadRequestError('The parent policy must be of type group.');
-                }
-            }
-
-            data.parent = parent;
-        } else {
-            data.parent = null;
-        }
-    }
-
     // ----------------------------------------------
 
     if (entity) {
-        entity = repository.merge(entity, data);
-        await repository.saveOneWithEA(entity, attributes);
+        const keys = Object.keys(data);
+        for (let i = 0; i < keys.length; i++) {
+            entity[keys[i]] = data[keys[i]];
+        }
+
+        await repository.saveOneWithEA(entity);
 
         return sendAccepted(res, entity);
     }
 
-    entity = repository.create(data);
-    await repository.saveOneWithEA(entity, attributes);
+    await repository.saveOneWithEA(data);
 
-    return sendCreated(res, entity);
+    return sendCreated(res, data);
 }

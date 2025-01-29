@@ -5,13 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    AttributeNamesPolicy, AttributesPolicy, BuiltInPolicy, PolicyWithType,
-} from '../../../src';
 import {
     BuiltInPolicyType,
     DecisionStrategy,
     PolicyEngine,
+    defineAttributesPolicy,
+    definePolicyWithType,
 } from '../../../src';
 import { buildTestPolicyEvaluateContext } from '../../utils';
 
@@ -24,28 +23,34 @@ describe('src/policy', () => {
     it('should work with default evaluators', async () => {
         const enforcer = new PolicyEngine();
 
-        const attributePolicy : PolicyWithType<AttributesPolicy<User>> = {
-            type: BuiltInPolicyType.ATTRIBUTES,
-            query: {
-                name: {
-                    $eq: 'admin',
+        const attributePolicy = definePolicyWithType(
+            BuiltInPolicyType.ATTRIBUTES,
+            defineAttributesPolicy<User>({
+                query: {
+                    name: {
+                        $eq: 'admin',
+                    },
                 },
+            }),
+        );
+
+        const attributeNamesPolicy = definePolicyWithType(
+            BuiltInPolicyType.ATTRIBUTE_NAMES,
+            {
+                names: ['name'],
             },
-        };
+        );
 
-        const attributeNamesPolicy : PolicyWithType<AttributeNamesPolicy> = {
-            type: BuiltInPolicyType.ATTRIBUTE_NAMES,
-            names: ['name'],
-        };
-
-        const compositePolicy : PolicyWithType<BuiltInPolicy<User>> = {
-            type: BuiltInPolicyType.COMPOSITE,
-            decisionStrategy: DecisionStrategy.UNANIMOUS,
-            children: [
-                attributePolicy,
-                attributeNamesPolicy,
-            ],
-        };
+        const compositePolicy = definePolicyWithType(
+            BuiltInPolicyType.COMPOSITE,
+            {
+                decisionStrategy: DecisionStrategy.UNANIMOUS,
+                children: [
+                    attributePolicy,
+                    attributeNamesPolicy,
+                ],
+            },
+        );
 
         let outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
             spec: compositePolicy,
