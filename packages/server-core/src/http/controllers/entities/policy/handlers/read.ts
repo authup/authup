@@ -10,11 +10,13 @@ import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
+import type { SelectQueryBuilder } from 'typeorm';
 import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
+import type { PolicyEntity } from '../../../../../database/domains';
 import { PolicyRepository, resolveRealm } from '../../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
 
@@ -31,9 +33,41 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
     const dataSource = await useDataSource();
     const repository = new PolicyRepository(dataSource);
 
-    const query = repository.createQueryBuilder('policy');
+    let queryBuilder: SelectQueryBuilder<PolicyEntity>;
+    const query = useRequestQuery(req);
+    if (
+        typeof query?.filter?.parent_id === 'string' ||
+        query?.filter?.parent_id === null
+    ) {
+        const parentId = query?.filter?.parent_id;
+        delete query?.filter?.parent_id;
 
-    const { pagination } = applyQuery(query, useRequestQuery(req), {
+        if (
+            parentId !== 'null' &&
+            parentId !== null
+        ) {
+            queryBuilder = repository.createAncestorsQueryBuilder(
+                'policy',
+                'policyRelation',
+                repository.create({ id: parentId }),
+            );
+        } else {
+            const joinColumn = repository.metadata.treeParentRelation!.joinColumns[0];
+            const parentPropertyName = joinColumn.givenDatabaseName || joinColumn.databaseName;
+
+            const escapeStr = repository.manager.connection.driver.escape;
+            queryBuilder = repository.createQueryBuilder('policy')
+                .where(
+                    `${escapeStr('policy')}.${escapeStr(
+                        parentPropertyName,
+                    )} IS NULL`,
+                );
+        }
+    } else {
+        queryBuilder = repository.createQueryBuilder('policy');
+    }
+
+    const { pagination } = applyQuery(queryBuilder, query, {
         defaultAlias: 'policy',
         relations: {
             allowed: ['realm'],
@@ -63,9 +97,10 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
         },
     });
 
-    const [entities, total] = await query.getManyAndCount();
-
+    const [entities, total] = await queryBuilder.getManyAndCount();
     await repository.extendManyWithEA(entities);
+
+    await Promise.all(entities.map((entity) => repository.findDescendantsTree(entity)));
 
     return send(res, {
         data: entities,
@@ -132,6 +167,7 @@ export async function getOnePolicyRouteHandler(req: Request, res: Response): Pro
     }
 
     await repository.extendOneWithEA(entity);
+    await repository.findDescendantsTree(entity);
 
     return send(res, entity);
 }
