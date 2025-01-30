@@ -19,7 +19,7 @@ import type {
 export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
     async getMany<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(data?: BuildInput<Policy>): Promise<CollectionResourceResponse<OUTPUT>> {
+    >(data?: BuildInput<Policy & { parent_id?: string | null }>): Promise<CollectionResourceResponse<OUTPUT>> {
         const response = await this.client.get(`policies${buildQuery(data)}`);
         return response.data;
     }

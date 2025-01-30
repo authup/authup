@@ -64,13 +64,40 @@ describe('src/http/controllers/policy', () => {
         ids.push(response.id);
     });
 
-    it('should read collection', async () => {
+    it('should read child policies', async () => {
         const response = await suite.client
+            .policy
+            .getMany({
+                filters: {
+                    parent_id: ids[2],
+                },
+            });
+
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toEqual(1);
+    });
+
+    it('should read collection', async () => {
+        let response = await suite.client
             .policy
             .getMany();
 
+        const prevCount = response.data.length;
+
         expect(response.data).toBeDefined();
         expect(response.data.length).toBeGreaterThanOrEqual(2);
+
+        response = await suite.client
+            .policy
+            .getMany({
+                filters: {
+                    parent_id: null,
+                },
+            });
+
+        expect(response.data).toBeDefined();
+        expect(response.data.length).toBeGreaterThanOrEqual(2);
+        expect(response.data.length).toBeLessThan(prevCount);
     });
 
     it('should read time policy', async () => {
