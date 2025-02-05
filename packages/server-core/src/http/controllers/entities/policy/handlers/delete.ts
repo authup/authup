@@ -39,6 +39,8 @@ export async function deletePolicyRouteHandler(
 
     const { id: entityId } = entity;
 
+    await repository.remove(entity);
+
     entity.id = entityId;
 
     // todo: remove after PolicyEntity - parent delete on cascade

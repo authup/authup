@@ -62,7 +62,7 @@ export default defineComponent({
         });
 
         function assign(data: Partial<TimePolicy> = {}) {
-            extendObjectProperties(form, data);
+            extendObjectProperties(form, data as Record<string, any>);
         }
 
         setup.expose({

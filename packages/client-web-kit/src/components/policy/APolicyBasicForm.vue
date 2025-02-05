@@ -2,10 +2,10 @@
 import { type PropType, defineComponent, reactive } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
-import type { IdentityProvider, Policy } from '@authup/core-kit';
+import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormSelectOption } from '@vuecs/form-controls';
-import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
+import { VCFormGroup, VCFormInput, VCFormInputCheckbox } from '@vuecs/form-controls';
 import { BuiltInPolicyType } from '@authup/access';
 import { extendObjectProperties } from '../../core';
 import { onChange, useUpdatedAt } from '../../composables';
@@ -13,6 +13,7 @@ import { onChange, useUpdatedAt } from '../../composables';
 export default defineComponent({
     components: {
         VCFormInput,
+        VCFormInputCheckbox,
         VCFormGroup,
         IVuelidate,
     },
@@ -25,6 +26,7 @@ export default defineComponent({
     setup(props, setup) {
         const form = reactive({
             name: '',
+            invert: false,
             display_name: '',
             description: '',
             realm_id: '',
@@ -39,6 +41,9 @@ export default defineComponent({
                 required,
                 minLength: minLength(5),
                 maxLength: maxLength(128),
+            },
+            invert: {
+
             },
             display_name: {
                 minLength: minLength(3),
@@ -131,6 +136,27 @@ export default defineComponent({
                         rows="4"
                         @change="handleUpdated"
                     />
+                </VCFormGroup>
+            </template>
+        </IVuelidate>
+        <IVuelidate :validation="vuelidate.invert">
+            <template #default="props">
+                <VCFormGroup
+                    :validation-messages="props.data"
+                    :validation-severity="props.severity"
+                >
+                    <VCFormInputCheckbox
+                        v-model="vuelidate.invert.$model"
+                        :group-class="'form-switch'"
+                        :label="true"
+                        @change="handleUpdated"
+                    >
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Invert?
+                            </label>
+                        </template>
+                    </VCFormInputCheckbox>
                 </VCFormGroup>
             </template>
         </IVuelidate>

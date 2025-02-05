@@ -45,7 +45,7 @@ export default defineComponent({
 
         const fields = [
             {
-                key: 'id', label: 'ID', thClass: 'text-left', tdClass: 'text-left',
+                key: 'type', label: 'Type', thClass: 'text-left', tdClass: 'text-left',
             },
             {
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
@@ -56,7 +56,11 @@ export default defineComponent({
             {
                 key: 'updated_at', label: 'Updated at', thClass: 'text-left', tdClass: 'text-left',
             },
-            { key: 'options', label: '', tdClass: 'text-left' },
+            {
+                key: 'options',
+                label: '',
+                tdClass: 'text-left',
+            },
         ];
 
         return {

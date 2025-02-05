@@ -5,14 +5,17 @@ import type { Policy } from '@authup/core-kit';
 import { DomainType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import { BuiltInPolicyType } from '@authup/access';
-import { onChange, useUpdatedAt } from '../../composables';
+import { onChange, useIsEditing, useUpdatedAt } from '../../composables';
 import { createResourceManager, extractVuelidateResultsFromChild } from '../../core';
+import { AFormSubmit } from '../utility/AFormSubmit';
 import APolicyBasicForm from './APolicyBasicForm.vue';
 import APolicyTypePicker from './APolicyTypePicker.vue';
+import AAttributeNamesPolicy from './built-in/AAttributeNamesPolicy.vue';
+import ADatePolicyForm from './built-in/ADatePolicyForm.vue';
 import ATimePolicyForm from './built-in/ATimePolicyForm.vue';
 
 export default defineComponent({
-    components: { APolicyTypePicker, APolicyBasicForm },
+    components: { AFormSubmit, APolicyTypePicker, APolicyBasicForm },
     props: {
         entity: {
             type: Object as PropType<Policy>,
@@ -21,7 +24,9 @@ export default defineComponent({
     setup(props, ctx) {
         const type = ref<string | null>(null);
         const typeComponents : Record<string, any> = {
+            [BuiltInPolicyType.DATE]: ADatePolicyForm,
             [BuiltInPolicyType.TIME]: ATimePolicyForm,
+            [BuiltInPolicyType.ATTRIBUTE_NAMES]: AAttributeNamesPolicy,
         };
 
         const manager = createResourceManager({
@@ -31,6 +36,7 @@ export default defineComponent({
         });
 
         const updatedAt = useUpdatedAt(manager.data);
+        const isEditing = useIsEditing(manager.data);
 
         const setType = (val: string | null): void => {
             type.value = val;
@@ -55,6 +61,7 @@ export default defineComponent({
 
             const data : Partial<Policy> = {
                 ...extractVuelidateResultsFromChild(vuelidate, 'basic'),
+                ...extractVuelidateResultsFromChild(vuelidate, 'type'),
             };
 
             if (type.value) {
@@ -69,6 +76,8 @@ export default defineComponent({
             typeComponents,
             setType,
             data: manager.data,
+            busy: manager.busy,
+            isEditing,
             submit,
             vuelidate,
         };
@@ -76,19 +85,29 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div>
-        <APolicyTypePicker
-            :type="type"
-            @pick="setType"
-        />
+    <div class="d-flex flex-column gap-2">
+        <template v-if="!isEditing">
+            <APolicyTypePicker
+                v-if="!isEditing"
+                :type="type"
+                @pick="setType"
+            />
+        </template>
 
         <template v-if="type">
-            <hr>
+            <h6>{{ type.slice(0,1).toUpperCase() }}{{ type.slice(1) }}</h6>
             <APolicyBasicForm :entity="data" />
 
             <component :is="typeComponents[type]" />
-        </template>
 
-        {{ vuelidate.$invalid }}
+            <div>
+                <AFormSubmit
+                    :is-invalid="vuelidate.$invalid || !type"
+                    :is-busy="busy"
+                    :is-editing="isEditing"
+                    @submit="submit"
+                />
+            </div>
+        </template>
     </div>
 </template>

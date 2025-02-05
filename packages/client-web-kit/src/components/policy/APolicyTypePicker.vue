@@ -19,7 +19,9 @@ export default defineComponent({
             } satisfies FormSelectOption)),
         ];
 
-        option.value = props.type;
+        if (props.type) {
+            option.value = props.type;
+        }
 
         const pick = (val: string) => {
             option.value = val;
@@ -47,7 +49,7 @@ export default defineComponent({
                     <div
                         :class="{'active': item.id === option}"
                         class="d-flex flex-column gap-1 text-center picker-item"
-                        @click.prevent="pick(item.id)"
+                        @click.prevent="pick(`${item.id}`)"
                     >
                         <div>
                             {{ item.value }}

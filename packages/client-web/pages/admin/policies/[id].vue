@@ -38,7 +38,7 @@ export default defineComponent({
 
         try {
             entity.value = await injectHTTPClient()
-                .permission
+                .policy
                 .getOne(route.params.id as string);
         } catch (e) {
             await navigateTo({ path: '/admin/policies' });
