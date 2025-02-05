@@ -7,7 +7,7 @@ import useVuelidate from '@vuelidate/core';
 import { BuiltInPolicyType } from '@authup/access';
 import { onChange, useIsEditing, useUpdatedAt } from '../../composables';
 import { createResourceManager, extractVuelidateResultsFromChild } from '../../core';
-import { AFormSubmit } from '../utility/AFormSubmit';
+import { AFormSubmit } from '../utility';
 import APolicyBasicForm from './APolicyBasicForm.vue';
 import APolicyTypePicker from './APolicyTypePicker.vue';
 import AAttributeNamesPolicy from './built-in/AAttributeNamesPolicy.vue';

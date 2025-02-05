@@ -13,8 +13,11 @@ import type { RobotRole } from '@authup/core-kit';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
-    renderEntityAssignAction,
 } from '../../core';
+
+import {
+    renderToggleButton,
+} from '../utility';
 
 export const ARobotRoleAssignment = defineComponent({
     props: {
@@ -43,14 +46,19 @@ export const ARobotRoleAssignment = defineComponent({
             },
         });
 
-        return () => renderEntityAssignAction({
-            add: () => manager.create({
-                robot_id: props.robotId,
-                role_id: props.roleId,
-            }),
-            drop: manager.delete,
-            item: manager.data,
-            busy: manager.busy,
+        return () => renderToggleButton({
+            changed: (value) => {
+                if (value) {
+                    return manager.create({
+                        robot_id: props.robotId,
+                        role_id: props.roleId,
+                    });
+                }
+
+                return manager.delete();
+            },
+            value: !!manager.data.value,
+            isBusy: manager.busy.value,
         });
     },
 });

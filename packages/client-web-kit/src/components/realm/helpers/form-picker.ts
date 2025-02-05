@@ -5,12 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core-kit';
 import { buildFormGroup } from '@vuecs/form-controls';
 import { SlotName } from '@vuecs/list-controls';
 import type { VNode } from 'vue';
 import { h } from 'vue';
-import { renderEntityAssignAction } from '../../../core';
+import type { ResourceCollectionVSlots } from '../../../core';
+import {
+    APagination,
+    ASearch,
+    renderToggleButton,
+} from '../../utility';
 import { ARealms } from '../ARealms';
 
 type RealmForm = {
@@ -22,16 +26,42 @@ export function createRealmFormPicker(form: RealmForm) : VNode {
         label: true,
         labelContent: 'Realm',
         content: h(ARealms, {}, {
+            [SlotName.HEADER]: (props: ResourceCollectionVSlots<{ id: string }>['header']) => [
+                h(ASearch, {
+                    load: (payload: any) => {
+                        if (props.load) {
+                            return props.load(payload);
+                        }
+
+                        return undefined;
+                    },
+                    busy: props.busy,
+                }),
+            ],
+            [SlotName.FOOTER]: (props: ResourceCollectionVSlots<{ id: string }>['footer']) => [
+                h(APagination, {
+                    load: (payload: any) => {
+                        if (props.load) {
+                            return props.load(payload);
+                        }
+
+                        return undefined;
+                    },
+                    busy: props.busy,
+                    meta: props.meta,
+                }),
+            ],
             [SlotName.ITEM_ACTIONS]: (
-                props: { data: Realm, busy: boolean },
-            ) => renderEntityAssignAction({
-                item: form.realm_id === props.data.id,
-                busy: props.busy,
-                add() {
-                    form.realm_id = props.data.id;
-                },
-                drop() {
-                    form.realm_id = '';
+                props: ResourceCollectionVSlots<{ id: string }>['itemActions'],
+            ) => renderToggleButton({
+                value: form.realm_id === props.data.id,
+                isBusy: props.busy,
+                changed(value) {
+                    if (value) {
+                        form.realm_id = props.data.id;
+                    } else {
+                        form.realm_id = '';
+                    }
                 },
             }),
         }),

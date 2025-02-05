@@ -25,9 +25,12 @@ import {
     TranslatorTranslationGroup, buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource, renderEntityAssignAction,
+    defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource,
     useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
+import {
+    renderToggleButton,
+} from '../utility';
 import { ARealms } from '../realm';
 
 export const AUserForm = defineComponent({
@@ -266,14 +269,15 @@ export const AUserForm = defineComponent({
                 !isRealmLocked.value
             ) {
                 const realm = h(ARealms, {}, {
-                    [SlotName.ITEM_ACTIONS]: (props: { data: Realm, busy: boolean }) => renderEntityAssignAction({
-                        item: form.realm_id === props.data.id,
-                        busy: props.busy,
-                        add() {
-                            form.realm_id = props.data.id;
-                        },
-                        drop() {
-                            form.realm_id = '';
+                    [SlotName.ITEM_ACTIONS]: (props: { data: Realm, busy: boolean }) => renderToggleButton({
+                        value: form.realm_id === props.data.id,
+                        isBusy: props.busy,
+                        changed(value) {
+                            if (value) {
+                                form.realm_id = props.data.id;
+                            } else {
+                                form.realm_id = '';
+                            }
                         },
                     }),
                 });
