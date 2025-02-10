@@ -76,10 +76,14 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
                         parentPropertyName,
                     )} IS NOT NULL`;
                 } else {
-                    const column = repository.metadata.closureJunctionTable.ancestorColumns[0];
-                    statement = `${closureTableAlias}.${column.propertyPath} = :ancestor${column.referencedColumn!.propertyName}`;
+                    const ancestorColumn = repository.metadata.closureJunctionTable.ancestorColumns[0];
+                    const descendantColumn = repository.metadata.closureJunctionTable.descendantColumns[0];
+                    statement = [
+                        `${closureTableAlias}.${ancestorColumn.propertyPath} = :ancestor${ancestorColumn.referencedColumn!.propertyName}`,
+                        `${closureTableAlias}.${descendantColumn.propertyPath} != :ancestor${ancestorColumn.referencedColumn!.propertyName}`,
+                    ].join(' AND ');
 
-                    parameters[`ancestor${column.referencedColumn!.propertyName}`] = column.referencedColumn!.getEntityValue({ id: parentIds[i] });
+                    parameters[`ancestor${ancestorColumn.referencedColumn!.propertyName}`] = ancestorColumn.referencedColumn!.getEntityValue({ id: parentIds[i] });
                 }
 
                 if (i === 0) {

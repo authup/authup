@@ -15,8 +15,8 @@ import { buildTestPolicyEvaluateContext } from '../../utils';
 describe('src/policy/time', () => {
     it('should restrict', async () => {
         const spec: TimePolicy = {
-            start: '08:00',
-            end: '16:00',
+            start: '08:00:00',
+            end: '16:00:00',
         };
 
         const evaluator = new TimePolicyEvaluator();
@@ -46,8 +46,8 @@ describe('src/policy/time', () => {
     it('should parse options', async () => {
         const validator = new TimePolicyValidator();
         const output = await validator.run({
-            start: '08:00',
-            end: '16:00',
+            start: '08:00:00',
+            end: '16:00:00',
             interval: 'daily',
             dayOfWeek: 0,
             dayOfMonth: 1,
@@ -55,9 +55,9 @@ describe('src/policy/time', () => {
         } satisfies TimePolicy);
 
         expect(output.start)
-            .toEqual('08:00');
+            .toEqual('08:00:00');
         expect(output.end)
-            .toEqual('16:00');
+            .toEqual('16:00:00');
         expect(output.interval)
             .toEqual('daily');
         expect(output.dayOfWeek)
@@ -71,12 +71,12 @@ describe('src/policy/time', () => {
     it('should parse options with unknown', async () => {
         const validator = new TimePolicyValidator();
         const output = await validator.run({
-            start: '08:00',
+            start: '08:00:00',
             foo: 'bar',
         } satisfies TimePolicy & { foo?: string }) as Partial<TimePolicy> & { foo?: string };
 
         expect(output.start)
-            .toEqual('08:00');
+            .toEqual('08:00:00');
         expect(output.foo)
             .toBeUndefined();
     });

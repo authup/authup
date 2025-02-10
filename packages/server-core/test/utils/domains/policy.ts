@@ -19,8 +19,8 @@ export function createFakeTimePolicy(data: Partial<TimePolicyExtended> = {}) {
         name: faker.internet.username(),
         display_name: faker.internet.displayName(),
         type: BuiltInPolicyType.TIME,
-        start: '08:00',
-        end: '16:00',
+        start: '08:00:00',
+        end: '16:00:00',
         invert: false,
         ...data,
     } satisfies Partial<TimePolicyExtended>;

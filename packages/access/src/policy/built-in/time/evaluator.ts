@@ -13,7 +13,7 @@ import { isIntervalForDayOfMonth, isIntervalForDayOfWeek, isIntervalForDayOfYear
 import type { TimePolicy } from './types';
 import { TimePolicyValidator } from './validator';
 
-const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 
 function normalizeDate(input: Date, dateRef?: Date) {
     const date = dateRef ? new Date(dateRef) : new Date();
@@ -75,7 +75,6 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicy> {
 
         if (ctx.spec.start) {
             const start = normalizeDate(toDate(ctx.spec.start, now), now);
-
             if (now < start) {
                 return maybeInvertPolicyOutcome(false, ctx.spec.invert);
             }
