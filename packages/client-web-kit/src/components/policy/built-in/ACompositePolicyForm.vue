@@ -40,8 +40,8 @@ export default defineComponent({
             $registerAs: 'type',
         });
 
-        const query = computed<BuildInput<Policy>>(() => {
-            const filters : FiltersBuildInput<Policy> = {};
+        const query = computed<BuildInput<Policy & { parent_id?: string | null }>>(() => {
+            const filters : FiltersBuildInput<Policy & { parent_id?: string | null }> = {};
             if (props.entity) {
                 filters.id = `!${props.entity.id}`;
                 // todo: maybe respect manual realmId component prop
