@@ -21,18 +21,17 @@ export class ExtraAttributesTreeRepositoryAdapter<T,
 
         let children : T | T[] | undefined;
 
-        if (
-            childColumnName &&
-            parentColumnName
-        ) {
-            if (input[childColumnName]) {
-                children = input[childColumnName];
-                delete input[childColumnName];
-            }
+        if (childColumnName && input[childColumnName]) {
+            children = input[childColumnName];
+            delete input[childColumnName];
+        }
 
-            if (options && options.parent) {
-                input[parentColumnName as keyof T] = options.parent as (T & E)[keyof T];
-            }
+        if (
+            parentColumnName &&
+            options &&
+            options.parent
+        ) {
+            input[parentColumnName as keyof T] = options.parent as (T & E)[keyof T];
         }
 
         await super.saveWithEA(input, attributes, options);

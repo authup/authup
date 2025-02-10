@@ -1,13 +1,11 @@
 <script lang="ts">
 import {
-    type PropType, computed, defineComponent, reactive,
+    type PropType, defineComponent, reactive,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
-import type { Policy } from '@authup/core-kit/src';
+import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
-import type { FormSelectOption } from '@vuecs/form-controls';
 import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
-import { TimePolicyInterval } from '@authup/access';
 import type { DatePolicy } from '@authup/access';
 import { extendObjectProperties } from '../../../core';
 import { onChange, useUpdatedAt } from '../../../composables';

@@ -16,7 +16,7 @@ import type {
 import { RequestHandlerOperation } from '../../../../request';
 import { PolicyAttributesValidator } from './attributes-validator';
 
-export class PolicyValidator extends Container<PolicyEntity> {
+export class PolicyValidator extends Container<PolicyEntity & { parent_id?: string | null }> {
     protected initialize() {
         super.initialize();
 
@@ -66,6 +66,18 @@ export class PolicyValidator extends Container<PolicyEntity> {
                     .exists()
                     .isString()
                     .isLength({ min: 3, max: 128 });
+            }),
+        );
+
+        this.mount(
+            'parent_id',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isUUID()
+                    .optional({ values: 'null' });
             }),
         );
 
