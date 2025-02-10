@@ -19,12 +19,34 @@ export class CompositePolicyValidator extends Container<CompositePolicy> {
     }
 
     mountAll() {
-        this.mount('decisionStrategy', createValidator(z.nativeEnum(DecisionStrategy).optional()));
+        this.mount(
+            'decisionStrategy',
+            createValidator(
+                z.nativeEnum(DecisionStrategy)
 
-        this.mount('children', createValidator(z.array(z.object({
-            type: z.string().min(3),
-        }).passthrough())));
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
 
-        this.mount('invert', createValidator(z.boolean().optional()));
+        this.mount(
+            'children',
+            createValidator(
+                z.array(z.object({
+                    type: z.string().min(3),
+                }).passthrough()),
+            ),
+        );
+
+        this.mount(
+            'invert',
+            createValidator(
+                z.boolean()
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
     }
 }

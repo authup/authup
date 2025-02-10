@@ -8,7 +8,12 @@ import type { Policy } from '@authup/core-kit/src';
 import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormSelectOption } from '@vuecs/form-controls';
 import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
-import { TimePolicyInterval } from '@authup/access';
+import {
+    TimePolicyInterval,
+    isIntervalForDayOfMonth,
+    isIntervalForDayOfWeek,
+    isIntervalForDayOfYear,
+} from '@authup/access';
 import type { TimePolicy } from '@authup/access';
 import { extendObjectProperties } from '../../../core';
 import { onChange, useUpdatedAt } from '../../../composables';
@@ -73,27 +78,6 @@ export default defineComponent({
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
-
-        const isIntervalForDayOfWeek = (interval: string) => {
-            if (!interval) return false;
-
-            return interval === TimePolicyInterval.WEEKLY ||
-                interval === TimePolicyInterval.MONTHLY ||
-                interval === TimePolicyInterval.YEARLY;
-        };
-
-        const isIntervalForDayOfMonth = (interval: string) => {
-            if (!interval) return false;
-
-            return interval === TimePolicyInterval.MONTHLY ||
-                interval === TimePolicyInterval.YEARLY;
-        };
-
-        const isIntervalForDayOfYear = (interval: string) => {
-            if (!interval) return false;
-
-            return interval === TimePolicyInterval.YEARLY;
-        };
 
         const displayIntervalForDayOfWeek = computed(
             () => isIntervalForDayOfWeek(vuelidate.value.interval.$model),

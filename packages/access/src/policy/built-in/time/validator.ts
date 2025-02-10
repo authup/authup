@@ -19,15 +19,67 @@ export class TimePolicyValidator extends Container<TimePolicy> {
     }
 
     mountAll() {
-        this.mount('dayOfWeek', createValidator(z.number().min(0).max(6).optional()));
-        this.mount('dayOfMonth', createValidator(z.number().min(1).max(31).optional()));
-        this.mount('dayOfYear', createValidator(z.number().min(1).max(366).optional()));
+        this.mount('dayOfWeek', createValidator(
+            z.number()
+                .min(0).max(6)
+                .or(z.null())
+                .or(z.undefined())
+                .optional(),
+        ));
+        this.mount('dayOfMonth', createValidator(
+            z.number()
+                .min(1)
+                .max(31)
+                .or(z.null())
+                .or(z.undefined())
+                .optional(),
+        ));
+        this.mount('dayOfYear', createValidator(
+            z.number()
+                .min(1)
+                .max(366)
+                .or(z.null())
+                .or(z.undefined())
+                .optional(),
+        ));
 
-        this.mount('start', createValidator(z.date().or(z.string()).or(z.number()).optional()));
-        this.mount('end', createValidator(z.date().or(z.string()).or(z.number()).optional()));
+        this.mount('start', createValidator(
+            z.date()
+                .or(z.string().datetime())
+                .or(z.string().time())
+                .or(z.number())
+                .or(z.null())
+                .or(z.undefined())
+                .optional(),
+        ));
+        this.mount('end', createValidator(
+            z.date()
+                .or(z.string().datetime())
+                .or(z.string().time())
+                .or(z.number())
+                .or(z.null())
+                .or(z.undefined())
+                .optional(),
+        ));
 
-        this.mount('interval', createValidator(z.nativeEnum(TimePolicyInterval).optional()));
+        this.mount(
+            'interval',
+            createValidator(
+                z.nativeEnum(TimePolicyInterval)
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
 
-        this.mount('invert', createValidator(z.boolean().optional()));
+        this.mount(
+            'invert',
+            createValidator(
+                z.boolean()
+                    .or(z.undefined())
+                    .or(z.null())
+                    .optional(),
+            ),
+        );
     }
 }

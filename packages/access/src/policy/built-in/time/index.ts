@@ -7,5 +7,6 @@
 
 export * from './constants';
 export * from './evaluator';
+export * from './helpers';
 export * from './validator';
 export * from './types';

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { minLength, required } from '@vuelidate/validators';
+import { helpers, minLength, required } from '@vuelidate/validators';
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import {
     type PropType, computed, defineComponent, reactive,
@@ -25,17 +25,12 @@ export default defineComponent({
     },
     emits: ['updated'],
     setup(props, setup) {
-        const form = reactive<{ children: string[] }>({
-            children: [],
+        const form = reactive<{ items: string[] }>({
+            items: [],
         });
 
         const vuelidate = useVuelidate({
-            children: {
-                minLength: minLength(1),
-                $each: {
-                    required,
-                },
-            },
+            items: {},
         }, form, {
             $registerAs: 'type',
         });
@@ -64,7 +59,7 @@ export default defineComponent({
 
         function assign(data: Partial<CompositePolicy> = {}) {
             if (data.children) {
-                form.children = data.children.map((child) => child.id);
+                form.items = data.children.map((child) => child.id);
             }
         }
 
@@ -78,10 +73,10 @@ export default defineComponent({
         assign(props.entity);
 
         const handleUpdated = (children: string[]) => {
-            form.children = [...children];
-
             setup.emit('updated', {
-                data: form,
+                data: [
+                    ...children,
+                ],
                 valid: !vuelidate.value.$invalid,
             });
         };
@@ -98,7 +93,7 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <IVuelidate :validation="vuelidate.children">
+        <IVuelidate :validation="vuelidate.items">
             <template #default="props">
                 <VCFormGroup
                     :validation-messages="props.data"
@@ -107,10 +102,9 @@ export default defineComponent({
                     <template #label>
                         Children
                     </template>
-                    <!-- todo: condition parent_id = null, realm_id = equal ? -->
                     <APolicyChildrenPicker
                         :query="query"
-                        :value="vuelidate.children.$model"
+                        :value="vuelidate.items.$model"
                         @changed="handleUpdated"
                     />
                 </VCFormGroup>
