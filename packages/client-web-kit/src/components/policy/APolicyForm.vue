@@ -10,9 +10,10 @@ import { createResourceManager, extractVuelidateResultsFromChild, injectHTTPClie
 import { AFormSubmit } from '../utility';
 import APolicyBasicForm from './APolicyBasicForm.vue';
 import APolicyTypePicker from './APolicyTypePicker.vue';
-import AAttributeNamesPolicy from './built-in/AAttributeNamesPolicy.vue';
+import AAttributeNamesPolicyForm from './built-in/AAttributeNamesPolicyForm.vue';
 import ACompositePolicyForm from './built-in/ACompositePolicyForm.vue';
 import ADatePolicyForm from './built-in/ADatePolicyForm.vue';
+import ARealmMatchPolicyForm from './built-in/ARealmMatchPolicyForm.vue';
 import ATimePolicyForm from './built-in/ATimePolicyForm.vue';
 
 export default defineComponent({
@@ -25,10 +26,11 @@ export default defineComponent({
     setup(props, ctx) {
         const type = ref<string | null>(null);
         const typeComponents : Record<string, any> = {
+            [BuiltInPolicyType.REALM_MATCH]: ARealmMatchPolicyForm,
             [BuiltInPolicyType.COMPOSITE]: ACompositePolicyForm,
             [BuiltInPolicyType.DATE]: ADatePolicyForm,
             [BuiltInPolicyType.TIME]: ATimePolicyForm,
-            [BuiltInPolicyType.ATTRIBUTE_NAMES]: AAttributeNamesPolicy,
+            [BuiltInPolicyType.ATTRIBUTE_NAMES]: AAttributeNamesPolicyForm,
         };
 
         const httpClient = injectHTTPClient();
@@ -109,13 +111,17 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="d-flex flex-column gap-2">
+    <div class="d-flex flex-column">
         <template v-if="!isEditing">
             <APolicyTypePicker
                 v-if="!isEditing"
                 :type="type"
                 @pick="setType"
             />
+
+            <template v-if="type">
+                <hr>
+            </template>
         </template>
 
         <template v-if="type">
