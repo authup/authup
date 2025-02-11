@@ -78,7 +78,7 @@ export default defineComponent({
         };
 
         const handleDeleted = (index: number) => {
-            if (vuelidate.value.names.$model <= props.minItems) {
+            if (vuelidate.value.names.$model.length <= props.minItems) {
                 return;
             }
 
