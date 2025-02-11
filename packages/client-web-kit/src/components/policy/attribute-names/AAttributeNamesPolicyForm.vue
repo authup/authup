@@ -7,11 +7,11 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import AInputListForm from '../../utility/AInputListForm.vue';
+import AFormInputList from '../../utility/AFormInputList.vue';
 
 export default defineComponent({
     components: {
-        AInputListForm,
+        AFormInputList,
     },
     props: {
         entity: {
@@ -57,7 +57,7 @@ export default defineComponent({
 });
 </script>
 <template>
-    <AInputListForm
+    <AFormInputList
         :names="vuelidate.names.$model"
         :min-items="1"
         @changed="handleUpdated"

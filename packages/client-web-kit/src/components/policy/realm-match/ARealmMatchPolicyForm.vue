@@ -9,11 +9,11 @@ import { VCFormGroup } from '@vuecs/form-controls';
 import type { RealmMatchPolicy } from '@authup/access';
 import { extendObjectProperties } from '../../../core';
 import { onChange, useUpdatedAt } from '../../../composables';
-import AInputListForm from '../../utility/AInputListForm.vue';
+import AFormInputList from '../../utility/AFormInputList.vue';
 
 export default defineComponent({
     components: {
-        AInputListForm,
+        AFormInputList,
         VCFormGroup,
         IVuelidate,
     },
@@ -81,7 +81,7 @@ export default defineComponent({
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
-                        <AInputListForm
+                        <AFormInputList
                             :names="vuelidate.attributeName.$model"
                             @changed="handleUpdated"
                         />

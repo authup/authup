@@ -11,5 +11,5 @@ export * from './search';
 export * from './toggle-button';
 export * from './LanguageSwitcherDropdown';
 
-export { default as AInputListForm } from './AInputListForm.vue';
+export { default as AFormInputList } from './AFormInputList.vue';
 export { AFormSubmit } from './AFormSubmit';
