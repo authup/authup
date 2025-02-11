@@ -1,5 +1,4 @@
 <script lang="ts">
-import { helpers, minLength, required } from '@vuelidate/validators';
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import {
     type PropType, computed, defineComponent, reactive,

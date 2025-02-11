@@ -44,9 +44,6 @@ export default defineNuxtComponent({
 </script>
 <template>
     <div>
-        <h6 class="title">
-            General
-        </h6>
         <APolicyForm
             :entity="entity"
             @updated="handleUpdated"

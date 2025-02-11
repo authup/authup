@@ -10,11 +10,12 @@ import { createResourceManager, extractVuelidateResultsFromChild, injectHTTPClie
 import { AFormSubmit } from '../utility';
 import APolicyBasicForm from './APolicyBasicForm.vue';
 import APolicyTypePicker from './APolicyTypePicker.vue';
-import AAttributeNamesPolicyForm from './built-in/AAttributeNamesPolicyForm.vue';
-import ACompositePolicyForm from './built-in/ACompositePolicyForm.vue';
-import ADatePolicyForm from './built-in/ADatePolicyForm.vue';
-import ARealmMatchPolicyForm from './built-in/ARealmMatchPolicyForm.vue';
-import ATimePolicyForm from './built-in/ATimePolicyForm.vue';
+import AAttributeNamesPolicyForm from './attribute-names/AAttributeNamesPolicyForm.vue';
+import ACompositePolicyForm from './composite/ACompositePolicyForm.vue';
+import ADatePolicyForm from './date/ADatePolicyForm.vue';
+import ARealmMatchPolicyForm from './realm-match/ARealmMatchPolicyForm.vue';
+import ATimePolicyForm from './time/ATimePolicyForm.vue';
+import AIdentityPolicyForm from './identity/AIdentityPolicyForm.vue';
 
 export default defineComponent({
     components: { AFormSubmit, APolicyTypePicker, APolicyBasicForm },
@@ -26,6 +27,7 @@ export default defineComponent({
     setup(props, ctx) {
         const type = ref<string | null>(null);
         const typeComponents : Record<string, any> = {
+            [BuiltInPolicyType.IDENTITY]: AIdentityPolicyForm,
             [BuiltInPolicyType.REALM_MATCH]: ARealmMatchPolicyForm,
             [BuiltInPolicyType.COMPOSITE]: ACompositePolicyForm,
             [BuiltInPolicyType.DATE]: ADatePolicyForm,
@@ -125,13 +127,16 @@ export default defineComponent({
         </template>
 
         <template v-if="type">
-            <h6>{{ type.slice(0,1).toUpperCase() }}{{ type.slice(1) }}</h6>
+            <h6>General</h6>
             <APolicyBasicForm :entity="data" />
 
-            <component
-                :is="typeComponents[type]"
-                :entity="entity"
-            />
+            <template v-if="type in typeComponents">
+                <h6>Custom</h6>
+                <component
+                    :is="typeComponents[type]"
+                    :entity="entity"
+                />
+            </template>
 
             <div>
                 <AFormSubmit

@@ -37,7 +37,7 @@ export default defineComponent({
         const vuelidate = useVuelidate({
             name: {
                 required,
-                minLength: minLength(1),
+                minLength: minLength(3),
                 maxLength: maxLength(2000),
             },
         }, form);
@@ -67,11 +67,11 @@ export default defineComponent({
             >
                 <VCFormInput
                     v-model="vuelidate.name.$model"
-                    placeholder=""
                     @change="handleUpdated"
                 >
-                    <template>
+                    <template #groupPrepend>
                         <button
+                            :disabled="disabled"
                             type="button"
                             class="btn btn-xs btn-danger"
                             @click.prevent="handleDeleted"

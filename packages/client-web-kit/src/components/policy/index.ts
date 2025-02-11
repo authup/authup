@@ -8,4 +8,3 @@
 export { APolicy } from './APolicy';
 export { APolicies } from './APolicies';
 export { default as APolicyForm } from './APolicyForm.vue';
-export { default as APolicyBasicForm } from './APolicyBasicForm.vue';

@@ -4,7 +4,7 @@ import {
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { maxValue, minValue } from '@vuelidate/validators';
-import type { Policy } from '@authup/core-kit/src';
+import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormSelectOption } from '@vuecs/form-controls';
 import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
