@@ -8,7 +8,6 @@
 export * from './http-client';
 export * from './inject';
 export * from './provide';
-export * from './entity-assign-action';
 export * from './resource/collection';
 export * from './resource/record';
 export * from './form';

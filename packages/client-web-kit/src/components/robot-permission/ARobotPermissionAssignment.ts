@@ -11,8 +11,11 @@ import type { RobotPermission } from '@authup/core-kit';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
-    renderEntityAssignAction,
 } from '../../core';
+
+import {
+    renderToggleButton,
+} from '../utility';
 
 export const ARobotPermissionAssignment = defineComponent({
     props: {
@@ -41,14 +44,19 @@ export const ARobotPermissionAssignment = defineComponent({
             },
         });
 
-        return () => renderEntityAssignAction({
-            add: () => manager.create({
-                robot_id: props.robotId,
-                permission_id: props.permissionId,
-            }),
-            drop: manager.delete,
-            item: manager.data,
-            busy: manager.busy,
+        return () => renderToggleButton({
+            changed: (value) => {
+                if (value) {
+                    return manager.create({
+                        robot_id: props.robotId,
+                        permission_id: props.permissionId,
+                    });
+                }
+
+                return manager.delete();
+            },
+            value: !!manager.data.value,
+            isBusy: manager.busy.value,
         });
     },
 });

@@ -19,7 +19,10 @@ export type BuiltInPolicyResponse<
     T extends Record<string, any> = Record<string, any>,
 > = Omit<Policy, 'type'> & BuiltInPolicies<T>;
 
-type PolicyCreateSubset = Pick<Policy, 'name'> & Partial<Pick<Policy, 'display_name' | 'description' | 'invert'>>;
+type PolicyCreateSubset = Pick<Policy, 'name'> &
+Partial<Pick<Policy, 'display_name' | 'description' | 'invert'>> & {
+    parent_id?: string | null
+};
 export type PolicyCreateRequest = PolicyCreateSubset & Record<string, any>;
 
 export type BuiltInPolicyCreateRequest<

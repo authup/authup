@@ -9,10 +9,11 @@ import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import type { PolicyData, PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
+import { isIntervalForDayOfMonth, isIntervalForDayOfWeek, isIntervalForDayOfYear } from './helpers';
 import type { TimePolicy } from './types';
 import { TimePolicyValidator } from './validator';
 
-const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
 
 function normalizeDate(input: Date, dateRef?: Date) {
     const date = dateRef ? new Date(dateRef) : new Date();
@@ -74,7 +75,6 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicy> {
 
         if (ctx.spec.start) {
             const start = normalizeDate(toDate(ctx.spec.start, now), now);
-
             if (now < start) {
                 return maybeInvertPolicyOutcome(false, ctx.spec.invert);
             }
@@ -87,28 +87,39 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicy> {
             }
         }
 
-        if (ctx.spec.dayOfWeek) {
-            if (now.getDay() !== ctx.spec.dayOfWeek) {
-                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+        if (ctx.spec.interval) {
+            if (
+                isIntervalForDayOfWeek(ctx.spec.interval) &&
+                ctx.spec.dayOfWeek
+            ) {
+                if (now.getDay() !== ctx.spec.dayOfWeek) {
+                    return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+                }
             }
-        }
 
-        if (ctx.spec.dayOfMonth) {
-            if (now.getDate() !== ctx.spec.dayOfMonth) {
-                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+            if (
+                isIntervalForDayOfMonth(ctx.spec.interval) &&
+                ctx.spec.dayOfMonth
+            ) {
+                if (now.getDate() !== ctx.spec.dayOfMonth) {
+                    return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+                }
             }
-        }
 
-        if (ctx.spec.dayOfYear) {
-            const start = new Date(now.getFullYear(), 0, 0);
-            const diff = (now.getTime() - start.getTime()) +
-                ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
+            if (
+                isIntervalForDayOfYear(ctx.spec.interval) &&
+                ctx.spec.dayOfYear
+            ) {
+                const start = new Date(now.getFullYear(), 0, 0);
+                const diff = (now.getTime() - start.getTime()) +
+                    ((start.getTimezoneOffset() - now.getTimezoneOffset()) * 60 * 1000);
 
-            const oneDay = 1000 * 60 * 60 * 24;
-            const dayOfYear = Math.floor(diff / oneDay);
+                const oneDay = 1000 * 60 * 60 * 24;
+                const dayOfYear = Math.floor(diff / oneDay);
 
-            if (dayOfYear !== ctx.spec.dayOfYear) {
-                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+                if (dayOfYear !== ctx.spec.dayOfYear) {
+                    return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+                }
             }
         }
 

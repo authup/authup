@@ -20,8 +20,22 @@ export class AttributesPolicyValidator<
     }
 
     mountAll() {
-        this.mount('query', createValidator(z.object({}).passthrough()));
+        this.mount(
+            'query',
+            createValidator(
+                z.object({})
+                    .passthrough(),
+            ),
+        );
 
-        this.mount('invert', createValidator(z.boolean().optional()));
+        this.mount(
+            'invert',
+            createValidator(
+                z.boolean()
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
     }
 }

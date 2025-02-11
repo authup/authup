@@ -43,10 +43,14 @@ import {
     defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
-    renderEntityAssignAction,
     useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
+
+import {
+    renderToggleButton,
+} from '../utility';
+
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import { ARealms } from '../realm';
 import { AClientRedirectUris } from './AClientRedirectUris';
@@ -341,14 +345,15 @@ export const AClientForm = defineComponent({
                     }, {
                         [SlotName.ITEM_ACTIONS]: (
                             props: { data: Realm, busy: boolean },
-                        ) => renderEntityAssignAction({
-                            item: form.realm_id === props.data.id,
-                            busy: props.busy,
-                            add() {
-                                form.realm_id = props.data.id;
-                            },
-                            drop() {
-                                form.realm_id = '';
+                        ) => renderToggleButton({
+                            value: form.realm_id === props.data.id,
+                            isBusy: props.busy,
+                            changed(value) {
+                                if (value) {
+                                    form.realm_id = props.data.id;
+                                } else {
+                                    form.realm_id = '';
+                                }
                             },
                         }),
                     }),

@@ -12,8 +12,25 @@ import type { AttributeNamesPolicy } from './types';
 
 export class AttributeNamesPolicyValidator extends Container<AttributeNamesPolicy> {
     protected initialize() {
-        this.mount('names', createValidator(z.array(z.string().min(3).max(128))));
+        this.mount(
+            'names',
+            createValidator(
+                z.array(
+                    z.string()
+                        .min(3)
+                        .max(128),
+                ),
+            ),
+        );
 
-        this.mount('invert', createValidator(z.boolean().optional()));
+        this.mount(
+            'invert',
+            createValidator(
+                z.boolean()
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
     }
 }

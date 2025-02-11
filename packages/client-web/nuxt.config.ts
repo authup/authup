@@ -54,7 +54,7 @@ export default defineNuxtConfig({
     runtimeConfig: {
         apiUrl: process.env.API_URL_SERVER,
         public: {
-            apiUrl: process.env.API_URL || 'http://localhost:3010',
+            apiUrl: process.env.API_URL || 'http://localhost:3001',
             publicUrl: process.env.PUBLIC_URL || 'http://localhost:3000',
             cookieDomain: process.env.COOKIE_DOMAIN,
         },

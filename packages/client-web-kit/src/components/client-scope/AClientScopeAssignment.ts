@@ -11,8 +11,11 @@ import type { ClientScope } from '@authup/core-kit';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
-    renderEntityAssignAction,
 } from '../../core';
+
+import {
+    renderToggleButton,
+} from '../utility';
 
 export const AClientScopeAssignment = defineComponent({
     props: {
@@ -41,14 +44,19 @@ export const AClientScopeAssignment = defineComponent({
             },
         });
 
-        return () => renderEntityAssignAction({
-            add: () => manager.create({
-                client_id: props.clientId,
-                scope_id: props.scopeId,
-            }),
-            drop: manager.delete,
-            item: manager.data,
-            busy: manager.busy,
+        return () => renderToggleButton({
+            changed: (value) => {
+                if (value) {
+                    return manager.create({
+                        client_id: props.clientId,
+                        scope_id: props.scopeId,
+                    });
+                }
+
+                return manager.delete();
+            },
+            value: !!manager.data.value,
+            isBusy: manager.busy.value,
         });
     },
 });

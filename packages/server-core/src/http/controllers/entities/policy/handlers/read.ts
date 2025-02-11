@@ -11,6 +11,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import type { SelectQueryBuilder } from 'typeorm';
+import { Brackets } from 'typeorm';
 import {
     applyQuery,
     useDataSource,
@@ -35,34 +36,63 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
 
     let queryBuilder: SelectQueryBuilder<PolicyEntity>;
     const query = useRequestQuery(req);
-    if (
-        typeof query?.filter?.parent_id === 'string' ||
-        query?.filter?.parent_id === null
-    ) {
-        const parentId = query?.filter?.parent_id;
+    if (typeof query?.filter?.parent_id === 'string') {
+        const parentIds = `${query?.filter?.parent_id}`.split(',');
         delete query?.filter?.parent_id;
 
-        if (
-            parentId !== 'null' &&
-            parentId !== null
-        ) {
-            queryBuilder = repository.createAncestorsQueryBuilder(
-                'policy',
-                'policyRelation',
-                repository.create({ id: parentId }),
-            );
-        } else {
-            const joinColumn = repository.metadata.treeParentRelation!.joinColumns[0];
-            const parentPropertyName = joinColumn.givenDatabaseName || joinColumn.databaseName;
+        const closureTableAlias = 'policyRelation';
+        const joinCondition = repository.metadata.closureJunctionTable.descendantColumns
+            .map((column) => (
+                `${closureTableAlias
+                }.${
+                    column.propertyPath
+                } = policy.${
+                    column.referencedColumn!.propertyPath}`
+            ))
+            .join(' AND ');
 
-            const escapeStr = repository.manager.connection.driver.escape;
-            queryBuilder = repository.createQueryBuilder('policy')
-                .where(
-                    `${escapeStr('policy')}.${escapeStr(
+        queryBuilder = repository.createQueryBuilder('policy')
+            .innerJoin(
+                repository.metadata.closureJunctionTable.tableName,
+                closureTableAlias,
+                joinCondition,
+            );
+
+        const escapeStr = repository.manager.connection.driver.escape;
+
+        const joinColumn = repository.metadata.treeParentRelation!.joinColumns[0];
+        const parentPropertyName = joinColumn.givenDatabaseName || joinColumn.databaseName;
+
+        queryBuilder.where(new Brackets((qb) => {
+            for (let i = 0; i < parentIds.length; i++) {
+                let statement : string;
+                const parameters : Record<string, any> = {};
+                if (parentIds[i] === 'null') {
+                    statement = `${escapeStr('policy')}.${escapeStr(
                         parentPropertyName,
-                    )} IS NULL`,
-                );
-        }
+                    )} IS NULL`;
+                } else if (parentIds[i] === '!null') {
+                    statement = `${escapeStr('policy')}.${escapeStr(
+                        parentPropertyName,
+                    )} IS NOT NULL`;
+                } else {
+                    const ancestorColumn = repository.metadata.closureJunctionTable.ancestorColumns[0];
+                    const descendantColumn = repository.metadata.closureJunctionTable.descendantColumns[0];
+                    statement = [
+                        `${closureTableAlias}.${ancestorColumn.propertyPath} = :ancestor${ancestorColumn.referencedColumn!.propertyName}`,
+                        `${closureTableAlias}.${descendantColumn.propertyPath} != :ancestor${ancestorColumn.referencedColumn!.propertyName}`,
+                    ].join(' AND ');
+
+                    parameters[`ancestor${ancestorColumn.referencedColumn!.propertyName}`] = ancestorColumn.referencedColumn!.getEntityValue({ id: parentIds[i] });
+                }
+
+                if (i === 0) {
+                    qb.where(statement, parameters);
+                } else {
+                    qb.orWhere(statement, parameters);
+                }
+            }
+        }));
     } else {
         queryBuilder = repository.createQueryBuilder('policy');
     }
@@ -87,7 +117,7 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
             ],
         },
         filters: {
-            allowed: ['name', 'type', 'realm_id', 'realm.name'],
+            allowed: ['id', 'name', 'type', 'realm_id', 'realm.name'],
         },
         sort: {
             allowed: ['id', 'created_at', 'updated_at'],

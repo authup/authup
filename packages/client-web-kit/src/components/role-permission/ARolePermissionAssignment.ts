@@ -11,8 +11,11 @@ import type { RolePermission } from '@authup/core-kit';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
-    renderEntityAssignAction,
 } from '../../core';
+
+import {
+    renderToggleButton,
+} from '../utility';
 
 export const ARolePermissionAssignment = defineComponent({
     props: {
@@ -41,14 +44,19 @@ export const ARolePermissionAssignment = defineComponent({
             },
         });
 
-        return () => renderEntityAssignAction({
-            add: () => manager.create({
-                role_id: props.roleId,
-                permission_id: props.permissionId,
-            }),
-            drop: manager.delete,
-            item: manager.data,
-            busy: manager.busy,
+        return () => renderToggleButton({
+            changed: (value) => {
+                if (value) {
+                    return manager.create({
+                        role_id: props.roleId,
+                        permission_id: props.permissionId,
+                    });
+                }
+
+                return manager.delete();
+            },
+            value: !!manager.data.value,
+            isBusy: manager.busy.value,
         });
     },
 });

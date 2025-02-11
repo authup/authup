@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isUUID } from '@authup/kit';
-import { NotFoundError } from '@ebec/http';
+import { BuiltInPolicyType } from '@authup/access';
+import { isPropertySet, isUUID } from '@authup/kit';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
@@ -83,10 +84,32 @@ export async function writePolicyRouteHandler(
 
     // ----------------------------------------------
 
+    let parent : PolicyEntity | undefined | null;
+    if (isPropertySet(data, 'parent_id')) {
+        if (data.parent_id) {
+            parent = await repository.findOneWithEA({ where: { id: data.parent_id } });
+            if (parent) {
+                if (parent.type !== BuiltInPolicyType.COMPOSITE) {
+                    throw new BadRequestError('The parent policy must be of type group.');
+                }
+            }
+        } else {
+            parent = null;
+        }
+
+        delete data.parent_id;
+    }
+
+    // ----------------------------------------------
+
     await validateEntityJoinColumns(data, {
         dataSource,
         entityTarget: PolicyEntity,
     });
+
+    if (typeof parent !== 'undefined') {
+        data.parent = parent;
+    }
 
     // ----------------------------------------------
 
@@ -137,6 +160,7 @@ export async function writePolicyRouteHandler(
         }
 
         await repository.saveOneWithEA(entity);
+        await repository.findDescendantsTree(entity);
 
         return sendAccepted(res, entity);
     }

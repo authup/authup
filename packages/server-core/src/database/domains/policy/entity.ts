@@ -11,7 +11,8 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
-    PrimaryGeneratedColumn, Tree, TreeChildren, TreeParent,
+    PrimaryGeneratedColumn, Tree, TreeChildren,
+    TreeParent,
     Unique,
     UpdateDateColumn,
 } from 'typeorm';

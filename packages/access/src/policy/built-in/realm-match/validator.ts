@@ -19,14 +19,64 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
     }
 
     mountAll() {
-        this.mount('decisionStrategy', createValidator(z.nativeEnum(DecisionStrategy).optional()));
+        this.mount(
+            'decisionStrategy',
+            createValidator(
+                z.nativeEnum(DecisionStrategy)
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
 
-        this.mount('attributeName', createValidator(z.string().min(3).or(z.array(z.string().min(3))).optional()));
-        this.mount('attributeNameStrict', createValidator(z.boolean().optional()));
-        this.mount('attributeNullMatchAll', createValidator(z.boolean().optional()));
+        this.mount(
+            'attributeName',
+            createValidator(
+                z.string()
+                    .min(3)
+                    .or(z.array(z.string().min(3)))
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
+        this.mount(
+            'attributeNameStrict',
+            createValidator(
+                z.boolean()
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
+        this.mount(
+            'attributeNullMatchAll',
+            createValidator(
+                z.boolean()
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
 
-        this.mount('identityMasterMatchAll', createValidator(z.boolean().optional()));
+        this.mount(
+            'identityMasterMatchAll',
+            createValidator(
+                z.boolean()
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
 
-        this.mount('invert', createValidator(z.boolean().optional()));
+        this.mount(
+            'invert',
+            createValidator(
+                z.boolean()
+                    .or(z.null())
+                    .or(z.undefined())
+                    .optional(),
+            ),
+        );
     }
 }

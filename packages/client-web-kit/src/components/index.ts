@@ -9,6 +9,7 @@ export * from './client';
 export * from './client-scope';
 export * from './identity-provider';
 export * from './identity-provider-role';
+export * from './policy';
 export * from './permission';
 export * from './permission-robot';
 export * from './permission-role';

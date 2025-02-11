@@ -11,8 +11,11 @@ import type { UserRole } from '@authup/core-kit';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
-    renderEntityAssignAction,
 } from '../../core';
+
+import {
+    renderToggleButton,
+} from '../utility';
 
 export const AUserRoleAssignment = defineComponent({
     props: {
@@ -41,14 +44,19 @@ export const AUserRoleAssignment = defineComponent({
             },
         });
 
-        return () => renderEntityAssignAction({
-            add: () => manager.create({
-                user_id: props.userId,
-                role_id: props.roleId,
-            }),
-            drop: manager.delete,
-            item: manager.data,
-            busy: manager.busy,
+        return () => renderToggleButton({
+            changed: (value) => {
+                if (value) {
+                    return manager.create({
+                        user_id: props.userId,
+                        role_id: props.roleId,
+                    });
+                }
+
+                return manager.delete();
+            },
+            value: !!manager.data.value,
+            isBusy: manager.busy.value,
         });
     },
 });
