@@ -33,7 +33,7 @@ export const APolicyChildrenPicker = defineComponent({
     emits: ['changed'],
     setup(props, { emit }) {
         return () => h(APolicies, props, {
-            [SlotName.HEADER]: (slotProps: ResourceCollectionVSlots<{ id: string }>['header']) => [
+            [SlotName.HEADER]: (slotProps: ResourceCollectionVSlots<Policy>['header']) => [
                 h(ASearch, {
                     load: (payload: any) => {
                         if (slotProps.load) {
@@ -45,7 +45,7 @@ export const APolicyChildrenPicker = defineComponent({
                     busy: slotProps.busy,
                 }),
             ],
-            [SlotName.FOOTER]: (slotProps: ResourceCollectionVSlots<{ id: string }>['footer']) => [
+            [SlotName.FOOTER]: (slotProps: ResourceCollectionVSlots<Policy>['footer']) => [
                 h(APagination, {
                     load: (payload: any) => {
                         if (slotProps.load) {
@@ -59,7 +59,7 @@ export const APolicyChildrenPicker = defineComponent({
                 }),
             ],
             [SlotName.ITEM_ACTIONS]: (
-                slotProps: ResourceCollectionVSlots<{ id: string }>['itemActions'],
+                slotProps: ResourceCollectionVSlots<Policy>['itemActions'],
             ) => {
                 if (props.parentId) {
                     return h(APolicyParentAssignment, {

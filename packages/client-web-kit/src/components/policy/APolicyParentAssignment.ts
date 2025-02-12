@@ -40,7 +40,7 @@ export const APolicyParentAssignment = defineComponent({
             setup,
             socket: {
                 processEvent(event) {
-                    return event.data.id === props.id;
+                    return event.data.id === props.entityId;
                 },
             },
             props: {
@@ -52,7 +52,7 @@ export const APolicyParentAssignment = defineComponent({
         await manager.resolve({
             query: {
                 filters: {
-                    id: props.id,
+                    id: props.entityId,
                 },
             },
         });
@@ -67,7 +67,9 @@ export const APolicyParentAssignment = defineComponent({
                     manager.data.value.parent_id = props.parentId;
                 } else {
                     manager.data.value.parent_id = null;
-                    delete manager.data.value.parent;
+                    if (manager.data.value.parent) {
+                        manager.data.value.parent = null;
+                    }
                 }
 
                 manager.update(manager.data.value);
