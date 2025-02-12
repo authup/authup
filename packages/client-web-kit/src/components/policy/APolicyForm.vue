@@ -66,10 +66,10 @@ export default defineComponent({
                 return;
             }
 
-            const { children = [], ...data } = {
+            const { items = [], ...data } = {
                 ...extractVuelidateResultsFromChild(vuelidate, 'basic'),
                 ...extractVuelidateResultsFromChild(vuelidate, 'type'),
-            } as Partial<Omit<Policy, 'children'>> & {children: string[]};
+            } as Partial<Omit<Policy, 'children'>> & {items: string[]};
 
             if (type.value) {
                 data.type = type.value;
@@ -78,22 +78,11 @@ export default defineComponent({
             await manager.createOrUpdate(data);
 
             if (manager.data.value) {
-                if (children.length > 0) {
-                    for (let i = 0; i < children.length; i++) {
-                        await httpClient.policy.update(children[i], {
+                if (items.length > 0) {
+                    for (let i = 0; i < items.length; i++) {
+                        await httpClient.policy.update(items[i], {
                             parent_id: manager.data.value.id,
                         });
-                    }
-                }
-
-                if (manager.data.value.children) {
-                    for (let i = 0; i < manager.data.value.children.length; i++) {
-                        const index = children.indexOf(manager.data.value.children[i].id);
-                        if (index === -1) {
-                            await httpClient.policy.update(manager.data.value.children[i].id, {
-                                parent_id: null,
-                            });
-                        }
                     }
                 }
             }

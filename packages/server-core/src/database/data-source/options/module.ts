@@ -26,7 +26,7 @@ export function extendDataSourceOptions(options: DataSourceOptions) : DataSource
     }
 
     Object.assign(options, {
-        logging: ['error'],
+        logging: ['error', 'schema', 'migration'],
         // logger: new DatabaseLogger(logger),
         migrations: [migrationPath],
         migrationsTransactionMode: 'each',
