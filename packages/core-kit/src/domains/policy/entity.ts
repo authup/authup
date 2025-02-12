@@ -31,6 +31,8 @@ export interface Policy {
 
     children: PolicyWithType[];
 
+    parent_id: string | null;
+
     parent: PolicyWithType | null;
 
     // ------------------------------------------------------------------

@@ -163,6 +163,8 @@ export class EATreeRepository<
         return entities;
     }
 
+    // -------------------------------------------------------------------------------
+
     async findAncestorsTree(
         entity: T,
         options?: FindTreeOptions,
@@ -191,5 +193,117 @@ export class EATreeRepository<
             relationMaps,
         );
         return entity;
+    }
+
+    // -------------------------------------------------------------------------------
+
+    async updateClosureTable(entity: T) {
+        const primaryKeyValue = this.metadata.primaryColumns[0].getEntityValue(entity);
+        if (!primaryKeyValue) {
+            return;
+        }
+
+        const closureTable = this.metadata.closureJunctionTable;
+        if (!closureTable) {
+            return;
+        }
+
+        const { tableName } = this.metadata.closureJunctionTable;
+        const ancestorColumn = this.metadata.closureJunctionTable.ancestorColumns[0];
+        const descendantColumn = this.metadata.closureJunctionTable.descendantColumns[0];
+
+        await this.manager.connection.transaction(async (manager) => {
+            // 1. Get All ancestors of current entity
+            const ancestors = await manager.query<Record<string, any>[]>(
+                `Select *
+                     FROM ${tableName}
+                     WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
+                           ${descendantColumn.databasePath} = '${primaryKeyValue}' AND
+                           ${ancestorColumn.databasePath} != '${primaryKeyValue}';`,
+            );
+
+            const parentId = this.metadata.treeParentRelation.joinColumns[0].getEntityValue(entity);
+
+            let ancestorIds : string[];
+            if (parentId) {
+                ancestorIds = [
+                    parentId,
+                    ...ancestors
+                        .filter((ancestor) => ancestor[ancestorColumn.databasePath] !== parentId)
+                        .map((ancestor) => ancestor[ancestorColumn.databasePath]),
+                ];
+            } else {
+                ancestorIds = ancestors.map((ancestor) => ancestor[ancestorColumn.databasePath]);
+            }
+
+            if (ancestorIds.length === 0) {
+                return;
+            }
+
+            // 2. Get All descendants of current entity.
+            const descendants = await manager.query<Record<string, any>[]>(
+                `Select *
+                         FROM ${tableName}
+                         WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
+                               ${ancestorColumn.databasePath} = '${primaryKeyValue}' AND
+                               ${descendantColumn.databasePath} != '${primaryKeyValue}';`,
+            );
+
+            if (parentId) {
+                // 3. get all descendant
+                const descendantIds = descendants
+                    .map((descendant) => descendant[descendantColumn.databasePath]);
+
+                // 4. get all ancestors of each descendant :)
+                const ancestorsOfDescendants = await manager.query<Record<string, any>[]>(
+                    `Select *
+                         FROM ${tableName}
+                         WHERE
+                             ${ancestorColumn.databasePath} != '${primaryKeyValue}' AND
+                             ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
+                             ${descendantColumn.databasePath} IN (${descendantIds.map((descendantId) => `'${descendantId}'`).join(',')});`,
+                );
+
+                const acc = ancestorsOfDescendants.reduce((acc, curr) => {
+                    if (!acc[curr[descendantColumn.databasePath]]) {
+                        acc[curr[descendantColumn.databasePath]] = [];
+                    }
+
+                    acc[curr[descendantColumn.databasePath]] = curr[ancestorColumn.databasePath];
+                    return acc;
+                }, {} as Record<string, string[]>);
+
+                const accKeys = Object.keys(acc);
+                // 5. Check if for each child a relation exists with each ancestor (create if not exist)
+                for (let i = 0; i < accKeys.length; i++) {
+                    const descendant = accKeys[i];
+                    const ancestorsOfDescendent = acc[descendant];
+
+                    for (let j = 0; j < ancestorIds.length; j++) {
+                        const index = ancestorsOfDescendent.indexOf(ancestorIds[j]);
+                        if (index === -1) {
+                            await manager.query(`INSERT INTO
+                                                    ${tableName}
+                                                 (${ancestorColumn.databasePath}, ${descendantColumn.databasePath}) VALUES
+                                                   ('${ancestorIds[j]}','${descendant}');`);
+                        }
+                    }
+                }
+            } else {
+                const descendantIds = [
+                    primaryKeyValue,
+                    ...descendants.map((descendant) => descendant[descendantColumn.databasePath]),
+                ];
+
+                for (let i = 0; i < ancestorIds.length; i++) {
+                    for (let j = 0; j < descendantIds.length; j++) {
+                        await manager.query(`DELETE
+                                                 FROM ${tableName}
+                                                 WHERE ${ancestorColumn.databasePath} = '${ancestorIds[i]}'
+                                                   AND ${descendantColumn.databasePath} = '${descendantIds[j]}';`);
+                    }
+                }
+            }
+        });
     }
 }

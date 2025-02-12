@@ -10,14 +10,11 @@ import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
-import type { SelectQueryBuilder } from 'typeorm';
-import { Brackets } from 'typeorm';
 import {
     applyQuery,
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import type { PolicyEntity } from '../../../../../database/domains';
 import { PolicyRepository, resolveRealm } from '../../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
 
@@ -33,74 +30,13 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
 
     const dataSource = await useDataSource();
     const repository = new PolicyRepository(dataSource);
-
-    let queryBuilder: SelectQueryBuilder<PolicyEntity>;
+    const queryBuilder = repository.createQueryBuilder('policy');
     const query = useRequestQuery(req);
-    if (typeof query?.filter?.parent_id === 'string') {
-        const parentIds = `${query?.filter?.parent_id}`.split(',');
-        delete query?.filter?.parent_id;
-
-        const closureTableAlias = 'policyRelation';
-        const joinCondition = repository.metadata.closureJunctionTable.descendantColumns
-            .map((column) => (
-                `${closureTableAlias
-                }.${
-                    column.propertyPath
-                } = policy.${
-                    column.referencedColumn!.propertyPath}`
-            ))
-            .join(' AND ');
-
-        queryBuilder = repository.createQueryBuilder('policy')
-            .innerJoin(
-                repository.metadata.closureJunctionTable.tableName,
-                closureTableAlias,
-                joinCondition,
-            );
-
-        const escapeStr = repository.manager.connection.driver.escape;
-
-        const joinColumn = repository.metadata.treeParentRelation!.joinColumns[0];
-        const parentPropertyName = joinColumn.givenDatabaseName || joinColumn.databaseName;
-
-        queryBuilder.where(new Brackets((qb) => {
-            for (let i = 0; i < parentIds.length; i++) {
-                let statement : string;
-                const parameters : Record<string, any> = {};
-                if (parentIds[i] === 'null') {
-                    statement = `${escapeStr('policy')}.${escapeStr(
-                        parentPropertyName,
-                    )} IS NULL`;
-                } else if (parentIds[i] === '!null') {
-                    statement = `${escapeStr('policy')}.${escapeStr(
-                        parentPropertyName,
-                    )} IS NOT NULL`;
-                } else {
-                    const ancestorColumn = repository.metadata.closureJunctionTable.ancestorColumns[0];
-                    const descendantColumn = repository.metadata.closureJunctionTable.descendantColumns[0];
-                    statement = [
-                        `${closureTableAlias}.${ancestorColumn.propertyPath} = :ancestor${ancestorColumn.referencedColumn!.propertyName}`,
-                        `${closureTableAlias}.${descendantColumn.propertyPath} != :ancestor${ancestorColumn.referencedColumn!.propertyName}`,
-                    ].join(' AND ');
-
-                    parameters[`ancestor${ancestorColumn.referencedColumn!.propertyName}`] = ancestorColumn.referencedColumn!.getEntityValue({ id: parentIds[i] });
-                }
-
-                if (i === 0) {
-                    qb.where(statement, parameters);
-                } else {
-                    qb.orWhere(statement, parameters);
-                }
-            }
-        }));
-    } else {
-        queryBuilder = repository.createQueryBuilder('policy');
-    }
 
     const { pagination } = applyQuery(queryBuilder, query, {
         defaultAlias: 'policy',
         relations: {
-            allowed: ['realm'],
+            allowed: ['children', 'realm'],
         },
         fields: {
             default: [
@@ -111,13 +47,14 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
                 'name',
                 'description',
                 'invert',
+                'parent_id',
                 'realm_id',
                 'created_at',
                 'updated_at',
             ],
         },
         filters: {
-            allowed: ['id', 'name', 'type', 'realm_id', 'realm.name'],
+            allowed: ['id', 'name', 'type', 'parent_id', 'realm_id', 'realm.name'],
         },
         sort: {
             allowed: ['id', 'created_at', 'updated_at'],
@@ -129,8 +66,6 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
 
     const [entities, total] = await queryBuilder.getManyAndCount();
     await repository.extendManyWithEA(entities);
-
-    await Promise.all(entities.map((entity) => repository.findDescendantsTree(entity)));
 
     return send(res, {
         data: entities,
@@ -180,13 +115,14 @@ export async function getOnePolicyRouteHandler(req: Request, res: Response): Pro
                 'display_name',
                 'description',
                 'invert',
+                'parent_id',
                 'realm_id',
                 'created_at',
                 'updated_at',
             ],
         },
         relations: {
-            allowed: ['realm'],
+            allowed: ['children', 'realm'],
         },
     });
 
@@ -197,7 +133,6 @@ export async function getOnePolicyRouteHandler(req: Request, res: Response): Pro
     }
 
     await repository.extendOneWithEA(entity);
-    await repository.findDescendantsTree(entity);
 
     return send(res, entity);
 }

@@ -51,11 +51,15 @@ export class PolicyEntity implements Policy {
     @Column({ type: 'boolean', default: false })
         invert: boolean;
 
-    @TreeChildren()
+    @TreeChildren({ cascade: true })
         children: PolicyEntity[];
 
+    @Column({ nullable: true })
+        parent_id: string | null;
+
     @TreeParent({ onDelete: 'CASCADE' })
-        parent: PolicyEntity | null;
+    @JoinColumn({ name: 'parent_id' })
+        parent: PolicyEntity;
 
     @CreateDateColumn()
         created_at: Date;

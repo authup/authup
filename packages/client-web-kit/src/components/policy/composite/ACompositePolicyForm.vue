@@ -28,6 +28,14 @@ export default defineComponent({
             items: [],
         });
 
+        const id = computed(() => {
+            if (!props.entity) {
+                return undefined;
+            }
+
+            return props.entity.id;
+        });
+
         const vuelidate = useVuelidate({
             items: {},
         }, form, {
@@ -37,13 +45,21 @@ export default defineComponent({
         const query = computed<BuildInput<Policy & { parent_id?: string | null }>>(() => {
             const filters : FiltersBuildInput<Policy & { parent_id?: string | null }> = {};
             if (props.entity) {
-                filters.id = `!${props.entity.id}`;
                 // todo: maybe respect manual realmId component prop
                 if (props.entity.realm_id) {
                     filters.realm_id = props.entity.realm_id;
                 }
 
-                filters.parent_id = [null, props.entity.id];
+                if (props.entity.parent_id) {
+                    filters.id = [
+                        `!${props.entity.id}`,
+                        `!${props.entity.parent_id}`,
+                    ];
+                } else {
+                    filters.id = `!${props.entity.id}`;
+                }
+
+                filters.parent_id = [null, `${props.entity.id}`];
             } else {
                 filters.parent_id = null;
             }
@@ -81,6 +97,8 @@ export default defineComponent({
         };
 
         return {
+            id,
+
             handleUpdated,
 
             vuelidate,
@@ -102,6 +120,7 @@ export default defineComponent({
                         Children
                     </template>
                     <APolicyChildrenPicker
+                        :parent-id="id"
                         :query="query"
                         :value="vuelidate.items.$model"
                         @changed="handleUpdated"

@@ -13,11 +13,16 @@ import type { ResourceCollectionVSlots } from '../../core';
 import { defineResourceCollectionVProps } from '../../core';
 import { APagination, ASearch, renderToggleButton } from '../utility';
 import { APolicies } from './APolicies';
+import { APolicyParentAssignment } from './APolicyParentAssignment';
 
 export const APolicyChildrenPicker = defineComponent({
     props: {
         value: {
             type: Array as PropType<string[]>,
+            default: () => [],
+        },
+        parentId: {
+            type: String,
         },
         multiple: {
             type: Boolean,
@@ -56,23 +61,28 @@ export const APolicyChildrenPicker = defineComponent({
             [SlotName.ITEM_ACTIONS]: (
                 slotProps: ResourceCollectionVSlots<{ id: string }>['itemActions'],
             ) => {
-                const { value: children } = props;
-                if (children) {
+                if (props.parentId) {
+                    return h(APolicyParentAssignment, {
+                        entity: slotProps.data,
+                        entityId: slotProps.data.id,
+                        parentId: props.parentId,
+                    });
+                } if (props.value) {
                     return renderToggleButton({
-                        value: children.indexOf(slotProps.data.id) !== -1,
+                        value: props.value.indexOf(slotProps.data.id) !== -1,
                         isBusy: slotProps.busy,
                         changed(value) {
-                            const index = children!.indexOf(slotProps.data.id);
+                            const index = props.value!.indexOf(slotProps.data.id);
 
                             if (value) {
                                 if (index === -1) {
-                                    children!.push(slotProps.data.id);
+                                    props.value!.push(slotProps.data.id);
                                 }
                             } else if (index !== -1) {
-                                children!.splice(index, 1);
+                                props.value!.splice(index, 1);
                             }
 
-                            emit('changed', children);
+                            emit('changed', props.value);
                         },
                     });
                 }
