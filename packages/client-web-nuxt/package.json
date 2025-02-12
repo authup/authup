@@ -44,6 +44,6 @@
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
-        "pinia": "^3.0.0"
+        "pinia": "^2.x || ^3.x"
     }
 }
