@@ -9,8 +9,12 @@ import type { Permission, Role } from '@authup/core-kit';
 import type { PolicyIdentity } from '@authup/access';
 import { isPermissionItemEqual } from '@authup/access';
 import type { DataSource } from 'typeorm';
-import type { ClientRepository } from '../../database/domains';
-import { RobotRepository, RoleRepository, UserRepository } from '../../database/domains';
+import {
+    ClientRepository,
+    RobotRepository,
+    RoleRepository,
+    UserRepository,
+} from '../../database/domains';
 
 export class IdentityPermissionService {
     protected dataSource: DataSource;
