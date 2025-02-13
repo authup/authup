@@ -21,7 +21,7 @@ import {
 import { PolicyEntity } from '../policy';
 import { RealmEntity } from '../realm';
 
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'client_id', 'realm_id'])
 @Entity({ name: 'auth_permissions' })
 export class PermissionEntity implements Permission {
     @PrimaryGeneratedColumn('uuid')

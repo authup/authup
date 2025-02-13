@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { Client } from '@authup/core-kit';
 import {
     Column,
     CreateDateColumn,
@@ -20,7 +21,7 @@ import type { Realm, Role } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_roles' })
-@Unique(['name', 'realm_id'])
+@Unique(['name', 'client_id', 'realm_id'])
 export class RoleEntity implements Role {
     @PrimaryGeneratedColumn('uuid')
         id: string;
@@ -42,6 +43,16 @@ export class RoleEntity implements Role {
 
     @Column({ type: 'varchar', length: 16, nullable: true })
         target: string | null;
+
+    // ------------------------------------------------------------------
+
+    @Index()
+    @Column({ nullable: true })
+        client_id: Client['id'] | null;
+
+    @ManyToOne(() => RealmEntity, { onDelete: 'SET NULL', nullable: true })
+    @JoinColumn({ name: 'client_id' })
+        client: Client | null;
 
     // ------------------------------------------------------------------
 

@@ -41,7 +41,10 @@ export function defineCLIMigrationCommand() {
             ) {
                 const options = await useDataSourceOptions();
                 extendDataSourceOptions(options);
-                const dataSource = new DataSource(options);
+                const dataSource = new DataSource({
+                    ...options,
+                    logging: ['error', 'schema', 'migration'],
+                });
                 await dataSource.initialize();
 
                 if (context.args.operation === 'revert') {
