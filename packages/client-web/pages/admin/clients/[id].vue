@@ -34,6 +34,12 @@ export default defineComponent({
             {
                 name: 'URL', icon: 'fa-solid fa-link', urlSuffix: '/url',
             },
+            {
+                name: 'Permissions', icon: 'fas fa-user-secret', urlSuffix: '/permissions',
+            },
+            {
+                name: 'Roles', icon: 'fa-solid fa-user-group', urlSuffix: '/roles',
+            },
         ];
 
         const toast = useToast();

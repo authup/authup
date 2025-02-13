@@ -32,6 +32,9 @@ export default defineComponent({
                 name: 'Users', icon: 'fas fa-user', urlSuffix: 'users',
             },
             {
+                name: 'Clients', icon: 'fa-solid fa-ghost ', urlSuffix: 'clients',
+            },
+            {
                 name: 'Robots', icon: 'fas fa-robot', urlSuffix: 'robots',
             },
             {
