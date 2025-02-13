@@ -54,7 +54,6 @@ export class PermissionDBProvider implements PermissionProvider {
         if (entity) {
             let policy : PolicyWithType | undefined;
             if (entity.policy) {
-                // todo: entity.policy and children need to be transformed
                 policy = await this.policyRepository.findDescendantsTree(entity.policy);
             } else {
                 policy = this.getDefaultPolicy();

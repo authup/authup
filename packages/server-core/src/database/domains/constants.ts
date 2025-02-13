@@ -14,6 +14,8 @@ export enum CachePrefix {
     OAUTH2_AUTHORIZATION_CODE = 'oauth2_authorization_code',
 
     CLIENT = 'client',
+    CLIENT_OWNED_PERMISSIONS = 'client_owned_permissions',
+    CLIENT_OWNED_ROLES = 'client_owned_roles',
     CLIENT_SCOPE = 'client_scope',
 
     USER = 'user',
