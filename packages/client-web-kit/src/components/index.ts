@@ -6,11 +6,14 @@
  */
 
 export * from './client';
+export * from './client-permission';
+export * from './client-role';
 export * from './client-scope';
 export * from './identity-provider';
 export * from './identity-provider-role';
 export * from './policy';
 export * from './permission';
+export * from './permission-client';
 export * from './permission-robot';
 export * from './permission-role';
 export * from './permission-user';
@@ -19,6 +22,7 @@ export * from './robot';
 export * from './robot-permission';
 export * from './robot-role';
 export * from './role';
+export * from './role-client';
 export * from './role-permission';
 export * from './role-robot';
 export * from './user-permission';

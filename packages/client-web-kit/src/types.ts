@@ -9,8 +9,12 @@ import type { Pinia } from 'pinia';
 import type {
     AClient,
     AClientForm,
+    AClientPermissionAssignment,
+    AClientPermissionAssignments,
     AClientRedirectUris,
     AClientRedirectUrisItem,
+    AClientRoleAssignment,
+    AClientRoleAssignments,
     AClientScope,
     AClientScopeAssignment,
     AClientScopeAssignments,
@@ -27,6 +31,7 @@ import type {
     AIdentityProviderRoleAssignments,
     AIdentityProviders,
     APermission,
+    APermissionClientAssignments,
     APermissionRobotAssignments,
     APermissionRoleAssignments,
     APermissionUserAssignments,
@@ -42,6 +47,7 @@ import type {
     ARobotRoleAssignments,
     ARobots,
     ARole,
+    ARoleClientAssignments,
     ARoleForm,
     ARolePermissionAssignment,
     ARolePermissionAssignments,
@@ -112,6 +118,12 @@ declare module '@vue/runtime-core' {
         AClientRedirectUris: typeof AClientRedirectUris;
         AClientRedirectUrisItem: typeof AClientRedirectUrisItem;
 
+        AClientPermissionAssignment: typeof AClientPermissionAssignment;
+        AClientPermissionAssignments: typeof AClientPermissionAssignments;
+
+        AClientRoleAssignment: typeof AClientRoleAssignment;
+        AClientRoleAssignments: typeof AClientRoleAssignments;
+
         AClientScope: typeof AClientScope;
         AClientScopes: typeof AClientScopes;
         AClientScopeAssignment: typeof AClientScopeAssignment;
@@ -132,6 +144,7 @@ declare module '@vue/runtime-core' {
         APermission: typeof APermission;
         APermissions: typeof APermissions;
 
+        APermissionClientAssignments: typeof APermissionClientAssignments;
         APermissionRobotAssignments: typeof APermissionRobotAssignments;
         APermissionRoleAssignments: typeof APermissionRoleAssignments;
         APermissionUserAssignments: typeof APermissionUserAssignments;
@@ -157,6 +170,7 @@ declare module '@vue/runtime-core' {
         ARolePermissionAssignment: typeof ARolePermissionAssignment;
         ARolePermissionAssignments: typeof ARolePermissionAssignments;
 
+        ARoleClientAssignments: typeof ARoleClientAssignments;
         ARoleRobotAssignments: typeof ARoleRobotAssignments;
         ARoleUserAssignments: typeof ARoleUserAssignments;
 
