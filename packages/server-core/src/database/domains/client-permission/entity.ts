@@ -23,7 +23,7 @@ import {
 import type { Realm } from '@authup/core-kit';
 import { PermissionEntity } from '../permission';
 import { PolicyEntity } from '../policy';
-import { RobotEntity } from '../robot/entity';
+import { ClientEntity } from '../client/entity';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_client_permissions' })
@@ -42,10 +42,10 @@ export class ClientPermissionEntity implements ClientPermission {
         policy: Policy | null;
 
     @Column()
-        robot_id: string;
+        client_id: string;
 
-    @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'robot_id' })
+    @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'client_id' })
         client: Client;
 
     @Column({ nullable: true })

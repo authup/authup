@@ -19,6 +19,8 @@ import {
 } from '@routup/basic/query';
 import {
     ClientController,
+    ClientPermissionController,
+    ClientRoleController,
     ClientScopeController,
     IdentityProviderController,
     OAuth2ProviderRoleController,
@@ -56,6 +58,8 @@ export function registerControllers(
             TokenController,
 
             ClientController,
+            ClientPermissionController,
+            ClientRoleController,
             ClientScopeController,
             OAuth2ProviderRoleController,
             IdentityProviderController,

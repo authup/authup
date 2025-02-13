@@ -12,6 +12,15 @@ export enum PermissionName {
     CLIENT_READ = 'client_read',
     CLIENT_SELF_MANAGE = 'client_self_manage',
 
+    CLIENT_PERMISSION_CREATE = 'client_permission_create',
+    CLIENT_PERMISSION_DELETE = 'client_permission_delete',
+    CLIENT_PERMISSION_READ = 'client_permission_read',
+
+    CLIENT_ROLE_CREATE = 'client_role_create',
+    CLIENT_ROLE_DELETE = 'client_role_delete',
+    CLIENT_ROLE_UPDATE = 'client_role_update',
+    CLIENT_ROLE_READ = 'client_role_read',
+
     CLIENT_SCOPE_CREATE = 'client_scope_create',
     CLIENT_SCOPE_DELETE = 'client_scope_delete',
 
