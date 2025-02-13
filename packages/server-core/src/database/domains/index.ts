@@ -7,6 +7,8 @@
 
 export * from './key';
 export * from './client';
+export * from './client-role';
+export * from './client-permission';
 export * from './client-scope';
 export * from './identity-provider';
 export * from './identity-provider-attribute';
