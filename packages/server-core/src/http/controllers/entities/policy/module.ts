@@ -24,15 +24,26 @@ import { checkPolicyRouteHandler } from './handlers/check';
 @DController('/policies')
 export class PolicyController {
     @DGet('', [])
-    async getProviders(
+    async getMany(
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Policy[]> {
         return getManyPolicyRouteHandler(req, res);
     }
 
+    @DGet('/:id/expanded', [])
+    async getOneExpanded(
+        @DPath('id') id: string,
+            @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<Policy> {
+        return getOnePolicyRouteHandler(req, res, {
+            expanded: true,
+        });
+    }
+
     @DGet('/:id', [])
-    async getProvider(
+    async getOne(
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -51,7 +62,7 @@ export class PolicyController {
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
-    async editProvider(
+    async update(
         @DPath('id') id: string,
             @DBody() data: NonNullable<Policy>,
             @DRequest() req: any,
@@ -63,7 +74,7 @@ export class PolicyController {
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
-    async put(
+    async replace(
         @DPath('id') id: string,
             @DBody() data: NonNullable<Policy>,
             @DRequest() req: any,
@@ -73,7 +84,7 @@ export class PolicyController {
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
-    async dropProvider(
+    async drop(
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
@@ -82,7 +93,7 @@ export class PolicyController {
     }
 
     @DPost('', [ForceLoggedInMiddleware])
-    async addProvider(
+    async create(
         @DBody() data: NonNullable<Policy>,
             @DRequest() req: any,
             @DResponse() res: any,

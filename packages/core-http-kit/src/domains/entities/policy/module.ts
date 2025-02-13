@@ -40,6 +40,14 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
         return response.data;
     }
 
+    async getOneExpanded<
+        OUTPUT extends PolicyResponse = PolicyResponse,
+    >(id: Policy['id'], record?: BuildInput<Policy>) : Promise<SingleResourceResponse<OUTPUT>> {
+        const response = await this.client.get(`policies/${id}/expanded${buildQuery(record)}`);
+
+        return response.data;
+    }
+
     async create<
         INPUT extends PolicyCreateRequest = PolicyCreateRequest,
         OUTPUT extends PolicyResponse = PolicyResponse,

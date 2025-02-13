@@ -76,7 +76,15 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
     });
 }
 
-export async function getOnePolicyRouteHandler(req: Request, res: Response): Promise<any> {
+type PolicyGetOneOptions = {
+    expanded?: boolean
+};
+
+export async function getOnePolicyRouteHandler(
+    req: Request,
+    res: Response,
+    options: PolicyGetOneOptions = {},
+): Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheckOneOf({
         name: [
@@ -130,6 +138,10 @@ export async function getOnePolicyRouteHandler(req: Request, res: Response): Pro
 
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (options.expanded) {
+        await repository.findDescendantsTree(entity);
     }
 
     await repository.extendOneWithEA(entity);
