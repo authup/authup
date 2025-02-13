@@ -6,6 +6,8 @@
  */
 
 import type { Client } from './client';
+import type { ClientPermission } from './client-permission';
+import type { ClientRole } from './client-role';
 import type { ClientScope } from './client-scope';
 import type { DomainType } from './contstants';
 import type { IdentityProvider } from './identity-provider';
@@ -30,6 +32,8 @@ import type { UserRole } from './user-role';
 
 type DomainTypeMapRaw = {
     [DomainType.CLIENT]: Client,
+    [DomainType.CLIENT_PERMISSION]: ClientPermission,
+    [DomainType.CLIENT_ROLE]: ClientRole,
     [DomainType.CLIENT_SCOPE]: ClientScope,
     [DomainType.IDENTITY_PROVIDER]: IdentityProvider,
     [DomainType.IDENTITY_PROVIDER_ACCOUNT]: IdentityProviderAccount,
