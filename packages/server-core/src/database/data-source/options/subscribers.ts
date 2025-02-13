@@ -7,6 +7,8 @@
 
 import type { DataSourceOptions } from 'typeorm';
 import {
+    ClientPermissionSubscriber,
+    ClientRoleSubscriber,
     ClientScopeSubscriber,
     ClientSubscriber,
     IdentityProviderAccountSubscriber,
@@ -37,6 +39,8 @@ export function extendDataSourceOptionsWithSubscribers<T extends DataSourceOptio
     return Object.assign(options, {
         subscribers: [
             ClientSubscriber,
+            ClientPermissionSubscriber,
+            ClientRoleSubscriber,
             ClientScopeSubscriber,
 
             IdentityProviderSubscriber,
