@@ -20,7 +20,7 @@ export const AClientRoleAssignments = defineComponent({
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
                 AClientRoleAssignment,
                 {
-                    robotId: props.entityId,
+                    clientId: props.entityId,
                     roleId: slotProps.data.id,
                     key: slotProps.data.id,
                 },

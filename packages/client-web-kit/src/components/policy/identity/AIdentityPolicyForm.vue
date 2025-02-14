@@ -31,7 +31,7 @@ export default defineComponent({
         });
 
         function assign(data: Partial<IdentityPolicy> = {}) {
-            form.types = data.types;
+            form.types = data.types || [];
         }
 
         setup.expose({
@@ -43,7 +43,7 @@ export default defineComponent({
 
         assign(props.entity);
 
-        const handleUpdated = ({ data } : { data: string[] }) => {
+        const handleUpdated = (data: string[]) => {
             form.types = data;
             setup.emit('updated', data);
         };

@@ -43,7 +43,7 @@ export default defineComponent({
 
         assign(props.entity);
 
-        const handleUpdated = ({ data } : { data: string[] }) => {
+        const handleUpdated = (data: string[]) => {
             form.names = data;
             setup.emit('updated', data);
         };

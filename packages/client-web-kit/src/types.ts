@@ -11,8 +11,6 @@ import type {
     AClientForm,
     AClientPermissionAssignment,
     AClientPermissionAssignments,
-    AClientRedirectUris,
-    AClientRedirectUrisItem,
     AClientRoleAssignment,
     AClientRoleAssignments,
     AClientScope,
@@ -115,8 +113,6 @@ declare module '@vue/runtime-core' {
         AClient: typeof AClient;
         AClients: typeof AClients;
         AClientForm: typeof AClientForm;
-        AClientRedirectUris: typeof AClientRedirectUris;
-        AClientRedirectUrisItem: typeof AClientRedirectUrisItem;
 
         AClientPermissionAssignment: typeof AClientPermissionAssignment;
         AClientPermissionAssignments: typeof AClientPermissionAssignments;

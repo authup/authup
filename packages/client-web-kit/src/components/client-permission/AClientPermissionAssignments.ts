@@ -25,7 +25,7 @@ export const AClientPermissionAssignments = defineComponent({
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Permission }) => h(
                 AClientPermissionAssignment,
                 {
-                    robotId: props.entityId,
+                    clientInd: props.entityId,
                     permissionId: slotProps.data.id,
                     key: slotProps.data.id,
                 },

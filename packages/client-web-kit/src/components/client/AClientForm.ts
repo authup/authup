@@ -6,7 +6,6 @@
  */
 
 import { createNanoID } from '@authup/kit';
-import { SlotName } from '@vuecs/list-controls';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -23,7 +22,7 @@ import {
 import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
-import type { Client, Realm } from '@authup/core-kit';
+import type { Client } from '@authup/core-kit';
 import { DomainType } from '@authup/core-kit';
 import {
     buildFormGroup,
@@ -43,17 +42,16 @@ import {
     defineResourceVEmitOptions,
     getVuelidateSeverity,
     initFormAttributesFromSource,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    injectStore,
+    storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
+import { createRealmFormPicker } from '../realm/helpers';
 
 import {
-    renderToggleButton,
+    AFormInputList,
 } from '../utility';
 
 import { useIsEditing, useUpdatedAt } from '../../composables';
-import { ARealms } from '../realm';
-import { AClientRedirectUris } from './AClientRedirectUris';
 
 export const AClientForm = defineComponent({
     props: {
@@ -118,6 +116,9 @@ export const AClientForm = defineComponent({
             },
         }, form);
 
+        const store = injectStore();
+        const storeRefs = storeToRefs(store);
+
         const manager = createResourceManager({
             type: `${DomainType.CLIENT}`,
             setup: ctx,
@@ -128,7 +129,15 @@ export const AClientForm = defineComponent({
         const updatedAt = useUpdatedAt(props.entity);
 
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
-        const isRealmLocked = computed(() => !!props.realmId);
+        const realmId = computed(() => {
+            if (!storeRefs.realmIsRoot) {
+                return storeRefs.realmId.value;
+            }
+
+            return manager.data.value ?
+                manager.data.value.realm_id :
+                null;
+        });
 
         const generateSecret = () => {
             form.secret = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 64);
@@ -139,10 +148,6 @@ export const AClientForm = defineComponent({
                 form.name = props.name;
             }
 
-            if (props.realmId) {
-                form.realm_id = props.realmId;
-            }
-
             initFormAttributesFromSource(form, manager.data.value);
 
             if (form.secret.length === 0) {
@@ -150,13 +155,16 @@ export const AClientForm = defineComponent({
             }
         }
 
-        watch(updatedAt, (val, oldVal) => {
-            if (val && val !== oldVal) {
-                manager.data.value = props.entity;
+        watch(
+            updatedAt,
+            (val, oldVal) => {
+                if (val && val !== oldVal) {
+                    manager.data.value = props.entity;
 
-                initForm();
-            }
-        });
+                    initForm();
+                }
+            },
+        );
 
         initForm();
 
@@ -249,18 +257,21 @@ export const AClientForm = defineComponent({
             ];
 
             const redirectUri = [
-                h('div', [
-                    h('label', { class: 'form-label' }, [
+                h(AFormInputList, {
+                    names: form.redirect_uri ? form.redirect_uri.split(',') : [],
+                    onChanged: (value: string[]) => {
+                        if (value.length === 0) {
+                            form.redirect_uri = '';
+                            return;
+                        }
+                        form.redirect_uri = value.join(',');
+                    },
+                }, {
+                    label: () => [
                         translationsDefault[TranslatorTranslationDefaultKey.REDIRECT_URIS].value,
-                    ]),
-                    h(AClientRedirectUris, {
-                        uri: form.redirect_uri,
-                        onUpdated: (value) => {
-                            form.redirect_uri = value;
-                        },
-                    }),
-                    h('small', translationsClient[TranslatorTranslationClientKey.REDIRECT_URI_HINT].value),
-                ]),
+                    ],
+                }),
+                h('small', translationsClient[TranslatorTranslationClientKey.REDIRECT_URI_HINT].value),
             ];
 
             const isConfidential = buildFormGroup({
@@ -332,31 +343,10 @@ export const AClientForm = defineComponent({
 
             let realm : VNodeChild = [];
 
-            if (!isRealmLocked.value) {
+            if (!realmId.value && !isEditing.value) {
                 realm = [
                     h('hr'),
-                    h(
-                        'label',
-                        { class: 'form-label' },
-                        translationsDefault[TranslatorTranslationDefaultKey.REALM].value,
-                    ),
-                    h(ARealms, {
-                        headerTitle: false,
-                    }, {
-                        [SlotName.ITEM_ACTIONS]: (
-                            props: { data: Realm, busy: boolean },
-                        ) => renderToggleButton({
-                            value: form.realm_id === props.data.id,
-                            isBusy: props.busy,
-                            changed(value) {
-                                if (value) {
-                                    form.realm_id = props.data.id;
-                                } else {
-                                    form.realm_id = '';
-                                }
-                            },
-                        }),
-                    }),
+                    createRealmFormPicker(form),
                 ];
             }
 

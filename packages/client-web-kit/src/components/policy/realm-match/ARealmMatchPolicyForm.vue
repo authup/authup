@@ -64,8 +64,14 @@ export default defineComponent({
             });
         };
 
+        const handleAttributeNameChanged = (data: string[]) => {
+            form.attributeName = data;
+            handleUpdated();
+        };
+
         return {
             handleUpdated,
+            handleAttributeNameChanged,
 
             vuelidate,
         };
@@ -83,7 +89,7 @@ export default defineComponent({
                     >
                         <AFormInputList
                             :names="vuelidate.attributeName.$model"
-                            @changed="handleUpdated"
+                            @changed="handleAttributeNameChanged"
                         />
                     </VCFormGroup>
                 </template>
