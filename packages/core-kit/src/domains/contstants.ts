@@ -7,6 +7,8 @@
 
 export enum DomainType {
     CLIENT = 'client',
+    CLIENT_PERMISSION = 'clientPermission',
+    CLIENT_ROLE = 'clientRole',
     CLIENT_SCOPE = 'clientScope',
     IDENTITY_PROVIDER = 'identityProvider',
     IDENTITY_PROVIDER_ACCOUNT = 'identityProviderAccount',

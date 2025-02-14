@@ -1,5 +1,4 @@
 <script lang="ts">
-
 import { AClientScopes } from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
 import {
@@ -19,8 +18,7 @@ export default defineNuxtComponent({
             required: true,
         },
     },
-    emits: ['updated', 'failed'],
-    setup(props, { emit }) {
+    setup(props) {
         const scopes = ref<string[]>([]);
         const redirectUri = ref<string>('');
 
@@ -82,18 +80,18 @@ export default defineNuxtComponent({
             :item="{class: ''}"
         >
             <template #item="props">
-                <VCFormGroup :validation-translator="(props.translatorLocale)">
-                    <template #label>
-                        {{ props.data.scope.name }}
+                <VCFormInputCheckbox
+                    :label="true"
+                    :group-class="'form-switch'"
+                    :model-value="scopes.indexOf(props.data.scope.name) !== -1"
+                    @update:model-value="toggleScope(props.data.scope.name)"
+                >
+                    <template #label="iProps">
+                        <label :for="iProps.id">
+                            {{ props.data.scope.name }}
+                        </label>
                     </template>
-
-                    <template #default>
-                        <VCFormInputCheckbox
-                            :model-value="scopes.indexOf(props.data.scope.name) !== -1"
-                            @update:model-value="toggleScope(props.data.scope.name)"
-                        />
-                    </template>
-                </VCFormGroup>
+                </VCFormInputCheckbox>
             </template>
         </AClientScopes>
 

@@ -33,6 +33,12 @@ export default defineComponent({
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
             },
             {
+                name: 'Users', icon: 'fas fa-user', urlSuffix: 'users',
+            },
+            {
+                name: 'Clients', icon: 'fas fa-ghost', urlSuffix: 'clients',
+            },
+            {
                 name: 'Permissions', icon: 'fas fa-user-secret', urlSuffix: 'permissions',
             },
             {

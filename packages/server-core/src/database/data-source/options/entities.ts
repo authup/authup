@@ -8,7 +8,7 @@
 import type { DataSourceOptions } from 'typeorm';
 
 import {
-    ClientEntity,
+    ClientEntity, ClientPermissionEntity, ClientRoleEntity,
     ClientScopeEntity,
     IdentityProviderAccountEntity,
     IdentityProviderAttributeEntity,
@@ -42,6 +42,8 @@ export function extendDataSourceOptionsWithEntities<T extends DataSourceOptions>
             OAuth2RefreshTokenEntity,
 
             ClientEntity,
+            ClientPermissionEntity,
+            ClientRoleEntity,
             ClientScopeEntity,
 
             IdentityProviderEntity,
@@ -52,16 +54,22 @@ export function extendDataSourceOptionsWithEntities<T extends DataSourceOptions>
             IdentityProviderAttributeMappingEntity,
 
             PermissionEntity,
+
             PolicyEntity,
             PolicyAttributeEntity,
+
             RealmEntity,
+
             RobotEntity,
             RobotPermissionEntity,
             RobotRoleEntity,
+
             RoleEntity,
             RoleAttributeEntity,
             RolePermissionEntity,
+
             ScopeEntity,
+
             UserEntity,
             UserAttributeEntity,
             UserPermissionEntity,

@@ -8,5 +8,3 @@
 export { AClient } from './AClient';
 export { AClientForm } from './AClientForm';
 export { AClients } from './AClients';
-export { AClientRedirectUris } from './AClientRedirectUris';
-export { AClientRedirectUrisItem } from './AClientRedirectUrisItem';

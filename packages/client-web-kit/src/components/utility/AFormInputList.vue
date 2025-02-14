@@ -6,9 +6,11 @@ import {
     ref,
 } from 'vue';
 import AFormInputListItem from './AFormInputListItem.vue';
+import { ATranslationDefault } from './translation';
 
 export default defineComponent({
     components: {
+        ATranslationDefault,
         AFormInputListItem,
     },
     props: {
@@ -60,13 +62,11 @@ export default defineComponent({
         const canDrop = computed(() => items.value.length > props.minItems);
 
         const emitUpdated = () => {
-            setup.emit('changed', {
-                data: [
-                    ...items.value
-                        .map((el) => el.value)
-                        .filter(Boolean),
-                ],
-            });
+            setup.emit('changed', [
+                ...items.value
+                    .map((el) => el.value)
+                    .filter(Boolean),
+            ]);
         };
 
         const handleUpdated = (id: number, value: string) => {
@@ -106,7 +106,7 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="d-flex flex-column gap-2 mb-2">
+    <div class="d-flex flex-column gap-2">
         <div class="d-flex flex-row">
             <div class="align-self-end">
                 <slot name="label">
@@ -120,7 +120,7 @@ export default defineComponent({
                     :disabled="!canAdd"
                     @click.prevent="add()"
                 >
-                    <i class="fa fa-plus" /> Add
+                    <i class="fa fa-plus" /> <ATranslationDefault :name="'add'" />
                 </button>
             </div>
         </div>

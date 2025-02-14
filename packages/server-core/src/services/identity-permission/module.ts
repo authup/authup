@@ -9,10 +9,17 @@ import type { Permission, Role } from '@authup/core-kit';
 import type { PolicyIdentity } from '@authup/access';
 import { isPermissionItemEqual } from '@authup/access';
 import type { DataSource } from 'typeorm';
-import { RobotRepository, RoleRepository, UserRepository } from '../../database/domains';
+import {
+    ClientRepository,
+    RobotRepository,
+    RoleRepository,
+    UserRepository,
+} from '../../database/domains';
 
 export class IdentityPermissionService {
     protected dataSource: DataSource;
+
+    protected clientRepository: ClientRepository;
 
     protected userRepository : UserRepository;
 
@@ -23,6 +30,7 @@ export class IdentityPermissionService {
     constructor(dataSource: DataSource) {
         this.dataSource = dataSource;
 
+        this.clientRepository = new ClientRepository(dataSource);
         this.userRepository = new UserRepository(dataSource);
         this.roleRepository = new RoleRepository(dataSource);
         this.robotRepository = new RobotRepository(dataSource);
@@ -45,8 +53,10 @@ export class IdentityPermissionService {
     }
 
     async getFor(identity: PolicyIdentity) : Promise<Permission[]> {
-        // todo: add client
         switch (identity.type) {
+            case 'client': {
+                return this.getForClient(identity.id);
+            }
             case 'user': {
                 return this.getForUser(identity.id);
             }
@@ -59,6 +69,20 @@ export class IdentityPermissionService {
         }
 
         return [];
+    }
+
+    async getForClient(id: string) : Promise<Permission[]> {
+        const permissions = await this.clientRepository.getBoundPermissions(id);
+        const roles = await this.clientRepository.getBoundRoles(id);
+        const rolePermissions = await this.getForRoles(roles);
+        if (rolePermissions.length === 0) {
+            return permissions;
+        }
+
+        return [
+            ...permissions,
+            ...rolePermissions,
+        ];
     }
 
     async getForUser(id: string) : Promise<Permission[]> {

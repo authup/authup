@@ -12,6 +12,8 @@ import type {
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
     ClientAPI,
+    ClientPermissionAPI,
+    ClientRoleAPI,
     ClientScopeAPI,
     IdentityProviderAPI,
     IdentityProviderRoleMappingAPI,
@@ -41,6 +43,10 @@ export class Client extends BaseClient {
     public readonly authorize : OAuth2AuthorizeAPI;
 
     public readonly client : ClientAPI;
+
+    public readonly clientPermission : ClientPermissionAPI;
+
+    public readonly clientRole : ClientRoleAPI;
 
     public readonly clientScope : ClientScopeAPI;
 
@@ -101,6 +107,8 @@ export class Client extends BaseClient {
         this.token = new OAuth2TokenAPI({ client: this, options });
 
         this.client = new ClientAPI({ client: this });
+        this.clientPermission = new ClientPermissionAPI({ client: this });
+        this.clientRole = new ClientRoleAPI({ client: this });
         this.clientScope = new ClientScopeAPI({ client: this });
 
         this.identityProvider = new IdentityProviderAPI({ client: this });
