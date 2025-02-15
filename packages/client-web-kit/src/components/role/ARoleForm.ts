@@ -27,7 +27,7 @@ import {
     createResourceManager, defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource,
     injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
-import { createRealmFormPicker } from '../realm/helpers';
+import { ARealmPicker } from '../realm';
 
 export const ARoleForm = defineComponent({
     props: {
@@ -118,6 +118,7 @@ export const ARoleForm = defineComponent({
                 { key: TranslatorTranslationDefaultKey.NAME },
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
             ],
         );
 
@@ -167,7 +168,20 @@ export const ARoleForm = defineComponent({
             }));
 
             if (!realmId.value && !isEditing.value) {
-                children.push(createRealmFormPicker(form));
+                children.push(
+                    buildFormGroup({
+                        validationMessages: translationsValidation.realm_id.value,
+                        validationSeverity: getVuelidateSeverity($v.value.realm_id),
+                        label: true,
+                        labelContent: translationsDefault[TranslatorTranslationDefaultKey.REALM].value,
+                        content: h(ARealmPicker, {
+                            value: $v.value.realm_id.$model,
+                            onChange: (input: string[]) => {
+                                $v.value.realm_id.$model = input.length > 0 ? input[0] : '';
+                            },
+                        }),
+                    }),
+                );
             }
 
             children.push(buildFormSubmitWithTranslations({

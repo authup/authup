@@ -32,7 +32,7 @@ import {
     injectStore,
     storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
-import { createRealmFormPicker } from '../realm/helpers';
+import { ARealmPicker } from '../realm';
 
 export const APermissionForm = defineComponent({
     props: {
@@ -123,6 +123,7 @@ export const APermissionForm = defineComponent({
                 { key: TranslatorTranslationDefaultKey.NAME },
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
             ],
         );
 
@@ -176,7 +177,19 @@ export const APermissionForm = defineComponent({
             }));
 
             if (!realmId.value && !isEditing.value) {
-                children.push(createRealmFormPicker(form));
+                children.push(buildFormGroup({
+                    validationMessages: translationsValidation.realm_id.value,
+                    validationSeverity: getVuelidateSeverity($v.value.realm_id),
+                    label: true,
+                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.REALM].value,
+                    content: h(ARealmPicker, {
+                        value: $v.value.realm_id.$model,
+                        multiple: false,
+                        onChange(input: string[]) {
+                            $v.value.realm_id.$model = input.length > 0 ? input[0] : '';
+                        },
+                    }),
+                }));
             }
 
             children.push(buildFormSubmitWithTranslations({
