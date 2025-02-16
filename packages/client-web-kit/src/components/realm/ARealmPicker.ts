@@ -26,7 +26,7 @@ export const ARealmPicker = defineComponent({
         ...defineResourceCollectionVProps<Realm>(),
     },
     emits: ['change'],
-    setup(props, { emit }) {
+    setup(props, { emit, attrs }) {
         const value = toRef(props, 'value');
         const items = ref<string[]>([]);
 
@@ -52,7 +52,7 @@ export const ARealmPicker = defineComponent({
 
         watch(value, (input) => assignItems(input));
 
-        return () => h(ARealms, props, {
+        return () => h(ARealms, { ...props, ...attrs }, {
             [SlotName.HEADER]: (slotProps: ResourceCollectionVSlots<{ id: string }>['header']) => [
                 h(ASearch, {
                     load: (payload: any) => {

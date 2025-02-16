@@ -14,5 +14,6 @@ export default defineNuxtPlugin((ctx) => {
 
     ctx.vueApp.use(createBootstrap({
         toast: true,
+        popover: true,
     }));
 });
