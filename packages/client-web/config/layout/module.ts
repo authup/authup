@@ -6,14 +6,13 @@
  */
 
 import { type Store } from '@authup/client-web-kit';
-import type { PolicyIdentity } from '@authup/specs';
+import type { PolicyIdentity } from '@authup/access';
 import type {
     NavigationItem,
     NavigationItemNormalized,
 } from '@vuecs/navigation';
 
 import {
-    LayoutSideAdminNavigation,
     LayoutSideDefaultNavigation,
     LayoutTopNavigation,
 } from './contants';
@@ -50,10 +49,6 @@ export class Navigation {
 
         if (parent) {
             if (level === 1) {
-                if (parent.name === 'Admin') {
-                    return this.reduce(LayoutSideAdminNavigation);
-                }
-
                 return this.reduce(LayoutSideDefaultNavigation);
             }
         }

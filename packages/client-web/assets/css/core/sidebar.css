@@ -14,6 +14,14 @@
     display: flex;
     flex-direction: column;
     font-size: 1rem;
+    overflow: scroll;
+
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;
+}
+
+.page-sidebar::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
 }
 
 .page-sidebar .sidebar-header {
