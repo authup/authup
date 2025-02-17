@@ -21,27 +21,156 @@ export const LayoutTopNavigation : NavigationItem<NavigationItemMeta>[] = [
         name: 'General',
         icon: 'fa fa-home',
     },
-    {
-        name: 'Admin',
-        icon: 'fas fa-cog',
-        activeMatch: '/admin/',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [],
-        },
-    },
 ];
 
 export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] = [
-    {
-        name: 'General',
-        type: 'separator',
-    },
     {
         name: 'Home',
         type: 'link',
         url: '/',
         icon: 'fas fa-home',
+    },
+    {
+        name: 'Resources',
+        type: 'separator',
+    },
+    {
+        name: 'Realms',
+        type: 'link',
+        url: '/realms',
+        icon: 'fas fa-building',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.REALM_READ,
+                PermissionName.REALM_CREATE,
+                PermissionName.REALM_UPDATE,
+                PermissionName.REALM_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Clients',
+        type: 'link',
+        url: '/clients',
+        icon: 'fa-solid fa-ghost',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.CLIENT_READ,
+                PermissionName.CLIENT_CREATE,
+                PermissionName.CLIENT_UPDATE,
+                PermissionName.CLIENT_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Scopes',
+        type: 'link',
+        url: '/scopes',
+        icon: 'fa-solid fa-meteor',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.SCOPE_READ,
+                PermissionName.SCOPE_CREATE,
+                PermissionName.SCOPE_UPDATE,
+                PermissionName.SCOPE_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Identity Providers',
+        type: 'link',
+        url: '/identity-providers',
+        icon: 'fa-solid fa-atom',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.IDENTITY_PROVIDER_READ,
+                PermissionName.IDENTITY_PROVIDER_CREATE,
+                PermissionName.IDENTITY_PROVIDER_UPDATE,
+                PermissionName.IDENTITY_PROVIDER_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Robots',
+        type: 'link',
+        url: '/robots',
+        icon: 'fas fa-robot',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.ROBOT_READ,
+                PermissionName.ROBOT_CREATE,
+                PermissionName.ROBOT_UPDATE,
+                PermissionName.ROBOT_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Users',
+        type: 'link',
+        url: '/users',
+        icon: 'fas fa-user',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.USER_READ,
+                PermissionName.USER_CREATE,
+                PermissionName.USER_UPDATE,
+                PermissionName.USER_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Roles',
+        type: 'link',
+        url: '/roles',
+        icon: 'fa-solid fa-theater-masks',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.ROLE_READ,
+                PermissionName.ROLE_CREATE,
+                PermissionName.ROLE_UPDATE,
+                PermissionName.ROLE_DELETE,
+                PermissionName.ROLE_PERMISSION_READ,
+                PermissionName.ROLE_PERMISSION_CREATE,
+                PermissionName.ROLE_PERMISSION_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Policies',
+        type: 'link',
+        url: '/policies',
+        icon: 'fa fa-balance-scale',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.PERMISSION_READ,
+                PermissionName.PERMISSION_CREATE,
+                PermissionName.PERMISSION_UPDATE,
+                PermissionName.PERMISSION_DELETE,
+            ],
+        },
+    },
+    {
+        name: 'Permissions',
+        type: 'link',
+        url: '/permissions',
+        icon: 'fas fa-key',
+        meta: {
+            [LayoutKey.REQUIRED_LOGGED_IN]: true,
+            [LayoutKey.REQUIRED_PERMISSIONS]: [
+                PermissionName.PERMISSION_READ,
+                PermissionName.PERMISSION_CREATE,
+                PermissionName.PERMISSION_UPDATE,
+                PermissionName.PERMISSION_DELETE,
+            ],
+        },
     },
     {
         name: 'Other',
@@ -72,147 +201,6 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa fa-power-off',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-        },
-    },
-];
-
-export const LayoutSideAdminNavigation : NavigationItem<NavigationItemMeta>[] = [
-    {
-        name: 'Realms',
-        type: 'link',
-        url: '/admin/realms',
-        icon: 'fas fa-building',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.REALM_READ,
-                PermissionName.REALM_CREATE,
-                PermissionName.REALM_UPDATE,
-                PermissionName.REALM_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Clients',
-        type: 'link',
-        url: '/admin/clients',
-        icon: 'fa-solid fa-ghost',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.CLIENT_READ,
-                PermissionName.CLIENT_CREATE,
-                PermissionName.CLIENT_UPDATE,
-                PermissionName.CLIENT_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Scopes',
-        type: 'link',
-        url: '/admin/scopes',
-        icon: 'fa-solid fa-meteor',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.SCOPE_READ,
-                PermissionName.SCOPE_CREATE,
-                PermissionName.SCOPE_UPDATE,
-                PermissionName.SCOPE_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Identity Providers',
-        type: 'link',
-        url: '/admin/identity-providers',
-        icon: 'fa-solid fa-atom',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.IDENTITY_PROVIDER_READ,
-                PermissionName.IDENTITY_PROVIDER_CREATE,
-                PermissionName.IDENTITY_PROVIDER_UPDATE,
-                PermissionName.IDENTITY_PROVIDER_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Robots',
-        type: 'link',
-        url: '/admin/robots',
-        icon: 'fas fa-robot',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.ROBOT_READ,
-                PermissionName.ROBOT_CREATE,
-                PermissionName.ROBOT_UPDATE,
-                PermissionName.ROBOT_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Users',
-        type: 'link',
-        url: '/admin/users',
-        icon: 'fas fa-user',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.USER_READ,
-                PermissionName.USER_CREATE,
-                PermissionName.USER_UPDATE,
-                PermissionName.USER_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Roles',
-        type: 'link',
-        url: '/admin/roles',
-        icon: 'fa-solid fa-theater-masks',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.ROLE_READ,
-                PermissionName.ROLE_CREATE,
-                PermissionName.ROLE_UPDATE,
-                PermissionName.ROLE_DELETE,
-                PermissionName.ROLE_PERMISSION_READ,
-                PermissionName.ROLE_PERMISSION_CREATE,
-                PermissionName.ROLE_PERMISSION_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Policies',
-        type: 'link',
-        url: '/admin/policies',
-        icon: 'fa fa-balance-scale',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.PERMISSION_READ,
-                PermissionName.PERMISSION_CREATE,
-                PermissionName.PERMISSION_UPDATE,
-                PermissionName.PERMISSION_DELETE,
-            ],
-        },
-    },
-    {
-        name: 'Permissions',
-        type: 'link',
-        url: '/admin/permissions',
-        icon: 'fas fa-key',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.PERMISSION_READ,
-                PermissionName.PERMISSION_CREATE,
-                PermissionName.PERMISSION_UPDATE,
-                PermissionName.PERMISSION_DELETE,
-            ],
         },
     },
 ];
