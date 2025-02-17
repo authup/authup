@@ -48,7 +48,6 @@ describe('idp-manager-service', () => {
         idp = {
             authorize_url: '',
             token_url: '',
-            slug: 'keycloak',
             name: 'keycloak',
             enabled: true,
             protocol: IdentityProviderProtocol.OAUTH2,

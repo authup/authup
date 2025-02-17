@@ -6,7 +6,7 @@
  */
 
 import {
-    isValidUserName,
+    isUserNameValid,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
@@ -27,7 +27,7 @@ UserEntity
                 .notEmpty()
                 .isLength({ min: 3, max: 128 })
                 .custom((value) => {
-                    const isValid = isValidUserName(value);
+                    const isValid = isUserNameValid(value);
                     if (!isValid) {
                         throw new BadRequestError('Only the characters [A-Za-z0-9-_.]+ are allowed.');
                     }

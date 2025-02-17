@@ -32,7 +32,6 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
         fields: {
             default: [
                 'id',
-                'slug',
                 'name',
                 'display_name',
                 'protocol',
@@ -98,7 +97,7 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
     if (isUUID(id)) {
         query.where('provider.id = :id', { id });
     } else {
-        query.where('provider.slug LIKE :slug', { slug: id });
+        query.where('provider.name = :name', { name: id });
 
         const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
         query.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
@@ -109,7 +108,6 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         fields: {
             default: [
                 'id',
-                'slug',
                 'name',
                 'display_name',
                 'protocol',

@@ -5,14 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function isValidUserName(input: string) : boolean {
-    if (/\s/g.test(input)) {
-        return false;
-    }
+import { isNameValid } from '../../helpers';
 
-    if (!(/^[A-Za-z0-9-_.]{3,36}$/.test(input))) {
-        return false;
-    }
+export function isUserNameValid(input: string) : boolean {
+    if (!isNameValid(input)) return false;
 
     input = input.toLowerCase();
 

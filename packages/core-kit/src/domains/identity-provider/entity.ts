@@ -14,9 +14,6 @@ export interface IdentityProvider {
 
     name: string,
 
-    // todo: remove slug property
-    slug: string;
-
     display_name: string | null;
 
     protocol: `${IdentityProviderProtocol}` | null;

@@ -35,7 +35,6 @@ describe('src/http/controllers/identity-provider', () => {
 
     it('should use ldap provider for login', async () => {
         const data : Partial<LdapIdentityProvider> = {
-            slug: 'ldap-ldap',
             name: 'ldapLdap',
             enabled: true,
             protocol: IdentityProviderProtocol.LDAP,

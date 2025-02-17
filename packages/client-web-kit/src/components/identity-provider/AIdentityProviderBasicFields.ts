@@ -35,25 +35,21 @@ export const AIdentityProviderBasicFields = defineComponent({
         const form = reactive({
             name: '',
             display_name: '',
-            slug: '',
             enabled: true,
         });
 
         const $v = useVuelidate({
             name: {
                 required,
-                minLength: minLength(5),
+                minLength: minLength(3),
                 maxLength: maxLength(128),
+                [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE]: VuelidateCustomRule[
+                    VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
+                ],
             },
             display_name: {
                 minLength: minLength(3),
                 maxLength: maxLength(256),
-            },
-            slug: {
-                required,
-                [VuelidateCustomRuleKey.ALPHA_NUM_HYPHEN_UNDERSCORE]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_NUM_HYPHEN_UNDERSCORE],
-                minLength: minLength(3),
-                maxLength: maxLength(36),
             },
             enabled: {
                 required,
@@ -62,17 +58,10 @@ export const AIdentityProviderBasicFields = defineComponent({
             $registerAs: 'basic',
         });
 
-        const isSlugEmpty = computed(() => !form.slug || form.slug.length === 0);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
 
         function generateId() {
-            const isSame: boolean = form.slug === form.name ||
-                (isSlugEmpty.value && isNameEmpty.value);
-
-            form.slug = createNanoID();
-            if (isSame) {
-                form.name = form.slug;
-            }
+            form.name = createNanoID();
         }
 
         const update = () => {
@@ -85,7 +74,7 @@ export const AIdentityProviderBasicFields = defineComponent({
         function assign(data: Partial<IdentityProvider> = {}) {
             extendObjectProperties(form, data);
 
-            if (isSlugEmpty.value) {
+            if (isNameEmpty.value) {
                 generateId();
             }
         }
@@ -123,6 +112,24 @@ export const AIdentityProviderBasicFields = defineComponent({
                 }),
             });
 
+            const nameGenerator = h('div', {
+                class: 'mb-3',
+            }, [
+                h('button', {
+                    class: 'btn btn-xs btn-dark',
+                    onClick($event: any) {
+                        $event.preventDefault();
+
+                        generateId.call(null);
+                        update();
+                    },
+                }, [
+                    h('i', { class: 'fa fa-refresh' }),
+                    ' ',
+                    'Generate',
+                ]),
+            ]);
+
             const displayName = buildFormGroup({
                 validationMessages: translationsValidation.display_name.value,
                 validationSeverity: getVuelidateSeverity($v.value.display_name),
@@ -136,38 +143,6 @@ export const AIdentityProviderBasicFields = defineComponent({
                 }),
             });
 
-            const slug = buildFormGroup({
-                validationMessages: translationsValidation.slug.value,
-                validationSeverity: getVuelidateSeverity($v.value.slug),
-                label: true,
-                labelContent: 'Slug',
-                content: buildFormInput({
-                    value: $v.value.slug.$model,
-                    onChange(input) {
-                        $v.value.slug.$model = input;
-                        update();
-                    },
-                }),
-            });
-
-            const slugGenerator = h('div', {
-                class: 'mb-3',
-            }, [
-                h('button', {
-                    class: 'btn btn-xs btn-dark',
-                    onClick($event: any) {
-                        $event.preventDefault();
-
-                        generateId.call(null);
-                        update();
-                    },
-                }, [
-                    h('i', { class: 'fa fa-wrench' }),
-                    ' ',
-                    'Generate',
-                ]),
-            ]);
-
             const enabled = buildFormInputCheckbox({
                 groupClass: 'form-switch mt-3',
                 labelContent: 'Enabled?',
@@ -180,9 +155,8 @@ export const AIdentityProviderBasicFields = defineComponent({
 
             return [
                 name,
+                nameGenerator,
                 displayName,
-                slug,
-                slugGenerator,
                 enabled,
             ];
         };
