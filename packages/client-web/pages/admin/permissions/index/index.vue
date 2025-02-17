@@ -45,9 +45,6 @@ export default defineNuxtComponent({
 
         const fields = [
             {
-                key: 'id', label: 'ID', thClass: 'text-left', tdClass: 'text-left',
-            },
-            {
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
             },
             {

@@ -45,9 +45,6 @@ export default defineComponent({
 
         const fields = [
             {
-                key: 'id', label: 'Type', thClass: 'text-left', tdClass: 'text-left',
-            },
-            {
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
             },
             {

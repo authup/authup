@@ -8,9 +8,9 @@ import {
     AClients, AEntityDelete, APagination, ASearch, ATitle, AUser, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
 import type { BuildInput } from 'rapiq';
-import { defineNuxtComponent } from '#imports';
+import { defineComponent } from 'vue';
 
-export default defineNuxtComponent({
+export default defineComponent({
     components: {
         APagination,
         ASearch,
@@ -30,7 +30,7 @@ export default defineNuxtComponent({
         const { realm, realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<Client> = {
-            filter: {
+            filters: {
                 realm_id: [realmManagementId.value, null],
             },
         };
@@ -43,9 +43,6 @@ export default defineNuxtComponent({
         const hasDropPermission = usePermissionCheck({ name: PermissionName.CLIENT_DELETE });
 
         const fields = [
-            {
-                key: 'id', label: 'ID', thClass: 'text-left', tdClass: 'text-left',
-            },
             {
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
             },
@@ -106,14 +103,19 @@ export default defineNuxtComponent({
                     <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(user_id)="data">
-                    <AUser :entity-id="data.item.user_id">
-                        <template #default="user">
-                            {{ user.data.name }}
-                        </template>
-                        <template #error>
-                            -
-                        </template>
-                    </AUser>
+                    <template v-if="data.item.user_id">
+                        <AUser :entity-id="data.item.user_id">
+                            <template #default="user">
+                                {{ user.data.name }}
+                            </template>
+                            <template #error>
+                                -
+                            </template>
+                        </AUser>
+                    </template>
+                    <template v-else>
+                        -
+                    </template>
                 </template>
                 <template #cell(options)="data">
                     <NuxtLink
