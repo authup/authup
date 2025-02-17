@@ -5,18 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function initFormAttributesFromSource(
-    form: Record<string, any>,
-    source?: Record<string, any>,
-) : void {
-    if (!source) {
-        return;
-    }
+type PartialRecordWithNull<T extends Record<string, any>> = {
+    [K in keyof T]?: T[K] | null
+};
 
-    const keys = Object.keys(form);
+/**
+ * Assign properties from input to src.
+ * 'null' values will be transformed to an empty string.
+ *
+ * @param src
+ * @param input
+ */
+export function assignFormProperties<T extends Record<string, any>>(
+    src: T,
+    input: PartialRecordWithNull<T> = {},
+) : T {
+    const keys : (keyof T)[] = Object.keys(input);
     for (let i = 0; i < keys.length; i++) {
-        if (Object.prototype.hasOwnProperty.call(source, keys[i])) {
-            form[keys[i]] = source[keys[i]] ?? '';
+        const value = input[keys[i]];
+        if (value === null) {
+            src[keys[i]] = '' as T[keyof T];
+        } else {
+            src[keys[i]] = value as T[keyof T];
         }
     }
+
+    return src;
 }

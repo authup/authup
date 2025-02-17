@@ -2,7 +2,7 @@
 import { VCTimeago } from '@vuecs/timeago';
 import { BTable } from 'bootstrap-vue-next';
 import type { Realm } from '@authup/core-kit';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import {
     AEntityDelete, APagination, ARealms, ASearch, ATitle, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
@@ -23,17 +23,12 @@ export default defineNuxtComponent({
     setup(props, { emit }) {
         const store = injectStore();
         const {
-            realm,
             realmManagementId,
         } = storeToRefs(store);
 
         const handleDeleted = (e: Realm) => {
             emit('deleted', e);
         };
-
-        const isResourceWritable = (
-            entity: Realm,
-        ) => isRealmResourceWritable(realm.value, entity.id);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.REALM_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.REALM_DELETE });
@@ -53,7 +48,6 @@ export default defineNuxtComponent({
 
         return {
             fields,
-            isResourceWritable,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,

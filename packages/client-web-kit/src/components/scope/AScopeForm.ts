@@ -36,16 +36,15 @@ import {
     TranslatorTranslationGroup,
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
+    assignFormProperties,
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
     defineResourceVEmitOptions,
     getVuelidateSeverity,
-    initFormAttributesFromSource,
     injectStore,
     storeToRefs,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealmPicker } from '../realm';
 
@@ -126,7 +125,7 @@ export const AScopeForm = defineComponent({
                 form.name = props.name;
             }
 
-            initFormAttributesFromSource(form, manager.data.value);
+            assignFormProperties(form, manager.data.value);
         }
 
         watch(updatedAt, (val, oldVal) => {

@@ -1,8 +1,7 @@
 <script lang="ts">
-
 import { BTable } from 'bootstrap-vue-next';
 import type { Robot } from '@authup/core-kit';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import {
     AEntityDelete, APagination, ARobots, ASearch, ATitle, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
@@ -26,17 +25,13 @@ export default defineNuxtComponent({
         };
 
         const store = injectStore();
-        const { realm, realmManagementId } = storeToRefs(store);
+        const { realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<Robot> = {
             filter: {
                 realm_id: [realmManagementId.value, null],
             },
         };
-
-        const isResourceWritable = (
-            resource: Robot,
-        ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.ROBOT_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.ROBOT_DELETE });
@@ -56,7 +51,6 @@ export default defineNuxtComponent({
 
         return {
             fields,
-            isResourceWritable,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -102,7 +96,7 @@ export default defineNuxtComponent({
                     <NuxtLink
                         :to="'/robots/'+ data.item.id"
                         class="btn btn-xs btn-outline-primary me-1"
-                        :disabled="!hasEditPermission || !isResourceWritable(data.item)"
+                        :disabled="!hasEditPermission"
                     >
                         <i class="fa-solid fa-bars" />
                     </NuxtLink>
@@ -111,7 +105,7 @@ export default defineNuxtComponent({
                         :entity-id="data.item.id"
                         entity-type="robot"
                         :with-text="false"
-                        :disabled="!hasDropPermission || !isResourceWritable(data.item)"
+                        :disabled="!hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>

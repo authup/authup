@@ -9,4 +9,3 @@ export * from './is-editing';
 export * from './on-change';
 export * from './updated-at';
 export * from './use-permission-check';
-export * from './use-realm-resource-writable-check';

@@ -17,12 +17,11 @@ import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/f
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
+    assignFormProperties,
     createResourceManager,
     defineResourceVEmitOptions,
     getVuelidateSeverity,
-    initFormAttributesFromSource,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 
 export const AIdentityProviderRoleAssignment = defineComponent({
@@ -92,7 +91,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
         });
 
         if (manager.data.value) {
-            initFormAttributesFromSource(form, manager.data.value);
+            assignFormProperties(form, manager.data.value);
         }
 
         const render = () => {

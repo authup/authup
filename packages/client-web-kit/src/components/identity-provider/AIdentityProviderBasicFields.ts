@@ -21,7 +21,7 @@ import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     VuelidateCustomRule,
-    VuelidateCustomRuleKey, extendObjectProperties, getVuelidateSeverity, useTranslationsForGroup, useTranslationsForNestedValidation,
+    VuelidateCustomRuleKey, assignFormProperties, getVuelidateSeverity, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 
 export const AIdentityProviderBasicFields = defineComponent({
@@ -72,7 +72,7 @@ export const AIdentityProviderBasicFields = defineComponent({
         };
 
         function assign(data: Partial<IdentityProvider> = {}) {
-            extendObjectProperties(form, data);
+            assignFormProperties(form, data);
 
             if (isNameEmpty.value) {
                 generateId();

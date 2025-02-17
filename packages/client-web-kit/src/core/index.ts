@@ -13,7 +13,6 @@ export * from './resource/record';
 export * from './form';
 export * from './query';
 export * from './busy';
-export * from './object';
 export * from './permission-check';
 export * from './socket-manager';
 export * from './store';

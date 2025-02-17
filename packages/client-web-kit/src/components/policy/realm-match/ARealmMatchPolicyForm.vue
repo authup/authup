@@ -7,7 +7,7 @@ import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import { VCFormGroup } from '@vuecs/form-controls';
 import type { RealmMatchPolicy } from '@authup/access';
-import { extendObjectProperties } from '../../../core';
+import { assignFormProperties } from '../../../core';
 import { onChange, useUpdatedAt } from '../../../composables';
 import AFormInputList from '../../utility/AFormInputList.vue';
 
@@ -42,7 +42,7 @@ export default defineComponent({
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
             const { attributeName, ...data } = input;
-            extendObjectProperties(form, data as Record<string, any>);
+            assignFormProperties(form, data as Record<string, any>);
             if (attributeName) {
                 form.attributeName = typeof attributeName === 'string' ? [attributeName] : attributeName;
             }

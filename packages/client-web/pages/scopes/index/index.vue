@@ -1,9 +1,8 @@
 <script lang="ts">
-
 import { BTable } from 'bootstrap-vue-next';
 import type { Scope } from '@authup/core-kit';
 import {
-    PermissionName, isRealmResourceWritable,
+    PermissionName,
 } from '@authup/core-kit';
 import {
     AEntityDelete, APagination, AScopes, ASearch, ATitle, injectStore, usePermissionCheck,
@@ -28,17 +27,13 @@ export default defineNuxtComponent({
         };
 
         const store = injectStore();
-        const { realm, realmManagementId } = storeToRefs(store);
+        const { realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<Scope> = {
             filter: {
                 realm_id: [realmManagementId.value, null],
             },
         };
-
-        const isResourceWritable = (
-            resource: Scope,
-        ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.SCOPE_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SCOPE_DELETE });
@@ -58,7 +53,6 @@ export default defineNuxtComponent({
 
         return {
             fields,
-            isResourceWritable,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -104,7 +98,7 @@ export default defineNuxtComponent({
                     <NuxtLink
                         :to="'/scopes/'+ data.item.id"
                         class="btn btn-xs btn-outline-primary me-1"
-                        :disabled="!hasEditPermission || !isResourceWritable(data.item)"
+                        :disabled="!hasEditPermission"
                     >
                         <i class="fa-solid fa-bars" />
                     </NuxtLink>
@@ -113,7 +107,7 @@ export default defineNuxtComponent({
                         :entity-id="data.item.id"
                         entity-type="scope"
                         :with-text="false"
-                        :disabled="data.item.built_in || !hasDropPermission || !isResourceWritable(data.item)"
+                        :disabled="data.item.built_in || !hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>

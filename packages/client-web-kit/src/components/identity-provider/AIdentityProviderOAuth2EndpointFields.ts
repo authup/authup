@@ -17,7 +17,7 @@ import {
     defineComponent, h, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
+import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery';
 
 export const AIdentityProviderOAuth2EndpointFields = defineComponent({
@@ -57,7 +57,7 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
         function init() {
             if (!props.entity) return;
 
-            extendObjectProperties(form, props.entity);
+            assignFormProperties(form, props.entity);
         }
 
         const updated = useUpdatedAt(props.entity as IdentityProvider);

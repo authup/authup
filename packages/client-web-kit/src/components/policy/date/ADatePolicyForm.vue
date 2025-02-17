@@ -7,7 +7,7 @@ import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
 import type { DatePolicy } from '@authup/access';
-import { extendObjectProperties } from '../../../core';
+import { assignFormProperties } from '../../../core';
 import { onChange, useUpdatedAt } from '../../../composables';
 
 export default defineComponent({
@@ -36,7 +36,7 @@ export default defineComponent({
         });
 
         function assign(data: Partial<DatePolicy> = {}) {
-            extendObjectProperties(form, data as Record<string, any>);
+            assignFormProperties(form, data as Record<string, any>);
         }
 
         setup.expose({

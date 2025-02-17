@@ -23,14 +23,13 @@ import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
+    assignFormProperties,
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
     defineResourceVEmitOptions,
     getVuelidateSeverity,
-    initFormAttributesFromSource,
-    injectStore,
-    storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
+    injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealmPicker } from '../realm';
 
@@ -93,7 +92,7 @@ export const APermissionForm = defineComponent({
         const updatedAt = useUpdatedAt(props.entity);
 
         function initForm() {
-            initFormAttributesFromSource(form, manager.data.value);
+            assignFormProperties(form, manager.data.value);
         }
 
         watch(updatedAt, (val, oldVal) => {

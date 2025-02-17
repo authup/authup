@@ -22,10 +22,18 @@ import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
+    VuelidateCustomRule,
+    VuelidateCustomRuleKey,
+    assignFormProperties,
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
-    createResourceManager, defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource,
-    injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
+    createResourceManager,
+    defineResourceVEmitOptions,
+    getVuelidateSeverity,
+    injectStore,
+    storeToRefs,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealmPicker } from '../realm';
 
@@ -51,6 +59,9 @@ export const ARoleForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(30),
+                [
+                VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
+                ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
             },
             display_name: {
                 minLength: minLength(3),
@@ -88,7 +99,7 @@ export const ARoleForm = defineComponent({
         const updatedAt = useUpdatedAt(props.entity);
 
         function initForm() {
-            initFormAttributesFromSource(form, manager.data.value);
+            assignFormProperties(form, manager.data.value);
         }
 
         watch(updatedAt, (val, oldVal) => {

@@ -41,6 +41,14 @@ export function createPermissionCheckerReactiveFn(
                     type: 'user',
                     id: storeRefs.userId.value,
                 };
+
+                if (storeRefs.realmId.value) {
+                    identity.realmId = storeRefs.realmId.value;
+                }
+
+                if (storeRefs.realmName.value) {
+                    identity.realmId = storeRefs.realmName.value;
+                }
             }
 
             let outcome: boolean;

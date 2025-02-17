@@ -15,7 +15,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../composables';
-import { extendObjectProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
+import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../core';
 
 export const AIdentityProviderLdapGroupFields = defineComponent({
     props: {
@@ -52,7 +52,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
         function init() {
             if (!props.entity) return;
 
-            extendObjectProperties(form, props.entity);
+            assignFormProperties(form, props.entity);
         }
 
         const updated = useUpdatedAt(props.entity as IdentityProvider);

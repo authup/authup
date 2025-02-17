@@ -7,7 +7,7 @@ import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormSelectOption } from '@vuecs/form-controls';
 import { VCFormGroup, VCFormInput, VCFormInputCheckbox } from '@vuecs/form-controls';
 import { BuiltInPolicyType } from '@authup/access';
-import { extendObjectProperties } from '../../core';
+import { assignFormProperties } from '../../core';
 import { onChange, useUpdatedAt } from '../../composables';
 
 export default defineComponent({
@@ -61,7 +61,7 @@ export default defineComponent({
         });
 
         function assign(data: Partial<Policy> = {}) {
-            extendObjectProperties(form, data);
+            assignFormProperties(form, data);
         }
 
         setup.expose({

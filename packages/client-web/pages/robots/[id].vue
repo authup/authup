@@ -1,8 +1,7 @@
 <script lang="ts">
-import { injectHTTPClient, injectStore } from '@authup/client-web-kit';
+import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
-import { storeToRefs } from 'pinia';
+import { PermissionName } from '@authup/core-kit';
 import { defineComponent, ref } from 'vue';
 import type { Ref } from 'vue';
 import {
@@ -39,7 +38,6 @@ export default defineComponent({
         ];
 
         const toast = useToast();
-        const store = injectStore();
         const route = useRoute();
 
         const entity: Ref<Robot> = ref(null) as any;
@@ -49,13 +47,6 @@ export default defineComponent({
                 .robot
                 .getOne(route.params.id as string, { fields: ['+secret'] });
         } catch (e) {
-            await navigateTo({ path: '/robots' });
-            createError({});
-        }
-
-        const { realm } = storeToRefs(store);
-
-        if (!isRealmResourceWritable(realm.value, entity.value.realm_id)) {
             await navigateTo({ path: '/robots' });
             createError({});
         }

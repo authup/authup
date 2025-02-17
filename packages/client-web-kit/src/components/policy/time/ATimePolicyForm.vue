@@ -15,7 +15,7 @@ import {
     isIntervalForDayOfYear,
 } from '@authup/access';
 import type { TimePolicy } from '@authup/access';
-import { extendObjectProperties } from '../../../core';
+import { assignFormProperties } from '../../../core';
 import { onChange, useUpdatedAt } from '../../../composables';
 
 export default defineComponent({
@@ -67,7 +67,7 @@ export default defineComponent({
         });
 
         function assign(data: Partial<TimePolicy> = {}) {
-            extendObjectProperties(form, data as Record<string, any>);
+            assignFormProperties(form, data as Record<string, any>);
         }
 
         setup.expose({

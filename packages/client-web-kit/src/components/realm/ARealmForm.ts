@@ -26,10 +26,10 @@ import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    buildFormSubmitWithTranslations,
-    createFormSubmitTranslations,
-    createResourceManager, defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource,
-    useTranslationsForGroup, useTranslationsForNestedValidation,
+    VuelidateCustomRule,
+    VuelidateCustomRuleKey,
+    assignFormProperties, buildFormSubmitWithTranslations, createFormSubmitTranslations, createResourceManager,
+    defineResourceVEmitOptions, getVuelidateSeverity, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 
 export const ARealmForm = defineComponent({
@@ -54,6 +54,9 @@ export const ARealmForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+                [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE]: VuelidateCustomRule[
+                    VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
+                ],
             },
             display_name: {
                 minLength: minLength(3),
@@ -80,7 +83,7 @@ export const ARealmForm = defineComponent({
         };
 
         function initForm() {
-            initFormAttributesFromSource(form, manager.data.value);
+            assignFormProperties(form, manager.data.value);
 
             if (form.name.length === 0) {
                 generateName();

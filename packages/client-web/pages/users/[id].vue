@@ -1,8 +1,7 @@
 <script lang="ts">
-import { injectHTTPClient, injectStore } from '@authup/client-web-kit';
+import { injectHTTPClient } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
-import { storeToRefs } from 'pinia';
+import { PermissionName } from '@authup/core-kit';
 import { defineComponent, ref } from 'vue';
 import type { Ref } from 'vue';
 import {
@@ -40,7 +39,6 @@ export default defineComponent({
         ];
 
         const toast = useToast();
-        const store = injectStore();
         const route = useRoute();
 
         const entity : Ref<User> = ref(null) as any;
@@ -50,13 +48,6 @@ export default defineComponent({
                 .user
                 .getOne(route.params.id as string, { fields: ['+email'] });
         } catch (e) {
-            await navigateTo({ path: '/users' });
-            throw createError({});
-        }
-
-        const { realm } = storeToRefs(store);
-
-        if (!isRealmResourceWritable(realm.value, entity.value.realm_id)) {
             await navigateTo({ path: '/users' });
             throw createError({});
         }

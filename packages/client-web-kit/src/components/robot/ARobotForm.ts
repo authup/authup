@@ -37,14 +37,13 @@ import {
     TranslatorTranslationGroup,
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
+    assignFormProperties,
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
     defineResourceVEmitOptions,
     getVuelidateSeverity,
-    initFormAttributesFromSource,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 
 import {
@@ -127,7 +126,7 @@ export const ARobotForm = defineComponent({
                 form.realm_id = props.realmId;
             }
 
-            initFormAttributesFromSource(form, manager.data.value);
+            assignFormProperties(form, manager.data.value);
 
             if (form.secret.length === 0) {
                 generateSecret();

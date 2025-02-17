@@ -7,7 +7,7 @@
 
 import type { DomainAPI } from '@authup/core-http-kit';
 import type { ResourceTypeMap } from '@authup/core-kit';
-import { hasOwnProperty } from '@authup/kit';
+import { extendObject, hasOwnProperty } from '@authup/kit';
 import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
@@ -17,7 +17,6 @@ import {
 import { injectHTTPClient } from '../../http-client';
 import type { ResourceSocketManager, ResourceSocketManagerCreateContext } from '../socket';
 import { createResourceSocketManager } from '../socket';
-import { extendObjectProperties } from '../../object';
 import { hasNormalizedSlot, normalizeSlot } from '../../slot';
 import { ResourceRecordError } from './error';
 import type {
@@ -100,7 +99,7 @@ function create<
 
     const updated = (value: Partial<RECORD>) => {
         if (entity.value) {
-            extendObjectProperties(entity.value, value);
+            extendObject(entity.value, value);
         }
 
         if (ctx.setup && ctx.setup.emit) {

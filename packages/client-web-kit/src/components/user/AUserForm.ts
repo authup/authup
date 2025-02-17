@@ -22,11 +22,11 @@ import {
 import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup, buildFormSubmitWithTranslations,
-    createFormSubmitTranslations,
-    createResourceManager,
-    defineResourceVEmitOptions, getVuelidateSeverity, initFormAttributesFromSource,
-    useTranslationsForGroup, useTranslationsForNestedValidation,
+    TranslatorTranslationGroup, VuelidateCustomRule,
+    VuelidateCustomRuleKey,
+    assignFormProperties,
+    buildFormSubmitWithTranslations, createFormSubmitTranslations,
+    createResourceManager, defineResourceVEmitOptions, getVuelidateSeverity, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import {
     renderToggleButton,
@@ -65,6 +65,9 @@ export const AUserForm = defineComponent({
 
             },
             name: {
+                [
+                VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
+                ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
@@ -109,7 +112,7 @@ export const AUserForm = defineComponent({
                 form.name_locked = manager.data.value.name_locked;
             }
 
-            initFormAttributesFromSource(form, manager.data.value);
+            assignFormProperties(form, manager.data.value);
         }
 
         watch(updatedAt, (val, oldVal) => {

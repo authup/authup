@@ -3,7 +3,7 @@
 import { BTable } from 'bootstrap-vue-next';
 import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core-kit';
-import { PermissionName, isRealmResourceWritable } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import {
     AClients, AEntityDelete, APagination, ASearch, ATitle, AUser, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
@@ -27,17 +27,13 @@ export default defineComponent({
         };
 
         const store = injectStore();
-        const { realm, realmManagementId } = storeToRefs(store);
+        const { realmManagementId } = storeToRefs(store);
 
         const query : BuildInput<Client> = {
             filters: {
                 realm_id: [realmManagementId.value, null],
             },
         };
-
-        const isResourceWritable = (
-            resource: Client,
-        ) => isRealmResourceWritable(realm.value, resource.realm_id);
 
         const hasEditPermission = usePermissionCheck({ name: PermissionName.CLIENT_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.CLIENT_DELETE });
@@ -60,7 +56,6 @@ export default defineComponent({
 
         return {
             fields,
-            isResourceWritable,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -121,7 +116,7 @@ export default defineComponent({
                     <NuxtLink
                         :to="'/clients/'+ data.item.id"
                         class="btn btn-xs btn-outline-primary me-1"
-                        :disabled="!hasEditPermission || !isResourceWritable(data.item)"
+                        :disabled="!hasEditPermission"
                     >
                         <i class="fa-solid fa-bars" />
                     </NuxtLink>
@@ -130,7 +125,7 @@ export default defineComponent({
                         :entity-id="data.item.id"
                         entity-type="client"
                         :with-text="false"
-                        :disabled="!hasDropPermission || !isResourceWritable(data.item)"
+                        :disabled="!hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>
