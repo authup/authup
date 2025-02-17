@@ -5,19 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { AuthupError } from '@authup/errors';
+import type { NameValidOptions } from '../../helpers';
 import { isNameValid } from '../../helpers';
 
-export function isUserNameValid(input: string) : boolean {
-    if (!isNameValid(input)) return false;
+export function isUserNameValid(input: string, options: NameValidOptions = {}) : boolean {
+    if (!isNameValid(input, options)) return false;
 
     input = input.toLowerCase();
 
-    return ![
+    const isReservedName = [
         'bot',
         'system',
         'everyone',
         'here',
     ].some((el) => input.startsWith(el));
+
+    if (isReservedName) {
+        if (options.throwOnFailure) {
+            throw new AuthupError(`${input} is a reserved name.`);
+        }
+
+        return false;
+    }
+
+    return true;
 }
 
 export function isValidUserEmail(input: string) {

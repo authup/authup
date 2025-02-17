@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isPermissionNameValid } from '@authup/core-kit';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type { PermissionEntity } from '../../../../../database/domains';
@@ -25,7 +26,8 @@ PermissionEntity
                 .isLength({
                     min: 3,
                     max: 128,
-                });
+                })
+                .custom((value) => isPermissionNameValid(value, { throwOnFailure: true }));
         });
         this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator);
         this.mount('name', { group: RequestHandlerOperation.UPDATE, optional: true }, nameValidator);

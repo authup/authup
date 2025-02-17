@@ -23,13 +23,13 @@ import { useIsEditing, useUpdatedAt } from '../../composables';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
+    VuelidateCustomRule,
+    VuelidateCustomRuleKey,
     assignFormProperties,
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineResourceVEmitOptions,
-    getVuelidateSeverity,
-    injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
+    defineResourceVEmitOptions, getVuelidateSeverity, injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../core';
 import { ARealmPicker } from '../realm';
 
@@ -55,6 +55,9 @@ export const APermissionForm = defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(128),
+                [
+                VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE
+                ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE],
             },
             display_name: {
                 minLength: minLength(3),

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isScopeNameValid } from '@authup/core-kit';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type { ScopeEntity } from '../../../../../database/domains';
@@ -20,7 +21,8 @@ ScopeEntity
             const chain = createValidationChain();
             return chain
                 .isString()
-                .isLength({ min: 3, max: 128 });
+                .isLength({ min: 3, max: 128 })
+                .custom((value) => isScopeNameValid(value, { throwOnFailure: true }));
         });
 
         this.mount(

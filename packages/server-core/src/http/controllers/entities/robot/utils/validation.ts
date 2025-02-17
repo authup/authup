@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isRobotNameValid } from '@authup/core-kit';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type { RobotEntity } from '../../../../../database/domains';
@@ -47,7 +48,8 @@ RobotEntity
                 return chain
                     .notEmpty()
                     .isLength({ min: 3, max: 128 })
-                    .optional({ nullable: true });
+                    .optional({ nullable: true })
+                    .custom((value) => isRobotNameValid(value, { throwOnFailure: true }));
             }),
         );
 

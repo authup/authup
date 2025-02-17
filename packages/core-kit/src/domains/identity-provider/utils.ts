@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { NameValidOptions } from '../../helpers';
 import { isNameValid } from '../../helpers';
 
 export function buildIdentityProviderAuthorizeCallbackPath(id: string | number) {
@@ -15,6 +16,6 @@ export function buildIdentityProviderAuthorizePath(id: string | number) {
     return `/identity-providers/${id}/authorize-url`;
 }
 
-export function isIdentityProviderNameValid(input: string) : boolean {
-    return isNameValid(input);
+export function isIdentityProviderNameValid(input: string, options: NameValidOptions = {}) : boolean {
+    return isNameValid(input, options);
 }

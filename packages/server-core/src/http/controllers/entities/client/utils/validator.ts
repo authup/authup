@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isClientNameValid } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
@@ -21,7 +22,8 @@ export class ClientRequestValidator extends Container<ClientEntity> {
             const chain = createValidationChain();
             return chain
                 .isString()
-                .isLength({ min: 3, max: 256 });
+                .isLength({ min: 3, max: 256 })
+                .custom((value) => isClientNameValid(value, { throwOnFailure: true }));
         });
 
         this.mount(

@@ -5,10 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function isNameValid(input: string): boolean {
+import { AuthupError } from '@authup/errors';
+
+export type NameValidOptions = {
+    throwOnFailure?: boolean;
+};
+export function isNameValid(input: string, options: NameValidOptions = {}): boolean {
     if (/\s/g.test(input)) {
+        if (options.throwOnFailure) {
+            throw new AuthupError('Whitespace character is not allowed.');
+        }
+
         return false;
     }
 
-    return /^[A-Za-z0-9-_.]{3,36}$/.test(input);
+    if (/^[A-Za-z0-9-_.]+$/.test(input)) {
+        return true;
+    }
+
+    if (options.throwOnFailure) {
+        throw new AuthupError('Only the characters [A-Za-z0-9-_.]+ are allowed.');
+    }
+
+    return false;
 }

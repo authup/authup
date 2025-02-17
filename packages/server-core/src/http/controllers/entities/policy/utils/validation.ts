@@ -6,6 +6,7 @@
  */
 
 import { BuiltInPolicyType } from '@authup/access';
+import { isPolicyNameValid } from '@authup/core-kit';
 import { isObject } from 'smob';
 import type { ValidatorContext } from 'validup';
 import { Container } from 'validup';
@@ -29,7 +30,8 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
                 .isLength({
                     min: 3,
                     max: 128,
-                });
+                })
+                .custom((value) => isPolicyNameValid(value, { throwOnFailure: true }));
         });
 
         this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator);

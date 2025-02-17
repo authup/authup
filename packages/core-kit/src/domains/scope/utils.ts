@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { NameValidOptions } from '../../helpers';
+import { isNameValid } from '../../helpers';
 import { ScopeName } from './constants';
 
 export function transformOAuth2ScopeToArray(scope?: string | string[]) : string[] {
@@ -45,4 +47,8 @@ export function isOAuth2ScopeAllowed(
     }
 
     return true;
+}
+
+export function isScopeNameValid(name: string, options: NameValidOptions = {}) : boolean {
+    return isNameValid(name, options);
 }

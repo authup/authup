@@ -8,7 +8,6 @@
 import {
     isUserNameValid,
 } from '@authup/core-kit';
-import { BadRequestError } from '@ebec/http';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
 import type { UserEntity } from '../../../../../database/domains';
@@ -26,14 +25,7 @@ UserEntity
                 .exists()
                 .notEmpty()
                 .isLength({ min: 3, max: 128 })
-                .custom((value) => {
-                    const isValid = isUserNameValid(value);
-                    if (!isValid) {
-                        throw new BadRequestError('Only the characters [A-Za-z0-9-_.]+ are allowed.');
-                    }
-
-                    return isValid;
-                });
+                .custom((value) => isUserNameValid(value, { throwOnFailure: true }));
         });
         this.mount(
             'name',
