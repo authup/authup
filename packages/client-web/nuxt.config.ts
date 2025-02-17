@@ -18,6 +18,7 @@ export default defineNuxtConfig({
     experimental: {
         // todo: enable after v3.12.4
         scanPageMeta: false,
+        appManifest: false,
     },
 
     css: [
