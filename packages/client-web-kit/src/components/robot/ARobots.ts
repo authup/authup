@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core-kit';
@@ -22,7 +22,7 @@ export const ARobots = defineComponent({
     emits: defineResourceCollectionVEmitOptions<Robot>(),
     setup(props, ctx) {
         const { render } = createResourceCollectionManager({
-            type: `${DomainType.ROBOT}`,
+            type: `${ResourceType.ROBOT}`,
             props,
             setup: ctx,
         });

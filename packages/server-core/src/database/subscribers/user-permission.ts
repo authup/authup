@@ -9,7 +9,7 @@ import type {
     UserPermission,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -31,26 +31,26 @@ async function publishEvent(
 ) {
     const destinations : DomainEventDestination[] = [
         {
-            channel: (id) => buildDomainChannelName(DomainType.USER_PERMISSION, id),
+            channel: (id) => buildDomainChannelName(ResourceType.USER_PERMISSION, id),
         },
     ];
     if (data.user_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.USER_PERMISSION, id),
+            channel: (id) => buildDomainChannelName(ResourceType.USER_PERMISSION, id),
             namespace: buildDomainNamespaceName(data.user_realm_id),
         });
     }
 
     if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.USER_PERMISSION, id),
+            channel: (id) => buildDomainChannelName(ResourceType.USER_PERMISSION, id),
             namespace: buildDomainNamespaceName(data.permission_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: DomainType.USER_PERMISSION,
+            type: ResourceType.USER_PERMISSION,
             event,
             data,
         },

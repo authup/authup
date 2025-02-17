@@ -10,7 +10,7 @@ import type {
 } from '@authup/core-kit';
 import {
     DomainEventName,
-    DomainType,
+    ResourceType,
     buildDomainChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
@@ -31,13 +31,13 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.POLICY,
+            type: ResourceType.POLICY,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.POLICY, id),
+                channel: (id) => buildDomainChannelName(ResourceType.POLICY, id),
             },
         ],
     });

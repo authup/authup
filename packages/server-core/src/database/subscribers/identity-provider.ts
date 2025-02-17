@@ -7,7 +7,7 @@
 
 import type { IdentityProvider } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
+    DomainEventName, ResourceType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -27,17 +27,17 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.IDENTITY_PROVIDER,
+            type: ResourceType.IDENTITY_PROVIDER,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER, id),
+                channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER, id),
+                channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER, id),
             },
         ],
     });

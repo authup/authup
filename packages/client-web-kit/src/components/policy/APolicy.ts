@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import type { Policy } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
@@ -22,7 +22,7 @@ export const APolicy = defineComponent({
     slots: Object as SlotsType<ResourceVSlots<Policy>>,
     async setup(props, setup) {
         const manager = createResourceManager({
-            type: `${DomainType.POLICY}`,
+            type: `${ResourceType.POLICY}`,
             setup,
             props,
         });

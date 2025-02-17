@@ -9,7 +9,7 @@ import type {
     Scope,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -32,17 +32,17 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.SCOPE,
+            type: ResourceType.SCOPE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.USER, id),
+                channel: (id) => buildDomainChannelName(ResourceType.USER, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(DomainType.USER, id),
+                channel: (id) => buildDomainChannelName(ResourceType.USER, id),
             },
         ],
     });

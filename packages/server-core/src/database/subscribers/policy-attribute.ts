@@ -7,7 +7,7 @@
 
 import type { PolicyAttribute } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
+    DomainEventName, ResourceType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -27,17 +27,17 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.POLICY_ATTRIBUTE,
+            type: ResourceType.POLICY_ATTRIBUTE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.POLICY_ATTRIBUTE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.POLICY_ATTRIBUTE, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(DomainType.POLICY_ATTRIBUTE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.POLICY_ATTRIBUTE, id),
             },
         ],
     });

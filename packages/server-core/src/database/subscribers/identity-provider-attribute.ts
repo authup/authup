@@ -9,7 +9,7 @@ import type {
     IdentityProviderAttribute,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
@@ -30,13 +30,13 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.IDENTITY_PROVIDER_ATTRIBUTE,
+            type: ResourceType.IDENTITY_PROVIDER_ATTRIBUTE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ATTRIBUTE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ATTRIBUTE, id),
             },
 
             // todo: realm attribute

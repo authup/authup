@@ -9,7 +9,7 @@ import type {
     RobotRole,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -30,24 +30,24 @@ async function publishEvent(
     data: RobotRole,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildDomainChannelName(DomainType.ROBOT_ROLE, id) },
+        { channel: (id) => buildDomainChannelName(ResourceType.ROBOT_ROLE, id) },
     ];
     if (data.robot_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.ROBOT_ROLE, id),
+            channel: (id) => buildDomainChannelName(ResourceType.ROBOT_ROLE, id),
             namespace: buildDomainNamespaceName(data.robot_realm_id),
         });
     }
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.ROBOT_ROLE, id),
+            channel: (id) => buildDomainChannelName(ResourceType.ROBOT_ROLE, id),
             namespace: buildDomainNamespaceName(data.role_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: DomainType.ROBOT_ROLE,
+            type: ResourceType.ROBOT_ROLE,
             event,
             data,
         },

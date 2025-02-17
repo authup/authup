@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Policy } from '@authup/core-kit';
@@ -36,7 +36,7 @@ export const APolicyParentAssignment = defineComponent({
     emits: defineResourceVEmitOptions<Policy>(),
     async setup(props, setup) {
         const manager : ResourceManager<Policy> = createResourceManager({
-            type: `${DomainType.POLICY}`,
+            type: `${ResourceType.POLICY}`,
             setup,
             socket: {
                 processEvent(event) {

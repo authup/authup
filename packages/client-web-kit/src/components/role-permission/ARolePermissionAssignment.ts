@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { RolePermission } from '@authup/core-kit';
 import {
@@ -25,7 +25,7 @@ export const ARolePermissionAssignment = defineComponent({
     emits: defineResourceVEmitOptions<RolePermission>(),
     async setup(props, setup) {
         const manager = createResourceManager({
-            type: `${DomainType.ROLE_PERMISSION}`,
+            type: `${ResourceType.ROLE_PERMISSION}`,
             setup,
             socket: {
                 processEvent(event) {

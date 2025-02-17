@@ -2,7 +2,7 @@
 import type { PropType } from 'vue';
 import { defineComponent, ref } from 'vue';
 import type { Policy } from '@authup/core-kit';
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import { BuiltInPolicyType } from '@authup/access';
 import { onChange, useIsEditing, useUpdatedAt } from '../../composables';
@@ -37,7 +37,7 @@ export default defineComponent({
 
         const httpClient = injectHTTPClient();
         const manager = createResourceManager({
-            type: `${DomainType.POLICY}`,
+            type: `${ResourceType.POLICY}`,
             setup: ctx,
             props,
         });

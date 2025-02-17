@@ -9,7 +9,7 @@ import type {
     UserRole,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -30,24 +30,24 @@ async function publishEvent(
     data: UserRole,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildDomainChannelName(DomainType.USER_ROLE, id) },
+        { channel: (id) => buildDomainChannelName(ResourceType.USER_ROLE, id) },
     ];
     if (data.user_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.USER_ROLE, id),
+            channel: (id) => buildDomainChannelName(ResourceType.USER_ROLE, id),
             namespace: buildDomainNamespaceName(data.user_realm_id),
         });
     }
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.USER_ROLE, id),
+            channel: (id) => buildDomainChannelName(ResourceType.USER_ROLE, id),
             namespace: buildDomainNamespaceName(data.role_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: DomainType.USER_ROLE,
+            type: ResourceType.USER_ROLE,
             event,
             data,
         },

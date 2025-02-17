@@ -9,7 +9,7 @@ import type {
     Client,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
+    DomainEventName, ResourceType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -29,17 +29,17 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.CLIENT,
+            type: ResourceType.CLIENT,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.CLIENT, id),
+                channel: (id) => buildDomainChannelName(ResourceType.CLIENT, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(DomainType.CLIENT, id),
+                channel: (id) => buildDomainChannelName(ResourceType.CLIENT, id),
             },
         ],
     });

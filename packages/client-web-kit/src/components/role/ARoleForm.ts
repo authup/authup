@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
@@ -69,7 +69,7 @@ export const ARoleForm = defineComponent({
         const storeRefs = storeToRefs(store);
 
         const manager = createResourceManager({
-            type: `${DomainType.ROLE}`,
+            type: `${ResourceType.ROLE}`,
             setup: ctx,
             props,
         });

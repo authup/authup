@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { UserRole } from '@authup/core-kit';
 import {
@@ -25,7 +25,7 @@ export const AUserRoleAssignment = defineComponent({
     emits: defineResourceVEmitOptions<UserRole>(),
     async setup(props, setup) {
         const manager = createResourceManager({
-            type: `${DomainType.USER_ROLE}`,
+            type: `${ResourceType.USER_ROLE}`,
             setup,
             socket: {
                 processEvent(event) {

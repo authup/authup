@@ -9,7 +9,7 @@ import type { Client } from './client';
 import type { ClientPermission } from './client-permission';
 import type { ClientRole } from './client-role';
 import type { ClientScope } from './client-scope';
-import type { DomainType } from './contstants';
+import type { ResourceType } from './contstants';
 import type { IdentityProvider } from './identity-provider';
 import type { IdentityProviderAccount } from './identity-provider-account';
 import type { IdentityProviderAttribute } from './identity-provider-attribute';
@@ -31,29 +31,29 @@ import type { UserPermission } from './user-permission';
 import type { UserRole } from './user-role';
 
 type DomainTypeMapRaw = {
-    [DomainType.CLIENT]: Client,
-    [DomainType.CLIENT_PERMISSION]: ClientPermission,
-    [DomainType.CLIENT_ROLE]: ClientRole,
-    [DomainType.CLIENT_SCOPE]: ClientScope,
-    [DomainType.IDENTITY_PROVIDER]: IdentityProvider,
-    [DomainType.IDENTITY_PROVIDER_ACCOUNT]: IdentityProviderAccount,
-    [DomainType.IDENTITY_PROVIDER_ATTRIBUTE]: IdentityProviderAttribute,
-    [DomainType.IDENTITY_PROVIDER_ROLE_MAPPING]: IdentityProviderRoleMapping,
-    [DomainType.POLICY]: Policy,
-    [DomainType.POLICY_ATTRIBUTE]: PolicyAttribute,
-    [DomainType.PERMISSION]: Permission,
-    [DomainType.REALM]: Realm,
-    [DomainType.ROBOT]: Robot,
-    [DomainType.ROBOT_PERMISSION]: RobotPermission,
-    [DomainType.ROBOT_ROLE]: RobotRole,
-    [DomainType.ROLE]: Role,
-    [DomainType.ROLE_ATTRIBUTE]: RoleAttribute,
-    [DomainType.ROLE_PERMISSION]: RolePermission,
-    [DomainType.SCOPE]: Scope,
-    [DomainType.USER]: User,
-    [DomainType.USER_ATTRIBUTE]: UserAttribute,
-    [DomainType.USER_PERMISSION]: UserPermission,
-    [DomainType.USER_ROLE]: UserRole,
+    [ResourceType.CLIENT]: Client,
+    [ResourceType.CLIENT_PERMISSION]: ClientPermission,
+    [ResourceType.CLIENT_ROLE]: ClientRole,
+    [ResourceType.CLIENT_SCOPE]: ClientScope,
+    [ResourceType.IDENTITY_PROVIDER]: IdentityProvider,
+    [ResourceType.IDENTITY_PROVIDER_ACCOUNT]: IdentityProviderAccount,
+    [ResourceType.IDENTITY_PROVIDER_ATTRIBUTE]: IdentityProviderAttribute,
+    [ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING]: IdentityProviderRoleMapping,
+    [ResourceType.POLICY]: Policy,
+    [ResourceType.POLICY_ATTRIBUTE]: PolicyAttribute,
+    [ResourceType.PERMISSION]: Permission,
+    [ResourceType.REALM]: Realm,
+    [ResourceType.ROBOT]: Robot,
+    [ResourceType.ROBOT_PERMISSION]: RobotPermission,
+    [ResourceType.ROBOT_ROLE]: RobotRole,
+    [ResourceType.ROLE]: Role,
+    [ResourceType.ROLE_ATTRIBUTE]: RoleAttribute,
+    [ResourceType.ROLE_PERMISSION]: RolePermission,
+    [ResourceType.SCOPE]: Scope,
+    [ResourceType.USER]: User,
+    [ResourceType.USER_ATTRIBUTE]: UserAttribute,
+    [ResourceType.USER_PERMISSION]: UserPermission,
+    [ResourceType.USER_ROLE]: UserRole,
 };
 
 export type DomainTypeMap = {

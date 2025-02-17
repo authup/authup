@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { DomainType, IdentityProviderProtocol } from '@authup/core-kit';
+import { IdentityProviderProtocol, ResourceType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import {
     type PropType, type VNodeChild, defineComponent, h, ref,
@@ -42,7 +42,7 @@ export const AIdentityProviderLdapForm = defineComponent({
     emits: defineResourceVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
         const manager = createResourceManager({
-            type: `${DomainType.IDENTITY_PROVIDER}`,
+            type: `${ResourceType.IDENTITY_PROVIDER}`,
             setup: ctx,
             props,
         });

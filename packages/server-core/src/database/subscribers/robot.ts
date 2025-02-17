@@ -9,7 +9,7 @@ import type {
     Robot,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -31,17 +31,17 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.ROBOT,
+            type: ResourceType.ROBOT,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.ROBOT, id),
+                channel: (id) => buildDomainChannelName(ResourceType.ROBOT, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(DomainType.ROBOT, id),
+                channel: (id) => buildDomainChannelName(ResourceType.ROBOT, id),
             },
         ],
     });

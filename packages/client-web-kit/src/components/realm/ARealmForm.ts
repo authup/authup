@@ -15,7 +15,7 @@ import {
 } from 'vue';
 import type { Realm } from '@authup/core-kit';
 import {
-    DomainType, REALM_MASTER_NAME,
+    REALM_MASTER_NAME, ResourceType,
 } from '@authup/core-kit';
 import {
     buildFormGroup,
@@ -66,7 +66,7 @@ export const ARealmForm = defineComponent({
         }, form);
 
         const manager = createResourceManager({
-            type: `${DomainType.REALM}`,
+            type: `${ResourceType.REALM}`,
             setup: ctx,
             props,
         });

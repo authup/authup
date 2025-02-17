@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core-kit';
@@ -26,7 +26,7 @@ export const AIdentityProviders = defineComponent({
     emits: defineResourceCollectionVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
         const { render } = createResourceCollectionManager({
-            type: `${DomainType.IDENTITY_PROVIDER}`,
+            type: `${ResourceType.IDENTITY_PROVIDER}`,
             props,
             setup: ctx,
         });

@@ -7,7 +7,7 @@
 
 import type { RoleAttribute } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType, buildDomainChannelName, buildDomainNamespaceName,
+    DomainEventName, ResourceType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -27,17 +27,17 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.ROLE_ATTRIBUTE,
+            type: ResourceType.ROLE_ATTRIBUTE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.ROLE_ATTRIBUTE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.ROLE_ATTRIBUTE, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(DomainType.ROLE_ATTRIBUTE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.ROLE_ATTRIBUTE, id),
             },
         ],
     });

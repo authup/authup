@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
@@ -22,7 +22,7 @@ export const AClientScope = defineComponent({
     slots: Object as SlotsType<ResourceVSlots<ClientScope>>,
     async setup(props, setup) {
         const manager = createResourceManager({
-            type: `${DomainType.CLIENT_SCOPE}`,
+            type: `${ResourceType.CLIENT_SCOPE}`,
             props,
             setup,
         });

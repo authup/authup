@@ -23,7 +23,7 @@ import {
     maxLength, minLength, required, url,
 } from '@vuelidate/validators';
 import type { Client } from '@authup/core-kit';
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
@@ -120,7 +120,7 @@ export const AClientForm = defineComponent({
         const storeRefs = storeToRefs(store);
 
         const manager = createResourceManager({
-            type: `${DomainType.CLIENT}`,
+            type: `${ResourceType.CLIENT}`,
             setup: ctx,
             props,
         });

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import type { Role } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
@@ -22,7 +22,7 @@ export const ARole = defineComponent({
     slots: Object as SlotsType<ResourceVSlots<Role>>,
     async setup(props, setup) {
         const manager = createResourceManager({
-            type: `${DomainType.ROLE}`,
+            type: `${ResourceType.ROLE}`,
             props,
             setup,
         });

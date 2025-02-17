@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import {
     defineComponent,
 } from 'vue';
@@ -27,7 +27,7 @@ export const ARobotRoleAssignment = defineComponent({
     emits: defineResourceVEmitOptions<RobotRole>(),
     async setup(props, setup) {
         const manager = createResourceManager({
-            type: `${DomainType.ROBOT_ROLE}`,
+            type: `${ResourceType.ROBOT_ROLE}`,
             setup,
             socket: {
                 processEvent(event) {

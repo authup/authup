@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
-import { DomainEventName, DomainType, buildDomainChannelName } from '@authup/core-kit';
+import { DomainEventName, ResourceType, buildDomainChannelName } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
@@ -25,13 +25,13 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.IDENTITY_PROVIDER_ACCOUNT,
+            type: ResourceType.IDENTITY_PROVIDER_ACCOUNT,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ACCOUNT, id),
+                channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ACCOUNT, id),
             },
         ],
     });

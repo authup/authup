@@ -21,7 +21,7 @@ import type {
     IdentityProviderPreset, OAuth2IdentityProvider,
 } from '@authup/core-kit';
 import {
-    DomainType, IdentityProviderProtocol,
+    IdentityProviderProtocol, ResourceType,
 } from '@authup/core-kit';
 import {
     buildFormGroup,
@@ -73,7 +73,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
     setup(props, ctx) {
         const apiClient = injectHTTPClient();
         const manager = createResourceManager({
-            type: `${DomainType.IDENTITY_PROVIDER}`,
+            type: `${ResourceType.IDENTITY_PROVIDER}`,
             setup: ctx,
             props,
         });

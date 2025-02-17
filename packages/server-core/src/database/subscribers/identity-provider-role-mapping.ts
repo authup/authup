@@ -10,7 +10,7 @@ import type {
 } from '@authup/core-kit';
 import {
     DomainEventName,
-    DomainType,
+    ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -31,26 +31,26 @@ async function publishEvent(
     data: IdentityProviderRoleMapping,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
+        { channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
     ];
 
     if (data.provider_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
+            channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
             namespace: buildDomainNamespaceName(data.provider_realm_id),
         });
     }
 
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
+            channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
             namespace: buildDomainNamespaceName(data.role_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: DomainType.IDENTITY_PROVIDER_ROLE_MAPPING,
+            type: ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING,
             event,
             data,
         },

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -95,7 +95,7 @@ export const AScopeForm = defineComponent({
         const storeRefs = storeToRefs(store);
 
         const manager = createResourceManager({
-            type: `${DomainType.SCOPE}`,
+            type: `${ResourceType.SCOPE}`,
             setup: ctx,
             props,
         });

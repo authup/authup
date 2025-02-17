@@ -9,7 +9,7 @@ import type {
     Role,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -32,17 +32,17 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.ROLE,
+            type: ResourceType.ROLE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.ROLE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.ROLE, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(DomainType.ROLE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.ROLE, id),
             },
         ],
     });

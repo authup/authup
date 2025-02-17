@@ -6,7 +6,7 @@
  */
 
 import type { ClientScope } from '@authup/core-kit';
-import { DomainEventName, DomainType, buildDomainChannelName } from '@authup/core-kit';
+import { DomainEventName, ResourceType, buildDomainChannelName } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
@@ -25,13 +25,13 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.CLIENT_SCOPE,
+            type: ResourceType.CLIENT_SCOPE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.CLIENT_SCOPE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.CLIENT_SCOPE, id),
             },
 
             // todo: realm attribute

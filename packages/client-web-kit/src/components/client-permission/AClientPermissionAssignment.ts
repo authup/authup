@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { ClientPermission } from '@authup/core-kit';
 import {
@@ -25,7 +25,7 @@ export const AClientPermissionAssignment = defineComponent({
     emits: defineResourceVEmitOptions<ClientPermission>(),
     async setup(props, setup) {
         const manager = createResourceManager({
-            type: `${DomainType.CLIENT_PERMISSION}`,
+            type: `${ResourceType.CLIENT_PERMISSION}`,
             setup,
             socket: {
                 processEvent(event) {

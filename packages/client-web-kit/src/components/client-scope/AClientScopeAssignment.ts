@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core-kit';
 import {
@@ -25,7 +25,7 @@ export const AClientScopeAssignment = defineComponent({
     emits: defineResourceVEmitOptions<ClientScope>(),
     async setup(props, setup) {
         const manager = createResourceManager({
-            type: `${DomainType.CLIENT_SCOPE}`,
+            type: `${ResourceType.CLIENT_SCOPE}`,
             setup,
             socket: {
                 processEvent(event) {

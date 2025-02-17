@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core-kit';
@@ -25,7 +25,7 @@ export const APermissions = defineComponent({
     emits: defineResourceCollectionVEmitOptions<Permission>(),
     setup(props, setup) {
         const { render } = createResourceCollectionManager({
-            type: `${DomainType.PERMISSION}`,
+            type: `${ResourceType.PERMISSION}`,
             props,
             setup,
         });

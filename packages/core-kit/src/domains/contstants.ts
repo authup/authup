@@ -6,7 +6,7 @@
  */
 
 // todo: rename to ResourceType
-export enum DomainType {
+export enum ResourceType {
     CLIENT = 'client',
     CLIENT_PERMISSION = 'clientPermission',
     CLIENT_ROLE = 'clientRole',

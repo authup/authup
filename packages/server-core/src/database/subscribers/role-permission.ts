@@ -9,7 +9,7 @@ import type {
     RolePermission,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -30,24 +30,24 @@ async function publishEvent(
     data: RolePermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildDomainChannelName(DomainType.ROLE_PERMISSION, id) },
+        { channel: (id) => buildDomainChannelName(ResourceType.ROLE_PERMISSION, id) },
     ];
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.ROLE_PERMISSION, id),
+            channel: (id) => buildDomainChannelName(ResourceType.ROLE_PERMISSION, id),
             namespace: buildDomainNamespaceName(data.role_realm_id),
         });
     }
     if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(DomainType.ROLE_PERMISSION, id),
+            channel: (id) => buildDomainChannelName(ResourceType.ROLE_PERMISSION, id),
             namespace: buildDomainNamespaceName(data.permission_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: DomainType.ROLE_PERMISSION,
+            type: ResourceType.ROLE_PERMISSION,
             event,
             data,
         },

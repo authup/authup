@@ -9,7 +9,7 @@ import type {
     UserAttribute,
 } from '@authup/core-kit';
 import {
-    DomainEventName, DomainType,
+    DomainEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -32,17 +32,17 @@ async function publishEvent(
 ) {
     await publishDomainEvent({
         content: {
-            type: DomainType.USER_ATTRIBUTE,
+            type: ResourceType.USER_ATTRIBUTE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(DomainType.USER_ATTRIBUTE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.USER_ATTRIBUTE, id),
                 namespace: buildDomainNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(DomainType.USER_ATTRIBUTE, id),
+                channel: (id) => buildDomainChannelName(ResourceType.USER_ATTRIBUTE, id),
             },
         ],
     });

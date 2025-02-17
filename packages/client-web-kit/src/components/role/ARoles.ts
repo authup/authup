@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DomainType } from '@authup/core-kit';
+import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Role } from '@authup/core-kit';
@@ -26,7 +26,7 @@ export const ARoles = defineComponent({
     emits: defineResourceCollectionVEmitOptions<Role>(),
     setup(props, ctx) {
         const { render } = createResourceCollectionManager({
-            type: `${DomainType.ROLE}`,
+            type: `${ResourceType.ROLE}`,
             props,
             setup: ctx,
         });

@@ -9,9 +9,9 @@ import {
     DomainEventName, REALM_MASTER_NAME, buildDomainChannelName,
 } from '@authup/core-kit';
 import type {
-    DomainType,
     DomainTypeMap,
     EventRecord,
+    ResourceType,
 } from '@authup/core-kit';
 import type { EventFullName, STCEventContext } from '@authup/core-realtime-kit';
 import { EventNameSuffix, buildEventFullName } from '@authup/core-realtime-kit';
@@ -162,21 +162,21 @@ function create<
 
         if (ctx.onCreated) {
             socket.on(buildEventFullName(
-                ctx.type as `${DomainType}`,
+                ctx.type as `${ResourceType}`,
                 DomainEventName.CREATED,
             ), handleCreated);
         }
 
         if (ctx.onUpdated) {
             socket.on(buildEventFullName(
-                ctx.type as `${DomainType}`,
+                ctx.type as `${ResourceType}`,
                 DomainEventName.UPDATED,
             ), handleUpdated);
         }
 
         if (ctx.onDeleted) {
             socket.on(buildEventFullName(
-                ctx.type as `${DomainType}`,
+                ctx.type as `${ResourceType}`,
                 DomainEventName.DELETED,
             ), handleDeleted);
         }
@@ -208,21 +208,21 @@ function create<
 
         if (ctx.onCreated) {
             socket.off(buildEventFullName(
-                ctx.type as `${DomainType}`,
+                ctx.type as `${ResourceType}`,
                 DomainEventName.UPDATED,
             ), handleCreated);
         }
 
         if (ctx.onUpdated) {
             socket.off(buildEventFullName(
-                ctx.type as `${DomainType}`,
+                ctx.type as `${ResourceType}`,
                 DomainEventName.UPDATED,
             ), handleUpdated);
         }
 
         if (ctx.onDeleted) {
             socket.off(buildEventFullName(
-                ctx.type as `${DomainType}`,
+                ctx.type as `${ResourceType}`,
                 DomainEventName.DELETED,
             ), handleDeleted);
         }
