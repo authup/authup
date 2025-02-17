@@ -11,8 +11,8 @@ import type {
 import {
     ResourceDefaultEventName,
     ResourceType,
-    buildDomainChannelName,
-    buildDomainNamespaceName,
+    buildResourceChannelName,
+    buildResourceNamespaceName,
 } from '@authup/core-kit';
 import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -31,20 +31,20 @@ async function publishEvent(
     data: IdentityProviderRoleMapping,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
+        { channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
     ];
 
     if (data.provider_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
-            namespace: buildDomainNamespaceName(data.provider_realm_id),
+            channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
+            namespace: buildResourceNamespaceName(data.provider_realm_id),
         });
     }
 
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
-            namespace: buildDomainNamespaceName(data.role_realm_id),
+            channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
+            namespace: buildResourceNamespaceName(data.role_realm_id),
         });
     }
 

@@ -10,8 +10,8 @@ import type {
 } from '@authup/core-kit';
 import {
     ResourceDefaultEventName, ResourceType,
-    buildDomainChannelName,
-    buildDomainNamespaceName,
+    buildResourceChannelName,
+    buildResourceNamespaceName,
 } from '@authup/core-kit';
 import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -31,20 +31,20 @@ async function publishEvent(
 ) {
     const destinations : DomainEventDestination[] = [
         {
-            channel: (id) => buildDomainChannelName(ResourceType.USER_PERMISSION, id),
+            channel: (id) => buildResourceChannelName(ResourceType.USER_PERMISSION, id),
         },
     ];
     if (data.user_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(ResourceType.USER_PERMISSION, id),
-            namespace: buildDomainNamespaceName(data.user_realm_id),
+            channel: (id) => buildResourceChannelName(ResourceType.USER_PERMISSION, id),
+            namespace: buildResourceNamespaceName(data.user_realm_id),
         });
     }
 
     if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildDomainChannelName(ResourceType.USER_PERMISSION, id),
-            namespace: buildDomainNamespaceName(data.permission_realm_id),
+            channel: (id) => buildResourceChannelName(ResourceType.USER_PERMISSION, id),
+            namespace: buildResourceNamespaceName(data.permission_realm_id),
         });
     }
 

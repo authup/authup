@@ -1,7 +1,7 @@
-export function buildDomainChannelName(entity: string, id?: string | number) {
+export function buildResourceChannelName(entity: string, id?: string | number) {
     return id ? `${entity}:${id}` : entity;
 }
 
-export function buildDomainNamespaceName(id: string) {
+export function buildResourceNamespaceName(id: string) {
     return `/realm#${id}`;
 }

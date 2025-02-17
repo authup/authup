@@ -10,7 +10,7 @@ import type {
 } from '@authup/core-kit';
 import {
     ResourceDefaultEventName, ResourceType,
-    buildDomainChannelName,
+    buildResourceChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -36,7 +36,7 @@ async function publishEvent(
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(ResourceType.IDENTITY_PROVIDER_ATTRIBUTE, id),
+                channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ATTRIBUTE, id),
             },
 
             // todo: realm attribute

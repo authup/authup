@@ -10,8 +10,8 @@ import type {
 } from '@authup/core-kit';
 import {
     ResourceDefaultEventName, ResourceType,
-    buildDomainChannelName,
-    buildDomainNamespaceName,
+    buildResourceChannelName,
+    buildResourceNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -37,11 +37,11 @@ async function publishEvent(
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(ResourceType.ROBOT, id),
-                namespace: buildDomainNamespaceName(data.realm_id),
+                channel: (id) => buildResourceChannelName(ResourceType.ROBOT, id),
+                namespace: buildResourceNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildDomainChannelName(ResourceType.ROBOT, id),
+                channel: (id) => buildResourceChannelName(ResourceType.ROBOT, id),
             },
         ],
     });

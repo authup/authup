@@ -11,7 +11,7 @@ import type {
 import {
     ResourceDefaultEventName,
     ResourceType,
-    buildDomainChannelName,
+    buildResourceChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -37,7 +37,7 @@ async function publishEvent(
         },
         destinations: [
             {
-                channel: (id) => buildDomainChannelName(ResourceType.PERMISSION, id),
+                channel: (id) => buildResourceChannelName(ResourceType.PERMISSION, id),
             },
         ],
     });

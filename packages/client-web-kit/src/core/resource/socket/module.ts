@@ -6,7 +6,7 @@
  */
 
 import {
-    REALM_MASTER_NAME, ResourceDefaultEventName, buildDomainChannelName,
+    REALM_MASTER_NAME, ResourceDefaultEventName, buildResourceChannelName,
 } from '@authup/core-kit';
 import type {
     EventRecord,
@@ -87,7 +87,7 @@ function create<
 
         const channelName = ctx.buildChannelName ?
             ctx.buildChannelName(targetId.value) :
-            buildDomainChannelName(ctx.type, targetId.value);
+            buildResourceChannelName(ctx.type, targetId.value);
 
         if (event.meta.roomName !== channelName) {
             return false;
