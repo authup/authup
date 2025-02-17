@@ -10,29 +10,26 @@ import {
     CodeTransformation, isCodeTransformation, transformFilePath,
 } from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
-import { isDatabaseTypeSupported } from '../../helpers';
 import { extendDataSourceOptionsWithEntities } from './entities';
 import { extendDataSourceOptionsWithSubscribers } from './subscribers';
 import { DatabaseQueryResultCache } from '../../cache';
 
 export function extendDataSourceOptions(options: DataSourceOptions) : DataSourceOptions {
-    if (!isDatabaseTypeSupported(options.type)) {
-        throw new Error('Only the database types mysql, better-sqlite3 and postgres are supported.');
-    }
+    if (options.type === 'mysql' || options.type === 'postgres') {
+        let migrationPath = `src/database/migrations/${options.type}/*.{ts,js}`;
+        if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
+            migrationPath = transformFilePath(migrationPath, './dist', './src');
+        }
 
-    let migrationPath = `src/database/migrations/${options.type}/*.{ts,js}`;
-    if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
-        migrationPath = transformFilePath(migrationPath, './dist', './src');
+        Object.assign(options, {
+            migrations: [migrationPath],
+            migrationsTransactionMode: 'each',
+        } satisfies Partial<DataSourceOptions>);
     }
 
     Object.assign(options, {
         logging: ['error'],
         // logger: new DatabaseLogger(logger),
-        migrations: [migrationPath],
-        migrationsTransactionMode: 'each',
-    } satisfies Partial<DataSourceOptions>);
-
-    Object.assign(options, {
         cache: {
             provider() {
                 return new DatabaseQueryResultCache();

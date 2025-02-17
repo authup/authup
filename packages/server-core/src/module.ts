@@ -6,6 +6,7 @@
  */
 
 import { isRedisClientUsable, isVaultClientUsable, useLogger } from '@authup/server-kit';
+import process from 'node:process';
 import { DataSource } from 'typeorm';
 import {
     checkDatabase,
@@ -17,7 +18,9 @@ import {
 } from 'typeorm-extension';
 import { createOAuth2Cleaner } from './components';
 import type { Config } from './config';
-import { DatabaseSeeder, extendDataSourceOptions, setDataSourceSync } from './database';
+import {
+    DatabaseSeeder, extendDataSourceOptions, isDatabaseTypeSupported, isDatabaseTypeSupportedForEnvironment, setDataSourceSync,
+} from './database';
 import {
     Swagger,
     createHttpServer,
@@ -73,6 +76,20 @@ export class Application {
         }
 
         const options = await useDataSourceOptions();
+        if (!isDatabaseTypeSupported(options.type)) {
+            logger
+                .error(`Database type ${options.type} is not supported (only: mysql, better-sqlite3 and postgres).`);
+
+            process.exit(1);
+        }
+
+        if (!isDatabaseTypeSupportedForEnvironment(options.type, this.config.env)) {
+            logger
+                .error(`Database type ${options.type} is not supported for ${this.config.env} environment.`);
+
+            process.exit(1);
+        }
+
         extendDataSourceOptions(options);
 
         const check = await checkDatabase({
@@ -111,7 +128,7 @@ export class Application {
                     await robotSynchronizationService.save(seederData.robot);
                 } catch (e) {
                     useLogger()
-                        .warn(`The ${this.config.robotAdminName} robot credentials could not saved to vault.`);
+                        .warn(`The ${this.config.robotAdminName} robot credentials could not be saved to vault.`);
                 }
             }
         }
