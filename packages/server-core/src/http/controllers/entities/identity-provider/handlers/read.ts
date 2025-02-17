@@ -97,7 +97,7 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
     if (isUUID(id)) {
         query.where('provider.id = :id', { id });
     } else {
-        query.where('provider.slug LIKE :slug', { slug: id });
+        query.where('provider.name = :name', { name: id });
 
         const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
         query.andWhere('provider.realm_id = :realmId', { realmId: realm.id });

@@ -60,10 +60,10 @@ describe('src/http/controllers/identity-provider', () => {
         expectPropertiesEqualToSrc(details, response);
     });
 
-    it('should read resource by slug', async () => {
+    it('should read resource by name', async () => {
         const response = await suite.client
             .identityProvider
-            .getOne(details.slug);
+            .getOne(details.name);
 
         expect(response).toBeDefined();
 
