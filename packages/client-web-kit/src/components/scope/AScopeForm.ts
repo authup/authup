@@ -47,7 +47,7 @@ import {
     useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
-import { createRealmFormPicker } from '../realm/helpers';
+import { ARealmPicker } from '../realm';
 
 export const AScopeForm = defineComponent({
     props: {
@@ -210,7 +210,18 @@ export const AScopeForm = defineComponent({
                 !isNameFixed.value &&
                 !isEditing.value
             ) {
-                children.push(createRealmFormPicker(form));
+                children.push(buildFormGroup({
+                    validationMessages: translationsValidation.realm_id.value,
+                    validationSeverity: getVuelidateSeverity($v.value.realm_id),
+                    label: true,
+                    labelContent: translationsDefault[TranslatorTranslationDefaultKey.REALM].value,
+                    content: h(ARealmPicker, {
+                        value: $v.value.realm_id.$model,
+                        onChange: (input: string[]) => {
+                            $v.value.realm_id.$model = input.length > 0 ? input[0] : '';
+                        },
+                    }),
+                }));
             }
 
             children.push(buildFormSubmitWithTranslations({

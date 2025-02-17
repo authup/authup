@@ -7,4 +7,5 @@
 
 export { ARealm } from './ARealm';
 export { ARealmForm } from './ARealmForm';
+export { ARealmPicker } from './ARealmPicker';
 export { ARealms } from './ARealms';
