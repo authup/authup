@@ -38,7 +38,7 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
     }
 
     return {
-        env: read('NODE_ENV', EnvironmentName.PRODUCTION),
+        env: read('NODE_ENV', EnvironmentName.DEVELOPMENT),
         rootPath: process.cwd(),
         writableDirectoryPath,
 
