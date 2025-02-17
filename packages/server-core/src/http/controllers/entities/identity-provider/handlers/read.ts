@@ -32,7 +32,6 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
         fields: {
             default: [
                 'id',
-                'slug',
                 'name',
                 'display_name',
                 'protocol',
@@ -109,7 +108,6 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         fields: {
             default: [
                 'id',
-                'slug',
                 'name',
                 'display_name',
                 'protocol',

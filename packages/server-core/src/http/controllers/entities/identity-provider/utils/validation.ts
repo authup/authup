@@ -7,8 +7,7 @@
 
 import {
     IdentityProviderPreset,
-    IdentityProviderProtocol,
-    isValidIdentityProviderSub,
+    IdentityProviderProtocol, isIdentityProviderNameValid,
 } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
@@ -20,40 +19,21 @@ export class IdentityProviderValidator extends Container<IdentityProviderEntity>
     protected initialize() {
         super.initialize();
 
-        const slugValidator = createValidator(() => {
-            const chain = createValidationChain();
-            return chain
-                .exists()
-                .notEmpty()
-                .isString()
-                .isLength({ min: 3, max: 36 })
-                .custom((value) => {
-                    const isValid = isValidIdentityProviderSub(value);
-                    if (!isValid) {
-                        throw new BadRequestError('Only the characters [a-z0-9-_]+ are allowed.');
-                    }
-
-                    return isValid;
-                });
-        });
-        this.mount(
-            'slug',
-            { group: RequestHandlerOperation.CREATE },
-            slugValidator,
-        );
-        this.mount(
-            'slug',
-            { group: RequestHandlerOperation.UPDATE, optional: true },
-            slugValidator,
-        );
-
         const nameValidator = createValidator(() => {
             const chain = createValidationChain();
             return chain
                 .exists()
                 .notEmpty()
                 .isString()
-                .isLength({ min: 5, max: 128 });
+                .isLength({ min: 3, max: 128 })
+                .custom((value) => {
+                    const isValid = isIdentityProviderNameValid(value);
+                    if (!isValid) {
+                        throw new BadRequestError('Only the characters [A-Za-z0-9-_.]+ are allowed.');
+                    }
+
+                    return isValid;
+                });
         });
         this.mount(
             'name',

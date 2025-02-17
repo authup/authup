@@ -10,9 +10,8 @@ import { IdentityProviderProtocol, type OAuth2IdentityProvider } from '@authup/c
 
 export function createFakeOAuth2IdentityProvider(data: Partial<OAuth2IdentityProvider> = {}) {
     return {
-        name: faker.internet.username(),
+        name: faker.string.alpha({ length: 16, casing: 'lower' }),
         display_name: faker.internet.displayName(),
-        slug: faker.string.alpha({ length: 16, casing: 'lower' }),
         enabled: true,
         protocol: IdentityProviderProtocol.OAUTH2,
         client_id: faker.internet.username(),

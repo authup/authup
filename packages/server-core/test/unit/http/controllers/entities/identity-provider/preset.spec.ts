@@ -23,7 +23,6 @@ describe('src/http/controllers/identity-provider', () => {
 
     it('should work with protocol config', async () => {
         const data : Partial<OAuth2IdentityProvider> = {
-            slug: 'google',
             name: 'google',
             enabled: true,
             preset: IdentityProviderPreset.GOOGLE,

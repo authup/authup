@@ -13,8 +13,8 @@ import type {
 } from '@authup/core-kit';
 import {
     IdentityProviderMappingSyncMode,
+    isUserNameValid,
     isValidUserEmail,
-    isValidUserName,
 } from '@authup/core-kit';
 import {
     createNanoID,
@@ -394,7 +394,7 @@ export class IdentityProviderAccountService {
             context.attributeNamePool.length > 0
         ) {
             const name = context.attributeNamePool.shift();
-            if (name && isValidUserName(name)) {
+            if (name && isUserNameValid(name)) {
                 context.attributes.name = name;
                 break;
             }

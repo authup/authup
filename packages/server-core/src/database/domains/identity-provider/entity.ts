@@ -19,14 +19,11 @@ import type { IdentityProvider, IdentityProviderPreset, IdentityProviderProtocol
 import { Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 
-@Unique(['slug', 'realm_id'])
+@Unique(['name', 'realm_id'])
 @Entity({ name: 'auth_identity_providers' })
 export class IdentityProviderEntity implements IdentityProvider {
     @PrimaryGeneratedColumn('uuid')
         id: string;
-
-    @Column({ type: 'varchar', length: 36 })
-        slug: string;
 
     @Column({ type: 'varchar', length: 128 })
         name: string;
