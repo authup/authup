@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-// todo: rename to ResourceType
 export enum ResourceType {
     CLIENT = 'client',
     CLIENT_PERMISSION = 'clientPermission',
@@ -32,8 +31,7 @@ export enum ResourceType {
     USER_ROLE = 'userRole',
 }
 
-// todo: rename to Event{Domain,Resource,Default}Event
-export enum DomainEventName {
+export enum ResourceDefaultEventName {
     CREATED = 'created',
     DELETED = 'deleted',
     UPDATED = 'updated',

@@ -7,7 +7,7 @@
 
 import type { PolicyAttribute } from '@authup/core-kit';
 import {
-    DomainEventName, ResourceType, buildDomainChannelName, buildDomainNamespaceName,
+    ResourceDefaultEventName, ResourceType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -22,7 +22,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, PolicyAttributeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: PolicyAttribute,
 ) {
     await publishDomainEvent({
@@ -64,7 +64,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             ]);
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<PolicyAttributeEntity>): Promise<any> {
@@ -81,7 +81,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as PolicyAttribute);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as PolicyAttribute);
     }
 
     async afterRemove(event: RemoveEvent<PolicyAttributeEntity>): Promise<any> {
@@ -98,6 +98,6 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
     }
 }

@@ -30,7 +30,7 @@ import type { UserAttribute } from './user-attribute';
 import type { UserPermission } from './user-permission';
 import type { UserRole } from './user-role';
 
-type DomainTypeMapRaw = {
+type ResourceTypeMapRaw = {
     [ResourceType.CLIENT]: Client,
     [ResourceType.CLIENT_PERMISSION]: ClientPermission,
     [ResourceType.CLIENT_ROLE]: ClientRole,
@@ -56,8 +56,8 @@ type DomainTypeMapRaw = {
     [ResourceType.USER_ROLE]: UserRole,
 };
 
-export type DomainTypeMap = {
-    [K in keyof DomainTypeMapRaw as `${K}`]: DomainTypeMapRaw[K]
+export type ResourceTypeMap = {
+    [K in keyof ResourceTypeMapRaw as `${K}`]: ResourceTypeMapRaw[K]
 };
 
 export type EventRecord<

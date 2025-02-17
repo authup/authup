@@ -9,7 +9,7 @@ import type {
     RolePermission,
 } from '@authup/core-kit';
 import {
-    DomainEventName, ResourceType,
+    ResourceDefaultEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -26,7 +26,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, RolePermissionEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: RolePermission,
 ) {
     const destinations : DomainEventDestination[] = [
@@ -76,7 +76,7 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<RolePermissionEntity>): Promise<any> {
@@ -93,7 +93,7 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as RolePermission);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as RolePermission);
     }
 
     async afterRemove(event: RemoveEvent<RolePermissionEntity>): Promise<any> {
@@ -110,6 +110,6 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
     }
 }

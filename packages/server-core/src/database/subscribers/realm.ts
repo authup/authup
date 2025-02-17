@@ -9,7 +9,7 @@ import type {
     Realm,
 } from '@authup/core-kit';
 import {
-    DomainEventName,
+    ResourceDefaultEventName,
     ResourceType,
     buildDomainChannelName,
 } from '@authup/core-kit';
@@ -26,7 +26,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, RealmEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: Realm,
 ) {
     await publishDomainEvent({
@@ -55,7 +55,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             return;
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity as Realm);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as Realm);
     }
 
     async afterUpdate(event: UpdateEvent<RealmEntity>): Promise<any> {
@@ -72,7 +72,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as Realm);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as Realm);
     }
 
     async afterRemove(event: RemoveEvent<RealmEntity>): Promise<any> {
@@ -89,6 +89,6 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity as Realm);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as Realm);
     }
 }

@@ -9,7 +9,7 @@ import type {
     Policy,
 } from '@authup/core-kit';
 import {
-    DomainEventName,
+    ResourceDefaultEventName,
     ResourceType,
     buildDomainChannelName,
 } from '@authup/core-kit';
@@ -26,7 +26,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, PolicyEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: Policy,
 ) {
     await publishDomainEvent({
@@ -55,7 +55,7 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             return;
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity as Policy);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as Policy);
     }
 
     async afterUpdate(event: UpdateEvent<PolicyEntity>): Promise<any> {
@@ -72,7 +72,7 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as Policy);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as Policy);
     }
 
     async afterRemove(event: RemoveEvent<PolicyEntity>): Promise<any> {
@@ -89,6 +89,6 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity as Policy);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as Policy);
     }
 }

@@ -6,12 +6,12 @@
  */
 
 import {
-    DomainEventName, REALM_MASTER_NAME, buildDomainChannelName,
+    REALM_MASTER_NAME, ResourceDefaultEventName, buildDomainChannelName,
 } from '@authup/core-kit';
 import type {
-    DomainTypeMap,
     EventRecord,
     ResourceType,
+    ResourceTypeMap,
 } from '@authup/core-kit';
 import type { EventFullName, STCEventContext } from '@authup/core-realtime-kit';
 import { EventNameSuffix, buildEventFullName } from '@authup/core-realtime-kit';
@@ -163,21 +163,21 @@ function create<
         if (ctx.onCreated) {
             socket.on(buildEventFullName(
                 ctx.type as `${ResourceType}`,
-                DomainEventName.CREATED,
+                ResourceDefaultEventName.CREATED,
             ), handleCreated);
         }
 
         if (ctx.onUpdated) {
             socket.on(buildEventFullName(
                 ctx.type as `${ResourceType}`,
-                DomainEventName.UPDATED,
+                ResourceDefaultEventName.UPDATED,
             ), handleUpdated);
         }
 
         if (ctx.onDeleted) {
             socket.on(buildEventFullName(
                 ctx.type as `${ResourceType}`,
-                DomainEventName.DELETED,
+                ResourceDefaultEventName.DELETED,
             ), handleDeleted);
         }
     };
@@ -209,21 +209,21 @@ function create<
         if (ctx.onCreated) {
             socket.off(buildEventFullName(
                 ctx.type as `${ResourceType}`,
-                DomainEventName.UPDATED,
+                ResourceDefaultEventName.UPDATED,
             ), handleCreated);
         }
 
         if (ctx.onUpdated) {
             socket.off(buildEventFullName(
                 ctx.type as `${ResourceType}`,
-                DomainEventName.UPDATED,
+                ResourceDefaultEventName.UPDATED,
             ), handleUpdated);
         }
 
         if (ctx.onDeleted) {
             socket.off(buildEventFullName(
                 ctx.type as `${ResourceType}`,
-                DomainEventName.DELETED,
+                ResourceDefaultEventName.DELETED,
             ), handleDeleted);
         }
     };
@@ -246,9 +246,9 @@ function create<
 }
 
 export function createResourceSocketManager<
-    A extends keyof DomainTypeMap,
+    A extends keyof ResourceTypeMap,
 >(
-    ctx: ResourceSocketManagerCreateContext<A, DomainTypeMap[A]>,
+    ctx: ResourceSocketManagerCreateContext<A, ResourceTypeMap[A]>,
 ) : ResourceSocketManager {
     return create(ctx);
 }

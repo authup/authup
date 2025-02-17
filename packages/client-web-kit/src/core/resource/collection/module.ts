@@ -7,7 +7,7 @@
 
 import { hasOwnProperty } from '@authup/kit';
 import type { DomainAPI } from '@authup/core-http-kit';
-import type { DomainTypeMap } from '@authup/core-kit';
+import type { ResourceTypeMap } from '@authup/core-kit';
 import type {
     ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput,
 } from '@vuecs/list-controls';
@@ -48,8 +48,8 @@ const merger = createMerger({
 type Entity<A> = A extends Record<string, any> ? A : never;
 
 function create<
-    TYPE extends keyof DomainTypeMap,
-    RECORD extends DomainTypeMap[TYPE],
+    TYPE extends keyof ResourceTypeMap,
+    RECORD extends ResourceTypeMap[TYPE],
 >(
     context: ResourceCollectionManagerCreateContext<TYPE, RECORD>,
 ) : ResourceCollectionManager<RECORD> {
@@ -306,9 +306,9 @@ function create<
 }
 
 export function createResourceCollectionManager<
-    A extends keyof DomainTypeMap,
+    A extends keyof ResourceTypeMap,
 >(
-    context: ResourceCollectionManagerCreateContext<A, DomainTypeMap[A]>,
-) : ResourceCollectionManager<DomainTypeMap[A]> {
+    context: ResourceCollectionManagerCreateContext<A, ResourceTypeMap[A]>,
+) : ResourceCollectionManager<ResourceTypeMap[A]> {
     return create(context);
 }

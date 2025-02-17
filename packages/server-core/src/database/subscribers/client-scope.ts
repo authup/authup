@@ -6,7 +6,7 @@
  */
 
 import type { ClientScope } from '@authup/core-kit';
-import { DomainEventName, ResourceType, buildDomainChannelName } from '@authup/core-kit';
+import { ResourceDefaultEventName, ResourceType, buildDomainChannelName } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
@@ -20,7 +20,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, ClientScopeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: ClientScope,
 ) {
     await publishDomainEvent({
@@ -51,7 +51,7 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             return;
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity as ClientScope);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as ClientScope);
     }
 
     async afterUpdate(event: UpdateEvent<ClientScopeEntity>): Promise<any> {
@@ -68,7 +68,7 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as ClientScope);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as ClientScope);
     }
 
     async afterRemove(event: RemoveEvent<ClientScopeEntity>): Promise<any> {
@@ -85,6 +85,6 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity as ClientScope);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as ClientScope);
     }
 }

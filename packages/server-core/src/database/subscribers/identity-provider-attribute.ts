@@ -9,7 +9,7 @@ import type {
     IdentityProviderAttribute,
 } from '@authup/core-kit';
 import {
-    DomainEventName, ResourceType,
+    ResourceDefaultEventName, ResourceType,
     buildDomainChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
@@ -25,7 +25,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, IdentityProviderAttributeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: IdentityProviderAttribute,
 ) {
     await publishDomainEvent({
@@ -56,7 +56,7 @@ export class IdentityProviderAttributeSubscriber implements EntitySubscriberInte
             return;
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity as IdentityProviderAttribute);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as IdentityProviderAttribute);
     }
 
     async afterUpdate(event: UpdateEvent<IdentityProviderAttributeEntity>): Promise<any> {
@@ -73,7 +73,7 @@ export class IdentityProviderAttributeSubscriber implements EntitySubscriberInte
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as IdentityProviderAttribute);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as IdentityProviderAttribute);
     }
 
     async afterRemove(event: RemoveEvent<IdentityProviderAttributeEntity>): Promise<any> {
@@ -90,6 +90,6 @@ export class IdentityProviderAttributeSubscriber implements EntitySubscriberInte
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity as IdentityProviderAttribute);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as IdentityProviderAttribute);
     }
 }

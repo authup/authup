@@ -6,7 +6,7 @@
  */
 
 import type { DomainAPI } from '@authup/core-http-kit';
-import type { DomainTypeMap } from '@authup/core-kit';
+import type { ResourceTypeMap } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
 import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
@@ -30,8 +30,8 @@ import type {
 import { buildResourceVSlotProps } from './utils';
 
 function create<
-    TYPE extends keyof DomainTypeMap,
-    RECORD extends DomainTypeMap[TYPE],
+    TYPE extends keyof ResourceTypeMap,
+    RECORD extends ResourceTypeMap[TYPE],
 >(
     ctx: ResourceManagerCreateContext<TYPE, RECORD>,
 ) : ResourceManager<RECORD> {
@@ -462,9 +462,9 @@ function create<
 }
 
 export function createResourceManager<
-    TYPE extends keyof DomainTypeMap,
+    TYPE extends keyof ResourceTypeMap,
 >(
-    ctx: ResourceManagerCreateContext<TYPE, DomainTypeMap[TYPE]>,
-) : ResourceManager<DomainTypeMap[TYPE]> {
-    return create<TYPE, DomainTypeMap[TYPE]>(ctx);
+    ctx: ResourceManagerCreateContext<TYPE, ResourceTypeMap[TYPE]>,
+) : ResourceManager<ResourceTypeMap[TYPE]> {
+    return create<TYPE, ResourceTypeMap[TYPE]>(ctx);
 }

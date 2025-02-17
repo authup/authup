@@ -9,7 +9,7 @@ import type {
     UserAttribute,
 } from '@authup/core-kit';
 import {
-    DomainEventName, ResourceType,
+    ResourceDefaultEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -27,7 +27,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, UserAttributeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: UserAttribute,
 ) {
     await publishDomainEvent({
@@ -65,7 +65,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             ]);
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
 
         return Promise.resolve(undefined);
     }
@@ -84,7 +84,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as UserAttributeEntity);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as UserAttributeEntity);
     }
 
     async afterRemove(event: RemoveEvent<UserAttributeEntity>): Promise<any> {
@@ -101,6 +101,6 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
     }
 }

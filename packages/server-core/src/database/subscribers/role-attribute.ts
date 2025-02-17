@@ -7,7 +7,7 @@
 
 import type { RoleAttribute } from '@authup/core-kit';
 import {
-    DomainEventName, ResourceType, buildDomainChannelName, buildDomainNamespaceName,
+    ResourceDefaultEventName, ResourceType, buildDomainChannelName, buildDomainNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -22,7 +22,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, RoleAttributeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: RoleAttribute,
 ) {
     await publishDomainEvent({
@@ -64,7 +64,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
             ]);
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<RoleAttributeEntity>): Promise<any> {
@@ -81,7 +81,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as RoleAttribute);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as RoleAttribute);
     }
 
     async afterRemove(event: RemoveEvent<RoleAttributeEntity>): Promise<any> {
@@ -98,6 +98,6 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
     }
 }

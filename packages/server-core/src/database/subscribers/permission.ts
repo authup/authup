@@ -9,7 +9,7 @@ import type {
     Permission,
 } from '@authup/core-kit';
 import {
-    DomainEventName,
+    ResourceDefaultEventName,
     ResourceType,
     buildDomainChannelName,
 } from '@authup/core-kit';
@@ -26,7 +26,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, PermissionEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: Permission,
 ) {
     await publishDomainEvent({
@@ -55,7 +55,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             return;
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity as Permission);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as Permission);
     }
 
     async afterUpdate(event: UpdateEvent<PermissionEntity>): Promise<any> {
@@ -76,7 +76,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as Permission);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as Permission);
     }
 
     async afterRemove(event: RemoveEvent<PermissionEntity>): Promise<any> {
@@ -97,6 +97,6 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity as Permission);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as Permission);
     }
 }

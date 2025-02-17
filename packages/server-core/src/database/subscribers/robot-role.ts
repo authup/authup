@@ -9,7 +9,7 @@ import type {
     RobotRole,
 } from '@authup/core-kit';
 import {
-    DomainEventName, ResourceType,
+    ResourceDefaultEventName, ResourceType,
     buildDomainChannelName,
     buildDomainNamespaceName,
 } from '@authup/core-kit';
@@ -26,7 +26,7 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, RobotRoleEntity } from '../domains';
 
 async function publishEvent(
-    event: `${DomainEventName}`,
+    event: `${ResourceDefaultEventName}`,
     data: RobotRole,
 ) {
     const destinations : DomainEventDestination[] = [
@@ -76,7 +76,7 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             ]);
         }
 
-        await publishEvent(DomainEventName.CREATED, event.entity);
+        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<RobotRoleEntity>): Promise<any> {
@@ -93,7 +93,7 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             ]);
         }
 
-        await publishEvent(DomainEventName.UPDATED, event.entity as RobotRoleEntity);
+        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as RobotRoleEntity);
     }
 
     async afterRemove(event: RemoveEvent<RobotRoleEntity>): Promise<any> {
@@ -110,6 +110,6 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             ]);
         }
 
-        await publishEvent(DomainEventName.DELETED, event.entity);
+        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
     }
 }
