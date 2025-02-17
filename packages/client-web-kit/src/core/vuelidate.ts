@@ -13,12 +13,12 @@ import type { Ref } from 'vue';
 
 export enum VuelidateCustomRuleKey {
     ALPHA_NUM_HYPHEN_UNDERSCORE = 'alphaNumHyphenUnderscore',
-    ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE = 'alphaUpperNumHyphenUnderscore',
+    ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT = 'alphaUpperNumHyphenUnderscoreDot',
 }
 
 export const VuelidateCustomRule = {
     [VuelidateCustomRuleKey.ALPHA_NUM_HYPHEN_UNDERSCORE]: helpers.regex(/^[a-z0-9-_]*$/),
-    [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE]: helpers.regex(/^[a-zA-Z0-9-_]*$/),
+    [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT]: helpers.regex(/^[a-zA-Z0-9-_.]*$/),
 };
 
 export function getVuelidateSeverity<
