@@ -62,21 +62,22 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
                     return false;
                 }
 
-                if (
-                    typeof item.realm_id === 'string' ||
-                    typeof ctx.data.permission.realmId === 'string'
-                ) {
-                    return item.realm_id === ctx.data.permission.realmId;
+                let realmId : string | null;
+                if (typeof ctx.data.permission.realmId === 'undefined') {
+                    realmId = null;
+                } else {
+                    realmId = ctx.data.permission.realmId;
                 }
 
-                if (
-                    typeof item.client_id === 'string' ||
-                    typeof ctx.data.permission.clientId === 'string'
-                ) {
-                    return item.client_id === ctx.data.permission.clientId;
+                let clientId : string | null;
+                if (typeof ctx.data.permission.clientId === 'undefined') {
+                    clientId = null;
+                } else {
+                    clientId = ctx.data.permission.clientId;
                 }
 
-                return true;
+                // we are comparing only string with null (db resources always null or string)
+                return realmId === item.realm_id && clientId === item.client_id;
             }));
 
         if (permissionsAll.length === 0) {
