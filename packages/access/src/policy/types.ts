@@ -22,10 +22,26 @@ export type PolicyWithType<
 };
 
 export type PolicyIdentity = {
+    /**
+     * user, client, robot
+     */
     type: string,
+    /**
+     * UUID
+     */
     id: string,
-    realmId?: string,
-    realmName?: string
+    /**
+     * Client associated with identity.
+     */
+    clientId?: string | null,
+    /**
+     * Realm id associated with identity.
+     */
+    realmId?: string | null,
+    /**
+     * Realm name associated with identity.
+     */
+    realmName?: string | null
 };
 
 export type PolicyData = {

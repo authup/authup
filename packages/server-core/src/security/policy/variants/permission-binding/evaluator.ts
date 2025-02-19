@@ -64,12 +64,19 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
 
                 if (
                     typeof item.realm_id === 'string' ||
-                typeof ctx.data.permission.realm_id === 'string'
+                    typeof ctx.data.permission.realmId === 'string'
                 ) {
-                    return item.realm_id === ctx.data.permission.realm_id;
+                    return item.realm_id === ctx.data.permission.realmId;
                 }
 
-                return !!item.realm_id === !!ctx.data.permission.realm_id;
+                if (
+                    typeof item.client_id === 'string' ||
+                    typeof ctx.data.permission.clientId === 'string'
+                ) {
+                    return item.client_id === ctx.data.permission.clientId;
+                }
+
+                return true;
             }));
 
         if (permissionsAll.length === 0) {

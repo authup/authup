@@ -8,7 +8,7 @@
 import {
     Column,
     CreateDateColumn,
-    Entity,
+    Entity, Index,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -46,6 +46,7 @@ export class ScopeEntity implements Scope {
 
     // ------------------------------------------------------------------
 
+    @Index()
     @Column({ nullable: true })
         realm_id: Realm['id'] | null;
 

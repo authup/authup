@@ -8,7 +8,7 @@
 import {
     Column,
     CreateDateColumn,
-    Entity,
+    Entity, Index,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -46,6 +46,7 @@ export class IdentityProviderEntity implements IdentityProvider {
     @UpdateDateColumn()
         updated_at: Date;
 
+    @Index()
     @Column()
         realm_id: string;
 

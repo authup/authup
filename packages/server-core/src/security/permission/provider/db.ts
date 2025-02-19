@@ -61,7 +61,8 @@ export class PermissionDBProvider implements PermissionProvider {
 
             return {
                 name: entity.name,
-                ...(entity.realm_id ? { realm_id: entity.realm_id } : {}),
+                realmId: entity.realm_id,
+                clientId: entity.client_id,
                 policy,
             };
         }

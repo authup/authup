@@ -20,7 +20,9 @@ export class PermissionChecker {
 
     protected policyEngine : PolicyEngine;
 
-    protected realmId?: string;
+    protected clientId?: string | null;
+
+    protected realmId?: string | null;
 
     // ----------------------------------------------
 
@@ -29,6 +31,10 @@ export class PermissionChecker {
             this.provider = options.provider;
         } else {
             this.provider = new PermissionMemoryProvider();
+        }
+
+        if (options.clientId) {
+            this.clientId = options.clientId;
         }
 
         if (options.realmId) {
@@ -54,7 +60,11 @@ export class PermissionChecker {
             name: input,
         };
 
-        if (typeof this.realmId !== 'undefined') {
+        if (this.clientId) {
+            options.clientId = this.clientId;
+        }
+
+        if (this.realmId) {
             options.realmId = this.realmId;
         }
 

@@ -9,11 +9,12 @@ import { DecisionStrategy } from '../../constants';
 import type { CompositePolicy, PolicyWithType } from '../../policy';
 import { BuiltInPolicyType } from '../../policy';
 import type { PermissionItem } from '../types';
+import { buildPermissionItemKey } from './key';
 
 export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[] {
     const grouped : Record<string, PermissionItem[]> = input
         .reduce((previous, current) => {
-            const key = current.realm_id || `/${current.name}`;
+            const key = buildPermissionItemKey(current);
             if (!previous[key]) {
                 previous[key] = [];
             }
