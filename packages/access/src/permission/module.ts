@@ -102,7 +102,12 @@ export class PermissionChecker {
         for (let i = 0; i < ctx.name.length; i++) {
             const entity = await this.get(ctx.name[i]);
             if (!entity) {
-                throw PermissionError.notFound(ctx.name[i]);
+                lastError = PermissionError.notFound(ctx.name[i]);
+                if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                    throw lastError;
+                }
+
+                continue;
             }
 
             if (!entity.policy) {

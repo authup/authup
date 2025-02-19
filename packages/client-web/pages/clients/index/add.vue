@@ -17,7 +17,7 @@ export default defineNuxtComponent({
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.ROBOT_CREATE,
+                PermissionName.CLIENT_CREATE,
             ],
         });
 
