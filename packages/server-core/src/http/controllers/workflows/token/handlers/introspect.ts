@@ -8,10 +8,11 @@
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
+import { useDataSource } from 'typeorm-extension';
+import { IdentityPermissionService } from '../../../../../services';
 import {
     OAuth2TokenManager,
     loadOAuth2SubEntity,
-    loadOAuth2SubPermissions,
     resolveOpenIdClaimsFromSubEntity,
 } from '../../../../oauth2';
 import { extractTokenFromRequest } from '../utils';
@@ -27,7 +28,16 @@ export async function introspectTokenRouteHandler(
         skipActiveCheck: true,
     });
 
-    const permissions = await loadOAuth2SubPermissions(payload.sub_kind, payload.sub, payload.scope);
+    const dataSource = await useDataSource();
+    const identityPermissionService = new IdentityPermissionService(dataSource);
+
+    // only receive client specific permissions
+    const permissions = await identityPermissionService.getFor({
+        id: payload.sub,
+        type: payload.sub_kind,
+        clientId: payload.client_id,
+        realmId: payload.realm_id,
+    });
 
     const output : OAuth2TokenIntrospectionResponse = {
         active: await tokenManager.isActive(token),

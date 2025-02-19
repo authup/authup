@@ -55,13 +55,13 @@ export class IdentityPermissionService {
     async getFor(identity: PolicyIdentity) : Promise<Permission[]> {
         switch (identity.type) {
             case 'client': {
-                return this.getForClient(identity.id);
+                return this.getForClient(identity);
             }
             case 'user': {
-                return this.getForUser(identity.id);
+                return this.getForUser(identity);
             }
             case 'robot': {
-                return this.getForRobot(identity.id);
+                return this.getForRobot(identity);
             }
             case 'role': {
                 return this.getForRole(identity.id);
@@ -71,9 +71,9 @@ export class IdentityPermissionService {
         return [];
     }
 
-    async getForClient(id: string) : Promise<Permission[]> {
-        const permissions = await this.clientRepository.getBoundPermissions(id);
-        const roles = await this.clientRepository.getBoundRoles(id);
+    async getForClient(identity: PolicyIdentity) : Promise<Permission[]> {
+        const permissions = await this.clientRepository.getBoundPermissions(identity.id);
+        const roles = await this.clientRepository.getBoundRoles(identity.id);
         const rolePermissions = await this.getForRoles(roles);
         if (rolePermissions.length === 0) {
             return permissions;
@@ -85,9 +85,9 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForUser(id: string) : Promise<Permission[]> {
-        const permissions = await this.userRepository.getBoundPermissions(id);
-        const roles = await this.userRepository.getBoundRoles(id);
+    async getForUser(identity: PolicyIdentity) : Promise<Permission[]> {
+        const permissions = await this.userRepository.getBoundPermissions(identity.id, identity.clientId);
+        const roles = await this.userRepository.getBoundRoles(identity.id, identity.clientId);
         const rolePermissions = await this.getForRoles(roles);
         if (rolePermissions.length === 0) {
             return permissions;
@@ -99,9 +99,9 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForRobot(id: string) : Promise<Permission[]> {
-        const permissions = await this.robotRepository.getBoundPermissions(id);
-        const roles = await this.robotRepository.getBoundRoles(id);
+    async getForRobot(identity: PolicyIdentity) : Promise<Permission[]> {
+        const permissions = await this.robotRepository.getBoundPermissions(identity.id, identity.clientId);
+        const roles = await this.robotRepository.getBoundRoles(identity.id, identity.clientId);
         const rolePermissions = await this.getForRoles(roles);
         if (rolePermissions.length === 0) {
             return permissions;
@@ -113,7 +113,7 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForRole(entity: Role | string) : Promise<Permission[]> {
+    async getForRole(entity: string | Role) : Promise<Permission[]> {
         return this.getForRoles([entity]);
     }
 

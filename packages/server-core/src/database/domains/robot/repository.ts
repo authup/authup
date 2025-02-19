@@ -15,7 +15,7 @@ import {
     isUUID,
 } from '@authup/kit';
 import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
-import type { DataSource, EntityManager } from 'typeorm';
+import type { DataSource, EntityManager, FindOptionsWhere } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { CachePrefix } from '../constants';
 import { RobotEntity } from './entity';
@@ -29,6 +29,7 @@ export class RobotRepository extends Repository<RobotEntity> {
 
     async getBoundRoles(
         entity: string | Robot,
+        clientId?: string | null,
     ) : Promise<Role[]> {
         let id : string;
         if (typeof entity === 'string') {
@@ -37,12 +38,20 @@ export class RobotRepository extends Repository<RobotEntity> {
             id = entity.id;
         }
 
+        const where : FindOptionsWhere<RobotRoleEntity> = {
+            robot_id: id,
+        };
+
+        if (clientId) {
+            where.role = {
+                client_id: clientId,
+            };
+        }
+
         const entities = await this.manager
             .getRepository(RobotRoleEntity)
             .find({
-                where: {
-                    robot_id: id,
-                },
+                where,
                 relations: {
                     role: true,
                 },
@@ -60,6 +69,7 @@ export class RobotRepository extends Repository<RobotEntity> {
 
     async getBoundPermissions(
         entity: string | Robot,
+        clientId?: string | null,
     ) : Promise<Permission[]> {
         let id : string;
         if (typeof entity === 'string') {
@@ -70,17 +80,25 @@ export class RobotRepository extends Repository<RobotEntity> {
 
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
+        const where : FindOptionsWhere<RobotPermissionEntity> = {
+            robot_id: id,
+        };
+
+        if (clientId) {
+            where.permission = {
+                client_id: clientId,
+            };
+        }
+
         const entities = await repository.find({
-            where: {
-                robot_id: id,
-            },
+            where,
             relations: {
                 permission: true,
             },
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
-                    key: id,
+                    key: id + (clientId ? `:${clientId}` : ''),
                 }),
                 milliseconds: 60_000,
             },
