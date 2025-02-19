@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildPermissionItemKey } from '@authup/access';
 import type {
     Permission,
 } from '@authup/core-kit';
@@ -71,7 +72,11 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
                 }),
                 buildRedisKeyPath({
                     prefix: CachePrefix.PERMISSION,
-                    key: event.entity.name,
+                    key: buildPermissionItemKey({
+                        name: event.entity.name,
+                        clientId: event.entity.client_id,
+                        realmId: event.entity.realm_id,
+                    }),
                 }),
             ]);
         }
@@ -90,9 +95,10 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
                     prefix: CachePrefix.PERMISSION,
                     key: event.entity.id,
                 }),
-                buildRedisKeyPath({
-                    prefix: CachePrefix.PERMISSION,
-                    key: event.entity.name,
+                buildPermissionItemKey({
+                    name: event.entity.name,
+                    clientId: event.entity.client_id,
+                    realmId: event.entity.realm_id,
                 }),
             ]);
         }

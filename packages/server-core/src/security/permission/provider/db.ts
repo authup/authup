@@ -15,9 +15,10 @@ import type {
     PolicyWithType,
     RealmMatchPolicy,
 } from '@authup/access';
-import { BuiltInPolicyType, DecisionStrategy } from '@authup/access';
+import { BuiltInPolicyType, DecisionStrategy, buildPermissionItemKey } from '@authup/access';
+import type { Permission } from '@authup/core-kit';
 import { buildCacheKey } from '@authup/server-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { CachePrefix, PermissionEntity, PolicyRepository } from '../../../database/domains';
 
 export class PermissionDBProvider implements PermissionProvider {
@@ -34,18 +35,31 @@ export class PermissionDBProvider implements PermissionProvider {
     }
 
     async get(options: PermissionGetOptions) : Promise<PermissionItem | undefined> {
+        const where : FindOptionsWhere<Permission> = {
+            name: options.name,
+        };
+
+        if (options.clientId) {
+            where.client_id = options.clientId;
+        }
+
+        if (options.realmId) {
+            where.realm_id = options.realmId;
+        }
+
         const entity = await this.repository.findOne({
-            where: {
-                name: options.name,
-                ...(options.realmId ? { realm_id: options.realmId } : {}),
-            },
+            where,
             relations: [
                 'policy',
             ],
             cache: {
                 id: buildCacheKey({
                     prefix: CachePrefix.PERMISSION,
-                    key: options.name,
+                    key: buildPermissionItemKey({
+                        name: options.name,
+                        clientId: options.clientId,
+                        realmId: options.realmId,
+                    }),
                 }),
                 milliseconds: 60_000,
             },
