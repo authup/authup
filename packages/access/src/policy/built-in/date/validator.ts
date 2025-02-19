@@ -6,18 +6,14 @@
  */
 
 import { createValidator } from '@validup/adapter-zod';
-import { Container, type ContainerOptions } from 'validup';
+import { Container } from 'validup';
 import { z } from 'zod';
 import type { DatePolicy } from './types';
 
 export class DatePolicyValidator extends Container<DatePolicy> {
-    constructor(options: ContainerOptions<DatePolicy> = {}) {
-        super(options);
+    initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
         this.mount('start', createValidator(
             z.date()
                 .or(z.string().date())

@@ -11,7 +11,9 @@ import { z } from 'zod';
 import type { AttributeNamesPolicy } from './types';
 
 export class AttributeNamesPolicyValidator extends Container<AttributeNamesPolicy> {
-    protected initialize() {
+    initialize() {
+        super.initialize();
+
         this.mount(
             'names',
             createValidator(
