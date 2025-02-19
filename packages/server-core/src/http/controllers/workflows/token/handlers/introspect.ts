@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { pickRecord } from '@authup/kit';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
@@ -41,7 +42,8 @@ export async function introspectTokenRouteHandler(
 
     const output : OAuth2TokenIntrospectionResponse = {
         active: await tokenManager.isActive(token),
-        permissions,
+        // todo: permissions property should be removed.
+        permissions: permissions.map((permission) => pickRecord(permission, ['name', 'client_id', 'realm_id'])),
         ...payload,
         ...resolveOpenIdClaimsFromSubEntity(
             payload.sub_kind,
