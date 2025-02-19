@@ -8,7 +8,7 @@
 import {
     Column,
     CreateDateColumn,
-    Entity,
+    Entity, Index,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn, Tree, TreeChildren,
@@ -67,6 +67,7 @@ export class PolicyEntity implements Policy {
     @UpdateDateColumn()
         updated_at: Date;
 
+    @Index()
     @Column({ nullable: true })
         realm_id: string | null;
 

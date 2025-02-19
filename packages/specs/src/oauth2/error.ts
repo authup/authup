@@ -35,6 +35,12 @@ export class TokenError extends AuthupError {
         });
     }
 
+    static realmIdInvalid() {
+        return new TokenError({
+            message: 'The realm id is invalid.',
+        });
+    }
+
     static kindInvalid() {
         return new TokenError({
             message: 'The token kind is invalid.',

@@ -42,14 +42,15 @@ export async function verifyBearerAuthorizationHeader(
         payload.scope,
     );
 
-    let realmId : string;
+    if (!payload.realm_id) {
+        throw TokenError.realmIdInvalid();
+    }
+
     let realmName: string;
 
     if (payload.realm_name) {
         realmName = payload.realm_name;
-        realmId = payload.realm_id;
     } else {
-        // todo: check realm_id, but it should always be given.
         const dataSource = await useDataSource();
         const realmRepository = dataSource.getRepository(RealmEntity);
         const realm = await realmRepository.findOne({
@@ -66,14 +67,14 @@ export async function verifyBearerAuthorizationHeader(
         });
 
         realmName = realm.name;
-        realmId = realm.id;
     }
 
     setRequestIdentity(request, {
         type: payload.sub_kind,
         id: payload.sub,
         attributes: sub,
-        realmId,
+        clientId: payload.client_id,
+        realmId: payload.realm_id,
         realmName,
     });
 }

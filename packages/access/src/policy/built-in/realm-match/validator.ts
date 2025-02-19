@@ -6,19 +6,15 @@
  */
 
 import { createValidator } from '@validup/adapter-zod';
-import { Container, type ContainerOptions } from 'validup';
+import { Container } from 'validup';
 import { z } from 'zod';
 import { DecisionStrategy } from '../../../constants';
 import type { RealmMatchPolicy } from './types';
 
 export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
-    constructor(options: ContainerOptions<RealmMatchPolicy> = {}) {
-        super(options);
+    initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
         this.mount(
             'decisionStrategy',
             createValidator(

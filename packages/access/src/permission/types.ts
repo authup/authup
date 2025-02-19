@@ -13,14 +13,16 @@ import type { PermissionProvider } from './provider';
 
 export type PermissionItem = {
     name: string,
-    realm_id?: string | null,
+    clientId?: string | null,
+    realmId?: string | null,
     policy?: PolicyWithType,
 };
 
 export type PermissionCheckerOptions = {
     provider?: PermissionProvider,
     policyEngine?: PolicyEngine,
-    realmId?: string
+    realmId?: string | null,
+    clientId?: string | null
 };
 
 export type PermissionCheckerCheckOptions = {

@@ -6,20 +6,16 @@
  */
 
 import { createValidator } from '@validup/adapter-zod';
-import { Container, type ContainerOptions } from 'validup';
+import { Container } from 'validup';
 import { z } from 'zod';
 import type { AttributesPolicy } from './types';
 
 export class AttributesPolicyValidator<
     T extends Record<string, any> = Record<string, any>,
 > extends Container<AttributesPolicy<T>> {
-    constructor(options: ContainerOptions<AttributesPolicy<T>> = {}) {
-        super(options);
+    initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
         this.mount(
             'query',
             createValidator(

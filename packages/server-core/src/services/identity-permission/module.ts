@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission, Role } from '@authup/core-kit';
+import type { Permission } from '@authup/core-kit';
 import type { PolicyIdentity } from '@authup/access';
 import { isPermissionItemEqual } from '@authup/access';
 import type { DataSource } from 'typeorm';
@@ -55,26 +55,26 @@ export class IdentityPermissionService {
     async getFor(identity: PolicyIdentity) : Promise<Permission[]> {
         switch (identity.type) {
             case 'client': {
-                return this.getForClient(identity.id);
+                return this.getForClient(identity);
             }
             case 'user': {
-                return this.getForUser(identity.id);
+                return this.getForUser(identity);
             }
             case 'robot': {
-                return this.getForRobot(identity.id);
+                return this.getForRobot(identity);
             }
             case 'role': {
-                return this.getForRole(identity.id);
+                return this.getForRole(identity);
             }
         }
 
         return [];
     }
 
-    async getForClient(id: string) : Promise<Permission[]> {
-        const permissions = await this.clientRepository.getBoundPermissions(id);
-        const roles = await this.clientRepository.getBoundRoles(id);
-        const rolePermissions = await this.getForRoles(roles);
+    async getForClient(identity: PolicyIdentity) : Promise<Permission[]> {
+        const permissions = await this.clientRepository.getBoundPermissions(identity.id);
+        const roles = await this.clientRepository.getBoundRoles(identity.id);
+        const rolePermissions = await this.roleRepository.getBoundPermissionsForMany(roles);
         if (rolePermissions.length === 0) {
             return permissions;
         }
@@ -85,10 +85,14 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForUser(id: string) : Promise<Permission[]> {
-        const permissions = await this.userRepository.getBoundPermissions(id);
-        const roles = await this.userRepository.getBoundRoles(id);
-        const rolePermissions = await this.getForRoles(roles);
+    async getForUser(identity: PolicyIdentity) : Promise<Permission[]> {
+        const permissions = await this.userRepository.getBoundPermissions(identity.id)
+            .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
+
+        const roles = await this.userRepository.getBoundRoles(identity.id)
+            .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
+
+        const rolePermissions = await this.roleRepository.getBoundPermissionsForMany(roles);
         if (rolePermissions.length === 0) {
             return permissions;
         }
@@ -99,10 +103,14 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForRobot(id: string) : Promise<Permission[]> {
-        const permissions = await this.robotRepository.getBoundPermissions(id);
-        const roles = await this.robotRepository.getBoundRoles(id);
-        const rolePermissions = await this.getForRoles(roles);
+    async getForRobot(identity: PolicyIdentity) : Promise<Permission[]> {
+        const permissions = await this.robotRepository.getBoundPermissions(identity.id)
+            .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
+
+        const roles = await this.robotRepository.getBoundRoles(identity.id)
+            .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
+
+        const rolePermissions = await this.roleRepository.getBoundPermissionsForMany(roles);
         if (rolePermissions.length === 0) {
             return permissions;
         }
@@ -113,15 +121,19 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForRole(entity: Role | string) : Promise<Permission[]> {
-        return this.getForRoles([entity]);
+    async getForRole(identity: PolicyIdentity) : Promise<Permission[]> {
+        return this.roleRepository.getBoundPermissions(identity.id)
+            .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
     }
 
-    async getForRoles(entities: (Role | string)[]) : Promise<Permission[]> {
-        if (entities.length === 0) {
-            return [];
+    private reduceEntitiesByIdentityClient<T extends { client_id?: string | null }>(
+        entities: T[],
+        identity: PolicyIdentity,
+    ): T[] {
+        if (!identity.clientId) {
+            return entities;
         }
 
-        return this.roleRepository.getBoundPermissionsForMany(entities);
+        return entities.filter((entity) => entity.client_id === identity.clientId);
     }
 }

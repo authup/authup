@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client } from '../client';
 import type { Realm } from '../realm';
 
 export interface Role {
@@ -22,6 +23,11 @@ export interface Role {
 
     // ------------------------------------------------------------------
 
+    client_id: Client['id'] | null;
+
+    client: Client | null;
+
+    // ------------------------------------------------------------------
     realm_id: Realm['id'] | null;
 
     realm: Realm | null;

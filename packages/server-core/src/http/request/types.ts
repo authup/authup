@@ -5,21 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RequestPermissionChecker } from './permission';
-
 export type RequestIdentity = {
     id: string;
     type: 'user' | 'client' | 'robot',
+    clientId?: string | null,
     realmId: string,
     realmName: string
     attributes?: Record<string, any>,
-};
-
-export type RequestEnv = {
-    identity?: RequestIdentity,
-
-    token?: string,
-    scopes?: string[],
-
-    permissionChecker: RequestPermissionChecker
 };

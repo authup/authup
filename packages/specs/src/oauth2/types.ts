@@ -114,6 +114,7 @@ export type OAuth2TokenPermission = {
         type: string,
         [key: string]: any,
     },
+    client_id?: string | null,
     realm_id?: string
 };
 

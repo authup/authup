@@ -6,22 +6,33 @@
  */
 
 import { createValidator } from '@validup/adapter-zod';
-import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import { z } from 'zod';
 import type { PermissionItem } from '../../../../permission';
 
 export class PolicyDataPermissionValidator extends Container<PermissionItem> {
-    constructor(options: ContainerOptions<PermissionItem> = {}) {
-        super(options);
+    initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
+        this.mount('name', createValidator(
+            z.string()
+                .min(3)
+                .max(256),
+        ));
 
-    mountAll() {
-        this.mount('name', createValidator(z.string().min(3).max(256)));
+        this.mount('clientId', createValidator(
+            z.string().uuid()
+                .or(z.null())
+                .or(z.undefined())
+                .optional(),
+        ));
 
-        this.mount('realm_id', createValidator(z.string().uuid().optional()));
+        this.mount('realmId', createValidator(
+            z.string().uuid()
+                .or(z.null())
+                .or(z.undefined())
+                .optional(),
+        ));
 
         this.mount('policy', createValidator(z.object({
             type: z.string(),

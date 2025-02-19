@@ -254,7 +254,11 @@ export function createStore(context: StoreCreateContext) {
                 }
 
                 if (response.permissions) {
-                    permissionRepository.setMany(response.permissions);
+                    permissionRepository.setMany(response.permissions.map((permission) => ({
+                        name: permission.name,
+                        realmId: permission.realm_id,
+                        clientId: permission.client_id,
+                    })));
                 }
             });
     };

@@ -27,7 +27,7 @@ RoleEntity
                 .isString()
                 .isLength({
                     min: 3,
-                    max: 64,
+                    max: 128,
                 })
                 .custom((value) => isRoleNameValid(value, { throwOnFailure: true }));
         });

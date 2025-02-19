@@ -6,19 +6,15 @@
  */
 
 import { createValidator } from '@validup/adapter-zod';
-import { Container, type ContainerOptions } from 'validup';
+import { Container } from 'validup';
 import { z } from 'zod';
 import type { TimePolicy } from './types';
 import { TimePolicyInterval } from './constants';
 
 export class TimePolicyValidator extends Container<TimePolicy> {
-    constructor(options: ContainerOptions<TimePolicy> = {}) {
-        super(options);
+    initialize() {
+        super.initialize();
 
-        this.mountAll();
-    }
-
-    mountAll() {
         this.mount('dayOfWeek', createValidator(
             z.number()
                 .min(0).max(6)

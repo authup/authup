@@ -141,7 +141,9 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     // ------------------------------------------------------------------
 
-    async getBoundRoles(entity: string | User) : Promise<Role[]> {
+    async getBoundRoles(
+        entity: string | User,
+    ) : Promise<Role[]> {
         let id : string;
         if (typeof entity === 'string') {
             id = entity;

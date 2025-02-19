@@ -55,7 +55,8 @@ export class RobotRepository extends Repository<RobotEntity> {
                 },
             });
 
-        return entities.map((entity) => entity.role);
+        return entities
+            .map((entity) => entity.role);
     }
 
     async getBoundPermissions(
@@ -86,7 +87,8 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
         });
 
-        return entities.map((entity) => entity.permission);
+        return entities
+            .map((entity) => entity.permission);
     }
 
     /**
