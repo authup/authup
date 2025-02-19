@@ -20,5 +20,5 @@ export function isPermissionItemEqual(a: PermissionItem, b: PermissionItem): boo
         return a.clientId === b.clientId;
     }
 
-    return !!a.realmId === !!b.realmId;
+    return !!a.realmId === !!b.realmId && !!a.clientId === !!b.clientId;
 }
