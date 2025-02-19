@@ -143,7 +143,6 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     async getBoundRoles(
         entity: string | User,
-        clientId?: string | null,
     ) : Promise<Role[]> {
         let id : string;
         if (typeof entity === 'string') {
@@ -152,27 +151,19 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             id = entity.id;
         }
 
-        const where : FindOptionsWhere<UserRoleEntity> = {
-            user_id: id,
-        };
-
-        if (clientId) {
-            where.role = {
-                client_id: clientId,
-            };
-        }
-
         const items = await this.manager
             .getRepository(UserRoleEntity)
             .find({
-                where,
+                where: {
+                    user_id: id,
+                },
                 relations: {
                     role: true,
                 },
                 cache: {
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.USER_OWNED_ROLES,
-                        key: id + (clientId ? `:${clientId}` : ''),
+                        key: id,
                     }),
                     milliseconds: 60_000,
                 },
@@ -183,7 +174,6 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     async getBoundPermissions(
         entity: string | User,
-        clientId?: string | null,
     ) : Promise<Permission[]> {
         let id : string;
         if (typeof entity === 'string') {
@@ -194,25 +184,17 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
         const repository = this.manager.getRepository(UserPermissionEntity);
 
-        const where : FindOptionsWhere<UserPermissionEntity> = {
-            user_id: id,
-        };
-
-        if (clientId) {
-            where.permission = {
-                client_id: clientId,
-            };
-        }
-
         const entities = await repository.find({
-            where,
+            where: {
+                user_id: id,
+            },
             relations: {
                 permission: true,
             },
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    key: id + (clientId ? `:${clientId}` : ''),
+                    key: id,
                 }),
                 milliseconds: 60_000,
             },

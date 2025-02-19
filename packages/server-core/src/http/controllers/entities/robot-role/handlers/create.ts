@@ -51,6 +51,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
         const hasPermissions = await identityPermissionService.hasSuperset(identity, {
             type: 'role',
             id: data.role_id,
+            clientId: data.role.client_id,
         });
         if (!hasPermissions) {
             throw new ForbiddenError('You don\'t own the required permissions.');

@@ -50,7 +50,8 @@ export async function createClientRoleRouteHandler(req: Request, res: Response) 
         const identityPermissionService = new IdentityPermissionService(dataSource);
         const hasPermissions = await identityPermissionService.hasSuperset(identity, {
             type: 'role',
-            id: data.role_id,
+            id: data.role.id,
+            clientId: data.role.client_id,
         });
         if (!hasPermissions) {
             throw new ForbiddenError('You don\'t own the required permissions.');

@@ -56,7 +56,9 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
     >): Promise<boolean> {
         const dataSource = await useDataSource();
         const identityPermissionService = new IdentityPermissionService(dataSource);
-        const permissionsAll = await identityPermissionService.getFor(ctx.data.identity)
+
+        // get all identity permissions with applicable client(_id) restriction
+        const identityPermissions = await identityPermissionService.getFor(ctx.data.identity)
             .then((permissions) => permissions.filter((item) => {
                 if (item.name !== ctx.data.permission.name) {
                     return false;
@@ -80,17 +82,16 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
                 return realmId === item.realm_id && clientId === item.client_id;
             }));
 
-        if (permissionsAll.length === 0) {
+        if (identityPermissions.length === 0) {
             return maybeInvertPolicyOutcome(false, ctx.spec.invert);
         }
 
-        const permissions = mergePermissionItems(permissionsAll);
-
-        if (permissions.length === 0) {
+        const permissionsMerged = mergePermissionItems(identityPermissions);
+        if (permissionsMerged.length === 0) {
             return maybeInvertPolicyOutcome(false, ctx.spec.invert);
         }
 
-        const policies = permissions
+        const policies = permissionsMerged
             .filter((permission) => !!permission.policy)
             .map((permission) => permission.policy);
 

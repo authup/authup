@@ -69,6 +69,7 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
     const hasPermissions = await identityPermissionService.hasSuperset(identity, {
         type: 'role',
         id: data.role_id,
+        clientId: data.role.client_id,
     });
     if (!hasPermissions) {
         throw new ForbiddenError('You don\'t own the required permissions.');
