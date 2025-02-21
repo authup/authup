@@ -36,7 +36,6 @@ import {
     useTranslationsForGroup,
     useTranslationsForNestedValidation,
 } from '../../core';
-import type { AEntityPicker } from '../AEntityPicker';
 import { APolicyPicker } from '../policy/APolicyPicker';
 import { ARealmPicker } from '../realm';
 
@@ -48,7 +47,7 @@ export const APermissionForm = defineComponent({
     },
     emits: defineResourceVEmitOptions<Permission>(),
     setup(props, ctx) {
-        const policyPickerVNode = ref(null) as Ref<null | typeof AEntityPicker>;
+        const policyPickerVNode = ref(null) as Ref<null | typeof ARealmPicker>;
         const busy = ref(false);
 
         const form = reactive({
@@ -225,7 +224,7 @@ export const APermissionForm = defineComponent({
                 content: h(APolicyPicker, {
                     ref: policyPickerVNode,
                     value: $v.value.policy_id.$model,
-                    onChange(input: string[]) {
+                    onChange: (input: string[]) => {
                         $v.value.policy_id.$model = input.length > 0 ? input[0] : '';
                     },
                     query: {

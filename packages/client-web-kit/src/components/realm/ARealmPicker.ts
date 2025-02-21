@@ -6,18 +6,25 @@
  */
 
 import type { Realm } from '@authup/core-kit';
+import type { SlotsType } from 'vue';
 import {
     defineComponent,
 } from 'vue';
-import { AEntityPicker, defineEntityPickerVProps } from '../AEntityPicker';
+import { defineResourcePicker, defineResourcePickerVEmitOptions, defineResourcePickerVProps } from '../utility/resource-picker/module';
+import type { ResourcePickerVSlots } from '../utility/resource-picker/types';
+import { ARealms } from './ARealms';
 
 export const ARealmPicker = defineComponent({
-    extends: AEntityPicker,
-    props: defineEntityPickerVProps<Realm>(),
+    props: defineResourcePickerVProps<Realm>(),
+    emits: defineResourcePickerVEmitOptions<Realm>(),
+    slots: Object as SlotsType<ResourcePickerVSlots<Realm>>,
     setup(props, setup) {
-        return AEntityPicker.setup!({
-            ...props,
-            componentName: 'ARealms',
-        }, setup);
+        const { render } = defineResourcePicker({
+            component: ARealms,
+            props,
+            setup,
+        });
+
+        return () => render();
     },
 });

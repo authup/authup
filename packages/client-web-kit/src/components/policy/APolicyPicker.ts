@@ -7,41 +7,47 @@
 
 import type { Policy } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
+import type { SlotsType } from 'vue';
 import {
     defineComponent, h,
 } from 'vue';
-import type { EntityPickerVSlots } from '../AEntityPicker';
-import { AEntityPicker, defineEntityPickerVProps } from '../AEntityPicker';
+import { defineResourcePicker, defineResourcePickerVEmitOptions, defineResourcePickerVProps } from '../utility/resource-picker/module';
+import type { ResourcePickerVSlots } from '../utility/resource-picker/types';
+import { APolicies } from './APolicies';
 import { APolicyParentAssignment } from './APolicyParentAssignment';
 
 export const APolicyPicker = defineComponent({
-    extends: AEntityPicker,
     props: {
         parentId: {
             type: String,
         },
-        ...defineEntityPickerVProps<Policy>(),
+        ...defineResourcePickerVProps<Policy>(),
     },
+    slots: Object as SlotsType<ResourcePickerVSlots<Policy>>,
+    emits: defineResourcePickerVEmitOptions<Policy>(),
     setup(props, { slots, ...setup }) {
-        return AEntityPicker.setup!({
-            ...props,
-            componentName: 'APolicies',
-        }, {
-            ...setup,
-            slots: {
-                [SlotName.ITEM_ACTIONS]: (slotProps: EntityPickerVSlots<Policy>) => {
-                    if (props.parentId) {
-                        return h(APolicyParentAssignment, {
-                            entity: slotProps.data,
-                            entityId: slotProps.data.id,
-                            parentId: props.parentId,
-                        });
-                    }
-
-                    return undefined;
+        const { render } = defineResourcePicker({
+            component: APolicies,
+            props,
+            setup: {
+                ...setup,
+                slots: {
+                    ...(
+                        props.parentId ? {
+                            [SlotName.ITEM_ACTIONS]: (
+                                slotProps: ResourcePickerVSlots<Policy>['itemActions'],
+                            ) => h(APolicyParentAssignment, {
+                                entity: slotProps.data,
+                                entityId: slotProps.data.id,
+                                parentId: props.parentId as string,
+                            }),
+                        } : {}
+                    ),
+                    ...slots,
                 },
-                ...slots,
             },
         });
+
+        return () => render();
     },
 });

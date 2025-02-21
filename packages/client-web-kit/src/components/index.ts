@@ -34,4 +34,3 @@ export * from './user-role';
 
 export * from './utility';
 export { AEntityDelete } from './AEntityDelete';
-export { AEntityPicker } from './AEntityPicker';
