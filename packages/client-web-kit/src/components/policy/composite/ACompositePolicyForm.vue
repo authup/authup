@@ -9,11 +9,11 @@ import { IVuelidate } from '@ilingo/vuelidate';
 import { VCFormGroup } from '@vuecs/form-controls';
 import type { CompositePolicy } from '@authup/access';
 import { onChange, useUpdatedAt } from '../../../composables';
-import { APolicyChildrenPicker } from '../APolicyChildrenPicker';
+import { APolicyPicker } from '../APolicyPicker';
 
 export default defineComponent({
     components: {
-        APolicyChildrenPicker,
+        APolicyChildrenPicker: APolicyPicker,
         VCFormGroup,
         IVuelidate,
     },
@@ -123,7 +123,7 @@ export default defineComponent({
                         :parent-id="id"
                         :query="query"
                         :value="vuelidate.items.$model"
-                        @changed="handleUpdated"
+                        @change="handleUpdated"
                     />
                 </VCFormGroup>
             </template>

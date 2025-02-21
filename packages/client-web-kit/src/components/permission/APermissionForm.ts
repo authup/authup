@@ -8,10 +8,10 @@
 import type { Permission } from '@authup/core-kit';
 import { ResourceType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
-import type { PropType, VNodeArrayChildren } from 'vue';
+import type { PropType, Ref, VNodeArrayChildren } from 'vue';
 import {
     computed,
-    defineComponent, h, reactive, ref, watch,
+    defineComponent, h, nextTick, reactive, ref, watch,
 } from 'vue';
 import {
     maxLength, minLength, required,
@@ -29,8 +29,15 @@ import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
     createResourceManager,
-    defineResourceVEmitOptions, getVuelidateSeverity, injectStore, storeToRefs, useTranslationsForGroup, useTranslationsForNestedValidation,
+    defineResourceVEmitOptions,
+    getVuelidateSeverity,
+    injectStore,
+    storeToRefs,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
 } from '../../core';
+import type { AEntityPicker } from '../AEntityPicker';
+import { APolicyPicker } from '../policy/APolicyPicker';
 import { ARealmPicker } from '../realm';
 
 export const APermissionForm = defineComponent({
@@ -41,6 +48,7 @@ export const APermissionForm = defineComponent({
     },
     emits: defineResourceVEmitOptions<Permission>(),
     setup(props, ctx) {
+        const policyPickerVNode = ref(null) as Ref<null | typeof AEntityPicker>;
         const busy = ref(false);
 
         const form = reactive({
@@ -48,6 +56,7 @@ export const APermissionForm = defineComponent({
             display_name: '',
             description: '',
             realm_id: '',
+            policy_id: '',
         });
 
         const $v = useVuelidate({
@@ -68,6 +77,9 @@ export const APermissionForm = defineComponent({
                 maxLength: maxLength(4096),
             },
             realm_id: {
+
+            },
+            policy_id: {
 
             },
         }, form);
@@ -96,6 +108,10 @@ export const APermissionForm = defineComponent({
 
         function initForm() {
             assignFormProperties(form, manager.data.value);
+
+            if (realmId.value) {
+                form.realm_id = realmId.value;
+            }
         }
 
         watch(updatedAt, (val, oldVal) => {
@@ -125,6 +141,7 @@ export const APermissionForm = defineComponent({
                 { key: TranslatorTranslationDefaultKey.NAME },
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.POLICY },
                 { key: TranslatorTranslationDefaultKey.REALM },
             ],
         );
@@ -189,10 +206,36 @@ export const APermissionForm = defineComponent({
                         multiple: false,
                         onChange(input: string[]) {
                             $v.value.realm_id.$model = input.length > 0 ? input[0] : '';
+
+                            nextTick(() => {
+                                if (policyPickerVNode.value) {
+                                    policyPickerVNode.value.load();
+                                }
+                            });
                         },
                     }),
                 }));
             }
+
+            children.push(buildFormGroup({
+                validationMessages: translationsValidation.policy_id.value,
+                validationSeverity: getVuelidateSeverity($v.value.policy_id),
+                label: true,
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.POLICY].value,
+                content: h(APolicyPicker, {
+                    ref: policyPickerVNode,
+                    value: $v.value.policy_id.$model,
+                    onChange(input: string[]) {
+                        $v.value.policy_id.$model = input.length > 0 ? input[0] : '';
+                    },
+                    query: {
+                        filters: {
+                            parent_id: null,
+                            ...(form.realm_id ? { realm_id: form.realm_id } : {}),
+                        },
+                    },
+                }),
+            }));
 
             children.push(buildFormSubmitWithTranslations({
                 submit,
