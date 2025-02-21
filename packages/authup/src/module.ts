@@ -51,9 +51,11 @@ export async function createCLIEntryPointCommand() {
                 ctx.args.package.split(',') :
                 [];
 
-            pkgs = pkgs
-                .map((pkg) => normalizePackageID(pkg))
-                .filter((pkg) => Boolean(pkg));
+            if (pkgs.length > 0) {
+                pkgs = pkgs
+                    .map((pkg) => normalizePackageID(pkg))
+                    .filter((pkg) => Boolean(pkg));
+            }
 
             if (pkgs.length === 0) {
                 pkgs = Object.values(PackageID);

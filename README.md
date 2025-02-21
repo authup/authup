@@ -18,6 +18,8 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 - [Features](#features)
 - [Documentation](#documentation)
 - [Usage](#usage)
+  - [Production](#production)
+  - [Development](#development)
 - [Packages](#packages)
 - [Contributing](#contributing)
 - [License](#license)
@@ -47,7 +49,8 @@ To read the docs, visit [https://authup.org](https://authup.org)
 
 How Authup can be configured and set up in detail, you can find out [here](https://authup.org/guide/deployment/).
 
-### Docker
+### Production
+#### Docker
 
 The **recommended** and optimal way to set up authup is using docker.
 
@@ -68,7 +71,7 @@ $ docker run \
   authup/authup:latest client/web start
 ```
 
-### Bare Metal
+#### Bare Metal
 
 The easiest way to get the framework up and running, is by using the global CLI.
 Therefore, execute the following shell command.
@@ -82,6 +85,30 @@ To find out how to configure and set up the bare metal variant in detail, click 
 This will lunch the following application with default settings:
 - Frontend Application: `http://localhost:3000/`
 - Backend Application: `http://localhost:3001/`
+
+### Development
+
+**1**. Installation
+```shell
+$ npm i
+```
+
+**2**. Build packages
+```shell
+$ npm run build
+```
+
+**3**. Start frontend & backend in separate terminals
+
+**Backend**
+```shell
+$ npm run cli-dev --workspace=pacakges/server-core -- start
+```
+
+**Frontend**
+```shell
+$ npm run dev --workspace=packages/client-web
+```
 
 ## Packages
 The repository contains the following packages:
