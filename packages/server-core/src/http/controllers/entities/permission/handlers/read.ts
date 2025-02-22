@@ -14,7 +14,7 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PermissionEntity, resolveRealm } from '../../../../../database/domains';
+import { PermissionEntity, PolicyRepository, resolveRealm } from '../../../../../database/domains';
 import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
 
 export async function getManyPermissionRouteHandler(req: Request, res: Response): Promise<any> {
@@ -39,12 +39,23 @@ export async function getManyPermissionRouteHandler(req: Request, res: Response)
         pagination: {
             maxLimit: 50,
         },
+        relations: {
+            allowed: ['policy'],
+        },
         sort: {
             allowed: ['id', 'name', 'created_at', 'updated_at'],
         },
     });
 
     const [entities, total] = await query.getManyAndCount();
+
+    // todo: this should be optimized, first check query input
+    const policyRepository = new PolicyRepository(dataSource);
+    for (let i = 0; i < entities.length; i++) {
+        if (entities[i].policy) {
+            await policyRepository.findDescendantsTree(entities[i].policy);
+        }
+    }
 
     return send(res, {
         data: entities,
@@ -84,10 +95,21 @@ export async function getOnePermissionRouteHandler(req: Request, res: Response):
         }
     }
 
-    const result = await query.getOne();
+    applyQuery(query, useRequestQuery(req), {
+        defaultAlias: 'permission',
+        relations: {
+            allowed: ['policy'],
+        },
+    });
 
+    const result = await query.getOne();
     if (!result) {
         throw new NotFoundError();
+    }
+
+    if (result.policy) {
+        const repository = new PolicyRepository(dataSource);
+        await repository.findDescendantsTree(result.policy);
     }
 
     return send(res, result);

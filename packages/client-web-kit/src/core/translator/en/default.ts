@@ -34,6 +34,7 @@ export const TranslatorTranslationDefaultEnglish : LinesRecord = {
     [TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS]: 'identity providers',
     [TranslatorTranslationDefaultKey.NAME]: 'name',
     [TranslatorTranslationDefaultKey.DESCRIPTION]: 'description',
+    [TranslatorTranslationDefaultKey.POLICY]: 'policy',
     [TranslatorTranslationDefaultKey.POLICIES]: 'policies',
     [TranslatorTranslationDefaultKey.PERMISSIONS]: 'permissions',
     [TranslatorTranslationDefaultKey.REALM]: 'realm',

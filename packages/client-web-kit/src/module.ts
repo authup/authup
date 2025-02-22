@@ -15,11 +15,7 @@ import {
 } from './core';
 import type { Options } from './types';
 
-export function installComponents(input?: boolean | string[]) {
-    if (!input) {
-        return;
-    }
-
+export function installComponents(app: App, input?: boolean | string[]) {
     let componentsSelected: undefined | string[];
     if (typeof input !== 'boolean') {
         componentsSelected = input;
@@ -64,5 +60,5 @@ export function install(app: App, options: Options): void {
         locale: options.translatorLocale,
     });
 
-    installComponents(options.components);
+    installComponents(app, options.components);
 }

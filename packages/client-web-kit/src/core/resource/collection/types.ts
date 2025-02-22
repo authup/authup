@@ -27,7 +27,7 @@ import type {
     Ref, SetupContext, VNodeChild,
 } from 'vue';
 import type { ResourceSocketManagerCreateContext } from '../socket';
-import type { EntityListSlotName } from './constants';
+import type { ResourceCollectionSlotName } from './constants';
 
 type Entity<T> = T extends Record<string, any> ? T : never;
 
@@ -84,15 +84,15 @@ export type ResourceCollectionManager<T extends Record<string, any>> = {
 };
 
 export type ResourceCollectionVSlots<T extends Record<string, any>> = {
-    [EntityListSlotName.BODY]: ListBodySlotProps<T, ListMeta<T>>,
-    [EntityListSlotName.DEFAULT]: ListSlotProps<T, ListMeta<T>>,
-    [EntityListSlotName.ITEM]: ListItemSlotProps<T>, // todo: add generic
-    [EntityListSlotName.ITEM_ACTIONS]: ListItemSlotProps<T>, // todo: add generic
-    [EntityListSlotName.ITEM_ACTIONS_EXTRA]: ListItemSlotProps<T>, // todo: add generic
-    [EntityListSlotName.HEADER]: ListHeaderSlotProps<T, ListMeta<T>>,
-    [EntityListSlotName.FOOTER]: ListFooterSlotProps<T, ListMeta<T>>,
-    [EntityListSlotName.NO_MORE]: undefined,
-    [EntityListSlotName.LOADING]: undefined
+    [ResourceCollectionSlotName.BODY]: ListBodySlotProps<T, ListMeta<T>>,
+    [ResourceCollectionSlotName.DEFAULT]: ListSlotProps<T, ListMeta<T>>,
+    [ResourceCollectionSlotName.ITEM]: ListItemSlotProps<T>, // todo: add generic
+    [ResourceCollectionSlotName.ITEM_ACTIONS]: ListItemSlotProps<T>, // todo: add generic
+    [ResourceCollectionSlotName.ITEM_ACTIONS_EXTRA]: ListItemSlotProps<T>, // todo: add generic
+    [ResourceCollectionSlotName.HEADER]: ListHeaderSlotProps<T, ListMeta<T>>,
+    [ResourceCollectionSlotName.FOOTER]: ListFooterSlotProps<T, ListMeta<T>>,
+    [ResourceCollectionSlotName.NO_MORE]: undefined,
+    [ResourceCollectionSlotName.LOADING]: undefined
 };
 
 export type ResourceCollectionVEmitOptions<T> = {
