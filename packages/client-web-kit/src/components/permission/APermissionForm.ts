@@ -205,6 +205,7 @@ export const APermissionForm = defineComponent({
                         multiple: false,
                         onChange(input: string[]) {
                             $v.value.realm_id.$model = input.length > 0 ? input[0] : '';
+                            $v.value.policy_id.$model = '';
 
                             nextTick(() => {
                                 if (policyPickerVNode.value) {

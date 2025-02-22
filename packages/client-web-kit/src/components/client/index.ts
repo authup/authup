@@ -7,4 +7,5 @@
 
 export { AClient } from './AClient';
 export { AClientForm } from './AClientForm';
+export { AClientPicker } from './AClientPicker';
 export { AClients } from './AClients';

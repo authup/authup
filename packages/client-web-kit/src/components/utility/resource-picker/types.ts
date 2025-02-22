@@ -38,5 +38,8 @@ export type ResourcePickerContext<T extends RecordWithID> = {
     ResourcePickerVEmitOptions<T>,
     SlotsType<ResourcePickerVSlots<T>>
     >,
-    component: Component
+    /**
+     * Resource collection component.
+     */
+    component: Component | string
 };

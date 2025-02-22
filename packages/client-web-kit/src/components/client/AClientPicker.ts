@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core-kit';
+import type { Client } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import {
     defineComponent,
@@ -16,15 +16,15 @@ import {
     defineResourcePickerVProps,
 } from '../utility/resource-picker/module';
 import type { ResourcePickerVSlots } from '../utility/resource-picker/types';
-import { ARealms } from './ARealms';
+import { AClients } from './AClients';
 
-export const ARealmPicker = defineComponent({
-    props: defineResourcePickerVProps<Realm>(),
-    emits: defineResourcePickerVEmitOptions<Realm>(),
-    slots: Object as SlotsType<ResourcePickerVSlots<Realm>>,
+export const AClientPicker = defineComponent({
+    props: defineResourcePickerVProps<Client>(),
+    emits: defineResourcePickerVEmitOptions<Client>(),
+    slots: Object as SlotsType<ResourcePickerVSlots<Client>>,
     setup(props, setup) {
         const { render } = defineResourcePicker({
-            component: ARealms,
+            component: AClients,
             props,
             setup,
         });

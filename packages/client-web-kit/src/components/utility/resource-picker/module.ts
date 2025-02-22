@@ -6,7 +6,9 @@
  */
 
 import { SlotName } from '@vuecs/list-controls';
-import type { PropType, Ref, VNodeChild } from 'vue';
+import type {
+    PropType, Ref, VNodeChild,
+} from 'vue';
 import {
     computed, h, mergeProps, ref, toRef, watch,
 } from 'vue';
