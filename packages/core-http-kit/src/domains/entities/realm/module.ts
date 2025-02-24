@@ -10,34 +10,34 @@ import { buildQuery } from 'rapiq';
 import type { Realm } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
-export class RealmAPI extends BaseAPI implements DomainAPI<Realm> {
-    async getMany(data?: BuildInput<Realm>): Promise<CollectionResourceResponse<Realm>> {
+export class RealmAPI extends BaseAPI implements EntityAPI<Realm> {
+    async getMany(data?: BuildInput<Realm>): Promise<EntityCollectionResponse<Realm>> {
         const response = await this.client.get(`realms${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: Realm['id']): Promise<SingleResourceResponse<Realm>> {
+    async getOne(id: Realm['id']): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.get(`realms/${id}`);
 
         return response.data;
     }
 
-    async delete(id: Realm['id']): Promise<SingleResourceResponse<Realm>> {
+    async delete(id: Realm['id']): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.delete(`realms/${id}`);
 
         return response.data;
     }
 
-    async create(data: Partial<Realm>): Promise<SingleResourceResponse<Realm>> {
+    async create(data: Partial<Realm>): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.post('realms', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(realmId: Realm['id'], data: Partial<Realm>): Promise<SingleResourceResponse<Realm>> {
+    async update(realmId: Realm['id'], data: Partial<Realm>): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -46,7 +46,7 @@ export class RealmAPI extends BaseAPI implements DomainAPI<Realm> {
     async createOrUpdate(
         idOrName: string,
         data: Partial<Realm>,
-    ): Promise<SingleResourceResponse<Realm>> {
+    ): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.put(`realms/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

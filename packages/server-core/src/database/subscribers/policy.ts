@@ -9,9 +9,9 @@ import type {
     Policy,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName,
-    ResourceType,
-    buildResourceChannelName,
+    EntityDefaultEventName,
+    EntityType,
+    buildEntityChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -26,18 +26,18 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, PolicyEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: Policy,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.POLICY,
+            type: EntityType.POLICY,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.POLICY, id),
+                channel: (id) => buildEntityChannelName(EntityType.POLICY, id),
             },
         ],
     });
@@ -55,7 +55,7 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as Policy);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Policy);
     }
 
     async afterUpdate(event: UpdateEvent<PolicyEntity>): Promise<any> {
@@ -72,7 +72,7 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as Policy);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Policy);
     }
 
     async afterRemove(event: RemoveEvent<PolicyEntity>): Promise<any> {
@@ -89,6 +89,6 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as Policy);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Policy);
     }
 }

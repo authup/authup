@@ -9,9 +9,9 @@ import type {
     Realm,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName,
-    ResourceType,
-    buildResourceChannelName,
+    EntityDefaultEventName,
+    EntityType,
+    buildEntityChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -26,18 +26,18 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, RealmEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: Realm,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.REALM,
+            type: EntityType.REALM,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.REALM, id),
+                channel: (id) => buildEntityChannelName(EntityType.REALM, id),
             },
         ],
     });
@@ -55,7 +55,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as Realm);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Realm);
     }
 
     async afterUpdate(event: UpdateEvent<RealmEntity>): Promise<any> {
@@ -72,7 +72,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as Realm);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Realm);
     }
 
     async afterRemove(event: RemoveEvent<RealmEntity>): Promise<any> {
@@ -89,6 +89,6 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as Realm);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Realm);
     }
 }

@@ -11,35 +11,35 @@ import type { RoleAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type {
-    CollectionResourceResponse, DomainAPI, SingleResourceResponse,
+    EntityAPI, EntityCollectionResponse, EntityRecordResponse,
 } from '../../types-base';
 
-export class RoleAttributeAPI extends BaseAPI implements DomainAPI<RoleAttribute> {
-    async getMany(data?: BuildInput<RoleAttribute>): Promise<CollectionResourceResponse<RoleAttribute>> {
+export class RoleAttributeAPI extends BaseAPI implements EntityAPI<RoleAttribute> {
+    async getMany(data?: BuildInput<RoleAttribute>): Promise<EntityCollectionResponse<RoleAttribute>> {
         const response = await this.client.get(`role-attributes${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: RoleAttribute['id']): Promise<SingleResourceResponse<RoleAttribute>> {
+    async getOne(roleId: RoleAttribute['id']): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.get(`role-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async delete(roleId: RoleAttribute['id']): Promise<SingleResourceResponse<RoleAttribute>> {
+    async delete(roleId: RoleAttribute['id']): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.delete(`role-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async create(data: Partial<RoleAttribute>): Promise<SingleResourceResponse<RoleAttribute>> {
+    async create(data: Partial<RoleAttribute>): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.post('role-attributes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: RoleAttribute['id'], data: Partial<RoleAttribute>): Promise<SingleResourceResponse<RoleAttribute>> {
+    async update(id: RoleAttribute['id'], data: Partial<RoleAttribute>): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.post(`role-attributes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

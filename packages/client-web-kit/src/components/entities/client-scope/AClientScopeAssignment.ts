@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core-kit';
 import {
@@ -22,7 +22,7 @@ export const AClientScopeAssignment = defineComponent({
     emits: defineEntityVEmitOptions<ClientScope>(),
     async setup(props, setup) {
         const manager = defineEntityManager({
-            type: `${ResourceType.CLIENT_SCOPE}`,
+            type: `${EntityType.CLIENT_SCOPE}`,
             setup,
             socket: {
                 processEvent(event) {

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
@@ -82,7 +82,7 @@ export const ARoleForm = defineComponent({
         const storeRefs = storeToRefs(store);
 
         const manager = defineEntityManager({
-            type: `${ResourceType.ROLE}`,
+            type: `${EntityType.ROLE}`,
             setup: ctx,
             props,
         });

@@ -9,9 +9,9 @@ import type {
     RobotPermission,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -26,28 +26,28 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, RobotPermissionEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: RobotPermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildResourceChannelName(ResourceType.ROBOT_PERMISSION, id) },
+        { channel: (id) => buildEntityChannelName(EntityType.ROBOT_PERMISSION, id) },
     ];
     if (data.robot_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.ROBOT_PERMISSION, id),
-            namespace: buildResourceNamespaceName(data.robot_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.ROBOT_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.robot_realm_id),
         });
     }
     if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.ROBOT_PERMISSION, id),
-            namespace: buildResourceNamespaceName(data.permission_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.ROBOT_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.permission_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: ResourceType.ROBOT_PERMISSION,
+            type: EntityType.ROBOT_PERMISSION,
             event,
             data,
         },
@@ -72,7 +72,7 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
 
         return Promise.resolve(undefined);
     }
@@ -91,7 +91,7 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as RobotPermission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RobotPermission);
     }
 
     async afterRemove(event: RemoveEvent<RobotPermissionEntity>): Promise<any> {
@@ -108,6 +108,6 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

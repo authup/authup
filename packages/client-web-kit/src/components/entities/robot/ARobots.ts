@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core-kit';
@@ -26,7 +26,7 @@ export const ARobots = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Robot>(),
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
-            type: `${ResourceType.ROBOT}`,
+            type: `${EntityType.ROBOT}`,
             props,
             setup: ctx,
         });

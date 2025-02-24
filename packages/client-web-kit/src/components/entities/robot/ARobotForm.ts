@@ -23,7 +23,7 @@ import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type { Realm, Robot } from '@authup/core-kit';
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
@@ -99,7 +99,7 @@ export const ARobotForm = defineComponent({
         }, form);
 
         const manager = defineEntityManager({
-            type: `${ResourceType.ROBOT}`,
+            type: `${EntityType.ROBOT}`,
             setup: ctx,
             props,
         });

@@ -9,9 +9,9 @@ import type {
     User,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -27,22 +27,22 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, UserEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: User,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.USER,
+            type: EntityType.USER,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.USER, id),
-                namespace: buildResourceNamespaceName(data.realm_id),
+                channel: (id) => buildEntityChannelName(EntityType.USER, id),
+                namespace: buildEntityNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildResourceChannelName(ResourceType.USER, id),
+                channel: (id) => buildEntityChannelName(EntityType.USER, id),
             },
         ],
     });
@@ -60,7 +60,7 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<UserEntity>): Promise<any> {
@@ -77,7 +77,7 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as UserEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserEntity);
     }
 
     async afterRemove(event: RemoveEvent<UserEntity>): Promise<any> {
@@ -94,6 +94,6 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as UserEntity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as UserEntity);
     }
 }

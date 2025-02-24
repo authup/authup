@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength } from '@vuelidate/validators';
 import type { PropType, VNodeArrayChildren } from 'vue';
@@ -74,7 +74,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
         );
 
         const manager = defineEntityManager({
-            type: `${ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
+            type: `${EntityType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
             setup,
             socket: {
                 processEvent(event) {

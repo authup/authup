@@ -9,9 +9,9 @@ import type {
     Scope,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -27,22 +27,22 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, ScopeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: Scope,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.SCOPE,
+            type: EntityType.SCOPE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.USER, id),
-                namespace: buildResourceNamespaceName(data.realm_id),
+                channel: (id) => buildEntityChannelName(EntityType.USER, id),
+                namespace: buildEntityNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildResourceChannelName(ResourceType.USER, id),
+                channel: (id) => buildEntityChannelName(EntityType.USER, id),
             },
         ],
     });
@@ -60,7 +60,7 @@ export class ScopeSubscriber implements EntitySubscriberInterface<ScopeEntity> {
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<ScopeEntity>): Promise<any> {
@@ -77,7 +77,7 @@ export class ScopeSubscriber implements EntitySubscriberInterface<ScopeEntity> {
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as ScopeEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ScopeEntity);
     }
 
     async afterRemove(event: RemoveEvent<ScopeEntity>): Promise<any> {
@@ -94,6 +94,6 @@ export class ScopeSubscriber implements EntitySubscriberInterface<ScopeEntity> {
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as ScopeEntity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as ScopeEntity);
     }
 }

@@ -10,9 +10,9 @@ import type {
     Permission,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName,
-    ResourceType,
-    buildResourceChannelName,
+    EntityDefaultEventName,
+    EntityType,
+    buildEntityChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -27,18 +27,18 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, PermissionEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: Permission,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.PERMISSION,
+            type: EntityType.PERMISSION,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.PERMISSION, id),
+                channel: (id) => buildEntityChannelName(EntityType.PERMISSION, id),
             },
         ],
     });
@@ -56,7 +56,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as Permission);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Permission);
     }
 
     async afterUpdate(event: UpdateEvent<PermissionEntity>): Promise<any> {
@@ -81,7 +81,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as Permission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Permission);
     }
 
     async afterRemove(event: RemoveEvent<PermissionEntity>): Promise<any> {
@@ -103,6 +103,6 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as Permission);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Permission);
     }
 }

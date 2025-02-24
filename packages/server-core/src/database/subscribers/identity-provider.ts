@@ -7,7 +7,7 @@
 
 import type { IdentityProvider } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType, buildResourceChannelName, buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -22,22 +22,22 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, IdentityProviderEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: IdentityProvider,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.IDENTITY_PROVIDER,
+            type: EntityType.IDENTITY_PROVIDER,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER, id),
-                namespace: buildResourceNamespaceName(data.realm_id),
+                channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER, id),
+                namespace: buildEntityNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER, id),
+                channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER, id),
             },
         ],
     });
@@ -55,7 +55,7 @@ export class IdentityProviderSubscriber implements EntitySubscriberInterface<Ide
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as IdentityProvider);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as IdentityProvider);
     }
 
     async afterUpdate(event: UpdateEvent<IdentityProviderEntity>): Promise<any> {
@@ -72,7 +72,7 @@ export class IdentityProviderSubscriber implements EntitySubscriberInterface<Ide
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as IdentityProvider);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProvider);
     }
 
     async afterRemove(event: RemoveEvent<IdentityProviderEntity>): Promise<any> {
@@ -89,6 +89,6 @@ export class IdentityProviderSubscriber implements EntitySubscriberInterface<Ide
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as IdentityProvider);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as IdentityProvider);
     }
 }

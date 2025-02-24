@@ -6,8 +6,8 @@
  */
 
 import { hasOwnProperty } from '@authup/kit';
-import type { DomainAPI } from '@authup/core-http-kit';
-import type { ResourceTypeMap } from '@authup/core-kit';
+import type { EntityAPI } from '@authup/core-http-kit';
+import type { EntityTypeMap } from '@authup/core-kit';
 import type {
     ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput,
 } from '@vuecs/list-controls';
@@ -48,8 +48,8 @@ const merger = createMerger({
 type Entity<A> = A extends Record<string, any> ? A : never;
 
 function create<
-    TYPE extends keyof ResourceTypeMap,
-    RECORD extends ResourceTypeMap[TYPE],
+    TYPE extends keyof EntityTypeMap,
+    RECORD extends EntityTypeMap[TYPE],
 >(
     context: EntityCollectionManagerCreateContext<TYPE, RECORD>,
 ) : EntityCollectionManager<RECORD> {
@@ -78,7 +78,7 @@ function create<
 
     const client = injectHTTPClient();
 
-    let domainAPI : DomainAPI<Entity<RECORD>> | undefined;
+    let domainAPI : EntityAPI<Entity<RECORD>> | undefined;
     if (hasOwnProperty(client, context.type)) {
         domainAPI = client[context.type] as any;
     }
@@ -306,9 +306,9 @@ function create<
 }
 
 export function defineEntityCollectionManager<
-    A extends keyof ResourceTypeMap,
+    A extends keyof EntityTypeMap,
 >(
-    context: EntityCollectionManagerCreateContext<A, ResourceTypeMap[A]>,
-) : EntityCollectionManager<ResourceTypeMap[A]> {
+    context: EntityCollectionManagerCreateContext<A, EntityTypeMap[A]>,
+) : EntityCollectionManager<EntityTypeMap[A]> {
     return create(context);
 }

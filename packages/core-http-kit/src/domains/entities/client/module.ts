@@ -10,12 +10,12 @@ import { buildQuery } from 'rapiq';
 import type { Client } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
-export class ClientAPI extends BaseAPI implements DomainAPI<Client> {
+export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
     async getMany(
         options?: BuildInput<Client>,
-    ): Promise<CollectionResourceResponse<Client>> {
+    ): Promise<EntityCollectionResponse<Client>> {
         const response = await this.client
             .get(`clients${buildQuery(options)}`);
 
@@ -25,7 +25,7 @@ export class ClientAPI extends BaseAPI implements DomainAPI<Client> {
     async getOne(
         id: Client['id'],
         options?: BuildInput<Client>,
-    ): Promise<SingleResourceResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client
             .get(`clients/${id}${buildQuery(options)}`);
 
@@ -34,7 +34,7 @@ export class ClientAPI extends BaseAPI implements DomainAPI<Client> {
 
     async delete(
         id: Client['id'],
-    ): Promise<SingleResourceResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client
             .delete(`clients/${id}`);
 
@@ -43,7 +43,7 @@ export class ClientAPI extends BaseAPI implements DomainAPI<Client> {
 
     async create(
         data: Partial<Client>,
-    ): Promise<SingleResourceResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client
             .post('clients', nullifyEmptyObjectProperties(data));
 
@@ -53,7 +53,7 @@ export class ClientAPI extends BaseAPI implements DomainAPI<Client> {
     async update(
         id: Client['id'],
         data: Partial<Client>,
-    ): Promise<SingleResourceResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client.post(`clients/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -62,7 +62,7 @@ export class ClientAPI extends BaseAPI implements DomainAPI<Client> {
     async createOrUpdate(
         idOrName: string,
         data: Partial<Client>,
-    ): Promise<SingleResourceResponse<Client>> {
+    ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client.put(`clients/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

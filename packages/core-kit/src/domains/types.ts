@@ -9,7 +9,7 @@ import type { Client } from './client';
 import type { ClientPermission } from './client-permission';
 import type { ClientRole } from './client-role';
 import type { ClientScope } from './client-scope';
-import type { ResourceType } from './contstants';
+import type { EntityType } from './contstants';
 import type { IdentityProvider } from './identity-provider';
 import type { IdentityProviderAccount } from './identity-provider-account';
 import type { IdentityProviderAttribute } from './identity-provider-attribute';
@@ -30,34 +30,34 @@ import type { UserAttribute } from './user-attribute';
 import type { UserPermission } from './user-permission';
 import type { UserRole } from './user-role';
 
-type ResourceTypeMapRaw = {
-    [ResourceType.CLIENT]: Client,
-    [ResourceType.CLIENT_PERMISSION]: ClientPermission,
-    [ResourceType.CLIENT_ROLE]: ClientRole,
-    [ResourceType.CLIENT_SCOPE]: ClientScope,
-    [ResourceType.IDENTITY_PROVIDER]: IdentityProvider,
-    [ResourceType.IDENTITY_PROVIDER_ACCOUNT]: IdentityProviderAccount,
-    [ResourceType.IDENTITY_PROVIDER_ATTRIBUTE]: IdentityProviderAttribute,
-    [ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING]: IdentityProviderRoleMapping,
-    [ResourceType.POLICY]: Policy,
-    [ResourceType.POLICY_ATTRIBUTE]: PolicyAttribute,
-    [ResourceType.PERMISSION]: Permission,
-    [ResourceType.REALM]: Realm,
-    [ResourceType.ROBOT]: Robot,
-    [ResourceType.ROBOT_PERMISSION]: RobotPermission,
-    [ResourceType.ROBOT_ROLE]: RobotRole,
-    [ResourceType.ROLE]: Role,
-    [ResourceType.ROLE_ATTRIBUTE]: RoleAttribute,
-    [ResourceType.ROLE_PERMISSION]: RolePermission,
-    [ResourceType.SCOPE]: Scope,
-    [ResourceType.USER]: User,
-    [ResourceType.USER_ATTRIBUTE]: UserAttribute,
-    [ResourceType.USER_PERMISSION]: UserPermission,
-    [ResourceType.USER_ROLE]: UserRole,
+type EntityTypeMapRaw = {
+    [EntityType.CLIENT]: Client,
+    [EntityType.CLIENT_PERMISSION]: ClientPermission,
+    [EntityType.CLIENT_ROLE]: ClientRole,
+    [EntityType.CLIENT_SCOPE]: ClientScope,
+    [EntityType.IDENTITY_PROVIDER]: IdentityProvider,
+    [EntityType.IDENTITY_PROVIDER_ACCOUNT]: IdentityProviderAccount,
+    [EntityType.IDENTITY_PROVIDER_ATTRIBUTE]: IdentityProviderAttribute,
+    [EntityType.IDENTITY_PROVIDER_ROLE_MAPPING]: IdentityProviderRoleMapping,
+    [EntityType.POLICY]: Policy,
+    [EntityType.POLICY_ATTRIBUTE]: PolicyAttribute,
+    [EntityType.PERMISSION]: Permission,
+    [EntityType.REALM]: Realm,
+    [EntityType.ROBOT]: Robot,
+    [EntityType.ROBOT_PERMISSION]: RobotPermission,
+    [EntityType.ROBOT_ROLE]: RobotRole,
+    [EntityType.ROLE]: Role,
+    [EntityType.ROLE_ATTRIBUTE]: RoleAttribute,
+    [EntityType.ROLE_PERMISSION]: RolePermission,
+    [EntityType.SCOPE]: Scope,
+    [EntityType.USER]: User,
+    [EntityType.USER_ATTRIBUTE]: UserAttribute,
+    [EntityType.USER_PERMISSION]: UserPermission,
+    [EntityType.USER_ROLE]: UserRole,
 };
 
-export type ResourceTypeMap = {
-    [K in keyof ResourceTypeMapRaw as `${K}`]: ResourceTypeMapRaw[K]
+export type EntityTypeMap = {
+    [K in keyof EntityTypeMapRaw as `${K}`]: EntityTypeMapRaw[K]
 };
 
 export type EventRecord<
@@ -67,14 +67,4 @@ export type EventRecord<
     type: T,
     data: D,
     event: string,
-};
-
-export type SingleResourceResponse<R> = R;
-export type CollectionResourceResponse<R> = {
-    data: R[],
-    meta: {
-        limit: number,
-        offset: number,
-        total: number
-    }
 };

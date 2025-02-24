@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core-kit';
@@ -29,7 +29,7 @@ export const AIdentityProviders = defineComponent({
     emits: defineEntityCollectionVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
-            type: `${ResourceType.IDENTITY_PROVIDER}`,
+            type: `${EntityType.IDENTITY_PROVIDER}`,
             props,
             setup: ctx,
         });

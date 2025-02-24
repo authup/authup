@@ -10,12 +10,12 @@ import { buildQuery } from 'rapiq';
 import type { User } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
-export class UserAPI extends BaseAPI implements DomainAPI<User> {
+export class UserAPI extends BaseAPI implements EntityAPI<User> {
     async getMany(
         options?: BuildInput<User>,
-    ): Promise<CollectionResourceResponse<User>> {
+    ): Promise<EntityCollectionResponse<User>> {
         const response = await this.client
             .get(`users${buildQuery(options)}`);
 
@@ -25,7 +25,7 @@ export class UserAPI extends BaseAPI implements DomainAPI<User> {
     async getOne(
         id: User['id'],
         options?: BuildInput<User>,
-    ): Promise<SingleResourceResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .get(`users/${id}${buildQuery(options)}`);
 
@@ -34,7 +34,7 @@ export class UserAPI extends BaseAPI implements DomainAPI<User> {
 
     async delete(
         id: User['id'],
-    ): Promise<SingleResourceResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .delete(`users/${id}`);
 
@@ -43,7 +43,7 @@ export class UserAPI extends BaseAPI implements DomainAPI<User> {
 
     async create(
         data: Partial<User>,
-    ): Promise<SingleResourceResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .post('users', nullifyEmptyObjectProperties(data));
 
@@ -53,7 +53,7 @@ export class UserAPI extends BaseAPI implements DomainAPI<User> {
     async update(
         id: User['id'],
         data: Partial<User> & { password_repeat?: User['password'] },
-    ): Promise<SingleResourceResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client.post(`users/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -62,7 +62,7 @@ export class UserAPI extends BaseAPI implements DomainAPI<User> {
     async createOrUpdate(
         idOrName: string,
         data: Partial<User> & { password_repeat?: User['password'] },
-    ): Promise<SingleResourceResponse<User>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client.put(`users/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

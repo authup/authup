@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DomainAPI } from '@authup/core-http-kit';
-import type { ResourceTypeMap } from '@authup/core-kit';
+import type { EntityAPI } from '@authup/core-http-kit';
+import type { EntityTypeMap } from '@authup/core-kit';
 import { extendObject, hasOwnProperty } from '@authup/kit';
 import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
@@ -28,13 +28,13 @@ import type {
 import { buildEntityVSlotProps } from './helpers';
 
 function create<
-    TYPE extends keyof ResourceTypeMap,
-    RECORD extends ResourceTypeMap[TYPE],
+    TYPE extends keyof EntityTypeMap,
+    RECORD extends EntityTypeMap[TYPE],
 >(
     ctx: EntityManagerCreateContext<TYPE, RECORD>,
 ) : EntityManager<RECORD> {
     const client = injectHTTPClient();
-    let domainAPI : DomainAPI<RECORD> | undefined;
+    let domainAPI : EntityAPI<RECORD> | undefined;
     if (hasOwnProperty(client, ctx.type)) {
         domainAPI = client[ctx.type] as any;
     }
@@ -460,9 +460,9 @@ function create<
 }
 
 export function defineEntityManager<
-    TYPE extends keyof ResourceTypeMap,
+    TYPE extends keyof EntityTypeMap,
 >(
-    ctx: EntityManagerCreateContext<TYPE, ResourceTypeMap[TYPE]>,
-) : EntityManager<ResourceTypeMap[TYPE]> {
-    return create<TYPE, ResourceTypeMap[TYPE]>(ctx);
+    ctx: EntityManagerCreateContext<TYPE, EntityTypeMap[TYPE]>,
+) : EntityManager<EntityTypeMap[TYPE]> {
+    return create<TYPE, EntityTypeMap[TYPE]>(ctx);
 }

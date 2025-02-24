@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum ResourceType {
+export enum EntityType {
     CLIENT = 'client',
     CLIENT_PERMISSION = 'clientPermission',
     CLIENT_ROLE = 'clientRole',
@@ -31,7 +31,7 @@ export enum ResourceType {
     USER_ROLE = 'userRole',
 }
 
-export enum ResourceDefaultEventName {
+export enum EntityDefaultEventName {
     CREATED = 'created',
     DELETED = 'deleted',
     UPDATED = 'updated',

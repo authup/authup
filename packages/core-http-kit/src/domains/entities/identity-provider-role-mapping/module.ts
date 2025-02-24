@@ -10,28 +10,28 @@ import { buildQuery } from 'rapiq';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
-export class IdentityProviderRoleMappingAPI extends BaseAPI implements DomainAPI<IdentityProviderRoleMapping> {
-    async getMany(data: BuildInput<IdentityProviderRoleMapping>): Promise<CollectionResourceResponse<IdentityProviderRoleMapping>> {
+export class IdentityProviderRoleMappingAPI extends BaseAPI implements EntityAPI<IdentityProviderRoleMapping> {
+    async getMany(data: BuildInput<IdentityProviderRoleMapping>): Promise<EntityCollectionResponse<IdentityProviderRoleMapping>> {
         const response = await this.client.get(`identity-provider-role-mappings${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: IdentityProviderRoleMapping['id']): Promise<SingleResourceResponse<IdentityProviderRoleMapping>> {
+    async getOne(id: IdentityProviderRoleMapping['id']): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
         const response = await this.client.get(`identity-provider-role-mappings/${id}`);
 
         return response.data;
     }
 
-    async delete(id: IdentityProviderRoleMapping['id']): Promise<SingleResourceResponse<IdentityProviderRoleMapping>> {
+    async delete(id: IdentityProviderRoleMapping['id']): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
         const response = await this.client.delete(`identity-provider-role-mappings/${id}`);
 
         return response.data;
     }
 
-    async create(data: Partial<IdentityProviderRoleMapping>): Promise<SingleResourceResponse<IdentityProviderRoleMapping>> {
+    async create(data: Partial<IdentityProviderRoleMapping>): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
         const response = await this.client.post('identity-provider-role-mappings', nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -40,7 +40,7 @@ export class IdentityProviderRoleMappingAPI extends BaseAPI implements DomainAPI
     async update(
         id: IdentityProviderRoleMapping['id'],
         data: Partial<IdentityProviderRoleMapping>,
-    ): Promise<SingleResourceResponse<IdentityProviderRoleMapping>> {
+    ): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
         const response = await this.client.post(`identity-provider-role-mappings/${id}`, data);
 
         return response.data;

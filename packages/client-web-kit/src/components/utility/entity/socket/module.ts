@@ -6,12 +6,12 @@
  */
 
 import {
-    REALM_MASTER_NAME, ResourceDefaultEventName, buildResourceChannelName,
+    EntityDefaultEventName, REALM_MASTER_NAME, buildEntityChannelName,
 } from '@authup/core-kit';
 import type {
+    EntityType,
+    EntityTypeMap,
     EventRecord,
-    ResourceType,
-    ResourceTypeMap,
 } from '@authup/core-kit';
 import type { EventFullName, STCEventContext } from '@authup/core-realtime-kit';
 import { EventNameSuffix, buildEventFullName } from '@authup/core-realtime-kit';
@@ -87,7 +87,7 @@ function create<
 
         const channelName = ctx.buildChannelName ?
             ctx.buildChannelName(targetId.value) :
-            buildResourceChannelName(ctx.type, targetId.value);
+            buildEntityChannelName(ctx.type, targetId.value);
 
         if (event.meta.roomName !== channelName) {
             return false;
@@ -162,22 +162,22 @@ function create<
 
         if (ctx.onCreated) {
             socket.on(buildEventFullName(
-                ctx.type as `${ResourceType}`,
-                ResourceDefaultEventName.CREATED,
+                ctx.type as `${EntityType}`,
+                EntityDefaultEventName.CREATED,
             ), handleCreated);
         }
 
         if (ctx.onUpdated) {
             socket.on(buildEventFullName(
-                ctx.type as `${ResourceType}`,
-                ResourceDefaultEventName.UPDATED,
+                ctx.type as `${EntityType}`,
+                EntityDefaultEventName.UPDATED,
             ), handleUpdated);
         }
 
         if (ctx.onDeleted) {
             socket.on(buildEventFullName(
-                ctx.type as `${ResourceType}`,
-                ResourceDefaultEventName.DELETED,
+                ctx.type as `${EntityType}`,
+                EntityDefaultEventName.DELETED,
             ), handleDeleted);
         }
     };
@@ -208,22 +208,22 @@ function create<
 
         if (ctx.onCreated) {
             socket.off(buildEventFullName(
-                ctx.type as `${ResourceType}`,
-                ResourceDefaultEventName.UPDATED,
+                ctx.type as `${EntityType}`,
+                EntityDefaultEventName.UPDATED,
             ), handleCreated);
         }
 
         if (ctx.onUpdated) {
             socket.off(buildEventFullName(
-                ctx.type as `${ResourceType}`,
-                ResourceDefaultEventName.UPDATED,
+                ctx.type as `${EntityType}`,
+                EntityDefaultEventName.UPDATED,
             ), handleUpdated);
         }
 
         if (ctx.onDeleted) {
             socket.off(buildEventFullName(
-                ctx.type as `${ResourceType}`,
-                ResourceDefaultEventName.DELETED,
+                ctx.type as `${EntityType}`,
+                EntityDefaultEventName.DELETED,
             ), handleDeleted);
         }
     };
@@ -246,9 +246,9 @@ function create<
 }
 
 export function defineEntitySocketManager<
-    A extends keyof ResourceTypeMap,
+    A extends keyof EntityTypeMap,
 >(
-    ctx: EntitySocketManagerCreateContext<A, ResourceTypeMap[A]>,
+    ctx: EntitySocketManagerCreateContext<A, EntityTypeMap[A]>,
 ) : EntitySocketManager {
     return create(ctx);
 }

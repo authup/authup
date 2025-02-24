@@ -8,8 +8,8 @@
 import type { Client, RequestBaseOptions } from 'hapic';
 import type { BuildInput } from 'rapiq';
 
-export type SingleResourceResponse<R> = R;
-export type CollectionResourceResponse<R> = {
+export type EntityRecordResponse<R> = R;
+export type EntityCollectionResponse<R> = {
     data: R[],
     meta: {
         limit: number,
@@ -26,15 +26,15 @@ export type DomainEntityID<T> = T extends DomainEntityWithID ?
     T['id'] :
     never;
 
-export interface DomainAPISlim<T> {
-    getMany(record?: BuildInput<T>) : Promise<CollectionResourceResponse<T>>;
-    getOne(id: DomainEntityID<T>, record?: BuildInput<T>) : Promise<SingleResourceResponse<T>>;
-    delete(id: DomainEntityID<T>) : Promise<SingleResourceResponse<T>>;
-    create(data: Partial<T>) : Promise<SingleResourceResponse<T>>;
+export interface EntityAPISlim<T> {
+    getMany(record?: BuildInput<T>) : Promise<EntityCollectionResponse<T>>;
+    getOne(id: DomainEntityID<T>, record?: BuildInput<T>) : Promise<EntityRecordResponse<T>>;
+    delete(id: DomainEntityID<T>) : Promise<EntityRecordResponse<T>>;
+    create(data: Partial<T>) : Promise<EntityRecordResponse<T>>;
 }
 
-export interface DomainAPI<T> extends DomainAPISlim<T> {
-    update(id: DomainEntityID<T>, data: Partial<T>) : Promise<SingleResourceResponse<T>>;
+export interface EntityAPI<T> extends EntityAPISlim<T> {
+    update(id: DomainEntityID<T>, data: Partial<T>) : Promise<EntityRecordResponse<T>>;
 }
 
 export type BaseAPIContext = {

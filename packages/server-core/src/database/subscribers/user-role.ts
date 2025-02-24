@@ -9,9 +9,9 @@ import type {
     UserRole,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -26,28 +26,28 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, UserRoleEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: UserRole,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildResourceChannelName(ResourceType.USER_ROLE, id) },
+        { channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id) },
     ];
     if (data.user_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.USER_ROLE, id),
-            namespace: buildResourceNamespaceName(data.user_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id),
+            namespace: buildEntityNamespaceName(data.user_realm_id),
         });
     }
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.USER_ROLE, id),
-            namespace: buildResourceNamespaceName(data.role_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id),
+            namespace: buildEntityNamespaceName(data.role_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: ResourceType.USER_ROLE,
+            type: EntityType.USER_ROLE,
             event,
             data,
         },
@@ -76,7 +76,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<UserRoleEntity>): Promise<any> {
@@ -93,7 +93,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as UserRoleEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserRoleEntity);
     }
 
     async afterRemove(event: RemoveEvent<UserRoleEntity>): Promise<any> {
@@ -110,6 +110,6 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

@@ -18,8 +18,8 @@ import {
     mergeProps,
     ref, resolveDynamicComponent,
 } from 'vue';
-import type { ResourceType } from '@authup/core-kit';
-import type { DomainAPISlim } from '@authup/core-http-kit';
+import type { EntityType } from '@authup/core-kit';
+import type { EntityAPISlim } from '@authup/core-http-kit';
 import {
     TranslatorTranslationDefaultKey, TranslatorTranslationGroup, injectHTTPClient, useTranslation, wrapFnWithBusyState,
 } from '../../../core';
@@ -50,7 +50,7 @@ const AEntityDelete = defineComponent({
             required: true,
         },
         entityType: {
-            type: String as PropType<`${ResourceType}`>,
+            type: String as PropType<`${EntityType}`>,
             required: true,
         },
 
@@ -68,7 +68,7 @@ const AEntityDelete = defineComponent({
         const submit = wrapFnWithBusyState(busy, async () => {
             const domainAPI = (
                 apiClient as Record<string, any>
-            )[props.entityType] as DomainAPISlim<any> | undefined;
+            )[props.entityType] as EntityAPISlim<any> | undefined;
 
             if (!isObject(domainAPI)) {
                 return;

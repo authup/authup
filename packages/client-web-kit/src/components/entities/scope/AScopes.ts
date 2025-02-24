@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core-kit';
@@ -28,7 +28,7 @@ export const AScopes = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Scope>(),
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
-            type: ResourceType.SCOPE,
+            type: EntityType.SCOPE,
             props,
             setup: ctx,
         });

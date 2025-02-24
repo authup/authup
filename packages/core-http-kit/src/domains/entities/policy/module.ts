@@ -10,23 +10,23 @@ import { buildQuery } from 'rapiq';
 import type { Policy } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     BuiltInPolicyCreateRequest,
     BuiltInPolicyResponse, BuiltInPolicyUpdateRequest, PolicyAPICheckResponse, PolicyCreateRequest, PolicyResponse, PolicyUpdateRequest,
 } from './types';
 
-export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
+export class PolicyAPI extends BaseAPI implements EntityAPI<Policy> {
     async getMany<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(data?: BuildInput<Policy & { parent_id?: string | null }>): Promise<CollectionResourceResponse<OUTPUT>> {
+    >(data?: BuildInput<Policy & { parent_id?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {
         const response = await this.client.get(`policies${buildQuery(data)}`);
         return response.data;
     }
 
     async delete<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id']): Promise<SingleResourceResponse<OUTPUT>> {
+    >(id: Policy['id']): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.delete(`policies/${id}`);
 
         return response.data;
@@ -34,7 +34,7 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
 
     async getOne<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], record?: BuildInput<Policy>) : Promise<SingleResourceResponse<OUTPUT>> {
+    >(id: Policy['id'], record?: BuildInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.get(`policies/${id}${buildQuery(record)}`);
 
         return response.data;
@@ -42,7 +42,7 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
 
     async getOneExpanded<
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], record?: BuildInput<Policy>) : Promise<SingleResourceResponse<OUTPUT>> {
+    >(id: Policy['id'], record?: BuildInput<Policy>) : Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.get(`policies/${id}/expanded${buildQuery(record)}`);
 
         return response.data;
@@ -51,7 +51,7 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
     async create<
         INPUT extends PolicyCreateRequest = PolicyCreateRequest,
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(data: INPUT): Promise<SingleResourceResponse<OUTPUT>> {
+    >(data: INPUT): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.post('policies', nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -59,14 +59,14 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
 
     async createBuiltIn(
         data: BuiltInPolicyCreateRequest,
-    ): Promise<SingleResourceResponse<BuiltInPolicyResponse>> {
+    ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.create(data);
     }
 
     async update<
         INPUT extends PolicyUpdateRequest = PolicyUpdateRequest,
         OUTPUT extends PolicyResponse = PolicyResponse,
-    >(id: Policy['id'], data: INPUT): Promise<SingleResourceResponse<OUTPUT>> {
+    >(id: Policy['id'], data: INPUT): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.post(`policies/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -75,7 +75,7 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
     async updateBuiltIn(
         id: Policy['id'],
         data: BuiltInPolicyUpdateRequest,
-    ): Promise<SingleResourceResponse<BuiltInPolicyResponse>> {
+    ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.update(id, data);
     }
 
@@ -85,7 +85,7 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
     >(
         idOrName: string,
         data: INPUT,
-    ): Promise<SingleResourceResponse<OUTPUT>> {
+    ): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.put(`policies/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -94,7 +94,7 @@ export class PolicyAPI extends BaseAPI implements DomainAPI<Policy> {
     async createOrUpdateBuiltin(
         idOrName: string,
         data: BuiltInPolicyCreateRequest,
-    ): Promise<SingleResourceResponse<BuiltInPolicyResponse>> {
+    ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.createOrUpdate(idOrName, data);
     }
 

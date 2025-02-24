@@ -4,7 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core-kit';
@@ -27,7 +27,7 @@ export const APermissions = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Permission>(),
     setup(props, setup) {
         const { render } = defineEntityCollectionManager({
-            type: `${ResourceType.PERMISSION}`,
+            type: `${EntityType.PERMISSION}`,
             props,
             setup,
         });

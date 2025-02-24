@@ -9,9 +9,9 @@ import type {
     ClientRole,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -26,28 +26,28 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, ClientRoleEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: ClientRole,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildResourceChannelName(ResourceType.CLIENT_ROLE, id) },
+        { channel: (id) => buildEntityChannelName(EntityType.CLIENT_ROLE, id) },
     ];
     if (data.client_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.CLIENT_ROLE, id),
-            namespace: buildResourceNamespaceName(data.client_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.CLIENT_ROLE, id),
+            namespace: buildEntityNamespaceName(data.client_realm_id),
         });
     }
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.CLIENT_ROLE, id),
-            namespace: buildResourceNamespaceName(data.role_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.CLIENT_ROLE, id),
+            namespace: buildEntityNamespaceName(data.role_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: ResourceType.CLIENT_ROLE,
+            type: EntityType.CLIENT_ROLE,
             event,
             data,
         },
@@ -76,7 +76,7 @@ export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRol
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<ClientRoleEntity>): Promise<any> {
@@ -93,7 +93,7 @@ export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRol
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as ClientRoleEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientRoleEntity);
     }
 
     async afterRemove(event: RemoveEvent<ClientRoleEntity>): Promise<any> {
@@ -110,6 +110,6 @@ export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRol
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

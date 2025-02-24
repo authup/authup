@@ -6,7 +6,7 @@
  */
 
 import type { Permission } from '@authup/core-kit';
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType, Ref, VNodeArrayChildren } from 'vue';
 import {
@@ -89,7 +89,7 @@ export const APermissionForm = defineComponent({
         const storeRefs = storeToRefs(store);
 
         const manager = defineEntityManager({
-            type: `${ResourceType.PERMISSION}`,
+            type: `${EntityType.PERMISSION}`,
             setup: ctx,
             props,
         });

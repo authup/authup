@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type {
     PropType,
@@ -96,7 +96,7 @@ export const AScopeForm = defineComponent({
         const storeRefs = storeToRefs(store);
 
         const manager = defineEntityManager({
-            type: `${ResourceType.SCOPE}`,
+            type: `${EntityType.SCOPE}`,
             setup: ctx,
             props,
         });

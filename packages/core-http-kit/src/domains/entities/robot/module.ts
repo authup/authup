@@ -10,12 +10,12 @@ import { buildQuery } from 'rapiq';
 import type { Robot } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
-export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
+export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
     async getMany(
         options?: BuildInput<Robot>,
-    ): Promise<CollectionResourceResponse<Robot>> {
+    ): Promise<EntityCollectionResponse<Robot>> {
         const response = await this.client
             .get(`robots${buildQuery(options)}`);
 
@@ -25,7 +25,7 @@ export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
     async getOne(
         id: Robot['id'],
         options?: BuildInput<Robot>,
-    ): Promise<SingleResourceResponse<Robot>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client
             .get(`robots/${id}${buildQuery(options)}`);
 
@@ -34,7 +34,7 @@ export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
 
     async delete(
         id: Robot['id'],
-    ): Promise<SingleResourceResponse<Robot>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client
             .delete(`robots/${id}`);
 
@@ -43,7 +43,7 @@ export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
 
     async create(
         data: Partial<Robot>,
-    ): Promise<SingleResourceResponse<Robot>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client
             .post('robots', nullifyEmptyObjectProperties(data));
 
@@ -53,7 +53,7 @@ export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
     async update(
         id: Robot['id'],
         data: Partial<Robot>,
-    ): Promise<SingleResourceResponse<Robot>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client.post(`robots/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -62,7 +62,7 @@ export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
     async createOrUpdate(
         idOrName: string,
         data: Partial<Robot>,
-    ): Promise<SingleResourceResponse<Robot>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client.put(`robots/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -70,7 +70,7 @@ export class RobotAPI extends BaseAPI implements DomainAPI<Robot> {
 
     async integrity(
         id: Robot['id'] | Robot['name'],
-    ): Promise<SingleResourceResponse<Robot>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const { data: response } = await this.client
             .get(`robots/${id}/integrity`);
 

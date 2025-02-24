@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { UserRole } from '@authup/core-kit';
 import {
@@ -23,7 +23,7 @@ export const AUserRoleAssignment = defineComponent({
     emits: defineEntityVEmitOptions<UserRole>(),
     async setup(props, setup) {
         const manager = defineEntityManager({
-            type: `${ResourceType.USER_ROLE}`,
+            type: `${EntityType.USER_ROLE}`,
             setup,
             socket: {
                 processEvent(event) {

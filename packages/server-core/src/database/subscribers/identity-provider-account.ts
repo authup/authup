@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
-import { ResourceDefaultEventName, ResourceType, buildResourceChannelName } from '@authup/core-kit';
+import { EntityDefaultEventName, EntityType, buildEntityChannelName } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
@@ -20,18 +20,18 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, IdentityProviderAccountEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: IdentityProviderAccount,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.IDENTITY_PROVIDER_ACCOUNT,
+            type: EntityType.IDENTITY_PROVIDER_ACCOUNT,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ACCOUNT, id),
+                channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ACCOUNT, id),
             },
         ],
     });
@@ -49,7 +49,7 @@ export class IdentityProviderAccountSubscriber implements EntitySubscriberInterf
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as IdentityProviderAccount);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as IdentityProviderAccount);
     }
 
     async afterUpdate(event: UpdateEvent<IdentityProviderAccountEntity>): Promise<any> {
@@ -66,7 +66,7 @@ export class IdentityProviderAccountSubscriber implements EntitySubscriberInterf
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as IdentityProviderAccount);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProviderAccount);
     }
 
     async afterRemove(event: RemoveEvent<IdentityProviderAccountEntity>): Promise<any> {
@@ -83,6 +83,6 @@ export class IdentityProviderAccountSubscriber implements EntitySubscriberInterf
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as IdentityProviderAccount);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as IdentityProviderAccount);
     }
 }

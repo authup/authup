@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { RolePermission } from '@authup/core-kit';
 import {
@@ -22,7 +22,7 @@ export const ARolePermissionAssignment = defineComponent({
     emits: defineEntityVEmitOptions<RolePermission>(),
     async setup(props, setup) {
         const manager = defineEntityManager({
-            type: `${ResourceType.ROLE_PERMISSION}`,
+            type: `${EntityType.ROLE_PERMISSION}`,
             setup,
             socket: {
                 processEvent(event) {

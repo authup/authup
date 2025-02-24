@@ -9,9 +9,9 @@ import type {
     ClientPermission,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -26,28 +26,28 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, ClientPermissionEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: ClientPermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildResourceChannelName(ResourceType.CLIENT_PERMISSION, id) },
+        { channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id) },
     ];
     if (data.client_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.CLIENT_PERMISSION, id),
-            namespace: buildResourceNamespaceName(data.client_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.client_realm_id),
         });
     }
     if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.CLIENT_PERMISSION, id),
-            namespace: buildResourceNamespaceName(data.permission_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.permission_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: ResourceType.CLIENT_PERMISSION,
+            type: EntityType.CLIENT_PERMISSION,
             event,
             data,
         },
@@ -72,7 +72,7 @@ export class ClientPermissionSubscriber implements EntitySubscriberInterface<Cli
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
 
         return Promise.resolve(undefined);
     }
@@ -91,7 +91,7 @@ export class ClientPermissionSubscriber implements EntitySubscriberInterface<Cli
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as ClientPermission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientPermission);
     }
 
     async afterRemove(event: RemoveEvent<ClientPermissionEntity>): Promise<any> {
@@ -108,6 +108,6 @@ export class ClientPermissionSubscriber implements EntitySubscriberInterface<Cli
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

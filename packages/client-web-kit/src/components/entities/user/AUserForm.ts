@@ -6,7 +6,7 @@
  */
 
 import type { Realm, User } from '@authup/core-kit';
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import {
     buildFormGroup, buildFormInput, buildFormInputCheckbox,
 } from '@vuecs/form-controls';
@@ -91,7 +91,7 @@ export const AUserForm = defineComponent({
         }, form);
 
         const manager = defineEntityManager({
-            type: `${ResourceType.USER}`,
+            type: `${EntityType.USER}`,
             setup: ctx,
             props,
         });

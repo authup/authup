@@ -6,7 +6,7 @@
  */
 
 import type { ClientScope } from '@authup/core-kit';
-import { ResourceDefaultEventName, ResourceType, buildResourceChannelName } from '@authup/core-kit';
+import { EntityDefaultEventName, EntityType, buildEntityChannelName } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
@@ -20,18 +20,18 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, ClientScopeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: ClientScope,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.CLIENT_SCOPE,
+            type: EntityType.CLIENT_SCOPE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.CLIENT_SCOPE, id),
+                channel: (id) => buildEntityChannelName(EntityType.CLIENT_SCOPE, id),
             },
 
             // todo: realm attribute
@@ -51,7 +51,7 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as ClientScope);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as ClientScope);
     }
 
     async afterUpdate(event: UpdateEvent<ClientScopeEntity>): Promise<any> {
@@ -68,7 +68,7 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as ClientScope);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientScope);
     }
 
     async afterRemove(event: RemoveEvent<ClientScopeEntity>): Promise<any> {
@@ -85,6 +85,6 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as ClientScope);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as ClientScope);
     }
 }

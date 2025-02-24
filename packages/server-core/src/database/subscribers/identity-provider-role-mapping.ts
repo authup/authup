@@ -9,10 +9,10 @@ import type {
     IdentityProviderRoleMapping,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName,
-    ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName,
+    EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -27,30 +27,30 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, IdentityProviderRoleMappingEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: IdentityProviderRoleMapping,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
+        { channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
     ];
 
     if (data.provider_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
-            namespace: buildResourceNamespaceName(data.provider_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
+            namespace: buildEntityNamespaceName(data.provider_realm_id),
         });
     }
 
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
-            namespace: buildResourceNamespaceName(data.role_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
+            namespace: buildEntityNamespaceName(data.role_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING,
+            type: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING,
             event,
             data,
         },
@@ -70,7 +70,7 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as IdentityProviderRoleMapping);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as IdentityProviderRoleMapping);
     }
 
     async afterUpdate(event: UpdateEvent<IdentityProviderRoleMappingEntity>): Promise<any> {
@@ -87,7 +87,7 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as IdentityProviderRoleMapping);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProviderRoleMapping);
     }
 
     async afterRemove(event: RemoveEvent<IdentityProviderRoleMappingEntity>): Promise<any> {
@@ -104,6 +104,6 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as IdentityProviderRoleMapping);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as IdentityProviderRoleMapping);
     }
 }

@@ -7,7 +7,7 @@
 
 import type { PolicyAttribute } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType, buildResourceChannelName, buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -22,22 +22,22 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, PolicyAttributeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: PolicyAttribute,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.POLICY_ATTRIBUTE,
+            type: EntityType.POLICY_ATTRIBUTE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.POLICY_ATTRIBUTE, id),
-                namespace: buildResourceNamespaceName(data.realm_id),
+                channel: (id) => buildEntityChannelName(EntityType.POLICY_ATTRIBUTE, id),
+                namespace: buildEntityNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildResourceChannelName(ResourceType.POLICY_ATTRIBUTE, id),
+                channel: (id) => buildEntityChannelName(EntityType.POLICY_ATTRIBUTE, id),
             },
         ],
     });
@@ -64,7 +64,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<PolicyAttributeEntity>): Promise<any> {
@@ -81,7 +81,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as PolicyAttribute);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as PolicyAttribute);
     }
 
     async afterRemove(event: RemoveEvent<PolicyAttributeEntity>): Promise<any> {
@@ -98,6 +98,6 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

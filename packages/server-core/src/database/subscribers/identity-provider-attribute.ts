@@ -9,8 +9,8 @@ import type {
     IdentityProviderAttribute,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -25,18 +25,18 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, IdentityProviderAttributeEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: IdentityProviderAttribute,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.IDENTITY_PROVIDER_ATTRIBUTE,
+            type: EntityType.IDENTITY_PROVIDER_ATTRIBUTE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.IDENTITY_PROVIDER_ATTRIBUTE, id),
+                channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ATTRIBUTE, id),
             },
 
             // todo: realm attribute
@@ -56,7 +56,7 @@ export class IdentityProviderAttributeSubscriber implements EntitySubscriberInte
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as IdentityProviderAttribute);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as IdentityProviderAttribute);
     }
 
     async afterUpdate(event: UpdateEvent<IdentityProviderAttributeEntity>): Promise<any> {
@@ -73,7 +73,7 @@ export class IdentityProviderAttributeSubscriber implements EntitySubscriberInte
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as IdentityProviderAttribute);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProviderAttribute);
     }
 
     async afterRemove(event: RemoveEvent<IdentityProviderAttributeEntity>): Promise<any> {
@@ -90,6 +90,6 @@ export class IdentityProviderAttributeSubscriber implements EntitySubscriberInte
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as IdentityProviderAttribute);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as IdentityProviderAttribute);
     }
 }

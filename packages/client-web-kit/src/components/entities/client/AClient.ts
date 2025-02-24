@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ResourceType } from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
@@ -22,7 +22,7 @@ export const AClient = defineComponent({
     slots: Object as SlotsType<EntityVSlots<Client>>,
     async setup(props, setup) {
         const manager = defineEntityManager({
-            type: `${ResourceType.CLIENT}`,
+            type: `${EntityType.CLIENT}`,
             setup,
             props,
         });

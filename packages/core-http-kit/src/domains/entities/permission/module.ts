@@ -10,16 +10,16 @@ import { buildQuery } from 'rapiq';
 import type { Permission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { CollectionResourceResponse, DomainAPI, SingleResourceResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type { PermissionAPICheckResponse } from './types';
 
-export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
-    async getMany(data?: BuildInput<Permission>): Promise<CollectionResourceResponse<Permission>> {
+export class PermissionAPI extends BaseAPI implements EntityAPI<Permission> {
+    async getMany(data?: BuildInput<Permission>): Promise<EntityCollectionResponse<Permission>> {
         const response = await this.client.get(`permissions${buildQuery(data)}`);
         return response.data;
     }
 
-    async delete(id: Permission['id']): Promise<SingleResourceResponse<Permission>> {
+    async delete(id: Permission['id']): Promise<EntityRecordResponse<Permission>> {
         const response = await this.client.delete(`permissions/${id}`);
 
         return response.data;
@@ -31,13 +31,13 @@ export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
         return response.data;
     }
 
-    async create(data: Partial<Permission>): Promise<SingleResourceResponse<Permission>> {
+    async create(data: Partial<Permission>): Promise<EntityRecordResponse<Permission>> {
         const response = await this.client.post('permissions', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Permission['id'], data: Partial<Permission>): Promise<SingleResourceResponse<Permission>> {
+    async update(id: Permission['id'], data: Partial<Permission>): Promise<EntityRecordResponse<Permission>> {
         const response = await this.client.post(`permissions/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -46,7 +46,7 @@ export class PermissionAPI extends BaseAPI implements DomainAPI<Permission> {
     async createOrUpdate(
         idOrName: string,
         data: Partial<Permission>,
-    ): Promise<SingleResourceResponse<Permission>> {
+    ): Promise<EntityRecordResponse<Permission>> {
         const response = await this.client.put(`permissions/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

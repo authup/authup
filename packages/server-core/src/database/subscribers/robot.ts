@@ -9,9 +9,9 @@ import type {
     Robot,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -26,22 +26,22 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, RobotEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: Robot,
 ) {
     await publishDomainEvent({
         content: {
-            type: ResourceType.ROBOT,
+            type: EntityType.ROBOT,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildResourceChannelName(ResourceType.ROBOT, id),
-                namespace: buildResourceNamespaceName(data.realm_id),
+                channel: (id) => buildEntityChannelName(EntityType.ROBOT, id),
+                namespace: buildEntityNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildResourceChannelName(ResourceType.ROBOT, id),
+                channel: (id) => buildEntityChannelName(EntityType.ROBOT, id),
             },
         ],
     });
@@ -59,7 +59,7 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
             return;
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity as Robot);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Robot);
     }
 
     async afterUpdate(event: UpdateEvent<RobotEntity>): Promise<any> {
@@ -76,7 +76,7 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as Robot);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Robot);
     }
 
     async afterRemove(event: RemoveEvent<RobotEntity>): Promise<any> {
@@ -93,6 +93,6 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity as Robot);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Robot);
     }
 }

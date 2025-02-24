@@ -9,9 +9,9 @@ import type {
     RolePermission,
 } from '@authup/core-kit';
 import {
-    ResourceDefaultEventName, ResourceType,
-    buildResourceChannelName,
-    buildResourceNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -26,28 +26,28 @@ import { publishDomainEvent } from '../../core';
 import { CachePrefix, RolePermissionEntity } from '../domains';
 
 async function publishEvent(
-    event: `${ResourceDefaultEventName}`,
+    event: `${EntityDefaultEventName}`,
     data: RolePermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildResourceChannelName(ResourceType.ROLE_PERMISSION, id) },
+        { channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id) },
     ];
     if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.ROLE_PERMISSION, id),
-            namespace: buildResourceNamespaceName(data.role_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.role_realm_id),
         });
     }
     if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildResourceChannelName(ResourceType.ROLE_PERMISSION, id),
-            namespace: buildResourceNamespaceName(data.permission_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.permission_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: ResourceType.ROLE_PERMISSION,
+            type: EntityType.ROLE_PERMISSION,
             event,
             data,
         },
@@ -76,7 +76,7 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.CREATED, event.entity);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
     async afterUpdate(event: UpdateEvent<RolePermissionEntity>): Promise<any> {
@@ -93,7 +93,7 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.UPDATED, event.entity as RolePermission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RolePermission);
     }
 
     async afterRemove(event: RemoveEvent<RolePermissionEntity>): Promise<any> {
@@ -110,6 +110,6 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        await publishEvent(ResourceDefaultEventName.DELETED, event.entity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }
