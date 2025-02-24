@@ -52,6 +52,7 @@ export enum TranslatorTranslationDefaultKey {
     NAME = 'name',
     DESCRIPTION = 'description',
     PERMISSIONS = 'permissions',
+    POLICY = 'policy',
     POLICIES = 'policies',
     REALM = 'realm',
     ROBOTS = 'robots',
