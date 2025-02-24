@@ -23,7 +23,7 @@ export default defineComponent({
     },
     props: {
         entity: {
-            type: Object as PropType<Partial<Policy>>,
+            type: Object as PropType<Policy>,
         },
     },
     emits: ['updated'],
