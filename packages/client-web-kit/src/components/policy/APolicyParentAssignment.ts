@@ -9,13 +9,10 @@ import { ResourceType } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Policy } from '@authup/core-kit';
-import type { ResourceManager } from '../../core';
+import type { ResourceManager } from '../utility';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
-} from '../../core';
-
-import {
     renderToggleButton,
 } from '../utility';
 

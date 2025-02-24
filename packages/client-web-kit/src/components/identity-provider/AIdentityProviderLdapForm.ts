@@ -15,10 +15,12 @@ import { useIsEditing } from '../../composables';
 import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
-    createResourceManager,
-    defineResourceVEmitOptions,
     extractVuelidateResultsFromChild,
 } from '../../core';
+import {
+    createResourceManager,
+    defineResourceVEmitOptions,
+} from '../utility';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderLdapConnectionFields } from './AIdentityProviderLdapConnectionFields';
 import { AIdentityProviderLdapCredentialsFields } from './AIdentityProviderLdapCredentialsFields';

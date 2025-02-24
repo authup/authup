@@ -10,7 +10,7 @@ import type {
     ResourceCollectionVEmitOptions,
     ResourceCollectionVProps,
     ResourceCollectionVSlots,
-} from '../../../core';
+} from '../collection';
 
 export type RecordWithID = {
     id: string,

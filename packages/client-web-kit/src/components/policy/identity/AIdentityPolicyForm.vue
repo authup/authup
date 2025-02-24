@@ -7,7 +7,7 @@ import {
     defineComponent, reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import AFormInputList from '../../utility/AFormInputList.vue';
+import AFormInputList from '../../utility/form-input-list/AFormInputList.vue';
 
 export default defineComponent({
     components: {

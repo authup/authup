@@ -12,11 +12,14 @@ import type {
 import {
     computed, h, mergeProps, ref, toRef, watch,
 } from 'vue';
-import type { ResourceCollectionVSlots } from '../../../core';
+import { APagination } from '../../pagination';
+import { renderToggleButton } from '../../toggle-button';
+import type { ResourceCollectionVSlots } from '../collection';
+import { defineResourceCollectionVEmitOptions, defineResourceCollectionVProps } from '../collection';
 import {
-    defineResourceCollectionVEmitOptions, defineResourceCollectionVProps, hasNormalizedSlot, normalizeSlot,
-} from '../../../core';
-import { APagination, ASearch, renderToggleButton } from '../index';
+    hasNormalizedSlot, normalizeSlot,
+} from '../../../../core';
+import { ASearch } from '../../search';
 import type { RecordWithID, ResourcePickerContext, ResourcePickerVEmitOptions } from './types';
 
 export function defineResourcePickerVEmitOptions<T>() : ResourcePickerVEmitOptions<T> {

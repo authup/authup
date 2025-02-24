@@ -21,11 +21,11 @@ import {
     ref, unref,
 } from 'vue';
 import { createMerger, isObject } from 'smob';
-import { boolableToObject } from '../../../utils';
-import { injectHTTPClient } from '../../http-client';
+import { boolableToObject } from '../../../../utils';
+import { injectHTTPClient } from '../../../../core/http-client';
 import { createResourceSocketManager } from '../socket';
 import type { ResourceSocketManagerCreateContext } from '../socket';
-import { isQuerySortedDescByDate } from '../../query';
+import { isQuerySortedDescByDate } from '../../../../core/query';
 import type {
     ListMeta,
     ResourceCollectionManager,

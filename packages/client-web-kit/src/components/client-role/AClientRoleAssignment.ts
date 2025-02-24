@@ -13,9 +13,6 @@ import type { ClientRole } from '@authup/core-kit';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
-} from '../../core';
-
-import {
     renderToggleButton,
 } from '../utility';
 

@@ -30,10 +30,13 @@ import {
 import { onChange, useIsEditing } from '../../composables';
 import {
     buildFormSubmitWithTranslations,
-    createFormSubmitTranslations, createResourceManager, defineResourceVEmitOptions,
+    createFormSubmitTranslations,
     extractVuelidateResultsFromChild,
     injectHTTPClient,
 } from '../../core';
+import {
+    createResourceManager, defineResourceVEmitOptions,
+} from '../utility';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields';
 import { AIdentityProviderOAuth2EndpointFields } from './AIdentityProviderOAuth2EndpointFields';

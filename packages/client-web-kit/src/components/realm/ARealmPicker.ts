@@ -14,8 +14,8 @@ import {
     defineResourcePicker,
     defineResourcePickerVEmitOptions,
     defineResourcePickerVProps,
-} from '../utility/resource-picker/module';
-import type { ResourcePickerVSlots } from '../utility/resource-picker/types';
+} from '../utility/resource/picker/module';
+import type { ResourcePickerVSlots } from '../utility/resource/picker/types';
 import { ARealms } from './ARealms';
 
 export const ARealmPicker = defineComponent({

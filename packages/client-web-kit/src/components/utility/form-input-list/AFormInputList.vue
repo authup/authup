@@ -1,3 +1,10 @@
+<!--
+  - Copyright (c) 2025.
+  - Author Peter Placzek (tada5hi)
+  - For the full copyright and license information,
+  - view the LICENSE file that was distributed with this source code.
+  -->
+
 <script lang="ts">
 import type { PropType } from 'vue';
 import {
@@ -6,7 +13,7 @@ import {
     ref,
 } from 'vue';
 import AFormInputListItem from './AFormInputListItem.vue';
-import { ATranslationDefault } from './translation';
+import { ATranslationDefault } from '../translation';
 
 export default defineComponent({
     components: {

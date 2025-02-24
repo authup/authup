@@ -18,9 +18,9 @@ import { EventNameSuffix, buildEventFullName } from '@authup/core-realtime-kit';
 import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
-import { injectStore, storeToRefs } from '../../store';
+import { injectStore, storeToRefs } from '../../../../core/store';
 import type { ResourceSocketManager, ResourceSocketManagerCreateContext } from './type';
-import { injectSocketManager, isSocketManagerUsable } from '../../socket-manager';
+import { injectSocketManager, isSocketManagerUsable } from '../../../../core/socket-manager';
 
 function create<
     TYPE extends string,

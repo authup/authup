@@ -40,13 +40,13 @@ import {
     assignFormProperties,
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations,
+    getVuelidateSeverity,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
+} from '../../core';
+import {
     createResourceManager,
     defineResourceVEmitOptions,
-    getVuelidateSeverity,
-    useTranslationsForGroup, useTranslationsForNestedValidation,
-} from '../../core';
-
-import {
     renderToggleButton,
 } from '../utility';
 

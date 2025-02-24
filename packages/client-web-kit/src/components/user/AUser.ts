@@ -9,12 +9,12 @@ import { ResourceType } from '@authup/core-kit';
 import type { User } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ResourceVSlots } from '../../core';
+import type { ResourceVSlots } from '../utility';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
     defineResourceVProps,
-} from '../../core';
+} from '../utility';
 
 export const AUser = defineComponent({
     props: defineResourceVProps<User>(),

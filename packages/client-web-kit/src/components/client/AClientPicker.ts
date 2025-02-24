@@ -14,8 +14,8 @@ import {
     defineResourcePicker,
     defineResourcePickerVEmitOptions,
     defineResourcePickerVProps,
-} from '../utility/resource-picker/module';
-import type { ResourcePickerVSlots } from '../utility/resource-picker/types';
+} from '../utility/resource/picker/module';
+import type { ResourcePickerVSlots } from '../utility/resource/picker/types';
 import { AClients } from './AClients';
 
 export const AClientPicker = defineComponent({

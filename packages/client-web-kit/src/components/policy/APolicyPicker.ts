@@ -11,8 +11,8 @@ import type { SlotsType } from 'vue';
 import {
     defineComponent, h,
 } from 'vue';
-import { defineResourcePicker, defineResourcePickerVEmitOptions, defineResourcePickerVProps } from '../utility/resource-picker/module';
-import type { ResourcePickerVSlots } from '../utility/resource-picker/types';
+import { defineResourcePicker, defineResourcePickerVEmitOptions, defineResourcePickerVProps } from '../utility/resource/picker/module';
+import type { ResourcePickerVSlots } from '../utility/resource/picker/types';
 import { APolicies } from './APolicies';
 import { APolicyParentAssignment } from './APolicyParentAssignment';
 

@@ -11,8 +11,7 @@ import type { UserPermission } from '@authup/core-kit';
 import {
     createResourceManager,
     defineResourceVEmitOptions,
-} from '../../core';
-import {
+
     renderToggleButton,
 } from '../utility';
 

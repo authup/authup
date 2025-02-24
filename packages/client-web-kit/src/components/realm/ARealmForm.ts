@@ -28,9 +28,17 @@ import {
     TranslatorTranslationGroup,
     VuelidateCustomRule,
     VuelidateCustomRuleKey,
-    assignFormProperties, buildFormSubmitWithTranslations, createFormSubmitTranslations, createResourceManager,
-    defineResourceVEmitOptions, getVuelidateSeverity, useTranslationsForGroup, useTranslationsForNestedValidation,
+    assignFormProperties,
+    buildFormSubmitWithTranslations,
+    createFormSubmitTranslations,
+    getVuelidateSeverity,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
 } from '../../core';
+import {
+    createResourceManager,
+    defineResourceVEmitOptions,
+} from '../utility';
 
 export const ARealmForm = defineComponent({
     props: {

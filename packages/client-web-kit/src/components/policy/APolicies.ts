@@ -8,16 +8,18 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Policy } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../core';
+import type { ResourceCollectionVSlots } from '../utility';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     TranslatorTranslationVuecsKey,
+    useTranslation,
+} from '../../core';
+import {
     createResourceCollectionManager,
     defineResourceCollectionVEmitOptions,
     defineResourceCollectionVProps,
-    useTranslation,
-} from '../../core';
+} from '../utility';
 
 export const APolicies = defineComponent({
     props: defineResourceCollectionVProps<Policy>(),

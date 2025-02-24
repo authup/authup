@@ -14,10 +14,10 @@ import type { Ref, VNodeChild } from 'vue';
 import {
     computed, isRef, ref, toRef, watch,
 } from 'vue';
-import { injectHTTPClient } from '../../http-client';
+import { injectHTTPClient } from '../../../../core/http-client';
 import type { ResourceSocketManager, ResourceSocketManagerCreateContext } from '../socket';
 import { createResourceSocketManager } from '../socket';
-import { hasNormalizedSlot, normalizeSlot } from '../../slot';
+import { hasNormalizedSlot, normalizeSlot } from '../../../../core/slot';
 import { ResourceRecordError } from './error';
 import type {
     EntityID,

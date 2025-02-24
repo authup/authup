@@ -9,12 +9,16 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../core';
+import type { ResourceCollectionVSlots } from '../utility';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup, TranslatorTranslationVuecsKey, createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions, defineResourceCollectionVProps, useTranslation,
+    TranslatorTranslationGroup, TranslatorTranslationVuecsKey, useTranslation,
 } from '../../core';
+import {
+    createResourceCollectionManager,
+    defineResourceCollectionVEmitOptions,
+    defineResourceCollectionVProps,
+} from '../utility';
 
 export const ARobots = defineComponent({
     props: defineResourceCollectionVProps<Robot>(),

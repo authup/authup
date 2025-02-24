@@ -9,7 +9,7 @@ import { VCFormGroup } from '@vuecs/form-controls';
 import type { RealmMatchPolicy } from '@authup/access';
 import { assignFormProperties } from '../../../core';
 import { onChange, useUpdatedAt } from '../../../composables';
-import AFormInputList from '../../utility/AFormInputList.vue';
+import AFormInputList from '../../utility/form-input-list/AFormInputList.vue';
 
 export default defineComponent({
     components: {
