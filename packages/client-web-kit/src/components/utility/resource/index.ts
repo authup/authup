@@ -9,3 +9,5 @@ export * from './collection';
 export * from './record';
 export * from './picker';
 export * from './socket';
+
+export { AEntityDelete } from './AEntityDelete';

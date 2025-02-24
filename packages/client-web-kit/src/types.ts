@@ -64,7 +64,7 @@ import type {
     AUserRoleAssignment,
     AUserRoleAssignments,
     AUsers,
-} from './components';
+} from './components/entities';
 
 export interface CookieOptions {
     path?: string;
