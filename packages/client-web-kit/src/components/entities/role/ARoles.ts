@@ -9,11 +9,11 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Role } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility';
 import {
-    createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions,
-    defineResourceCollectionVProps,
+    defineEntityCollectionManager,
+    defineEntityCollectionVEmitOptions,
+    defineEntityCollectionVProps,
 } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
@@ -23,11 +23,11 @@ import {
 } from '../../../core';
 
 export const ARoles = defineComponent({
-    props: defineResourceCollectionVProps<Role>(),
-    slots: Object as SlotsType<ResourceCollectionVSlots<Role>>,
-    emits: defineResourceCollectionVEmitOptions<Role>(),
+    props: defineEntityCollectionVProps<Role>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Role>>,
+    emits: defineEntityCollectionVEmitOptions<Role>(),
     setup(props, ctx) {
-        const { render } = createResourceCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${ResourceType.ROLE}`,
             props,
             setup: ctx,

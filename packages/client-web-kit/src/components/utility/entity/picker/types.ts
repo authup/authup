@@ -7,36 +7,36 @@
 
 import type { Component, SetupContext, SlotsType } from 'vue';
 import type {
-    ResourceCollectionVEmitOptions,
-    ResourceCollectionVProps,
-    ResourceCollectionVSlots,
+    EntityCollectionVEmitOptions,
+    EntityCollectionVProps,
+    EntityCollectionVSlots,
 } from '../collection';
 
 export type RecordWithID = {
     id: string,
     [key: string]: any
 };
-export type ResourcePickerVSlots<
+export type EntityPickerVSlots<
     T extends RecordWithID = RecordWithID,
 > = {
-    [K in keyof ResourceCollectionVSlots<T>]: ResourceCollectionVSlots<T>[K] & {
+    [K in keyof EntityCollectionVSlots<T>]: EntityCollectionVSlots<T>[K] & {
         toggle: () => void
     }
 };
-export type ResourcePickerVEmitOptions<T> = {
+export type EntityPickerVEmitOptions<T> = {
     change: (values: string[]) => true
-} & ResourceCollectionVEmitOptions<T>;
+} & EntityCollectionVEmitOptions<T>;
 
-export type ResourcePickerVProps<T> = {
+export type EntityPickerVProps<T> = {
     value?: string[] | string | null,
     multiple?: boolean
-} & ResourceCollectionVProps<T>;
+} & EntityCollectionVProps<T>;
 
-export type ResourcePickerContext<T extends RecordWithID> = {
-    props: ResourcePickerVProps<T>,
+export type EntityPickerContext<T extends RecordWithID> = {
+    props: EntityPickerVProps<T>,
     setup: SetupContext<
-    ResourcePickerVEmitOptions<T>,
-    SlotsType<ResourcePickerVSlots<T>>
+    EntityPickerVEmitOptions<T>,
+    SlotsType<EntityPickerVSlots<T>>
     >,
     /**
      * Resource collection component.

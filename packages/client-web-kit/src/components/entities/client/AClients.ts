@@ -9,11 +9,11 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Client } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility';
 import {
-    createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions,
-    defineResourceCollectionVProps,
+    defineEntityCollectionManager,
+    defineEntityCollectionVEmitOptions,
+    defineEntityCollectionVProps,
 } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
@@ -23,11 +23,11 @@ import {
 } from '../../../core';
 
 export const AClients = defineComponent({
-    props: defineResourceCollectionVProps<Client>(),
-    slots: Object as SlotsType<ResourceCollectionVSlots<Client>>,
-    emits: defineResourceCollectionVEmitOptions<Client>(),
+    props: defineEntityCollectionVProps<Client>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Client>>,
+    emits: defineEntityCollectionVEmitOptions<Client>(),
     setup(props, ctx) {
-        const { render } = createResourceCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${ResourceType.CLIENT}`,
             props,
             setup: ctx,

@@ -14,23 +14,23 @@ import {
 } from 'vue';
 import { APagination } from '../../pagination';
 import { renderToggleButton } from '../../toggle-button';
-import type { ResourceCollectionVSlots } from '../collection';
-import { defineResourceCollectionVEmitOptions, defineResourceCollectionVProps } from '../collection';
+import type { EntityCollectionVSlots } from '../collection';
+import { defineEntityCollectionVEmitOptions, defineEntityCollectionVProps } from '../collection';
 import {
     hasNormalizedSlot, normalizeSlot,
 } from '../../../../core';
 import { ASearch } from '../../search';
-import type { RecordWithID, ResourcePickerContext, ResourcePickerVEmitOptions } from './types';
+import type { EntityPickerContext, EntityPickerVEmitOptions, RecordWithID } from './types';
 
-export function defineResourcePickerVEmitOptions<T>() : ResourcePickerVEmitOptions<T> {
+export function defineEntityPickerVEmitOptions<T>() : EntityPickerVEmitOptions<T> {
     return {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         change: (_values: string[]) => true,
-        ...defineResourceCollectionVEmitOptions<T>(),
+        ...defineEntityCollectionVEmitOptions<T>(),
     };
 }
 
-export function defineResourcePickerVProps<T extends RecordWithID = RecordWithID>() {
+export function defineEntityPickerVProps<T extends RecordWithID = RecordWithID>() {
     return {
         value: {
             type: [Array, String] as PropType<string[] | string | null>,
@@ -38,15 +38,15 @@ export function defineResourcePickerVProps<T extends RecordWithID = RecordWithID
         multiple: {
             type: Boolean as PropType<boolean | undefined>,
         },
-        ...defineResourceCollectionVProps<T>(),
+        ...defineEntityCollectionVProps<T>(),
     };
 }
 
-export function defineResourcePicker<T extends RecordWithID>({
+export function defineEntityPicker<T extends RecordWithID>({
     props,
     setup,
     component,
-} : ResourcePickerContext<T>) {
+} : EntityPickerContext<T>) {
     const componentRef = ref(null) as Ref<null | Record<string, any>>;
 
     setup.expose({
@@ -112,7 +112,7 @@ export function defineResourcePicker<T extends RecordWithID>({
             setup.attrs,
         ),
         {
-            [SlotName.HEADER]: (slotProps: ResourceCollectionVSlots<RecordWithID>['header']) => [
+            [SlotName.HEADER]: (slotProps: EntityCollectionVSlots<RecordWithID>['header']) => [
                 h(ASearch, {
                     load: (payload: any) => {
                         if (slotProps.load) {
@@ -124,7 +124,7 @@ export function defineResourcePicker<T extends RecordWithID>({
                     busy: slotProps.busy,
                 }),
             ],
-            [SlotName.FOOTER]: (slotProps: ResourceCollectionVSlots<RecordWithID>['footer']) => [
+            [SlotName.FOOTER]: (slotProps: EntityCollectionVSlots<RecordWithID>['footer']) => [
                 h(APagination, {
                     load: (payload: any) => {
                         if (slotProps.load) {
@@ -138,7 +138,7 @@ export function defineResourcePicker<T extends RecordWithID>({
                 }),
             ],
             [SlotName.ITEM_ACTIONS]: (
-                slotProps: ResourceCollectionVSlots<RecordWithID>['itemActions'],
+                slotProps: EntityCollectionVSlots<RecordWithID>['itemActions'],
             ) => {
                 let content : VNodeChild | undefined;
                 if (hasNormalizedSlot(SlotName.ITEM_ACTIONS, setup.slots)) {

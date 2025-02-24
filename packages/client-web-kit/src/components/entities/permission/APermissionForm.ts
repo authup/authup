@@ -35,8 +35,8 @@ import {
     useTranslationsForNestedValidation,
 } from '../../../core';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
 } from '../../utility';
 import { APolicyPicker } from '../policy/APolicyPicker';
 import { ARealmPicker } from '../realm';
@@ -47,7 +47,7 @@ export const APermissionForm = defineComponent({
             type: Object as PropType<Permission>,
         },
     },
-    emits: defineResourceVEmitOptions<Permission>(),
+    emits: defineEntityVEmitOptions<Permission>(),
     setup(props, ctx) {
         const policyPickerVNode = ref(null) as Ref<null | typeof ARealmPicker>;
         const busy = ref(false);
@@ -88,7 +88,7 @@ export const APermissionForm = defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.PERMISSION}`,
             setup: ctx,
             props,

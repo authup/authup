@@ -9,19 +9,19 @@ import { ResourceType } from '@authup/core-kit';
 import type { Policy } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ResourceVSlots } from '../../utility';
+import type { EntityVSlots } from '../../utility';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
-    defineResourceVProps,
+    defineEntityManager,
+    defineEntityVEmitOptions,
+    defineEntityVProps,
 } from '../../utility';
 
 export const APolicy = defineComponent({
-    props: defineResourceVProps<Policy>(),
-    emits: defineResourceVEmitOptions<Policy>(),
-    slots: Object as SlotsType<ResourceVSlots<Policy>>,
+    props: defineEntityVProps<Policy>(),
+    emits: defineEntityVEmitOptions<Policy>(),
+    slots: Object as SlotsType<EntityVSlots<Policy>>,
     async setup(props, setup) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.POLICY}`,
             setup,
             props,

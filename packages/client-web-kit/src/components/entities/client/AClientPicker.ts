@@ -11,19 +11,19 @@ import {
     defineComponent,
 } from 'vue';
 import {
-    defineResourcePicker,
-    defineResourcePickerVEmitOptions,
-    defineResourcePickerVProps,
-} from '../../utility/resource/picker/module';
-import type { ResourcePickerVSlots } from '../../utility/resource/picker/types';
+    defineEntityPicker,
+    defineEntityPickerVEmitOptions,
+    defineEntityPickerVProps,
+} from '../../utility/entity/picker/module';
+import type { EntityPickerVSlots } from '../../utility/entity/picker/types';
 import { AClients } from './AClients';
 
 export const AClientPicker = defineComponent({
-    props: defineResourcePickerVProps<Client>(),
-    emits: defineResourcePickerVEmitOptions<Client>(),
-    slots: Object as SlotsType<ResourcePickerVSlots<Client>>,
+    props: defineEntityPickerVProps<Client>(),
+    emits: defineEntityPickerVEmitOptions<Client>(),
+    slots: Object as SlotsType<EntityPickerVSlots<Client>>,
     setup(props, setup) {
-        const { render } = defineResourcePicker({
+        const { render } = defineEntityPicker({
             component: AClients,
             props,
             setup,

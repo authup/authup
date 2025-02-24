@@ -9,19 +9,19 @@ import { ResourceType } from '@authup/core-kit';
 import type { Permission } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ResourceVSlots } from '../../utility';
+import type { EntityVSlots } from '../../utility';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
-    defineResourceVProps,
+    defineEntityManager,
+    defineEntityVEmitOptions,
+    defineEntityVProps,
 } from '../../utility';
 
 export const APermission = defineComponent({
-    props: defineResourceVProps<Permission>(),
-    emits: defineResourceVEmitOptions<Permission>(),
-    slots: Object as SlotsType<ResourceVSlots<Permission>>,
+    props: defineEntityVProps<Permission>(),
+    emits: defineEntityVEmitOptions<Permission>(),
+    slots: Object as SlotsType<EntityVSlots<Permission>>,
     async setup(props, setup) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.PERMISSION}`,
             setup,
             props,

@@ -10,7 +10,7 @@ import type {
     MaybeRef, Ref, SetupContext, SlotsType,
     VNodeChild,
 } from 'vue';
-import type { ResourceSocketManagerCreateContext } from '../socket';
+import type { EntitySocketManagerCreateContext } from '../socket';
 
 type EntityWithID = {
     [key: string]: any,
@@ -28,7 +28,7 @@ export type ResourceManagerResolveContext<T> = {
     query?: T extends Record<string, any> ? BuildInput<T> : never
 };
 
-export type ResourceManager<T> = {
+export type EntityManager<T> = {
     busy: Ref<boolean>,
     data: Ref<T | undefined>,
     error: Ref<Error | undefined>,
@@ -47,25 +47,25 @@ export type ResourceManager<T> = {
     renderError(error: unknown) : VNodeChild;
 };
 
-export type ResourceVProps<T> = {
+export type EntityVProps<T> = {
     entity?: T,
     entityId?: EntityID<T>,
     queryFilters?: T extends Record<string, any> ? FiltersBuildInput<T> : never,
     queryFields?: T extends Record<string, any> ? FieldsBuildInput<T> : never
 };
 
-export type ResourceVSlotProps<T> = {
-    [K in keyof ResourceManager<T>]: ResourceManager<T>[K] extends Ref<infer U> ?
+export type EntityVSlotProps<T> = {
+    [K in keyof EntityManager<T>]: EntityManager<T>[K] extends Ref<infer U> ?
         U :
-        ResourceManager<T>[K]
+        EntityManager<T>[K]
 };
 
-export type ResourceVSlots<T> = {
-    default?: ResourceVSlotProps<T>,
+export type EntityVSlots<T> = {
+    default?: EntityVSlotProps<T>,
     error?: Error
 };
 
-export type ResourceVEmitOptions<T> = {
+export type EntityVEmitOptions<T> = {
     failed: (item: Error) => true,
     created: (item: T) => true,
     deleted: (item: T) => true,
@@ -73,21 +73,21 @@ export type ResourceVEmitOptions<T> = {
     resolved: (item?: T) => true
 };
 
-export type ResourceManagerCreateContext<
+export type EntityManagerCreateContext<
     A extends string,
     T extends Record<string, any>,
 > = {
     type: A,
     setup?: Partial<SetupContext<
-    ResourceVEmitOptions<T>,
-    SlotsType<ResourceVSlots<T>>
+    EntityVEmitOptions<T>,
+    SlotsType<EntityVSlots<T>>
     >>,
-    props?: ResourceVProps<T>,
+    props?: EntityVProps<T>,
     realmId?: MaybeRef<string> | ((entity: T | undefined) => string | undefined),
     onResolved?(entity?: T) : any,
     onCreated?(entity: T): any,
     onUpdated?(entity: Partial<T>): any,
     onDeleted?(entity: T): any,
     onFailed?(e: Error): any,
-    socket?: Omit<ResourceSocketManagerCreateContext<A, T>, 'type'> | boolean;
+    socket?: Omit<EntitySocketManagerCreateContext<A, T>, 'type'> | boolean;
 };

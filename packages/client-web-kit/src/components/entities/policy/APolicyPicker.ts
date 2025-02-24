@@ -11,8 +11,8 @@ import type { SlotsType } from 'vue';
 import {
     defineComponent, h,
 } from 'vue';
-import { defineResourcePicker, defineResourcePickerVEmitOptions, defineResourcePickerVProps } from '../../utility/resource/picker/module';
-import type { ResourcePickerVSlots } from '../../utility/resource/picker/types';
+import { defineEntityPicker, defineEntityPickerVEmitOptions, defineEntityPickerVProps } from '../../utility/entity/picker/module';
+import type { EntityPickerVSlots } from '../../utility/entity/picker/types';
 import { APolicies } from './APolicies';
 import { APolicyParentAssignment } from './APolicyParentAssignment';
 
@@ -21,12 +21,12 @@ export const APolicyPicker = defineComponent({
         parentId: {
             type: String,
         },
-        ...defineResourcePickerVProps<Policy>(),
+        ...defineEntityPickerVProps<Policy>(),
     },
-    slots: Object as SlotsType<ResourcePickerVSlots<Policy>>,
-    emits: defineResourcePickerVEmitOptions<Policy>(),
+    slots: Object as SlotsType<EntityPickerVSlots<Policy>>,
+    emits: defineEntityPickerVEmitOptions<Policy>(),
     setup(props, { slots, ...setup }) {
-        const { render } = defineResourcePicker({
+        const { render } = defineEntityPicker({
             component: APolicies,
             props,
             setup: {
@@ -35,7 +35,7 @@ export const APolicyPicker = defineComponent({
                     ...(
                         props.parentId ? {
                             [SlotName.ITEM_ACTIONS]: (
-                                slotProps: ResourcePickerVSlots<Policy>['itemActions'],
+                                slotProps: EntityPickerVSlots<Policy>['itemActions'],
                             ) => h(APolicyParentAssignment, {
                                 entity: slotProps.data,
                                 entityId: slotProps.data.id,

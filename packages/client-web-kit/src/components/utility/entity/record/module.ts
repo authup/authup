@@ -14,26 +14,25 @@ import type { Ref, VNodeChild } from 'vue';
 import {
     computed, isRef, ref, toRef, watch,
 } from 'vue';
-import { injectHTTPClient } from '../../../../core/http-client';
-import type { ResourceSocketManager, ResourceSocketManagerCreateContext } from '../socket';
-import { createResourceSocketManager } from '../socket';
-import { hasNormalizedSlot, normalizeSlot } from '../../../../core/slot';
-import { ResourceRecordError } from './error';
+import { hasNormalizedSlot, injectHTTPClient, normalizeSlot } from '../../../../core';
+import type { EntitySocketManager, EntitySocketManagerCreateContext } from '../socket';
+import { defineEntitySocketManager } from '../socket';
+import { EntityRecordError } from './error';
 import type {
     EntityID,
-    ResourceManager,
-    ResourceManagerCreateContext,
+    EntityManager,
+    EntityManagerCreateContext,
     ResourceManagerRenderFn,
     ResourceManagerResolveContext,
 } from './types';
-import { buildResourceVSlotProps } from './utils';
+import { buildEntityVSlotProps } from './helpers';
 
 function create<
     TYPE extends keyof ResourceTypeMap,
     RECORD extends ResourceTypeMap[TYPE],
 >(
-    ctx: ResourceManagerCreateContext<TYPE, RECORD>,
-) : ResourceManager<RECORD> {
+    ctx: EntityManagerCreateContext<TYPE, RECORD>,
+) : EntityManager<RECORD> {
     const client = injectHTTPClient();
     let domainAPI : DomainAPI<RECORD> | undefined;
     if (hasOwnProperty(client, ctx.type)) {
@@ -219,7 +218,7 @@ function create<
         }
     };
 
-    let socket : ResourceSocketManager | undefined;
+    let socket : EntitySocketManager | undefined;
 
     if (
         typeof ctx.socket !== 'boolean' ||
@@ -227,7 +226,7 @@ function create<
         typeof ctx.socket === 'function' ||
         ctx.socket
     ) {
-        let socketContext : ResourceSocketManagerCreateContext<TYPE, RECORD> = {
+        let socketContext : EntitySocketManagerCreateContext<TYPE, RECORD> = {
             type: ctx.type,
         };
 
@@ -245,7 +244,7 @@ function create<
         socketContext.target = true;
         socketContext.targetId = entityId;
 
-        socket = createResourceSocketManager(socketContext);
+        socket = defineEntitySocketManager(socketContext);
     }
 
     const error = ref<Error | undefined>(undefined);
@@ -390,7 +389,7 @@ function create<
 
         if (typeof entity.value === 'undefined') {
             if (!error.value) {
-                throw ResourceRecordError.unresolvable();
+                throw EntityRecordError.unresolvable();
             }
 
             // eslint-disable-next-line no-throw-literal
@@ -398,7 +397,7 @@ function create<
         }
     };
 
-    const manager : ResourceManager<RECORD> = {
+    const manager : EntityManager<RECORD> = {
         resolve,
         resolveOrFail,
         lockId,
@@ -432,7 +431,7 @@ function create<
         if (hasNormalizedSlot('default', ctx.setup.slots)) {
             return normalizeSlot(
                 'default',
-                buildResourceVSlotProps(manager),
+                buildEntityVSlotProps(manager),
                 ctx.setup.slots,
             );
         }
@@ -460,10 +459,10 @@ function create<
     return manager;
 }
 
-export function createResourceManager<
+export function defineEntityManager<
     TYPE extends keyof ResourceTypeMap,
 >(
-    ctx: ResourceManagerCreateContext<TYPE, ResourceTypeMap[TYPE]>,
-) : ResourceManager<ResourceTypeMap[TYPE]> {
+    ctx: EntityManagerCreateContext<TYPE, ResourceTypeMap[TYPE]>,
+) : EntityManager<ResourceTypeMap[TYPE]> {
     return create<TYPE, ResourceTypeMap[TYPE]>(ctx);
 }

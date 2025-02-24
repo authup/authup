@@ -45,8 +45,8 @@ import {
     useTranslationsForNestedValidation,
 } from '../../../core';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
     renderToggleButton,
 } from '../../utility';
 
@@ -67,7 +67,7 @@ export const ARobotForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineResourceVEmitOptions<Robot>(),
+    emits: defineEntityVEmitOptions<Robot>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -98,7 +98,7 @@ export const ARobotForm = defineComponent({
             },
         }, form);
 
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.ROBOT}`,
             setup: ctx,
             props,

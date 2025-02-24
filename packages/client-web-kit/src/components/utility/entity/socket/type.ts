@@ -10,7 +10,7 @@ import type { EventFullName, EventNameSuffix, STCEventContext } from '@authup/co
 import type { MaybeRef } from 'vue';
 import type { EntityID } from '../record';
 
-export type ResourceSocketManagerCreateContext<
+export type EntitySocketManagerCreateContext<
     TYPE extends string,
     RECORD extends Record<string, any>,
 > = {
@@ -28,7 +28,7 @@ export type ResourceSocketManagerCreateContext<
     buildUnsubscribeEventName?(): EventFullName<TYPE, `${EventNameSuffix.UNSUBSCRIBE}`>;
 };
 
-export type ResourceSocketManager = {
+export type EntitySocketManager = {
     mount() : void;
     unmount() : void;
 };

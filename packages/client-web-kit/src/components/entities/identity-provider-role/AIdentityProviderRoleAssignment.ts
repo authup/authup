@@ -23,8 +23,8 @@ import {
     useTranslationsForNestedValidation,
 } from '../../../core';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
 } from '../../utility';
 
 export const AIdentityProviderRoleAssignment = defineComponent({
@@ -38,7 +38,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             required: true,
         },
     },
-    emits: defineResourceVEmitOptions<IdentityProviderRoleMapping>(),
+    emits: defineEntityVEmitOptions<IdentityProviderRoleMapping>(),
     async setup(props, setup) {
         const display = ref(false);
         const toggleDisplay = () => {
@@ -73,7 +73,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
             ],
         );
 
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
             setup,
             socket: {

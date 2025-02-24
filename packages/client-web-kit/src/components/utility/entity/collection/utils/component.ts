@@ -8,11 +8,11 @@
 import type { BuildInput } from 'rapiq';
 import type { PropType } from 'vue';
 import type {
-    ListBodyOptions,
-    ListFooterOptions, ListHeaderOptions, ListLoadingOptions, ListNoMoreOptions, ResourceCollectionVEmitOptions,
+    EntityCollectionVEmitOptions,
+    ListBodyOptions, ListFooterOptions, ListHeaderOptions, ListLoadingOptions, ListNoMoreOptions,
 } from '../types';
 
-export function defineResourceCollectionVEmitOptions<T>() : ResourceCollectionVEmitOptions<T> {
+export function defineEntityCollectionVEmitOptions<T>() : EntityCollectionVEmitOptions<T> {
     return {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         created: (_item: T) => true,
@@ -22,7 +22,7 @@ export function defineResourceCollectionVEmitOptions<T>() : ResourceCollectionVE
         updated: (_item: T) => true,
     };
 }
-export function defineResourceCollectionVProps<T>() {
+export function defineEntityCollectionVProps<T>() {
     return {
         query: {
             type: Object as PropType<BuildInput<T extends Record<string, any> ? T : never>>,

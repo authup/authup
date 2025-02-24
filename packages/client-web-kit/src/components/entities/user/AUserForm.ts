@@ -28,8 +28,8 @@ import {
     buildFormSubmitWithTranslations, createFormSubmitTranslations, getVuelidateSeverity, useTranslationsForGroup, useTranslationsForNestedValidation,
 } from '../../../core';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
     renderToggleButton,
 } from '../../utility';
 import { ARealms } from '../realm';
@@ -49,7 +49,7 @@ export const AUserForm = defineComponent({
             default: true,
         },
     },
-    emits: defineResourceVEmitOptions<User>(),
+    emits: defineEntityVEmitOptions<User>(),
     async setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -90,7 +90,7 @@ export const AUserForm = defineComponent({
             },
         }, form);
 
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.USER}`,
             setup: ctx,
             props,

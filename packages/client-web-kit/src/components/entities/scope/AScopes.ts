@@ -9,11 +9,11 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Scope } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility';
 import {
-    createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions,
-    defineResourceCollectionVProps,
+    defineEntityCollectionManager,
+    defineEntityCollectionVEmitOptions,
+    defineEntityCollectionVProps,
 } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
@@ -23,11 +23,11 @@ import {
 } from '../../../core';
 
 export const AScopes = defineComponent({
-    props: defineResourceCollectionVProps<Scope>(),
-    slots: Object as SlotsType<ResourceCollectionVSlots<Scope>>,
-    emits: defineResourceCollectionVEmitOptions<Scope>(),
+    props: defineEntityCollectionVProps<Scope>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Scope>>,
+    emits: defineEntityCollectionVEmitOptions<Scope>(),
     setup(props, ctx) {
-        const { render } = createResourceCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: ResourceType.SCOPE,
             props,
             setup: ctx,

@@ -9,7 +9,7 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
@@ -17,19 +17,19 @@ import {
     useTranslation,
 } from '../../../core';
 import {
-    createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions,
-    defineResourceCollectionVProps,
+    defineEntityCollectionManager,
+    defineEntityCollectionVEmitOptions,
+    defineEntityCollectionVProps,
 } from '../../utility';
 
 export const AClientScopes = defineComponent({
-    props: defineResourceCollectionVProps<ClientScope>(),
-    slots: Object as SlotsType<ResourceCollectionVSlots<ClientScope>>,
-    emits: defineResourceCollectionVEmitOptions<ClientScope>(),
+    props: defineEntityCollectionVProps<ClientScope>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<ClientScope>>,
+    emits: defineEntityCollectionVEmitOptions<ClientScope>(),
     setup(props, ctx) {
         const {
             render,
-        } = createResourceCollectionManager({
+        } = defineEntityCollectionManager({
             type: `${ResourceType.CLIENT_SCOPE}`,
             props,
             setup: ctx,

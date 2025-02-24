@@ -19,15 +19,15 @@ import {
     computed, isRef, onMounted, onUnmounted, watch,
 } from 'vue';
 import { injectStore, storeToRefs } from '../../../../core/store';
-import type { ResourceSocketManager, ResourceSocketManagerCreateContext } from './type';
+import type { EntitySocketManager, EntitySocketManagerCreateContext } from './type';
 import { injectSocketManager, isSocketManagerUsable } from '../../../../core/socket-manager';
 
 function create<
     TYPE extends string,
     RECORD extends Record<string, any>,
 >(
-    ctx: ResourceSocketManagerCreateContext<TYPE, RECORD>,
-) : ResourceSocketManager {
+    ctx: EntitySocketManagerCreateContext<TYPE, RECORD>,
+) : EntitySocketManager {
     if (!isSocketManagerUsable()) {
         return {
             mount() {
@@ -245,10 +245,10 @@ function create<
     };
 }
 
-export function createResourceSocketManager<
+export function defineEntitySocketManager<
     A extends keyof ResourceTypeMap,
 >(
-    ctx: ResourceSocketManagerCreateContext<A, ResourceTypeMap[A]>,
-) : ResourceSocketManager {
+    ctx: EntitySocketManagerCreateContext<A, ResourceTypeMap[A]>,
+) : EntitySocketManager {
     return create(ctx);
 }

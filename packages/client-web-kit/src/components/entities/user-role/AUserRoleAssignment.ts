@@ -9,8 +9,8 @@ import { ResourceType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { UserRole } from '@authup/core-kit';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
 
     renderToggleButton,
 } from '../../utility';
@@ -20,9 +20,9 @@ export const AUserRoleAssignment = defineComponent({
         roleId: String,
         userId: String,
     },
-    emits: defineResourceVEmitOptions<UserRole>(),
+    emits: defineEntityVEmitOptions<UserRole>(),
     async setup(props, setup) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.USER_ROLE}`,
             setup,
             socket: {

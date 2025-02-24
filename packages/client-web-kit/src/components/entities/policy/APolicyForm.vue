@@ -7,7 +7,7 @@ import useVuelidate from '@vuelidate/core';
 import { BuiltInPolicyType } from '@authup/access';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
 import { extractVuelidateResultsFromChild, injectHTTPClient } from '../../../core';
-import { AFormSubmit, createResourceManager } from '../../utility';
+import { AFormSubmit, defineEntityManager } from '../../utility';
 import APolicyBasicForm from './APolicyBasicForm.vue';
 import APolicyTypePicker from './APolicyTypePicker.vue';
 import AAttributeNamesPolicyForm from './attribute-names/AAttributeNamesPolicyForm.vue';
@@ -36,7 +36,7 @@ export default defineComponent({
         };
 
         const httpClient = injectHTTPClient();
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.POLICY}`,
             setup: ctx,
             props,

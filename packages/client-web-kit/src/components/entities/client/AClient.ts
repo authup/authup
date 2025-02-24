@@ -9,19 +9,19 @@ import { ResourceType } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ResourceVSlots } from '../../utility';
+import type { EntityVSlots } from '../../utility';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
-    defineResourceVProps,
+    defineEntityManager,
+    defineEntityVEmitOptions,
+    defineEntityVProps,
 } from '../../utility';
 
 export const AClient = defineComponent({
-    props: defineResourceVProps<Client>(),
-    emits: defineResourceVEmitOptions<Client>(),
-    slots: Object as SlotsType<ResourceVSlots<Client>>,
+    props: defineEntityVProps<Client>(),
+    emits: defineEntityVEmitOptions<Client>(),
+    slots: Object as SlotsType<EntityVSlots<Client>>,
     async setup(props, setup) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.CLIENT}`,
             setup,
             props,

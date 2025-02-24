@@ -44,8 +44,8 @@ import {
 } from '../../../core';
 import {
     AFormInputList,
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
 } from '../../utility';
 import { ARealmPicker } from '../realm';
 
@@ -66,7 +66,7 @@ export const AClientForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineResourceVEmitOptions<Client>(),
+    emits: defineEntityVEmitOptions<Client>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -117,7 +117,7 @@ export const AClientForm = defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.CLIENT}`,
             setup: ctx,
             props,

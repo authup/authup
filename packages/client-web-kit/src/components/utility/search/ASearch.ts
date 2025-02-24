@@ -8,7 +8,7 @@
 import type { ListLoadFn } from '@vuecs/list-controls';
 import type { PropType, SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ListMeta } from '../resource';
+import type { ListMeta } from '../entity';
 import type { SearchSlotProps } from './type';
 import { buildListSearch } from './module';
 

@@ -9,7 +9,7 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { User } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
@@ -17,17 +17,17 @@ import {
     useTranslation,
 } from '../../../core';
 import {
-    createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions,
-    defineResourceCollectionVProps,
+    defineEntityCollectionManager,
+    defineEntityCollectionVEmitOptions,
+    defineEntityCollectionVProps,
 } from '../../utility';
 
 export const AUsers = defineComponent({
-    props: defineResourceCollectionVProps<User>(),
-    slots: Object as SlotsType<ResourceCollectionVSlots<User>>,
-    emits: defineResourceCollectionVEmitOptions<User>(),
+    props: defineEntityCollectionVProps<User>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<User>>,
+    emits: defineEntityCollectionVEmitOptions<User>(),
     setup(props, ctx) {
-        const { render } = createResourceCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${ResourceType.USER}`,
             props,
             setup: ctx,

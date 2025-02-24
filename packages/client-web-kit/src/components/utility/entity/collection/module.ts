@@ -23,20 +23,20 @@ import {
 import { createMerger, isObject } from 'smob';
 import { boolableToObject } from '../../../../utils';
 import { injectHTTPClient } from '../../../../core/http-client';
-import { createResourceSocketManager } from '../socket';
-import type { ResourceSocketManagerCreateContext } from '../socket';
+import { defineEntitySocketManager } from '../socket';
+import type { EntitySocketManagerCreateContext } from '../socket';
 import { isQuerySortedDescByDate } from '../../../../core/query';
 import type {
+    EntityCollectionManager,
+    EntityCollectionManagerCreateContext,
+    EntityCollectionRenderOptions,
     ListMeta,
-    ResourceCollectionManager,
-    ResourceCollectionManagerCreateContext,
-    ResourceCollectionRenderOptions,
 } from './types';
 import {
-    buildListCreatedHandler,
-    buildListDeletedHandler,
-    buildListUpdatedHandler,
-    mergeListOptions,
+    buildEntityCollectionCreatedHandler,
+    buildEntityCollectionDeletedHandler,
+    buildEntityCollectionUpdatedHandler,
+    mergeEntityCollectionRenderOptions,
 } from './utils';
 
 const merger = createMerger({
@@ -51,8 +51,8 @@ function create<
     TYPE extends keyof ResourceTypeMap,
     RECORD extends ResourceTypeMap[TYPE],
 >(
-    context: ResourceCollectionManagerCreateContext<TYPE, RECORD>,
-) : ResourceCollectionManager<RECORD> {
+    context: EntityCollectionManagerCreateContext<TYPE, RECORD>,
+) : EntityCollectionManager<RECORD> {
     const data : Ref<RECORD[]> = ref([]);
     const busy = ref(false);
     const total = ref(0);
@@ -170,7 +170,7 @@ function create<
         }
     }
 
-    const handleCreated = buildListCreatedHandler(data, (cbEntity) => {
+    const handleCreated = buildEntityCollectionCreatedHandler(data, (cbEntity) => {
         total.value++;
 
         if (context.onCreated) {
@@ -178,15 +178,15 @@ function create<
         }
     });
 
-    const handleDeleted = buildListDeletedHandler(data, () => {
+    const handleDeleted = buildEntityCollectionDeletedHandler(data, () => {
         total.value--;
     });
-    const handleUpdated = buildListUpdatedHandler(data);
+    const handleUpdated = buildEntityCollectionUpdatedHandler(data);
 
-    function render(defaults?: ResourceCollectionRenderOptions<RECORD>) : VNodeChild {
-        let renderOptions : ResourceCollectionRenderOptions<RECORD>;
+    function render(defaults?: EntityCollectionRenderOptions<RECORD>) : VNodeChild {
+        let renderOptions : EntityCollectionRenderOptions<RECORD>;
         if (defaults) {
-            renderOptions = mergeListOptions(context.props, defaults);
+            renderOptions = mergeEntityCollectionRenderOptions(context.props, defaults);
         } else {
             renderOptions = context.props;
         }
@@ -264,7 +264,7 @@ function create<
         typeof context.socket === 'undefined' ||
         context.socket
     ) {
-        const socketContext : ResourceSocketManagerCreateContext<TYPE, RECORD> = {
+        const socketContext : EntitySocketManagerCreateContext<TYPE, RECORD> = {
             type: context.type,
             ...(isObject(context.socket) ? context.socket : {}),
         };
@@ -287,7 +287,7 @@ function create<
         };
         socketContext.realmId = realmId;
 
-        createResourceSocketManager(socketContext);
+        defineEntitySocketManager(socketContext);
     }
 
     return {
@@ -305,10 +305,10 @@ function create<
     };
 }
 
-export function createResourceCollectionManager<
+export function defineEntityCollectionManager<
     A extends keyof ResourceTypeMap,
 >(
-    context: ResourceCollectionManagerCreateContext<A, ResourceTypeMap[A]>,
-) : ResourceCollectionManager<ResourceTypeMap[A]> {
+    context: EntityCollectionManagerCreateContext<A, ResourceTypeMap[A]>,
+) : EntityCollectionManager<ResourceTypeMap[A]> {
     return create(context);
 }

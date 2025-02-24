@@ -26,8 +26,8 @@ import type {
     MaybeRef,
     Ref, SetupContext, VNodeChild,
 } from 'vue';
-import type { ResourceSocketManagerCreateContext } from '../socket';
-import type { ResourceCollectionSlotName } from './constants';
+import type { EntitySocketManagerCreateContext } from '../socket';
+import type { EntityCollectionSlotName } from './constants';
 
 type Entity<T> = T extends Record<string, any> ? T : never;
 
@@ -56,7 +56,7 @@ export type ListBodyOptions<T> = {
     item?: ListItemOptions<T>
 };
 
-export type ResourceCollectionRenderOptions<T> = {
+export type EntityCollectionRenderOptions<T> = {
     header?: ListHeaderOptions<T> | boolean,
     body?: ListBodyOptions<T>,
     item?: ListItemOptions<T>,
@@ -65,14 +65,14 @@ export type ResourceCollectionRenderOptions<T> = {
     loading?: ListLoadingOptions<T> | boolean
 };
 
-export type ResourceCollectionVProps<T> = {
+export type EntityCollectionVProps<T> = {
     realmId?: string,
     query?: BuildInput<Entity<T>>,
     loadOnSetup?: boolean,
-} & ResourceCollectionRenderOptions<T>;
+} & EntityCollectionRenderOptions<T>;
 
-export type ResourceCollectionManager<T extends Record<string, any>> = {
-    render(defaults?: ResourceCollectionRenderOptions<T>) : VNodeChild;
+export type EntityCollectionManager<T extends Record<string, any>> = {
+    render(defaults?: EntityCollectionRenderOptions<T>) : VNodeChild;
     load: ListLoadFn<ListMeta<T>>,
     handleCreated(item: T) : void;
     handleDeleted(item: T) : void;
@@ -83,35 +83,35 @@ export type ResourceCollectionManager<T extends Record<string, any>> = {
     total: Ref<number>,
 };
 
-export type ResourceCollectionVSlots<T extends Record<string, any>> = {
-    [ResourceCollectionSlotName.BODY]: ListBodySlotProps<T, ListMeta<T>>,
-    [ResourceCollectionSlotName.DEFAULT]: ListSlotProps<T, ListMeta<T>>,
-    [ResourceCollectionSlotName.ITEM]: ListItemSlotProps<T>, // todo: add generic
-    [ResourceCollectionSlotName.ITEM_ACTIONS]: ListItemSlotProps<T>, // todo: add generic
-    [ResourceCollectionSlotName.ITEM_ACTIONS_EXTRA]: ListItemSlotProps<T>, // todo: add generic
-    [ResourceCollectionSlotName.HEADER]: ListHeaderSlotProps<T, ListMeta<T>>,
-    [ResourceCollectionSlotName.FOOTER]: ListFooterSlotProps<T, ListMeta<T>>,
-    [ResourceCollectionSlotName.NO_MORE]: undefined,
-    [ResourceCollectionSlotName.LOADING]: undefined
+export type EntityCollectionVSlots<T extends Record<string, any>> = {
+    [EntityCollectionSlotName.BODY]: ListBodySlotProps<T, ListMeta<T>>,
+    [EntityCollectionSlotName.DEFAULT]: ListSlotProps<T, ListMeta<T>>,
+    [EntityCollectionSlotName.ITEM]: ListItemSlotProps<T>, // todo: add generic
+    [EntityCollectionSlotName.ITEM_ACTIONS]: ListItemSlotProps<T>, // todo: add generic
+    [EntityCollectionSlotName.ITEM_ACTIONS_EXTRA]: ListItemSlotProps<T>, // todo: add generic
+    [EntityCollectionSlotName.HEADER]: ListHeaderSlotProps<T, ListMeta<T>>,
+    [EntityCollectionSlotName.FOOTER]: ListFooterSlotProps<T, ListMeta<T>>,
+    [EntityCollectionSlotName.NO_MORE]: undefined,
+    [EntityCollectionSlotName.LOADING]: undefined
 };
 
-export type ResourceCollectionVEmitOptions<T> = {
+export type EntityCollectionVEmitOptions<T> = {
     created: (item: T) => true,
     deleted: (item: T) => true,
     updated: (item: T) => true
 };
 
-export type ResourceCollectionManagerCreateContext<
+export type EntityCollectionManagerCreateContext<
     TYPE extends string,
     RECORD extends Record<string, any>,
 > = {
     type: TYPE,
     realmId?: MaybeRef<string>,
-    setup: SetupContext<ResourceCollectionVEmitOptions<RECORD>>,
-    props: ResourceCollectionVProps<RECORD>,
+    setup: SetupContext<EntityCollectionVEmitOptions<RECORD>>,
+    props: EntityCollectionVProps<RECORD>,
     loadAll?: boolean,
     query?: BuildInput<Entity<RECORD>> | (() => BuildInput<Entity<RECORD>>),
     queryFilters?: ((q: string) => FiltersBuildInput<Entity<RECORD>>),
     onCreated?: (entity: RECORD, meta: ListMeta<RECORD>) => void | Promise<void>,
-    socket?: boolean | Omit<ResourceSocketManagerCreateContext<TYPE, RECORD>, 'type'>
+    socket?: boolean | Omit<EntitySocketManagerCreateContext<TYPE, RECORD>, 'type'>
 };

@@ -35,7 +35,7 @@ import {
     injectHTTPClient,
 } from '../../../core';
 import {
-    createResourceManager, defineResourceVEmitOptions,
+    defineEntityManager, defineEntityVEmitOptions,
 } from '../../utility';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields';
@@ -72,10 +72,10 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             type: String as PropType<string | null>,
         },
     },
-    emits: defineResourceVEmitOptions<IdentityProvider>(),
+    emits: defineEntityVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
         const apiClient = injectHTTPClient();
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.IDENTITY_PROVIDER}`,
             setup: ctx,
             props,

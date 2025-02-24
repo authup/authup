@@ -9,8 +9,8 @@ import { ResourceType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { ClientPermission } from '@authup/core-kit';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
     renderToggleButton,
 } from '../../utility';
 
@@ -19,9 +19,9 @@ export const AClientPermissionAssignment = defineComponent({
         clientId: String,
         permissionId: String,
     },
-    emits: defineResourceVEmitOptions<ClientPermission>(),
+    emits: defineEntityVEmitOptions<ClientPermission>(),
     async setup(props, setup) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.CLIENT_PERMISSION}`,
             setup,
             socket: {

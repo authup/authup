@@ -9,14 +9,14 @@ import type { BuildInput, FieldsBuildInput, FiltersBuildInput } from 'rapiq';
 import { unref } from 'vue';
 import type { PropType } from 'vue';
 import type {
-    ResourceManager,
-    ResourceVEmitOptions,
-    ResourceVSlotProps,
+    EntityManager,
+    EntityVEmitOptions,
+    EntityVSlotProps,
 } from './types';
 
-export function buildResourceVSlotProps<T>(
-    input: ResourceManager<T>,
-) : ResourceVSlotProps<T> {
+export function buildEntityVSlotProps<T>(
+    input: EntityManager<T>,
+) : EntityVSlotProps<T> {
     return {
         ...input,
         error: unref(input.error),
@@ -26,7 +26,7 @@ export function buildResourceVSlotProps<T>(
     };
 }
 
-export function defineResourceVEmitOptions<T>(): ResourceVEmitOptions<T> {
+export function defineEntityVEmitOptions<T>(): EntityVEmitOptions<T> {
     return {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         failed: (_item: Error) => true,
@@ -41,7 +41,7 @@ export function defineResourceVEmitOptions<T>(): ResourceVEmitOptions<T> {
     };
 }
 
-export function defineResourceVProps<T>() {
+export function defineEntityVProps<T>() {
     return {
         entity: {
             type: Object as PropType<T>,

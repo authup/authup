@@ -8,7 +8,7 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
@@ -16,17 +16,17 @@ import {
     useTranslation,
 } from '../../../core';
 import {
-    createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions,
-    defineResourceCollectionVProps,
+    defineEntityCollectionManager,
+    defineEntityCollectionVEmitOptions,
+    defineEntityCollectionVProps,
 } from '../../utility';
 
 export const APermissions = defineComponent({
-    props: defineResourceCollectionVProps<Permission>(),
-    slots: Object as SlotsType<ResourceCollectionVSlots<Permission>>,
-    emits: defineResourceCollectionVEmitOptions<Permission>(),
+    props: defineEntityCollectionVProps<Permission>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Permission>>,
+    emits: defineEntityCollectionVEmitOptions<Permission>(),
     setup(props, setup) {
-        const { render } = createResourceCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${ResourceType.PERMISSION}`,
             props,
             setup,

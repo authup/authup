@@ -11,19 +11,19 @@ import {
     defineComponent,
 } from 'vue';
 import {
-    defineResourcePicker,
-    defineResourcePickerVEmitOptions,
-    defineResourcePickerVProps,
-} from '../../utility/resource/picker/module';
-import type { ResourcePickerVSlots } from '../../utility/resource/picker/types';
+    defineEntityPicker,
+    defineEntityPickerVEmitOptions,
+    defineEntityPickerVProps,
+} from '../../utility/entity/picker/module';
+import type { EntityPickerVSlots } from '../../utility/entity/picker/types';
 import { ARealms } from './ARealms';
 
 export const ARealmPicker = defineComponent({
-    props: defineResourcePickerVProps<Realm>(),
-    emits: defineResourcePickerVEmitOptions<Realm>(),
-    slots: Object as SlotsType<ResourcePickerVSlots<Realm>>,
+    props: defineEntityPickerVProps<Realm>(),
+    emits: defineEntityPickerVEmitOptions<Realm>(),
+    slots: Object as SlotsType<EntityPickerVSlots<Realm>>,
     setup(props, setup) {
-        const { render } = defineResourcePicker({
+        const { render } = defineEntityPicker({
             component: ARealms,
             props,
             setup,

@@ -6,7 +6,7 @@
  */
 
 import { merge } from 'smob';
-import type { ResourceCollectionRenderOptions, ResourceCollectionVProps } from '../types';
+import type { EntityCollectionRenderOptions, EntityCollectionVProps } from '../types';
 
 function mergeListOption<T extends boolean | Record<string, any> | undefined>(
     primary: T,
@@ -30,11 +30,11 @@ function mergeListOption<T extends boolean | Record<string, any> | undefined>(
     return merge(primaryRecord, secondaryRecord) as T;
 }
 
-export function mergeListOptions<T>(
-    props: ResourceCollectionVProps<T>,
-    defaults: Partial<ResourceCollectionRenderOptions<T>>,
-) : ResourceCollectionRenderOptions<T> {
-    const output : Partial<ResourceCollectionRenderOptions<T>> = {
+export function mergeEntityCollectionRenderOptions<T>(
+    props: EntityCollectionVProps<T>,
+    defaults: Partial<EntityCollectionRenderOptions<T>>,
+) : EntityCollectionRenderOptions<T> {
+    const output : Partial<EntityCollectionRenderOptions<T>> = {
         body: defaults.body,
         item: defaults.item,
     };
@@ -44,5 +44,5 @@ export function mergeListOptions<T>(
     output.footer = mergeListOption(props.footer, defaults.footer);
     output.loading = mergeListOption(props.loading, defaults.loading);
 
-    return output as ResourceCollectionRenderOptions<T>;
+    return output as EntityCollectionRenderOptions<T>;
 }

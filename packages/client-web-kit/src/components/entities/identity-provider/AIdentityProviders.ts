@@ -9,7 +9,7 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
@@ -18,17 +18,17 @@ import {
 } from '../../../core';
 import {
 
-    createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions,
-    defineResourceCollectionVProps,
+    defineEntityCollectionManager,
+    defineEntityCollectionVEmitOptions,
+    defineEntityCollectionVProps,
 } from '../../utility';
 
 export const AIdentityProviders = defineComponent({
-    props: defineResourceCollectionVProps<IdentityProvider>(),
-    slots: Object as SlotsType<ResourceCollectionVSlots<IdentityProvider>>,
-    emits: defineResourceCollectionVEmitOptions<IdentityProvider>(),
+    props: defineEntityCollectionVProps<IdentityProvider>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<IdentityProvider>>,
+    emits: defineEntityCollectionVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
-        const { render } = createResourceCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${ResourceType.IDENTITY_PROVIDER}`,
             props,
             setup: ctx,

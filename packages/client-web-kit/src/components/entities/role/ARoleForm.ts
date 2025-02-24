@@ -34,8 +34,8 @@ import {
     useTranslationsForNestedValidation,
 } from '../../../core';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
 } from '../../utility';
 import { ARealmPicker } from '../realm';
 
@@ -46,7 +46,7 @@ export const ARoleForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineResourceVEmitOptions<Role>(),
+    emits: defineEntityVEmitOptions<Role>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -81,7 +81,7 @@ export const ARoleForm = defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.ROLE}`,
             setup: ctx,
             props,

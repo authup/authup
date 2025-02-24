@@ -7,7 +7,7 @@
 
 export * from './form-input-list';
 export * from './pagination';
-export * from './resource';
+export * from './entity';
 export * from './title';
 export * from './search';
 export * from './toggle-button';

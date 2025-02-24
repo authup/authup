@@ -7,7 +7,7 @@
 
 import { SlotName } from '@vuecs/list-controls';
 
-export enum ResourceCollectionSlotName {
+export enum EntityCollectionSlotName {
     DEFAULT = SlotName.DEFAULT,
     BODY = SlotName.BODY,
     ITEM = SlotName.ITEM,

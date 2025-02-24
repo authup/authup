@@ -9,10 +9,10 @@ import { ResourceType } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Policy } from '@authup/core-kit';
-import type { ResourceManager } from '../../utility';
+import type { EntityManager } from '../../utility';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
     renderToggleButton,
 } from '../../utility';
 
@@ -30,9 +30,9 @@ export const APolicyParentAssignment = defineComponent({
             required: true,
         },
     },
-    emits: defineResourceVEmitOptions<Policy>(),
+    emits: defineEntityVEmitOptions<Policy>(),
     async setup(props, setup) {
-        const manager : ResourceManager<Policy> = createResourceManager({
+        const manager : EntityManager<Policy> = defineEntityManager({
             type: `${ResourceType.POLICY}`,
             setup,
             socket: {

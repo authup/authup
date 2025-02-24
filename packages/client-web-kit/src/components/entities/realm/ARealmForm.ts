@@ -36,8 +36,8 @@ import {
     useTranslationsForNestedValidation,
 } from '../../../core';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
 } from '../../utility';
 
 export const ARealmForm = defineComponent({
@@ -48,7 +48,7 @@ export const ARealmForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineResourceVEmitOptions<Realm>(),
+    emits: defineEntityVEmitOptions<Realm>(),
     setup(props, ctx) {
         const busy = ref(false);
         const form = reactive({
@@ -76,7 +76,7 @@ export const ARealmForm = defineComponent({
             },
         }, form);
 
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.REALM}`,
             setup: ctx,
             props,

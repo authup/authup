@@ -11,8 +11,8 @@ import {
 } from 'vue';
 import type { ClientRole } from '@authup/core-kit';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
     renderToggleButton,
 } from '../../utility';
 
@@ -21,9 +21,9 @@ export const AClientRoleAssignment = defineComponent({
         roleId: String,
         clientId: String,
     },
-    emits: defineResourceVEmitOptions<ClientRole>(),
+    emits: defineEntityVEmitOptions<ClientRole>(),
     async setup(props, setup) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.CLIENT_ROLE}`,
             setup,
             socket: {

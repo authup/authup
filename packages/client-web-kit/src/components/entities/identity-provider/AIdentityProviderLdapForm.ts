@@ -18,8 +18,8 @@ import {
     extractVuelidateResultsFromChild,
 } from '../../../core';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
 } from '../../utility';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderLdapConnectionFields } from './AIdentityProviderLdapConnectionFields';
@@ -41,9 +41,9 @@ export const AIdentityProviderLdapForm = defineComponent({
             default: undefined,
         },
     },
-    emits: defineResourceVEmitOptions<IdentityProvider>(),
+    emits: defineEntityVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.IDENTITY_PROVIDER}`,
             setup: ctx,
             props,

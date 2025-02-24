@@ -9,8 +9,8 @@ import { ResourceType } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import type { RobotPermission } from '@authup/core-kit';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
+    defineEntityManager,
+    defineEntityVEmitOptions,
 
     renderToggleButton,
 } from '../../utility';
@@ -20,9 +20,9 @@ export const ARobotPermissionAssignment = defineComponent({
         robotId: String,
         permissionId: String,
     },
-    emits: defineResourceVEmitOptions<RobotPermission>(),
+    emits: defineEntityVEmitOptions<RobotPermission>(),
     async setup(props, setup) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.ROBOT_PERMISSION}`,
             setup,
             socket: {

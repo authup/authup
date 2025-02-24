@@ -9,19 +9,19 @@ import { ResourceType } from '@authup/core-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import type { ResourceVSlots } from '../../utility';
+import type { EntityVSlots } from '../../utility';
 import {
-    createResourceManager,
-    defineResourceVEmitOptions,
-    defineResourceVProps,
+    defineEntityManager,
+    defineEntityVEmitOptions,
+    defineEntityVProps,
 } from '../../utility';
 
 export const AIdentityProvider = defineComponent({
-    props: defineResourceVProps<IdentityProvider>(),
-    emits: defineResourceVEmitOptions<IdentityProvider>(),
-    slots: Object as SlotsType<ResourceVSlots<IdentityProvider>>,
+    props: defineEntityVProps<IdentityProvider>(),
+    emits: defineEntityVEmitOptions<IdentityProvider>(),
+    slots: Object as SlotsType<EntityVSlots<IdentityProvider>>,
     async setup(props, setup) {
-        const manager = createResourceManager({
+        const manager = defineEntityManager({
             type: `${ResourceType.IDENTITY_PROVIDER}`,
             props,
             setup,

@@ -9,23 +9,23 @@ import { ResourceType } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core-kit';
-import type { ResourceCollectionVSlots } from '../../utility';
+import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup, TranslatorTranslationVuecsKey, useTranslation,
 } from '../../../core';
 import {
-    createResourceCollectionManager,
-    defineResourceCollectionVEmitOptions,
-    defineResourceCollectionVProps,
+    defineEntityCollectionManager,
+    defineEntityCollectionVEmitOptions,
+    defineEntityCollectionVProps,
 } from '../../utility';
 
 export const ARobots = defineComponent({
-    props: defineResourceCollectionVProps<Robot>(),
-    slots: Object as SlotsType<ResourceCollectionVSlots<Robot>>,
-    emits: defineResourceCollectionVEmitOptions<Robot>(),
+    props: defineEntityCollectionVProps<Robot>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Robot>>,
+    emits: defineEntityCollectionVEmitOptions<Robot>(),
     setup(props, ctx) {
-        const { render } = createResourceCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${ResourceType.ROBOT}`,
             props,
             setup: ctx,
