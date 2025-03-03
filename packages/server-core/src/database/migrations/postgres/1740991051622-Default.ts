@@ -196,7 +196,7 @@ export class Default1740991051622 implements MigrationInterface {
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_identity_providers"
-            ADD "slug" character varying(36) NOT NULL
+            ADD "slug" character varying(36) NULL
         `);
         await queryRunner.query(`
             DROP INDEX "public"."IDX_2b1afa844bfc6635f92be68375"

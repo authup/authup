@@ -198,7 +198,7 @@ export class Default1740991051622 implements MigrationInterface {
         `);
         await queryRunner.query(`
             ALTER TABLE \`auth_identity_providers\`
-            ADD \`slug\` varchar(36) NOT NULL
+            ADD \`slug\` varchar(36) NULL
         `);
         await queryRunner.query(`
             DROP INDEX \`IDX_2b1afa844bfc6635f92be68375\` ON \`auth_client_roles\`
