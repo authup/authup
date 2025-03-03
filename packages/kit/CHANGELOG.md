@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-03-03)
+
+
+### Features
+
+* correct client usage in security context ([#2579](https://github.com/authup/authup/issues/2579)) ([26f0118](https://github.com/authup/authup/commit/26f0118184c98bf04f499d19526b1cf0d034cad6))
+
+
+### Bug Fixes
+
+* **deps:** bump nanoid to v3.3.8 ([4729780](https://github.com/authup/authup/commit/4729780635295705a14594eea4a3059deb207cc0))
+
 ## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
 
 
