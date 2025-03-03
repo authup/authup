@@ -59,11 +59,7 @@ export class Default1740991051622 implements MigrationInterface {
             ADD "client_id" uuid
         `);
         await queryRunner.query(`
-            ALTER TABLE "auth_roles" DROP COLUMN "name"
-        `);
-        await queryRunner.query(`
-            ALTER TABLE "auth_roles"
-            ADD "name" character varying(128) NOT NULL
+            ALTER TABLE "auth_roles" ALTER COLUMN "name" TYPE varying(128)
         `);
         await queryRunner.query(`
             CREATE INDEX "IDX_707089f1df498d1719972e69ae" ON "auth_policies" ("realm_id")
@@ -193,11 +189,7 @@ export class Default1740991051622 implements MigrationInterface {
             DROP INDEX "public"."IDX_707089f1df498d1719972e69ae"
         `);
         await queryRunner.query(`
-            ALTER TABLE "auth_roles" DROP COLUMN "name"
-        `);
-        await queryRunner.query(`
-            ALTER TABLE "auth_roles"
-            ADD "name" character varying(64) NOT NULL
+            ALTER TABLE "auth_roles" ALTER COLUMN "name" TYPE varying(64)
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_roles" DROP COLUMN "client_id"
