@@ -23,7 +23,7 @@ export function extendDataSourceOptions(options: DataSourceOptions) : DataSource
 
         Object.assign(options, {
             migrations: [migrationPath],
-            migrationsTransactionMode: 'each',
+            migrationsTransactionMode: 'all',
         } satisfies Partial<DataSourceOptions>);
     }
 

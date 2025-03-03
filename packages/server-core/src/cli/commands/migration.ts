@@ -75,10 +75,6 @@ export function defineCLIMigrationCommand() {
                     username: 'root',
                     password: 'start123',
                 },
-                {
-                    type: 'better-sqlite3',
-                    database: path.join(config.writableDirectoryPath, 'migrations.sql'),
-                },
             ];
 
             const baseDirectory = path.join(__dirname, '..', '..', 'database', 'migrations');
