@@ -190,8 +190,8 @@ export class Default1740991051622 implements MigrationInterface {
             MODIFY \`name\` varchar(64) NOT NULL
         `);
         await queryRunner.query(`
-            ALTER TABLE \` auth_policies\`
-                MODIFY \` parent_id\` varchar (36) NULL
+            ALTER TABLE \`auth_policies\`
+                MODIFY \`parent_id\` varchar (36) NULL
         `);
         await queryRunner.query(`
             ALTER TABLE \`auth_roles\` DROP COLUMN \`client_id\`
