@@ -1,5 +1,6 @@
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import type { PropType } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import type { FormSelectOption } from '@vuecs/form-controls';
 import { BuiltInPolicyType } from '@authup/access';
 
@@ -8,16 +9,30 @@ export default defineComponent({
         type: {
             type: String,
         },
+        types: {
+            type: Array as PropType<(FormSelectOption | string)[]>,
+        },
     },
     emits: ['pick'],
     setup(props, setup) {
         const option = ref<string | null>(null);
-        const options : FormSelectOption[] = [
-            ...Object.values(BuiltInPolicyType).map((type: string) => ({
-                id: type,
-                value: type,
-            } satisfies FormSelectOption)),
-        ];
+        const options = computed<FormSelectOption[]>(() => {
+            if (props.types) {
+                return props.types.map((type) => {
+                    if (typeof type === 'string') {
+                        return { id: type, value: type } satisfies FormSelectOption;
+                    }
+
+                    return type;
+                });
+            }
+
+            return Object.values(BuiltInPolicyType)
+                .map((type: string) => ({
+                    id: type,
+                    value: type,
+                } satisfies FormSelectOption));
+        });
 
         if (props.type) {
             option.value = props.type;
@@ -48,7 +63,7 @@ export default defineComponent({
                 >
                     <div
                         :class="{'active': item.id === option}"
-                        class="d-flex flex-column gap-1 text-center picker-item"
+                        class="d-flex flex-column gap-1 text-center a-picker-item"
                         @click.prevent="pick(`${item.id}`)"
                     >
                         <div>
@@ -61,7 +76,7 @@ export default defineComponent({
     </div>
 </template>
 <style scoped>
-.picker-item {
+.a-picker-item {
     cursor: pointer;
     border-radius: 4px;
     min-width: 120px;
@@ -70,9 +85,9 @@ export default defineComponent({
     padding: 0.5rem;
 }
 
-.picker-item.active,
-.picker-item:hover,
-.picker-item:active {
+.a-picker-item.active,
+.a-picker-item:hover,
+.a-picker-item:active {
     background-color: #6d7fcc;
     color: #fff;
 }

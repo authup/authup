@@ -1,11 +1,11 @@
 <script lang="ts">
 import type { PropType } from 'vue';
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent } from 'vue';
 import type { Policy } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import { BuiltInPolicyType } from '@authup/access';
-import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
+import { useIsEditing } from '../../../composables';
 import { extractVuelidateResultsFromChild, injectHTTPClient } from '../../../core';
 import { AFormSubmit, defineEntityManager } from '../../utility';
 import APolicyBasicForm from './APolicyBasicForm.vue';
@@ -23,9 +23,11 @@ export default defineComponent({
         entity: {
             type: Object as PropType<Policy>,
         },
+        type: {
+            type: String as PropType<string>,
+        },
     },
     setup(props, ctx) {
-        const type = ref<string | null>(null);
         const typeComponents : Record<string, any> = {
             [BuiltInPolicyType.IDENTITY]: AIdentityPolicyForm,
             [BuiltInPolicyType.REALM_MATCH]: ARealmMatchPolicyForm,
@@ -42,22 +44,19 @@ export default defineComponent({
             props,
         });
 
-        const updatedAt = useUpdatedAt(manager.data);
         const isEditing = useIsEditing(manager.data);
 
-        const setType = (val: string | null): void => {
-            type.value = val;
-        };
-
-        const setTypeByEntity = () => {
-            if (manager.data.value && manager.data.value.type) {
-                type.value = manager.data.value.type;
+        const typeComputed = computed<string | null>(() => {
+            if (manager.data.value) {
+                return manager.data.value.type;
             }
-        };
 
-        setTypeByEntity();
+            if (props.type) {
+                return props.type;
+            }
 
-        onChange(updatedAt, () => setTypeByEntity());
+            return null;
+        });
 
         const vuelidate = useVuelidate({ $stopPropagation: true });
 
@@ -71,8 +70,8 @@ export default defineComponent({
                 ...extractVuelidateResultsFromChild(vuelidate, 'type'),
             } as Partial<Omit<Policy, 'children'>> & {items: string[]};
 
-            if (type.value) {
-                data.type = type.value;
+            if (typeComputed.value) {
+                data.type = typeComputed.value;
             }
 
             await manager.createOrUpdate(data);
@@ -89,9 +88,8 @@ export default defineComponent({
         };
 
         return {
-            type,
+            typeComputed,
             typeComponents,
-            setType,
             data: manager.data,
             busy: manager.busy,
             isEditing,
@@ -103,38 +101,30 @@ export default defineComponent({
 </script>
 <template>
     <div class="d-flex flex-column">
-        <template v-if="!isEditing">
-            <APolicyTypePicker
-                v-if="!isEditing"
-                :type="type"
-                @pick="setType"
+        <h6>General</h6>
+        <APolicyBasicForm :entity="data" />
+
+        <template v-if="typeComputed">
+            <slot
+                name="default"
+                :entity="entity"
+            >
+                <template v-if="typeComputed in typeComponents">
+                    <component
+                        :is="typeComponents[typeComputed]"
+                        :entity="entity"
+                    />
+                </template>
+            </slot>
+        </template>
+
+        <div>
+            <AFormSubmit
+                :is-invalid="vuelidate.$invalid || !typeComputed"
+                :is-busy="busy"
+                :is-editing="isEditing"
+                @submit="submit"
             />
-
-            <template v-if="type">
-                <hr>
-            </template>
-        </template>
-
-        <template v-if="type">
-            <h6>General</h6>
-            <APolicyBasicForm :entity="data" />
-
-            <template v-if="type in typeComponents">
-                <h6>Custom</h6>
-                <component
-                    :is="typeComponents[type]"
-                    :entity="entity"
-                />
-            </template>
-
-            <div>
-                <AFormSubmit
-                    :is-invalid="vuelidate.$invalid || !type"
-                    :is-busy="busy"
-                    :is-editing="isEditing"
-                    @submit="submit"
-                />
-            </div>
-        </template>
+        </div>
     </div>
 </template>

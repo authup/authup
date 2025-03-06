@@ -11,8 +11,8 @@ import type { SlotsType } from 'vue';
 import {
     defineComponent, h,
 } from 'vue';
-import { defineEntityPicker, defineEntityPickerVEmitOptions, defineEntityPickerVProps } from '../../utility/entity/picker/module';
-import type { EntityPickerVSlots } from '../../utility/entity/picker/types';
+import { defineEntityPicker, defineEntityPickerVEmitOptions, defineEntityPickerVProps } from '../../utility';
+import type { EntityPickerVSlots } from '../../utility';
 import { APolicies } from './APolicies';
 import { APolicyParentAssignment } from './APolicyParentAssignment';
 
