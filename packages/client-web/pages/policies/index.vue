@@ -1,5 +1,4 @@
 <script lang="ts">
-
 import type { Policy } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { definePageMeta, useToast } from '#imports';

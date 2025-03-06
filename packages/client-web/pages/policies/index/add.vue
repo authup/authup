@@ -1,23 +1,19 @@
 <script lang="ts">
-import { APolicyForm } from '@authup/client-web-kit';
-import type { Permission, Policy } from '@authup/core-kit';
-import { PermissionName } from '@authup/core-kit';
-import { defineNuxtComponent, navigateTo } from '#app';
-import { definePageMeta } from '#imports';
-import { LayoutKey } from '../../../config/layout';
+import { defineComponent, ref } from 'vue';
+import { APolicyForm, APolicyTypePicker } from '@authup/client-web-kit';
+import type { Policy } from '@authup/core-kit';
+import { navigateTo } from '#app';
 
-export default defineNuxtComponent({
+export default defineComponent({
     components: {
         APolicyForm,
+        APolicyTypePicker,
     },
-    emits: ['failed', 'created'],
     setup(props, { emit }) {
-        definePageMeta({
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            [LayoutKey.REQUIRED_PERMISSIONS]: [
-                PermissionName.PERMISSION_CREATE,
-            ],
-        });
+        const type = ref<string | null>(null);
+        const handlePicked = (value: string) => {
+            type.value = value;
+        };
 
         const handleCreated = (e: Policy) => {
             navigateTo({ path: `/policies/${e.id}` });
@@ -30,13 +26,22 @@ export default defineNuxtComponent({
         return {
             handleCreated,
             handleFailed,
+            handlePicked,
+            type,
         };
     },
 });
 </script>
 <template>
-    <APolicyForm
-        @failed="handleFailed"
-        @created="handleCreated"
-    />
+    <div class="d-flex flex-column gap-2">
+        <APolicyTypePicker @pick="handlePicked" />
+
+        <template v-if="type">
+            <APolicyForm
+                :type="type"
+                @failed="handleFailed"
+                @created="handleCreated"
+            />
+        </template>
+    </div>
 </template>

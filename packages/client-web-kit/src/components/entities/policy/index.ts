@@ -7,4 +7,5 @@
 
 export { APolicy } from './APolicy';
 export { APolicies } from './APolicies';
+export { default as APolicyTypePicker } from './APolicyTypePicker.vue';
 export { default as APolicyForm } from './APolicyForm.vue';
