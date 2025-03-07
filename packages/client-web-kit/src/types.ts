@@ -7,6 +7,7 @@
 
 import type { Pinia } from 'pinia';
 import type {
+    AAttributeNamesPolicyForm,
     AClient,
     AClientForm,
     AClientPermissionAssignment,
@@ -18,6 +19,9 @@ import type {
     AClientScopeAssignments,
     AClientScopes,
     AClients,
+    ACompositePolicyForm,
+    ADatePolicyForm,
+    AIdentityPolicyForm,
     AIdentityProvider,
     AIdentityProviderForm,
     AIdentityProviderIcon,
@@ -34,8 +38,13 @@ import type {
     APermissionRoleAssignments,
     APermissionUserAssignments,
     APermissions,
+    APolicies,
+    APolicy,
+    APolicyForm,
+    APolicyTypePicker,
     ARealm,
     ARealmForm,
+    ARealmMatchPolicyForm,
     ARealms,
     ARobot,
     ARobotForm,
@@ -56,6 +65,7 @@ import type {
     AScopeClientAssignments,
     AScopeForm,
     AScopes,
+    ATimePolicyForm,
     AUser,
     AUserForm,
     AUserPasswordForm,
@@ -144,6 +154,17 @@ declare module '@vue/runtime-core' {
         APermissionRobotAssignments: typeof APermissionRobotAssignments;
         APermissionRoleAssignments: typeof APermissionRoleAssignments;
         APermissionUserAssignments: typeof APermissionUserAssignments;
+
+        APolicy: typeof APolicy;
+        APolicies: typeof APolicies;
+        APolicyTypePicker: typeof APolicyTypePicker;
+        APolicyForm: typeof APolicyForm;
+        AAttributeNamesPolicyForm: typeof AAttributeNamesPolicyForm;
+        ACompositePolicyForm: typeof ACompositePolicyForm;
+        ADatePolicyForm: typeof ADatePolicyForm;
+        AIdentityPolicyForm: typeof AIdentityPolicyForm;
+        ARealmMatchPolicyForm: typeof ARealmMatchPolicyForm;
+        ATimePolicyForm: typeof ATimePolicyForm;
 
         ARealm: typeof ARealm;
         ARealms: typeof ARealms;
