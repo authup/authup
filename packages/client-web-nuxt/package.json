@@ -38,7 +38,7 @@
     "devDependencies": {
         "@nuxt/module-builder": "^0.8.4",
         "@pinia/nuxt": "^0.10.1",
-        "nuxt": "^3.15.4",
+        "nuxt": "^3.16.0",
         "pinia": "^3.0.0",
         "vue-router": "^4.4.5"
     },
