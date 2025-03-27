@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Socket } from 'socket.io-client';
+import type { ManagerOptions, Socket } from 'socket.io-client';
 import { Manager } from 'socket.io-client';
 import type { CTSEvents, DefaultEvents, STCEvents } from '../../types';
+import { cleanDoubleSlashes } from '../../utils';
 import type { ClientManagerContext, ClientManagerTokenFn } from './types';
 import { isDisconnectDescription, toClientManagerTokenAsyncFn } from './utils';
 
@@ -24,12 +25,35 @@ export class ClientManager<
     constructor(ctx: ClientManagerContext) {
         this.sockets = new Map();
 
-        this.manager = new Manager(ctx.url, {
+        const url = new URL(ctx.url);
+        const baseURL = `${url.protocol}//${url.host}`;
+
+        const options : Partial<ManagerOptions> = {
+            ...(ctx.options || {}),
+        };
+
+        if (options.path) {
+            if (url.pathname.endsWith(options.path)) {
+                options.path = url.pathname;
+            } else if (url.pathname !== '/') {
+                options.path = cleanDoubleSlashes(url.pathname + options.path);
+            }
+        } else if (url.pathname.endsWith('/socket.io')) {
+            options.path = url.pathname;
+        } else if (url.pathname !== '/') {
+            options.path = cleanDoubleSlashes(`${url.pathname}/socket.io`);
+        }
+
+        this.manager = new Manager(baseURL, {
             autoConnect: false,
-            ...ctx.options,
+            ...options,
         });
 
         this.tokenFn = toClientManagerTokenAsyncFn(ctx.token);
+    }
+
+    get options() {
+        return this.manager.opts;
     }
 
     async connect(namespace = '/') : Promise<Socket<ListenEvents, EmitEvents>> {

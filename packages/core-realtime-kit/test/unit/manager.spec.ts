@@ -35,6 +35,39 @@ describe('src/manager', () => {
         server.close();
     });
 
+    it('should accept different url + path combinations', () => {
+        let manager = new ClientManager({
+            url: `http://localhost:${port}`,
+        });
+        expect(manager.options.path).toEqual('/socket.io');
+
+        manager = new ClientManager({
+            url: `http://localhost:${port}/api/`,
+        });
+        expect(manager.options.path).toEqual('/api/socket.io');
+
+        manager = new ClientManager({
+            url: `http://localhost:${port}/api/socket.io`,
+            options: {
+                path: '/socket.io',
+            },
+        });
+        expect(manager.options.path).toEqual('/api/socket.io');
+
+        manager = new ClientManager({
+            url: `http://localhost:${port}/api/socket.io`,
+        });
+        expect(manager.options.path).toEqual('/api/socket.io');
+
+        manager = new ClientManager({
+            url: `http://localhost:${port}/api/socket.io`,
+            options: {
+                path: '/socket.jo',
+            },
+        });
+        expect(manager.options.path).toEqual('/api/socket.io/socket.jo');
+    });
+
     it('should connect to server', async () => {
         const manager = new ClientManager({
             url: `http://localhost:${port}`,
