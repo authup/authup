@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useLogger } from '@authup/server-kit';
 import { defineCommand } from 'citty';
 import path from 'node:path';
 import process from 'node:process';
@@ -16,6 +17,13 @@ import { DataSource, type DataSourceOptions } from 'typeorm';
 import { applyConfig, useConfig } from '../../config';
 import { extendDataSourceOptions } from '../../database';
 
+enum MigrationOperation {
+    GENERATE = 'generate',
+    REVERT = 'revert',
+    STATUS = 'status',
+    RUN = 'run',
+}
+
 export function defineCLIMigrationCommand() {
     return defineCommand({
         meta: {
@@ -25,12 +33,8 @@ export function defineCLIMigrationCommand() {
             operation: {
                 required: true,
                 type: 'positional',
-                options: [
-                    'generate',
-                    'revert',
-                    'status',
-                    'run',
-                ],
+                options: Object.values(MigrationOperation),
+                valueHint: Object.values(MigrationOperation).join('|'),
             },
         },
         async setup(context) {
@@ -38,12 +42,25 @@ export function defineCLIMigrationCommand() {
             applyConfig(config);
 
             if (
-                context.args.operation === 'revert' ||
-                context.args.operation === 'status' ||
-                context.args.operation === 'run'
+                context.args.operation === MigrationOperation.REVERT ||
+                context.args.operation === MigrationOperation.STATUS ||
+                context.args.operation === MigrationOperation.RUN
             ) {
                 const options = await useDataSourceOptions();
                 extendDataSourceOptions(options);
+
+                const logger = useLogger();
+                logger.info(`Type: ${options.type}`);
+                logger.info(`Database: ${options.database}`);
+                if (Array.isArray(options.migrations)) {
+                    for (let i = 0; i < options.migrations.length; i++) {
+                        if (typeof options.migrations[i] === 'string') {
+                            logger.info(`Migration-Directory: ${options.migrations[i]}`);
+                        }
+                    }
+                } else if (typeof options.migrations === 'string') {
+                    logger.info(`Migration-Directory: ${options.migrations}`);
+                }
 
                 const check = await checkDatabase({
                     options,
@@ -59,9 +76,9 @@ export function defineCLIMigrationCommand() {
                 });
                 await dataSource.initialize();
 
-                if (context.args.operation === 'revert') {
+                if (context.args.operation === MigrationOperation.REVERT) {
                     await dataSource.undoLastMigration();
-                } else if (context.args.operation === 'status') {
+                } else if (context.args.operation === MigrationOperation.STATUS) {
                     await dataSource.showMigrations();
                 } else {
                     await dataSource.runMigrations();
