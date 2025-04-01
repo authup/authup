@@ -9,6 +9,7 @@ import { defineCommand } from 'citty';
 import path from 'node:path';
 import process from 'node:process';
 import {
+    checkDatabase,
     createDatabase, dropDatabase, generateMigration, useDataSourceOptions,
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
@@ -28,6 +29,7 @@ export function defineCLIMigrationCommand() {
                     'generate',
                     'revert',
                     'status',
+                    'run',
                 ],
             },
         },
@@ -37,10 +39,20 @@ export function defineCLIMigrationCommand() {
 
             if (
                 context.args.operation === 'revert' ||
-                context.args.operation === 'status'
+                context.args.operation === 'status' ||
+                context.args.operation === 'run'
             ) {
                 const options = await useDataSourceOptions();
                 extendDataSourceOptions(options);
+
+                const check = await checkDatabase({
+                    options,
+                });
+
+                if (!check.exists) {
+                    await createDatabase({ options, synchronize: false, ifNotExist: true });
+                }
+
                 const dataSource = new DataSource({
                     ...options,
                     logging: ['error', 'schema', 'migration'],
@@ -49,8 +61,10 @@ export function defineCLIMigrationCommand() {
 
                 if (context.args.operation === 'revert') {
                     await dataSource.undoLastMigration();
-                } else {
+                } else if (context.args.operation === 'status') {
                     await dataSource.showMigrations();
+                } else {
+                    await dataSource.runMigrations();
                 }
 
                 await dataSource.destroy();

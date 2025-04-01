@@ -164,6 +164,11 @@ export class Default1740991051622 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE \`auth_policies\` DROP FOREIGN KEY \`FK_14b3b3b9c0a1b3a1d2abecb6e72\`
         `);
+
+        // create & drop foreign key: realm_id
+        await queryRunner.query(`
+            ALTER TABLE \`auth_identity_providers\` DROP FOREIGN KEY \`FK_00fd737c365d688f9edd0c73eca\`
+        `);
         await queryRunner.query(`
             DROP INDEX \`IDX_ab9dccd698d40bc1ea0938c1dd\` ON \`auth_identity_providers\`
         `);
@@ -171,8 +176,20 @@ export class Default1740991051622 implements MigrationInterface {
             DROP INDEX \`IDX_00fd737c365d688f9edd0c73ec\` ON \`auth_identity_providers\`
         `);
         await queryRunner.query(`
+            ALTER TABLE \`auth_identity_providers\`
+            ADD CONSTRAINT \`FK_00fd737c365d688f9edd0c73eca\` FOREIGN KEY (\`realm_id\`) REFERENCES \`auth_realms\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+
+        // create & drop foreign key: realm_id
+        await queryRunner.query('ALTER TABLE `auth_scopes` DROP FOREIGN KEY `FK_69e83c8e7e11a247a0809eb3327`');
+        await queryRunner.query(`
             DROP INDEX \`IDX_69e83c8e7e11a247a0809eb332\` ON \`auth_scopes\`
         `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_scopes\`
+                ADD CONSTRAINT \`FK_69e83c8e7e11a247a0809eb3327\` FOREIGN KEY (\`realm_id\`) REFERENCES \`auth_realms\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+
         await queryRunner.query(`
             DROP INDEX \`IDX_5456fbd03999de8005f6bb88bd\` ON \`auth_roles\`
         `);
@@ -182,9 +199,17 @@ export class Default1740991051622 implements MigrationInterface {
         await queryRunner.query(`
             DROP INDEX \`IDX_561d1b8a5a7db602df418d7cd5\` ON \`auth_permissions\`
         `);
+
+        // create & drop foreign key: realm_id
+        await queryRunner.query('ALTER TABLE `auth_policies` DROP FOREIGN KEY `FK_707089f1df498d1719972e69aef`');
         await queryRunner.query(`
             DROP INDEX \`IDX_707089f1df498d1719972e69ae\` ON \`auth_policies\`
         `);
+        await queryRunner.query(`
+            ALTER TABLE \`auth_policies\`
+                ADD CONSTRAINT \`FK_707089f1df498d1719972e69aef\` FOREIGN KEY (\`realm_id\`) REFERENCES \`auth_realms\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+
         await queryRunner.query(`
             ALTER TABLE \`auth_roles\`
             MODIFY \`name\` varchar(64) NOT NULL
