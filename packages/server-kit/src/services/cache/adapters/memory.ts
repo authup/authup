@@ -23,6 +23,10 @@ export class MemoryCacheAdapter<
         });
     }
 
+    async has(key: string) : Promise<boolean> {
+        return this.instance.has(key);
+    }
+
     async get(key: string): Promise<VALUE> {
         return this.instance.get(key);
     }

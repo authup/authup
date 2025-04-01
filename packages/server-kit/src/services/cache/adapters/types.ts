@@ -8,6 +8,8 @@
 import type { CacheClearOptions, CacheSetOptions } from '../types';
 
 export interface CacheAdapter {
+    has(key: string) : Promise<boolean>;
+
     set(key: string, value: any, options: CacheSetOptions): Promise<void>;
 
     get(key: string): Promise<any | undefined>;

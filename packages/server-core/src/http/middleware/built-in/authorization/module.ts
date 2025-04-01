@@ -18,14 +18,14 @@ import { RequestPermissionChecker, setRequestPermissionChecker } from '../../../
 import { verifyAuthorizationHeader } from './verify';
 
 export function registerAuthorizationMiddleware(router: Router) {
-    router.use(coreHandler(async (request, response, next) => {
-        const dataSource = useDataSourceSync();
-        const permissionProvider = new PermissionDBProvider(dataSource);
-        const permissionChecker = new PermissionChecker({
-            provider: permissionProvider,
-            policyEngine: new PolicyEngine(),
-        });
+    const dataSource = useDataSourceSync();
+    const permissionProvider = new PermissionDBProvider(dataSource);
+    const permissionChecker = new PermissionChecker({
+        provider: permissionProvider,
+        policyEngine: new PolicyEngine(),
+    });
 
+    router.use(coreHandler(async (request, response, next) => {
         const requestPermissionChecker = new RequestPermissionChecker(request, permissionChecker);
         setRequestPermissionChecker(request, requestPermissionChecker);
 

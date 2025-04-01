@@ -25,6 +25,12 @@ export class RedisCacheAdapter implements CacheAdapter {
         return this.instance.get(key);
     }
 
+    async has(key: string) : Promise<boolean> {
+        const output = await this.get(key);
+
+        return typeof output !== 'undefined';
+    }
+
     async set(key: string, value: any, options: CacheSetOptions): Promise<void> {
         await this.instance.set(key, value, {
             milliseconds: options.ttl,
