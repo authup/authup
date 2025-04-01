@@ -5,7 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
-export * from './verify';
-export { verifyBasicAuthorizationHeader } from './basic';
-export { verifyBearerAuthorizationHeader } from './bearer';
+export * from './register';
