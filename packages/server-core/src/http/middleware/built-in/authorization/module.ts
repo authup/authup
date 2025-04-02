@@ -9,9 +9,9 @@ import type { PermissionProvider } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
 import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
-import { HeaderError } from '@authup/errors';
+import { HTTPError } from '@authup/errors';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { OAuth2TokenKind, TokenError } from '@authup/specs';
+import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { getRequestHostName } from 'routup';
@@ -117,7 +117,7 @@ export class AuthorizationMiddleware {
                 return;
             }
 
-            next(HeaderError.unsupportedHeaderType(header.type));
+            next(HTTPError.unsupportedHeaderType(header.type));
         } catch (e) {
             const config = useConfig();
             const cookieOptions : SerializeOptions = {};
@@ -138,13 +138,22 @@ export class AuthorizationMiddleware {
         }
     }
 
+    /**
+     *
+     * @throws JWTError
+     *
+     * @param request
+     * @param header
+     *
+     * @protected
+     */
     protected async verifyBearerAuthorizationHeader(
         request: Request,
         header: BearerAuthorizationHeader,
     ) {
         const payload = await this.oauth2TokenManager.verify(header.token);
         if (payload.kind !== OAuth2TokenKind.ACCESS) {
-            throw TokenError.accessTokenRequired();
+            throw JWTError.payloadPropertyInvalid('kind');
         }
 
         setRequestToken(request, header.token);
@@ -157,7 +166,7 @@ export class AuthorizationMiddleware {
         );
 
         if (!payload.realm_id) {
-            throw TokenError.realmIdInvalid();
+            throw JWTError.payloadPropertyInvalid('realm_id');
         }
 
         let realmName: string;
@@ -177,6 +186,10 @@ export class AuthorizationMiddleware {
                     milliseconds: 60_000,
                 },
             });
+
+            if(!realm) {
+                throw JWTError.payloadPropertyInvalid('realm_id');
+            }
 
             realmName = realm.name;
         }

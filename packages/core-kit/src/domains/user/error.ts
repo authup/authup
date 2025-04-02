@@ -10,8 +10,15 @@ import { AuthupError, ErrorCode } from '@authup/errors';
 export class UserError extends AuthupError {
     static credentialsInvalid() {
         return new UserError({
-            code: ErrorCode.CREDENTIALS_INVALID,
+            code: ErrorCode.ENTITY_CREDENTIALS_INVALID,
             message: 'The user credentials are invalid.',
+        });
+    }
+
+    static notFound() {
+        return new UserError({
+            code: ErrorCode.ENTITY_NOT_FOUND,
+            message: 'The user account was not found.',
         });
     }
 

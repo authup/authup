@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/specs';
+import { JWTError } from '@authup/specs';
 import type { JWTClaims } from '@authup/specs';
 import {
     CryptoAsymmetricAlgorithm,
@@ -83,7 +83,7 @@ describe('src/json-web-token', () => {
                 type: 'rsa',
                 key: keyPair.publicKey,
             });
-        }).rejects.toThrow(TokenError.expired());
+        }).rejects.toThrow(JWTError.expired());
     });
 
     it('sign and not verify token (not active before)', async () => {
@@ -101,7 +101,7 @@ describe('src/json-web-token', () => {
                 type: 'rsa',
                 key: keyPair.publicKey,
             });
-        }).rejects.toThrow(TokenError.notActiveBefore());
+        }).rejects.toThrow(JWTError.notActiveBefore());
     });
 
     it('not verify token', async () => {
@@ -110,7 +110,7 @@ describe('src/json-web-token', () => {
                 type: 'rsa',
                 key: keyPair.publicKey,
             });
-        }).rejects.toThrow(TokenError);
+        }).rejects.toThrow(JWTError);
     });
 
     it('should sign and decode header', async () => {

@@ -37,32 +37,32 @@ describe('src/interceptor/utils', () => {
     it('should be valid response error', () => {
         let error = createResponseError({
             status: 401,
-            code: ErrorCode.TOKEN_INACTIVE,
+            code: ErrorCode.JWT_INACTIVE,
         });
-        expect(isClientErrorWithCode(error, ErrorCode.TOKEN_INACTIVE)).toBeTruthy();
+        expect(isClientErrorWithCode(error, ErrorCode.JWT_INACTIVE)).toBeTruthy();
 
         error = createResponseError({
             status: 500,
-            code: ErrorCode.TOKEN_EXPIRED,
+            code: ErrorCode.JWT_EXPIRED,
         });
         expect(isClientTokenExpiredError(error)).toBeTruthy();
 
         error = createResponseError({
             status: 400,
-            code: ErrorCode.TOKEN_INVALID,
+            code: ErrorCode.JWT_INVALID,
         });
         expect(isClientTokenInvalidError(error)).toBeTruthy();
     });
 
     it('should not be valid response error', () => {
         let error = new Error('foo');
-        expect(isClientErrorWithCode(error, ErrorCode.TOKEN_EXPIRED)).toBeFalsy();
+        expect(isClientErrorWithCode(error, ErrorCode.JWT_EXPIRED)).toBeFalsy();
 
         error = createResponseError({
             status: 400,
-            code: ErrorCode.CREDENTIALS_INVALID,
+            code: ErrorCode.ENTITY_CREDENTIALS_INVALID,
         });
-        expect(isClientErrorWithCode(error, ErrorCode.TOKEN_EXPIRED)).toBeFalsy();
+        expect(isClientErrorWithCode(error, ErrorCode.JWT_EXPIRED)).toBeFalsy();
     });
 
     it('should get current request retry state', () => {

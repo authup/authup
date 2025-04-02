@@ -7,8 +7,8 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import {
+    OAuth2Error,
     OAuth2SubKind,
-    TokenError,
 } from '@authup/specs';
 import {
     ScopeName, UserError,
@@ -85,7 +85,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             const header = parseAuthorizationHeader(headerValue);
 
             if (header.type !== AuthorizationHeaderType.BASIC) {
-                throw TokenError.requestInvalid();
+                throw OAuth2Error.requestInvalid();
             }
 
             clientId = header.username;

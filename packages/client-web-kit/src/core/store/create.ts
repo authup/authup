@@ -11,7 +11,7 @@ import {
     PolicyEngine,
 } from '@authup/access';
 import {
-    TokenError,
+    OAuth2Error,
 } from '@authup/specs';
 import { computed, ref } from 'vue';
 import type {
@@ -285,7 +285,7 @@ export function createStore(context: StoreCreateContext) {
     const refreshSession = createPromiseShareWrapperFn(
         async (): Promise<void> => {
             if (!refreshToken.value) {
-                throw new TokenError('The access token can not be renewed.');
+                throw new OAuth2Error('The access token can not be renewed.');
             }
 
             try {

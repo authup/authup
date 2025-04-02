@@ -7,25 +7,25 @@
 
 import { AuthupError, ErrorCode } from '@authup/errors';
 
-export class RobotError extends AuthupError {
+export class ClientError extends AuthupError {
     static credentialsInvalid() {
-        return new RobotError({
+        return new ClientError({
             code: ErrorCode.ENTITY_CREDENTIALS_INVALID,
-            message: 'The robot credentials are invalid.',
+            message: 'The client credentials are invalid.',
         });
     }
 
     static notFound() {
-        return new RobotError({
+        return new ClientError({
             code: ErrorCode.ENTITY_NOT_FOUND,
-            message: 'The robot account was not found.',
+            message: 'The client account was not found.',
         });
     }
 
     static inactive() {
-        return new RobotError({
+        return new ClientError({
             code: ErrorCode.ENTITY_INACTIVE,
-            message: 'The robot account is inactive.',
+            message: 'The client account is inactive.',
         });
     }
 }

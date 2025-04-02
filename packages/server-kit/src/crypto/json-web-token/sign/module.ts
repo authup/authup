@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, TokenError } from '@authup/specs';
+import { JWKType, OAuth2Error } from '@authup/specs';
 import type { JWTClaims } from '@authup/specs';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
 import { encodePKCS8ToPEM } from '../../key-asymmetric';
@@ -71,5 +71,5 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
         }
     }
 
-    throw new TokenError();
+    throw new OAuth2Error();
 }

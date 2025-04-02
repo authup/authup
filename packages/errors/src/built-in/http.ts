@@ -8,16 +8,11 @@
 import type { AuthorizationHeaderType } from 'hapic';
 import { ErrorCode } from '../constants';
 import { AuthupError } from '../module';
-import type { AuthupErrorOptionsInput } from '../types';
 
-export class HeaderError extends AuthupError {
-    constructor(...input: AuthupErrorOptionsInput[]) {
-        super({ code: ErrorCode.HEADER_INVALID }, ...input);
-    }
-
+export class HTTPError extends AuthupError {
     static unsupportedHeaderType(type: `${AuthorizationHeaderType}`) {
-        return new HeaderError({
-            code: ErrorCode.HEADER_AUTH_TYPE_UNSUPPORTED,
+        return new HTTPError({
+            code: ErrorCode.HTTP_HEADER_AUTH_TYPE_UNSUPPORTED,
             message: `The authorization header type ${type} is not supported.`,
         });
     }

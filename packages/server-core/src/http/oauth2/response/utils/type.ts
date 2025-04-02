@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2AuthorizationResponseType, TokenError } from '@authup/specs';
+import { OAuth2AuthorizationResponseType, OAuth2Error } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
@@ -26,13 +26,13 @@ export function getOauth2AuthorizeResponseTypesByRequest(
         useRequestQuery(request, 'response_type');
 
     if (typeof responseType !== 'string') {
-        throw TokenError.responseTypeUnsupported();
+        throw OAuth2Error.responseTypeUnsupported();
     }
 
     const responseTypes = responseType.split(' ');
     for (let i = 0; i < responseTypes.length; i++) {
         if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
-            throw TokenError.responseTypeUnsupported();
+            throw OAuth2Error.responseTypeUnsupported();
         } else {
             data[responseTypes[i]] = true;
         }

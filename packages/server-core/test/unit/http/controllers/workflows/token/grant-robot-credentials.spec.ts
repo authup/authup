@@ -74,7 +74,7 @@ describe('refresh-token', () => {
         } catch (e) {
             if (isClientError(e)) {
                 expect(e.status).toEqual(400);
-                expect(e.response.data.code).toEqual(ErrorCode.CREDENTIALS_INVALID);
+                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
             }
         }
     });

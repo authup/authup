@@ -6,7 +6,7 @@
  */
 
 import { CookieName } from '@authup/core-http-kit';
-import { OAuth2TokenGrant, TokenError } from '@authup/specs';
+import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
@@ -28,7 +28,7 @@ import {
  * @param req
  * @param res
  *
- * @throws TokenError
+ * @throws OAuth2Error
  */
 export async function createTokenRouteHandler(
     req: Request,
@@ -36,7 +36,7 @@ export async function createTokenRouteHandler(
 ) : Promise<any> {
     const grantType = guessOauth2GrantTypeByRequest(req);
     if (!grantType) {
-        throw TokenError.grantInvalid();
+        throw OAuth2Error.grantInvalid();
     }
 
     let grant : Grant | undefined;

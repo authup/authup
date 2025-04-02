@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, TokenError } from '@authup/specs';
+import { JWKType, OAuth2Error } from '@authup/specs';
 import type { JWTClaims, OAuth2TokenPayload } from '@authup/specs';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
 import { encodeSPKIToPem } from '../../key-asymmetric';
@@ -19,7 +19,7 @@ import type { TokenVerifyOptions } from './types';
  * @param token
  * @param context
  *
- * @throws TokenError
+ * @throws OAuth2Error
  */
 export async function verifyToken(
     token: string,
@@ -99,7 +99,7 @@ export async function verifyToken(
     }
 
     if (typeof output === 'undefined') {
-        throw new TokenError({ message: 'Invalid type.' });
+        throw new OAuth2Error({ message: 'Invalid type.' });
     }
 
     return output as OAuth2TokenPayload;

@@ -145,7 +145,7 @@ describe('refresh-token', () => {
         } catch (e) {
             if (isClientError(e)) {
                 expect(e.response.data).toBeDefined();
-                expect(e.response.data.code).toEqual(ErrorCode.TOKEN_GRANT_INVALID);
+                expect(e.response.data.code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
             }
         }
     });

@@ -5,26 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWTAlgorithm, TokenError } from '@authup/specs';
+import { JWTAlgorithm, JWTError } from '@authup/specs';
 import { Algorithm } from '@node-rs/jsonwebtoken';
 import { isObject } from 'smob';
 
-export function createErrorForJWTError(e: unknown) : TokenError {
+export function createErrorForJWTError(e: unknown) : JWTError {
     if (isObject(e)) {
         if (typeof e.name === 'string') {
             switch (e.name) {
                 case 'TokenExpiredError': {
-                    return TokenError.expired();
+                    return JWTError.expired();
                 }
                 case 'NotBeforeError': {
                     if (typeof e.date === 'string' || e.date instanceof Date) {
-                        return TokenError.notActiveBefore(e.date);
+                        return JWTError.notActiveBefore(e.date);
                     }
                     break;
                 }
                 case 'JsonWebTokenError': {
                     if (typeof e.message === 'string') {
-                        return TokenError.payloadInvalid(e.message);
+                        return JWTError.payloadInvalid(e.message);
                     }
 
                     break;
@@ -35,19 +35,19 @@ export function createErrorForJWTError(e: unknown) : TokenError {
         // @see https://github.com/Keats/jsonwebtoken/blob/master/src/errors.rs
         switch (e.message) {
             case 'ExpiredSignature': {
-                return TokenError.expired();
+                return JWTError.expired();
             }
             case 'ImmatureSignature': {
-                return TokenError.notActiveBefore();
+                return JWTError.notActiveBefore();
             }
             case 'InvalidToken':
             case 'InvalidSignature': {
-                return TokenError.payloadInvalid();
+                return JWTError.payloadInvalid();
             }
         }
     }
 
-    return new TokenError({
+    return new JWTError({
         cause: e as Error,
         logMessage: true,
         message: 'The JWT error could not be determined.',

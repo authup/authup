@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '../../src';
+import { JWTError } from '../../src';
 
 describe('src/error', () => {
     it('should throw error', () => {
-        const error = TokenError.expired();
+        const error = JWTError.expired();
         expect(error.statusCode).toEqual(400);
         expect(error.message).toEqual('The token has expired.');
     });

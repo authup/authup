@@ -27,11 +27,11 @@ export function isClientErrorWithCode(err: unknown, code: `${ErrorCode}`) : bool
 }
 
 export function isClientTokenExpiredError(err: unknown) {
-    return isClientErrorWithCode(err, ErrorCode.TOKEN_EXPIRED);
+    return isClientErrorWithCode(err, ErrorCode.JWT_EXPIRED);
 }
 
 export function isClientTokenInvalidError(err: unknown) {
-    return isClientErrorWithCode(err, ErrorCode.TOKEN_INVALID);
+    return isClientErrorWithCode(err, ErrorCode.JWT_INVALID);
 }
 
 type RetryState = {

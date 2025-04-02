@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { TokenError } from '@authup/specs';
+import { OAuth2Error } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
 
 type Context = {
@@ -14,12 +14,12 @@ type Context = {
     message?: string
 };
 export function createResponseError(context: Context) : Error {
-    const error = new TokenError();
+    const error = new OAuth2Error();
 
     Object.assign(error, {
         response: {
             data: {
-                code: context.code || ErrorCode.TOKEN_INVALID,
+                code: context.code || ErrorCode.JWT_INVALID,
                 message: context.message || 'foo',
             },
             status: context.status || 400,
