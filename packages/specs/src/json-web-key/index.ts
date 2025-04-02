@@ -6,4 +6,5 @@
  */
 
 export * from './constants';
+export * from './check';
 export * from './error';

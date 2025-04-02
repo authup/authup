@@ -56,6 +56,7 @@
     "dependencies": {
         "@hapic/oauth2": "^3.1.0",
         "@hapic/vault": "^2.3.5",
+        "@posva/event-emitter": "^1.0.2",
         "hapic": "^2.5.1",
         "rapiq": "^0.9.0"
     },

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, ClientResponseErrorTokenHook } from '@authup/core-http-kit';
+import { Client, ClientResponseTokenHook, ClientResponseTokenHookEventName } from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { App } from 'vue';
 import { StoreDispatcherEventName, injectStoreDispatcher, injectStoreFactory } from '../store';
@@ -24,7 +24,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
 
     const { refreshToken } = storeToRefs(store);
 
-    const tokenHook = new ClientResponseErrorTokenHook(client, {
+    const tokenHook = new ClientResponseTokenHook({
         baseURL: options.baseURL,
         tokenCreator: () => {
             if (!refreshToken.value) {
@@ -35,14 +35,16 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
                 refresh_token: refreshToken.value,
             });
         },
-        tokenCreated: (response) => {
-            store.applyTokenGrantResponse(response);
-        },
-        tokenFailed: () => {
-            Promise.resolve()
-                .then(() => store.logout());
-        },
         timer: !options.isServer,
+    });
+
+    tokenHook.on(ClientResponseTokenHookEventName.CREATED, (response) => {
+        store.applyTokenGrantResponse(response);
+    });
+
+    tokenHook.on(ClientResponseTokenHookEventName.REFRESH_FAILED, () => {
+        Promise.resolve()
+            .then(() => store.logout());
     });
 
     const storeDispatcher = injectStoreDispatcher(app);
@@ -53,21 +55,17 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
                 token: store.accessToken,
             });
 
-            tokenHook.mount();
+            tokenHook.mount(client);
         } else {
             client.unsetAuthorizationHeader();
-            tokenHook.unmount();
+            tokenHook.unmount(client);
         }
     };
 
     const handleAccessTokenExpireDateEvent = () => {
         if (store.accessTokenExpireDate) {
             const expiresIn = Math.floor((store.accessTokenExpireDate.getTime() - Date.now()) / 1000);
-
-            tokenHook.setTimer(
-                expiresIn,
-                () => refreshToken.value || undefined,
-            );
+            tokenHook.setTimer(expiresIn);
         }
     };
 

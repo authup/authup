@@ -5,49 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isJWKErrorCode, isJWTErrorCode } from '@authup/specs';
 import type { TokenGrantResponse } from '@hapic/oauth2';
-import type { Client as BaseClient, HookErrorFn } from 'hapic';
+import { EventEmitter } from '@posva/event-emitter';
+import type { Client as BaseClient } from 'hapic';
 import {
     HeaderName,
-    HookName,
-    setHeader,
-    stringifyAuthorizationHeader,
+    HookName, isClientError, setHeader, stringifyAuthorizationHeader, unsetHeader,
 } from 'hapic';
-import { Client } from '../client';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
-import type { ClientResponseErrorTokenHookOptions } from './type';
-import { getRequestRetryState, isClientTokenExpiredError } from './utils';
+import { ClientResponseTokenHookEventName } from './constants';
+import type { ClientResponseTokenHookEvents, ClientResponseTokenHookOptions } from './types';
+import { getClientErrorCode, getClientRequestRetryState } from './utils';
 
-const hookSymbol = Symbol.for('ClientResponseErrorTokenHook');
+const HOOK_SYMBOL = Symbol.for('ClientResponseHook');
 
-export class ClientResponseErrorTokenHook {
-    protected client : BaseClient;
-
+export class ClientResponseTokenHook extends EventEmitter<ClientResponseTokenHookEvents> {
     protected creator: TokenCreator;
 
-    protected creatorClient : Client;
-
-    protected options : ClientResponseErrorTokenHookOptions;
-
-    protected hookId?: number;
+    protected options : ClientResponseTokenHookOptions;
 
     protected timer : ReturnType<typeof setTimeout> | undefined;
 
-    protected createPromise?: Promise<TokenGrantResponse>;
+    protected refreshPromise?: Promise<TokenGrantResponse>;
 
-    constructor(client: BaseClient, options: ClientResponseErrorTokenHookOptions) {
-        this.client = client;
+    // ------------------------------------------------
+
+    constructor(options: ClientResponseTokenHookOptions) {
+        super();
 
         options.timer ??= true;
         this.options = options;
-
-        let baseURL : string;
-        if (options.baseURL) {
-            baseURL = options.baseURL;
-        } else {
-            baseURL = client.getBaseURL();
-        }
 
         let creator : TokenCreator;
         if (typeof options.tokenCreator === 'function') {
@@ -55,71 +44,90 @@ export class ClientResponseErrorTokenHook {
         } else {
             creator = createTokenCreator({
                 ...options.tokenCreator,
-                baseURL,
+                baseURL: options.baseURL,
             });
         }
 
         this.creator = creator;
-        this.creatorClient = new Client({ baseURL });
-
-        client[hookSymbol] = this;
     }
 
-    mount() {
-        if (this.hookId) {
+    // ------------------------------------------------
+
+    isMounted(client: BaseClient) {
+        return HOOK_SYMBOL in client;
+    }
+
+    mount(client: BaseClient) {
+        if (this.isMounted(client)) {
             return;
         }
 
-        const handler : HookErrorFn = (err) => {
-            if (!isClientTokenExpiredError(err)) {
-                return Promise.reject(err);
-            }
+        client[HOOK_SYMBOL] = client.on(
+            HookName.RESPONSE_ERROR,
+            (err) => {
+                const code = getClientErrorCode(err);
 
-            const { request } = err;
+                if (
+                    isJWTErrorCode(code) ||
+                    isJWKErrorCode(code)
+                ) {
+                    const { request } = err;
 
-            const currentState = getRequestRetryState(request);
-            if (currentState.retryCount > 0) {
-                return Promise.reject(err);
-            }
-
-            currentState.retryCount += 1;
-
-            return this.refresh()
-                .then((response) => {
-                    if (request.headers) {
-                        setHeader(
-                            request.headers,
-                            HeaderName.AUTHORIZATION,
-                            stringifyAuthorizationHeader({
-                                type: 'Bearer',
-                                token: response.access_token,
-                            }),
-                        );
+                    const currentState = getClientRequestRetryState(request);
+                    if (currentState.retryCount > 0) {
+                        return Promise.reject(err);
                     }
 
-                    return this.client.request(request);
-                });
-        };
+                    currentState.retryCount += 1;
 
-        this.hookId = this.client.on(HookName.RESPONSE_ERROR, handler);
+                    return this.refresh()
+                        .then((response) => {
+                            if (request.headers) {
+                                setHeader(
+                                    request.headers,
+                                    HeaderName.AUTHORIZATION,
+                                    stringifyAuthorizationHeader({
+                                        type: 'Bearer',
+                                        token: response.access_token,
+                                    }),
+                                );
+                            }
+
+                            return client.request(request);
+                        })
+                        .catch((err) => {
+                            if (request.headers) {
+                                unsetHeader(
+                                    request.headers,
+                                    HeaderName.AUTHORIZATION,
+                                );
+                            }
+
+                            return Promise.reject(err);
+                        });
+                }
+
+                return Promise.reject(err);
+            },
+        );
     }
 
-    unmount() {
-        if (!this.hookId) {
+    unmount(client: BaseClient) {
+        if (!this.isMounted(client)) {
             return;
         }
 
-        this.client.off(HookName.RESPONSE_ERROR, this.hookId);
-        this.hookId = undefined;
+        client.off(HookName.RESPONSE_ERROR, client[HOOK_SYMBOL] as number);
 
-        this.clearTimer();
+        delete client[HOOK_SYMBOL];
     }
+
+    // ------------------------------------------------
 
     setTimer(
         expiresIn: number,
-        refreshToken?: string | (() => string | undefined),
     ) {
-        if (!this.hookId || !this.options.timer) {
+        if (!this.options.timer) {
             return;
         }
 
@@ -133,7 +141,10 @@ export class ClientResponseErrorTokenHook {
             return;
         }
 
-        this.timer = setTimeout(async () => this.refresh(refreshToken), refreshInMs);
+        this.timer = setTimeout(
+            async () => this.refresh(),
+            refreshInMs,
+        );
     }
 
     clearTimer() {
@@ -142,104 +153,35 @@ export class ClientResponseErrorTokenHook {
         }
     }
 
-    protected async refresh(
-        refreshToken?: string | (() => string | undefined),
-    ) : Promise<TokenGrantResponse> {
-        let creator : TokenCreator | undefined;
+    // ------------------------------------------------
 
-        let token : string | undefined;
-        if (typeof refreshToken === 'function') {
-            token = refreshToken();
-        } else {
-            token = refreshToken;
+    async refresh() : Promise<TokenGrantResponse> {
+        if (this.refreshPromise) {
+            return this.refreshPromise;
         }
 
-        if (token) {
-            creator = () => this.creatorClient.token.createWithRefreshToken({
-                refresh_token: token,
-            });
-        } else {
-            creator = this.creator;
-        }
+        this.refreshPromise = this.creator();
 
-        return this.executeCreator(creator)
+        return this.refreshPromise
             .then((response) => {
-                this.setTimer(response.expires_in, response.refresh_token);
+                this.setTimer(response.expires_in);
+
+                this.emit(ClientResponseTokenHookEventName.CREATED, response);
+
+                this.refreshPromise = undefined;
 
                 return response;
             })
             .catch((e) => {
-                if (token) {
-                    return this.refresh();
+                if (isClientError(e)) {
+                    this.emit(ClientResponseTokenHookEventName.REFRESH_FAILED, e);
+                } else {
+                    this.emit(ClientResponseTokenHookEventName.REFRESH_FAILED, null);
                 }
+
+                this.refreshPromise = undefined;
 
                 return Promise.reject(e);
             });
     }
-
-    protected async executeCreator(creator: TokenCreator) {
-        if (this.createPromise) {
-            return this.createPromise;
-        }
-
-        this.createPromise = creator();
-
-        return this.createPromise
-            .then((response) => {
-                this.client.setAuthorizationHeader({
-                    type: 'Bearer',
-                    token: response.access_token,
-                });
-
-                if (this.options.tokenCreated) {
-                    this.options.tokenCreated(response);
-                }
-
-                this.createPromise = undefined;
-
-                return response;
-            })
-            .catch((e) => {
-                this.client.unsetAuthorizationHeader();
-
-                if (this.options.tokenFailed) {
-                    this.options.tokenFailed(e);
-                }
-
-                this.createPromise = undefined;
-
-                return Promise.reject(e);
-            });
-    }
-}
-function isClientResponseErrorTokenHook(input: unknown) : input is ClientResponseErrorTokenHook {
-    return input instanceof ClientResponseErrorTokenHook;
-}
-
-export function hasClientResponseErrorTokenHook(client: BaseClient) {
-    return hookSymbol in client;
-}
-
-export function unmountClientResponseErrorTokenHook(client: BaseClient) {
-    if (!isClientResponseErrorTokenHook(client[hookSymbol])) {
-        return;
-    }
-
-    (client[hookSymbol] as ClientResponseErrorTokenHook).unmount();
-
-    delete client[hookSymbol];
-}
-
-export function mountClientResponseErrorTokenHook(
-    client: BaseClient,
-    options: ClientResponseErrorTokenHookOptions,
-) : ClientResponseErrorTokenHook {
-    if (isClientResponseErrorTokenHook(client[hookSymbol])) {
-        return client[hookSymbol];
-    }
-
-    const interceptor = new ClientResponseErrorTokenHook(client, options);
-    interceptor.mount();
-
-    return interceptor;
 }

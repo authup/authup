@@ -24,7 +24,7 @@ import type {
 } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import {
-    Client, isClientTokenExpiredError,
+    Client,
 } from '@authup/core-http-kit';
 import { StoreDispatcherEventName } from './dispatcher';
 import type { StoreCreateContext, StoreLoginContext } from './types';
@@ -327,10 +327,7 @@ export function createStore(context: StoreCreateContext) {
                 }
             }
         } catch (e) {
-            if (
-                isClientTokenExpiredError(e) &&
-                refreshToken.value
-            ) {
+            if (refreshToken.value) {
                 await refreshSession();
                 await resolveToken();
                 await resolveUser();
