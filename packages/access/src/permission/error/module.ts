@@ -5,21 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode } from '@authup/errors';
+import type { AuthupErrorOptions } from '@authup/errors';
+import { AuthupError, ErrorCode } from '@authup/errors';
 import type { PolicyError, PolicyWithType } from '../../policy';
-import type { PermissionErrorOptions, PermissionEvaluationErrorOptions } from './types';
+import { BuiltInPolicyType } from '../../policy';
+import type { PermissionEvaluationErrorOptions } from './types';
 
-export class PermissionError extends Error {
-    public code : null | string;
-
+export class PermissionError extends AuthupError {
     public policy : PolicyWithType | undefined;
 
     public policyError : PolicyError | undefined;
 
-    constructor(options: PermissionErrorOptions = {}) {
-        super(options.message || 'A permission error occurred.');
-
-        this.code = options.code ?? null;
+    constructor(options: AuthupErrorOptions = {}) {
+        super({
+            ...options,
+            message: options.message || 'A permission error occurred.',
+            statusCode: options.statusCode || 403,
+        });
     }
 
     static notFound(name: string) {
@@ -51,6 +53,10 @@ export class PermissionError extends Error {
 
         if (options.policy) {
             error.policy = options.policy;
+
+            if (options.policy.type === BuiltInPolicyType.IDENTITY) {
+                error.statusCode = 401;
+            }
         }
 
         if (options.policyError) {

@@ -10,6 +10,7 @@ import {
     DController, DGet, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { createTokenRouteHandler, introspectTokenRouteHandler, revokeTokenRouteHandler } from './handlers';
+import { toOAuth2Error } from '../../../oauth2/helpers';
 
 @DTags('auth')
 @DController('/token')
@@ -19,7 +20,11 @@ export class TokenController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Record<string, any>> {
-        return introspectTokenRouteHandler(req, res);
+        try {
+            return await introspectTokenRouteHandler(req, res);
+        } catch (e) {
+            throw toOAuth2Error(e);
+        }
     }
 
     @DPost('/introspect', [])
@@ -27,7 +32,11 @@ export class TokenController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<Record<string, any>> {
-        return introspectTokenRouteHandler(req, res);
+        try {
+            return await introspectTokenRouteHandler(req, res);
+        } catch (e) {
+            throw toOAuth2Error(e);
+        }
     }
 
     // ----------------------------------------------------------
@@ -37,7 +46,11 @@ export class TokenController {
     @DRequest() req: any,
         @DResponse() res: any,
     ) {
-        return revokeTokenRouteHandler(req, res);
+        try {
+            return await revokeTokenRouteHandler(req, res);
+        } catch (e) {
+            throw toOAuth2Error(e);
+        }
     }
 
     // ----------------------------------------------------------
@@ -47,6 +60,10 @@ export class TokenController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2TokenGrantResponse[]> {
-        return createTokenRouteHandler(req, res);
+        try {
+            return await createTokenRouteHandler(req, res);
+        } catch (e) {
+            throw toOAuth2Error(e);
+        }
     }
 }

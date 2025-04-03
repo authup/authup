@@ -5,22 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    BadRequestErrorOptions,
+    ConflictErrorOptions,
+    HTTPError,
+    InsufficientStorageErrorOptions,
+    InternalServerErrorOptions,
+} from '@ebec/http';
 import { distinctArray } from 'smob';
-import type { ZodError } from 'zod';
-
-export function buildErrorMessageForZodError(error: ZodError) {
-    const names: string[] = [];
-    for (let i = 0; i < error.issues.length; i++) {
-        for (let j = 0; j < error.issues[i].path.length; j++) {
-            names.push(`${error.issues[i].path[j]}`);
-        }
-    }
-
-    if (names.length > 1) {
-        return `The attributes ${names.join(', ')} are invalid.`;
-    }
-    return `The attributes ${String(names[0])} is invalid.`;
-}
+import { AuthupError } from '@authup/errors';
+import { EntityRelationLookupError } from 'typeorm-extension';
+import { ValidupNestedError } from 'validup';
+import { hasOwnProperty, isObject } from '@authup/kit';
 
 export function buildErrorMessageForAttribute(name: string) {
     return buildErrorMessageForAttributes([name]);
@@ -43,4 +39,82 @@ export function buildErrorMessageForAttributes(input: string[] | Record<string, 
     }
 
     return `The attribute ${String(names[0])} is invalid.`;
+}
+
+export function sanitizeError(error: unknown) : AuthupError {
+    if (error instanceof AuthupError) {
+        return error;
+    }
+
+    if (error instanceof EntityRelationLookupError) {
+        return new AuthupError({
+            statusCode: BadRequestErrorOptions.statusCode,
+            code: BadRequestErrorOptions.code,
+            message: error.message,
+            stack: error.stack,
+        });
+    }
+
+    if (error instanceof ValidupNestedError) {
+        return new AuthupError({
+            statusCode: BadRequestErrorOptions.statusCode,
+            code: BadRequestErrorOptions.code,
+            data: {
+                children: error.children,
+                attributes: error.children.map((child) => child.pathAbsolute),
+            },
+            stack: error.stack,
+        });
+    }
+
+    if (error instanceof HTTPError) {
+        return new AuthupError({
+            statusCode: error.statusCode,
+            code: error.code,
+            message: error.message,
+            data: error.data,
+            stack: error.stack,
+        });
+    }
+
+    if (isObject(error)) {
+        const code = hasOwnProperty(error, 'code') &&
+        typeof error.code === 'string' ?
+            error.code :
+            undefined;
+
+        /**
+         * @see https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html
+         */
+        switch (code) {
+            case 'ER_DUP_ENTRY':
+            case 'SQLITE_CONSTRAINT_UNIQUE': {
+                return new AuthupError({
+                    statusCode: ConflictErrorOptions.statusCode,
+                    code: ConflictErrorOptions.code,
+                    message: 'An entry with some unique attributes already exist.',
+                    stack: error.stack,
+                });
+            }
+            case 'ER_DISK_FULL':
+                return new AuthupError({
+                    statusCode: InsufficientStorageErrorOptions.statusCode,
+                    code: InsufficientStorageErrorOptions.code,
+                    message: 'No database operation possible, due the leak of free disk space.',
+                    stack: error.stack,
+                });
+        }
+
+        return new AuthupError({
+            statusCode: InternalServerErrorOptions.statusCode,
+            code: InternalServerErrorOptions.code,
+            message: error.message,
+            stack: error.stack,
+        });
+    }
+
+    return new AuthupError({
+        statusCode: InternalServerErrorOptions.statusCode,
+        code: InternalServerErrorOptions.code,
+    });
 }

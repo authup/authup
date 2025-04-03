@@ -6,22 +6,17 @@
  */
 
 import { CookieName } from '@authup/core-http-kit';
-import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2Error } from '@authup/specs';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { getRequestHostName, send } from 'routup';
 import { ConfigDefaults, useConfig } from '../../../../../config';
-import type { Grant } from '../../../../oauth2';
 import {
-    AuthorizeGrantType,
-    ClientCredentialsGrant,
-    PasswordGrantType,
-    RefreshTokenGrantType,
-    RobotCredentialsGrantType,
     guessOauth2GrantTypeByRequest,
 } from '../../../../oauth2';
+import { createOAuth2Grant } from '../../../../oauth2/grant-types/create';
 
 /**
  *
@@ -39,30 +34,7 @@ export async function createTokenRouteHandler(
         throw OAuth2Error.grantInvalid();
     }
 
-    let grant : Grant | undefined;
-
-    switch (grantType) {
-        case OAuth2TokenGrant.AUTHORIZATION_CODE: {
-            grant = new AuthorizeGrantType();
-            break;
-        }
-        case OAuth2TokenGrant.CLIENT_CREDENTIALS: {
-            grant = new ClientCredentialsGrant();
-            break;
-        }
-        case OAuth2TokenGrant.ROBOT_CREDENTIALS: {
-            grant = new RobotCredentialsGrantType();
-            break;
-        }
-        case OAuth2TokenGrant.PASSWORD: {
-            grant = new PasswordGrantType();
-            break;
-        }
-        case OAuth2TokenGrant.REFRESH_TOKEN: {
-            grant = new RefreshTokenGrantType();
-            break;
-        }
-    }
+    const grant = createOAuth2Grant(grantType);
 
     const config = useConfig();
 
