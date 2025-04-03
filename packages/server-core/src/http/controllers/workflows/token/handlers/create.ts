@@ -6,29 +6,24 @@
  */
 
 import { CookieName } from '@authup/core-http-kit';
-import { OAuth2TokenGrant, TokenError } from '@authup/specs';
+import { OAuth2Error } from '@authup/specs';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { getRequestHostName, send } from 'routup';
 import { ConfigDefaults, useConfig } from '../../../../../config';
-import type { Grant } from '../../../../oauth2';
 import {
-    AuthorizeGrantType,
-    ClientCredentialsGrant,
-    PasswordGrantType,
-    RefreshTokenGrantType,
-    RobotCredentialsGrantType,
     guessOauth2GrantTypeByRequest,
 } from '../../../../oauth2';
+import { createOAuth2Grant } from '../../../../oauth2/grant-types/create';
 
 /**
  *
  * @param req
  * @param res
  *
- * @throws TokenError
+ * @throws OAuth2Error
  */
 export async function createTokenRouteHandler(
     req: Request,
@@ -36,33 +31,10 @@ export async function createTokenRouteHandler(
 ) : Promise<any> {
     const grantType = guessOauth2GrantTypeByRequest(req);
     if (!grantType) {
-        throw TokenError.grantInvalid();
+        throw OAuth2Error.grantInvalid();
     }
 
-    let grant : Grant | undefined;
-
-    switch (grantType) {
-        case OAuth2TokenGrant.AUTHORIZATION_CODE: {
-            grant = new AuthorizeGrantType();
-            break;
-        }
-        case OAuth2TokenGrant.CLIENT_CREDENTIALS: {
-            grant = new ClientCredentialsGrant();
-            break;
-        }
-        case OAuth2TokenGrant.ROBOT_CREDENTIALS: {
-            grant = new RobotCredentialsGrantType();
-            break;
-        }
-        case OAuth2TokenGrant.PASSWORD: {
-            grant = new PasswordGrantType();
-            break;
-        }
-        case OAuth2TokenGrant.REFRESH_TOKEN: {
-            grant = new RefreshTokenGrantType();
-            break;
-        }
-    }
+    const grant = createOAuth2Grant(grantType);
 
     const config = useConfig();
 

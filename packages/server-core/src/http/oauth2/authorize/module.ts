@@ -8,8 +8,7 @@
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
 import type { OAuth2SubKind } from '@authup/specs';
-import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import { BadRequestError } from '@ebec/http';
+import { OAuth2AuthorizationResponseType, OAuth2Error } from '@authup/specs';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
@@ -128,6 +127,14 @@ export class OAuth2AuthorizationService {
         return output;
     }
 
+    /**
+     * Validate authorization request.
+     *
+     * @throws OAuth2Error
+     *
+     * @param req
+     * @protected
+     */
     protected async validate(
         req: Request,
     ) : Promise<OAuth2AuthorizationCodeRequest> {
@@ -137,7 +144,7 @@ export class OAuth2AuthorizationService {
         const clientRepository = dataSource.getRepository(ClientEntity);
         const client = await clientRepository.findOneBy({ id: data.client_id });
         if (!client) {
-            throw new BadRequestError('The referenced client does not exist.');
+            throw OAuth2Error.clientInvalid();
         }
 
         const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
@@ -153,7 +160,7 @@ export class OAuth2AuthorizationService {
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
         if (data.scope) {
             if (!isOAuth2ScopeAllowed(scopeNames, data.scope)) {
-                throw new BadRequestError('The requested scope is not covered by the client scope.');
+                throw OAuth2Error.scopeInsufficient();
             }
         }
 

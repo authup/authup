@@ -36,3 +36,20 @@ export enum OAuth2AuthorizationCodeChallengeMethod {
     SHA_256 = 'S256',
     PLAIN = 'plain',
 }
+
+/**
+ * @see https://datatracker.ietf.org/doc/html/rfc6749#section-5.2
+ */
+export enum OAuth2ErrorCode {
+    INVALID_REQUEST = 'invalid_request',
+
+    INVALID_CLIENT = 'invalid_client',
+
+    INVALID_GRANT = 'invalid_grant',
+
+    UNAUTHORIZED_CLIENT = 'unauthorized_client',
+
+    UNSUPPORTED_GRANT_TYPE = 'unsupported_grant_type',
+
+    INVALID_SCOPE = 'invalid_scope',
+}

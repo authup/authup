@@ -7,6 +7,7 @@
 
 export * from './authorize';
 export * from './client-credentials';
+export * from './create';
 export * from './internal';
 export * from './password';
 export * from './refresh-token';

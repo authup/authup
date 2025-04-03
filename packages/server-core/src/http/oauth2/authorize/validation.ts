@@ -9,7 +9,7 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
-    TokenError,
+    OAuth2Error,
 } from '@authup/specs';
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
@@ -33,7 +33,7 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
 
                         for (let i = 0; i < responseTypes.length; i++) {
                             if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
-                                throw TokenError.responseTypeUnsupported();
+                                throw OAuth2Error.responseTypeUnsupported();
                             }
                         }
 

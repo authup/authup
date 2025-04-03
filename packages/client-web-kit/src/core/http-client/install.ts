@@ -5,9 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Client, ClientResponseErrorTokenHook } from '@authup/core-http-kit';
+import {
+    Client,
+    ClientResponseErrorTokenHook,
+    ClientResponseTokenHookEventName,
+    getClientErrorCode,
+    unsetHeader,
+} from '@authup/core-http-kit';
 import { storeToRefs } from 'pinia';
 import type { App } from 'vue';
+import { isJWKErrorCode } from '@authup/specs';
 import { StoreDispatcherEventName, injectStoreDispatcher, injectStoreFactory } from '../store';
 import { hasHTTPClient, provideHTTPClient } from './singleton';
 import type { HTTPClientInstallOptions } from './types';
@@ -24,7 +31,27 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
 
     const { refreshToken } = storeToRefs(store);
 
-    const tokenHook = new ClientResponseErrorTokenHook(client, {
+    client.on('responseError', (err) => {
+        const { request } = err;
+
+        const code = getClientErrorCode(err);
+        if (isJWKErrorCode(code)) {
+            return store.logout()
+                .then(() => {
+                    if (request.headers) {
+                        unsetHeader(request.headers, 'authorization');
+
+                        return client.request(request);
+                    }
+
+                    return Promise.reject(err);
+                });
+        }
+
+        return Promise.reject(err);
+    });
+
+    const tokenHook = new ClientResponseErrorTokenHook({
         baseURL: options.baseURL,
         tokenCreator: () => {
             if (!refreshToken.value) {
@@ -35,14 +62,16 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
                 refresh_token: refreshToken.value,
             });
         },
-        tokenCreated: (response) => {
-            store.applyTokenGrantResponse(response);
-        },
-        tokenFailed: () => {
-            Promise.resolve()
-                .then(() => store.logout());
-        },
         timer: !options.isServer,
+    });
+
+    tokenHook.on(ClientResponseTokenHookEventName.REFRESH_FINISHED, (response) => {
+        store.applyTokenGrantResponse(response);
+    });
+
+    tokenHook.on(ClientResponseTokenHookEventName.REFRESH_FAILED, () => {
+        Promise.resolve()
+            .then(() => store.logout());
     });
 
     const storeDispatcher = injectStoreDispatcher(app);
@@ -53,21 +82,17 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
                 token: store.accessToken,
             });
 
-            tokenHook.mount();
+            tokenHook.mount(client);
         } else {
             client.unsetAuthorizationHeader();
-            tokenHook.unmount();
+            tokenHook.unmount(client);
         }
     };
 
     const handleAccessTokenExpireDateEvent = () => {
         if (store.accessTokenExpireDate) {
             const expiresIn = Math.floor((store.accessTokenExpireDate.getTime() - Date.now()) / 1000);
-
-            tokenHook.setTimer(
-                expiresIn,
-                () => refreshToken.value || undefined,
-            );
+            tokenHook.setTimer(expiresIn);
         }
     };
 

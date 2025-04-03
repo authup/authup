@@ -5,39 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode } from '@authup/errors';
 import type { RequestOptions } from 'hapic';
 import { isObject } from '@authup/kit';
 
-export function isClientErrorWithCode(err: unknown, code: `${ErrorCode}`) : boolean {
+export function getClientErrorCode(err: unknown) : string | null {
     if (!isObject(err) || !isObject(err.response)) {
-        return false;
+        return null;
     }
 
     if (err.response.status === 401) {
-        return true;
+        return null;
     }
 
     /* istanbul ignore next */
     if (!isObject(err.response.data) || typeof err.response.data.code !== 'string') {
-        return false;
+        return null;
     }
 
-    return err.response.data.code === code;
-}
-
-export function isClientTokenExpiredError(err: unknown) {
-    return isClientErrorWithCode(err, ErrorCode.TOKEN_EXPIRED);
-}
-
-export function isClientTokenInvalidError(err: unknown) {
-    return isClientErrorWithCode(err, ErrorCode.TOKEN_INVALID);
+    return err.response.data.code;
 }
 
 type RetryState = {
     retryCount: number
 };
-export function getRequestRetryState(
+export function getClientRequestRetryState(
     config: Partial<RequestOptions> & { retry?: Partial<RetryState> },
 ) : RetryState {
     const currentState = config.retry || {};

@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, JWTAlgorithm, TokenError } from '@authup/specs';
+import {
+    JWKError, JWKType, JWTAlgorithm, JWTError,
+} from '@authup/specs';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import type {
     Cache,
@@ -46,18 +48,25 @@ export class OAuth2TokenManager {
 
     // -----------------------------------------------------
 
+    /**
+     * @throws JWTError
+     * @throws JWKError
+     *
+     * @param token
+     * @param options
+     */
     async verify(
         token: string,
         options: OAuth2TokenManagerVerifyOptions = {},
     ) {
         if (!token) {
-            throw TokenError.requestInvalid('The token is not defined.');
+            throw JWTError.invalid();
         }
 
         if (!options.skipActiveCheck) {
             const isActive = await this.isActive(token);
             if (!isActive) {
-                throw TokenError.inactive();
+                throw JWTError.notActive();
             }
         }
 
@@ -68,14 +77,14 @@ export class OAuth2TokenManager {
 
         const header = extractTokenHeader(token);
         if (!header.kid) {
-            throw TokenError.payloadInvalid('The jwk (kid) is invalid.');
+            throw JWTError.headerPropertyInvalid('kid');
         }
 
         const entity = await this.useKey({
             id: header.kid,
         });
         if (!entity) {
-            throw TokenError.payloadInvalid('The referenced jwk (kid) does not exist.');
+            throw JWKError.notFound(header.kid);
         }
 
         if (entity.type === JWKType.OCT) {
@@ -127,7 +136,7 @@ export class OAuth2TokenManager {
         });
 
         if (!key) {
-            throw TokenError.payloadInvalid('No jwk found to sign the token.');
+            throw JWKError.notFoundForRealm(payload.realm_id, payload.realm_name);
         }
 
         if (!payload.exp) {

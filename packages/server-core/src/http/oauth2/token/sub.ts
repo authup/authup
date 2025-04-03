@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ScopeName } from '@authup/core-kit';
+import {
+    ClientError, RobotError, ScopeName, UserError,
+} from '@authup/core-kit';
 import {
     OAuth2SubKind,
-    TokenError,
 } from '@authup/specs';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import type {
     RobotEntity,
@@ -36,20 +36,20 @@ export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
 
 /**
  *
- *
- * @throws TokenError
+ * @throws ClientError
+ * @throws RobotError
+ * @throws UserError
  * @throws NotFoundError
+ *
  * @param kind
  * @param id
  * @param scope
  */
-export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind>(
-    kind: `${OAuth2SubKind}`,
+export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
+    kind: T,
     id: string,
     scope?: string,
 ) : Promise<OAuth2SubEntity<T>> {
-    let payload : UserEntity | RobotEntity | ClientEntity;
-
     const dataSource = await useDataSource();
     const attributes = resolveOAuth2SubAttributesForScope(kind, scope);
 
@@ -73,13 +73,11 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
             }
 
             const entity = await query.getOne();
-
             if (!entity) {
-                throw new NotFoundError();
+                throw ClientError.notFound();
             }
 
-            payload = entity;
-            break;
+            return entity as OAuth2SubEntity<T>;
         }
         case OAuth2SubKind.USER: {
             const repository = new UserRepository(dataSource);
@@ -102,7 +100,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
             const entity = await query.getOne();
 
             if (!entity) {
-                throw new NotFoundError();
+                throw UserError.notFound();
             }
 
             // todo: this might also be the case under other conditions :)
@@ -111,11 +109,10 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
             }
 
             if (!entity.active) {
-                throw TokenError.targetInactive(OAuth2SubKind.USER);
+                throw UserError.inactive();
             }
 
-            payload = entity;
-            break;
+            return entity as OAuth2SubEntity<T>;
         }
         case OAuth2SubKind.ROBOT: {
             const repository = new RobotRepository(dataSource);
@@ -138,21 +135,16 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2S
             const entity = await query.getOne();
 
             if (!entity) {
-                throw new NotFoundError();
+                throw RobotError.notFound();
             }
 
             if (!entity.active) {
-                throw TokenError.targetInactive(OAuth2SubKind.ROBOT);
+                throw RobotError.inactive();
             }
 
-            payload = entity;
-            break;
+            return entity as OAuth2SubEntity<T>;
         }
     }
 
-    if (!payload) {
-        throw new NotFoundError();
-    }
-
-    return payload as OAuth2SubEntity<T>;
+    throw new SyntaxError(`Sub kind must be one of: ${Object.values(OAuth2SubKind).join(',')}`);
 }

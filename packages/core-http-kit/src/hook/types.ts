@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2023-2024.
+ * Copyright (c) 2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    TokenCreator, TokenCreatorCreatedHook, TokenCreatorFailedHook, TokenCreatorOptions,
-} from '../token-creator';
+import type { TokenGrantResponse } from '@hapic/oauth2';
+import type { ClientError } from 'hapic';
+import type { TokenCreator, TokenCreatorOptions } from '../token-creator';
+import type { ClientResponseTokenHookEventName } from './constants';
 
 export type ClientResponseErrorTokenHookOptions = {
     /**
@@ -26,12 +27,9 @@ export type ClientResponseErrorTokenHookOptions = {
      * Fn to create a new token, if the previous token expired.
      */
     tokenCreator: TokenCreatorOptions | TokenCreator,
-    /**
-     * Called when the token creator created a new token.
-     */
-    tokenCreated?: TokenCreatorCreatedHook,
-    /**
-     * Called when the token creator could not create a new token.
-     */
-    tokenFailed?: TokenCreatorFailedHook,
+};
+
+export type ClientResponseErrorTokenHookEvents = {
+    [ClientResponseTokenHookEventName.REFRESH_FINISHED]: TokenGrantResponse,
+    [ClientResponseTokenHookEventName.REFRESH_FAILED]: ClientError | null,
 };

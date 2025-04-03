@@ -6,28 +6,37 @@
  */
 
 export enum ErrorCode {
-    HEADER_INVALID = 'invalid_header',
-    HEADER_AUTH_TYPE_UNSUPPORTED = 'unsupported_auth_header_type',
+    // HTTP Codes
+    HTTP_HEADER_AUTH_TYPE_UNSUPPORTED = 'unsupported_auth_header_type',
 
-    CREDENTIALS_INVALID = 'invalid_credentials',
+    // Entity Codes
+    ENTITY_CREDENTIALS_INVALID = 'invalid_credentials',
+    ENTITY_INACTIVE = 'entity_inactive',
+    ENTITY_NOT_FOUND = 'entity_not_found',
 
-    ENTITY_INACTIVE = 'inactive_entity',
+    // JWK Codes
+    JWK_INVALID = 'jwk_invalid',
+    JWK_NOT_FOUND = 'jwk_not_found',
 
-    TOKEN_REDIRECT_URI_MISMATCH = 'redirect_uri_mismatch',
-    TOKEN_INVALID = 'invalid_token',
-    TOKEN_INACTIVE = 'inactive_token',
-    TOKEN_EXPIRED = 'expired_token',
-    TOKEN_CLIENT_INVALID = 'invalid_client',
-    TOKEN_GRANT_INVALID = 'invalid_grant',
-    TOKEN_GRANT_TYPE_UNSUPPORTED = 'unsupported_token_grant_type',
-    TOKEN_SCOPE_INVALID = 'invalid_scope',
-    TOKEN_SCOPE_INSUFFICIENT = 'insufficient_scope',
-    TOKEN_SUB_KIND_INVALID = 'invalid_token_sub_kind',
+    // JWT Codes
+    JWT_INVALID = 'invalid_token',
+    JWT_INACTIVE = 'inactive_token',
+    JWT_EXPIRED = 'expired_token',
 
+    // Oauth2 Codes
+    OAUTH_REDIRECT_URI_MISMATCH = 'redirect_uri_mismatch',
+    OAUTH_CLIENT_INVALID = 'invalid_client',
+    OAUTH_GRANT_INVALID = 'invalid_grant',
+    OAUTH_GRANT_TYPE_UNSUPPORTED = 'unsupported_token_grant_type',
+    OAUTH_SCOPE_INVALID = 'invalid_scope',
+    OAUTH_SCOPE_INSUFFICIENT = 'insufficient_scope',
+
+    // Permission Codes
     PERMISSION_NOT_FOUND = 'permission_not_found',
     PERMISSION_DENIED = 'permission_denied',
     PERMISSION_EVALUATION_FAILED = 'permission_evaluation_failed',
 
+    // Policy Codes
     POLICY_EVALUATOR_NOT_FOUND = 'policy_evaluator_not_found',
     POLICY_EVALUATOR_NOT_PROCESSABLE = 'policy_evaluator_not_processable',
     POLICY_EVALUATOR_CONTEXT_INVALID = 'policy_evaluator_context_invalid',

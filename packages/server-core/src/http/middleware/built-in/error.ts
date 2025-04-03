@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import {
     isObject,
 } from '@authup/kit';
@@ -16,8 +15,8 @@ import {
     errorHandler, send,
 } from 'routup';
 import { useLogger } from '@authup/server-kit';
-import { EntityRelationLookupError } from 'typeorm-extension';
-import { ValidupNestedError } from 'validup';
+import type { AuthupError } from '@authup/errors';
+import { sanitizeError } from '../../../utils';
 
 type ErrorResponsePayload = {
     statusCode: number,
@@ -32,56 +31,28 @@ export function registerErrorMiddleware(router: Router) {
         request,
         response,
     ) => {
+        let next : AuthupError;
+        if (error.cause) {
+            next = sanitizeError(error.cause);
+        } else {
+            next = sanitizeError(error);
+        }
+
         const payload : ErrorResponsePayload = {
-            statusCode: error.statusCode,
-            code: `${error.code}`,
-            message: error.message,
+            statusCode: next.statusCode,
+            code: `${next.code}`,
+            message: next.message,
         };
 
-        if (error.cause instanceof PermissionError) {
-            if (
-                error.cause.policy &&
-                error.cause.policy.type === BuiltInPolicyType.IDENTITY
-            ) {
-                payload.statusCode = 401;
-            } else {
-                payload.statusCode = 403;
-            }
-        } else if (error.cause instanceof EntityRelationLookupError) {
-            payload.statusCode = 400;
-        } else if (error.cause instanceof ValidupNestedError) {
-            payload.statusCode = 400;
-            payload.children = error.cause.children;
-            payload.attributes = error.cause.children.map((child) => child.pathAbsolute);
-        }
-
-        // catch and decorate some db errors :)
-        switch (error.code) {
-            case 'ER_DUP_ENTRY':
-            case 'SQLITE_CONSTRAINT_UNIQUE': {
-                payload.statusCode = 409;
-                payload.message = 'An entry with some unique attributes already exist.';
-                break;
-            }
-            case 'ER_DISK_FULL':
-                payload.statusCode = 507;
-                payload.message = 'No database operation possible, due the leak of free disk space.';
-                break;
-        }
-
-        const isServerError = payload.statusCode >= 500 && payload.statusCode < 600;
+        const isServerError = next.statusCode >= 500 && next.statusCode < 600;
         if (isServerError) {
-            useLogger().error(error);
-
-            if (error.cause) {
-                useLogger().error(error.cause);
-            }
+            useLogger().error(next);
 
             payload.message = 'An internal server error occurred.';
-        } else if (isObject(error.data)) {
-            const keys = Object.keys(error.data);
+        } else if (isObject(next.data)) {
+            const keys = Object.keys(next.data);
             for (let i = 0; i < keys.length; i++) {
-                payload[keys[i]] = error.data[keys[i]];
+                payload[keys[i]] = next.data[keys[i]];
             }
         }
 

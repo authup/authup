@@ -11,7 +11,7 @@ import {
     PolicyEngine,
 } from '@authup/access';
 import {
-    TokenError,
+    OAuth2Error,
 } from '@authup/specs';
 import { computed, ref } from 'vue';
 import type {
@@ -24,7 +24,7 @@ import type {
 } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import {
-    Client, isClientTokenExpiredError,
+    Client,
 } from '@authup/core-http-kit';
 import { StoreDispatcherEventName } from './dispatcher';
 import type { StoreCreateContext, StoreLoginContext } from './types';
@@ -285,7 +285,7 @@ export function createStore(context: StoreCreateContext) {
     const refreshSession = createPromiseShareWrapperFn(
         async (): Promise<void> => {
             if (!refreshToken.value) {
-                throw new TokenError('The access token can not be renewed.');
+                throw new OAuth2Error('The access token can not be renewed.');
             }
 
             try {
@@ -327,10 +327,7 @@ export function createStore(context: StoreCreateContext) {
                 }
             }
         } catch (e) {
-            if (
-                isClientTokenExpiredError(e) &&
-                refreshToken.value
-            ) {
+            if (refreshToken.value) {
                 await refreshSession();
                 await resolveToken();
                 await resolveUser();

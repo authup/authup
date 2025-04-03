@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2SubKind, OAuth2TokenKind, TokenError } from '@authup/specs';
+import {
+    JWTError, OAuth2SubKind,
+} from '@authup/specs';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
@@ -63,12 +65,12 @@ export class RefreshTokenGrantType extends AbstractGrant implements Grant {
         });
 
         if (!entity) {
-            throw TokenError.tokenNotFound(OAuth2TokenKind.REFRESH);
+            throw JWTError.notFound();
         }
 
         const expires = Date.parse(entity.expires);
         if (expires < Date.now()) {
-            throw TokenError.expired(OAuth2TokenKind.REFRESH);
+            throw JWTError.expired();
         }
 
         await repository.remove(entity);

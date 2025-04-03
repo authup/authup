@@ -8,8 +8,8 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
+    OAuth2Error,
     OAuth2SubKind,
-    TokenError,
 } from '@authup/specs';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import {
@@ -74,14 +74,14 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
 
         const entity = await this.codeRepository.get(code);
         if (!entity) {
-            throw TokenError.grantInvalid();
+            throw OAuth2Error.grantInvalid();
         }
 
         if (entity.redirect_uri) {
             const redirectUri = this.extractRedirectURIParam(request);
 
             if (!redirectUri || entity.redirect_uri !== redirectUri) {
-                throw TokenError.redirectUriMismatch();
+                throw OAuth2Error.redirectUriMismatch();
             }
         }
 
@@ -89,12 +89,12 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
             const codeVerifier = this.extractParam(request, 'code_verifier');
             if (entity.code_challenge_method === OAuth2AuthorizationCodeChallengeMethod.PLAIN) {
                 if (codeVerifier !== entity.code_challenge) {
-                    throw TokenError.grantInvalid('PKCE code_verifier mismatch.');
+                    throw OAuth2Error.grantInvalid('PKCE code_verifier mismatch.');
                 }
             } else {
                 const codeVerifierHash = await buildOAuth2CodeChallenge(codeVerifier);
                 if (codeVerifierHash !== entity.code_challenge) {
-                    throw TokenError.grantInvalid('PKCE code_verifier mismatch.');
+                    throw OAuth2Error.grantInvalid('PKCE code_verifier mismatch.');
                 }
             }
         }
@@ -105,7 +105,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
     protected extractRedirectURIParam(request: Request) : string {
         const redirectUri = this.extractParam(request, 'redirect_uri');
         if (!redirectUri) {
-            throw TokenError.redirectUriMismatch();
+            throw OAuth2Error.redirectUriMismatch();
         }
 
         return redirectUri;
@@ -114,7 +114,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
     protected extractCodeParam(request: Request) : string {
         const code = this.extractParam(request, 'code');
         if (!code) {
-            throw TokenError.requestInvalid();
+            throw OAuth2Error.requestInvalid();
         }
 
         return code;

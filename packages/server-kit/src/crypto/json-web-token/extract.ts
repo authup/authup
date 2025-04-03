@@ -6,21 +6,21 @@
  */
 
 import type { JWTClaims, JWTHeader } from '@authup/specs';
-import { TokenError } from '@authup/specs';
+import { JWTError } from '@authup/specs';
 
 /**
  * Decode a JWT token with no verification.
  *
  * @param token
  *
- * @throws TokenError
+ * @throws JWTError
  */
 export function extractTokenHeader(
     token: string,
 ) : JWTHeader {
     const parts = token.split('.');
     if (parts.length !== 3) {
-        throw TokenError.payloadInvalid('The token format is not valid.');
+        throw JWTError.invalid();
     }
 
     const [headerBase64] = parts;
@@ -44,16 +44,21 @@ export function extractTokenHeader(
         };
          */
     } catch (e) {
-        throw TokenError.headerInvalid('The token header could not be extracted.');
+        throw JWTError.headerInvalid('The token header could not be extracted.');
     }
 }
 
+/**
+ * @param token
+ *
+ * @throws JWTError
+ */
 export function extractTokenPayload(
     token: string,
 ) : JWTClaims {
     const parts = token.split('.');
     if (parts.length !== 3) {
-        throw TokenError.payloadInvalid('The token format is not valid.');
+        throw JWTError.invalid();
     }
 
     const [, payloadBase64] = parts;
@@ -63,6 +68,6 @@ export function extractTokenPayload(
 
         return JSON.parse(payload);
     } catch (e) {
-        throw TokenError.payloadInvalid('The token payload could not be extracted.');
+        throw JWTError.payloadInvalid('The token payload could not be extracted.');
     }
 }

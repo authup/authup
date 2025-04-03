@@ -29,6 +29,7 @@ export default defineNuxtPlugin({
         ctx.hook(
             'authup:middleware:end',
             async ({ to }) => {
+                navigationManager.reset();
                 await navigationManager.build({
                     path: to.fullPath,
                 });
