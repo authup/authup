@@ -112,7 +112,7 @@ export class ClientRepository extends Repository<ClientEntity> {
             .getMany();
 
         for (let i = 0; i < entities.length; i++) {
-            if (!entities[i].secret) {
+            if (!entities[i].secret || entities[i].is_confidential) {
                 continue;
             }
 
