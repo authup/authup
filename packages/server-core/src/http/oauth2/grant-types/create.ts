@@ -32,5 +32,5 @@ export function createOAuth2Grant(type: `${OAuth2TokenGrant}`): Grant {
         }
     }
 
-    throw new SyntaxError(`OAuth2 gran type ${type} is not supported.`);
+    throw new SyntaxError(`OAuth2 grant type ${type} is not supported.`);
 }
