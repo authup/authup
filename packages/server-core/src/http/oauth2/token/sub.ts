@@ -146,5 +146,5 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
         }
     }
 
-    throw new SyntaxError('Sub kind must be one of: ' + Object.values(OAuth2SubKind).join(','))
+    throw new SyntaxError(`Sub kind must be one of: ${Object.values(OAuth2SubKind).join(',')}`);
 }

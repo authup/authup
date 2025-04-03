@@ -6,7 +6,7 @@
  */
 
 import {
-    JWKError, JWKType, JWTAlgorithm, JWTError, OAuth2Error,
+    JWKError, JWKType, JWTAlgorithm, JWTError,
 } from '@authup/specs';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import type {

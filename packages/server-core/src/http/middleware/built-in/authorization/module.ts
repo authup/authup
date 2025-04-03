@@ -187,7 +187,7 @@ export class AuthorizationMiddleware {
                 },
             });
 
-            if(!realm) {
+            if (!realm) {
                 throw JWTError.payloadPropertyInvalid('realm_id');
             }
 
