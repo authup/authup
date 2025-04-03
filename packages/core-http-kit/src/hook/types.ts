@@ -10,7 +10,7 @@ import type { ClientError } from 'hapic';
 import type { TokenCreator, TokenCreatorOptions } from '../token-creator';
 import type { ClientResponseTokenHookEventName } from './constants';
 
-export type ClientResponseTokenHookOptions = {
+export type ClientResponseErrorTokenHookOptions = {
     /**
      * The URL of the api service.
      *
@@ -29,7 +29,7 @@ export type ClientResponseTokenHookOptions = {
     tokenCreator: TokenCreatorOptions | TokenCreator,
 };
 
-export type ClientResponseTokenHookEvents = {
-    [ClientResponseTokenHookEventName.CREATED]: TokenGrantResponse,
+export type ClientResponseErrorTokenHookEvents = {
+    [ClientResponseTokenHookEventName.REFRESH_FINISHED]: TokenGrantResponse,
     [ClientResponseTokenHookEventName.REFRESH_FAILED]: ClientError | null,
 };

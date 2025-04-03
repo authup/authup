@@ -5,26 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isJWKErrorCode, isJWTErrorCode } from '@authup/specs';
+import { isJWTErrorCode } from '@authup/specs';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import { EventEmitter } from '@posva/event-emitter';
 import type { Client as BaseClient } from 'hapic';
 import {
     HeaderName,
-    HookName, isClientError, setHeader, stringifyAuthorizationHeader, unsetHeader,
+    HookName, isClientError, setHeader,
+    stringifyAuthorizationHeader, unsetHeader,
 } from 'hapic';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
 import { ClientResponseTokenHookEventName } from './constants';
-import type { ClientResponseTokenHookEvents, ClientResponseTokenHookOptions } from './types';
+import type { ClientResponseErrorTokenHookEvents, ClientResponseErrorTokenHookOptions } from './types';
 import { getClientErrorCode, getClientRequestRetryState } from './utils';
 
 const HOOK_SYMBOL = Symbol.for('ClientResponseHook');
 
-export class ClientResponseTokenHook extends EventEmitter<ClientResponseTokenHookEvents> {
+export class ClientResponseErrorTokenHook extends EventEmitter<ClientResponseErrorTokenHookEvents> {
     protected creator: TokenCreator;
 
-    protected options : ClientResponseTokenHookOptions;
+    protected options : ClientResponseErrorTokenHookOptions;
 
     protected timer : ReturnType<typeof setTimeout> | undefined;
 
@@ -32,7 +33,7 @@ export class ClientResponseTokenHook extends EventEmitter<ClientResponseTokenHoo
 
     // ------------------------------------------------
 
-    constructor(options: ClientResponseTokenHookOptions) {
+    constructor(options: ClientResponseErrorTokenHookOptions) {
         super();
 
         options.timer ??= true;
@@ -65,21 +66,18 @@ export class ClientResponseTokenHook extends EventEmitter<ClientResponseTokenHoo
         client[HOOK_SYMBOL] = client.on(
             HookName.RESPONSE_ERROR,
             (err) => {
+                const { request } = err;
+
+                const currentState = getClientRequestRetryState(request);
+                if (currentState.retryCount > 0) {
+                    return Promise.reject(err);
+                }
+
+                currentState.retryCount += 1;
+
                 const code = getClientErrorCode(err);
 
-                if (
-                    isJWTErrorCode(code) ||
-                    isJWKErrorCode(code)
-                ) {
-                    const { request } = err;
-
-                    const currentState = getClientRequestRetryState(request);
-                    if (currentState.retryCount > 0) {
-                        return Promise.reject(err);
-                    }
-
-                    currentState.retryCount += 1;
-
+                if (isJWTErrorCode(code)) {
                     return this.refresh()
                         .then((response) => {
                             if (request.headers) {
@@ -155,6 +153,11 @@ export class ClientResponseTokenHook extends EventEmitter<ClientResponseTokenHoo
 
     // ------------------------------------------------
 
+    /**
+     * Refresh token
+     *
+     * @throws ClientError
+     */
     async refresh() : Promise<TokenGrantResponse> {
         if (this.refreshPromise) {
             return this.refreshPromise;
@@ -166,7 +169,7 @@ export class ClientResponseTokenHook extends EventEmitter<ClientResponseTokenHoo
             .then((response) => {
                 this.setTimer(response.expires_in);
 
-                this.emit(ClientResponseTokenHookEventName.CREATED, response);
+                this.emit(ClientResponseTokenHookEventName.REFRESH_FINISHED, response);
 
                 this.refreshPromise = undefined;
 

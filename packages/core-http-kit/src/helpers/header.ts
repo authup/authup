@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum ClientResponseTokenHookEventName {
-    REFRESH_FINISHED = 'refreshFinished',
-    REFRESH_FAILED = 'refreshFailed',
-}
+import { setHeader, unsetHeader } from 'hapic';
+
+export {
+    setHeader,
+    unsetHeader,
+};
