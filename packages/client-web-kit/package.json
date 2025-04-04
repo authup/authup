@@ -1,5 +1,6 @@
 {
     "name": "@authup/client-web-kit",
+    "type": "module",
     "version": "1.0.0-beta.24",
     "description": "This package contains vue components.",
     "license": "Apache-2.0",

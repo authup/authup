@@ -12,7 +12,7 @@
         "sourceMap": false,
         "module": "ESNext",
         "jsx": "preserve",
-
+        "moduleResolution": "bundler",
         "declaration": true,
         "declarationDir": "dist"
     },
