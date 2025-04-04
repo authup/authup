@@ -6,7 +6,7 @@
  */
 
 import { CookieName } from '@authup/core-http-kit';
-import { useCookies } from '@vueuse/integrations';
+import { useCookies } from '@vueuse/integrations/useCookies';
 import { defineStore } from 'pinia';
 import type { App } from 'vue';
 import type {
