@@ -128,9 +128,28 @@ export async function writePermissionRouteHandler(
 
     if (entity) {
         entity = repository.merge(entity, data);
+
+        if (
+            data.policy &&
+            data.policy.realm_id &&
+            entity.realm_id &&
+            data.policy.realm_id !== entity.realm_id
+        ) {
+            throw new BadRequestError('Policy realm and permission realm must be equal.');
+        }
+
         await repository.save(entity);
 
         return sendAccepted(res, entity);
+    }
+
+    if (
+        data.policy &&
+        data.policy.realm_id &&
+        data.realm_id &&
+        data.policy.realm_id !== data.realm_id
+    ) {
+        throw new BadRequestError('Policy realm and permission realm must be equal.');
     }
 
     entity = repository.create(data);
