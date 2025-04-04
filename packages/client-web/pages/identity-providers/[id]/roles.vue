@@ -1,6 +1,6 @@
 <script lang="ts">
 
-import { AIdentityProviderRoleAssignments, APagination } from '@authup/client-web-kit';
+import { AIdentityProviderRoleAssignments, APagination, ASearch } from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';
@@ -9,6 +9,7 @@ import { LayoutKey } from '../../../config/layout';
 
 export default defineNuxtComponent({
     components: {
+        ASearch,
         APagination,
         AIdentityProviderRoleAssignments,
     },
@@ -43,6 +44,12 @@ export default defineNuxtComponent({
         :entity-id="entity.id"
         @failed="handleFailed"
     >
+        <template #header="props">
+            <ASearch
+                :load="props.load"
+                :meta="props.meta"
+            />
+        </template>
         <template #footer="props">
             <APagination
                 :busy="props.busy"

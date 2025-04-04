@@ -1,12 +1,12 @@
 <script lang="ts">
-
-import { AClientPermissionAssignments, APagination } from '@authup/client-web-kit';
+import { AClientPermissionAssignments, APagination, ASearch } from '@authup/client-web-kit';
 import type { Client } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
+        ASearch,
         APagination,
         AClientPermissionAssignments,
     },
@@ -16,15 +16,16 @@ export default defineNuxtComponent({
             required: true,
         },
     },
-    setup(props) {
-        return {
-            entity: props.entity,
-        };
-    },
 });
 </script>
 <template>
     <AClientPermissionAssignments :entity-id="entity.id">
+        <template #header="props">
+            <ASearch
+                :load="props.load"
+                :meta="props.meta"
+            />
+        </template>
         <template #footer="props">
             <APagination
                 :busy="props.busy"

@@ -1,12 +1,12 @@
 <script lang="ts">
-
-import { APagination, ARoleUserAssignments } from '@authup/client-web-kit';
+import { APagination, ARoleUserAssignments, ASearch } from '@authup/client-web-kit';
 import type { Role } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#app';
 
 export default defineNuxtComponent({
     components: {
+        ASearch,
         APagination,
         ARoleUserAssignments,
     },
@@ -16,15 +16,16 @@ export default defineNuxtComponent({
             required: true,
         },
     },
-    setup(props) {
-        return {
-            entity: props.entity,
-        };
-    },
 });
 </script>
 <template>
     <ARoleUserAssignments :entity-id="entity.id">
+        <template #header="props">
+            <ASearch
+                :load="props.load"
+                :meta="props.meta"
+            />
+        </template>
         <template #footer="props">
             <APagination
                 :busy="props.busy"

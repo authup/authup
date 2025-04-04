@@ -16,11 +16,6 @@ export default defineNuxtComponent({
             required: true,
         },
     },
-    setup(props) {
-        return {
-            entity: props.entity,
-        };
-    },
 });
 </script>
 <template>
