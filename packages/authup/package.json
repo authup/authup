@@ -48,7 +48,7 @@
         "@authup/core-kit": "^1.0.0-beta.24",
         "@authup/server-core": "^1.0.0-beta.24",
         "citty": "^0.1.6",
-        "chalk": "^4.1.2",
+        "chalk": "^5.4.1",
         "confinity": "^1.0.0-beta.1",
         "consola": "^3.4.0",
         "dycraft": "^1.1.0",
