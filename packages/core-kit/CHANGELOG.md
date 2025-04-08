@@ -1,5 +1,37 @@
 # Change Log
 
+## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
+
+
+### Features
+
+* client-{permission,role} relations ([#2570](https://github.com/authup/authup/issues/2570)) ([95e5e85](https://github.com/authup/authup/commit/95e5e855083b20fc17e7df9047a97948d66aac3d))
+* correct client usage in security context ([#2579](https://github.com/authup/authup/issues/2579)) ([26f0118](https://github.com/authup/authup/commit/26f0118184c98bf04f499d19526b1cf0d034cad6))
+* flatten admin pages to root path & remove id table column(s) ([#2576](https://github.com/authup/authup/issues/2576)) ([657b39c](https://github.com/authup/authup/commit/657b39cc4dd6b40a05572b4feb20a985917db13b))
+* permit tree like policy submission ([#2560](https://github.com/authup/authup/issues/2560)) ([b43afdb](https://github.com/authup/authup/commit/b43afdbacf63c3e809b34a50a576e12c9133367c))
+* remove identity provider slug field ([#2575](https://github.com/authup/authup/issues/2575)) ([19e111b](https://github.com/authup/authup/commit/19e111b96321c915014417ad5148307724dc93ee))
+* remove isRealmResource{Readable,Writable} helper ([ac06e71](https://github.com/authup/authup/commit/ac06e71f32c47fa250e381197dc6069ccc2cb9fa))
+* rename channel & namespace builder heplpers ([e86e18c](https://github.com/authup/authup/commit/e86e18c2821b6a0b9afa7c27efabbc6d0d9b5c7c))
+* stricter restrictions for resource name attribute ([57965ea](https://github.com/authup/authup/commit/57965eae29523b59c46e86b6f12e7b44752ae301))
+
+
+### Bug Fixes
+
+* policy ancestor assignment ([#2568](https://github.com/authup/authup/issues/2568)) ([ca4cad7](https://github.com/authup/authup/commit/ca4cad73d3051ea4da53b56a7d7848a0e2e15f95))
+* rename domain-type to resource-type ([c01ec66](https://github.com/authup/authup/commit/c01ec66ff0cb8c06c6e360878b4f40a7eed30fb7))
+* rename domain-type-map to resource-type-map ([131b296](https://github.com/authup/authup/commit/131b29665df32c82456e9543b50710278e90c479))
+* renamed types & interfaces ([45c2fb7](https://github.com/authup/authup/commit/45c2fb78e8948fcc2d41e3615dad35d906e94b2f))
+* update year range in LICENSE file ([8dd6da9](https://github.com/authup/authup/commit/8dd6da98cbfd8f910397de7391402af1e7517cc9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/errors bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/specs bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+
 ## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
 
 

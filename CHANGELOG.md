@@ -3,6 +3,58 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* sqlite not longer supported for production
+
+### Features
+
+* add client_id reference in role model + updated unique constraints ([6a1bc89](https://github.com/authup/authup/commit/6a1bc89b87d1cfa40c45f12245137c3a5a5ec896))
+* add route (handler) to retrieve expanded policy tree ([3079444](https://github.com/authup/authup/commit/3079444f04eaf16a29dacb4aa3339ccc284029ff))
+* client-{permission,role} relations ([#2570](https://github.com/authup/authup/issues/2570)) ([95e5e85](https://github.com/authup/authup/commit/95e5e855083b20fc17e7df9047a97948d66aac3d))
+* correct client usage in security context ([#2579](https://github.com/authup/authup/issues/2579)) ([26f0118](https://github.com/authup/authup/commit/26f0118184c98bf04f499d19526b1cf0d034cad6))
+* dedicated realm picker component ([#2573](https://github.com/authup/authup/issues/2573)) ([f98b7e7](https://github.com/authup/authup/commit/f98b7e71cd934e2fecbe1e8d46e2f12fe531b1e2))
+* deprecate sqlite for production environment ([#2574](https://github.com/authup/authup/issues/2574)) ([75fc3aa](https://github.com/authup/authup/commit/75fc3aa4164d2ceda9bb8084dca9cf4f51252c5c))
+* enable reading explicit root & children policies ([#2561](https://github.com/authup/authup/issues/2561)) ([07ae0db](https://github.com/authup/authup/commit/07ae0dbe8f6975357788bc1af572ccad87f367e7))
+* enable realm specification in policy basic form ([d9553a2](https://github.com/authup/authup/commit/d9553a241c714d8541fd44f29d904008f42c8a9d))
+* enhance cli migration command ([3ec235b](https://github.com/authup/authup/commit/3ec235b03509bbc36795bb01790f505a1c9c71ca))
+* enhance policy components ([#2598](https://github.com/authup/authup/issues/2598)) ([39361d3](https://github.com/authup/authup/commit/39361d3f2927ec5912383163334b03d7bcbfed47))
+* expose important policy related components ([1dc4430](https://github.com/authup/authup/commit/1dc4430e72a9d71be66d98129a64bf98ec19ebf8))
+* extend tree repository save & find  ([#2559](https://github.com/authup/authup/issues/2559)) ([88f5247](https://github.com/authup/authup/commit/88f52473b048f4a27cd991c01fd9d7aaf50a4bf3))
+* flatten admin pages to root path & remove id table column(s) ([#2576](https://github.com/authup/authup/issues/2576)) ([657b39c](https://github.com/authup/authup/commit/657b39cc4dd6b40a05572b4feb20a985917db13b))
+* initial policy components ([#2562](https://github.com/authup/authup/issues/2562)) ([f73cd74](https://github.com/authup/authup/commit/f73cd7476970f563a07307ee12e1742de9eeaf32))
+* make relational list entities searchable ([59007b2](https://github.com/authup/authup/commit/59007b239435e1f8a3b1d8efd1a3400dafede889))
+* permit tree like policy submission ([#2560](https://github.com/authup/authup/issues/2560)) ([b43afdb](https://github.com/authup/authup/commit/b43afdbacf63c3e809b34a50a576e12c9133367c))
+* prepare migrations for next release ([#2593](https://github.com/authup/authup/issues/2593)) ([72f69fa](https://github.com/authup/authup/commit/72f69fa5ed11bf2c8596a094e12f5413a1fa2c89))
+* remove identity provider slug field ([#2575](https://github.com/authup/authup/issues/2575)) ([19e111b](https://github.com/authup/authup/commit/19e111b96321c915014417ad5148307724dc93ee))
+* remove isRealmResource{Readable,Writable} helper ([ac06e71](https://github.com/authup/authup/commit/ac06e71f32c47fa250e381197dc6069ccc2cb9fa))
+* rename channel & namespace builder heplpers ([e86e18c](https://github.com/authup/authup/commit/e86e18c2821b6a0b9afa7c27efabbc6d0d9b5c7c))
+* stricter restrictions for resource name attribute ([57965ea](https://github.com/authup/authup/commit/57965eae29523b59c46e86b6f12e7b44752ae301))
+* unified entity picker mechanism ([#2581](https://github.com/authup/authup/issues/2581)) ([831aeb2](https://github.com/authup/authup/commit/831aeb20e1937f8106395e0e8f71c122b89bf256))
+
+
+### Bug Fixes
+
+* add '.' caharacter as allowed character in ui components ([cbd5b0a](https://github.com/authup/authup/commit/cbd5b0a8b2ba887889b73631b290673caa473cd4))
+* **deps:** accept pinia v2.x and v3.x ([ade237a](https://github.com/authup/authup/commit/ade237a07dbbd982cccd5a1ca3dbb6afbd4f82b0))
+* **deps:** bump nanoid to v3.3.8 ([4729780](https://github.com/authup/authup/commit/4729780635295705a14594eea4a3059deb207cc0))
+* enable reverting mysql migration 1740991051622-Default ([0b0616e](https://github.com/authup/authup/commit/0b0616e2bfe5c07b202f4d91d7c38d4e6d07ed82))
+* eplicit restrcit veryfing client credentials for non public clients ([460dbbd](https://github.com/authup/authup/commit/460dbbd4b57fcd732d8178d3822b59f44cbbd4de))
+* if non global policy is assigned to permission, realms must match ([c6167b5](https://github.com/authup/authup/commit/c6167b522546613b50c2b563e8a4954bdfae29fa))
+* import for @vueuse/integrations package ([409e4c5](https://github.com/authup/authup/commit/409e4c578083c9e2a956eb0472714fc49a70e219))
+* import for @vueuse/integrations package ([68a330a](https://github.com/authup/authup/commit/68a330aace898c3f2313112d7eaf25cbbc529148))
+* minor optimization to cli ([e44e4bf](https://github.com/authup/authup/commit/e44e4bfdf0299d1cc46af86ac224d5b7b2318824))
+* policy ancestor assignment ([#2568](https://github.com/authup/authup/issues/2568)) ([ca4cad7](https://github.com/authup/authup/commit/ca4cad73d3051ea4da53b56a7d7848a0e2e15f95))
+* rename domain-type to resource-type ([c01ec66](https://github.com/authup/authup/commit/c01ec66ff0cb8c06c6e360878b4f40a7eed30fb7))
+* rename domain-type-map to resource-type-map ([131b296](https://github.com/authup/authup/commit/131b29665df32c82456e9543b50710278e90c479))
+* renamed types & interfaces ([45c2fb7](https://github.com/authup/authup/commit/45c2fb78e8948fcc2d41e3615dad35d906e94b2f))
+* typing in policy basic form ([7ee8b70](https://github.com/authup/authup/commit/7ee8b70210f50787d25d652a4353f9104ab1abf4))
+* update year range in LICENSE file ([8dd6da9](https://github.com/authup/authup/commit/8dd6da98cbfd8f910397de7391402af1e7517cc9))
+* use uncrypto to support web crypto api with different targets ([e37a0ba](https://github.com/authup/authup/commit/e37a0bad390fe7984fc9d68bf4572e5e1aa9e442))
+
 ## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
 
 

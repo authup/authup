@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
+
+
+### Bug Fixes
+
+* minor optimization to cli ([e44e4bf](https://github.com/authup/authup/commit/e44e4bfdf0299d1cc46af86ac224d5b7b2318824))
+* update year range in LICENSE file ([8dd6da9](https://github.com/authup/authup/commit/8dd6da98cbfd8f910397de7391402af1e7517cc9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/server-core bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+
 ## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
 
 
