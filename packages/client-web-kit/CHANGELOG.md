@@ -1,5 +1,59 @@
 # Change Log
 
+## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
+
+
+### Features
+
+* client-{permission,role} relations ([#2570](https://github.com/authup/authup/issues/2570)) ([95e5e85](https://github.com/authup/authup/commit/95e5e855083b20fc17e7df9047a97948d66aac3d))
+* correct client usage in security context ([#2579](https://github.com/authup/authup/issues/2579)) ([26f0118](https://github.com/authup/authup/commit/26f0118184c98bf04f499d19526b1cf0d034cad6))
+* dedicated realm picker component ([#2573](https://github.com/authup/authup/issues/2573)) ([f98b7e7](https://github.com/authup/authup/commit/f98b7e71cd934e2fecbe1e8d46e2f12fe531b1e2))
+* enable realm specification in policy basic form ([d9553a2](https://github.com/authup/authup/commit/d9553a241c714d8541fd44f29d904008f42c8a9d))
+* enhance policy components ([#2598](https://github.com/authup/authup/issues/2598)) ([39361d3](https://github.com/authup/authup/commit/39361d3f2927ec5912383163334b03d7bcbfed47))
+* expose important policy related components ([1dc4430](https://github.com/authup/authup/commit/1dc4430e72a9d71be66d98129a64bf98ec19ebf8))
+* initial policy components ([#2562](https://github.com/authup/authup/issues/2562)) ([f73cd74](https://github.com/authup/authup/commit/f73cd7476970f563a07307ee12e1742de9eeaf32))
+* make relational list entities searchable ([59007b2](https://github.com/authup/authup/commit/59007b239435e1f8a3b1d8efd1a3400dafede889))
+* remove identity provider slug field ([#2575](https://github.com/authup/authup/issues/2575)) ([19e111b](https://github.com/authup/authup/commit/19e111b96321c915014417ad5148307724dc93ee))
+* remove isRealmResource{Readable,Writable} helper ([ac06e71](https://github.com/authup/authup/commit/ac06e71f32c47fa250e381197dc6069ccc2cb9fa))
+* rename channel & namespace builder heplpers ([e86e18c](https://github.com/authup/authup/commit/e86e18c2821b6a0b9afa7c27efabbc6d0d9b5c7c))
+* stricter restrictions for resource name attribute ([57965ea](https://github.com/authup/authup/commit/57965eae29523b59c46e86b6f12e7b44752ae301))
+* unified entity picker mechanism ([#2581](https://github.com/authup/authup/issues/2581)) ([831aeb2](https://github.com/authup/authup/commit/831aeb20e1937f8106395e0e8f71c122b89bf256))
+
+
+### Bug Fixes
+
+* add '.' caharacter as allowed character in ui components ([cbd5b0a](https://github.com/authup/authup/commit/cbd5b0a8b2ba887889b73631b290673caa473cd4))
+* **deps:** accept pinia v2.x and v3.x ([ade237a](https://github.com/authup/authup/commit/ade237a07dbbd982cccd5a1ca3dbb6afbd4f82b0))
+* import for @vueuse/integrations package ([409e4c5](https://github.com/authup/authup/commit/409e4c578083c9e2a956eb0472714fc49a70e219))
+* import for @vueuse/integrations package ([68a330a](https://github.com/authup/authup/commit/68a330aace898c3f2313112d7eaf25cbbc529148))
+* policy ancestor assignment ([#2568](https://github.com/authup/authup/issues/2568)) ([ca4cad7](https://github.com/authup/authup/commit/ca4cad73d3051ea4da53b56a7d7848a0e2e15f95))
+* rename domain-type to resource-type ([c01ec66](https://github.com/authup/authup/commit/c01ec66ff0cb8c06c6e360878b4f40a7eed30fb7))
+* rename domain-type-map to resource-type-map ([131b296](https://github.com/authup/authup/commit/131b29665df32c82456e9543b50710278e90c479))
+* renamed types & interfaces ([45c2fb7](https://github.com/authup/authup/commit/45c2fb78e8948fcc2d41e3615dad35d906e94b2f))
+* typing in policy basic form ([7ee8b70](https://github.com/authup/authup/commit/7ee8b70210f50787d25d652a4353f9104ab1abf4))
+* update year range in LICENSE file ([8dd6da9](https://github.com/authup/authup/commit/8dd6da98cbfd8f910397de7391402af1e7517cc9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-http-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/errors bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/specs bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-http-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/errors bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/specs bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+
 ## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
 
 

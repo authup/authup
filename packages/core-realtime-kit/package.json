@@ -1,6 +1,6 @@
 {
     "name": "@authup/core-realtime-kit",
-    "version": "1.0.0-beta.24",
+    "version": "1.0.0-beta.25",
     "description": "Package containing a toolkit for the core realtime service.",
     "license": "Apache-2.0",
     "exports": {
@@ -41,12 +41,12 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
-        "@authup/kit": "^1.0.0-beta.24",
+        "@authup/kit": "^1.0.0-beta.25",
         "socket.io": "^4.8.1",
         "socket.io-client": "^4.8.1"
     },
     "peerDependencies": {
-        "@authup/kit": "^1.0.0-beta.24",
+        "@authup/kit": "^1.0.0-beta.25",
         "socket.io-client": "^4.8.1"
     },
     "publishConfig": {

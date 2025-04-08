@@ -1,5 +1,39 @@
 # Change Log
 
+## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
+
+
+### Features
+
+* add route (handler) to retrieve expanded policy tree ([3079444](https://github.com/authup/authup/commit/3079444f04eaf16a29dacb4aa3339ccc284029ff))
+* client-{permission,role} relations ([#2570](https://github.com/authup/authup/issues/2570)) ([95e5e85](https://github.com/authup/authup/commit/95e5e855083b20fc17e7df9047a97948d66aac3d))
+* enable reading explicit root & children policies ([#2561](https://github.com/authup/authup/issues/2561)) ([07ae0db](https://github.com/authup/authup/commit/07ae0dbe8f6975357788bc1af572ccad87f367e7))
+* initial policy components ([#2562](https://github.com/authup/authup/issues/2562)) ([f73cd74](https://github.com/authup/authup/commit/f73cd7476970f563a07307ee12e1742de9eeaf32))
+* permit tree like policy submission ([#2560](https://github.com/authup/authup/issues/2560)) ([b43afdb](https://github.com/authup/authup/commit/b43afdbacf63c3e809b34a50a576e12c9133367c))
+
+
+### Bug Fixes
+
+* renamed types & interfaces ([45c2fb7](https://github.com/authup/authup/commit/45c2fb78e8948fcc2d41e3615dad35d906e94b2f))
+* update year range in LICENSE file ([8dd6da9](https://github.com/authup/authup/commit/8dd6da98cbfd8f910397de7391402af1e7517cc9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/errors bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/specs bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/errors bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/specs bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+
 ## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
 
 

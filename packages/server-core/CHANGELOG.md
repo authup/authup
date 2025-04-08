@@ -1,5 +1,56 @@
 # Change Log
 
+## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* sqlite not longer supported for production
+
+### Features
+
+* add client_id reference in role model + updated unique constraints ([6a1bc89](https://github.com/authup/authup/commit/6a1bc89b87d1cfa40c45f12245137c3a5a5ec896))
+* add route (handler) to retrieve expanded policy tree ([3079444](https://github.com/authup/authup/commit/3079444f04eaf16a29dacb4aa3339ccc284029ff))
+* client-{permission,role} relations ([#2570](https://github.com/authup/authup/issues/2570)) ([95e5e85](https://github.com/authup/authup/commit/95e5e855083b20fc17e7df9047a97948d66aac3d))
+* correct client usage in security context ([#2579](https://github.com/authup/authup/issues/2579)) ([26f0118](https://github.com/authup/authup/commit/26f0118184c98bf04f499d19526b1cf0d034cad6))
+* deprecate sqlite for production environment ([#2574](https://github.com/authup/authup/issues/2574)) ([75fc3aa](https://github.com/authup/authup/commit/75fc3aa4164d2ceda9bb8084dca9cf4f51252c5c))
+* enable reading explicit root & children policies ([#2561](https://github.com/authup/authup/issues/2561)) ([07ae0db](https://github.com/authup/authup/commit/07ae0dbe8f6975357788bc1af572ccad87f367e7))
+* enhance cli migration command ([3ec235b](https://github.com/authup/authup/commit/3ec235b03509bbc36795bb01790f505a1c9c71ca))
+* extend tree repository save & find  ([#2559](https://github.com/authup/authup/issues/2559)) ([88f5247](https://github.com/authup/authup/commit/88f52473b048f4a27cd991c01fd9d7aaf50a4bf3))
+* initial policy components ([#2562](https://github.com/authup/authup/issues/2562)) ([f73cd74](https://github.com/authup/authup/commit/f73cd7476970f563a07307ee12e1742de9eeaf32))
+* permit tree like policy submission ([#2560](https://github.com/authup/authup/issues/2560)) ([b43afdb](https://github.com/authup/authup/commit/b43afdbacf63c3e809b34a50a576e12c9133367c))
+* prepare migrations for next release ([#2593](https://github.com/authup/authup/issues/2593)) ([72f69fa](https://github.com/authup/authup/commit/72f69fa5ed11bf2c8596a094e12f5413a1fa2c89))
+* remove identity provider slug field ([#2575](https://github.com/authup/authup/issues/2575)) ([19e111b](https://github.com/authup/authup/commit/19e111b96321c915014417ad5148307724dc93ee))
+* rename channel & namespace builder heplpers ([e86e18c](https://github.com/authup/authup/commit/e86e18c2821b6a0b9afa7c27efabbc6d0d9b5c7c))
+* stricter restrictions for resource name attribute ([57965ea](https://github.com/authup/authup/commit/57965eae29523b59c46e86b6f12e7b44752ae301))
+* unified entity picker mechanism ([#2581](https://github.com/authup/authup/issues/2581)) ([831aeb2](https://github.com/authup/authup/commit/831aeb20e1937f8106395e0e8f71c122b89bf256))
+
+
+### Bug Fixes
+
+* enable reverting mysql migration 1740991051622-Default ([0b0616e](https://github.com/authup/authup/commit/0b0616e2bfe5c07b202f4d91d7c38d4e6d07ed82))
+* eplicit restrcit veryfing client credentials for non public clients ([460dbbd](https://github.com/authup/authup/commit/460dbbd4b57fcd732d8178d3822b59f44cbbd4de))
+* if non global policy is assigned to permission, realms must match ([c6167b5](https://github.com/authup/authup/commit/c6167b522546613b50c2b563e8a4954bdfae29fa))
+* policy ancestor assignment ([#2568](https://github.com/authup/authup/issues/2568)) ([ca4cad7](https://github.com/authup/authup/commit/ca4cad73d3051ea4da53b56a7d7848a0e2e15f95))
+* rename domain-type to resource-type ([c01ec66](https://github.com/authup/authup/commit/c01ec66ff0cb8c06c6e360878b4f40a7eed30fb7))
+* rename domain-type-map to resource-type-map ([131b296](https://github.com/authup/authup/commit/131b29665df32c82456e9543b50710278e90c479))
+* renamed types & interfaces ([45c2fb7](https://github.com/authup/authup/commit/45c2fb78e8948fcc2d41e3615dad35d906e94b2f))
+* update year range in LICENSE file ([8dd6da9](https://github.com/authup/authup/commit/8dd6da98cbfd8f910397de7391402af1e7517cc9))
+* use uncrypto to support web crypto api with different targets ([e37a0ba](https://github.com/authup/authup/commit/e37a0bad390fe7984fc9d68bf4572e5e1aa9e442))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/core-http-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/errors bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/server-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/specs bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+
 ## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
 
 

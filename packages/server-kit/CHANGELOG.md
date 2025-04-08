@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
+
+
+### Bug Fixes
+
+* update year range in LICENSE file ([8dd6da9](https://github.com/authup/authup/commit/8dd6da98cbfd8f910397de7391402af1e7517cc9))
+* use uncrypto to support web crypto api with different targets ([e37a0ba](https://github.com/authup/authup/commit/e37a0bad390fe7984fc9d68bf4572e5e1aa9e442))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/errors bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/specs bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+  * peerDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/kit bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/errors bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+    * @authup/specs bumped from ^1.0.0-beta.24 to ^1.0.0-beta.25
+
 ## [1.0.0-beta.24](https://github.com/authup/authup/compare/v1.0.0-beta.23...v1.0.0-beta.24) (2025-01-18)
 
 
