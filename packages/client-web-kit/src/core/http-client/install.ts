@@ -7,17 +7,15 @@
 
 import {
     Client,
-    ClientResponseErrorTokenHook,
-    ClientResponseTokenHookEventName,
     getClientErrorCode,
     unsetHeader,
 } from '@authup/core-http-kit';
-import { storeToRefs } from 'pinia';
 import type { App } from 'vue';
 import { isJWKErrorCode } from '@authup/specs';
 import { StoreDispatcherEventName, injectStoreDispatcher, injectStoreFactory } from '../store';
 import { hasHTTPClient, provideHTTPClient } from './singleton';
 import type { HTTPClientInstallOptions } from './types';
+import { injectHTTPClientTokenRefresher } from './token-refresher';
 
 export function installHTTPClient(app: App, options: HTTPClientInstallOptions = {}) {
     if (hasHTTPClient(app)) {
@@ -28,8 +26,6 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
 
     const storeFactory = injectStoreFactory(app);
     const store = storeFactory(options.pinia);
-
-    const { refreshToken } = storeToRefs(store);
 
     client.on('responseError', (err) => {
         const { request } = err;
@@ -51,48 +47,29 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         return Promise.reject(err);
     });
 
-    const tokenHook = new ClientResponseErrorTokenHook({
-        baseURL: options.baseURL,
-        tokenCreator: () => {
-            if (!refreshToken.value) {
-                throw new Error('No refresh token available.');
-            }
-
-            return client.token.createWithRefreshToken({
-                refresh_token: refreshToken.value,
-            });
-        },
-        timer: !options.isServer,
-    });
-
-    tokenHook.on(ClientResponseTokenHookEventName.REFRESH_FINISHED, (response) => {
-        store.applyTokenGrantResponse(response);
-    });
-
-    tokenHook.on(ClientResponseTokenHookEventName.REFRESH_FAILED, () => {
-        Promise.resolve()
-            .then(() => store.logout());
-    });
-
+    const tokenRefresher = injectHTTPClientTokenRefresher(app);
     const storeDispatcher = injectStoreDispatcher(app);
+
     const handleAccessTokenEvent = () => {
         if (store.accessToken) {
-            client.setAuthorizationHeader({
+            // todo: is better to enable/disable :)
+            // todo: better than unmount and mount always.
+            tokenRefresher.attach(client);
+            tokenRefresher.call((c) => c.setAuthorizationHeader({
                 type: 'Bearer',
-                token: store.accessToken,
-            });
+                token: store.accessToken as string,
+            }))
 
-            tokenHook.mount(client);
         } else {
-            client.unsetAuthorizationHeader();
-            tokenHook.unmount(client);
+            tokenRefresher.call((c) => c.unsetAuthorizationHeader());
+            tokenRefresher.detach(client);
         }
     };
 
     const handleAccessTokenExpireDateEvent = () => {
         if (store.accessTokenExpireDate) {
             const expiresIn = Math.floor((store.accessTokenExpireDate.getTime() - Date.now()) / 1000);
-            tokenHook.setTimer(expiresIn);
+            tokenRefresher.setTimer(expiresIn);
         }
     };
 

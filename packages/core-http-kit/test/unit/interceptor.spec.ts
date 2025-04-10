@@ -6,13 +6,13 @@
  */
 
 import {
-    Client, ClientResponseErrorTokenHook,
+    Client, ClientHookTokenRefresher,
     getClientRequestRetryState,
 } from '../../src';
 
 describe('src/interceptor/utils', () => {
     it('should mount and unmount interceptor', () => {
-        const hook = new ClientResponseErrorTokenHook({
+        const hook = new ClientHookTokenRefresher({
             tokenCreator: {
                 type: 'user',
                 name: 'admin',
@@ -22,13 +22,13 @@ describe('src/interceptor/utils', () => {
 
         const client = new Client();
 
-        expect(hook.isMounted(client)).toBeFalsy();
+        expect(hook.isAttached(client)).toBeFalsy();
 
-        hook.mount(client);
-        expect(hook.isMounted(client)).toBeTruthy();
+        hook.attach(client);
+        expect(hook.isAttached(client)).toBeTruthy();
 
-        hook.unmount(client);
-        expect(hook.isMounted(client)).toBeFalsy();
+        hook.detach(client);
+        expect(hook.isAttached(client)).toBeFalsy();
     });
 
     it('should get current request retry state', () => {

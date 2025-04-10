@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum ClientResponseTokenHookEventName {
+export enum ClientHokenTokenRefresherEventName {
     REFRESH_FINISHED = 'refreshFinished',
     REFRESH_FAILED = 'refreshFailed',
 }

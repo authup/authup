@@ -14,18 +14,21 @@ import {
     HookName, isClientError, setHeader,
     stringifyAuthorizationHeader, unsetHeader,
 } from 'hapic';
+import { isObject } from '@authup/kit';
 import type { TokenCreator } from '../token-creator';
 import { createTokenCreator } from '../token-creator';
-import { ClientResponseTokenHookEventName } from './constants';
-import type { ClientResponseErrorTokenHookEvents, ClientResponseErrorTokenHookOptions } from './types';
+import { ClientHokenTokenRefresherEventName } from './constants';
+import type { ClientHookTokenRefresherEvents, ClientHookTokenRefresherOptions } from './types';
 import { getClientErrorCode, getClientRequestRetryState } from './utils';
 
 const HOOK_SYMBOL = Symbol.for('ClientResponseHook');
 
-export class ClientResponseErrorTokenHook extends EventEmitter<ClientResponseErrorTokenHookEvents> {
+export class ClientHookTokenRefresher extends EventEmitter<ClientHookTokenRefresherEvents> {
+    protected clients : BaseClient[];
+
     protected creator: TokenCreator;
 
-    protected options : ClientResponseErrorTokenHookOptions;
+    protected options : ClientHookTokenRefresherOptions;
 
     protected timer : ReturnType<typeof setTimeout> | undefined;
 
@@ -33,8 +36,10 @@ export class ClientResponseErrorTokenHook extends EventEmitter<ClientResponseErr
 
     // ------------------------------------------------
 
-    constructor(options: ClientResponseErrorTokenHookOptions) {
+    constructor(options: ClientHookTokenRefresherOptions) {
         super();
+
+        this.clients = [];
 
         options.timer ??= true;
         this.options = options;
@@ -54,70 +59,94 @@ export class ClientResponseErrorTokenHook extends EventEmitter<ClientResponseErr
 
     // ------------------------------------------------
 
-    isMounted(client: BaseClient) {
+    call(fn: (client: BaseClient) => void) : void {
+        for (let i = 0; i < this.clients.length; i++) {
+            fn(this.clients[i]);
+        }
+    }
+
+    // ------------------------------------------------
+
+    isAttached(client: BaseClient) {
         return HOOK_SYMBOL in client;
     }
 
-    mount(client: BaseClient) {
-        if (this.isMounted(client)) {
-            return;
+    attach(client: BaseClient) {
+        const index = this.clients.indexOf(client);
+        if (index === -1) {
+            this.clients.push(client);
         }
 
-        client[HOOK_SYMBOL] = client.on(
-            HookName.RESPONSE_ERROR,
-            (err) => {
-                const { request } = err;
+        if (!this.isAttached(client)) {
+            client[HOOK_SYMBOL] = client.on(
+                HookName.RESPONSE_ERROR,
+                (err) => {
+                    const { request } = err;
 
-                const currentState = getClientRequestRetryState(request);
-                if (currentState.retryCount > 0) {
+                    const currentState = getClientRequestRetryState(request);
+                    if (currentState.retryCount > 0) {
+                        return Promise.reject(err);
+                    }
+
+                    currentState.retryCount += 1;
+
+                    const code = getClientErrorCode(err);
+
+                    if (
+                        isJWTErrorCode(code) ||
+                        (isObject(err.response) && err.response.status === 401)
+                    ) {
+                        return this.refresh()
+                            .then((response) => {
+                                if (request.headers) {
+                                    setHeader(
+                                        request.headers,
+                                        HeaderName.AUTHORIZATION,
+                                        stringifyAuthorizationHeader({
+                                            type: 'Bearer',
+                                            token: response.access_token,
+                                        }),
+                                    );
+                                }
+
+                                this.call((c) => c.setAuthorizationHeader({
+                                    type: 'Bearer',
+                                    token: response.access_token,
+                                }));
+
+                                return client.request(request);
+                            })
+                            .catch((err) => {
+                                if (request.headers) {
+                                    unsetHeader(
+                                        request.headers,
+                                        HeaderName.AUTHORIZATION,
+                                    );
+                                }
+
+                                this.call((c) => c.unsetAuthorizationHeader());
+
+                                return Promise.reject(err);
+                            });
+                    }
+
                     return Promise.reject(err);
-                }
-
-                currentState.retryCount += 1;
-
-                const code = getClientErrorCode(err);
-
-                if (isJWTErrorCode(code)) {
-                    return this.refresh()
-                        .then((response) => {
-                            if (request.headers) {
-                                setHeader(
-                                    request.headers,
-                                    HeaderName.AUTHORIZATION,
-                                    stringifyAuthorizationHeader({
-                                        type: 'Bearer',
-                                        token: response.access_token,
-                                    }),
-                                );
-                            }
-
-                            return client.request(request);
-                        })
-                        .catch((err) => {
-                            if (request.headers) {
-                                unsetHeader(
-                                    request.headers,
-                                    HeaderName.AUTHORIZATION,
-                                );
-                            }
-
-                            return Promise.reject(err);
-                        });
-                }
-
-                return Promise.reject(err);
-            },
-        );
+                },
+            );
+        }
     }
 
-    unmount(client: BaseClient) {
-        if (!this.isMounted(client)) {
-            return;
+    detach(client: BaseClient) {
+        const index = this.clients.indexOf(client);
+        if (index !== -1) {
+            this.clients.splice(index, 1);
         }
 
-        client.off(HookName.RESPONSE_ERROR, client[HOOK_SYMBOL] as number);
+        if (this.isAttached(client)) {
+            client.off(HookName.RESPONSE_ERROR, client[HOOK_SYMBOL] as number);
 
-        delete client[HOOK_SYMBOL];
+            delete client[HOOK_SYMBOL];
+        }
     }
 
     // ------------------------------------------------
@@ -169,7 +198,7 @@ export class ClientResponseErrorTokenHook extends EventEmitter<ClientResponseErr
             .then((response) => {
                 this.setTimer(response.expires_in);
 
-                this.emit(ClientResponseTokenHookEventName.REFRESH_FINISHED, response);
+                this.emit(ClientHokenTokenRefresherEventName.REFRESH_FINISHED, response);
 
                 this.refreshPromise = undefined;
 
@@ -177,9 +206,9 @@ export class ClientResponseErrorTokenHook extends EventEmitter<ClientResponseErr
             })
             .catch((e) => {
                 if (isClientError(e)) {
-                    this.emit(ClientResponseTokenHookEventName.REFRESH_FAILED, e);
+                    this.emit(ClientHokenTokenRefresherEventName.REFRESH_FAILED, e);
                 } else {
-                    this.emit(ClientResponseTokenHookEventName.REFRESH_FAILED, null);
+                    this.emit(ClientHokenTokenRefresherEventName.REFRESH_FAILED, null);
                 }
 
                 this.refreshPromise = undefined;

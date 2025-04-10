@@ -13,10 +13,6 @@ export function getClientErrorCode(err: unknown) : string | null {
         return null;
     }
 
-    if (err.response.status === 401) {
-        return null;
-    }
-
     /* istanbul ignore next */
     if (!isObject(err.response.data) || typeof err.response.data.code !== 'string') {
         return null;

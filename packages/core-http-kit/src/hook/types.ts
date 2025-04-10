@@ -8,9 +8,9 @@
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import type { ClientError } from 'hapic';
 import type { TokenCreator, TokenCreatorOptions } from '../token-creator';
-import type { ClientResponseTokenHookEventName } from './constants';
+import type { ClientHokenTokenRefresherEventName } from './constants';
 
-export type ClientResponseErrorTokenHookOptions = {
+export type ClientHookTokenRefresherOptions = {
     /**
      * The URL of the api service.
      *
@@ -29,7 +29,7 @@ export type ClientResponseErrorTokenHookOptions = {
     tokenCreator: TokenCreatorOptions | TokenCreator,
 };
 
-export type ClientResponseErrorTokenHookEvents = {
-    [ClientResponseTokenHookEventName.REFRESH_FINISHED]: TokenGrantResponse,
-    [ClientResponseTokenHookEventName.REFRESH_FAILED]: ClientError | null,
+export type ClientHookTokenRefresherEvents = {
+    [ClientHokenTokenRefresherEventName.REFRESH_FINISHED]: TokenGrantResponse,
+    [ClientHokenTokenRefresherEventName.REFRESH_FAILED]: ClientError | null,
 };

@@ -5,8 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './token-refresher';
-
-export * from './singleton';
 export * from './install';
-export * from './types';
+export * from './singleton';
