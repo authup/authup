@@ -8,7 +8,7 @@
 import type { App, Component } from 'vue';
 import * as components from './components/entities';
 import {
-    installHTTPClient,
+    installHTTPClient, installHTTPClientAuthenticationHook,
     installSocketManager,
     installStore,
     installTranslator,
@@ -55,6 +55,12 @@ export function install(app: App, options: Options): void {
         cookieSet: options.cookieSet,
         cookieGet: options.cookieGet,
         cookieUnset: options.cookieUnset,
+    });
+
+    installHTTPClientAuthenticationHook(app, {
+        pinia: options.pinia,
+        baseURL: options.baseURL,
+        isServer: options.isServer,
     });
 
     installHTTPClient(app, {

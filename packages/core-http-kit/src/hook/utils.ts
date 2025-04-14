@@ -6,24 +6,6 @@
  */
 
 import type { RequestOptions } from 'hapic';
-import { isObject } from '@authup/kit';
-
-export function getClientErrorCode(err: unknown) : string | null {
-    if (!isObject(err) || !isObject(err.response)) {
-        return null;
-    }
-
-    if (err.response.status === 401) {
-        return null;
-    }
-
-    /* istanbul ignore next */
-    if (!isObject(err.response.data) || typeof err.response.data.code !== 'string') {
-        return null;
-    }
-
-    return err.response.data.code;
-}
 
 type RetryState = {
     retryCount: number
