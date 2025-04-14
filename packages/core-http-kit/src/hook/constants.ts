@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum ClientHokenTokenRefresherEventName {
+export enum ClientAuthenticationHookEventName {
     REFRESH_FINISHED = 'refreshFinished',
     REFRESH_FAILED = 'refreshFailed',
+
+    HEADER_SET = 'headerSet',
+    HEADER_UNSET = 'headerRemoved',
 }

@@ -17,7 +17,11 @@ export function provideHTTPClient(client: Client, app?: App) {
 }
 
 export function hasHTTPClient(app?: App) : boolean {
-    return !!inject(HTTPClientSymbol, app);
+    try {
+        return !!injectHTTPClient(app);
+    } catch (e) {
+        return false;
+    }
 }
 
 export function injectHTTPClient(app?: App) {

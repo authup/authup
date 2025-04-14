@@ -6,13 +6,13 @@
  */
 
 import {
-    Client, ClientHookTokenRefresher,
+    Client, ClientAuthenticationHook,
     getClientRequestRetryState,
 } from '../../src';
 
 describe('src/interceptor/utils', () => {
     it('should mount and unmount interceptor', () => {
-        const hook = new ClientHookTokenRefresher({
+        const hook = new ClientAuthenticationHook({
             tokenCreator: {
                 type: 'user',
                 name: 'admin',

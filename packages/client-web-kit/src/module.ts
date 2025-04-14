@@ -8,7 +8,7 @@
 import type { App, Component } from 'vue';
 import * as components from './components/entities';
 import {
-    installHTTPClient, installHTTPClientHookTokenRefresher,
+    installHTTPClient, installHTTPClientAuthenticationHook,
     installSocketManager,
     installStore,
     installTranslator,
@@ -57,7 +57,7 @@ export function install(app: App, options: Options): void {
         cookieUnset: options.cookieUnset,
     });
 
-    installHTTPClientHookTokenRefresher(app, {
+    installHTTPClientAuthenticationHook(app, {
         pinia: options.pinia,
         baseURL: options.baseURL,
         isServer: options.isServer,

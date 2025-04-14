@@ -7,7 +7,7 @@
 
 import type { Pinia } from 'pinia';
 
-export type HTTPClientTokenRefresherInstallOptions = {
+export type HTTPClientAuthenticationHookInstallOptions = {
     baseURL?: string,
     pinia?: Pinia,
     isServer?: boolean
