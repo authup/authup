@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
+
+
+### Bug Fixes
+
+* add e-mail to LICENSE file + set next version ([004ee6a](https://github.com/authup/authup/commit/004ee6a2a7fb93506535c8baeebff5981667036a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/kit bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/core-kit bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/core-http-kit bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+
 ## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
 
 
