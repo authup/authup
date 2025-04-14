@@ -1,5 +1,34 @@
 # Change Log
 
+## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
+
+
+### Features
+
+* cleanup & refactor client response hook  ([#2631](https://github.com/authup/authup/issues/2631)) ([ddccf0b](https://github.com/authup/authup/commit/ddccf0bcffd0d61fcc82995723b9c3d0e7eaa5c4))
+
+
+### Bug Fixes
+
+* add e-mail to LICENSE file + set next version ([004ee6a](https://github.com/authup/authup/commit/004ee6a2a7fb93506535c8baeebff5981667036a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/errors bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/kit bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/core-kit bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/specs bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/errors bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/kit bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/core-kit bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+    * @authup/specs bumped from ^1.0.0-beta.25 to ^1.0.0-beta.26
+
 ## [1.0.0-beta.25](https://github.com/authup/authup/compare/v1.0.0-beta.24...v1.0.0-beta.25) (2025-04-08)
 
 
