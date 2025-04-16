@@ -11,7 +11,7 @@ import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../database/domains';
 import type { Component } from '../types';
 
-export function createOAuth2Cleaner() : Component {
+export function createOAuth2CleanerComponent() : Component {
     return {
         async start() {
             const dataSource = await useDataSource();

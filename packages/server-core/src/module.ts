@@ -16,7 +16,7 @@ import {
     synchronizeDatabaseSchema,
     useDataSourceOptions,
 } from 'typeorm-extension';
-import { createOAuth2Cleaner } from './components';
+import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from './components';
 import type { Config } from './config';
 import {
     DatabaseSeeder, extendDataSourceOptions, isDatabaseTypeSupported, isDatabaseTypeSupportedForEnvironment, setDataSourceSync,
@@ -38,7 +38,8 @@ export class Application {
         this.config = config;
 
         this.components = [
-            createOAuth2Cleaner(),
+            createOAuth2CleanerComponent(),
+            createDatabaseUniqueEntriesComponent(),
         ];
     }
 
