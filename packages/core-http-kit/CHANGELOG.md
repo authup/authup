@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.0.1-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.1-beta.26) (2025-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/errors bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/core-kit bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/specs bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/errors bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/core-kit bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/specs bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+
 ## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
 
 

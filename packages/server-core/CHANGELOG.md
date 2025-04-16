@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.26) (2025-04-16)
+
+
+### Bug Fixes
+
+* remove non unique entries on start up ([cae3df5](https://github.com/authup/authup/commit/cae3df562005936efc6bb9b79c9050ee81b300b0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/core-kit bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/core-http-kit bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/errors bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/server-kit bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+    * @authup/specs bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+
 ## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
 
 
