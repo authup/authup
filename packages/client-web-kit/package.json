@@ -54,7 +54,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@vueuse/integrations": "^13.0.0"
+        "@vueuse/integrations": "^13.1.0"
     },
     "devDependencies": {
         "@authup/access": "^1.0.0-beta.26",
