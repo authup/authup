@@ -52,8 +52,8 @@
         "pinia": "^3.0.0",
         "rapiq": "^0.9.0",
         "vue": "^3.5.12",
-        "vue-router": "^4.4.5",
-        "zod": "^3.24.1",
+        "vue-router": "^4.5.1",
+        "zod": "^3.24.3",
         "universal-cookie": "^8.0.1"
     },
     "publishConfig": {
