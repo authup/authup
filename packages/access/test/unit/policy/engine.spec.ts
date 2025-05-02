@@ -53,8 +53,8 @@ describe('src/policy', () => {
         );
 
         let outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
-            spec: compositePolicy,
-            data: {
+            config: compositePolicy,
+            input: {
                 attributes: {
                     name: 'admin',
                 },
@@ -63,8 +63,8 @@ describe('src/policy', () => {
         expect(outcome).toBeTruthy();
 
         outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
-            spec: compositePolicy,
-            data: {
+            config: compositePolicy,
+            input: {
                 attributes: {
                     id: 'foo',
                     name: 'admin',
@@ -74,8 +74,8 @@ describe('src/policy', () => {
         expect(outcome).toBeFalsy();
 
         outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
-            spec: compositePolicy,
-            data: {
+            config: compositePolicy,
+            input: {
                 attributes: {
                     name: 'foo',
                 },

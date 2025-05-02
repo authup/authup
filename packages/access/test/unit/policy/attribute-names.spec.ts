@@ -16,14 +16,14 @@ const evaluator = new AttributeNamesPolicyEvaluator();
 
 describe('src/policy/attribute-names', () => {
     it('should succeed with known attributes', async () => {
-        const spec : AttributeNamesPolicy = {
+        const config : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 attributes: {
                     foo: 'bar',
                     bar: 'baz',
@@ -55,23 +55,23 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should fail with missing context', async () => {
-        const spec : AttributeNamesPolicy = {
+        const config : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        await expect(evaluator.evaluate(buildTestPolicyEvaluateContext({ spec, data: {} }))).rejects.toThrow();
+        await expect(evaluator.evaluate(buildTestPolicyEvaluateContext({ config, input: {} }))).rejects.toThrow();
     });
 
     it('should fail with unknown attributes', async () => {
-        const spec : AttributeNamesPolicy = {
+        const config : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 attributes: {
                     foo: 'bar',
                     bar: 'baz',
@@ -83,7 +83,7 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should succeed with known nested attributes', async () => {
-        const spec: AttributeNamesPolicy = {
+        const config: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
@@ -91,8 +91,8 @@ describe('src/policy/attribute-names', () => {
         };
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 attributes: {
                     user: {
                         name: 'admin',
@@ -105,7 +105,7 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should fail with unknown nested attributes', async () => {
-        const spec: AttributeNamesPolicy = {
+        const config: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
@@ -113,8 +113,8 @@ describe('src/policy/attribute-names', () => {
         };
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 attributes: {
                     user: {
                         display_name: 'admin',
@@ -127,7 +127,7 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should fail with partially known nested attributes', async () => {
-        const spec: AttributeNamesPolicy = {
+        const config: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
@@ -135,8 +135,8 @@ describe('src/policy/attribute-names', () => {
         };
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 attributes: {
                     user: {
                         name: 'admin',

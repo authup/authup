@@ -14,7 +14,7 @@ import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/date', () => {
     it('should restrict', async () => {
-        const spec : DatePolicy = {
+        const config : DatePolicy = {
             start: '2024-04-01',
             end: '2024-05-01',
         };
@@ -22,8 +22,8 @@ describe('src/policy/date', () => {
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
         let outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 dateTime,
             },
         }));
@@ -32,8 +32,8 @@ describe('src/policy/date', () => {
         // march
         dateTime.setMonth(2, 1);
         outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 dateTime,
             },
         }));
@@ -42,8 +42,8 @@ describe('src/policy/date', () => {
         // june
         dateTime.setMonth(5, 1);
         outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 dateTime,
             },
         }));

@@ -14,7 +14,7 @@ import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/time', () => {
     it('should restrict', async () => {
-        const spec: TimePolicy = {
+        const config: TimePolicy = {
             start: '08:00:00',
             end: '16:00:00',
         };
@@ -24,8 +24,8 @@ describe('src/policy/time', () => {
         dateTime.setHours(12, 0);
 
         let outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 dateTime,
             },
         }));
@@ -34,8 +34,8 @@ describe('src/policy/time', () => {
 
         dateTime.setHours(6, 0);
         outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 dateTime,
             },
         }));

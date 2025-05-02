@@ -13,15 +13,15 @@ import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/identity', () => {
     it('should permit due defined identity', async () => {
-        const spec : IdentityPolicy = {
+        const config : IdentityPolicy = {
             types: [],
         };
 
         const evaluator = new IdentityPolicyEvaluator();
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 identity: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
@@ -33,15 +33,15 @@ describe('src/policy/identity', () => {
     });
 
     it('should permit due matching type', async () => {
-        const spec : IdentityPolicy = {
+        const config : IdentityPolicy = {
             types: ['user'],
         };
 
         const evaluator = new IdentityPolicyEvaluator();
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 identity: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
@@ -53,15 +53,15 @@ describe('src/policy/identity', () => {
     });
 
     it('should not permit due non matching type', async () => {
-        const spec : IdentityPolicy = {
+        const config : IdentityPolicy = {
             types: ['foo'],
         };
 
         const evaluator = new IdentityPolicyEvaluator();
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {
+            config,
+            input: {
                 identity: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
@@ -73,15 +73,15 @@ describe('src/policy/identity', () => {
     });
 
     it('should not permit due non defined identity', async () => {
-        const spec : IdentityPolicy = {
+        const config : IdentityPolicy = {
             types: [],
         };
 
         const evaluator = new IdentityPolicyEvaluator();
 
         const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            spec,
-            data: {},
+            config,
+            input: {},
         }));
         expect(outcome).toBeFalsy();
     });
