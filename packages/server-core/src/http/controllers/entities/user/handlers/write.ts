@@ -125,7 +125,7 @@ export async function writeUserRouteHandler(
         if (hasAbility) {
             await permissionChecker.check({
                 name: PermissionName.USER_UPDATE,
-                data: {
+                input: {
                     attributes: {
                         ...entity,
                         ...data,
@@ -157,7 +157,7 @@ export async function writeUserRouteHandler(
     if (hasAbility) {
         await permissionChecker.check({
             name: PermissionName.USER_CREATE,
-            data: {
+            input: {
                 attributes: {
                     ...entity,
                     ...data,

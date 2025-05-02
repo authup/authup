@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyData } from '@authup/access';
+import type { PolicyInput } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -41,7 +41,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
         entityTarget: RobotPermissionEntity,
     });
 
-    const policyData : PolicyData = {
+    const policyInput : PolicyInput = {
         attributes: data satisfies Partial<RobotPermissionEntity>,
     };
 
@@ -65,7 +65,7 @@ export async function createRobotPermissionRouteHandler(req: Request, res: Respo
 
     await permissionChecker.check({
         name: PermissionName.ROBOT_PERMISSION_CREATE,
-        data: policyData,
+        input: policyInput,
     });
 
     // ----------------------------------------------

@@ -86,7 +86,7 @@ export async function writeScopeRouteHandler(
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.SCOPE_UPDATE,
-            data: {
+            input: {
                 attributes: {
                     ...entity,
                     ...data,
@@ -103,7 +103,7 @@ export async function writeScopeRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.SCOPE_CREATE,
-            data: {
+            input: {
                 attributes: data,
             },
         });

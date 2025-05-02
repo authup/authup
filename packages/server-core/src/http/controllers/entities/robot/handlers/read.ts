@@ -96,7 +96,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
                     PermissionName.ROBOT_UPDATE,
                     PermissionName.ROBOT_DELETE,
                 ],
-                data: { attributes: queryOutput[0][i] },
+                input: { attributes: queryOutput[0][i] },
             });
 
             data.push(queryOutput[0][i]);
@@ -220,7 +220,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
                 PermissionName.ROBOT_UPDATE,
                 PermissionName.ROBOT_DELETE,
             ],
-            data: { attributes: entity },
+            input: { attributes: entity },
         });
     }
 

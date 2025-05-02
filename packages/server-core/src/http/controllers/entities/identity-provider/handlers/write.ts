@@ -86,7 +86,7 @@ export async function writeIdentityProviderRouteHandler(
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.IDENTITY_PROVIDER_UPDATE,
-            data: {
+            input: {
                 attributes: {
                     ...entity,
                     ...data,
@@ -101,7 +101,7 @@ export async function writeIdentityProviderRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.IDENTITY_PROVIDER_CREATE,
-            data: {
+            input: {
                 attributes: data,
             },
         });

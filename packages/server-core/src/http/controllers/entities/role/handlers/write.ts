@@ -88,7 +88,7 @@ export async function writeRoleRouteHandler(
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.ROLE_UPDATE,
-            data: {
+            input: {
                 attributes: {
                     ...entity,
                     ...data,
@@ -105,7 +105,7 @@ export async function writeRoleRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.ROLE_CREATE,
-            data: {
+            input: {
                 attributes: data,
             },
         });

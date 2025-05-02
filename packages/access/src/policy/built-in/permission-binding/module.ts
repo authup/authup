@@ -9,7 +9,7 @@ import { isObject } from '@authup/kit';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyData, PolicyWithType } from '../../types';
+import type { PolicyInput, PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
 import type { PermissionBindingPolicy } from './types';
 import { PermissionBindingPolicyValidator } from './validator';
@@ -24,26 +24,26 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
     async can(
         ctx: PolicyEvaluateContext<PolicyWithType>,
     ): Promise<boolean> {
-        return ctx.spec.type === BuiltInPolicyType.PERMISSION_BINDING;
+        return ctx.config.type === BuiltInPolicyType.PERMISSION_BINDING;
     }
 
-    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<PermissionBindingPolicy> {
-        return this.validator.run(ctx.spec);
+    async validateConfig(ctx: PolicyEvaluateContext) : Promise<PermissionBindingPolicy> {
+        return this.validator.run(ctx.config);
     }
 
-    async validateData(ctx: PolicyEvaluateContext) : Promise<PolicyData> {
-        if (!isObject(ctx.data.identity) && !isObject(ctx.data.permission)) {
+    async validateInput(ctx: PolicyEvaluateContext) : Promise<PolicyInput> {
+        if (!isObject(ctx.input.identity) && !isObject(ctx.input.permission)) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        return ctx.data;
+        return ctx.input;
     }
 
     async evaluate(ctx: PolicyEvaluateContext<
     PermissionBindingPolicy,
-    PolicyData
+    PolicyInput
     >): Promise<boolean> {
         // todo: this must be changed when the permission-checker not only checks owned permissions.
-        return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+        return maybeInvertPolicyOutcome(true, ctx.config.invert);
     }
 }

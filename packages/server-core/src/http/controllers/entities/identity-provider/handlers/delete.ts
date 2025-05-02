@@ -32,7 +32,7 @@ export async function deleteIdentityProviderRouteHandler(
 
     await permissionChecker.check({
         name: PermissionName.IDENTITY_PROVIDER_DELETE,
-        data: {
+        input: {
             attributes: entity,
         },
     });

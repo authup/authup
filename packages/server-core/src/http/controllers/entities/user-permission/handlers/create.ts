@@ -60,7 +60,7 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     await permissionChecker.check({
         name: PermissionName.USER_PERMISSION_CREATE,
-        data: {
+        input: {
             attributes: data,
         },
     });

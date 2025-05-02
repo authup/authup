@@ -7,7 +7,7 @@
 
 import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyData, PolicyWithType } from '../../types';
+import type { PolicyInput, PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
 import type { DatePolicy } from './types';
 import { DatePolicyValidator } from './validator';
@@ -38,39 +38,39 @@ export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicy> {
     async can(
         ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.spec.type === BuiltInPolicyType.DATE;
+        return ctx.config.type === BuiltInPolicyType.DATE;
     }
 
-    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<DatePolicy> {
-        return this.validator.run(ctx.spec);
+    async validateConfig(ctx: PolicyEvaluateContext) : Promise<DatePolicy> {
+        return this.validator.run(ctx.config);
     }
 
-    async validateData(ctx: PolicyEvaluateContext<DatePolicy>) : Promise<PolicyData> {
-        return ctx.data;
+    async validateInput(ctx: PolicyEvaluateContext<DatePolicy>) : Promise<PolicyInput> {
+        return ctx.input;
     }
 
     async evaluate(ctx: PolicyEvaluateContext<DatePolicy>) : Promise<boolean> {
         let now : Date;
-        if (ctx.data.dateTime) {
-            now = normalizeDate(toDate(ctx.data.dateTime));
+        if (ctx.input.dateTime) {
+            now = normalizeDate(toDate(ctx.input.dateTime));
         } else {
             now = normalizeDate(new Date());
         }
 
-        if (ctx.spec.start) {
-            const start = normalizeDate(toDate(ctx.spec.start));
+        if (ctx.config.start) {
+            const start = normalizeDate(toDate(ctx.config.start));
             if (now < start) {
-                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+                return maybeInvertPolicyOutcome(false, ctx.config.invert);
             }
         }
 
-        if (ctx.spec.end) {
-            const end = normalizeDate(toDate(ctx.spec.end));
+        if (ctx.config.end) {
+            const end = normalizeDate(toDate(ctx.config.end));
             if (now > end) {
-                return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+                return maybeInvertPolicyOutcome(false, ctx.config.invert);
             }
         }
 
-        return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+        return maybeInvertPolicyOutcome(true, ctx.config.invert);
     }
 }

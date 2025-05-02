@@ -85,7 +85,7 @@ export async function writeRobotRouteHandler(
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.ROBOT_UPDATE,
-            data: {
+            input: {
                 attributes: {
                     ...entity,
                     ...data,
@@ -132,7 +132,7 @@ export async function writeRobotRouteHandler(
 
     await permissionChecker.check({
         name: PermissionName.ROBOT_CREATE,
-        data: {
+        input: {
             attributes: data,
         },
     });

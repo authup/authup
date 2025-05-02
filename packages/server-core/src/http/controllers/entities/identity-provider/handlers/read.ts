@@ -63,7 +63,7 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
             try {
                 await permissionChecker.check({
                     name: PermissionName.IDENTITY_PROVIDER_READ,
-                    data: { attributes: entities[i] },
+                    input: { attributes: entities[i] },
                 });
 
                 await repository.extendOneWithEA(entities[i]);
@@ -133,7 +133,7 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         const permissionChecker = useRequestPermissionChecker(req);
         await permissionChecker.check({
             name: PermissionName.IDENTITY_PROVIDER_READ,
-            data: { attributes: entity },
+            input: { attributes: entity },
         });
         await repository.extendOneWithEA(entity);
     } catch (e) {

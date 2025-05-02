@@ -7,7 +7,7 @@
 
 import { isObject } from '@authup/kit';
 import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
-import type { PolicyData, PolicyWithType } from '../../types';
+import type { PolicyInput, PolicyWithType } from '../../types';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { BuiltInPolicyType } from '../constants';
 import type { IdentityPolicy } from './types';
@@ -23,31 +23,31 @@ export class IdentityPolicyEvaluator implements PolicyEvaluator<IdentityPolicy> 
     async can(
         ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.spec.type === BuiltInPolicyType.IDENTITY;
+        return ctx.config.type === BuiltInPolicyType.IDENTITY;
     }
 
-    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<IdentityPolicy> {
-        return this.validator.run(ctx.spec);
+    async validateConfig(ctx: PolicyEvaluateContext) : Promise<IdentityPolicy> {
+        return this.validator.run(ctx.config);
     }
 
-    async validateData(ctx: PolicyEvaluateContext<IdentityPolicy>) : Promise<PolicyData> {
-        return ctx.data;
+    async validateInput(ctx: PolicyEvaluateContext<IdentityPolicy>) : Promise<PolicyInput> {
+        return ctx.input;
     }
 
     async evaluate(ctx: PolicyEvaluateContext<
     IdentityPolicy
     >): Promise<boolean> {
-        if (!isObject(ctx.data.identity)) {
-            return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+        if (!isObject(ctx.input.identity)) {
+            return maybeInvertPolicyOutcome(false, ctx.config.invert);
         }
 
-        const types = ctx.spec.types || [];
+        const types = ctx.config.types || [];
         if (types.length === 0) {
-            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+            return maybeInvertPolicyOutcome(true, ctx.config.invert);
         }
 
-        const typeAllowed = types.indexOf(ctx.data.identity.type) !== -1;
+        const typeAllowed = types.indexOf(ctx.input.identity.type) !== -1;
 
-        return maybeInvertPolicyOutcome(typeAllowed, ctx.spec.invert);
+        return maybeInvertPolicyOutcome(typeAllowed, ctx.config.invert);
     }
 }

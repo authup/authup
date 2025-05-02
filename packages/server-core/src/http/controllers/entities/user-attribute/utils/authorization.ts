@@ -25,7 +25,7 @@ export async function canRequestManageUserAttribute(
         if (isMe) {
             await permissionChecker.check({
                 name: PermissionName.USER_SELF_MANAGE,
-                data: {
+                input: {
                     attributes: entity,
                 },
             });
@@ -42,7 +42,7 @@ export async function canRequestManageUserAttribute(
         try {
             await permissionChecker.check({
                 name: PermissionName.USER_UPDATE,
-                data: {
+                input: {
                     attributes: entity,
                 },
             });

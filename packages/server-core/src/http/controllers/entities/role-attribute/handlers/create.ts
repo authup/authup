@@ -39,7 +39,7 @@ export async function createRoleAttributeRouteHandler(req: Request, res: Respons
 
     await permissionChecker.check({
         name: PermissionName.ROLE_UPDATE,
-        data: {
+        input: {
             attributes: entity,
         },
     });

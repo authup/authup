@@ -9,7 +9,7 @@ import { hasOwnProperty, isObject } from '@authup/kit';
 import { DecisionStrategy } from '../../../constants';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
-import type { PolicyData, PolicyWithType } from '../../types';
+import type { PolicyInput, PolicyWithType } from '../../types';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { BuiltInPolicyType } from '../constants';
 import type { RealmMatchPolicy } from './types';
@@ -25,46 +25,46 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
     async can(
         ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.spec.type === BuiltInPolicyType.REALM_MATCH;
+        return ctx.config.type === BuiltInPolicyType.REALM_MATCH;
     }
 
-    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<RealmMatchPolicy> {
-        return this.validator.run(ctx.spec);
+    async validateConfig(ctx: PolicyEvaluateContext) : Promise<RealmMatchPolicy> {
+        return this.validator.run(ctx.config);
     }
 
-    async validateData(ctx: PolicyEvaluateContext<RealmMatchPolicy>) : Promise<PolicyData> {
+    async validateInput(ctx: PolicyEvaluateContext<RealmMatchPolicy>) : Promise<PolicyInput> {
         if (
-            !isObject(ctx.data.attributes) ||
-            !isObject(ctx.data.identity)
+            !isObject(ctx.input.attributes) ||
+            !isObject(ctx.input.identity)
         ) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        return ctx.data;
+        return ctx.input;
     }
 
     async evaluate(ctx: PolicyEvaluateContext<
     RealmMatchPolicy
     >): Promise<boolean> {
-        if (!ctx.data.attributes || !ctx.data.identity) {
+        if (!ctx.input.attributes || !ctx.input.identity) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        const identityMasterMatchAll = ctx.spec.identityMasterMatchAll ?? true;
+        const identityMasterMatchAll = ctx.config.identityMasterMatchAll ?? true;
         if (
             identityMasterMatchAll &&
-            ctx.data.identity.realmName &&
-            ctx.data.identity.realmName === 'master'
+            ctx.input.identity.realmName &&
+            ctx.input.identity.realmName === 'master'
         ) {
-            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+            return maybeInvertPolicyOutcome(true, ctx.config.invert);
         }
 
         let keys : string[];
-        if (ctx.spec.attributeName) {
-            if (Array.isArray(ctx.spec.attributeName)) {
-                keys = ctx.spec.attributeName;
+        if (ctx.config.attributeName) {
+            if (Array.isArray(ctx.config.attributeName)) {
+                keys = ctx.config.attributeName;
             } else {
-                keys = [ctx.spec.attributeName];
+                keys = [ctx.config.attributeName];
             }
         } else {
             keys = [
@@ -74,12 +74,12 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
                 'realmName',
             ];
 
-            ctx.spec.decisionStrategy = DecisionStrategy.CONSENSUS;
+            ctx.config.decisionStrategy = DecisionStrategy.CONSENSUS;
         }
 
-        const attributeNameStrict = ctx.spec.attributeNameStrict ?? true;
+        const attributeNameStrict = ctx.config.attributeNameStrict ?? true;
         if (!attributeNameStrict) {
-            const resourceKeys = Object.keys(ctx.data.attributes);
+            const resourceKeys = Object.keys(ctx.input.attributes);
             const keysToAdd : string[] = [];
             for (let i = 0; i < resourceKeys.length; i++) {
                 let contains : boolean = false;
@@ -107,41 +107,41 @@ export class RealmMatchPolicyEvaluator implements PolicyEvaluator<RealmMatchPoli
         let count = 0;
 
         for (let i = 0; i < keys.length; i++) {
-            if (!hasOwnProperty(ctx.data.attributes, keys[i])) {
+            if (!hasOwnProperty(ctx.input.attributes, keys[i])) {
                 continue;
             }
 
             let outcome : boolean = false;
 
-            const attributeValue = ctx.data.attributes[keys[i]];
+            const attributeValue = ctx.input.attributes[keys[i]];
 
             if (
                 attributeValue === null &&
-                ctx.spec.attributeNullMatchAll
+                ctx.config.attributeNullMatchAll
             ) {
                 outcome = true;
             } else if (
-                attributeValue === ctx.data.identity.realmId ||
-                attributeValue === ctx.data.identity.realmName
+                attributeValue === ctx.input.identity.realmId ||
+                attributeValue === ctx.input.identity.realmName
             ) {
                 outcome = true;
             }
 
             if (outcome) {
-                if (ctx.spec.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
-                    return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+                if (ctx.config.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                    return maybeInvertPolicyOutcome(true, ctx.config.invert);
                 }
 
                 count++;
             } else {
-                if (ctx.spec.decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+                if (ctx.config.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                    return maybeInvertPolicyOutcome(false, ctx.config.invert);
                 }
 
                 count--;
             }
         }
 
-        return maybeInvertPolicyOutcome(count > 0, ctx.spec.invert);
+        return maybeInvertPolicyOutcome(count > 0, ctx.config.invert);
     }
 }

@@ -57,8 +57,8 @@ export function createPermissionCheckerReactiveFn(
                 computePromise = store.permissionChecker
                     .preCheckOneOf({
                         ...ctx,
-                        data: {
-                            ...(ctx.data || {}),
+                        input: {
+                            ...(ctx.input || {}),
                             identity,
                         },
                     })

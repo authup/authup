@@ -41,7 +41,7 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     ) {
         await permissionChecker.check({
             name: PermissionName.ROBOT_DELETE,
-            data: {
+            input: {
                 attributes: entity,
             },
         });

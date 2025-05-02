@@ -9,9 +9,9 @@ import { isObject } from 'smob';
 import type {
     CompositePolicy,
     PermissionBindingPolicy,
-    PolicyData,
     PolicyEvaluateContext,
     PolicyEvaluator,
+    PolicyInput,
     PolicyWithType,
 } from '@authup/access';
 import {
@@ -35,47 +35,47 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
     async can(
         ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.spec.type === BuiltInPolicyType.PERMISSION_BINDING;
+        return ctx.config.type === BuiltInPolicyType.PERMISSION_BINDING;
     }
 
-    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<PermissionBindingPolicy> {
-        return this.validator.run(ctx.spec);
+    async validateConfig(ctx: PolicyEvaluateContext) : Promise<PermissionBindingPolicy> {
+        return this.validator.run(ctx.config);
     }
 
-    async validateData(ctx: PolicyEvaluateContext) : Promise<PolicyData> {
-        if (!isObject(ctx.data.identity) && !isObject(ctx.data.permission)) {
+    async validateInput(ctx: PolicyEvaluateContext) : Promise<PolicyInput> {
+        if (!isObject(ctx.input.identity) && !isObject(ctx.input.permission)) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        return ctx.data;
+        return ctx.input;
     }
 
     async evaluate(ctx: PolicyEvaluateContext<
     PermissionBindingPolicy,
-    PolicyData
+    PolicyInput
     >): Promise<boolean> {
         const dataSource = await useDataSource();
         const identityPermissionService = new IdentityPermissionService(dataSource);
 
         // get all identity permissions with applicable client(_id) restriction
-        const identityPermissions = await identityPermissionService.getFor(ctx.data.identity)
+        const identityPermissions = await identityPermissionService.getFor(ctx.input.identity)
             .then((permissions) => permissions.filter((item) => {
-                if (item.name !== ctx.data.permission.name) {
+                if (item.name !== ctx.input.permission.name) {
                     return false;
                 }
 
                 let realmId : string | null;
-                if (typeof ctx.data.permission.realmId === 'undefined') {
+                if (typeof ctx.input.permission.realmId === 'undefined') {
                     realmId = null;
                 } else {
-                    realmId = ctx.data.permission.realmId;
+                    realmId = ctx.input.permission.realmId;
                 }
 
                 let clientId : string | null;
-                if (typeof ctx.data.permission.clientId === 'undefined') {
+                if (typeof ctx.input.permission.clientId === 'undefined') {
                     clientId = null;
                 } else {
-                    clientId = ctx.data.permission.clientId;
+                    clientId = ctx.input.permission.clientId;
                 }
 
                 // we are comparing only string with null (db resources always null or string)
@@ -83,12 +83,12 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
             }));
 
         if (identityPermissions.length === 0) {
-            return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+            return maybeInvertPolicyOutcome(false, ctx.config.invert);
         }
 
         const permissionsMerged = mergePermissionItems(identityPermissions);
         if (permissionsMerged.length === 0) {
-            return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+            return maybeInvertPolicyOutcome(false, ctx.config.invert);
         }
 
         const policies = permissionsMerged
@@ -96,11 +96,11 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
             .map((permission) => permission.policy);
 
         if (policies.length === 0) {
-            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+            return maybeInvertPolicyOutcome(true, ctx.config.invert);
         }
 
         if (!ctx.evaluators) {
-            return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+            return maybeInvertPolicyOutcome(false, ctx.config.invert);
         }
 
         const compositePolicy : CompositePolicy = {
@@ -111,7 +111,7 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
 
         return compositePolicyEvaluator.evaluate({
             ...ctx,
-            spec: compositePolicy,
+            config: compositePolicy,
         });
     }
 }

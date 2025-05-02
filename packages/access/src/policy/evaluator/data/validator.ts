@@ -8,11 +8,11 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import type { PolicyData } from '../../types';
+import type { PolicyInput } from '../../types';
 import { PolicyDataIdentityValidator } from './identity';
 import { PolicyDataPermissionValidator } from './permission';
 
-export class PolicyDataValidator extends Container<PolicyData> {
+export class PolicyDataValidator extends Container<PolicyInput> {
     initialize() {
         super.initialize();
 

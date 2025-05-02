@@ -5,21 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyData, PolicyWithType } from '../types';
+import type { PolicyInput, PolicyWithType } from '../types';
 
 export type PolicyEvaluateContext<
-    SPEC extends Record<string, any> = Record<string, any>,
-    DATA extends PolicyData = PolicyData,
+    CONFIG extends Record<string, any> = Record<string, any>,
+    INPUT extends PolicyInput = PolicyInput,
 > = {
-    spec: SPEC,
-    data: DATA,
+    config: CONFIG,
+    input: INPUT,
     evaluators: PolicyEvaluators
     options: PolicyEvaluateOptions
 };
 
 export type PolicyEvaluateContextInput<
     SPEC extends Record<string, any> = Record<string, any>,
-    DATA extends PolicyData = PolicyData,
+    DATA extends PolicyInput = PolicyInput,
 > = Omit<PolicyEvaluateContext<SPEC, DATA>, 'evaluators' | 'options'> &
 Partial<Pick<PolicyEvaluateContext<SPEC, DATA>, 'evaluators' | 'options'>>;
 
@@ -31,8 +31,8 @@ export type PolicyEvaluateOptions = {
 export type PolicyEvaluators = Record<string, PolicyEvaluator>;
 
 export interface PolicyEvaluator<
-    SPEC extends Record<string, any> = Record<string, any>,
-    DATA extends Record<string, any> = Record<string, any>,
+    CONFIG extends Record<string, any> = Record<string, any>,
+    INPUT extends Record<string, any> = Record<string, any>,
 > {
     /**
      * Execute the evaluator with a given
@@ -41,26 +41,26 @@ export interface PolicyEvaluator<
      * @throws PolicyError
      * @param ctx
      */
-    evaluate(ctx: PolicyEvaluateContext<SPEC, DATA>): Promise<boolean>;
+    evaluate(ctx: PolicyEvaluateContext<CONFIG, INPUT>): Promise<boolean>;
 
     /**
-     * Validate the specification.
+     * Validate the configuration for the policy.
      *
      * @throws PolicyError
      * @param ctx
      */
-    validateSpecification(
-        ctx: PolicyEvaluateContext<Record<string, any>, DATA>
-    ) : Promise<SPEC>;
+    validateConfig(
+        ctx: PolicyEvaluateContext<Record<string, any>, INPUT>
+    ) : Promise<CONFIG>;
 
     /**
-     * Validate the passed data.
+     * Validate the passed input.
      *
      * @param ctx
      */
-    validateData(
-        ctx: PolicyEvaluateContext<SPEC>
-    ) : Promise<DATA>;
+    validateInput(
+        ctx: PolicyEvaluateContext<CONFIG>
+    ) : Promise<INPUT>;
 
     /**
      * Verify if the evaluator (might) can hande the provided

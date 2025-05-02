@@ -59,7 +59,7 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     await permissionChecker.check({
         name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
-        data: {
+        input: {
             attributes: data,
         },
     });

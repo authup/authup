@@ -43,7 +43,7 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
 
     await permissionChecker.check({
         name: PermissionName.CLIENT_SCOPE_CREATE,
-        data: {
+        input: {
             attributes: data,
         },
     });

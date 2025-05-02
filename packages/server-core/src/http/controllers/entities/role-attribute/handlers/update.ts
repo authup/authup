@@ -44,7 +44,12 @@ export async function updateRoleAttributeRouteHandler(req: Request, res: Respons
 
     entity = repository.merge(entity, data);
 
-    await permissionChecker.check({ name: PermissionName.ROLE_UPDATE, data: { attributes: entity } });
+    await permissionChecker.check({
+        name: PermissionName.ROLE_UPDATE,
+        input: {
+            attributes: entity,
+        },
+    });
 
     await repository.save(entity);
 

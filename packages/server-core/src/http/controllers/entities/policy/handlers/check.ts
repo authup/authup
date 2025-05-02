@@ -54,8 +54,8 @@ export async function checkPolicyRouteHandler(req: Request, res: Response) : Pro
     }
 
     const ctx : PolicyEngineEvaluateContext = {
-        spec: entity,
-        data,
+        config: entity,
+        input: data,
     };
 
     const policyEngine = new PolicyEngine();

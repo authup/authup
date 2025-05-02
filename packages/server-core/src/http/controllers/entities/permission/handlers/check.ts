@@ -54,7 +54,7 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
 
     const ctx : PermissionCheckerCheckContext = {
         name: entity.name,
-        data,
+        input: data,
     };
 
     const permissionChecker = new PermissionChecker({
@@ -64,7 +64,7 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
 
     let output : PermissionAPICheckResponse;
     try {
-        if (ctx.data.attributes) {
+        if (ctx.input.attributes) {
             await permissionChecker.check(ctx);
         } else {
             await permissionChecker.preCheck(ctx);

@@ -44,7 +44,7 @@ export type PolicyIdentity = {
     realmName?: string | null
 };
 
-export type PolicyData = {
+export type PolicyInput = {
     /**
      * Permission for which the policy is evaluated.
      */

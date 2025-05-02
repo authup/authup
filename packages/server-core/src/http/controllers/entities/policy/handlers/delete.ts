@@ -32,7 +32,7 @@ export async function deletePolicyRouteHandler(
 
     await permissionChecker.check({
         name: PermissionName.PERMISSION_DELETE,
-        data: {
+        input: {
             attributes: entity,
         },
     });

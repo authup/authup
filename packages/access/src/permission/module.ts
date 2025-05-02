@@ -124,11 +124,11 @@ export class PermissionChecker {
 
             try {
                 outcome = await this.policyEngine.evaluate({
-                    data: {
-                        ...ctx.data || {},
+                    input: {
+                        ...ctx.input || {},
                         permission: entity,
                     },
-                    spec: entity.policy,
+                    config: entity.policy,
                     options: {
                         include: options.policiesIncluded,
                         exclude: options.policiesExcluded,

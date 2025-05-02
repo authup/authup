@@ -61,7 +61,7 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
                     PermissionName.ROLE_UPDATE,
                     PermissionName.ROLE_DELETE,
                 ],
-                data: {
+                input: {
                     attributes: queryOutput[0][i],
                 },
             });
@@ -110,7 +110,7 @@ export async function getOneRoleAttributeRouteHandler(
             PermissionName.ROLE_UPDATE,
             PermissionName.ROLE_DELETE,
         ],
-        data: {
+        input: {
             attributes: entity,
         },
     });

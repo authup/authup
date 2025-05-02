@@ -45,7 +45,7 @@ export async function deleteRolePermissionRouteHandler(req: Request, res: Respon
 
     await permissionChecker.check({
         name: PermissionName.ROLE_PERMISSION_DELETE,
-        data: {
+        input: {
             attributes: entity,
         },
     });

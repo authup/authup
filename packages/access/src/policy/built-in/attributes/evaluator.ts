@@ -10,7 +10,7 @@ import { isObject } from '@authup/kit';
 import { PolicyError } from '../../error';
 import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyData, PolicyWithType } from '../../types';
+import type { PolicyInput, PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
 import type { AttributesPolicy } from './types';
 import { AttributesPolicyValidator } from './validator';
@@ -27,30 +27,30 @@ export class AttributesPolicyEvaluator<
     async can(
         ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return ctx.spec.type === BuiltInPolicyType.ATTRIBUTES;
+        return ctx.config.type === BuiltInPolicyType.ATTRIBUTES;
     }
 
-    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<AttributesPolicy<T>> {
-        return this.validator.run(ctx.spec);
+    async validateConfig(ctx: PolicyEvaluateContext) : Promise<AttributesPolicy<T>> {
+        return this.validator.run(ctx.config);
     }
 
-    async validateData(ctx: PolicyEvaluateContext<AttributesPolicy<T>>) : Promise<PolicyData> {
-        if (!isObject(ctx.data.attributes)) {
+    async validateInput(ctx: PolicyEvaluateContext<AttributesPolicy<T>>) : Promise<PolicyInput> {
+        if (!isObject(ctx.input.attributes)) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        return ctx.data;
+        return ctx.input;
     }
 
     async evaluate(ctx: PolicyEvaluateContext<AttributesPolicy<T>>): Promise<boolean> {
-        if (!ctx.data.attributes) {
+        if (!ctx.input.attributes) {
             throw PolicyError.evaluatorContextInvalid();
         }
 
-        this.fixQuery(ctx.spec.query);
+        this.fixQuery(ctx.config.query);
 
-        const testIt = guard<T>(ctx.spec.query);
-        return maybeInvertPolicyOutcome(testIt(ctx.data.attributes as T), ctx.spec.invert);
+        const testIt = guard<T>(ctx.config.query);
+        return maybeInvertPolicyOutcome(testIt(ctx.input.attributes as T), ctx.config.invert);
     }
 
     protected fixQuery(query: Record<string, any>) {

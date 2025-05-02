@@ -14,10 +14,10 @@ export async function evaluatePolicy(ctx: PolicyEvaluateContext<PolicyWithType>)
     if (
         ctx.options.exclude &&
         ctx.options.exclude.length > 0 &&
-        ctx.options.exclude.indexOf(ctx.spec.type) !== -1
+        ctx.options.exclude.indexOf(ctx.config.type) !== -1
     ) {
-        if (typeof ctx.spec.invert === 'boolean') {
-            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+        if (typeof ctx.config.invert === 'boolean') {
+            return maybeInvertPolicyOutcome(true, ctx.config.invert);
         }
 
         return true;
@@ -26,30 +26,30 @@ export async function evaluatePolicy(ctx: PolicyEvaluateContext<PolicyWithType>)
     if (
         ctx.options.include &&
         ctx.options.include.length > 0 &&
-        ctx.options.include.indexOf(ctx.spec.type) === -1
+        ctx.options.include.indexOf(ctx.config.type) === -1
     ) {
-        if (typeof ctx.spec.invert === 'boolean') {
-            return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+        if (typeof ctx.config.invert === 'boolean') {
+            return maybeInvertPolicyOutcome(true, ctx.config.invert);
         }
 
         return true;
     }
 
-    const evaluator = ctx.evaluators[ctx.spec.type];
+    const evaluator = ctx.evaluators[ctx.config.type];
     if (!evaluator) {
-        throw PolicyError.evaluatorNotFound(ctx.spec.type);
+        throw PolicyError.evaluatorNotFound(ctx.config.type);
     }
 
     try {
         const canEvaluate = await evaluator.can(ctx);
         if (canEvaluate) {
-            const spec = await evaluator.validateSpecification(ctx);
-            const data = await evaluator.validateData(ctx);
+            const config = await evaluator.validateConfig(ctx);
+            const input = await evaluator.validateInput(ctx);
 
             return await evaluator.evaluate({
                 ...ctx,
-                data,
-                spec,
+                input,
+                config,
             });
         }
     } catch (e) {

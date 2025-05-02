@@ -91,7 +91,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
                     PermissionName.USER_UPDATE,
                     PermissionName.USER_DELETE,
                 ],
-                data: {
+                input: {
                     attributes: entities[i],
                 },
             });
@@ -203,7 +203,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_DELETE,
             ],
-            data: { attributes: entity },
+            input: { attributes: entity },
         });
 
         await repository.extendOneWithEA(entity);

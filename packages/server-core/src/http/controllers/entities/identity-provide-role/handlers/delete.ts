@@ -33,7 +33,7 @@ export async function deleteOauth2ProvideRoleRouteHandler(
 
     await permissionChecker.check({
         name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
-        data: {
+        input: {
             attributes: entity,
         },
     });

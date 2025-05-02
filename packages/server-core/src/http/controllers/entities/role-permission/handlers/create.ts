@@ -64,7 +64,7 @@ export async function createRolePermissionRouteHandler(req: Request, res: Respon
 
     await permissionChecker.check({
         name: PermissionName.ROLE_PERMISSION_CREATE,
-        data: {
+        input: {
             attributes: data,
         },
     });

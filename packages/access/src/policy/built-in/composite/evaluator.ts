@@ -9,7 +9,7 @@ import { DecisionStrategy } from '../../../constants';
 import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
 import { evaluatePolicy } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyData, PolicyWithType } from '../../types';
+import type { PolicyInput, PolicyWithType } from '../../types';
 import { isCompositePolicy } from './helper';
 import type { CompositePolicy } from './types';
 import { CompositePolicyValidator } from './validator';
@@ -24,54 +24,54 @@ export class CompositePolicyEvaluator implements PolicyEvaluator<CompositePolicy
     async can(
         ctx: PolicyEvaluateContext<PolicyWithType>,
     ) : Promise<boolean> {
-        return isCompositePolicy(ctx.spec);
+        return isCompositePolicy(ctx.config);
     }
 
-    async validateSpecification(ctx: PolicyEvaluateContext) : Promise<CompositePolicy> {
-        return this.validator.run(ctx.spec);
+    async validateConfig(ctx: PolicyEvaluateContext) : Promise<CompositePolicy> {
+        return this.validator.run(ctx.config);
     }
 
-    async validateData(ctx: PolicyEvaluateContext<CompositePolicy>) : Promise<PolicyData> {
-        return ctx.data;
+    async validateInput(ctx: PolicyEvaluateContext<CompositePolicy>) : Promise<PolicyInput> {
+        return ctx.input;
     }
 
     async evaluate(ctx: PolicyEvaluateContext<CompositePolicy>): Promise<boolean> {
         let count = 0;
 
-        const decisionStrategy = ctx.spec.decisionStrategy ??
+        const decisionStrategy = ctx.config.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
 
-        for (let i = 0; i < ctx.spec.children.length; i++) {
-            const childPolicy = ctx.spec.children[i];
+        for (let i = 0; i < ctx.config.children.length; i++) {
+            const childPolicy = ctx.config.children[i];
             let outcome : boolean;
 
             if (isCompositePolicy(childPolicy)) {
                 outcome = await this.evaluate({
                     ...ctx,
-                    spec: childPolicy,
+                    config: childPolicy,
                 });
             } else {
                 outcome = await evaluatePolicy({
                     ...ctx,
-                    spec: childPolicy,
+                    config: childPolicy,
                 });
             }
 
             if (outcome) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
-                    return maybeInvertPolicyOutcome(true, ctx.spec.invert);
+                    return maybeInvertPolicyOutcome(true, ctx.config.invert);
                 }
 
                 count++;
             } else {
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    return maybeInvertPolicyOutcome(false, ctx.spec.invert);
+                    return maybeInvertPolicyOutcome(false, ctx.config.invert);
                 }
 
                 count--;
             }
         }
 
-        return maybeInvertPolicyOutcome(count > 0, ctx.spec.invert);
+        return maybeInvertPolicyOutcome(count > 0, ctx.config.invert);
     }
 }

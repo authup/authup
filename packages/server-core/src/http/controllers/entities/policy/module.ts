@@ -7,7 +7,7 @@
 
 import { PolicyAPICheckResponse } from '@authup/core-http-kit';
 import { Policy } from '@authup/core-kit';
-import { PolicyData } from '@authup/access';
+import { PolicyInput } from '@authup/access';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
@@ -54,7 +54,7 @@ export class PolicyController {
     @DPost('/:id/check', [ForceLoggedInMiddleware])
     async check(
         @DPath('id') id: string,
-            @DBody() data: PolicyData,
+            @DBody() data: PolicyInput,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<PolicyAPICheckResponse> {

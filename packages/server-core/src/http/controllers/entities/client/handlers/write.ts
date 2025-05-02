@@ -84,7 +84,7 @@ export async function writeClientRouteHandler(
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.CLIENT_UPDATE,
-            data: {
+            input: {
                 attributes: {
                     ...entity,
                     ...data,
@@ -101,7 +101,7 @@ export async function writeClientRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.CLIENT_CREATE,
-            data: {
+            input: {
                 attributes: data,
             },
         });

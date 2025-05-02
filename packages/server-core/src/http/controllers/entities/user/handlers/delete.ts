@@ -39,7 +39,7 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
 
     await permissionChecker.check({
         name: PermissionName.USER_DELETE,
-        data: {
+        input: {
             attributes: entity,
         },
     });

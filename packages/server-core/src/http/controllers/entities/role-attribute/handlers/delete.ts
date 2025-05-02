@@ -28,7 +28,12 @@ export async function deleteRoleAttributeRouteHandler(req: Request, res: Respons
         throw new NotFoundError();
     }
 
-    await permissionChecker.check({ name: PermissionName.ROLE_UPDATE, data: { attributes: entity } });
+    await permissionChecker.check({
+        name: PermissionName.ROLE_UPDATE,
+        input: {
+            attributes: entity,
+        },
+    });
 
     const { id: entityId } = entity;
 

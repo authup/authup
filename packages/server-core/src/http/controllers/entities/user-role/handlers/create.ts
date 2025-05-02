@@ -61,7 +61,7 @@ export async function createUserRoleRouteHandler(req: Request, res: Response) : 
 
     await permissionChecker.check({
         name: PermissionName.USER_ROLE_CREATE,
-        data: {
+        input: {
             attributes: data,
         },
     });

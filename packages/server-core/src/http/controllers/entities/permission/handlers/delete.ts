@@ -32,7 +32,12 @@ export async function deletePermissionRouteHandler(req: Request, res: Response) 
         throw new BadRequestError('A built-in permission can not be deleted.');
     }
 
-    await permissionChecker.check({ name: PermissionName.PERMISSION_DELETE, data: { attributes: entity } });
+    await permissionChecker.check({
+        name: PermissionName.PERMISSION_DELETE,
+        input: {
+            attributes: entity,
+        },
+    });
 
     const { id: entityId } = entity;
 

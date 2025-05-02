@@ -92,7 +92,7 @@ export async function writePermissionRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.PERMISSION_UPDATE,
-            data: {
+            input: {
                 attributes: {
                     ...entity,
                     ...data,
@@ -109,7 +109,7 @@ export async function writePermissionRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.PERMISSION_CREATE,
-            data: {
+            input: {
                 attributes: data,
             },
         });

@@ -37,7 +37,7 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     await permissionChecker.check({
         name: PermissionName.ROLE_DELETE,
-        data: {
+        input: {
             attributes: entity,
         },
     });
