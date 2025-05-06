@@ -53,6 +53,10 @@ function buildApiUrl(runtimeConfig: RuntimeConfig) : string {
                 url = pathValue;
             }
         }
+
+        if (options.serverApiURL) {
+            url = options.serverApiURL;
+        }
     }
 
     if (!url) {
