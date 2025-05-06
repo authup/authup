@@ -6,12 +6,16 @@
  */
 
 import {
-    addPlugin, addRouteMiddleware, defineNuxtModule, installModule,
+    addPlugin,
+    addRouteMiddleware,
+    addTemplate,
+    createResolver,
+    defineNuxtModule,
+    installModule,
 } from '@nuxt/kit';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { merge } from 'smob';
 import './declare';
+import { fileURLToPath } from 'node:url';
 import type { RuntimeOptions } from './runtime/types';
 import type { ModuleOptions } from './types';
 
@@ -27,6 +31,8 @@ export default defineNuxtModule<ModuleOptions>({
         const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url));
         nuxt.options.build.transpile.push(runtimeDir);
 
+        const resolver = createResolver(import.meta.url);
+
         const runtimeOptions : RuntimeOptions = {
             apiURL: options.apiURL,
             apiURLRuntimeKey: options.apiURLRuntimeKey,
@@ -36,7 +42,6 @@ export default defineNuxtModule<ModuleOptions>({
 
             homeRoute: options.homeRoute,
             loginRoute: options.loginRoute,
-            logoutRoute: options.logoutRoute,
         };
 
         nuxt.options.runtimeConfig.public = nuxt.options.runtimeConfig.public || {};
@@ -47,16 +52,30 @@ export default defineNuxtModule<ModuleOptions>({
             );
         } else {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
             nuxt.options.runtimeConfig.public.authup = runtimeOptions;
         }
 
-        addPlugin(path.resolve(runtimeDir, 'plugins/kit'));
-        addPlugin(path.resolve(runtimeDir, 'plugins/root'));
+        nuxt.options.alias['#authup/nuxt'] = resolver.resolve('./runtime/exports');
+
+        const template = addTemplate({
+            filename: 'types/authup-nuxt.d.ts',
+            getContents: () => [
+                'declare module \'#authup/nuxt\' {',
+                `  const RouteMetaKey: typeof import('${resolver.resolve('./runtime/exports')}').RouteMetaKey`,
+                '}',
+            ].join('\n'),
+        });
+
+        nuxt.hook('prepare:types', async (options) => {
+            options.references.push({ path: template.dst });
+        });
+
+        addPlugin(resolver.resolve('./runtime/plugins/kit'));
+        addPlugin(resolver.resolve('./runtime/plugins/root'));
 
         addRouteMiddleware({
             name: 'authup',
-            path: path.resolve(runtimeDir, 'middleware/00.root'),
+            path: resolver.resolve('./runtime/middleware/00.root'),
             global: true,
         });
     },

@@ -44,13 +44,7 @@ export type RuntimeOptions = {
      * Path of the login route
      * Default: /login
      */
-    loginRoute?: string,
-
-    /**
-     * Path of the logout route
-     * Default: /logout
-     */
-    logoutRoute?: string
+    loginRoute?: string
 };
 
 export type MiddlewareHookPayload = {

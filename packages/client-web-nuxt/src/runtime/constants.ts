@@ -6,8 +6,8 @@
  */
 
 export enum RouteMetaKey {
-    REQUIRED_LOGGED_IN = 'requireLoggedIn',
-    REQUIRED_LOGGED_OUT = 'requireLoggedOut',
+    REQUIRE_LOGGED_IN = 'requireLoggedIn',
+    REQUIRE_LOGGED_OUT = 'requireLoggedOut',
 
-    REQUIRED_PERMISSIONS = 'requirePermissions',
+    REQUIRE_PERMISSIONS = 'requirePermissions',
 }

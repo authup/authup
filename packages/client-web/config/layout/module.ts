@@ -112,7 +112,7 @@ export class Navigation {
                 try {
                     await this.store.permissionChecker.preCheckOneOf({
                         name: permissions,
-                        data: {
+                        input: {
                             identity,
                         },
                     });

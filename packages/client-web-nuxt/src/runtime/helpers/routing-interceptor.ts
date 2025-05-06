@@ -8,8 +8,9 @@
 import {
     type Store, type StoreToRefs, injectStore, storeToRefs,
 } from '@authup/client-web-kit';
-import { type PolicyIdentity, hasOwnProperty } from '@authup/kit';
+import { hasOwnProperty } from '@authup/kit';
 import type { RouteLocationAsPathGeneric, RouteLocationNormalized } from 'vue-router';
+import type { PolicyIdentity } from '@authup/access';
 import type { NuxtApp } from '#app';
 import { RouteMetaKey } from '../constants';
 import type { RuntimeOptions } from '../types';
@@ -108,7 +109,7 @@ export class RoutingInterceptor {
 
     protected hasLoggedInCondition(route: RouteLocationNormalized) {
         return route.matched.some(
-            (matched) => !!matched.meta[RouteMetaKey.REQUIRED_LOGGED_IN],
+            (matched) => !!matched.meta[RouteMetaKey.REQUIRE_LOGGED_IN],
         );
     }
 
@@ -122,7 +123,7 @@ export class RoutingInterceptor {
 
     protected hasLoggedOutCondition(route: RouteLocationNormalized) {
         return route.matched.some(
-            (matched) => matched.meta[RouteMetaKey.REQUIRED_LOGGED_OUT],
+            (matched) => matched.meta[RouteMetaKey.REQUIRE_LOGGED_OUT],
         );
     }
 
@@ -136,7 +137,7 @@ export class RoutingInterceptor {
 
     protected hasPermissionCondition(route: RouteLocationNormalized) {
         return route.matched.some(
-            (matched) => !!matched.meta[RouteMetaKey.REQUIRED_PERMISSIONS],
+            (matched) => !!matched.meta[RouteMetaKey.REQUIRE_PERMISSIONS],
         );
     }
 
@@ -156,16 +157,16 @@ export class RoutingInterceptor {
         for (let i = 0; i < route.matched.length; i++) {
             const match = route.matched[i];
 
-            if (!match.meta || !hasOwnProperty(match.meta, RouteMetaKey.REQUIRED_PERMISSIONS)) {
+            if (!match.meta || !hasOwnProperty(match.meta, RouteMetaKey.REQUIRE_PERMISSIONS)) {
                 continue;
             }
 
             let permissions : string[] = [];
-            if (match.meta[RouteMetaKey.REQUIRED_PERMISSIONS]) {
-                if (Array.isArray(match.meta[RouteMetaKey.REQUIRED_PERMISSIONS])) {
-                    permissions = match.meta[RouteMetaKey.REQUIRED_PERMISSIONS];
-                } else if (typeof match.meta[RouteMetaKey.REQUIRED_PERMISSIONS] === 'string') {
-                    permissions = [match.meta[RouteMetaKey.REQUIRED_PERMISSIONS]];
+            if (match.meta[RouteMetaKey.REQUIRE_PERMISSIONS]) {
+                if (Array.isArray(match.meta[RouteMetaKey.REQUIRE_PERMISSIONS])) {
+                    permissions = match.meta[RouteMetaKey.REQUIRE_PERMISSIONS];
+                } else if (typeof match.meta[RouteMetaKey.REQUIRE_PERMISSIONS] === 'string') {
+                    permissions = [match.meta[RouteMetaKey.REQUIRE_PERMISSIONS]];
                 }
             }
 
@@ -176,7 +177,7 @@ export class RoutingInterceptor {
             try {
                 await this.store.permissionChecker.preCheckOneOf({
                     name: permissions,
-                    data: {
+                    input: {
                         identity,
                     },
                 });
