@@ -5,7 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-/* @import url('https://fonts.googleapis.com/css?family=Asap'); */
+#__nuxt,
+#__layout,
+#app {
+    height: 100%;
+}
 
 html, body {
     margin: 0;

@@ -20,7 +20,7 @@ import {
     watch,
 } from 'vue';
 import {
-    maxLength, minLength, required, url,
+    maxLength, minLength, required,
 } from '@vuelidate/validators';
 import type { Client } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
@@ -102,7 +102,7 @@ export const AClientForm = defineComponent({
                 required,
             },
             redirect_uri: {
-                url,
+                // todo: url is required!
                 maxLength: maxLength(2000),
             },
             is_confidential: {

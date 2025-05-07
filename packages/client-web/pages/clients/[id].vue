@@ -2,6 +2,7 @@
 import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { extendObject } from '@authup/kit';
 import { type Ref, defineComponent } from 'vue';
 import { ref } from 'vue';
 import {
@@ -12,7 +13,6 @@ import {
     useToast,
 } from '#imports';
 import { LayoutKey } from '../../config/layout';
-import { updateObjectProperties } from '../../utils';
 
 export default defineComponent({
     async setup() {
@@ -60,7 +60,7 @@ export default defineComponent({
                 toast.show({ variant: 'success', body: 'The client was successfully updated.' });
             }
 
-            updateObjectProperties(entity, e);
+            extendObject(entity, e);
         };
 
         const handleFailed = (e: Error) => {

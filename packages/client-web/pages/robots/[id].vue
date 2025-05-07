@@ -2,11 +2,12 @@
 import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
 import type { Ref } from 'vue';
 import {
     definePageMeta,
-    updateObjectProperties, useToast,
+    useToast,
 } from '#imports';
 import {
     createError, navigateTo, useRoute,
@@ -56,7 +57,7 @@ export default defineComponent({
                 toast.show({ variant: 'success', body: 'The robot was successfully updated.' });
             }
 
-            updateObjectProperties(entity, e);
+            extendObject(entity, e);
         };
 
         const handleFailed = (e: Error) => {

@@ -41,7 +41,6 @@ export default defineNuxtConfig({
         '@/assets/css/form.css',
         '@/assets/css/generics.css',
         '@/assets/css/bootstrap-override.css',
-        '@/assets/css/oauth2.css',
     ],
 
     alias: {

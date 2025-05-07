@@ -5,7 +5,6 @@
   view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-
 import PageHeader from '../components/header.vue';
 import PageSidebar from '../components/sidebar.vue';
 import PageFooter from '../components/footer.vue';
@@ -28,10 +27,3 @@ export default defineNuxtComponent({
         <PageFooter />
     </div>
 </template>
-<style>
-#__nuxt,
-#__layout,
-#app {
-    height: 100%;
-}
-</style>
