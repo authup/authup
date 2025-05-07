@@ -5,6 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+import type { Ref } from 'vue';
 import {
     computed,
     defineComponent,
@@ -84,7 +85,7 @@ export default defineComponent({
             return form.realm_id;
         });
 
-        const identityProviderQuery : ref<BuildInput<IdentityProvider>> = ref({});
+        const identityProviderQuery : Ref<BuildInput<IdentityProvider>> = ref({});
         const resetIdentityProviderQuery = () => {
             identityProviderQuery.value = {
                 filters: {
@@ -124,7 +125,7 @@ export default defineComponent({
 
                 emit('done');
             } catch (e: any) {
-                emit('failed', e instanceof Error ? e.messag : 'The login operation failed');
+                emit('failed', e instanceof Error ? e.message : 'The login operation failed');
             }
         };
 
