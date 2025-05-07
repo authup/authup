@@ -2,6 +2,7 @@
 import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Role } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
 import type { Ref } from 'vue';
 import {
@@ -12,7 +13,6 @@ import {
     createError, navigateTo, useRoute,
 } from '#app';
 import { LayoutKey } from '../../config/layout';
-import { updateObjectProperties } from '../../utils';
 
 export default defineComponent({
     async setup() {
@@ -63,7 +63,7 @@ export default defineComponent({
                 toast.show({ variant: 'success', body: 'The role was successfully updated.' });
             }
 
-            updateObjectProperties(entity, e);
+            extendObject(entity, e);
         };
 
         const handleFailed = (e: Error) => {

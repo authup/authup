@@ -2,11 +2,11 @@
 import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
 import type { Ref } from 'vue';
 import {
     definePageMeta,
-    updateObjectProperties,
     useToast,
 } from '#imports';
 import {
@@ -48,7 +48,7 @@ export default defineComponent({
                 toast.show({ variant: 'success', body: 'The realm was successfully updated.' });
             }
 
-            updateObjectProperties(entity, e);
+            extendObject(entity, e);
         };
 
         const handleFailed = (e: Error) => {

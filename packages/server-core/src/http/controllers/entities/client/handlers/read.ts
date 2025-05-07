@@ -92,13 +92,6 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
 
 export async function getOneClientRouteHandler(req: Request, res: Response): Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);
-    await permissionChecker.preCheckOneOf({
-        name: [
-            PermissionName.CLIENT_READ,
-            PermissionName.CLIENT_UPDATE,
-            PermissionName.CLIENT_DELETE,
-        ],
-    });
 
     const id = useRequestParamID(req, {
         isUUID: false,
@@ -151,13 +144,28 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         allowed: ['secret'],
     };
 
-    applyQuery(query, useRequestQuery(req), {
+    const output = applyQuery(query, useRequestQuery(req), {
         defaultPath: 'client',
         fields: options,
         relations: {
             allowed: ['realm'],
         },
     });
+
+    const isSecretIncluded = output.fields
+        .map((field) => field.key)
+        .filter((key) => key === 'secret')
+        .length > 0;
+
+    if (isSecretIncluded) {
+        await permissionChecker.preCheckOneOf({
+            name: [
+                PermissionName.CLIENT_READ,
+                PermissionName.CLIENT_UPDATE,
+                PermissionName.CLIENT_DELETE,
+            ],
+        });
+    }
 
     const result = await query.getOne();
 

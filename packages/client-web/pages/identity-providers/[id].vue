@@ -3,6 +3,7 @@
 import { injectHTTPClient } from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
 import type { Ref } from 'vue';
 import {
@@ -13,7 +14,6 @@ import {
     useToast,
 } from '#imports';
 import { LayoutKey } from '../../config/layout';
-import { updateObjectProperties } from '../../utils';
 
 export default defineComponent({
     async setup() {
@@ -50,7 +50,7 @@ export default defineComponent({
         const handleUpdated = (e: IdentityProvider) => {
             toast.show({ variant: 'success', body: 'The identity-provider was successfully updated.' });
 
-            updateObjectProperties(entity, e);
+            extendObject(entity, e);
         };
 
         const handleFailed = (e: Error) => {
