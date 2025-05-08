@@ -24,10 +24,6 @@ export const AIdentityProviderForm = defineComponent({
         realmId: {
             type: String,
         },
-        apiUrl: {
-            type: String,
-            default: 'http://localhost:3001',
-        },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
     setup(props, setup) {
@@ -97,7 +93,6 @@ export const AIdentityProviderForm = defineComponent({
                             realmId: props.realmId,
                             protocol: protocol.value,
                             preset: preset.value,
-                            apiUrl: props.apiUrl,
                             onCreated: (el: IdentityProvider) => {
                                 entity.value = el;
 

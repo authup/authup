@@ -7,6 +7,7 @@
 
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
+import { isSimpleMatch } from '@authup/kit';
 import type { OAuth2SubKind } from '@authup/specs';
 import { OAuth2AuthorizationResponseType, OAuth2Error } from '@authup/specs';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
@@ -147,6 +148,7 @@ export class OAuth2AuthorizationService {
             throw OAuth2Error.clientInvalid();
         }
 
+        // verifying scopes
         const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
         const clientScopes = await clientScopeRepository.find({
             where: {
@@ -166,6 +168,13 @@ export class OAuth2AuthorizationService {
 
         if (!data.scope) {
             data.scope = scopeNames.join(' ');
+        }
+
+        const redirectUris = client.redirect_uri.split(',');
+
+        // verifying scopes
+        if (!isSimpleMatch(data.redirect_uri, redirectUris)) {
+            throw OAuth2Error.redirectUriMismatch();
         }
 
         return data;

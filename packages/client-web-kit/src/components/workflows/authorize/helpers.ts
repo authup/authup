@@ -66,14 +66,3 @@ export function extractOAuth2QueryParameters(
         state,
     };
 }
-
-export function isGlobMatch(target: string, pattern: string | string[]) {
-    const patterns = Array.isArray(pattern) ? pattern : [pattern];
-    for (let i = 0; i < patterns.length; i++) {
-        if (target === patterns[i]) {
-            return true;
-        }
-    }
-
-    return false;
-}

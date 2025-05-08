@@ -9,6 +9,7 @@ export * from './array';
 export * from './array-buffer';
 export * from './base64';
 export * from './has-own-property';
+export * from './is-simple-match';
 export * from './nanoid';
 export * from './object';
 export * from './pick';

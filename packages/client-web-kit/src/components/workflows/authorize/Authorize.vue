@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 import type { Client } from '@authup/core-kit';
+import { isSimpleMatch } from '@authup/kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, Ref, VNodeChild } from 'vue';
 import {
@@ -17,7 +18,7 @@ import Login from '../Login.vue';
 import AuthorizeConfirm from './AuthorizeConfirm.vue';
 import AuthorizeError from './AuthorizeError.vue';
 import type { OAuth2QueryParameters } from './helpers';
-import { extractOAuth2QueryParameters, isGlobMatch } from './helpers';
+import { extractOAuth2QueryParameters } from './helpers';
 
 const wrapChild = (child: VNodeChild) => h(
     'div',
@@ -105,7 +106,7 @@ export default defineComponent({
             if (
                 parameters.redirect_uri &&
                 redirectUriPatterns.value.length > 0 &&
-                !isGlobMatch(parameters.redirect_uri, redirectUriPatterns.value)
+                !isSimpleMatch(parameters.redirect_uri, redirectUriPatterns.value)
             ) {
                 return wrapChild(h(AuthorizeError, {
                     message: 'The redirect_uri does not match.',
