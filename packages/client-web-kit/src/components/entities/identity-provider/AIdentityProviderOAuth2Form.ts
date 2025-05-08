@@ -60,10 +60,6 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             type: String,
             default: undefined,
         },
-        apiUrl: {
-            type: String,
-            default: 'http://localhost:3001',
-        },
         protocol: {
             type: String as PropType<string | null>,
             default: IdentityProviderProtocol.OAUTH2,
@@ -108,7 +104,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                 return '';
             }
 
-            return apiClient.identityProvider.getAuthorizeUri(props.apiUrl, manager.data.value.id);
+            return apiClient.identityProvider.getAuthorizeUri(manager.data.value.id);
         });
 
         const basicFieldsNode = ref<null | typeof AIdentityProviderBasicFields>(null);

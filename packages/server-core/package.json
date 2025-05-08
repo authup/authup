@@ -8,7 +8,10 @@
         "debug": "node --inspect dist/cli/index.js start",
         "cli": "node dist/cli/index.js",
         "cli-dev": "ts-node src/cli/index.ts",
-        "build": "rm -rf ./dist && tsc -p tsconfig.build.json && npm run cli -- swagger generate",
+        "build:client": "rollup -c client/rollup.config.mjs",
+        "build:server": "rm -rf ./dist && tsc -p tsconfig.build.json",
+        "build:swagger": "npm run cli -- swagger generate",
+        "build": "npm run build:client && npm run build:server && npm run build:swagger",
         "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --detectOpenHandles --runInBand --testTimeout=10000",
         "test:coverage": "npm run test -- --coverage"
     },
@@ -89,6 +92,7 @@
         "zod": "^3.24.3"
     },
     "devDependencies": {
+        "@authup/client-web-kit": "^1.0.0-beta.26",
         "@types/cors": "^2.8.17",
         "@types/ldapjs": "^3.0.6",
         "@types/morgan": "^1.9.9",

@@ -34,7 +34,10 @@ export function registerMiddlewares(router: Router) {
         registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
     }
 
-    registerAssetsMiddleware(router);
+    registerAssetsMiddleware(router, {
+        scan: false,
+        fallthrough: false,
+    });
 
     registerBasicMiddleware(router);
 

@@ -6,7 +6,6 @@
  */
 
 import type { LocationQuery } from 'vue-router';
-import { minimatch } from 'minimatch';
 
 export type OAuth2QueryParameters = {
     client_id: string,
@@ -66,15 +65,4 @@ export function extractOAuth2QueryParameters(
         scope: decodeURIComponent(query.scope || ''),
         state,
     };
-}
-
-export function isGlobMatch(target: string, pattern: string | string[]) {
-    const patterns = Array.isArray(pattern) ? pattern : [pattern];
-    for (let i = 0; i < patterns.length; i++) {
-        if (minimatch(target, patterns[i])) {
-            return true;
-        }
-    }
-
-    return false;
 }

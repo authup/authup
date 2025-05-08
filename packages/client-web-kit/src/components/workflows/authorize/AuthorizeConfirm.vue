@@ -7,8 +7,8 @@
 <script lang="ts">
 import type { Client, ClientScope } from '@authup/core-kit';
 import type { BuildInput } from 'rapiq';
-import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
+import type { PropType, Ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 import { injectHTTPClient } from '../../../core';
 import type { OAuth2QueryParameters } from './helpers';
 
@@ -23,7 +23,7 @@ export default defineComponent({
             required: true,
         },
     },
-    async setup(props) {
+    setup(props) {
         const httpClient = injectHTTPClient();
 
         let scopeNames : string[] = [];
@@ -42,7 +42,15 @@ export default defineComponent({
             relations: ['scope'],
         };
 
-        const { data: clientScopes } = await httpClient.clientScope.getMany(clientScopeQuery);
+        const clientScopes : Ref<ClientScope[]> = ref([]);
+        const loadClientScopes = async () => {
+            const response = await httpClient.clientScope.getMany(clientScopeQuery);
+
+            clientScopes.value = response.data;
+        };
+
+        Promise.resolve()
+            .then(loadClientScopes);
 
         const abort = () => {
             const url = new URL(`${props.params.redirect_uri}`);
@@ -70,7 +78,7 @@ export default defineComponent({
                         client_id: props.entity.id,
                         redirect_uri: props.params.redirect_uri,
                         ...(props.params.state ? { state: props.params.state } : {}),
-                        scope: clientScopes.map((item) => item.scope.name).join(' '),
+                        scope: clientScopes.value.map((item) => item.scope.name).join(' '),
                     });
 
                 const { url } = response;

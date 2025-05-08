@@ -15,8 +15,6 @@ import bootstrap from '@vuecs/preset-bootstrap-v5';
 import fontAwesome from '@vuecs/preset-font-awesome';
 
 import installCountdown from '@vuecs/countdown';
-import installFormControl from '@vuecs/form-controls';
-import installPagination from '@vuecs/pagination';
 import installTimeago, { injectLocale as injectTimeagoLocale } from '@vuecs/timeago';
 import { applyStoreManagerOptions, installStoreManager } from '@vuecs/form-controls/core';
 
@@ -47,14 +45,11 @@ export default defineNuxtPlugin({
         applyStoreManagerOptions(storeManager, storeManagerOptions);
 
         ctx.vueApp.use(installCountdown);
-        ctx.vueApp.use(installFormControl);
         ctx.vueApp.use(installTimeago, {
             locales: {
                 de,
             },
         });
-
-        ctx.vueApp.use(installPagination);
 
         // preset missing ...
 

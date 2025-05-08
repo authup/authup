@@ -35,10 +35,7 @@ export default defineNuxtComponent({
             emit('failed', e);
         };
 
-        const runtimeConfig = useRuntimeConfig();
-
         return {
-            apiUrl: runtimeConfig.public.apiUrl as string,
             entity: props.entity,
             handleUpdated,
             handleFailed,
@@ -48,7 +45,6 @@ export default defineNuxtComponent({
 </script>
 <template>
     <AIdentityProviderForm
-        :api-url="apiUrl"
         :entity="entity"
         :realm-id="entity.realm_id"
         @updated="handleUpdated"

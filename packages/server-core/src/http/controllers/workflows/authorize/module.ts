@@ -6,18 +6,26 @@
  */
 
 import {
-    DController, DPost, DRequest, DResponse,
+    DController, DGet, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { ForceUserLoggedInMiddleware } from '../../../middleware';
-import { runAuthorizationRouteHandler } from './handlers';
+import { runAuthorizationRouteHandler, serveAuthorizationRouteHandler } from './handlers';
 
 @DController('')
 export class AuthorizeController {
     @DPost('/authorize', [ForceUserLoggedInMiddleware])
-    async confirmAuthorization(
+    async confirm(
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<void> {
         return runAuthorizationRouteHandler(req, res);
+    }
+
+    @DGet('/authorize', [])
+    async serve(
+        @DRequest() req: any,
+            @DResponse() res: any,
+    ): Promise<void> {
+        return serveAuthorizationRouteHandler(req, res);
     }
 }

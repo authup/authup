@@ -6,16 +6,19 @@
   -->
 <script lang="ts">
 import type { Client } from '@authup/core-kit';
+import { isSimpleMatch } from '@authup/kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, Ref, VNodeChild } from 'vue';
-import { defineComponent, h, ref } from 'vue';
+import {
+    computed, defineComponent, h, ref,
+} from 'vue';
 import type { LocationQuery } from 'vue-router';
-import AuthorizeConfirm from './AuthorizeConfirm.vue';
-import { extractOAuth2QueryParameters, isGlobMatch } from './helpers';
-import AuthorizeError from './AuthorizeError.vue';
-import type { OAuth2QueryParameters } from './helpers';
 import { injectHTTPClient, injectStore } from '../../../core';
 import Login from '../Login.vue';
+import AuthorizeConfirm from './AuthorizeConfirm.vue';
+import AuthorizeError from './AuthorizeError.vue';
+import type { OAuth2QueryParameters } from './helpers';
+import { extractOAuth2QueryParameters } from './helpers';
 
 const wrapChild = (child: VNodeChild) => h(
     'div',
@@ -32,6 +35,11 @@ const wrapChild = (child: VNodeChild) => h(
 );
 
 export default defineComponent({
+    components: {
+        AuthorizeError,
+        AuthorizeConfirm,
+        Login,
+    },
     props: {
         query: {
             type: Object as PropType<LocationQuery>,
@@ -39,7 +47,7 @@ export default defineComponent({
         },
     },
     emits: ['redirect'],
-    async setup(props) {
+    setup(props) {
         const httpClient = injectHTTPClient();
 
         const store = injectStore();
@@ -50,43 +58,61 @@ export default defineComponent({
         try {
             parameters = extractOAuth2QueryParameters(props.query);
         } catch (e) {
-            return () => wrapChild(h(AuthorizeError, {
-                message: e.message,
+            const node = wrapChild(h(AuthorizeError, {
+                message: e instanceof Error ? e.message : 'The query parameters are invalid.',
             }));
+
+            return () => node;
         }
 
-        let entity : Ref<Client>;
+        const entity : Ref<Client | null> = ref(null);
+        const error : Ref<string | null> = ref(null);
 
-        try {
-            const response = await httpClient
-                .client
-                .getOne(parameters.client_id);
+        const load = async () => {
+            try {
+                entity.value = await httpClient
+                    .client
+                    .getOne(parameters.client_id);
+            } catch (e: any) {
+                error.value = e instanceof Error ? e.message : 'The client_id is invalid.';
+            }
+        };
 
-            entity = ref(response);
-        } catch (e: any) {
-            return () => wrapChild(h(AuthorizeError, {
-                message: e instanceof Error ? e.message : 'The client_id is invalid.',
-            }));
-        }
+        Promise.resolve()
+            .then(load);
 
-        const redirectUriPatterns : string[] = [];
-        if (
-            entity.value &&
-            entity.value.redirect_uri
-        ) {
-            redirectUriPatterns.push(...entity.value.redirect_uri.split(','));
-        }
+        const redirectUriPatterns = computed(() => {
+            if (
+                entity.value &&
+                entity.value.redirect_uri
+            ) {
+                return entity.value.redirect_uri.split(',');
+            }
 
-        if (
-            parameters.redirect_uri &&
-            !isGlobMatch(parameters.redirect_uri, redirectUriPatterns)
-        ) {
-            return () => wrapChild(h(AuthorizeError, {
-                message: 'The redirect_uri does not match.',
-            }));
-        }
+            return [];
+        });
 
         return () => {
+            if (!entity.value) {
+                if (error.value) {
+                    return wrapChild(h(AuthorizeError, {
+                        message: error.value,
+                    }));
+                }
+
+                return [];
+            }
+
+            if (
+                parameters.redirect_uri &&
+                redirectUriPatterns.value.length > 0 &&
+                !isSimpleMatch(parameters.redirect_uri, redirectUriPatterns.value)
+            ) {
+                return wrapChild(h(AuthorizeError, {
+                    message: 'The redirect_uri does not match.',
+                }));
+            }
+
             if (!loggedIn.value) {
                 return wrapChild(h(Login, {
                     clientId: entity.value.id,
