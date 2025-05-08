@@ -10,6 +10,7 @@ import type { Router } from 'routup';
 import { useConfig } from '../../config';
 import { resolvePackagePath } from '../../path';
 import {
+    registerAssetsMiddleware,
     registerAuthorizationMiddleware,
     registerBasicMiddleware,
     registerCorsMiddleware,
@@ -32,6 +33,8 @@ export function registerMiddlewares(router: Router) {
     if (isBuiltInMiddlewareEnabled(cors)) {
         registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
     }
+
+    registerAssetsMiddleware(router);
 
     registerBasicMiddleware(router);
 

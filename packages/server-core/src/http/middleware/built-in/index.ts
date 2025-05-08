@@ -6,6 +6,7 @@
  */
 
 export * from './authorization';
+export * from './assets';
 export * from './basic';
 export * from './cors';
 export * from './error';

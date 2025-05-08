@@ -58,6 +58,7 @@
         "@routup/decorators": "^3.4.1",
         "@routup/prometheus": "^2.4.0",
         "@routup/rate-limit": "^2.4.0",
+        "@routup/assets": "^3.4.0",
         "@routup/swagger": "^2.4.1",
         "@validup/adapter-routup": "^0.1.9",
         "@validup/adapter-validator": "^0.2.0",
