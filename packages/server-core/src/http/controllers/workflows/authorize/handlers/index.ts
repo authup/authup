@@ -6,3 +6,4 @@
  */
 
 export * from './run';
+export * from './serve';

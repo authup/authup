@@ -14,8 +14,8 @@ import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '
 import { BaseAPI } from '../../base';
 
 export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityProvider> {
-    getAuthorizeUri(baseUrl: string, id: IdentityProvider['id']): string {
-        return cleanDoubleSlashes(`${baseUrl}/${buildIdentityProviderAuthorizePath(id)}`);
+    getAuthorizeUri(id: IdentityProvider['id']): string {
+        return cleanDoubleSlashes(`${this.client.defaults.baseURL}/${buildIdentityProviderAuthorizePath(id)}`);
     }
 
     async getMany(record?: BuildInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProvider>> {

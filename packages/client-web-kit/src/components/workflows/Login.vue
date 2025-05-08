@@ -44,9 +44,6 @@ export default defineComponent({
         realmId: {
             type: String,
         },
-        baseUrl: {
-            type: String,
-        },
     },
     emits: ['done', 'failed'],
     setup(props, { emit }) {
@@ -130,16 +127,7 @@ export default defineComponent({
         };
 
         const buildIdentityProviderURL = (id: string) => {
-            let baseURL : string;
-            if (props.baseUrl) {
-                baseURL = props.baseUrl;
-            } else {
-                // todo: extract current location from window
-                baseURL = 'http://localhost:3000';
-            }
-
             let authorizeURL = apiClient.identityProvider.getAuthorizeUri(
-                baseURL,
                 id,
             );
 
