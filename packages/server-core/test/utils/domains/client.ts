@@ -13,7 +13,7 @@ export function createFakeClient(data: Partial<Client> = {}) {
         name: faker.internet.username(),
         display_name: faker.internet.displayName(),
         secret: faker.string.alpha({ length: 10 }),
-        redirect_uri: faker.internet.url(),
+        redirect_uri: 'https://example.com/**',
         is_confidential: true,
         ...data,
     } satisfies Partial<Client>;
