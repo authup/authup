@@ -8,5 +8,6 @@
 export * from './module';
 export * from './helpers';
 export * from './singleton';
+export * from './state';
 export * from './types';
 export * from './validation';

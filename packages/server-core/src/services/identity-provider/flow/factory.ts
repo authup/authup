@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { IdentityProviderPreset } from '@authup/core-kit';
-import { OpenIDIdentityProviderFlow } from './core';
+import { IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core-kit';
+import { OAuth2IdentityProviderFlow, OpenIDIdentityProviderFlow } from './core';
 import {
     FacebookIdentityProviderFlow,
     GithubIdentityProviderFlow,
@@ -39,5 +39,9 @@ export function createOAuth2IdentityProviderFlow(
         return new PaypalIdentityProviderFlow(provider);
     }
 
-    return new OpenIDIdentityProviderFlow(provider);
+    if (provider.protocol === IdentityProviderProtocol.OIDC) {
+        return new OpenIDIdentityProviderFlow(provider);
+    }
+
+    return new OAuth2IdentityProviderFlow(provider);
 }

@@ -131,6 +131,10 @@ export class OAuth2TokenManager {
     async sign<T extends OAuth2TokenPayload>(
         payload: T,
     ) : Promise<OAuth2TokenManagerSingResult<T>> {
+        if (!payload.realm_id) {
+            throw JWKError.invalidRealm();
+        }
+
         const key = await this.useKey({
             realm_id: payload.realm_id,
         });

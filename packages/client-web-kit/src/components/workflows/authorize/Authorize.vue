@@ -5,20 +5,18 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { Client } from '@authup/core-kit';
-import { isSimpleMatch } from '@authup/kit';
+import type {
+    Client, ClientScope, OAuth2AuthorizationCodeRequest,
+} from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
-import type { PropType, Ref, VNodeChild } from 'vue';
+import type { PropType, VNodeChild } from 'vue';
 import {
-    computed, defineComponent, h, ref,
+    defineComponent, h,
 } from 'vue';
-import type { LocationQuery } from 'vue-router';
-import { injectHTTPClient, injectStore } from '../../../core';
+import { injectStore } from '../../../core';
 import Login from '../Login.vue';
 import AuthorizeConfirm from './AuthorizeConfirm.vue';
 import AuthorizeError from './AuthorizeError.vue';
-import type { OAuth2QueryParameters } from './helpers';
-import { extractOAuth2QueryParameters } from './helpers';
 
 const wrapChild = (child: VNodeChild) => h(
     'div',
@@ -41,89 +39,50 @@ export default defineComponent({
         Login,
     },
     props: {
-        query: {
-            type: Object as PropType<LocationQuery>,
-            required: true,
+        codeRequest: {
+            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
+        },
+        client: {
+            type: Object as PropType<Client>,
+        },
+        clientScopes: {
+            type: Array as PropType<ClientScope[]>,
+            default: () => [],
+        },
+        error: {
+            type: Object as PropType<Error>,
         },
     },
     emits: ['redirect'],
     setup(props) {
-        const httpClient = injectHTTPClient();
-
         const store = injectStore();
         const { loggedIn } = storeToRefs(store);
 
-        let parameters : OAuth2QueryParameters;
-
-        try {
-            parameters = extractOAuth2QueryParameters(props.query);
-        } catch (e) {
-            const node = wrapChild(h(AuthorizeError, {
-                message: e instanceof Error ? e.message : 'The query parameters are invalid.',
-            }));
-
-            return () => node;
-        }
-
-        const entity : Ref<Client | null> = ref(null);
-        const error : Ref<string | null> = ref(null);
-
-        const load = async () => {
-            try {
-                entity.value = await httpClient
-                    .client
-                    .getOne(parameters.client_id);
-            } catch (e: any) {
-                error.value = e instanceof Error ? e.message : 'The client_id is invalid.';
-            }
-        };
-
-        Promise.resolve()
-            .then(load);
-
-        const redirectUriPatterns = computed(() => {
-            if (
-                entity.value &&
-                entity.value.redirect_uri
-            ) {
-                return entity.value.redirect_uri.split(',');
-            }
-
-            return [];
-        });
-
         return () => {
-            if (!entity.value) {
-                if (error.value) {
-                    return wrapChild(h(AuthorizeError, {
-                        message: error.value,
-                    }));
-                }
-
-                return [];
+            if (props.error) {
+                return wrapChild(h(AuthorizeError, {
+                    message: props.error.message,
+                }));
             }
 
-            if (
-                parameters.redirect_uri &&
-                redirectUriPatterns.value.length > 0 &&
-                !isSimpleMatch(parameters.redirect_uri, redirectUriPatterns.value)
-            ) {
-                return wrapChild(h(AuthorizeError, {
-                    message: 'The redirect_uri does not match.',
-                }));
+            if (!props.codeRequest) {
+                return [];
             }
 
             if (!loggedIn.value) {
                 return wrapChild(h(Login, {
-                    clientId: entity.value.id,
-                    realmId: entity.value.realm_id,
-                    redirectUri: parameters.redirect_uri,
+                    codeRequest: props.codeRequest,
                 }));
             }
 
+            if (!props.client) {
+                return [];
+            }
+
             return wrapChild(h(AuthorizeConfirm, {
-                params: parameters,
-                entity: entity.value,
+                codeRequest: props.codeRequest,
+                client: props.client,
+                clientScopes: props.clientScopes,
             }));
         };
     },

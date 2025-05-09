@@ -14,7 +14,7 @@ import { applyStoreManagerOptions, installStoreManager } from '@vuecs/form-contr
 import bootstrap from '@vuecs/preset-bootstrap-v5';
 import fontAwesome from '@vuecs/preset-font-awesome';
 
-// import '@fortawesome/fontawesome-free/css/all.css';
+import '@fortawesome/fontawesome-free/css/all.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import '@vuecs/pagination/dist/index.css';
 import '@authup/client-web-kit/dist/index.css';

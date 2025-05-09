@@ -5,14 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type {
+    Client, ClientScope, OAuth2AuthorizationCodeRequest,
+} from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useConfig } from '../../../../../config';
+import { useOAuth2AuthorizationService } from '../../../../oauth2';
 
 export async function serveAuthorizationRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
+    let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
+
+    let client : Client | undefined;
+    let clientScopes : ClientScope[] | undefined;
+
+    let error : Error | undefined;
+
+    try {
+        const authorizationService = useOAuth2AuthorizationService();
+        const result = await authorizationService.validateWithRequest(req);
+
+        client = result.client;
+        clientScopes = result.clientScopes;
+
+        codeRequest = result.data;
+    } catch (e) {
+        error = e;
+    }
+
+    // 3. pass to authorize :)
     const config = useConfig();
 
     const url = new URL('/public', config.publicUrl);
@@ -30,6 +54,10 @@ export async function serveAuthorizationRouteHandler(
         <div id="app"></div>
         <script>
         window.baseURL = "${config.publicUrl}";
+        window.codeRequest = ${codeRequest ? JSON.stringify(codeRequest) : 'undefined'};
+        window.error = ${error ? JSON.stringify(error) : 'undefined'};
+        window.client = ${client ? JSON.stringify(client) : 'undefined'};
+        window.clientScopes = ${clientScopes ? JSON.stringify(clientScopes) : 'undefined'};
         </script>
         <script type="module" src="${url.href}/client.js"></script>
     </body>

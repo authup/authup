@@ -1,48 +1,39 @@
-<!--
-  - Copyright (c) 2025.
-  - Author Peter Placzek (tada5hi)
-  - For the full copyright and license information,
-  - view the LICENSE file that was distributed with this source code.
-  -->
 <script lang="ts">
-import type { Ref } from 'vue';
+import { base64URLEncode } from '@authup/kit';
+import type { PropType, Ref } from 'vue';
 import {
+
     computed,
     defineComponent,
     nextTick,
     reactive,
     ref,
 } from 'vue';
-import type { IdentityProvider } from '@authup/core-kit';
+import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { BuildInput } from 'rapiq';
 import { injectHTTPClient, injectStore } from '../../core';
-import {
-    AIdentityProviderIcon, AIdentityProviders, ARealmPicker,
-} from '../entities';
+import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../entities';
 import { APagination, ATitle } from '../utility';
 
 export default defineComponent({
+
     components: {
+
         ARealmPicker,
         APagination,
         ATitle,
         IVuelidate,
         AIdentityProviders,
         AIdentityProviderIcon,
+
     },
     props: {
-        clientId: {
-            type: String,
-        },
-        redirectUri: {
-            type: String,
-        },
-        realmId: {
-            type: String,
+        codeRequest: {
+            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
         },
     },
     emits: ['done', 'failed'],
@@ -54,6 +45,7 @@ export default defineComponent({
             name: '',
             password: '',
             realm_id: '',
+
         });
 
         const vuelidate = useVuelidate({
@@ -61,22 +53,25 @@ export default defineComponent({
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(255),
+
             },
             password: {
                 required,
                 minLength: minLength(3),
                 maxLength: maxLength(255),
+
             },
             realm_id: {
 
             },
+
         }, form);
 
         const busy = ref(false);
 
         const realmId = computed(() => {
-            if (props.realmId) {
-                return props.realmId;
+            if (props.codeRequest && props.codeRequest.realm_id) {
+                return props.codeRequest.realm_id;
             }
 
             return form.realm_id;
@@ -89,6 +84,7 @@ export default defineComponent({
                     realm_id: realmId.value || '',
                     protocol: `!${IdentityProviderProtocol.LDAP}`,
                     enabled: true,
+
                 },
             };
         };
@@ -118,6 +114,7 @@ export default defineComponent({
                     name: form.name,
                     password: form.password,
                     realmId: form.realm_id,
+
                 });
 
                 emit('done');
@@ -129,20 +126,19 @@ export default defineComponent({
         const buildIdentityProviderURL = (id: string) => {
             let authorizeURL = apiClient.identityProvider.getAuthorizeUri(
                 id,
+
             );
 
-            if (props.clientId) {
-                authorizeURL += `?client_id=${props.clientId}`;
-
-                if (props.redirectUri) {
-                    authorizeURL += `&redirect_uri=${props.redirectUri}`;
-                }
+            if (props.codeRequest) {
+                const serialized = base64URLEncode(JSON.stringify(props.codeRequest));
+                authorizeURL += `?codeRequest=${serialized}`;
             }
 
             return authorizeURL;
         };
 
         return {
+
             updateRealmId,
 
             vuelidate,
@@ -153,6 +149,7 @@ export default defineComponent({
             identityProviderQuery,
             identityProviderRef,
             buildIdentityProviderURL,
+
         };
     },
 });
@@ -213,7 +210,7 @@ export default defineComponent({
 
             <hr>
 
-            <template v-if="!realmId">
+            <template v-if="!codeRequest || !codeRequest.realm_id">
                 <ARealmPicker
                     :value="form.realm_id"
                     @change="updateRealmId"

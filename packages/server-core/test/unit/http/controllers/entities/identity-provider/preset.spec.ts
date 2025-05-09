@@ -37,6 +37,6 @@ describe('src/http/controllers/identity-provider', () => {
         expect(response).toBeDefined();
 
         const flow = createOAuth2IdentityProviderFlow(response);
-        expect(flow.buildAuthorizeURL()).toMatch(/^https:\/\/accounts.google.com\/o\/oauth2\/v2\//);
+        expect(flow.buildRedirectURL()).toMatch(/^https:\/\/accounts.google.com\/o\/oauth2\/v2\//);
     });
 });

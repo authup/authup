@@ -10,12 +10,12 @@ import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useOAuth2AuthorizationService } from '../../../../oauth2';
 
-export async function runAuthorizationRouteHandler(
+export async function confirmAuthorizationRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
     const authorizationService = useOAuth2AuthorizationService();
-    const result = await authorizationService.execute(req);
+    const result = await authorizationService.executeWithRequest(req);
 
     // ---------------------------------------------------------
 

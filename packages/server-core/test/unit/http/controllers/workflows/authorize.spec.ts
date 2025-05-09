@@ -6,6 +6,7 @@
  */
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import { ScopeName } from '@authup/core-kit';
 import type {
     OAuth2TokenPayload,
 } from '@authup/specs';
@@ -14,9 +15,6 @@ import {
     OAuth2SubKind,
     OAuth2TokenKind,
 } from '@authup/specs';
-import {
-    ScopeName,
-} from '@authup/core-kit';
 import { extractTokenPayload } from '@authup/server-kit';
 import { createFakeClient, createTestSuite } from '../../../../utils';
 
@@ -37,6 +35,7 @@ describe('src/http/controllers/token', () => {
         });
 
         payload = {
+            response_type: 'code',
             client_id: client.id,
             redirect_uri: 'https://example.com/redirect',
             scope: ScopeName.GLOBAL,

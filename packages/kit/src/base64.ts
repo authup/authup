@@ -16,3 +16,30 @@ export function base64ToArrayBuffer(base64: string) : ArrayBuffer {
 
     return bytes.buffer;
 }
+
+/**
+ * @see https://thewoods.blog/base64url/
+ *
+ * @param input
+ */
+export function base64URLEncode(input: string): string {
+    return btoa(input)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+/**
+ * @see https://thewoods.blog/base64url/
+ *
+ * @param value
+ */
+export function base64URLDecode(value: string): string {
+    const m = value.length % 4;
+
+    return atob(
+        value.replace(/-/g, '+')
+            .replace(/_/g, '/')
+            .padEnd(value.length + (m === 0 ? 0 : 4 - m), '='),
+    );
+}

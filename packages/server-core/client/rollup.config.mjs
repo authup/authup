@@ -11,6 +11,9 @@ import replace from '@rollup/plugin-replace';
 import vue from '@vitejs/plugin-vue';
 import postcss from 'rollup-plugin-postcss';
 
+import postcssImport from 'postcss-import';
+import postcssURL from 'postcss-url';
+
 export default {
     input: 'client/src/index.js',
     external: [],
@@ -28,6 +31,12 @@ export default {
 
         postcss({
             extract: true,
+            plugins: [
+                postcssImport(),
+                postcssURL({
+                    url: 'inline',
+                }),
+            ],
         }),
 
         replace({

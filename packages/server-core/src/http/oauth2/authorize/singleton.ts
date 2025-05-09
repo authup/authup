@@ -7,14 +7,14 @@
 
 import { singa } from 'singa';
 import { useConfig } from '../../../config';
-import { OAuth2AuthorizationService } from './module';
+import { OAuth2AuthorizationManager } from './module';
 
-const instance = singa<OAuth2AuthorizationService>({
+const instance = singa<OAuth2AuthorizationManager>({
     name: 'oauth2Authorization',
     factory: () => {
         const config = useConfig();
 
-        return new OAuth2AuthorizationService({
+        return new OAuth2AuthorizationManager({
             issuer: config.publicUrl,
             accessTokenMaxAge: config.tokenAccessMaxAge || 7200,
             authorizationCodeMaxAge: 300,

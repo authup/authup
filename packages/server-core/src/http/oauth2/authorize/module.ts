@@ -7,7 +7,9 @@
 
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
-import { isSimpleMatch } from '@authup/kit';
+import {
+    isSimpleMatch,
+} from '@authup/kit';
 import type { OAuth2SubKind } from '@authup/specs';
 import { OAuth2AuthorizationResponseType, OAuth2Error } from '@authup/specs';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
@@ -23,30 +25,36 @@ import {
     OAuth2TokenManager, buildOAuth2AccessTokenPayload, buildOpenIdTokenPayload, extendOpenIdTokenPayload,
 } from '../token';
 import { OAuth2AuthorizationCodeRepository } from './repository';
-import type { OAuth2AuthorizationResult, OAuth2AuthorizationServiceOptions } from './types';
+import type {
+    OAuth2AuthorizationCodeRequestContainer,
+    OAuth2AuthorizationManagerOptions,
+    OAuth2AuthorizationResult,
+} from './types';
 import { AuthorizeRequestValidator } from './validation';
 
-export class OAuth2AuthorizationService {
-    protected options: OAuth2AuthorizationServiceOptions;
+export class OAuth2AuthorizationManager {
+    protected options: OAuth2AuthorizationManagerOptions;
 
     protected codeRepository : OAuth2AuthorizationCodeRepository;
 
     protected tokenManager : OAuth2TokenManager;
 
+    protected validator : AuthorizeRequestValidator;
+
     protected validatorAdapter : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
 
-    constructor(options: OAuth2AuthorizationServiceOptions) {
+    constructor(options: OAuth2AuthorizationManagerOptions) {
         this.options = options;
 
         this.codeRepository = new OAuth2AuthorizationCodeRepository();
         this.tokenManager = new OAuth2TokenManager();
 
-        const validator = new AuthorizeRequestValidator();
-        this.validatorAdapter = new RoutupContainerAdapter(validator);
+        this.validator = new AuthorizeRequestValidator();
+        this.validatorAdapter = new RoutupContainerAdapter(this.validator);
     }
 
-    async execute(req: Request) {
-        const data = await this.validate(req);
+    async executeWithRequest(req: Request) {
+        const { data } = await this.validateWithRequest(req);
 
         const responseTypes = getOauth2AuthorizeResponseTypesByRequest(req);
 
@@ -134,19 +142,37 @@ export class OAuth2AuthorizationService {
      * @throws OAuth2Error
      *
      * @param req
-     * @protected
      */
-    protected async validate(
+    async validateWithRequest(
         req: Request,
-    ) : Promise<OAuth2AuthorizationCodeRequest> {
-        const data = await this.validatorAdapter.run(req);
+    ) : Promise<OAuth2AuthorizationCodeRequestContainer> {
+        const data = await this.validatorAdapter.run(req, {
+            locations: ['body', 'query'],
+        });
 
+        return this.postValidation(data);
+    }
+
+    /**
+     * Validate raw authorization data.
+     *
+     * @param input
+     */
+    async validate(input: Record<string, any>) : Promise<OAuth2AuthorizationCodeRequestContainer> {
+        const data = await this.validator.run(input);
+        return this.postValidation(data);
+    }
+
+    protected async postValidation(data: OAuth2AuthorizationCodeRequest) : Promise<OAuth2AuthorizationCodeRequestContainer> {
         const dataSource = await useDataSource();
         const clientRepository = dataSource.getRepository(ClientEntity);
+        // todo: maybe id or (name + realm_id), realm_id can be realm.name or realm.id ?!
         const client = await clientRepository.findOneBy({ id: data.client_id });
         if (!client) {
             throw OAuth2Error.clientInvalid();
         }
+
+        data.realm_id = client.realm_id;
 
         // verifying scopes
         const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
@@ -164,9 +190,7 @@ export class OAuth2AuthorizationService {
             if (!isOAuth2ScopeAllowed(scopeNames, data.scope)) {
                 throw OAuth2Error.scopeInsufficient();
             }
-        }
-
-        if (!data.scope) {
+        } else {
             data.scope = scopeNames.join(' ');
         }
 
@@ -177,6 +201,10 @@ export class OAuth2AuthorizationService {
             throw OAuth2Error.redirectUriMismatch();
         }
 
-        return data;
+        return {
+            data,
+            client,
+            clientScopes,
+        };
     }
 }

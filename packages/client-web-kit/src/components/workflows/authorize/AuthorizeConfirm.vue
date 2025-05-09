@@ -5,63 +5,39 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { Client, ClientScope } from '@authup/core-kit';
-import type { BuildInput } from 'rapiq';
-import type { PropType, Ref } from 'vue';
-import { defineComponent, ref } from 'vue';
+import type { Client, ClientScope, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { PropType } from 'vue';
+import { defineComponent } from 'vue';
 import { injectHTTPClient } from '../../../core';
-import type { OAuth2QueryParameters } from './helpers';
 
 export default defineComponent({
     props: {
-        entity: {
+        client: {
             type: Object as PropType<Client>,
             required: true,
         },
-        params: {
-            type: Object as PropType<OAuth2QueryParameters>,
+        clientScopes: {
+            type: Array as PropType<ClientScope[]>,
+            default: () => [],
+        },
+        codeRequest: {
+            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
             required: true,
         },
     },
     setup(props) {
         const httpClient = injectHTTPClient();
 
-        let scopeNames : string[] = [];
-        if (
-            typeof props.params.scope === 'string' &&
-            props.params.scope.length > 0
-        ) {
-            scopeNames = props.params.scope.split(' ');
-        }
-
-        const clientScopeQuery : BuildInput<ClientScope> = {
-            filter: {
-                client_id: props.entity.id,
-                ...(scopeNames.length > 0 ? { scope: { name: scopeNames } } : {}),
-            },
-            relations: ['scope'],
-        };
-
-        const clientScopes : Ref<ClientScope[]> = ref([]);
-        const loadClientScopes = async () => {
-            const response = await httpClient.clientScope.getMany(clientScopeQuery);
-
-            clientScopes.value = response.data;
-        };
-
-        Promise.resolve()
-            .then(loadClientScopes);
-
         const abort = () => {
-            const url = new URL(`${props.params.redirect_uri}`);
+            const url = new URL(`${props.codeRequest.redirect_uri}`);
             url.searchParams.set('error', 'access_denied');
             url.searchParams.set(
                 'error_description',
                 'The resource owner or authorization server denied the request',
             );
 
-            if (props.params.state) {
-                url.searchParams.set('state', props.params.state);
+            if (props.codeRequest.state) {
+                url.searchParams.set('state', props.codeRequest.state);
             }
 
             if (typeof window !== 'undefined') {
@@ -74,11 +50,11 @@ export default defineComponent({
                 const response = await httpClient
                     .authorize
                     .confirm({
-                        response_type: props.params.response_type,
-                        client_id: props.entity.id,
-                        redirect_uri: props.params.redirect_uri,
-                        ...(props.params.state ? { state: props.params.state } : {}),
-                        scope: clientScopes.value.map((item) => item.scope.name).join(' '),
+                        response_type: props.codeRequest.response_type,
+                        client_id: props.client.id,
+                        redirect_uri: props.codeRequest.redirect_uri,
+                        ...(props.codeRequest.state ? { state: props.codeRequest.state } : {}),
+                        scope: props.clientScopes.map((item) => item.scope.name).join(' '),
                     });
 
                 const { url } = response;
@@ -95,7 +71,6 @@ export default defineComponent({
         return {
             authorize,
             abort,
-            clientScopes,
         };
     },
 });
@@ -107,7 +82,7 @@ export default defineComponent({
                 Application
             </h5>
             <h1 class="fw-bold">
-                {{ entity.name }}
+                {{ client.name }}
             </h1>
         </div>
 
@@ -115,7 +90,7 @@ export default defineComponent({
             <div>
                 This will allow the
                 <strong class="ps-1 pe-1">
-                    {{ entity.name }}
+                    {{ client.name }}
                 </strong>
                 developer to:
             </div>
@@ -125,10 +100,7 @@ export default defineComponent({
                     :key="item.id"
                     class="d-flex flex-row"
                 >
-                    <div
-                        class="text-center"
-                        style="width: 15px"
-                    >
+                    <div class="text-center ps-1 pe-1">
                         <i class="fa-solid fa-check text-success" />
                     </div>
                     <div class="ms-1">
@@ -145,7 +117,7 @@ export default defineComponent({
                 </div>
                 <div class="ms-1">
                     <small>
-                        Once authorized, you will be redirected to: <strong>{{ params.redirect_uri }}</strong>
+                        Once authorized, you will be redirected to: <strong>{{ codeRequest.redirect_uri }}</strong>
                     </small>
                 </div>
             </div>
@@ -157,7 +129,7 @@ export default defineComponent({
                     <small>
                         This application is governed by the
                         <strong>
-                            {{ entity.name }}
+                            {{ client.name }}
                         </strong>
                         application's Privacy Policy and Terms of Service.
                     </small>
@@ -169,7 +141,7 @@ export default defineComponent({
                 </div>
                 <div class="ms-1">
                     <small>
-                        Active since {{ entity.created_at }}
+                        Active since {{ client.created_at }}
                     </small>
                 </div>
             </div>

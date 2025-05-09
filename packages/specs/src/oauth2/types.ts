@@ -29,7 +29,7 @@ export type OAuth2TokenPayload = JWTClaims & {
     /**
      * Token type
      */
-    kind: `${OAuth2TokenKind}`,
+    kind?: `${OAuth2TokenKind}`,
 
     /**
      * Subject (userId | robotId | clientId)

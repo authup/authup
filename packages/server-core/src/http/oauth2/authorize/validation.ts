@@ -12,8 +12,10 @@ import {
     OAuth2Error,
 } from '@authup/specs';
 
+import { createValidator as createZodValidator } from '@validup/adapter-zod';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
-import { Container } from 'validup';
+import { Container, ValidupValidatorError } from 'validup';
+import zod from 'zod';
 
 export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCodeRequest> {
     protected initialize() {
@@ -28,8 +30,15 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
                     .isString()
                     .notEmpty()
                     .custom((value) => {
+                        if (typeof value !== 'string') {
+                            throw new ValidupValidatorError({
+                                path: 'response_type',
+                                expected: 'string',
+                            });
+                        }
+
                         const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
-                        const responseTypes = value.split(' ');
+                        const responseTypes = value.split(' ') as OAuth2AuthorizationResponseType[];
 
                         for (let i = 0; i < responseTypes.length; i++) {
                             if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
@@ -44,14 +53,7 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
 
         this.mount(
             'redirect_uri',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isURL()
-                    .isLength({ min: 3, max: 2000 });
-            }),
+            createZodValidator(zod.string().url()),
         );
 
         this.mount(

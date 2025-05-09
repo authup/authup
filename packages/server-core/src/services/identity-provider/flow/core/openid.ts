@@ -6,7 +6,6 @@
  */
 
 import { extractTokenPayload } from '@authup/server-kit';
-import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import type { IOAuth2IdentityProviderFlow, IdentityProviderIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
 import { OAuth2IdentityProviderFlow } from './oauth2';
@@ -18,13 +17,8 @@ export class OpenIDIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
     }
 
     async getIdentityForRequest(request: Request): Promise<IdentityProviderIdentity> {
-        const { code } = useRequestQuery(request);
-
-        const token = await this.client.token.createWithAuthorizationCode({
-            code: code as string,
-        });
-
-        const payload = extractTokenPayload(token.access_token);
+        const response = await this.getTokenResponseForRequest(request);
+        const payload = extractTokenPayload(response.access_token);
 
         return {
             id: payload.sub,

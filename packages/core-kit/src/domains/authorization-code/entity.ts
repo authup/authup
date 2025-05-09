@@ -35,9 +35,10 @@ export interface OAuth2AuthorizationCode {
 }
 
 export type OAuth2AuthorizationCodeRequest = {
-    response_type?: string,
+    response_type: string,
     client_id: string,
-    redirect_uri?: string,
+    realm_id?: string,
+    redirect_uri: string,
     scope?: string,
     state?: string,
     code_challenge?: string,
