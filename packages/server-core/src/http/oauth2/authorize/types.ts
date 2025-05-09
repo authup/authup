@@ -17,7 +17,9 @@ export type OAuth2AuthorizationManagerOptions = {
     idTokenMaxAge: number
 };
 
-export type OAuth2AuthorizationCodeRequestExtended = OAuth2AuthorizationCodeRequest & {
+export type OAuth2AuthorizationCodeRequestContainer = {
+    data: OAuth2AuthorizationCodeRequest,
+
     client: Client,
     clientScopes: ClientScope[]
 };

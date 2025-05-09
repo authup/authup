@@ -15,7 +15,7 @@ export async function runAuthorizationRouteHandler(
     res: Response,
 ) : Promise<any> {
     const authorizationService = useOAuth2AuthorizationService();
-    const result = await authorizationService.execute(req);
+    const result = await authorizationService.executeWithRequest(req);
 
     // ---------------------------------------------------------
 

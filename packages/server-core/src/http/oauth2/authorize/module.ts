@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCode } from '@authup/core-kit';
+import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
 import {
     isSimpleMatch,
@@ -25,7 +25,11 @@ import {
     OAuth2TokenManager, buildOAuth2AccessTokenPayload, buildOpenIdTokenPayload, extendOpenIdTokenPayload,
 } from '../token';
 import { OAuth2AuthorizationCodeRepository } from './repository';
-import type { OAuth2AuthorizationCodeRequestExtended, OAuth2AuthorizationManagerOptions, OAuth2AuthorizationResult } from './types';
+import type {
+    OAuth2AuthorizationCodeRequestContainer,
+    OAuth2AuthorizationManagerOptions,
+    OAuth2AuthorizationResult,
+} from './types';
 import { AuthorizeRequestValidator } from './validation';
 
 export class OAuth2AuthorizationManager {
@@ -35,7 +39,9 @@ export class OAuth2AuthorizationManager {
 
     protected tokenManager : OAuth2TokenManager;
 
-    protected validatorAdapter : RoutupContainerAdapter<OAuth2AuthorizationCodeRequestExtended>;
+    protected validator : AuthorizeRequestValidator;
+
+    protected validatorAdapter : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
 
     constructor(options: OAuth2AuthorizationManagerOptions) {
         this.options = options;
@@ -43,12 +49,12 @@ export class OAuth2AuthorizationManager {
         this.codeRepository = new OAuth2AuthorizationCodeRepository();
         this.tokenManager = new OAuth2TokenManager();
 
-        const validator = new AuthorizeRequestValidator();
-        this.validatorAdapter = new RoutupContainerAdapter(validator);
+        this.validator = new AuthorizeRequestValidator();
+        this.validatorAdapter = new RoutupContainerAdapter(this.validator);
     }
 
-    async execute(req: Request) {
-        const data = await this.validate(req);
+    async executeWithRequest(req: Request) {
+        const { data } = await this.validateWithRequest(req);
 
         const responseTypes = getOauth2AuthorizeResponseTypesByRequest(req);
 
@@ -137,13 +143,27 @@ export class OAuth2AuthorizationManager {
      *
      * @param req
      */
-    async validate(
+    async validateWithRequest(
         req: Request,
-    ) : Promise<OAuth2AuthorizationCodeRequestExtended> {
+    ) : Promise<OAuth2AuthorizationCodeRequestContainer> {
         const data = await this.validatorAdapter.run(req, {
             locations: ['body', 'query'],
         });
 
+        return this.postValidation(data);
+    }
+
+    /**
+     * Validate raw authorization data.
+     *
+     * @param input
+     */
+    async validate(input: Record<string, any>) : Promise<OAuth2AuthorizationCodeRequestContainer> {
+        const data = await this.validator.run(input);
+        return this.postValidation(data);
+    }
+
+    protected async postValidation(data: OAuth2AuthorizationCodeRequest) : Promise<OAuth2AuthorizationCodeRequestContainer> {
         const dataSource = await useDataSource();
         const clientRepository = dataSource.getRepository(ClientEntity);
         // todo: maybe id or (name + realm_id), realm_id can be realm.name or realm.id ?!
@@ -152,7 +172,6 @@ export class OAuth2AuthorizationManager {
             throw OAuth2Error.clientInvalid();
         }
 
-        data.client = client;
         data.realm_id = client.realm_id;
 
         // verifying scopes
@@ -165,8 +184,6 @@ export class OAuth2AuthorizationManager {
                 scope: true,
             },
         });
-
-        data.clientScopes = clientScopes;
 
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
         if (data.scope) {
@@ -184,6 +201,10 @@ export class OAuth2AuthorizationManager {
             throw OAuth2Error.redirectUriMismatch();
         }
 
-        return data;
+        return {
+            data,
+            client,
+            clientScopes,
+        };
     }
 }

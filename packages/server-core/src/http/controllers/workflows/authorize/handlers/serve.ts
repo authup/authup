@@ -26,7 +26,7 @@ export async function serveAuthorizationRouteHandler(
 
     try {
         const authorizationService = useOAuth2AuthorizationService();
-        const result = await authorizationService.validate(req);
+        const result = await authorizationService.validateWithRequest(req);
 
         client = result.client;
         clientScopes = result.clientScopes;

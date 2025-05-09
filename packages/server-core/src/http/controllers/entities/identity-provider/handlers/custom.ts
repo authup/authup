@@ -8,6 +8,7 @@
 import { base64URLDecode } from '@authup/kit';
 import { OAuth2Error } from '@authup/specs';
 import { BadRequestError, NotFoundError } from '@ebec/http';
+import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     IdentityProviderProtocol,
 } from '@authup/core-kit';
@@ -28,8 +29,8 @@ import {
 import { createOAuth2IdentityProviderFlow } from '../../../../../domains';
 import { IdentityProviderAccountService } from '../../../../../services';
 import type { OAuth2AuthorizeStateData } from '../../../../oauth2';
+import { InternalGrantType, OAuth2AuthorizationStateManager, useOAuth2AuthorizationService } from '../../../../oauth2';
 import { setRequestIdentity, useRequestParamID } from '../../../../request';
-import { InternalGrantType, OAuth2AuthorizationStateManager } from '../../../../oauth2';
 import { useConfig } from '../../../../../config';
 
 async function resolve(dataSource: DataSource, id: string) {
@@ -73,17 +74,30 @@ export async function authorizeURLIdentityProviderRouteHandler(
     const stateData : OAuth2AuthorizeStateData = {};
     const query = useRequestQuery(req);
     if (typeof query.codeRequest === 'string') {
+        let codeRequestRaw: OAuth2AuthorizationCodeRequest;
+
         try {
-            // todo: validate
-            stateData.codeRequest = JSON.parse(base64URLDecode(query.codeRequest));
+            codeRequestRaw = JSON.parse(base64URLDecode(query.codeRequest));
         } catch (e) {
-            throw OAuth2Error.requestInvalid('The code request is malformed.');
+            throw OAuth2Error.requestInvalid('The code request is malformed and can not be parsed.');
         }
+
+        const authorizationManager = useOAuth2AuthorizationService();
+        const validationResult = await authorizationManager.validate(codeRequestRaw);
+
+        if (
+            validationResult.client.realm_id &&
+            entity.realm_id &&
+            entity.realm_id !== validationResult.client.realm_id
+        ) {
+            throw OAuth2Error.requestInvalid('The provider and client realm do not match.');
+        }
+
+        stateData.codeRequest = validationResult.data;
     }
+
     const authorizationStateManager = new OAuth2AuthorizationStateManager();
     parameters.state = await authorizationStateManager.create(req, stateData);
-
-    // todo: maybe verify if state.payload.realm_id = identity_provider.realm_id
 
     return sendRedirect(res, flow.buildRedirectURL(parameters));
 }
@@ -107,6 +121,13 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const authorizationStateManager = new OAuth2AuthorizationStateManager();
     const data = await authorizationStateManager.verify(req);
+    if (
+        data.codeRequest.realm_id &&
+        entity.realm_id &&
+        data.codeRequest.realm_id !== entity.realm_id
+    ) {
+        throw OAuth2Error.requestInvalid('The provider and client realm do not match.');
+    }
 
     const flow = createOAuth2IdentityProviderFlow(entity);
 
