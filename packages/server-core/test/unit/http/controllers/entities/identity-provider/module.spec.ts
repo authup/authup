@@ -98,7 +98,7 @@ describe('src/http/controllers/identity-provider', () => {
         const flow = createOAuth2IdentityProviderFlow(details as IdentityProvider);
 
         const responseURL = new URL(response.headers.get('location') as string);
-        const flowURL = new URL(flow.buildAuthorizeURL());
+        const flowURL = new URL(flow.buildRedirectURL());
 
         expect(responseURL.searchParams.get('response_type'))
             .toEqual(flowURL.searchParams.get('response_type'));

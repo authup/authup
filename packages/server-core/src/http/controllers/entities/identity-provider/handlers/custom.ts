@@ -74,7 +74,7 @@ export async function authorizeURLIdentityProviderRouteHandler(
     const query = useRequestQuery(req);
     if (typeof query.codeRequest === 'string') {
         try {
-            // todo: maybe validate :)
+            // todo: validate
             stateData.codeRequest = JSON.parse(base64URLDecode(query.codeRequest));
         } catch (e) {
             throw OAuth2Error.requestInvalid('The code request is malformed.');
@@ -85,7 +85,7 @@ export async function authorizeURLIdentityProviderRouteHandler(
 
     // todo: maybe verify if state.payload.realm_id = identity_provider.realm_id
 
-    return sendRedirect(res, flow.buildAuthorizeURL(parameters));
+    return sendRedirect(res, flow.buildRedirectURL(parameters));
 }
 
 /* istanbul ignore next */
@@ -110,10 +110,10 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const flow = createOAuth2IdentityProviderFlow(entity);
 
-    // todo: identity should respect client_id
     const identity = await flow.getIdentityForRequest(req);
     const manager = new IdentityProviderAccountService(dataSource, entity);
 
+    // todo: identity should respect client_id
     const account = await manager.save(identity);
     const grant = new InternalGrantType();
 

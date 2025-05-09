@@ -30,6 +30,6 @@ export interface ILdapIdentityProviderFlow {
 export type OAuth2IdentityProviderFlowOptions = IdentityProvider & Partial<OAuth2IdentityProviderBase>;
 
 export interface IOAuth2IdentityProviderFlow {
-    buildAuthorizeURL(parameters?: Partial<AuthorizeParameters>) : string;
+    buildRedirectURL(parameters?: Partial<AuthorizeParameters>) : string;
     getIdentityForRequest(request: Request) : Promise<IdentityProviderIdentity>;
 }
