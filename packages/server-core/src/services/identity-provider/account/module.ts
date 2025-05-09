@@ -364,11 +364,13 @@ export class IdentityProviderAccountService {
                         break;
                     }
 
-                    if (
-                        child.path === 'email' &&
-                        emailPool.length > 0
-                    ) {
-                        internal.email = emailPool.shift();
+                    if (child.path === 'email') {
+                        if (emailPool.length > 0) {
+                            internal.email = emailPool.shift();
+                        } else {
+                            internal.email = null;
+                        }
+
                         retry = true;
                         break;
                     }
