@@ -8,7 +8,7 @@
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
 import {
-    base64URLDecode, createNanoID, isSimpleMatch, pickRecord,
+    base64URLDecode, createNanoID, isSimpleMatch,
 } from '@authup/kit';
 import type { Cache } from '@authup/server-kit';
 import { buildCacheKey, useCache } from '@authup/server-kit';
@@ -18,10 +18,9 @@ import { useRequestQuery } from '@routup/basic/query';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
+import { getRequestHeader, getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { ClientEntity, ClientScopeEntity } from '../../../database/domains';
-import type { RequestIdentity } from '../../request';
 import { useRequestIdentityOrFail } from '../../request';
 import { OAuth2CachePrefix } from '../constants';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
@@ -215,11 +214,16 @@ export class OAuth2AuthorizationManager {
 
     async createState(req: Request, data: Record<string, any> = {}) : Promise<string> {
         const state = createNanoID();
+        const ip = getRequestIP(req, {
+            trustProxy: true,
+        });
+        const userAgent = getRequestHeader(req, 'user-agent');
 
         await this.cache.set(
             buildCacheKey({ prefix: OAuth2CachePrefix.AUTHORIZATION_CODE, key: state }),
             {
-                identity: pickRecord(useRequestIdentityOrFail(req), ['id', 'type']),
+                ip,
+                userAgent,
                 data,
             },
             {
@@ -237,7 +241,11 @@ export class OAuth2AuthorizationManager {
         }
 
         const cacheKey = buildCacheKey({ prefix: OAuth2CachePrefix.AUTHORIZATION_CODE, key: query.state });
-        const cached : { identity: RequestIdentity, data: T} = await this.cache.get(cacheKey);
+        const cached : {
+            ip?: string,
+            userAgent?: string,
+            data: T,
+        } = await this.cache.get(cacheKey);
         if (!cached) {
             throw OAuth2Error.stateInvalid();
         }
@@ -245,12 +253,15 @@ export class OAuth2AuthorizationManager {
         // avoid replay attack :)
         await this.cache.drop(cacheKey);
 
-        const identity = useRequestIdentityOrFail(req);
+        const ip = getRequestIP(req, {
+            trustProxy: true,
+        });
+        if (ip !== cached.ip) {
+            throw OAuth2Error.stateInvalid();
+        }
 
-        if (
-            identity.type !== cached.identity.type ||
-            identity.id !== cached.identity.id
-        ) {
+        const userAgent = getRequestHeader(req, 'user-agent');
+        if (userAgent !== cached.userAgent) {
             throw OAuth2Error.stateInvalid();
         }
 
