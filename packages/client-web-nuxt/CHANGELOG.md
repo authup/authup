@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.26) (2025-05-09)
+
+
+### Features
+
+* export route meta key in nuxt module ([4715eea](https://github.com/authup/authup/commit/4715eead0a20b32ec4fa08c2a2d75a6320003cee))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 21 updates ([#2653](https://github.com/authup/authup/issues/2653)) ([eb5cdcd](https://github.com/authup/authup/commit/eb5cdcd775466506ec4d86166e6de55e9868f46b))
+
 ## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
 
 
