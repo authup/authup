@@ -25,7 +25,7 @@ import {
 import { createOAuth2IdentityProviderFlow } from '../../../../../domains';
 import { IdentityProviderAccountService } from '../../../../../services';
 import { setRequestIdentity, useRequestParamID } from '../../../../request';
-import { InternalGrantType, useOAuth2AuthorizationService } from '../../../../oauth2';
+import { InternalGrantType, OAuth2AuthorizationStateManager } from '../../../../oauth2';
 import { useConfig } from '../../../../../config';
 
 async function resolve(dataSource: DataSource, id: string) {
@@ -66,12 +66,8 @@ export async function authorizeURLIdentityProviderRouteHandler(
 
     const parameters : AuthorizeParameters = {};
 
-    const authorizationService = useOAuth2AuthorizationService();
-    const codeRequest = authorizationService.extractCodeRequest(req);
-
-    parameters.state = await authorizationService.createState(req, {
-        codeRequest,
-    });
+    const authorizationStateManager = new OAuth2AuthorizationStateManager();
+    parameters.state = await authorizationStateManager.create(req);
 
     // todo: maybe verify if state.payload.realm_id = identity_provider.realm_id
 
@@ -95,10 +91,8 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
         throw new Error(`The provider protocol ${entity.protocol} is not valid.`);
     }
 
-    const authorizationService = useOAuth2AuthorizationService();
-    const data = await authorizationService.verifyState<{
-        codeRequest?: string
-    }>(req);
+    const authorizationStateManager = new OAuth2AuthorizationStateManager();
+    const data = await authorizationStateManager.verify(req);
 
     const flow = createOAuth2IdentityProviderFlow(entity);
 
@@ -160,12 +154,11 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     }
 
     if (data.codeRequest) {
-        const params = authorizationService.decodeCodeRequest(data.codeRequest);
-        const keys = Object.keys(params);
+        const codeRequestKeys = Object.keys(data.codeRequest);
 
         const url = new URL('/authorize', config.publicUrl);
-        for (let i = 0; i < keys.length; i++) {
-            url.searchParams.set(keys[i], params[keys[i]]);
+        for (let i = 0; i < codeRequestKeys.length; i++) {
+            url.searchParams.set(codeRequestKeys[i], data.codeRequest[codeRequestKeys[i]]);
         }
 
         return sendRedirect(res, url.href);

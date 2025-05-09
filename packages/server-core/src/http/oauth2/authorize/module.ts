@@ -5,24 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
 import {
-    base64URLDecode, createNanoID, isSimpleMatch,
+    isSimpleMatch,
 } from '@authup/kit';
-import type { Cache } from '@authup/server-kit';
-import { buildCacheKey, useCache } from '@authup/server-kit';
 import type { OAuth2SubKind } from '@authup/specs';
 import { OAuth2AuthorizationResponseType, OAuth2Error } from '@authup/specs';
-import { useRequestQuery } from '@routup/basic/query';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
-import { getRequestHeader, getRequestIP } from 'routup';
+import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { ClientEntity, ClientScopeEntity } from '../../../database/domains';
 import { useRequestIdentityOrFail } from '../../request';
-import { OAuth2CachePrefix } from '../constants';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
 import type { OAuth2AccessTokenBuildContext, OAuth2OpenIdTokenBuildContext } from '../token';
 import {
@@ -35,8 +31,6 @@ import { AuthorizeRequestValidator } from './validation';
 export class OAuth2AuthorizationManager {
     protected options: OAuth2AuthorizationManagerOptions;
 
-    protected cache : Cache;
-
     protected codeRepository : OAuth2AuthorizationCodeRepository;
 
     protected tokenManager : OAuth2TokenManager;
@@ -45,8 +39,6 @@ export class OAuth2AuthorizationManager {
 
     constructor(options: OAuth2AuthorizationManagerOptions) {
         this.options = options;
-
-        this.cache = useCache();
 
         this.codeRepository = new OAuth2AuthorizationCodeRepository();
         this.tokenManager = new OAuth2TokenManager();
@@ -193,78 +185,5 @@ export class OAuth2AuthorizationManager {
         }
 
         return data;
-    }
-
-    decodeCodeRequest(input: string) : OAuth2AuthorizationCodeRequest {
-        try {
-            return JSON.parse(base64URLDecode(input));
-        } catch (e) {
-            throw OAuth2Error.requestInvalid('The code request is malformed.');
-        }
-    }
-
-    extractCodeRequest(req: Request) : string | undefined {
-        const query = useRequestQuery(req);
-        if (typeof query.codeRequest !== 'string') {
-            return undefined;
-        }
-
-        return query.codeRequest;
-    }
-
-    async createState(req: Request, data: Record<string, any> = {}) : Promise<string> {
-        const state = createNanoID();
-        const ip = getRequestIP(req, {
-            trustProxy: true,
-        });
-        const userAgent = getRequestHeader(req, 'user-agent');
-
-        await this.cache.set(
-            buildCacheKey({ prefix: OAuth2CachePrefix.AUTHORIZATION_CODE, key: state }),
-            {
-                ip,
-                userAgent,
-                data,
-            },
-            {
-                ttl: 1000 * 60 * 30, // 30 min
-            },
-        );
-
-        return state;
-    }
-
-    async verifyState<T extends Record<string, any>>(req: Request) : Promise<T> {
-        const query = useRequestQuery(req);
-        if (typeof query.state !== 'string') {
-            throw OAuth2Error.stateInvalid();
-        }
-
-        const cacheKey = buildCacheKey({ prefix: OAuth2CachePrefix.AUTHORIZATION_CODE, key: query.state });
-        const cached : {
-            ip?: string,
-            userAgent?: string,
-            data: T,
-        } = await this.cache.get(cacheKey);
-        if (!cached) {
-            throw OAuth2Error.stateInvalid();
-        }
-
-        // avoid replay attack :)
-        await this.cache.drop(cacheKey);
-
-        const ip = getRequestIP(req, {
-            trustProxy: true,
-        });
-        if (ip !== cached.ip) {
-            throw OAuth2Error.stateInvalid();
-        }
-
-        const userAgent = getRequestHeader(req, 'user-agent');
-        if (userAgent !== cached.userAgent) {
-            throw OAuth2Error.stateInvalid();
-        }
-
-        return cached.data;
     }
 }
