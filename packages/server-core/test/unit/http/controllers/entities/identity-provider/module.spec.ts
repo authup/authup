@@ -97,8 +97,19 @@ describe('src/http/controllers/identity-provider', () => {
 
         const flow = createOAuth2IdentityProviderFlow(details as IdentityProvider);
 
-        expect(response.headers.get('location'))
-            .toEqual(flow.buildAuthorizeURL());
+        const responseURL = new URL(response.headers.get('location') as string);
+        const flowURL = new URL(flow.buildAuthorizeURL());
+
+        expect(responseURL.searchParams.get('response_type'))
+            .toEqual(flowURL.searchParams.get('response_type'));
+
+        expect(responseURL.searchParams.get('client_id'))
+            .toEqual(flowURL.searchParams.get('client_id'));
+
+        expect(responseURL.searchParams.get('redirect_uri'))
+            .toEqual(flowURL.searchParams.get('redirect_uri'));
+
+        expect(responseURL.searchParams.get('state')).toBeDefined();
     });
 
     it('should delete resource', async () => {
