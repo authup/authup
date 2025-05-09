@@ -55,14 +55,6 @@ export class IdentityProviderAccountService {
 
     protected userValidator : UserValidator;
 
-    protected userAttributes : (keyof User)[] = [
-        'first_name',
-        'last_name',
-        'avatar',
-        'cover',
-        'display_name',
-    ];
-
     protected providerAccountRepository : Repository<IdentityProviderAccountEntity>;
 
     constructor(
@@ -257,6 +249,14 @@ export class IdentityProviderAccountService {
         const columnPropertyNames = this.userRepository.metadata.columns.map((c) => c.propertyName);
         const relationPropertyNames = this.userRepository.metadata.relations.map((r) => r.propertyName);
 
+        const internalAllowed = [
+            'first_name',
+            'last_name',
+            'avatar',
+            'cover',
+            'display_name',
+        ];
+
         const internal : Partial<User> = {};
         const external : Record<string, any> = {};
 
@@ -274,13 +274,14 @@ export class IdentityProviderAccountService {
                 continue;
             }
 
-            // todo: check existing props
-
             index = columnPropertyNames.indexOf(attributeKey);
             if (index === -1) {
                 external[attributeKey] = value;
             } else {
-                internal[attributeKey] = value;
+                const internalAllowedIndex = internalAllowed.indexOf(attributeKey);
+                if (internalAllowedIndex !== -1) {
+                    internal[attributeKey] = value;
+                }
             }
         }
 
@@ -289,7 +290,7 @@ export class IdentityProviderAccountService {
 
     protected async updateUser(
         identity: IdentityProviderIdentity,
-        attributes: UserEntity,
+        entity: UserEntity,
     ) : Promise<UserEntity> {
         const claimAttributes = await this.getClaimAttributes(
             identity,
@@ -297,23 +298,53 @@ export class IdentityProviderAccountService {
         );
 
         const [
-            internalNew,
-            externalNew,
+            attributesNew,
+            attributesExtraNew,
         ] = this.groupClaimAttributes(claimAttributes);
 
-        const externalExisting = await this.userRepository.findOneWithEAByPrimaryColumn(attributes.id);
-        const external = assign(externalExisting, externalNew);
+        const attributesExtraOld = await this.userRepository.findOneWithEAByPrimaryColumn(entity.id);
+        const attributesExtra = assign(attributesExtraOld, attributesExtraNew);
 
-        const validation = await this.userValidator.run(internalNew, {
-            pathsToInclude: Object.keys(internalNew),
-            group: ValidatorGroup.UPDATE,
-        });
+        const attributesNewKeys = Object.keys(attributesNew);
+        while (attributesNewKeys.length > 0) {
+            try {
+                const validation = await this.userValidator.run(attributesNew, {
+                    pathsToInclude: attributesNewKeys,
+                    group: ValidatorGroup.UPDATE,
+                });
 
-        extendObject(attributes, validation);
+                extendObject(entity, validation);
 
-        await this.userRepository.saveOneWithEA(attributes, external);
+                break;
+            } catch (e) {
+                if (
+                    !(e instanceof ValidupNestedError) ||
+                    e.children.length === 0
+                ) {
+                    throw new Error('Unknown validation error occurred.');
+                }
 
-        return attributes;
+                let keysDeleted = 0;
+
+                for (let i = 0; i < e.children.length; i++) {
+                    const child = e.children[i];
+
+                    const index = attributesNewKeys.indexOf(child.path);
+                    if (index !== -1) {
+                        attributesNewKeys.splice(index, 1);
+                        keysDeleted++;
+                    }
+                }
+
+                if (keysDeleted === 0) {
+                    throw new Error('Validation errors can not be fixed.');
+                }
+            }
+        }
+
+        await this.userRepository.saveOneWithEA(entity, attributesExtra);
+
+        return entity;
     }
 
     protected async createUser(
@@ -325,13 +356,13 @@ export class IdentityProviderAccountService {
         );
 
         const [
-            internal,
-            external,
+            attributes,
+            attributesExtra,
         ] = this.groupClaimAttributes(claimAttributes);
 
-        internal.name_locked = false;
-        internal.realm_id = this.provider.realm_id;
-        internal.active = true;
+        attributes.name_locked = false;
+        attributes.realm_id = this.provider.realm_id;
+        attributes.active = true;
 
         const namePool = toArray(identity.name);
         const emailPool = toArray(identity.email);
@@ -343,7 +374,7 @@ export class IdentityProviderAccountService {
             let validationResult : User;
 
             try {
-                validationResult = await this.userValidator.run(internal, {
+                validationResult = await this.userValidator.run(attributes, {
                     group: ValidatorGroup.CREATE,
                 });
             } catch (e: any) {
@@ -359,16 +390,16 @@ export class IdentityProviderAccountService {
                         child.path === 'name' &&
                         namePool.length > 0
                     ) {
-                        internal.name = namePool.shift();
+                        attributes.name = namePool.shift();
                         retry = true;
                         break;
                     }
 
                     if (child.path === 'email') {
                         if (emailPool.length > 0) {
-                            internal.email = emailPool.shift();
+                            attributes.email = emailPool.shift();
                         } else {
-                            internal.email = null;
+                            attributes.email = null;
                         }
 
                         retry = true;
@@ -385,15 +416,15 @@ export class IdentityProviderAccountService {
 
             try {
                 const output = this.userRepository.create(validationResult);
-                await this.userRepository.saveOneWithEA(output, external);
+                await this.userRepository.saveOneWithEA(output, attributesExtra);
 
                 return output;
             } catch (e) {
                 // todo: check for conflict error :)
                 if (namePool.length > 0) {
-                    internal.name = namePool.shift();
+                    attributes.name = namePool.shift();
                 } else {
-                    internal.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
+                    attributes.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
                 }
             }
         }
