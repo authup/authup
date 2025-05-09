@@ -79,7 +79,7 @@ export class OAuth2Error extends AuthupError {
 
     static scopeInsufficient() {
         return new OAuth2Error({
-            message: 'The request requires higher privileges than provided by the access token.',
+            message: 'The request requires higher privileges than supported by the client.',
             code: ErrorCode.OAUTH_SCOPE_INSUFFICIENT,
             data: {
                 error: OAuth2ErrorCode.INVALID_GRANT,

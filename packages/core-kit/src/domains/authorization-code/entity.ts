@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ClientScope } from '../client-scope';
 import type { Robot } from '../robot';
 import type { User } from '../user';
 import type { Client } from '../client';
@@ -35,11 +36,18 @@ export interface OAuth2AuthorizationCode {
 }
 
 export type OAuth2AuthorizationCodeRequest = {
-    response_type?: string,
+    response_type: string,
     client_id: string,
-    redirect_uri?: string,
+    redirect_uri: string,
     scope?: string,
     state?: string,
     code_challenge?: string,
     code_challenge_method?: string,
+};
+
+export type OAuth2AuthorizationData = {
+    client: Client,
+    clientScopes: ClientScope[],
+    token: string,
+    tokenPayload: OAuth2AuthorizationCodeRequest
 };

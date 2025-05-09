@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client, ClientScope, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+
 export type OAuth2AuthorizationServiceOptions = {
     issuer: string,
 
@@ -13,6 +15,11 @@ export type OAuth2AuthorizationServiceOptions = {
     authorizationCodeMaxAge: number,
 
     idTokenMaxAge: number
+};
+
+export type OAuth2AuthorizationCodeRequestExtended = OAuth2AuthorizationCodeRequest & {
+    client: Client,
+    clientScopes: ClientScope[]
 };
 
 export type OAuth2AuthorizationResult = {

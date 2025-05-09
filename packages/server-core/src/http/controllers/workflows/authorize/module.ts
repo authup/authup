@@ -13,6 +13,8 @@ import { runAuthorizationRouteHandler, serveAuthorizationRouteHandler } from './
 
 @DController('')
 export class AuthorizeController {
+    // todo: maybe /realms/<realm>/protocol/openid-connect/authorize
+    // todo: maybe /realms/<realm>/[...]/authorize
     @DPost('/authorize', [ForceUserLoggedInMiddleware])
     async confirm(
         @DRequest() req: any,

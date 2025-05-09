@@ -7,6 +7,7 @@
 
 import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase } from '@authup/core-kit';
 import type { JWTClaims } from '@authup/specs';
+import type { AuthorizeParameters } from '@hapic/oauth2';
 import type { Request } from 'routup';
 
 export type IdentityProviderIdentityStatus = 'created' | 'updated';
@@ -29,6 +30,6 @@ export interface ILdapIdentityProviderFlow {
 export type OAuth2IdentityProviderFlowOptions = IdentityProvider & Partial<OAuth2IdentityProviderBase>;
 
 export interface IOAuth2IdentityProviderFlow {
-    buildAuthorizeURL() : string;
+    buildAuthorizeURL(parameters?: Partial<AuthorizeParameters>) : string;
     getIdentityForRequest(request: Request) : Promise<IdentityProviderIdentity>;
 }

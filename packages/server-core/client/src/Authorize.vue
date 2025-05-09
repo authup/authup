@@ -6,22 +6,39 @@
   -->
 <script lang="ts">
 import { AAuthorize } from '@authup/client-web-kit';
+import type { OAuth2AuthorizationData } from '@authup/core-kit';
+import { isObject } from '@authup/kit';
 import { defineComponent } from 'vue';
-import { useRoute } from 'vue-router';
+
+const extractFromWindow = <T = any>(key: string) : T => {
+    if (
+        typeof window !== 'undefined' &&
+        isObject(window)
+    ) {
+        return window[key];
+    }
+
+    return undefined;
+};
 
 export default defineComponent({
     components: {
         AAuthorize,
     },
     setup() {
-        const route = useRoute();
+        const authorize = extractFromWindow<OAuth2AuthorizationData | undefined>('authorize');
+        const authorizeMessage = extractFromWindow<string | undefined>('authorizeMessage');
 
         return {
-            route,
+            authorize,
+            authorizeMessage,
         };
     },
 });
 </script>
 <template>
-    <AAuthorize :query="route.query" />
+    <AAuthorize
+        :state="authorize"
+        :message="authorizeMessage"
+    />
 </template>

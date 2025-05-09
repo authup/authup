@@ -31,6 +31,13 @@ export class JWKError extends AuthupError {
         });
     }
 
+    static invalidRealm() {
+        return new JWKError({
+            code: ErrorCode.JWK_NOT_FOUND,
+            message: 'No valid realm for JWK.',
+        });
+    }
+
     static notFoundForRealm(id: string, name?: string) {
         let key : string;
         if (name) {

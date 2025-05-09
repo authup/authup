@@ -38,7 +38,7 @@ export default defineComponent({
         clientId: {
             type: String,
         },
-        redirectUri: {
+        state: {
             type: String,
         },
         realmId: {
@@ -131,12 +131,8 @@ export default defineComponent({
                 id,
             );
 
-            if (props.clientId) {
-                authorizeURL += `?client_id=${props.clientId}`;
-
-                if (props.redirectUri) {
-                    authorizeURL += `&redirect_uri=${props.redirectUri}`;
-                }
+            if (props.state) {
+                authorizeURL += `?state=${props.state}`;
             }
 
             return authorizeURL;

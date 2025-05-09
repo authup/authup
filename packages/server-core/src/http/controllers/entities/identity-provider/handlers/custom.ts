@@ -12,8 +12,9 @@ import {
 import {
     CookieName,
 } from '@authup/core-http-kit';
-import type { SerializeOptions } from '@routup/basic/cookie';
+import type { AuthorizeParameters } from '@hapic/oauth2';
 import { setResponseCookie } from '@routup/basic/cookie';
+import { URL } from 'node:url';
 import type { Request, Response } from 'routup';
 import { getRequestHostName, sendRedirect } from 'routup';
 import type { DataSource } from 'typeorm';
@@ -24,8 +25,8 @@ import {
 import { createOAuth2IdentityProviderFlow } from '../../../../../domains';
 import { IdentityProviderAccountService } from '../../../../../services';
 import { setRequestIdentity, useRequestParamID } from '../../../../request';
-import { InternalGrantType } from '../../../../oauth2';
-import { ConfigDefaults, useConfig } from '../../../../../config';
+import { InternalGrantType, useOAuth2AuthorizationService } from '../../../../oauth2';
+import { useConfig } from '../../../../../config';
 
 async function resolve(dataSource: DataSource, id: string) {
     const repository = new IdentityProviderRepository(dataSource);
@@ -63,7 +64,18 @@ export async function authorizeURLIdentityProviderRouteHandler(
 
     const flow = createOAuth2IdentityProviderFlow(entity);
 
-    return sendRedirect(res, flow.buildAuthorizeURL());
+    const parameters : AuthorizeParameters = {};
+
+    const authorizationService = useOAuth2AuthorizationService();
+
+    const state = authorizationService.extractCodeRequest(req);
+    if (state) {
+        parameters.state = state;
+    }
+
+    // todo: maybe verify if state.payload.realm_id = identity_provider.realm_id
+
+    return sendRedirect(res, flow.buildAuthorizeURL(parameters));
 }
 
 /* istanbul ignore next */
@@ -85,6 +97,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     const flow = createOAuth2IdentityProviderFlow(entity);
 
+    // todo: identity should respect client_id
     const identity = await flow.getIdentityForRequest(req);
     const manager = new IdentityProviderAccountService(dataSource, entity);
 
@@ -101,26 +114,59 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     const token = await grant.run(req);
     const config = useConfig();
 
-    const cookieOptions : SerializeOptions = {};
+    const cookieDomainsRaw : string[] = [
+        new URL(config.publicUrl).hostname,
+    ];
+
     if (config.cookieDomain) {
-        cookieOptions.domain = config.cookieDomain;
-    } else if (config.authorizeRedirectUrl !== ConfigDefaults.AUTHORIZE_REDIRECT_URL) {
-        cookieOptions.domain = new URL(config.publicUrl).hostname;
-    } else {
-        cookieOptions.domain = getRequestHostName(req, {
-            trustProxy: true,
-        });
+        cookieDomainsRaw.push(config.cookieDomain);
     }
 
-    setResponseCookie(res, CookieName.ACCESS_TOKEN, token.access_token, {
-        ...cookieOptions,
-        maxAge: config.tokenAccessMaxAge * 1000,
-    });
+    if (config.authorizeRedirectUrl) {
+        cookieDomainsRaw.push(new URL(config.authorizeRedirectUrl).hostname);
+    }
 
-    setResponseCookie(res, CookieName.REFRESH_TOKEN, token.refresh_token, {
-        ...cookieOptions,
-        maxAge: config.tokenRefreshMaxAge * 1000,
-    });
+    cookieDomainsRaw.push(getRequestHostName(req, {
+        trustProxy: true,
+    }));
 
-    return sendRedirect(res, config.authorizeRedirectUrl);
+    const cookieDomains = [...new Set(cookieDomainsRaw)];
+
+    for (let i = 0; i < cookieDomains.length; i++) {
+        setResponseCookie(
+            res,
+            CookieName.ACCESS_TOKEN,
+            token.access_token,
+            {
+                domain: cookieDomains[i],
+                maxAge: config.tokenAccessMaxAge * 1000,
+            },
+        );
+
+        setResponseCookie(
+            res,
+            CookieName.REFRESH_TOKEN,
+            token.refresh_token,
+            {
+                domain: cookieDomains[i],
+                maxAge: config.tokenRefreshMaxAge * 1000,
+            },
+        );
+    }
+
+    const authorizationService = useOAuth2AuthorizationService();
+    const state = authorizationService.extractCodeRequest(req);
+    if (state) {
+        const params = authorizationService.decodeCodeRequest(state);
+        const keys = Object.keys(params);
+
+        const url = new URL('/authorize', config.publicUrl);
+        for (let i = 0; i < keys.length; i++) {
+            url.searchParams.set(keys[i], params[keys[i]]);
+        }
+
+        return sendRedirect(res, url.href);
+    }
+
+    return sendRedirect(res, config.authorizeRedirectUrl || config.publicUrl);
 }

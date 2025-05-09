@@ -128,9 +128,13 @@ export class OAuth2TokenManager {
         return payload;
     }
 
-    async sign<T extends OAuth2TokenPayload>(
+    async sign<T extends Partial<OAuth2TokenPayload>>(
         payload: T,
     ) : Promise<OAuth2TokenManagerSingResult<T>> {
+        if (!payload.realm_id) {
+            throw JWKError.invalidRealm();
+        }
+
         const key = await this.useKey({
             realm_id: payload.realm_id,
         });
@@ -175,7 +179,7 @@ export class OAuth2TokenManager {
             );
         }
 
-        await this.addPayloadToCache(token, payload);
+        await this.addPayloadToCache(token, payload as OAuth2TokenPayload);
 
         return {
             payload,

@@ -5,17 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
     OAuth2Error,
 } from '@authup/specs';
 
+import { createValidator as createZodValidator } from '@validup/adapter-zod';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
-import { Container } from 'validup';
+import { Container, ValidupValidatorError } from 'validup';
+import zod from 'zod';
+import type { OAuth2AuthorizationCodeRequestExtended } from './types';
 
-export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCodeRequest> {
+export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCodeRequestExtended> {
     protected initialize() {
         super.initialize();
 
@@ -28,8 +30,15 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
                     .isString()
                     .notEmpty()
                     .custom((value) => {
+                        if (typeof value !== 'string') {
+                            throw new ValidupValidatorError({
+                                path: 'response_type',
+                                expected: 'string',
+                            });
+                        }
+
                         const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
-                        const responseTypes = value.split(' ');
+                        const responseTypes = value.split(' ') as OAuth2AuthorizationResponseType[];
 
                         for (let i = 0; i < responseTypes.length; i++) {
                             if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
@@ -44,14 +53,7 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
 
         this.mount(
             'redirect_uri',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isURL()
-                    .isLength({ min: 3, max: 2000 });
-            }),
+            createZodValidator(zod.string().url()),
         );
 
         this.mount(

@@ -7,9 +7,10 @@
 
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
-import { isSimpleMatch } from '@authup/kit';
+import { base64URLDecode, base64URLEncode, isSimpleMatch } from '@authup/kit';
 import type { OAuth2SubKind } from '@authup/specs';
 import { OAuth2AuthorizationResponseType, OAuth2Error } from '@authup/specs';
+import { useRequestQuery } from '@routup/basic/query';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
@@ -23,7 +24,7 @@ import {
     OAuth2TokenManager, buildOAuth2AccessTokenPayload, buildOpenIdTokenPayload, extendOpenIdTokenPayload,
 } from '../token';
 import { OAuth2AuthorizationCodeRepository } from './repository';
-import type { OAuth2AuthorizationResult, OAuth2AuthorizationServiceOptions } from './types';
+import type { OAuth2AuthorizationCodeRequestExtended, OAuth2AuthorizationResult, OAuth2AuthorizationServiceOptions } from './types';
 import { AuthorizeRequestValidator } from './validation';
 
 export class OAuth2AuthorizationService {
@@ -33,7 +34,7 @@ export class OAuth2AuthorizationService {
 
     protected tokenManager : OAuth2TokenManager;
 
-    protected validatorAdapter : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
+    protected validatorAdapter : RoutupContainerAdapter<OAuth2AuthorizationCodeRequestExtended>;
 
     constructor(options: OAuth2AuthorizationServiceOptions) {
         this.options = options;
@@ -134,19 +135,23 @@ export class OAuth2AuthorizationService {
      * @throws OAuth2Error
      *
      * @param req
-     * @protected
      */
-    protected async validate(
+    async validate(
         req: Request,
-    ) : Promise<OAuth2AuthorizationCodeRequest> {
-        const data = await this.validatorAdapter.run(req);
+    ) : Promise<OAuth2AuthorizationCodeRequestExtended> {
+        const data = await this.validatorAdapter.run(req, {
+            locations: ['body', 'query'],
+        });
 
         const dataSource = await useDataSource();
         const clientRepository = dataSource.getRepository(ClientEntity);
+        // todo: maybe id or (name + realm_id), realm_id can be realm.name or realm.id ?!
         const client = await clientRepository.findOneBy({ id: data.client_id });
         if (!client) {
             throw OAuth2Error.clientInvalid();
         }
+
+        data.client = client;
 
         // verifying scopes
         const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
@@ -159,14 +164,14 @@ export class OAuth2AuthorizationService {
             },
         });
 
+        data.clientScopes = clientScopes;
+
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
         if (data.scope) {
             if (!isOAuth2ScopeAllowed(scopeNames, data.scope)) {
                 throw OAuth2Error.scopeInsufficient();
             }
-        }
-
-        if (!data.scope) {
+        } else {
             data.scope = scopeNames.join(' ');
         }
 
@@ -178,5 +183,26 @@ export class OAuth2AuthorizationService {
         }
 
         return data;
+    }
+
+    encodeCodeRequest(input: OAuth2AuthorizationCodeRequest) {
+        return base64URLEncode(JSON.stringify(input));
+    }
+
+    decodeCodeRequest(input: string) : OAuth2AuthorizationCodeRequest {
+        try {
+            return JSON.parse(base64URLDecode(input));
+        } catch (e) {
+            throw OAuth2Error.requestInvalid('The code request is malformed.');
+        }
+    }
+
+    extractCodeRequest(req: Request) : string | undefined {
+        const query = useRequestQuery(req);
+        if (typeof query.state !== 'string') {
+            return undefined;
+        }
+
+        return query.state;
     }
 }
