@@ -363,6 +363,15 @@ export class IdentityProviderAccountService {
         attributes.realm_id = this.provider.realm_id;
         attributes.active = true;
 
+        if (identity.attributeCandidates) {
+            const attributeCandidateKeys = Object.keys(identity.attributeCandidates);
+            for (let i = 0; i < attributeCandidateKeys.length; i++) {
+                if (!(attributeCandidateKeys[i] in attributes)) {
+                    attributes[attributeCandidateKeys[i]] = identity.attributeCandidates[attributeCandidateKeys[i]].shift();
+                }
+            }
+        }
+
         let attempts : number = 0;
         while (attempts < 10) {
             attempts++;
