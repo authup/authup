@@ -31,10 +31,7 @@ export async function serveAuthorizationRouteHandler(
         client = result.client;
         clientScopes = result.clientScopes;
 
-        delete result.client;
-        delete result.clientScopes;
-
-        codeRequest = result;
+        codeRequest = result.data;
     } catch (e) {
         error = e;
     }

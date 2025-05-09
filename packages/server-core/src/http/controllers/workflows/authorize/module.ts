@@ -9,7 +9,7 @@ import {
     DController, DGet, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { ForceUserLoggedInMiddleware } from '../../../middleware';
-import { runAuthorizationRouteHandler, serveAuthorizationRouteHandler } from './handlers';
+import { confirmAuthorizationRouteHandler, serveAuthorizationRouteHandler } from './handlers';
 
 @DController('')
 export class AuthorizeController {
@@ -20,7 +20,7 @@ export class AuthorizeController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<void> {
-        return runAuthorizationRouteHandler(req, res);
+        return confirmAuthorizationRouteHandler(req, res);
     }
 
     @DGet('/authorize', [])
