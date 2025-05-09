@@ -77,6 +77,36 @@ describe('idp-manager-service', () => {
         expect(account.user.name).toEqual('fooBarBaz');
     });
 
+    it('should create user with alternative name', async () => {
+        const account = await idpAccountService.save({
+            data: claims,
+            id: 'bar',
+            name: [
+                'admin', // exists
+                '', // invalid due validation rules
+                'bar', // valid
+            ],
+        });
+
+        expect(account.id).toBeDefined();
+        expect(account.user.id).toBeDefined();
+        expect(account.user.name).toEqual('bar');
+    });
+
+    it('should create user with random name', async () => {
+        const account = await idpAccountService.save({
+            data: claims,
+            id: 'baz',
+            name: [
+                'admin', // exists
+            ],
+        });
+
+        expect(account.id).toBeDefined();
+        expect(account.user.id).toBeDefined();
+        expect(account.user.name).not.toEqual('admin');
+    });
+
     it('should create user only once', async () => {
         let account = await idpAccountService.save(identity);
         expect(account).toBeDefined();

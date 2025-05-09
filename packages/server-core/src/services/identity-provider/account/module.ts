@@ -14,19 +14,19 @@ import type {
 import {
     IdentityProviderMappingSyncMode,
     UserValidator,
-    isUserNameValid,
-    isValidUserEmail,
+    ValidatorGroup,
 } from '@authup/core-kit';
 import {
     createNanoID,
-    isScalar,
+    extendObject,
     toArray,
     toArrayElement,
-    toStringArray,
 } from '@authup/kit';
 import { getJWTClaimByPattern } from '@authup/specs';
 import { BadRequestError } from '@ebec/http';
+import { assign } from 'smob';
 import type { DataSource, Repository } from 'typeorm';
+import { ValidupNestedError } from 'validup';
 import type {
     UserEntity,
     UserRelationSyncItem,
@@ -40,14 +40,6 @@ import {
     UserRepository,
 } from '../../../database/domains';
 import type { IdentityProviderIdentity } from '../flow';
-
-type UserCreateContext = {
-    attempts: number,
-    attributes: UserEntity,
-    attributesExtra: Record<string, any>,
-    attributeNamePool: string[],
-    attributeEmailPool: string[]
-};
 
 type ClaimAttribute = {
     value: unknown[],
@@ -213,13 +205,16 @@ export class IdentityProviderAccountService {
         return operation;
     }
 
-    protected async getClaimAttributes(identity: IdentityProviderIdentity) : Promise<Record<string, ClaimAttribute>> {
+    protected async getClaimAttributes(
+        identity: IdentityProviderIdentity,
+        validatorGroup: ValidatorGroup,
+    ) : Promise<Record<string, ClaimAttribute>> {
         const repository = this.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
         const entities = await repository.findBy({
             provider_id: this.provider.id,
         });
 
-        const attributes : Record<string, ClaimAttribute> = {};
+        const attributes: Record<string, ClaimAttribute> = {};
 
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
@@ -232,6 +227,13 @@ export class IdentityProviderAccountService {
             );
 
             if (value.length === 0) {
+                continue;
+            }
+
+            if (
+                validatorGroup === ValidatorGroup.UPDATE &&
+                entity.synchronization_mode === IdentityProviderMappingSyncMode.ONCE
+            ) {
                 continue;
             }
 
@@ -251,185 +253,149 @@ export class IdentityProviderAccountService {
         return attributes;
     }
 
-    protected async updateUser(
-        identity: IdentityProviderIdentity,
-        user: UserEntity,
-    ) : Promise<UserEntity> {
-        const claimAttributes = await this.getClaimAttributes(identity);
-        const extra = await this.userRepository.findOneWithEAByPrimaryColumn(user.id);
-
+    groupClaimAttributes(input: Record<string, ClaimAttribute>) {
         const columnPropertyNames = this.userRepository.metadata.columns.map((c) => c.propertyName);
         const relationPropertyNames = this.userRepository.metadata.relations.map((r) => r.propertyName);
 
-        const claimAttributeKeys = Object.keys(claimAttributes);
-        for (let i = 0; i < claimAttributeKeys.length; i++) {
-            const attributeKey = claimAttributeKeys[i];
+        const internal : Partial<User> = {};
+        const external : Record<string, any> = {};
+
+        const inputKeys = Object.keys(input);
+        for (let i = 0; i < inputKeys.length; i++) {
+            const attributeKey = inputKeys[i];
 
             let index : number = relationPropertyNames.indexOf(attributeKey);
             if (index !== -1) {
                 continue;
             }
 
-            const mode = claimAttributes[attributeKey].mode ||
-                IdentityProviderMappingSyncMode.ALWAYS;
-
-            const value = toArrayElement(claimAttributes[attributeKey].value);
-            if (!isScalar(value) || typeof value === 'undefined') {
+            const value = toArrayElement(input[attributeKey].value);
+            if (typeof value === 'undefined') {
                 continue;
             }
 
+            // todo: check existing props
+
             index = columnPropertyNames.indexOf(attributeKey);
             if (index === -1) {
-                if (typeof extra[attributeKey] !== 'undefined') {
-                    if (mode === IdentityProviderMappingSyncMode.ONCE) {
-                        continue;
-                    }
-                }
-
-                // todo: run validation on attribute value
-                extra[attributeKey] = value;
+                external[attributeKey] = value;
             } else {
-                const isAllowed = this.userAttributes.includes(attributeKey);
-                if (!isAllowed) {
-                    continue;
-                }
-
-                if (typeof user[attributeKey] !== 'undefined') {
-                    if (mode === IdentityProviderMappingSyncMode.ONCE) {
-                        continue;
-                    }
-                }
-
-                // todo: run validation on attribute value
-                user[attributeKey] = value;
+                internal[attributeKey] = value;
             }
         }
 
-        await this.userRepository.saveOneWithEA(user, extra);
+        return [internal, external];
+    }
 
-        return user;
+    protected async updateUser(
+        identity: IdentityProviderIdentity,
+        attributes: UserEntity,
+    ) : Promise<UserEntity> {
+        const claimAttributes = await this.getClaimAttributes(
+            identity,
+            ValidatorGroup.UPDATE,
+        );
+
+        const [
+            internalNew,
+            externalNew,
+        ] = this.groupClaimAttributes(claimAttributes);
+
+        const externalExisting = await this.userRepository.findOneWithEAByPrimaryColumn(attributes.id);
+        const external = assign(externalExisting, externalNew);
+
+        const validation = await this.userValidator.run(internalNew, {
+            pathsToInclude: Object.keys(internalNew),
+            group: ValidatorGroup.UPDATE,
+        });
+
+        extendObject(attributes, validation);
+
+        await this.userRepository.saveOneWithEA(attributes, external);
+
+        return attributes;
     }
 
     protected async createUser(
         identity: IdentityProviderIdentity,
     ) : Promise<UserEntity> {
-        const claimAttributes = await this.getClaimAttributes(identity);
+        const claimAttributes = await this.getClaimAttributes(
+            identity,
+            ValidatorGroup.CREATE,
+        );
 
-        const names = toArray(identity.name);
-        const emails = toArray(identity.email);
+        const [
+            internal,
+            external,
+        ] = this.groupClaimAttributes(claimAttributes);
 
-        const columnPropertyNames = this.userRepository.metadata.columns.map((c) => c.propertyName);
-        const relationPropertyNames = this.userRepository.metadata.relations.map((r) => r.propertyName);
+        internal.name_locked = false;
+        internal.realm_id = this.provider.realm_id;
+        internal.active = true;
 
-        const user = this.userRepository.create({});
-        const extra : Record<string, any> = {};
+        const namePool = toArray(identity.name);
+        const emailPool = toArray(identity.email);
 
-        const claimAttributeKeys = Object.keys(claimAttributes);
-        for (let i = 0; i < claimAttributeKeys.length; i++) {
-            const attributeKey = claimAttributeKeys[i];
-            let index : number = relationPropertyNames.indexOf(attributeKey);
-            if (index !== -1) {
-                continue;
-            }
+        let attempts : number = 0;
+        while (attempts < 10) {
+            attempts++;
 
-            const attribute = claimAttributes[attributeKey];
+            let validationResult : User;
 
-            index = columnPropertyNames.indexOf(attributeKey);
-            if (index === -1) {
-                const value = toArrayElement(attribute.value);
-                if (!isScalar(value) || typeof value === 'undefined') {
+            try {
+                validationResult = await this.userValidator.run(internal, {
+                    group: ValidatorGroup.CREATE,
+                });
+            } catch (e: any) {
+                if (!(e instanceof ValidupNestedError)) {
+                    throw new Error('Unknown validation error occurred.');
+                }
+
+                let retry = false;
+                for (let i = 0; i < e.children.length; i++) {
+                    const child = e.children[i];
+
+                    if (
+                        child.path === 'name' &&
+                        namePool.length > 0
+                    ) {
+                        internal.name = namePool.shift();
+                        retry = true;
+                        break;
+                    }
+
+                    if (
+                        child.path === 'email' &&
+                        emailPool.length > 0
+                    ) {
+                        internal.email = emailPool.shift();
+                        retry = true;
+                        break;
+                    }
+                }
+
+                if (retry) {
                     continue;
+                } else {
+                    throw e;
                 }
+            }
 
-                // todo: run validation on attribute value
-                extra[attributeKey] = value;
-            } else {
-                const isAllowed = this.userAttributes.includes(attributeKey);
-                if (!isAllowed) {
-                    continue;
-                }
+            try {
+                const output = this.userRepository.create(validationResult);
+                await this.userRepository.saveOneWithEA(output, external);
 
-                switch (attributeKey) {
-                    case 'name': {
-                        const values = toStringArray(attribute.value);
-                        if (values.length > 0) {
-                            names.push(...values);
-                        }
-                        break;
-                    }
-                    case 'email': {
-                        const values = toStringArray(attribute.value);
-                        if (values.length > 0) {
-                            emails.push(...values);
-                        }
-                        break;
-                    }
-                    default: {
-                        const value = toArrayElement(attribute.value);
-                        if (!isScalar(value) || typeof value === 'undefined') {
-                            continue;
-                        }
-
-                        // todo: run validation on attribute value
-                        user[attributeKey] = value;
-                        break;
-                    }
+                return output;
+            } catch (e) {
+                // todo: check for conflict error :)
+                if (namePool.length > 0) {
+                    internal.name = namePool.shift();
+                } else {
+                    internal.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
                 }
             }
         }
 
-        return this.tryToCreateUser({
-            attributes: user,
-            attributesExtra: extra,
-            attempts: 0,
-            attributeNamePool: names,
-            attributeEmailPool: emails,
-        });
-    }
-
-    protected async tryToCreateUser(context: UserCreateContext) {
-        context.attempts++;
-
-        if (context.attempts >= 5) {
-            throw new BadRequestError('The user could not be created.');
-        }
-
-        while (
-            !context.attributes.name &&
-            context.attributeNamePool.length > 0
-        ) {
-            const name = context.attributeNamePool.shift();
-            if (name && isUserNameValid(name)) {
-                context.attributes.name = name;
-                break;
-            }
-        }
-
-        while (
-            !context.attributes.email &&
-            context.attributeEmailPool.length > 0
-        ) {
-            const email = context.attributeEmailPool.shift();
-            if (email && isValidUserEmail(email)) {
-                context.attributes.email = email;
-                break;
-            }
-        }
-
-        try {
-            context.attributes.name = context.attributes.name || createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
-            context.attributes.display_name = context.attributes.display_name || context.attributes.name;
-            context.attributes.name_locked = false;
-            context.attributes.realm_id = this.provider.realm_id;
-            context.attributes.active = true;
-
-            await this.userRepository.saveOneWithEA(context.attributes, context.attributesExtra);
-
-            return context.attributes;
-        } catch (e) {
-            // the only reason this query should fail, is due unique constraint ^^
-            context.attributes.name = undefined;
-            return this.tryToCreateUser(context);
-        }
+        throw new BadRequestError('The user could not be created.');
     }
 }
