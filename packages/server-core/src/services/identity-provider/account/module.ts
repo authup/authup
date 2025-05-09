@@ -19,7 +19,6 @@ import {
 import {
     createNanoID,
     extendObject,
-    toArray,
     toArrayElement,
 } from '@authup/kit';
 import { getJWTClaimByPattern } from '@authup/specs';
@@ -364,9 +363,6 @@ export class IdentityProviderAccountService {
         attributes.realm_id = this.provider.realm_id;
         attributes.active = true;
 
-        const namePool = toArray(identity.name);
-        const emailPool = toArray(identity.email);
-
         let attempts : number = 0;
         while (attempts < 10) {
             attempts++;
@@ -387,22 +383,17 @@ export class IdentityProviderAccountService {
                     const child = e.children[i];
 
                     if (
-                        child.path === 'name' &&
-                        namePool.length > 0
+                        identity.attributeCandidates &&
+                        identity.attributeCandidates[child.path] &&
+                        identity.attributeCandidates[child.path].length > 0
                     ) {
-                        attributes.name = namePool.shift();
+                        attributes[child.path] = identity.attributeCandidates[child.path].shift();
                         retry = true;
                         break;
                     }
 
-                    if (child.path === 'email') {
-                        if (emailPool.length > 0) {
-                            attributes.email = emailPool.shift();
-                        } else {
-                            attributes.email = null;
-                        }
-
-                        retry = true;
+                    if (attributes[child.path]) {
+                        attributes[child.path] = null;
                         break;
                     }
                 }
@@ -420,9 +411,13 @@ export class IdentityProviderAccountService {
 
                 return output;
             } catch (e) {
-                // todo: check for conflict error :)
-                if (namePool.length > 0) {
-                    attributes.name = namePool.shift();
+                // todo: conflict can only occur due name unique constraint
+                if (
+                    identity.attributeCandidates &&
+                    identity.attributeCandidates.name &&
+                    identity.attributeCandidates.name.length > 0
+                ) {
+                    attributes.name = identity.attributeCandidates.name.shift();
                 } else {
                     attributes.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
                 }

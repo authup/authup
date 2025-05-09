@@ -37,7 +37,12 @@ export class InstagramIdentityProviderFlow extends OAuth2IdentityProviderFlow im
 
         return {
             id: userInfo.id,
-            name: userInfo.username,
+            attributeCandidates: {
+                name: [
+                    userInfo.username,
+                    userInfo.id,
+                ],
+            },
             data: claims,
         };
     }

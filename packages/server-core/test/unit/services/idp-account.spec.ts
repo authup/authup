@@ -34,9 +34,11 @@ describe('idp-manager-service', () => {
     let idpAccountService : IdentityProviderAccountService;
 
     const identity : IdentityProviderIdentity = {
-        data: claims,
         id: 'foo',
-        name: 'fooBarBaz',
+        data: claims,
+        attributeCandidates: {
+            name: ['fooBarBaz'],
+        },
     };
 
     beforeAll(async () => {
@@ -81,11 +83,13 @@ describe('idp-manager-service', () => {
         const account = await idpAccountService.save({
             data: claims,
             id: 'bar',
-            name: [
-                'admin', // exists
-                '', // invalid due validation rules
-                'bar', // valid
-            ],
+            attributeCandidates: {
+                name: [
+                    'admin', // exists
+                    '', // invalid due validation rules
+                    'bar', // valid
+                ],
+            },
         });
 
         expect(account.id).toBeDefined();
@@ -97,9 +101,11 @@ describe('idp-manager-service', () => {
         const account = await idpAccountService.save({
             data: claims,
             id: 'baz',
-            name: [
-                'admin', // exists
-            ],
+            attributeCandidates: {
+                name: [
+                    'admin', // exists
+                ],
+            },
         });
 
         expect(account.id).toBeDefined();
