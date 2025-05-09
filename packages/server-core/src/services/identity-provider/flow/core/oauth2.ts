@@ -17,7 +17,7 @@ import type { IOAuth2IdentityProviderFlow, IdentityProviderIdentity, OAuth2Ident
 export class OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     protected client : OAuth2Client;
 
-    protected constructor(provider: OAuth2IdentityProviderFlowOptions) {
+    constructor(provider: OAuth2IdentityProviderFlowOptions) {
         const clientOptions : Options = {
             clientId: provider.client_id,
             clientSecret: provider.client_secret,
