@@ -20,7 +20,7 @@ export default defineComponent({
             type: Array as PropType<ClientScope[]>,
             default: () => [],
         },
-        params: {
+        codeRequest: {
             type: Object as PropType<OAuth2AuthorizationCodeRequest>,
             required: true,
         },
@@ -29,15 +29,15 @@ export default defineComponent({
         const httpClient = injectHTTPClient();
 
         const abort = () => {
-            const url = new URL(`${props.params.redirect_uri}`);
+            const url = new URL(`${props.codeRequest.redirect_uri}`);
             url.searchParams.set('error', 'access_denied');
             url.searchParams.set(
                 'error_description',
                 'The resource owner or authorization server denied the request',
             );
 
-            if (props.params.state) {
-                url.searchParams.set('state', props.params.state);
+            if (props.codeRequest.state) {
+                url.searchParams.set('state', props.codeRequest.state);
             }
 
             if (typeof window !== 'undefined') {
@@ -50,10 +50,10 @@ export default defineComponent({
                 const response = await httpClient
                     .authorize
                     .confirm({
-                        response_type: props.params.response_type,
+                        response_type: props.codeRequest.response_type,
                         client_id: props.client.id,
-                        redirect_uri: props.params.redirect_uri,
-                        ...(props.params.state ? { state: props.params.state } : {}),
+                        redirect_uri: props.codeRequest.redirect_uri,
+                        ...(props.codeRequest.state ? { state: props.codeRequest.state } : {}),
                         scope: props.clientScopes.map((item) => item.scope.name).join(' '),
                     });
 
@@ -117,7 +117,7 @@ export default defineComponent({
                 </div>
                 <div class="ms-1">
                     <small>
-                        Once authorized, you will be redirected to: <strong>{{ params.redirect_uri }}</strong>
+                        Once authorized, you will be redirected to: <strong>{{ codeRequest.redirect_uri }}</strong>
                     </small>
                 </div>
             </div>

@@ -6,7 +6,9 @@
   -->
 <script lang="ts">
 import { AAuthorize } from '@authup/client-web-kit';
-import type { OAuth2AuthorizationData } from '@authup/core-kit';
+import type {
+    Client, ClientScope, OAuth2AuthorizationCodeRequest,
+} from '@authup/core-kit';
 import { isObject } from '@authup/kit';
 import { defineComponent } from 'vue';
 
@@ -26,19 +28,25 @@ export default defineComponent({
         AAuthorize,
     },
     setup() {
-        const authorize = extractFromWindow<OAuth2AuthorizationData | undefined>('authorize');
-        const authorizeMessage = extractFromWindow<string | undefined>('authorizeMessage');
+        const codeRequest = extractFromWindow<OAuth2AuthorizationCodeRequest | undefined>('codeRequest');
+        const error = extractFromWindow<Error | undefined>('error');
+        const client = extractFromWindow<Client | undefined>('client');
+        const clientScopes = extractFromWindow<ClientScope[] | undefined>('clientScopes');
 
         return {
-            authorize,
-            authorizeMessage,
+            codeRequest,
+            error,
+            client,
+            clientScopes,
         };
     },
 });
 </script>
 <template>
     <AAuthorize
-        :state="authorize"
-        :message="authorizeMessage"
+        :code-request="codeRequest"
+        :client="client"
+        :client-scopes="clientScopes"
+        :error="error"
     />
 </template>

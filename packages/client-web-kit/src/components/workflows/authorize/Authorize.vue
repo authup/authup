@@ -5,7 +5,9 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { OAuth2AuthorizationData } from '@authup/core-kit';
+import type {
+    Client, ClientScope, OAuth2AuthorizationCodeRequest,
+} from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
@@ -37,11 +39,18 @@ export default defineComponent({
         Login,
     },
     props: {
-        state: {
-            type: Object as PropType<OAuth2AuthorizationData>,
+        codeRequest: {
+            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
         },
-        message: {
-            type: String,
+        client: {
+            type: Object as PropType<Client>,
+        },
+        clientScopes: {
+            type: Array as PropType<ClientScope[]>,
+            default: () => [],
+        },
+        error: {
+            type: Object as PropType<Error>,
         },
     },
     emits: ['redirect'],
@@ -50,29 +59,30 @@ export default defineComponent({
         const { loggedIn } = storeToRefs(store);
 
         return () => {
-            if (props.message) {
+            if (props.error) {
                 return wrapChild(h(AuthorizeError, {
-                    message: props.message,
+                    message: props.error.message,
                 }));
             }
 
-            if (!props.state) {
+            if (!props.codeRequest) {
                 return [];
             }
 
             if (!loggedIn.value) {
                 return wrapChild(h(Login, {
-                    state: props.state.token,
-                    clientId: props.state.client.id,
-                    realmId: props.state.client.realm_id || undefined,
-                    redirectUri: props.state.tokenPayload.redirect_uri,
+                    codeRequest: props.codeRequest,
                 }));
             }
 
+            if (!props.client) {
+                return [];
+            }
+
             return wrapChild(h(AuthorizeConfirm, {
-                params: props.state.tokenPayload,
-                client: props.state.client,
-                clientScopes: props.state.clientScopes,
+                codeRequest: props.codeRequest,
+                client: props.client,
+                clientScopes: props.clientScopes,
             }));
         };
     },

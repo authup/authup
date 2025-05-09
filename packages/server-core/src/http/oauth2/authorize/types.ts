@@ -7,7 +7,7 @@
 
 import type { Client, ClientScope, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 
-export type OAuth2AuthorizationServiceOptions = {
+export type OAuth2AuthorizationManagerOptions = {
     issuer: string,
 
     accessTokenMaxAge: number,

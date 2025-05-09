@@ -67,6 +67,15 @@ export class OAuth2Error extends AuthupError {
         });
     }
 
+    static stateInvalid() {
+        return new OAuth2Error({
+            message: 'The request state is invalid, unknown or malformed.',
+            data: {
+                error: OAuth2ErrorCode.INVALID_REQUEST,
+            },
+        });
+    }
+
     static scopeInvalid() {
         return new OAuth2Error({
             message: 'The requested scope is invalid, unknown or malformed.',

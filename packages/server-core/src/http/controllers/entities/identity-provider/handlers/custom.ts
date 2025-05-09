@@ -67,11 +67,11 @@ export async function authorizeURLIdentityProviderRouteHandler(
     const parameters : AuthorizeParameters = {};
 
     const authorizationService = useOAuth2AuthorizationService();
+    const codeRequest = authorizationService.extractCodeRequest(req);
 
-    const state = authorizationService.extractCodeRequest(req);
-    if (state) {
-        parameters.state = state;
-    }
+    parameters.state = await authorizationService.createState(req, {
+        codeRequest,
+    });
 
     // todo: maybe verify if state.payload.realm_id = identity_provider.realm_id
 
@@ -94,6 +94,11 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
     ) {
         throw new Error(`The provider protocol ${entity.protocol} is not valid.`);
     }
+
+    const authorizationService = useOAuth2AuthorizationService();
+    const data = await authorizationService.verifyState<{
+        codeRequest?: string
+    }>(req);
 
     const flow = createOAuth2IdentityProviderFlow(entity);
 
@@ -154,10 +159,8 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
         );
     }
 
-    const authorizationService = useOAuth2AuthorizationService();
-    const state = authorizationService.extractCodeRequest(req);
-    if (state) {
-        const params = authorizationService.decodeCodeRequest(state);
+    if (data.codeRequest) {
+        const params = authorizationService.decodeCodeRequest(data.codeRequest);
         const keys = Object.keys(params);
 
         const url = new URL('/authorize', config.publicUrl);

@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationData } from '@authup/core-kit';
+import type {
+    Client, ClientScope, OAuth2AuthorizationCodeRequest,
+} from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useConfig } from '../../../../../config';
@@ -15,30 +17,26 @@ export async function serveAuthorizationRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    let authorize : OAuth2AuthorizationData | undefined;
-    let authorizeMessage : string | undefined;
+    let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
+
+    let client : Client | undefined;
+    let clientScopes : ClientScope[] | undefined;
+
+    let error : Error | undefined;
 
     try {
         const authorizationService = useOAuth2AuthorizationService();
-        const {
-            client,
-            clientScopes,
+        const result = await authorizationService.validate(req);
 
-            ...codeRequest
-        } = await authorizationService.validate(req);
+        client = result.client;
+        clientScopes = result.clientScopes;
 
-        authorize = {
-            client,
-            clientScopes,
-            tokenPayload: codeRequest,
-            token: authorizationService.encodeCodeRequest(codeRequest),
-        };
+        delete result.client;
+        delete result.clientScopes;
+
+        codeRequest = result;
     } catch (e) {
-        if (e instanceof Error) {
-            authorizeMessage = e.message;
-        } else {
-            authorizeMessage = 'An unknown error occurred.';
-        }
+        error = e;
     }
 
     // 3. pass to authorize :)
@@ -59,8 +57,10 @@ export async function serveAuthorizationRouteHandler(
         <div id="app"></div>
         <script>
         window.baseURL = "${config.publicUrl}";
-        window.authorize = ${JSON.stringify(authorize)};
-        window.authorizeMessage = ${authorizeMessage ? `"${authorizeMessage}"` : 'null'};
+        window.codeRequest = ${codeRequest ? JSON.stringify(codeRequest) : 'undefined'};
+        window.error = ${error ? JSON.stringify(error) : 'undefined'};
+        window.client = ${client ? JSON.stringify(client) : 'undefined'};
+        window.clientScopes = ${clientScopes ? JSON.stringify(clientScopes) : 'undefined'};
         </script>
         <script type="module" src="${url.href}/client.js"></script>
     </body>

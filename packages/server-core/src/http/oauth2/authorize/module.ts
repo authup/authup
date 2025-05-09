@@ -7,7 +7,11 @@
 
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
-import { base64URLDecode, base64URLEncode, isSimpleMatch } from '@authup/kit';
+import {
+    base64URLDecode, createNanoID, isSimpleMatch, pickRecord,
+} from '@authup/kit';
+import type { Cache } from '@authup/server-kit';
+import { buildCacheKey, useCache } from '@authup/server-kit';
 import type { OAuth2SubKind } from '@authup/specs';
 import { OAuth2AuthorizationResponseType, OAuth2Error } from '@authup/specs';
 import { useRequestQuery } from '@routup/basic/query';
@@ -17,18 +21,22 @@ import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { ClientEntity, ClientScopeEntity } from '../../../database/domains';
+import type { RequestIdentity } from '../../request';
 import { useRequestIdentityOrFail } from '../../request';
+import { OAuth2CachePrefix } from '../constants';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
 import type { OAuth2AccessTokenBuildContext, OAuth2OpenIdTokenBuildContext } from '../token';
 import {
     OAuth2TokenManager, buildOAuth2AccessTokenPayload, buildOpenIdTokenPayload, extendOpenIdTokenPayload,
 } from '../token';
 import { OAuth2AuthorizationCodeRepository } from './repository';
-import type { OAuth2AuthorizationCodeRequestExtended, OAuth2AuthorizationResult, OAuth2AuthorizationServiceOptions } from './types';
+import type { OAuth2AuthorizationCodeRequestExtended, OAuth2AuthorizationManagerOptions, OAuth2AuthorizationResult } from './types';
 import { AuthorizeRequestValidator } from './validation';
 
-export class OAuth2AuthorizationService {
-    protected options: OAuth2AuthorizationServiceOptions;
+export class OAuth2AuthorizationManager {
+    protected options: OAuth2AuthorizationManagerOptions;
+
+    protected cache : Cache;
 
     protected codeRepository : OAuth2AuthorizationCodeRepository;
 
@@ -36,8 +44,10 @@ export class OAuth2AuthorizationService {
 
     protected validatorAdapter : RoutupContainerAdapter<OAuth2AuthorizationCodeRequestExtended>;
 
-    constructor(options: OAuth2AuthorizationServiceOptions) {
+    constructor(options: OAuth2AuthorizationManagerOptions) {
         this.options = options;
+
+        this.cache = useCache();
 
         this.codeRepository = new OAuth2AuthorizationCodeRepository();
         this.tokenManager = new OAuth2TokenManager();
@@ -152,6 +162,7 @@ export class OAuth2AuthorizationService {
         }
 
         data.client = client;
+        data.realm_id = client.realm_id;
 
         // verifying scopes
         const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
@@ -185,10 +196,6 @@ export class OAuth2AuthorizationService {
         return data;
     }
 
-    encodeCodeRequest(input: OAuth2AuthorizationCodeRequest) {
-        return base64URLEncode(JSON.stringify(input));
-    }
-
     decodeCodeRequest(input: string) : OAuth2AuthorizationCodeRequest {
         try {
             return JSON.parse(base64URLDecode(input));
@@ -199,10 +206,54 @@ export class OAuth2AuthorizationService {
 
     extractCodeRequest(req: Request) : string | undefined {
         const query = useRequestQuery(req);
-        if (typeof query.state !== 'string') {
+        if (typeof query.codeRequest !== 'string') {
             return undefined;
         }
 
-        return query.state;
+        return query.codeRequest;
+    }
+
+    async createState(req: Request, data: Record<string, any> = {}) : Promise<string> {
+        const state = createNanoID();
+
+        await this.cache.set(
+            buildCacheKey({ prefix: OAuth2CachePrefix.AUTHORIZATION_CODE, key: state }),
+            {
+                identity: pickRecord(useRequestIdentityOrFail(req), ['id', 'type']),
+                data,
+            },
+            {
+                ttl: 1000 * 60 * 30, // 30 min
+            },
+        );
+
+        return state;
+    }
+
+    async verifyState<T extends Record<string, any>>(req: Request) : Promise<T> {
+        const query = useRequestQuery(req);
+        if (typeof query.state !== 'string') {
+            throw OAuth2Error.stateInvalid();
+        }
+
+        const cacheKey = buildCacheKey({ prefix: OAuth2CachePrefix.AUTHORIZATION_CODE, key: query.state });
+        const cached : { identity: RequestIdentity, data: T} = await this.cache.get(cacheKey);
+        if (!cached) {
+            throw OAuth2Error.stateInvalid();
+        }
+
+        // avoid replay attack :)
+        await this.cache.drop(cacheKey);
+
+        const identity = useRequestIdentityOrFail(req);
+
+        if (
+            identity.type !== cached.identity.type ||
+            identity.id !== cached.identity.id
+        ) {
+            throw OAuth2Error.stateInvalid();
+        }
+
+        return cached.data;
     }
 }
