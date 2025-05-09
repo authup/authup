@@ -7,7 +7,7 @@
 
 import { isUUID } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, UserValidator, ValidatorGroup } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
@@ -15,9 +15,7 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../../config';
 import { UserEntity, UserRepository } from '../../../../../database/domains';
-import { UserRequestValidator } from '../utils';
 import {
-    RequestHandlerOperation,
     getRequestBodyRealmID,
     getRequestParamID,
     useRequestIdentityOrFail,
@@ -73,17 +71,17 @@ export async function writeUserRouteHandler(
             }
         }
 
-        group = RequestHandlerOperation.UPDATE;
+        group = ValidatorGroup.UPDATE;
     } else {
         await permissionChecker.preCheck({
             name: PermissionName.USER_CREATE,
         });
         hasAbility = true;
 
-        group = RequestHandlerOperation.CREATE;
+        group = ValidatorGroup.CREATE;
     }
 
-    const validator = new UserRequestValidator();
+    const validator = new UserValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
     const data = await validatorAdapter.run(req, {
         group,

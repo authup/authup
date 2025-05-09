@@ -13,6 +13,7 @@ import type {
 } from '@authup/core-kit';
 import {
     IdentityProviderMappingSyncMode,
+    UserValidator,
     isUserNameValid,
     isValidUserEmail,
 } from '@authup/core-kit';
@@ -60,6 +61,8 @@ export class IdentityProviderAccountService {
 
     protected userRepository: UserRepository;
 
+    protected userValidator : UserValidator;
+
     protected userAttributes : (keyof User)[] = [
         'first_name',
         'last_name',
@@ -78,6 +81,8 @@ export class IdentityProviderAccountService {
         this.provider = provider;
 
         this.userRepository = new UserRepository(dataSource);
+        this.userValidator = new UserValidator();
+
         this.providerAccountRepository = dataSource.getRepository(IdentityProviderAccountEntity);
     }
 
