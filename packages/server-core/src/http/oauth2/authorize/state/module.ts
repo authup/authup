@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { base64URLDecode, createNanoID } from '@authup/kit';
+import { createNanoID } from '@authup/kit';
 import type { Cache } from '@authup/server-kit';
 import { buildCacheKey, useCache } from '@authup/server-kit';
 import { OAuth2Error } from '@authup/specs';
@@ -28,27 +28,18 @@ export class OAuth2AuthorizationStateManager {
      * The state is stored in the cache for 30 minutes.
      *
      * @param req
+     * @param data
      */
     async create(
         req: Request,
+        data: OAuth2AuthorizeStateData,
     ) : Promise<string> {
         const state = createNanoID();
-        const data : OAuth2AuthorizeStateData = {};
 
         const ip = getRequestIP(req, {
             trustProxy: true,
         });
         const userAgent = getRequestHeader(req, 'user-agent');
-
-        const query = useRequestQuery(req);
-        if (typeof query.codeRequest === 'string') {
-            try {
-                // todo: maybe validate :)
-                data.codeRequest = JSON.parse(base64URLDecode(query.codeRequest));
-            } catch (e) {
-                throw OAuth2Error.requestInvalid('The code request is malformed.');
-            }
-        }
 
         await this.cache.set(
             buildCacheKey({ prefix: OAuth2CachePrefix.AUTHORIZATION_CODE, key: state }),

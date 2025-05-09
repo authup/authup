@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { base64URLDecode } from '@authup/kit';
+import { OAuth2Error } from '@authup/specs';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     IdentityProviderProtocol,
@@ -14,6 +16,7 @@ import {
 } from '@authup/core-http-kit';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { setResponseCookie } from '@routup/basic/cookie';
+import { useRequestQuery } from '@routup/basic/query';
 import { URL } from 'node:url';
 import type { Request, Response } from 'routup';
 import { getRequestHostName, sendRedirect } from 'routup';
@@ -24,6 +27,7 @@ import {
 } from '../../../../../database/domains';
 import { createOAuth2IdentityProviderFlow } from '../../../../../domains';
 import { IdentityProviderAccountService } from '../../../../../services';
+import type { OAuth2AuthorizeStateData } from '../../../../oauth2';
 import { setRequestIdentity, useRequestParamID } from '../../../../request';
 import { InternalGrantType, OAuth2AuthorizationStateManager } from '../../../../oauth2';
 import { useConfig } from '../../../../../config';
@@ -66,8 +70,18 @@ export async function authorizeURLIdentityProviderRouteHandler(
 
     const parameters : AuthorizeParameters = {};
 
+    const stateData : OAuth2AuthorizeStateData = {};
+    const query = useRequestQuery(req);
+    if (typeof query.codeRequest === 'string') {
+        try {
+            // todo: maybe validate :)
+            stateData.codeRequest = JSON.parse(base64URLDecode(query.codeRequest));
+        } catch (e) {
+            throw OAuth2Error.requestInvalid('The code request is malformed.');
+        }
+    }
     const authorizationStateManager = new OAuth2AuthorizationStateManager();
-    parameters.state = await authorizationStateManager.create(req);
+    parameters.state = await authorizationStateManager.create(req, stateData);
 
     // todo: maybe verify if state.payload.realm_id = identity_provider.realm_id
 
