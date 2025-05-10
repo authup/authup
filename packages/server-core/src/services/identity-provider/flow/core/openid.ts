@@ -22,12 +22,16 @@ export class OpenIDIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
 
         return {
             id: payload.sub,
-            name: [
-                payload.preferred_username,
-                payload.nickname,
-                payload.sub,
-            ],
-            email: payload.email,
+            attributeCandidates: {
+                name: [
+                    payload.preferred_username,
+                    payload.nickname,
+                    payload.sub,
+                ],
+                email: [
+                    payload.email,
+                ],
+            },
             data: payload,
         };
     }

@@ -37,11 +37,16 @@ export class GithubIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
 
         return {
             id: userInfo.id,
-            name: [
-                userInfo.login,
-                userInfo.name,
-            ],
-            email: userInfo.email,
+            attributeCandidates: {
+                name: [
+                    userInfo.login,
+                    userInfo.name,
+                    userInfo.id,
+                ],
+                email: [
+                    userInfo.email,
+                ],
+            },
             data: claims,
         };
     }

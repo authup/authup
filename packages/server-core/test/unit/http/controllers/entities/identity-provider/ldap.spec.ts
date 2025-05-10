@@ -53,9 +53,14 @@ describe('src/http/controllers/identity-provider', () => {
 
         const grantResponse = await suite.client
             .token
-            .createWithPassword({ username: 'foo', password: 'foo' });
+            .createWithPassword({
+                username: 'foo',
+                password: 'foo',
+            });
 
-        expect(grantResponse).toBeDefined();
-        expect(grantResponse.access_token).toBeDefined();
+        expect(grantResponse)
+            .toBeDefined();
+        expect(grantResponse.access_token)
+            .toBeDefined();
     });
 });

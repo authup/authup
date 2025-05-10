@@ -51,10 +51,14 @@ export class OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
 
         return {
             id: payload.sub,
-            name: [
-                payload.sub,
-            ],
-            email: payload.email,
+            attributeCandidates: {
+                name: [
+                    payload.sub,
+                ],
+                email: [
+                    payload.email,
+                ],
+            },
             data: payload,
         };
     }

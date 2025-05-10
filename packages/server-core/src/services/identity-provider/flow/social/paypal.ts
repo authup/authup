@@ -37,8 +37,15 @@ export class PaypalIdentityProviderFlow extends OAuth2IdentityProviderFlow imple
 
         return {
             id: userInfo.user_id,
-            name: userInfo.name,
-            email: userInfo.email,
+            attributeCandidates: {
+                name: [
+                    userInfo.name,
+                    userInfo.user_id,
+                ],
+                email: [
+                    userInfo.email,
+                ],
+            },
             data: claims,
         };
     }

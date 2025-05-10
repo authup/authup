@@ -34,9 +34,11 @@ describe('idp-manager-service', () => {
     let idpAccountService : IdentityProviderAccountService;
 
     const identity : IdentityProviderIdentity = {
-        data: claims,
         id: 'foo',
-        name: 'fooBarBaz',
+        data: claims,
+        attributeCandidates: {
+            name: ['fooBarBaz'],
+        },
     };
 
     beforeAll(async () => {
@@ -75,6 +77,40 @@ describe('idp-manager-service', () => {
         expect(account.id).toBeDefined();
         expect(account.user.id).toBeDefined();
         expect(account.user.name).toEqual('fooBarBaz');
+    });
+
+    it('should create user with alternative name', async () => {
+        const account = await idpAccountService.save({
+            data: claims,
+            id: 'bar',
+            attributeCandidates: {
+                name: [
+                    'admin', // exists
+                    '', // invalid due validation rules
+                    'bar', // valid
+                ],
+            },
+        });
+
+        expect(account.id).toBeDefined();
+        expect(account.user.id).toBeDefined();
+        expect(account.user.name).toEqual('bar');
+    });
+
+    it('should create user with random name', async () => {
+        const account = await idpAccountService.save({
+            data: claims,
+            id: 'baz',
+            attributeCandidates: {
+                name: [
+                    'admin', // exists
+                ],
+            },
+        });
+
+        expect(account.id).toBeDefined();
+        expect(account.user.id).toBeDefined();
+        expect(account.user.name).not.toEqual('admin');
     });
 
     it('should create user only once', async () => {

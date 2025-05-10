@@ -37,10 +37,21 @@ export class FacebookIdentityProviderFlow extends OAuth2IdentityProviderFlow imp
 
         return {
             id: userInfo.id,
-            name: userInfo.username,
-            email: userInfo.email,
-            first_name: userInfo.first_name,
-            last_name: userInfo.last_name,
+            attributeCandidates: {
+                name: [
+                    userInfo.username,
+                    userInfo.id,
+                ],
+                email: [
+                    userInfo.email,
+                ],
+                first_name: [
+                    userInfo.first_name,
+                ],
+                last_name: [
+                    userInfo.last_name,
+                ],
+            },
             data: payload,
         };
     }
