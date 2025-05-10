@@ -392,6 +392,29 @@ export class IdentityProviderAccountService {
                     const child = e.children[i];
 
                     if (
+                        Array.isArray(attributes[child.path]) &&
+                        attributes[child.path].length > 0
+                    ) {
+                        const [first, ...rest] = attributes[child.path];
+                        attributes[child.path] = first;
+
+                        if (rest.length > 0) {
+                            if (!identity.attributeCandidates) {
+                                identity.attributeCandidates = {};
+                            }
+
+                            if (!identity.attributeCandidates[child.path]) {
+                                identity.attributeCandidates[child.path] = [];
+                            }
+
+                            identity.attributeCandidates[child.path].push(...rest);
+                        }
+
+                        retry = true;
+                        break;
+                    }
+
+                    if (
                         identity.attributeCandidates &&
                         identity.attributeCandidates[child.path] &&
                         identity.attributeCandidates[child.path].length > 0
