@@ -8,6 +8,7 @@
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { User } from '@authup/core-kit';
+import { UserValidator } from '@authup/core-kit';
 import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
@@ -19,13 +20,12 @@ import { UserEntity, UserRepository, resolveRealm } from '../../../../../databas
 import { useConfig } from '../../../../../config';
 import { EnvironmentName } from '../../../../../env';
 import { RequestHandlerOperation } from '../../../../request';
-import { UserRequestValidator } from '../utils';
 
 export class AuthRegisterRequestValidator extends Container<User> {
     protected initialize() {
         super.initialize();
 
-        this.mount(new UserRequestValidator({
+        this.mount(new UserValidator({
             pathsToInclude: ['email', 'name', 'password', 'realm_id'],
         }));
     }

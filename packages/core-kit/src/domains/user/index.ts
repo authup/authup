@@ -8,3 +8,4 @@
 export * from './entity';
 export * from './error';
 export * from './utils';
+export * from './validator';
