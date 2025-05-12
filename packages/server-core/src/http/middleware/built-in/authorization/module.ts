@@ -209,7 +209,10 @@ export class AuthorizationMiddleware {
         header: BasicAuthorizationHeader,
     ) {
         if (this.config.userAuthBasic) {
-            const user = await this.userRepository.verifyCredentials(header.username, header.password);
+            const user = await this.userRepository.verifyCredentials(
+                header.username,
+                header.password,
+            );
             if (user) {
                 await this.userRepository.extendOneWithEA(user);
 
@@ -227,7 +230,10 @@ export class AuthorizationMiddleware {
         }
 
         if (this.config.robotAuthBasic) {
-            const robot = await this.robotRepository.verifyCredentials(header.username, header.password);
+            const robot = await this.robotRepository.verifyCredentials(
+                header.username,
+                header.password,
+            );
             if (robot) {
                 setRequestScopes(request, [ScopeName.GLOBAL]);
                 setRequestIdentity(request, {
@@ -241,7 +247,10 @@ export class AuthorizationMiddleware {
         }
 
         if (this.config.clientAuthBasic) {
-            const client = await this.clientRepository.verifyCredentials(header.username, header.password);
+            const client = await this.clientRepository.verifyCredentials(
+                header.username,
+                header.password,
+            );
             if (client) {
                 setRequestScopes(request, [ScopeName.GLOBAL]);
                 setRequestIdentity(request, {

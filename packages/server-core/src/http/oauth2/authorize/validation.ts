@@ -109,7 +109,8 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
         );
 
         this.mount(
-            'client_id',
+            'realm_id',
+            { optional: true },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -117,6 +118,17 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
                     .notEmpty()
                     .isString()
                     .isUUID();
+            }),
+        );
+
+        this.mount(
+            'client_id',
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .notEmpty()
+                    .isString();
             }),
         );
     }

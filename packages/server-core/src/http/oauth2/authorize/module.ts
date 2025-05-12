@@ -17,7 +17,7 @@ import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ClientEntity, ClientScopeEntity } from '../../../database/domains';
+import { ClientRepository, ClientScopeEntity } from '../../../database/domains';
 import { useRequestIdentityOrFail } from '../../request';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
 import type { OAuth2AccessTokenBuildContext, OAuth2OpenIdTokenBuildContext } from '../token';
@@ -165,12 +165,18 @@ export class OAuth2AuthorizationManager {
 
     protected async postValidation(data: OAuth2AuthorizationCodeRequest) : Promise<OAuth2AuthorizationCodeRequestContainer> {
         const dataSource = await useDataSource();
-        const clientRepository = dataSource.getRepository(ClientEntity);
-        // todo: maybe id or (name + realm_id), realm_id can be realm.name or realm.id ?!
-        const client = await clientRepository.findOneBy({ id: data.client_id });
-        if (!client) {
+        const clientRepository = new ClientRepository(dataSource);
+
+        const clients = await clientRepository.findLazy({
+            key: data.client_id,
+            realmKey: data.realm_id,
+        });
+
+        if (clients.length !== 1) {
             throw OAuth2Error.clientInvalid();
         }
+
+        const [client] = clients;
 
         data.realm_id = client.realm_id;
 

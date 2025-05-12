@@ -33,6 +33,18 @@ type UserRelationSyncContext<T> = {
     realmIdKey: keyof T
 } & UserRelationSaveContext;
 
+type FindLazyOptions = {
+    /**
+     * ID or name
+     */
+    key: string,
+    /**
+     * Realm key.
+     */
+    realmKey?: string,
+    withPassword?: boolean,
+};
+
 export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
         super(instance, {
@@ -217,22 +229,11 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         password: string,
         realmId?: string,
     ) : Promise<UserEntity | undefined> {
-        const query = this.createQueryBuilder('user')
-            .leftJoinAndSelect('user.realm', 'realm');
-
-        if (isUUID(idOrName)) {
-            query.where('user.id = :id', { id: idOrName });
-        } else {
-            query.where('user.name LIKE :name', { name: idOrName });
-
-            if (realmId) {
-                query.andWhere('user.realm_id = :realmId', { realmId });
-            }
-        }
-
-        const entities = await query
-            .addSelect('user.password')
-            .getMany();
+        const entities = await this.findLazy({
+            key: idOrName,
+            realmKey: realmId,
+            withPassword: true,
+        });
 
         for (let i = 0; i < entities.length; i++) {
             if (!entities[i].password) {
@@ -246,6 +247,35 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         }
 
         return undefined;
+    }
+
+    async findLazy(options: FindLazyOptions) : Promise<UserEntity[]> {
+        const query = this.createQueryBuilder('user')
+            .leftJoinAndSelect('user.realm', 'realm');
+
+        if (isUUID(options.key)) {
+            query.where('user.id = :id', { id: options.key });
+        } else {
+            query.where('user.name = :name', { name: options.key });
+
+            if (options.realmKey) {
+                if (isUUID(options.realmKey)) {
+                    query.andWhere('user.realm_id = :realmId', {
+                        realmId: options.realmKey,
+                    });
+                } else {
+                    query.andWhere('realm.name = :realmName', {
+                        realmName: options.realmKey,
+                    });
+                }
+            }
+        }
+
+        if (options.withPassword) {
+            query.addSelect('user.password');
+        }
+
+        return query.getMany();
     }
 
     async createWithPassword(data: Partial<User>) : Promise<{
