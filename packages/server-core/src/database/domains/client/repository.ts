@@ -15,6 +15,18 @@ import { ClientPermissionEntity } from '../client-permission';
 import { ClientRoleEntity } from '../client-role';
 import { ClientEntity } from './entity';
 
+type FindLazyOptions = {
+    /**
+     * ID or name
+     */
+    key: string,
+    /**
+     * Realm key.
+     */
+    realmKey?: string,
+    withSecret?: boolean,
+};
+
 export class ClientRepository extends Repository<ClientEntity> {
     constructor(instance: DataSource | EntityManager) {
         super(ClientEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
@@ -94,22 +106,11 @@ export class ClientRepository extends Repository<ClientEntity> {
         secret: string,
         realmId?: string,
     ) : Promise<ClientEntity | undefined> {
-        const query = this.createQueryBuilder('client')
-            .leftJoinAndSelect('client.realm', 'realm');
-
-        if (isUUID(idOrName)) {
-            query.where('client.id = :id', { id: idOrName });
-        } else {
-            query.where('client.name LIKE :name', { name: idOrName });
-
-            if (realmId) {
-                query.andWhere('client.realm_id = :realmId', { realmId });
-            }
-        }
-
-        const entities = await query
-            .addSelect('client.secret')
-            .getMany();
+        const entities = await this.findLazy({
+            key: idOrName,
+            realmKey: realmId,
+            withSecret: true,
+        });
 
         for (let i = 0; i < entities.length; i++) {
             if (!entities[i].secret || entities[i].is_confidential) {
@@ -122,5 +123,34 @@ export class ClientRepository extends Repository<ClientEntity> {
         }
 
         return undefined;
+    }
+
+    async findLazy(options: FindLazyOptions) : Promise<ClientEntity[]> {
+        const query = this.createQueryBuilder('client')
+            .leftJoinAndSelect('client.realm', 'realm');
+
+        if (isUUID(options.key)) {
+            query.where('client.id = :id', { id: options.key });
+        } else {
+            query.where('client.name = :name', { name: options.key });
+
+            if (options.realmKey) {
+                if (isUUID(options.realmKey)) {
+                    query.andWhere('client.realm_id = :realmId', {
+                        realmId: options.realmKey,
+                    });
+                } else {
+                    query.andWhere('realm.name = :realmName', {
+                        realmName: options.realmKey,
+                    });
+                }
+            }
+        }
+
+        if (options.withSecret) {
+            query.addSelect('client.secret');
+        }
+
+        return query.getMany();
     }
 }

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { isUUID } from '@authup/kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import type { IdentityProviderAccount } from '@authup/core-kit';
@@ -13,7 +14,7 @@ import {
 } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
-import { getRequestIP, useRequestParam } from 'routup';
+import { getRequestIP } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import type {
@@ -27,7 +28,6 @@ import {
     IdentityProviderRepository,
     UserEntity,
     UserRepository,
-    resolveRealm,
 } from '../../../database/domains';
 import {
     LdapIdentityProviderFlow,
@@ -67,18 +67,14 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
     }
 
     async validate(request: Request) : Promise<UserEntity> {
-        const { username, password, realm_id: requestRealmId } = useRequestBody(request);
-
-        const realm = await resolveRealm(
-            useRequestParam(request, 'realmId') || requestRealmId,
-        );
+        const {
+            username,
+            password,
+            realm_id: realmId,
+        } = useRequestBody(request);
 
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);
-        let realmId : undefined | string;
-        if (realm && realm.id) {
-            realmId = realm.id;
-        }
 
         let entity = await repository.verifyCredentials(
             username,
@@ -87,7 +83,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         );
 
         if (!entity) {
-            entity = await this.verifyCredentialsByLDAP(username, password, realmId);
+            entity = await this.verifyCredentialsWithLDAP(username, password, realmId);
         }
 
         if (!entity) {
@@ -101,7 +97,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         return entity;
     }
 
-    protected async verifyCredentialsByLDAP(user: string, password: string, realmId?: string) : Promise<UserEntity> {
+    protected async verifyCredentialsWithLDAP(user: string, password: string, realmId?: string) : Promise<UserEntity> {
         const dataSource = await useDataSource();
         const repository = new IdentityProviderRepository(dataSource);
 
@@ -110,12 +106,19 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         };
 
         if (realmId) {
-            where.realm_id = realmId;
+            if (isUUID(realmId)) {
+                where.realm_id = realmId;
+            } else {
+                where.realm = {
+                    name: realmId,
+                };
+            }
         }
 
         const entities = await repository.findManyWithEA<LdapIdentityProviderFlowOptions>(
             {
                 where,
+                relations: ['realm'],
             },
         );
 
@@ -134,10 +137,10 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
 
             try {
                 identity = await flow.getIdentityForCredentials(user, password);
-                await flow.unbind();
             } catch (e) {
-                await flow.unbind();
                 continue;
+            } finally {
+                await flow.unbind();
             }
 
             manager = new IdentityProviderAccountService(dataSource, entity);

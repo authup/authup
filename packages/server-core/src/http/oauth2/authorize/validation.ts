@@ -12,9 +12,8 @@ import {
     OAuth2Error,
 } from '@authup/specs';
 
-import { createValidator as createZodValidator } from '@validup/adapter-zod';
-import { createValidationChain, createValidator } from '@validup/adapter-validator';
-import { Container, ValidupValidatorError } from 'validup';
+import { createValidator } from '@validup/adapter-zod';
+import { Container } from 'validup';
 import zod from 'zod';
 
 export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCodeRequest> {
@@ -23,101 +22,66 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
 
         this.mount(
             'response_type',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isString()
-                    .notEmpty()
-                    .custom((value) => {
-                        if (typeof value !== 'string') {
-                            throw new ValidupValidatorError({
-                                path: 'response_type',
-                                expected: 'string',
-                            });
-                        }
-
+            createValidator(
+                zod
+                    .string()
+                    .nonempty()
+                    .superRefine((value, ctx) : value is string => {
                         const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
                         const responseTypes = value.split(' ') as OAuth2AuthorizationResponseType[];
 
                         for (let i = 0; i < responseTypes.length; i++) {
                             if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
-                                throw OAuth2Error.responseTypeUnsupported();
+                                const error = OAuth2Error.responseTypeUnsupported();
+                                ctx.addIssue({
+                                    code: 'custom',
+                                    message: error.message,
+                                });
                             }
                         }
 
-                        return true;
-                    });
-            }),
+                        return zod.NEVER;
+                    }),
+            ),
         );
 
         this.mount(
             'redirect_uri',
-            createZodValidator(zod.string().url()),
+            createValidator(zod.string().url()),
         );
 
         this.mount(
             'scope',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isString()
-                    .isLength({ min: 3, max: 512 });
-            }),
+            createValidator(zod.string().min(3).max(512)),
         );
 
         this.mount(
             'state',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isString()
-                    .isLength({ min: 5, max: 2048 })
-                    .optional({ values: 'null' });
-            }),
+            createValidator(zod.string().min(5).max(2048).nullable()),
         );
 
         this.mount(
             'code_challenge',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-
-                return chain
-                    .isString()
-                    .isLength({ max: 256 })
-                    .optional({ values: 'null' });
-            }),
+            createValidator(zod.string().min(1).max(256).nullable()),
         );
 
         this.mount(
             'code_challenge_method',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
+            createValidator(zod.nativeEnum(OAuth2AuthorizationCodeChallengeMethod).nullable()),
+        );
 
-                return chain
-                    .isString()
-                    .isIn(Object.values(OAuth2AuthorizationCodeChallengeMethod))
-                    .optional({ values: 'null' });
-            }),
+        this.mount(
+            'realm_id',
+            { optional: true },
+            createValidator(zod.string().nonempty()),
         );
 
         this.mount(
             'client_id',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isString()
-                    .isUUID();
-            }),
+            createValidator(zod.string().nonempty()),
         );
     }
 }

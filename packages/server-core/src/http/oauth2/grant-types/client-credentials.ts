@@ -14,12 +14,12 @@ import {
     ScopeName, UserError,
 } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
-import { useRequestQuery } from '@routup/basic/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ClientEntity } from '../../../database/domains';
+import type { ClientEntity } from '../../../database/domains';
+import { ClientRepository } from '../../../database/domains';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
 import { buildOAuth2BearerTokenResponse } from '../response';
@@ -55,19 +55,12 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     }
 
     async validate(request: Request) : Promise<ClientEntity> {
-        const [id, secret] = this.getClientCredentials(request);
+        const [id, secret, realmId] = this.getClientCredentials(request);
 
         const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(ClientEntity);
+        const repository = new ClientRepository(dataSource);
 
-        const entity = await repository.findOne({
-            where: {
-                id,
-                secret,
-            },
-            relations: ['realm'],
-        });
-
+        const entity = await repository.verifyCredentials(id, secret, realmId);
         if (!entity) {
             throw UserError.credentialsInvalid();
         }
@@ -75,9 +68,10 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         return entity;
     }
 
-    protected getClientCredentials(request: Request) : [string, string] {
-        let clientId = useRequestBody(request, 'client_id') || useRequestQuery(request, 'client_id');
-        let clientSecret = useRequestBody(request, 'client_secret') || useRequestQuery(request, 'client_secret');
+    protected getClientCredentials(request: Request) : [string, string, string | undefined] {
+        let clientId = useRequestBody(request, 'client_id');
+        let clientSecret = useRequestBody(request, 'client_secret');
+        const realmId = useRequestBody(request, 'realm_id');
 
         if (!clientId && !clientSecret) {
             const { authorization: headerValue } = request.headers;
@@ -92,6 +86,6 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             clientSecret = header.password;
         }
 
-        return [clientId, clientSecret];
+        return [clientId, clientSecret, realmId];
     }
 }
