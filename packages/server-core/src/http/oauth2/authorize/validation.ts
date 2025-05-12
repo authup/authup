@@ -116,8 +116,7 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
                 return chain
                     .exists()
                     .notEmpty()
-                    .isString()
-                    .isUUID();
+                    .isString();
             }),
         );
 
