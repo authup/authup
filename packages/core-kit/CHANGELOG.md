@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.26) (2025-05-12)
+
+
+### Features
+
+* track authroization through idp redirect & callback ([#2669](https://github.com/authup/authup/issues/2669)) ([5cab0f4](https://github.com/authup/authup/commit/5cab0f405c2d9361f62d1aeb03f83fe8e23c7326))
+* validate user in idp account creation ([#2671](https://github.com/authup/authup/issues/2671)) ([084ec15](https://github.com/authup/authup/commit/084ec151348591fea272c93b66fa5601780266d3))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 11 updates ([#2672](https://github.com/authup/authup/issues/2672)) ([242bedd](https://github.com/authup/authup/commit/242bedd9c611b84293ba75cc9427892c7ac962c6))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/errors bumped from ^1.0.0-beta.26 to ^1.0.1-beta.26
+
 ## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
 
 
