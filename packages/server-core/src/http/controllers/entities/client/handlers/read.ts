@@ -21,7 +21,7 @@ import {
 import { isUUID } from '@authup/kit';
 import { ClientEntity, resolveRealm } from '../../../../../database/domains';
 import { isSelfId } from '../../../../../utils';
-import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
+import { resolveOAuth2SubAttributesForScopes } from '../../../../oauth2';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker, useRequestScopes,
 } from '../../../../request';
@@ -108,7 +108,7 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         identity &&
         identity.type === 'client'
     ) {
-        const attributes = resolveOAuth2SubAttributesForScope(OAuth2SubKind.CLIENT, useRequestScopes(req));
+        const attributes = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.CLIENT, useRequestScopes(req));
         for (let i = 0; i < attributes.length; i++) {
             query.addSelect(`client.${attributes[i]}`);
         }

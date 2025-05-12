@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { deserializeOAuth2Scope } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
 import type { OAuth2TokenIntrospectionResponse } from '@authup/specs';
 import type { Request, Response } from 'routup';
@@ -47,7 +48,12 @@ export async function introspectTokenRouteHandler(
         ...payload,
         ...resolveOpenIdClaimsFromSubEntity(
             payload.sub_kind,
-            await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope),
+            await loadOAuth2SubEntity(
+                payload.sub_kind,
+                payload.sub,
+                payload.scope ? deserializeOAuth2Scope(payload.scope) : []
+                ,
+            ),
         ),
     };
 

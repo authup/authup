@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { deserializeOAuth2Scope } from '@authup/core-kit';
 import type { OpenIDTokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import { resolveOpenIdClaimsFromSubEntity } from '../../openid';
@@ -35,7 +36,11 @@ export async function extendOpenIdTokenPayload(
 
     const claims : Partial<OpenIDTokenPayload> = resolveOpenIdClaimsFromSubEntity(
         payload.sub_kind,
-        await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope),
+        await loadOAuth2SubEntity(
+            payload.sub_kind,
+            payload.sub,
+            payload.scope ? deserializeOAuth2Scope(payload.scope) : [],
+        ),
     );
 
     return {

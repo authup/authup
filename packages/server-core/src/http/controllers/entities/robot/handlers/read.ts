@@ -20,7 +20,7 @@ import {
 } from '@authup/core-kit';
 import { RobotEntity, resolveRealm } from '../../../../../database/domains';
 import { isSelfId } from '../../../../../utils';
-import { resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
+import { resolveOAuth2SubAttributesForScopes } from '../../../../oauth2';
 import {
     useRequestIdentity,
     useRequestParamID,
@@ -164,7 +164,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
 
     const scopes = useRequestScopes(req);
     if (isMe) {
-        const attributes: string[] = resolveOAuth2SubAttributesForScope(OAuth2SubKind.ROBOT, scopes);
+        const attributes: string[] = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.ROBOT, scopes);
 
         const validAttributes = repository.metadata.columns.map(
             (column) => column.databaseName,

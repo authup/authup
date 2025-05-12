@@ -147,11 +147,11 @@ export default defineComponent({
             </div>
         </div>
 
-        <div class="d-flex justify-content-evenly mt-auto">
+        <div class="d-flex justify-content-between mt-auto">
             <div>
                 <button
                     type="button"
-                    class="btn btn-sm btn-secondary"
+                    class="btn btn-secondary"
                     @click.prevent="abort"
                 >
                     Abort
@@ -160,7 +160,7 @@ export default defineComponent({
             <div>
                 <button
                     type="button"
-                    class="btn btn-sm btn-primary"
+                    class="btn btn-primary"
                     @click.prevent="authorize"
                 >
                     Authorize

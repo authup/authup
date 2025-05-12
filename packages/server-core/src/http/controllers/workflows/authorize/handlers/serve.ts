@@ -11,6 +11,7 @@ import type {
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useConfig } from '../../../../../config';
+import { sanitizeError } from '../../../../../utils';
 import { useOAuth2AuthorizationService } from '../../../../oauth2';
 
 export async function serveAuthorizationRouteHandler(
@@ -33,7 +34,7 @@ export async function serveAuthorizationRouteHandler(
 
         codeRequest = result.data;
     } catch (e) {
-        error = e;
+        error = sanitizeError(e);
     }
 
     // 3. pass to authorize :)
@@ -55,7 +56,7 @@ export async function serveAuthorizationRouteHandler(
         <script>
         window.baseURL = "${config.publicUrl}";
         window.codeRequest = ${codeRequest ? JSON.stringify(codeRequest) : 'undefined'};
-        window.error = ${error ? JSON.stringify(error) : 'undefined'};
+        window.error = ${error ? JSON.stringify({ ...error, message: error.message }) : 'undefined'};
         window.client = ${client ? JSON.stringify(client) : 'undefined'};
         window.clientScopes = ${clientScopes ? JSON.stringify(clientScopes) : 'undefined'};
         </script>

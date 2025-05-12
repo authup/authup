@@ -6,7 +6,9 @@
  */
 
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { hasOAuth2OpenIDScope, isOAuth2ScopeAllowed } from '@authup/core-kit';
+import {
+    ScopeName, deserializeOAuth2Scope, hasOAuth2Scope, isOAuth2ScopeAllowed,
+} from '@authup/core-kit';
 import {
     isSimpleMatch,
 } from '@authup/kit';
@@ -79,7 +81,10 @@ export class OAuth2AuthorizationManager {
         let idToken : string | undefined;
         if (
             responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
-            hasOAuth2OpenIDScope(data.scope)
+            (
+                data.scope &&
+                hasOAuth2Scope(deserializeOAuth2Scope(data.scope), ScopeName.OPEN_ID)
+            )
         ) {
             tokenBuildContext.maxAge = this.options.idTokenMaxAge;
 
@@ -184,7 +189,7 @@ export class OAuth2AuthorizationManager {
         const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
         const clientScopes = await clientScopeRepository.find({
             where: {
-                client_id: data.client_id,
+                client_id: client.id,
             },
             relations: {
                 scope: true,
@@ -193,7 +198,7 @@ export class OAuth2AuthorizationManager {
 
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
         if (data.scope) {
-            if (!isOAuth2ScopeAllowed(scopeNames, data.scope)) {
+            if (!isOAuth2ScopeAllowed(scopeNames, deserializeOAuth2Scope(data.scope))) {
                 throw OAuth2Error.scopeInsufficient();
             }
         } else {

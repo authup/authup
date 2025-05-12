@@ -9,28 +9,27 @@ import type { NameValidOptions } from '../../helpers';
 import { isNameValid } from '../../helpers';
 import { ScopeName } from './constants';
 
-export function transformOAuth2ScopeToArray(scope?: string | string[]) : string[] {
-    if (!scope) {
-        return [];
-    }
+export function serializeOAuth2Scope(scope: string[]) {
+    return scope.join(' ');
+}
 
-    if (Array.isArray(scope)) {
-        return scope;
-    }
-
+/**
+ * Deserialize a string representation of multiple oauth2 scopes.
+ *
+ * @param scope
+ */
+export function deserializeOAuth2Scope(scope: string) : string[] {
     return scope.split(/\s+|,+/);
 }
 
-export function hasOAuth2OpenIDScope(scope?: string | string[]) : boolean {
-    return transformOAuth2ScopeToArray(scope).indexOf(ScopeName.OPEN_ID) !== -1;
+export function hasOAuth2Scope(scopes: string[], name: string) : boolean {
+    return scopes.indexOf(name) !== -1;
 }
 
 export function isOAuth2ScopeAllowed(
-    available?: string | string[],
-    required?: string[] | string,
+    available: string[],
+    required: string[],
 ) : boolean {
-    available = transformOAuth2ScopeToArray(available);
-
     if (available.indexOf(ScopeName.GLOBAL) !== -1) {
         return true;
     }
@@ -39,7 +38,6 @@ export function isOAuth2ScopeAllowed(
         return false;
     }
 
-    required = transformOAuth2ScopeToArray(required);
     for (let i = 0; i < required.length; i++) {
         if (available.indexOf(required[i]) === -1) {
             return false;

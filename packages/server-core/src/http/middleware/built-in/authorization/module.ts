@@ -8,7 +8,7 @@
 import type { PermissionProvider } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
-import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
+import { ScopeName, deserializeOAuth2Scope } from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
@@ -157,12 +157,17 @@ export class AuthorizationMiddleware {
         }
 
         setRequestToken(request, header.token);
-        setRequestScopes(request, transformOAuth2ScopeToArray(payload.scope));
+
+        let scopes : string[] | undefined;
+        if (payload.scope) {
+            scopes = deserializeOAuth2Scope(payload.scope);
+            setRequestScopes(request, scopes);
+        }
 
         const sub = await loadOAuth2SubEntity(
             payload.sub_kind,
             payload.sub,
-            payload.scope,
+            scopes,
         );
 
         if (!payload.realm_id) {
