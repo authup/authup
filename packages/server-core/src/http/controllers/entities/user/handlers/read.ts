@@ -17,7 +17,7 @@ import { applyQuery, useDataSource } from 'typeorm-extension';
 import type { UserEntity } from '../../../../../database/domains';
 import { UserRepository, resolveRealm } from '../../../../../database/domains';
 import { isSelfId } from '../../../../../utils';
-import { hasOAuth2Scope, resolveOAuth2SubAttributesForScope } from '../../../../oauth2';
+import { hasOAuth2Scope, resolveOAuth2SubAttributesForScopes } from '../../../../oauth2';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker, useRequestScopes,
 } from '../../../../request';
@@ -158,7 +158,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
 
     const scopes = useRequestScopes(req);
     if (isMe) {
-        const attributes: string[] = resolveOAuth2SubAttributesForScope(OAuth2SubKind.USER, scopes);
+        const attributes: string[] = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.USER, scopes);
 
         const validAttributes = repository.metadata.columns.map(
             (column) => column.databaseName,

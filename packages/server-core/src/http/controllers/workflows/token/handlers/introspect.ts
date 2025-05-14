@@ -47,7 +47,12 @@ export async function introspectTokenRouteHandler(
         ...payload,
         ...resolveOpenIdClaimsFromSubEntity(
             payload.sub_kind,
-            await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope),
+            await loadOAuth2SubEntity(
+                payload.sub_kind,
+                payload.sub,
+                payload.scope
+                ,
+            ),
         ),
     };
 
