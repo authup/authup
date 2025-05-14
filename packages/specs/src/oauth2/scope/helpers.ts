@@ -18,7 +18,7 @@ export function deserializeOAuth2Scope(scope: string) : string[] {
     return scope.split(/\s+|,+/);
 }
 
-function unwrapOAuth2Scope(input: string | string[]) : string[] {
+export function unwrapOAuth2Scope(input: string | string[]) : string[] {
     if (Array.isArray(input)) {
         return input
             .map((el) => unwrapOAuth2Scope(el))
