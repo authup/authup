@@ -6,10 +6,11 @@
  */
 
 import {
-    ClientError, RobotError, ScopeName, UserError, hasOAuth2Scope,
+    ClientError, RobotError, ScopeName, UserError,
 } from '@authup/core-kit';
 import {
     OAuth2SubKind,
+    hasOAuth2Scopes,
 } from '@authup/specs';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
@@ -48,7 +49,7 @@ export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
 export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
     kind: T,
     id: string,
-    scopes?: string[],
+    scopes: string | string[],
 ) : Promise<OAuth2SubEntity<T>> {
     const dataSource = await useDataSource();
     const attributes = resolveOAuth2SubAttributesForScopes(kind, scopes);
@@ -104,10 +105,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
             }
 
             // todo: this might also be the case under other conditions :)
-            if (
-                scopes &&
-                hasOAuth2Scope(scopes, ScopeName.GLOBAL)
-            ) {
+            if (hasOAuth2Scopes(scopes, ScopeName.GLOBAL)) {
                 await repository.extendOneWithEA(entity);
             }
 

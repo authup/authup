@@ -7,13 +7,13 @@
 
 import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
-    ScopeName, deserializeOAuth2Scope, hasOAuth2Scope, isOAuth2ScopeAllowed,
+    ScopeName,
 } from '@authup/core-kit';
 import {
     isSimpleMatch,
 } from '@authup/kit';
 import type { OAuth2SubKind } from '@authup/specs';
-import { OAuth2AuthorizationResponseType, OAuth2Error } from '@authup/specs';
+import { OAuth2AuthorizationResponseType, OAuth2Error, hasOAuth2Scopes } from '@authup/specs';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
@@ -83,7 +83,7 @@ export class OAuth2AuthorizationManager {
             responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
             (
                 data.scope &&
-                hasOAuth2Scope(deserializeOAuth2Scope(data.scope), ScopeName.OPEN_ID)
+                hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID)
             )
         ) {
             tokenBuildContext.maxAge = this.options.idTokenMaxAge;
@@ -198,7 +198,7 @@ export class OAuth2AuthorizationManager {
 
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
         if (data.scope) {
-            if (!isOAuth2ScopeAllowed(scopeNames, deserializeOAuth2Scope(data.scope))) {
+            if (!hasOAuth2Scopes(scopeNames, [data.scope, ScopeName.GLOBAL])) {
                 throw OAuth2Error.scopeInsufficient();
             }
         } else {

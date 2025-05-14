@@ -10,12 +10,11 @@ import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2Error,
     OAuth2SubKind,
+    hasOAuth2Scopes,
 } from '@authup/specs';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import {
     ScopeName,
-    deserializeOAuth2Scope,
-    hasOAuth2Scope,
 } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
@@ -66,7 +65,7 @@ export class AuthorizeGrantType extends AbstractGrant implements Grant {
 
         if (
             authorizationCode.scope &&
-            hasOAuth2Scope(deserializeOAuth2Scope(authorizationCode.scope), ScopeName.OPEN_ID)
+            hasOAuth2Scopes(authorizationCode.scope, ScopeName.OPEN_ID)
         ) {
             buildContext.idToken = authorizationCode.id_token;
         }
