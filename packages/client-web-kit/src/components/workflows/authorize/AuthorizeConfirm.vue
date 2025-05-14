@@ -6,8 +6,9 @@
   -->
 <script lang="ts">
 import type { Client, ClientScope, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import { deserializeOAuth2Scope } from '@authup/specs';
 import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { injectHTTPClient } from '../../../core';
 
 export default defineComponent({
@@ -27,6 +28,35 @@ export default defineComponent({
     },
     setup(props) {
         const httpClient = injectHTTPClient();
+
+        const requestedScopes = computed(() => {
+            if (!props.codeRequest.scope) {
+                return [];
+            }
+
+            return deserializeOAuth2Scope(props.codeRequest.scope);
+        });
+
+        const scopes = computed(() => {
+            const output : {
+                name: string,
+                description?: string | null,
+                enabled: boolean
+            }[] = [];
+
+            let index = -1;
+            for (let i = 0; i < props.clientScopes.length; i++) {
+                index = requestedScopes.value.indexOf(props.clientScopes[i].scope.name);
+
+                output.push({
+                    name: props.clientScopes[i].scope.name,
+                    description: props.clientScopes[i].scope.description,
+                    enabled: index !== -1,
+                });
+            }
+
+            return output;
+        });
 
         const abort = () => {
             const url = new URL(`${props.codeRequest.redirect_uri}`);
@@ -71,6 +101,8 @@ export default defineComponent({
         return {
             authorize,
             abort,
+
+            scopes,
         };
     },
 });
@@ -88,23 +120,29 @@ export default defineComponent({
 
         <div v-if="clientScopes && clientScopes.length > 0">
             <div>
-                This will allow the
-                <strong class="ps-1 pe-1">
-                    {{ client.name }}
-                </strong>
-                developer to:
+                This will allow the <strong>{{ client.name }}</strong> application to
             </div>
             <div class="flex-column">
                 <div
-                    v-for="item in clientScopes"
-                    :key="item.id"
-                    class="d-flex flex-row"
+                    v-for="item in scopes"
+                    :key="item.name"
+                    class="d-flex flex-row gap-1"
                 >
-                    <div class="text-center ps-1 pe-1">
-                        <i class="fa-solid fa-check text-success" />
+                    <div class="text-center">
+                        <i
+                            class="fa-solid"
+                            :class="{
+                                'fa-check text-success': item.enabled,
+                                'fa-times text-danger': !item.enabled
+                            }"
+                        />
                     </div>
-                    <div class="ms-1">
-                        <small>{{ item.scope.name }}</small>
+                    <div>
+                        <strong>{{ item.name }}</strong>
+
+                        <template v-if="item.description">
+                            <p>{{ item.description }}</p>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -147,20 +185,20 @@ export default defineComponent({
             </div>
         </div>
 
-        <div class="d-flex justify-content-between mt-auto">
-            <div>
+        <div class="row">
+            <div class="col-6">
                 <button
                     type="button"
-                    class="btn btn-secondary"
+                    class="btn btn-block btn-secondary"
                     @click.prevent="abort"
                 >
                     Abort
                 </button>
             </div>
-            <div>
+            <div class="col-6">
                 <button
                     type="button"
-                    class="btn btn-primary"
+                    class="btn btn-block btn-primary"
                     @click.prevent="authorize"
                 >
                     Authorize
