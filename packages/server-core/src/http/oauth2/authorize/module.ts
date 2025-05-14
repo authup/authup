@@ -198,7 +198,10 @@ export class OAuth2AuthorizationManager {
 
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
         if (data.scope) {
-            if (!hasOAuth2Scopes(scopeNames, [data.scope, ScopeName.GLOBAL])) {
+            if (
+                !hasOAuth2Scopes(scopeNames, data.scope) &&
+                !hasOAuth2Scopes(data.scope, ScopeName.GLOBAL)
+            ) {
                 throw OAuth2Error.scopeInsufficient();
             }
         } else {

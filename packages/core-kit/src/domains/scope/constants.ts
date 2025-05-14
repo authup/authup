@@ -7,7 +7,7 @@
 
 export enum ScopeName {
     /**
-     * Full permissions (userinfo & id-token)
+     * Full permissions
      */
     GLOBAL = 'global',
 
