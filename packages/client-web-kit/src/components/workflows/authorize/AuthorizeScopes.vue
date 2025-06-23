@@ -26,7 +26,7 @@ export default defineComponent({
             type: [String, Array] as PropType<string[] | string>,
         },
     },
-    async setup(props) {
+    setup(props) {
         const httpClient = injectHTTPClient();
 
         const scopesRequestedNormalized = computed<string[]>(() => {
