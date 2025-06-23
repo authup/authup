@@ -10,6 +10,7 @@ import {
 } from '@authup/core-kit';
 import {
     OAuth2SubKind,
+    hasOAuth2Scopes,
 } from '@authup/specs';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
@@ -23,7 +24,7 @@ import {
     RobotRepository,
     UserRepository,
 } from '../../../database/domains';
-import { resolveOAuth2SubAttributesForScope } from '../scope';
+import { resolveOAuth2SubAttributesForScopes } from '../scope';
 
 export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
     T extends `${OAuth2SubKind.USER}` | OAuth2SubKind.USER ?
@@ -43,15 +44,15 @@ export type OAuth2SubEntity<T extends `${OAuth2SubKind}` | OAuth2SubKind> =
  *
  * @param kind
  * @param id
- * @param scope
+ * @param scopes
  */
 export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
     kind: T,
     id: string,
-    scope?: string,
+    scopes: string | string[],
 ) : Promise<OAuth2SubEntity<T>> {
     const dataSource = await useDataSource();
-    const attributes = resolveOAuth2SubAttributesForScope(kind, scope);
+    const attributes = resolveOAuth2SubAttributesForScopes(kind, scopes);
 
     switch (kind) {
         case OAuth2SubKind.CLIENT: {
@@ -104,7 +105,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
             }
 
             // todo: this might also be the case under other conditions :)
-            if (scope === ScopeName.GLOBAL) {
+            if (hasOAuth2Scopes(scopes, ScopeName.GLOBAL)) {
                 await repository.extendOneWithEA(entity);
             }
 

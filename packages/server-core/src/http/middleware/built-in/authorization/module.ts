@@ -8,10 +8,10 @@
 import type { PermissionProvider } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
-import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
+import { ScopeName } from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { JWTError, OAuth2TokenKind } from '@authup/specs';
+import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { getRequestHostName } from 'routup';
@@ -157,7 +157,10 @@ export class AuthorizationMiddleware {
         }
 
         setRequestToken(request, header.token);
-        setRequestScopes(request, transformOAuth2ScopeToArray(payload.scope));
+
+        if (payload.scope) {
+            setRequestScopes(request, deserializeOAuth2Scope(payload.scope));
+        }
 
         const sub = await loadOAuth2SubEntity(
             payload.sub_kind,

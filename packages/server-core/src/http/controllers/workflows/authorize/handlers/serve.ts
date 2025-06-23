@@ -6,11 +6,12 @@
  */
 
 import type {
-    Client, ClientScope, OAuth2AuthorizationCodeRequest,
+    Client, OAuth2AuthorizationCodeRequest, Scope,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { useConfig } from '../../../../../config';
+import { sanitizeError } from '../../../../../utils';
 import { useOAuth2AuthorizationService } from '../../../../oauth2';
 
 export async function serveAuthorizationRouteHandler(
@@ -20,7 +21,7 @@ export async function serveAuthorizationRouteHandler(
     let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
 
     let client : Client | undefined;
-    let clientScopes : ClientScope[] | undefined;
+    let scopes : Scope[] | undefined;
 
     let error : Error | undefined;
 
@@ -29,11 +30,11 @@ export async function serveAuthorizationRouteHandler(
         const result = await authorizationService.validateWithRequest(req);
 
         client = result.client;
-        clientScopes = result.clientScopes;
+        scopes = result.clientScopes.map((s) => s.scope);
 
         codeRequest = result.data;
     } catch (e) {
-        error = e;
+        error = sanitizeError(e);
     }
 
     // 3. pass to authorize :)
@@ -55,9 +56,9 @@ export async function serveAuthorizationRouteHandler(
         <script>
         window.baseURL = "${config.publicUrl}";
         window.codeRequest = ${codeRequest ? JSON.stringify(codeRequest) : 'undefined'};
-        window.error = ${error ? JSON.stringify(error) : 'undefined'};
+        window.error = ${error ? JSON.stringify({ ...error, message: error.message }) : 'undefined'};
         window.client = ${client ? JSON.stringify(client) : 'undefined'};
-        window.clientScopes = ${clientScopes ? JSON.stringify(clientScopes) : 'undefined'};
+        window.scopes = ${scopes ? JSON.stringify(scopes) : 'undefined'};
         </script>
         <script type="module" src="${url.href}/client.js"></script>
     </body>

@@ -7,7 +7,7 @@
 <script lang="ts">
 import { AAuthorize } from '@authup/client-web-kit';
 import type {
-    Client, ClientScope, OAuth2AuthorizationCodeRequest,
+    Client, OAuth2AuthorizationCodeRequest, Scope,
 } from '@authup/core-kit';
 import { isObject } from '@authup/kit';
 import { defineComponent } from 'vue';
@@ -31,13 +31,13 @@ export default defineComponent({
         const codeRequest = extractFromWindow<OAuth2AuthorizationCodeRequest | undefined>('codeRequest');
         const error = extractFromWindow<Error | undefined>('error');
         const client = extractFromWindow<Client | undefined>('client');
-        const clientScopes = extractFromWindow<ClientScope[] | undefined>('clientScopes');
+        const scopes = extractFromWindow<Scope[] | undefined>('scopes');
 
         return {
             codeRequest,
             error,
             client,
-            clientScopes,
+            scopes,
         };
     },
 });
@@ -46,7 +46,7 @@ export default defineComponent({
     <AAuthorize
         :code-request="codeRequest"
         :client="client"
-        :client-scopes="clientScopes"
+        :scopes="scopes"
         :error="error"
     />
 </template>

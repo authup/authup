@@ -6,17 +6,17 @@
   -->
 <script lang="ts">
 import type {
-    Client, ClientScope, OAuth2AuthorizationCodeRequest,
+    Client, OAuth2AuthorizationCodeRequest, Scope,
 } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
-    defineComponent, h,
+    Suspense, defineComponent, h, ref,
 } from 'vue';
-import { injectStore } from '../../../core';
+import { injectHTTPClient, injectStore } from '../../../core';
 import Login from '../Login.vue';
-import AuthorizeConfirm from './AuthorizeConfirm.vue';
-import AuthorizeError from './AuthorizeError.vue';
+import AuthorizeForm from './AuthorizeForm.vue';
+import AuthorizeText from './AuthorizeText.vue';
 
 const wrapChild = (child: VNodeChild) => h(
     'div',
@@ -34,8 +34,8 @@ const wrapChild = (child: VNodeChild) => h(
 
 export default defineComponent({
     components: {
-        AuthorizeError,
-        AuthorizeConfirm,
+        AuthorizeText,
+        AuthorizeForm,
         Login,
     },
     props: {
@@ -45,9 +45,11 @@ export default defineComponent({
         client: {
             type: Object as PropType<Client>,
         },
-        clientScopes: {
-            type: Array as PropType<ClientScope[]>,
-            default: () => [],
+        clientId: {
+            type: String,
+        },
+        scopes: {
+            type: Array as PropType<Scope[]>,
         },
         error: {
             type: Object as PropType<Error>,
@@ -55,13 +57,42 @@ export default defineComponent({
     },
     emits: ['redirect'],
     setup(props) {
+        const httpClient = injectHTTPClient();
         const store = injectStore();
         const { loggedIn } = storeToRefs(store);
 
-        return () => {
+        const error = ref<Error | null>(null);
+        const client = ref<Client | null>(null);
+
+        const resolve = async () => {
             if (props.error) {
-                return wrapChild(h(AuthorizeError, {
-                    message: props.error.message,
+                error.value = props.error;
+                return;
+            }
+
+            if (props.client) {
+                client.value = props.client;
+            }
+
+            if (props.clientId) {
+                try {
+                    client.value = await httpClient.client.getOne(props.clientId);
+                } catch (e) {
+                    if (e instanceof Error) {
+                        error.value = e;
+                    }
+                }
+            }
+        };
+
+        Promise.resolve()
+            .then(() => resolve());
+
+        return () => {
+            if (error.value) {
+                return wrapChild(h(AuthorizeText, {
+                    message: error.value.message,
+                    isError: true,
                 }));
             }
 
@@ -70,19 +101,29 @@ export default defineComponent({
             }
 
             if (!loggedIn.value) {
-                return wrapChild(h(Login, {
-                    codeRequest: props.codeRequest,
+                return wrapChild(h(Suspense, {}, {
+                    default: () => h(Login, {
+                        codeRequest: props.codeRequest,
+                    }),
+                    fallback: () => h(AuthorizeText, {
+                        message: 'Loading...',
+                    }),
                 }));
             }
 
-            if (!props.client) {
+            if (!client.value) {
                 return [];
             }
 
-            return wrapChild(h(AuthorizeConfirm, {
-                codeRequest: props.codeRequest,
-                client: props.client,
-                clientScopes: props.clientScopes,
+            return wrapChild(h(Suspense, {}, {
+                default: () => h(AuthorizeForm, {
+                    codeRequest: props.codeRequest!,
+                    client: client.value!,
+                    scopes: props.scopes,
+                }),
+                fallback: () => h(AuthorizeText, {
+                    message: 'Loading...',
+                }),
             }));
         };
     },

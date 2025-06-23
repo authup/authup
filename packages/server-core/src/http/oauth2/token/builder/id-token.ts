@@ -35,7 +35,11 @@ export async function extendOpenIdTokenPayload(
 
     const claims : Partial<OpenIDTokenPayload> = resolveOpenIdClaimsFromSubEntity(
         payload.sub_kind,
-        await loadOAuth2SubEntity(payload.sub_kind, payload.sub, payload.scope),
+        await loadOAuth2SubEntity(
+            payload.sub_kind,
+            payload.sub,
+            payload.scope,
+        ),
     );
 
     return {

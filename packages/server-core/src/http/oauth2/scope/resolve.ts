@@ -7,8 +7,8 @@
 
 import type { Client, Robot, User } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
-import { ScopeName, transformOAuth2ScopeToArray } from '@authup/core-kit';
-import { OAuth2SubKind } from '@authup/specs';
+import { ScopeName } from '@authup/core-kit';
+import { OAuth2SubKind, unwrapOAuth2Scope } from '@authup/specs';
 
 const userFields = {
     [ScopeName.IDENTITY]: ['name', 'display_name', 'last_name', 'first_name'] satisfies (keyof User)[],
@@ -23,13 +23,17 @@ const clientFields = {
     [ScopeName.IDENTITY]: ['name'] satisfies (keyof Client)[],
 };
 
-export function resolveOAuth2SubAttributesForScope(
+export function resolveOAuth2SubAttributesForScopes(
     subKind: OAuth2SubKind | `${OAuth2SubKind}`,
-    scope?: string | string[],
+    scope: string | string[] = [],
 ) : string[] {
+    const scopes = unwrapOAuth2Scope(scope);
+    if (!scopes || scopes.length === 0) {
+        return [];
+    }
+
     const fields : string[] = [];
 
-    const scopes = transformOAuth2ScopeToArray(scope);
     for (let i = 0; i < scopes.length; i++) {
         switch (subKind) {
             case OAuth2SubKind.USER: {

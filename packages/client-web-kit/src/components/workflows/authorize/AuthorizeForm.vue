@@ -5,20 +5,21 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { Client, ClientScope, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import { injectHTTPClient } from '../../../core';
+import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({
+    components: { AuthorizeScopes },
     props: {
         client: {
             type: Object as PropType<Client>,
             required: true,
         },
-        clientScopes: {
-            type: Array as PropType<ClientScope[]>,
-            default: () => [],
+        scopes: {
+            type: Array as PropType<Scope[]>,
         },
         codeRequest: {
             type: Object as PropType<OAuth2AuthorizationCodeRequest>,
@@ -54,7 +55,7 @@ export default defineComponent({
                         client_id: props.client.id,
                         redirect_uri: props.codeRequest.redirect_uri,
                         ...(props.codeRequest.state ? { state: props.codeRequest.state } : {}),
-                        scope: props.clientScopes.map((item) => item.scope.name).join(' '),
+                        ...(props.codeRequest.scope ? { scope: props.codeRequest.scope } : {}),
                     });
 
                 const { url } = response;
@@ -86,29 +87,11 @@ export default defineComponent({
             </h1>
         </div>
 
-        <div v-if="clientScopes && clientScopes.length > 0">
-            <div>
-                This will allow the
-                <strong class="ps-1 pe-1">
-                    {{ client.name }}
-                </strong>
-                developer to:
-            </div>
-            <div class="flex-column">
-                <div
-                    v-for="item in clientScopes"
-                    :key="item.id"
-                    class="d-flex flex-row"
-                >
-                    <div class="text-center ps-1 pe-1">
-                        <i class="fa-solid fa-check text-success" />
-                    </div>
-                    <div class="ms-1">
-                        <small>{{ item.scope.name }}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <AuthorizeScopes
+            :client="client"
+            :scopes-requested="codeRequest.scope"
+            :scopes-available="scopes"
+        />
 
         <div class="mt-auto">
             <div class="d-flex flex-row">
@@ -147,20 +130,20 @@ export default defineComponent({
             </div>
         </div>
 
-        <div class="d-flex justify-content-evenly mt-auto">
-            <div>
+        <div class="row">
+            <div class="col-6">
                 <button
                     type="button"
-                    class="btn btn-sm btn-secondary"
+                    class="btn btn-block btn-secondary"
                     @click.prevent="abort"
                 >
                     Abort
                 </button>
             </div>
-            <div>
+            <div class="col-6">
                 <button
                     type="button"
-                    class="btn btn-sm btn-primary"
+                    class="btn btn-block btn-primary"
                     @click.prevent="authorize"
                 >
                     Authorize
