@@ -101,7 +101,7 @@
         "@faker-js/faker": "^9.8.0",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.1.1",
-        "testcontainers": "^10.25.0",
+        "testcontainers": "^11.0.3",
         "ts-node": "^10.8.2"
     },
     "publishConfig": {
