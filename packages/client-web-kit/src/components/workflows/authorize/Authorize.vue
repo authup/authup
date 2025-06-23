@@ -6,7 +6,7 @@
   -->
 <script lang="ts">
 import type {
-    Client, ClientScope, OAuth2AuthorizationCodeRequest, Scope,
+    Client, OAuth2AuthorizationCodeRequest, Scope,
 } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
