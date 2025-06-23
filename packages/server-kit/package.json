@@ -51,7 +51,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@hapic/vault": "^2.3.5",
+        "@hapic/vault": "^2.3.7",
         "@isaacs/ttlcache": "^1.4.1",
         "@node-rs/bcrypt": "^1.10.7",
         "@node-rs/jsonwebtoken": "^0.5.9",
