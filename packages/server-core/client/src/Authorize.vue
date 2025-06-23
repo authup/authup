@@ -9,44 +9,36 @@ import { AAuthorize } from '@authup/client-web-kit';
 import type {
     Client, OAuth2AuthorizationCodeRequest, Scope,
 } from '@authup/core-kit';
-import { isObject } from '@authup/kit';
 import { defineComponent } from 'vue';
-
-const extractFromWindow = <T = any>(key: string) : T => {
-    if (
-        typeof window !== 'undefined' &&
-        isObject(window)
-    ) {
-        return window[key];
-    }
-
-    return undefined;
-};
+import { getWindowApp } from './utils';
 
 export default defineComponent({
     components: {
         AAuthorize,
     },
     setup() {
-        const codeRequest = extractFromWindow<OAuth2AuthorizationCodeRequest | undefined>('codeRequest');
-        const error = extractFromWindow<Error | undefined>('error');
-        const client = extractFromWindow<Client | undefined>('client');
-        const scopes = extractFromWindow<Scope[] | undefined>('scopes');
+        const app = getWindowApp();
+
+        const { data } = app as {
+            data: {
+                codeRequest: OAuth2AuthorizationCodeRequest | undefined,
+                error: Error | undefined,
+                client: Client | undefined,
+                scopes: Scope[] | undefined
+            }
+        };
 
         return {
-            codeRequest,
-            error,
-            client,
-            scopes,
+            data,
         };
     },
 });
 </script>
 <template>
     <AAuthorize
-        :code-request="codeRequest"
-        :client="client"
-        :scopes="scopes"
-        :error="error"
+        :code-request="data.codeRequest"
+        :client="data.client"
+        :scopes="data.scopes"
+        :error="data.error"
     />
 </template>

@@ -8,7 +8,9 @@
         "debug": "node --inspect dist/cli/index.js start",
         "cli": "node dist/cli/index.js",
         "cli-dev": "ts-node src/cli/index.ts",
-        "build:client": "rollup -c client/rollup.config.mjs",
+        "build:client-client": "vite build client --ssrManifest .vite/ssr-manifest.json --outDir ../public/",
+        "build:client-server": "vite build client --ssr src/server.js --outDir dist/server",
+        "build:client": "npm run build:client-server && npm run build:client-client",
         "build:server": "rm -rf ./dist && tsc -p tsconfig.build.json",
         "build:swagger": "npm run cli -- swagger generate",
         "build": "npm run build:client && npm run build:server && npm run build:swagger",
@@ -99,10 +101,12 @@
         "@types/node-cron": "^3.0.11",
         "@types/supertest": "^6.0.3",
         "@faker-js/faker": "^9.8.0",
+        "@vitejs/plugin-vue": "^5.2.4",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.1.1",
         "testcontainers": "^10.25.0",
-        "ts-node": "^10.8.2"
+        "ts-node": "^10.8.2",
+        "vite": "^6.3.5"
     },
     "publishConfig": {
         "access": "public"

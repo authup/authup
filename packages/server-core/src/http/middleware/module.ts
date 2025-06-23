@@ -24,7 +24,7 @@ import {
     transformBoolToEmptyObject,
 } from './utils';
 
-export function registerMiddlewares(router: Router) {
+export async function registerMiddlewares(router: Router) {
     const config = useConfig();
 
     registerLoggerMiddleware(router);
@@ -34,7 +34,7 @@ export function registerMiddlewares(router: Router) {
         registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
     }
 
-    registerAssetsMiddleware(router, {
+    await registerAssetsMiddleware(router, {
         scan: false,
         fallthrough: false,
     });

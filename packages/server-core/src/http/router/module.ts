@@ -10,10 +10,10 @@ import { registerControllers } from '../controllers';
 
 import { registerErrorMiddleware, registerMiddlewares } from '../middleware';
 
-export function createRouter() : Router {
+export async function createRouter() : Promise<Router> {
     const router = new Router();
 
-    registerMiddlewares(router);
+    await registerMiddlewares(router);
     registerControllers(router);
     registerErrorMiddleware(router);
 
