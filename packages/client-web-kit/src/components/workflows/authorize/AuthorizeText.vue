@@ -9,6 +9,9 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     props: {
+        isError: {
+            type: Boolean,
+        },
         message: {
             type: String,
             required: true,
@@ -19,7 +22,13 @@ export default defineComponent({
 <template>
     <div class="flex-column">
         <div class="text-center">
-            <i class="fa-solid fa-exclamation fa-10x text-danger" />
+            <i
+                class="fa-solid fa-10x"
+                :class="{
+                    'fa-exclamation text-danger': isError,
+                    'fa-info text-info': !isError,
+                }"
+            />
         </div>
         <div class="text-center fs-6 p-3">
             {{ message }}

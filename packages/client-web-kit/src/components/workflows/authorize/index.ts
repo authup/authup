@@ -6,3 +6,4 @@
  */
 
 export { default as AAuthorize } from './Authorize.vue';
+export { default as AAuthorizeText } from './AuthorizeText.vue';

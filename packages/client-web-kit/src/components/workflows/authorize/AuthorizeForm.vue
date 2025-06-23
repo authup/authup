@@ -5,21 +5,21 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { Client, ClientScope, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { deserializeOAuth2Scope } from '@authup/specs';
+import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
-import { computed, defineComponent } from 'vue';
+import { defineComponent } from 'vue';
 import { injectHTTPClient } from '../../../core';
+import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({
+    components: { AuthorizeScopes },
     props: {
         client: {
             type: Object as PropType<Client>,
             required: true,
         },
-        clientScopes: {
-            type: Array as PropType<ClientScope[]>,
-            default: () => [],
+        scopes: {
+            type: Array as PropType<Scope[]>,
         },
         codeRequest: {
             type: Object as PropType<OAuth2AuthorizationCodeRequest>,
@@ -28,35 +28,6 @@ export default defineComponent({
     },
     setup(props) {
         const httpClient = injectHTTPClient();
-
-        const requestedScopes = computed(() => {
-            if (!props.codeRequest.scope) {
-                return [];
-            }
-
-            return deserializeOAuth2Scope(props.codeRequest.scope);
-        });
-
-        const scopes = computed(() => {
-            const output : {
-                name: string,
-                description?: string | null,
-                enabled: boolean
-            }[] = [];
-
-            let index = -1;
-            for (let i = 0; i < props.clientScopes.length; i++) {
-                index = requestedScopes.value.indexOf(props.clientScopes[i].scope.name);
-
-                output.push({
-                    name: props.clientScopes[i].scope.name,
-                    description: props.clientScopes[i].scope.description,
-                    enabled: index !== -1,
-                });
-            }
-
-            return output;
-        });
 
         const abort = () => {
             const url = new URL(`${props.codeRequest.redirect_uri}`);
@@ -84,7 +55,7 @@ export default defineComponent({
                         client_id: props.client.id,
                         redirect_uri: props.codeRequest.redirect_uri,
                         ...(props.codeRequest.state ? { state: props.codeRequest.state } : {}),
-                        scope: props.clientScopes.map((item) => item.scope.name).join(' '),
+                        ...(props.codeRequest.scope ? { scope: props.codeRequest.scope } : {}),
                     });
 
                 const { url } = response;
@@ -101,8 +72,6 @@ export default defineComponent({
         return {
             authorize,
             abort,
-
-            scopes,
         };
     },
 });
@@ -118,35 +87,11 @@ export default defineComponent({
             </h1>
         </div>
 
-        <div v-if="clientScopes && clientScopes.length > 0">
-            <div>
-                This will allow the <strong>{{ client.name }}</strong> application to
-            </div>
-            <div class="flex-column">
-                <div
-                    v-for="item in scopes"
-                    :key="item.name"
-                    class="d-flex flex-row gap-1"
-                >
-                    <div class="text-center">
-                        <i
-                            class="fa-solid"
-                            :class="{
-                                'fa-check text-success': item.enabled,
-                                'fa-times text-danger': !item.enabled
-                            }"
-                        />
-                    </div>
-                    <div>
-                        <strong>{{ item.name }}</strong>
-
-                        <template v-if="item.description">
-                            <p>{{ item.description }}</p>
-                        </template>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <AuthorizeScopes
+            :client="client"
+            :scopes-requested="codeRequest.scope"
+            :scopes-available="scopes"
+        />
 
         <div class="mt-auto">
             <div class="d-flex flex-row">
