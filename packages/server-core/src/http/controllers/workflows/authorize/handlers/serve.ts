@@ -11,7 +11,7 @@ import type {
 import type { Request, Response } from 'routup';
 import { sanitizeError } from '../../../../../utils';
 import { useOAuth2AuthorizationService } from '../../../../oauth2';
-import { sendClientResponse } from '../../../../response/client';
+import { sendClientResponse } from '../../../../response';
 
 export async function serveAuthorizationRouteHandler(
     req: Request,
@@ -37,6 +37,7 @@ export async function serveAuthorizationRouteHandler(
     }
 
     return sendClientResponse(req, res, {
+        path: '/authorize',
         data: {
             codeRequest,
             error: {

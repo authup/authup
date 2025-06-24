@@ -25,7 +25,7 @@ import '../../client-web/assets/css/form.css';
 import '../../client-web/assets/css/generics.css';
 
 import type { Router } from 'vue-router';
-import Authorize from './Authorize.vue';
+import Authorize from './pages/authorize.vue';
 import VApp from './App.vue';
 import { providePayload } from './di';
 import type { HydrationPayload } from './types';
@@ -45,7 +45,7 @@ export function createApp(payload: HydrationPayload) : {app: App, router: Router
         routes: [
             {
                 component: Authorize,
-                path: '/:pathMatch(.*)*',
+                path: '/authorize',
             },
         ],
     });
