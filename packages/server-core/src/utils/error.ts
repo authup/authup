@@ -56,14 +56,19 @@ export function sanitizeError(error: unknown) : AuthupError {
     }
 
     if (error instanceof ValidupNestedError) {
+        const attributes = error.children.map(
+            (child) => child.pathAbsolute,
+        );
         return new AuthupError({
             statusCode: BadRequestErrorOptions.statusCode,
             code: BadRequestErrorOptions.code,
             data: {
                 children: error.children,
-                attributes: error.children.map((child) => child.pathAbsolute),
+                attributes,
             },
             stack: error.stack,
+            message: error.message ||
+                `The attributes ${attributes.join(', ')} are invalid.`,
         });
     }
 

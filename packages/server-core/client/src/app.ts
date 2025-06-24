@@ -7,6 +7,7 @@
 
 import { injectStore, install } from '@authup/client-web-kit';
 import { createPinia } from 'pinia';
+import type { App } from 'vue';
 import { createSSRApp } from 'vue';
 import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router';
 
@@ -23,11 +24,14 @@ import '../../../client-web/assets/css/root.css';
 import '../../../client-web/assets/css/form.css';
 import '../../../client-web/assets/css/generics.css';
 
+import type { Router } from 'vue-router';
 import Authorize from './Authorize.vue';
-import { getWindowApp } from './utils';
+import VApp from './App.vue';
+import { providePayload } from './di';
+import type { HydrationPayload } from './types';
 
-export function createApp() {
-    const app = createSSRApp(Authorize);
+export function createApp(payload: HydrationPayload) : {app: App, router: Router} {
+    const app = createSSRApp(VApp);
     const pinia = createPinia();
 
     app.use(pinia);
@@ -35,7 +39,9 @@ export function createApp() {
     const isClient = typeof window !== 'undefined';
 
     const router = createRouter({
-        history: isClient ? createWebHistory() : createMemoryHistory(),
+        history: isClient ?
+            createWebHistory() :
+            createMemoryHistory(),
         routes: [
             {
                 component: Authorize,
@@ -56,12 +62,10 @@ export function createApp() {
 
     app.use(router);
 
-    const windowApp = getWindowApp();
-    console.log(windowApp);
-    const { config: windowAppConfig } = windowApp;
+    providePayload(payload, app);
 
     install(app, {
-        baseURL: windowAppConfig.baseURL,
+        baseURL: payload?.config?.baseURL,
         pinia,
     });
 

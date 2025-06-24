@@ -31,7 +31,7 @@ export async function registerAssetsMiddleware(router: Router, input?: OptionsIn
     const server = await vite.createServer({
         root: path.join(resolvePackagePath(), 'client'),
         base: '/public/',
-        logLevel: 'info',
+        logLevel: 'error',
         server: {
             middlewareMode: true,
             watch: {

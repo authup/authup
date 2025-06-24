@@ -9,7 +9,7 @@
         "cli": "node dist/cli/index.js",
         "cli-dev": "ts-node src/cli/index.ts",
         "build:client-client": "vite build client --ssrManifest .vite/ssr-manifest.json --outDir ../public/",
-        "build:client-server": "vite build client --ssr src/server.js --outDir dist/server",
+        "build:client-server": "vite build client --ssr src/server.ts --outDir dist/server",
         "build:client": "npm run build:client-server && npm run build:client-client",
         "build:server": "rm -rf ./dist && tsc -p tsconfig.build.json",
         "build:swagger": "npm run cli -- swagger generate",

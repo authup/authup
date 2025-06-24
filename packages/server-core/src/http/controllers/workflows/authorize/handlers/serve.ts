@@ -39,7 +39,10 @@ export async function serveAuthorizationRouteHandler(
     return sendClientResponse(req, res, {
         data: {
             codeRequest,
-            error,
+            error: {
+                ...error,
+                message: error.message,
+            },
             client,
             scopes,
         },

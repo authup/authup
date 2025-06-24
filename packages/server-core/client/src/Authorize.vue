@@ -10,26 +10,22 @@ import type {
     Client, OAuth2AuthorizationCodeRequest, Scope,
 } from '@authup/core-kit';
 import { defineComponent } from 'vue';
-import { getWindowApp } from './utils';
+import { injectPayload } from './di';
 
 export default defineComponent({
     components: {
         AAuthorize,
     },
     setup() {
-        const app = getWindowApp();
-
-        const { data } = app as {
-            data: {
-                codeRequest: OAuth2AuthorizationCodeRequest | undefined,
-                error: Error | undefined,
-                client: Client | undefined,
-                scopes: Scope[] | undefined
-            }
-        };
+        const app = injectPayload<{
+            codeRequest: OAuth2AuthorizationCodeRequest | undefined,
+            error: Error | undefined,
+            client: Client | undefined,
+            scopes: Scope[] | undefined
+        }>();
 
         return {
-            data,
+            data: app.data,
         };
     },
 });

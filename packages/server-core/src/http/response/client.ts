@@ -27,9 +27,8 @@ export async function sendClientResponse(
 
     const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
 
-    const hydrationData = {
+    const payload = {
         config: {
-
             baseURL: config.publicUrl,
         },
         data: options.data || {},
@@ -66,13 +65,16 @@ export async function sendClientResponse(
         render = (await load('./client/dist/server/server.mjs')).render;
     }
 
-    const [appHtml, preloadLinks] = await render('/', manifest);
+    const [appHtml, preloadLinks] = await render({
+        url: options.path || '/',
+        manifest,
+        payload,
+    });
 
-    return send(res, html
-        .replace('<!--preload-links-->', preloadLinks)
-        .replace('<!--app-html-->', appHtml)
-        .replace('<!--hydration-data-->', `
-        <script>
-        window.hydrationData = ${JSON.stringify(hydrationData)};
-        </script>`));
+    return send(
+        res,
+        html
+            .replace('<!--preload-links-->', preloadLinks)
+            .replace('<!--app-html-->', appHtml),
+    );
 }
