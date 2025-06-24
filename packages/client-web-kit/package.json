@@ -54,7 +54,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@vueuse/integrations": "^13.3.0"
+        "@vueuse/integrations": "^13.4.0"
     },
     "devDependencies": {
         "@authup/access": "^1.0.0-beta.26",
@@ -79,7 +79,7 @@
         "smob": "^1.5.0",
         "socket.io-client": "^4.8.1",
         "universal-cookie": "^8.0.1",
-        "vue": "^3.5.12",
+        "vue": "^3.5.17",
         "vue-tsc": "^2.2.10"
     },
     "peerDependencies": {
