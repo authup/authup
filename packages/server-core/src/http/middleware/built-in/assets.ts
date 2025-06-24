@@ -7,16 +7,29 @@
 
 import { load } from 'locter';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
-import type { OptionsInput } from '@routup/assets';
-import { assets } from '@routup/assets';
+import { createHandler } from '@routup/assets';
 import path from 'node:path';
 import type { Router } from 'routup';
 import { coreHandler, setRequestParam } from 'routup';
-import { resolvePackagePath } from '../../../path';
+import { resolveClientWebSlimPackagePath, resolvePackagePath } from '../../../path';
 
-export async function registerAssetsMiddleware(router: Router, input?: OptionsInput) {
+export async function registerAssetsMiddleware(router: Router) {
     if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
-        router.use('public', assets(path.posix.join(resolvePackagePath(), 'public'), input));
+        router.use('public', createHandler(
+            path.posix.join(resolvePackagePath(), 'public'),
+            {
+                fallthrough: true,
+                scan: false,
+            },
+        ));
+
+        router.use('public', createHandler(
+            path.posix.join(resolveClientWebSlimPackagePath(), 'dist', 'client'),
+            {
+                fallthrough: false,
+                scan: false,
+            },
+        ));
         return;
     }
 
@@ -29,7 +42,7 @@ export async function registerAssetsMiddleware(router: Router, input?: OptionsIn
      * @type {import('vite').ViteDevServer}
      */
     const server = await vite.createServer({
-        root: path.join(resolvePackagePath(), 'client'),
+        root: resolveClientWebSlimPackagePath(),
         base: '/public/',
         logLevel: 'error',
         server: {

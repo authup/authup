@@ -12,7 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { useConfig } from '../../config';
-import { resolvePackagePath } from '../../path';
+import { resolveClientWebSlimPackagePath } from '../../path';
 
 type ClientAppResponseOptions = {
     data?: Record<string, any>,
@@ -38,6 +38,8 @@ export async function sendClientResponse(
     let manifest : Record<string, any>;
     let render : CallableFunction;
 
+    const clientWebSlimPackagePath = resolveClientWebSlimPackagePath();
+
     if (isJIT) {
         /**
          * @type {import('vite').ViteDevServer}
@@ -45,24 +47,24 @@ export async function sendClientResponse(
         const vite = useRequestParam(req, 'viteServer');
 
         html = await fs.promises.readFile(
-            path.join(resolvePackagePath(), 'client', 'index.html'),
+            path.join(clientWebSlimPackagePath, 'index.html'),
             'utf-8',
         );
         html = await vite.transformIndexHtml('/', html);
         manifest = {};
-        render = (await vite.ssrLoadModule('/src/server.js')).render;
+        render = (await vite.ssrLoadModule('/src/server.ts')).render;
     } else {
         html = await fs.promises.readFile(
-            path.join(resolvePackagePath(), 'public', 'index.html'),
+            path.join(clientWebSlimPackagePath, 'dist', 'client', 'index.html'),
             'utf-8',
         );
 
         manifest = JSON.parse(await fs.promises.readFile(
-            path.join(resolvePackagePath(), 'public', '.vite', 'ssr-manifest.json'),
+            path.join(clientWebSlimPackagePath, 'dist', 'client', '.vite', 'ssr-manifest.json'),
             'utf-8',
         ));
 
-        render = (await load('./client/dist/server/server.mjs')).render;
+        render = (await load(path.join(clientWebSlimPackagePath, 'dist', 'server', 'server.js'))).render;
     }
 
     const [appHtml, preloadLinks] = await render({

@@ -19,10 +19,10 @@ import '@fortawesome/fontawesome-free/css/all.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import '@vuecs/pagination/dist/index.css';
 import '@authup/client-web-kit/../dist/index.css';
-import '../../../client-web/assets/css/bootstrap-override.css';
-import '../../../client-web/assets/css/root.css';
-import '../../../client-web/assets/css/form.css';
-import '../../../client-web/assets/css/generics.css';
+import '../../client-web/assets/css/bootstrap-override.css';
+import '../../client-web/assets/css/root.css';
+import '../../client-web/assets/css/form.css';
+import '../../client-web/assets/css/generics.css';
 
 import type { Router } from 'vue-router';
 import Authorize from './Authorize.vue';

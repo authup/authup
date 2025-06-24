@@ -16,11 +16,11 @@ export default defineConfig(() => ({
     ],
     resolve: {
         alias: {
-            '@authup/core-kit': path.join(__dirname, '..', '..', 'core-kit', 'src'),
-            '@authup/core-http-kit': path.join(__dirname, '..', '..', 'core-http-kit', 'src'),
-            '@authup/kit': path.join(__dirname, '..', '..', 'kit', 'src'),
-            '@authup/client-web-kit': path.join(__dirname, '..', '..', 'client-web-kit', 'src'),
-            '@authup/specs': path.join(__dirname, '..', '..', 'specs', 'src'),
+            '@authup/core-kit': path.join(__dirname, '..', 'core-kit', 'src'),
+            '@authup/core-http-kit': path.join(__dirname, '..', 'core-http-kit', 'src'),
+            '@authup/kit': path.join(__dirname, '..', 'kit', 'src'),
+            '@authup/client-web-kit': path.join(__dirname, '..', 'client-web-kit', 'src'),
+            '@authup/specs': path.join(__dirname, '..', 'specs', 'src'),
         },
     },
 }));

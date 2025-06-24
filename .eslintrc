@@ -23,6 +23,7 @@
                     "**/rollup.config.mjs",
                     "packages/client-web/**",
                     "packages/client-web-kit/**",
+                    "packages/client-web-slim/**",
                     "packages/server-core/client/**"
                 ]
             }

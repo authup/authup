@@ -34,10 +34,7 @@ export async function registerMiddlewares(router: Router) {
         registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
     }
 
-    await registerAssetsMiddleware(router, {
-        scan: false,
-        fallthrough: false,
-    });
+    await registerAssetsMiddleware(router);
 
     registerBasicMiddleware(router);
 
