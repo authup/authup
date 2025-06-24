@@ -80,7 +80,7 @@ class TestSuite {
     }
 
     protected async startServer() : Promise<void> {
-        const router = createRouter();
+        const router = await createRouter();
         const server = createServer(createNodeDispatcher(router));
 
         this._server = await new Promise<Server>((resolve, reject) => {

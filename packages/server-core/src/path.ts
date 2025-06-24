@@ -15,6 +15,10 @@ export function resolvePackagePath() {
     return path.resolve(resolveRootPath(), '..');
 }
 
+export function resolveClientWebSlimPackagePath() {
+    return path.resolve(resolveRootPath(), '..', '..', 'client-web-slim');
+}
+
 export function getSrcPath() {
     return path.join(resolvePackagePath(), 'src');
 }

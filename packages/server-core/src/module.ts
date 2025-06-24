@@ -138,7 +138,7 @@ export class Application {
 
         logger.info('Starting http server...');
 
-        const router = createRouter();
+        const router = await createRouter();
         const httpServer = createHttpServer({ router });
         httpServer.listen(this.config.port, this.config.host, () => {
             logger.info('Started http server.');
