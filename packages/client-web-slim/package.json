@@ -46,7 +46,7 @@
         "@authup/core-kit": "^1.0.0-beta.26",
         "@authup/core-http-kit": "^1.0.0-beta.26",
         "@fortawesome/fontawesome-free": "^6.7.2",
-        "@vitejs/plugin-vue": "^5.2.4",
+        "@vitejs/plugin-vue": "^6.0.0",
         "@vuecs/countdown": "^1.0.0",
         "@vuecs/form-controls": "^2.4.2",
         "@vuecs/list-controls": "^2.0.0",
@@ -59,7 +59,7 @@
         "@vuelidate/validators": "^2.0.4",
         "bootstrap": "^5.3.7",
         "pinia": "^3.0.0",
-        "vite": "^6.3.5",
+        "vite": "^7.0.0",
         "vue": "^3.5.17",
         "vue-router": "^4.4.5"
     },
@@ -81,7 +81,7 @@
         "@vuelidate/validators": "^2.0.4",
         "bootstrap": "^5.3.7",
         "pinia": "^3.0.0",
-        "vite": "^6.3.5",
+        "vite": "^7.0.0",
         "vue": "^3.5.17",
         "vue-router": "^4.4.5"
     },
