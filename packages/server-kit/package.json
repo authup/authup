@@ -65,15 +65,15 @@
         "winston": "^3.17.0"
     },
     "devDependencies": {
-        "@authup/core-realtime-kit": "^1.0.0-beta.26",
+        "@authup/core-realtime-kit": "^1.0.1-beta.26",
         "@authup/kit": "^1.0.0-beta.26",
-        "@authup/errors": "^1.0.0-beta.26",
+        "@authup/errors": "^1.0.1-beta.26",
         "@authup/specs": "^1.0.0-beta.26"
     },
     "peerDependencies": {
-        "@authup/core-realtime-kit": "^1.0.0-beta.26",
+        "@authup/core-realtime-kit": "^1.0.1-beta.26",
         "@authup/kit": "^1.0.0-beta.26",
-        "@authup/errors": "^1.0.0-beta.26",
+        "@authup/errors": "^1.0.1-beta.26",
         "@authup/specs": "^1.0.0-beta.26"
     },
     "publishConfig": {
