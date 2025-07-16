@@ -41,5 +41,5 @@ export function useTranslationsForNestedValidation<
     V extends ValidationArgs = ValidationArgs,
     T = unknown,
 >(validation: Validation<V, T>) : NestedValidationsTranslations<T> {
-    return _useTranslationsForNestedValidations(validation);
+    return _useTranslationsForNestedValidations<V, T>(validation);
 }
