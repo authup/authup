@@ -21,17 +21,16 @@ export class UserValidator extends Container<User> {
                 .string()
                 .min(3)
                 .max(128)
-                .superRefine((val, ctx) : val is string => {
+                .check((ctx) => {
                     try {
-                        isUserNameValid(val, { throwOnFailure: true });
+                        isUserNameValid(ctx.value, { throwOnFailure: true });
                     } catch (e) {
-                        ctx.addIssue({
-                            code: zod.ZodIssueCode.custom,
+                        ctx.issues.push({
+                            input: ctx.value,
+                            code: 'custom',
                             message: e instanceof Error ? e.message : 'The user name is not valid.',
                         });
                     }
-
-                    return zod.NEVER;
                 }),
         );
 

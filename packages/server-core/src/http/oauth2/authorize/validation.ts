@@ -26,14 +26,15 @@ export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCode
                 zod
                     .string()
                     .nonempty()
-                    .superRefine((value, ctx) : value is string => {
+                    .check((ctx) => {
                         const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
-                        const responseTypes = value.split(' ') as OAuth2AuthorizationResponseType[];
+                        const responseTypes = ctx.value.split(' ') as OAuth2AuthorizationResponseType[];
 
                         for (let i = 0; i < responseTypes.length; i++) {
                             if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
                                 const error = OAuth2Error.responseTypeUnsupported();
-                                ctx.addIssue({
+                                ctx.issues.push({
+                                    input: responseTypes[i],
                                     code: 'custom',
                                     message: error.message,
                                 });

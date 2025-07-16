@@ -47,17 +47,17 @@ export function parseConfig(input: unknown = {}): ConfigInput {
         authorizeRedirectUrl: zod.string()
             .url().optional(),
         middlewareBody: zod.boolean()
-            .or(zod.record(zod.any())).optional(),
+            .or(zod.record(zod.string(), zod.any())).optional(),
         middlewareCors: zod.boolean()
-            .or(zod.record(zod.any())).optional(),
+            .or(zod.record(zod.string(), zod.any())).optional(),
         middlewareCookie: zod.boolean()
-            .or(zod.record(zod.any())).optional(),
+            .or(zod.record(zod.string(), zod.any())).optional(),
         middlewareQuery: zod.boolean()
-            .or(zod.record(zod.any())).optional(),
+            .or(zod.record(zod.string(), zod.any())).optional(),
         middlewarePrometheus: zod.boolean()
-            .or(zod.record(zod.any())).optional(),
+            .or(zod.record(zod.string(), zod.any())).optional(),
         middlewareRateLimit: zod.boolean()
-            .or(zod.record(zod.any())).optional(),
+            .or(zod.record(zod.string(), zod.any())).optional(),
         middlewareSwagger: zod.boolean().optional(),
 
         tokenAccessMaxAge: zod.number()
