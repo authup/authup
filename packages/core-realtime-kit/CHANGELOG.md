@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
+
+
+### Bug Fixes
+
+* minor changes to keywords in package.json(s) ([d672947](https://github.com/authup/authup/commit/d672947c4036d9849c031fa43a1718d1a621d581))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+
 ## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
 
 

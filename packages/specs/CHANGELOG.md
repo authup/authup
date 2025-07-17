@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
+
+
+### Features
+
+* refactored internal scope handling & authorize error formatting ([#2676](https://github.com/authup/authup/issues/2676)) ([9444ec2](https://github.com/authup/authup/commit/9444ec23a12e00c3397eda2bb28cbc08193f9a69))
+* track authroization through idp redirect & callback ([#2669](https://github.com/authup/authup/issues/2669)) ([5cab0f4](https://github.com/authup/authup/commit/5cab0f405c2d9361f62d1aeb03f83fe8e23c7326))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+  * peerDependencies
+    * @authup/errors bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+
 ## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
 
 
