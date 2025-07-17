@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.0.1-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.1-beta.27) (2025-07-17)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 
