@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.26) (2025-07-17)
+
+
+### Features
+
+* export route meta key in nuxt module ([4715eea](https://github.com/authup/authup/commit/4715eead0a20b32ec4fa08c2a2d75a6320003cee))
+* find user,robot & client lazy ([#2673](https://github.com/authup/authup/issues/2673)) ([331b3ee](https://github.com/authup/authup/commit/331b3ee86cacdb99590a19386facedd2c32cee2b))
+* move authorize & login component to kit package ([#2663](https://github.com/authup/authup/issues/2663)) ([defcdda](https://github.com/authup/authup/commit/defcdda91e944f7a113d872b8528c32646204000))
+* refactored internal scope handling & authorize error formatting ([#2676](https://github.com/authup/authup/issues/2676)) ([9444ec2](https://github.com/authup/authup/commit/9444ec23a12e00c3397eda2bb28cbc08193f9a69))
+* serve authorization component form via api ([#2666](https://github.com/authup/authup/issues/2666)) ([c88a13f](https://github.com/authup/authup/commit/c88a13f2f5f60b28a76526b0469b623c73b3ab78))
+* serve static files in public folder ([a426bd2](https://github.com/authup/authup/commit/a426bd253494a3af6d8bf7b3625743128df133bf))
+* slime web app with vite ([#2689](https://github.com/authup/authup/issues/2689)) ([2084e99](https://github.com/authup/authup/commit/2084e99dc30c1ba7f3ad9fa4af371ad40d59fcd7))
+* track authroization through idp redirect & callback ([#2669](https://github.com/authup/authup/issues/2669)) ([5cab0f4](https://github.com/authup/authup/commit/5cab0f405c2d9361f62d1aeb03f83fe8e23c7326))
+* validate user in idp account creation ([#2671](https://github.com/authup/authup/issues/2671)) ([084ec15](https://github.com/authup/authup/commit/084ec151348591fea272c93b66fa5601780266d3))
+
+
+### Bug Fixes
+
+* cleanup policy evaluator function signature ([4cd41db](https://github.com/authup/authup/commit/4cd41db762d00b60303165630f93c8da3f8074da))
+* **client-web-kit:** translator composable usage ([769f624](https://github.com/authup/authup/commit/769f6242f35d17397d6fadbde29c5c7403933c7b))
+* **deps:** bump dependencies ([c5e66dd](https://github.com/authup/authup/commit/c5e66ddd50ea4f4b596e47ff99e3a3d6c8133e22))
+* **deps:** bump the minorandpatch group across 1 directory with 11 updates ([#2672](https://github.com/authup/authup/issues/2672)) ([242bedd](https://github.com/authup/authup/commit/242bedd9c611b84293ba75cc9427892c7ac962c6))
+* **deps:** bump the minorandpatch group across 1 directory with 21 updates ([#2653](https://github.com/authup/authup/issues/2653)) ([eb5cdcd](https://github.com/authup/authup/commit/eb5cdcd775466506ec4d86166e6de55e9868f46b))
+* **deps:** bump the minorandpatch group across 1 directory with 22 updates ([#2687](https://github.com/authup/authup/issues/2687)) ([f10970b](https://github.com/authup/authup/commit/f10970b89ae166cb33de9841bb221b40eb28081c))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2692](https://github.com/authup/authup/issues/2692)) ([b0c963a](https://github.com/authup/authup/commit/b0c963a3135ebfccc908f0b1bec2900faccdc59a))
+* remove non unique entries on start up ([cae3df5](https://github.com/authup/authup/commit/cae3df562005936efc6bb9b79c9050ee81b300b0))
+
 ## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
 
 

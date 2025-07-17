@@ -45,11 +45,11 @@
         "smob": "^1.5.0"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.26",
+        "@authup/errors": "^1.0.1-beta.26",
         "@authup/kit": "^1.0.0-beta.26"
     },
     "peerDependencies": {
-        "@authup/errors": "^1.0.0-beta.26",
+        "@authup/errors": "^1.0.1-beta.26",
         "@authup/kit": "^1.0.0-beta.26"
     },
     "publishConfig": {
