@@ -1,5 +1,46 @@
 # Change Log
 
+## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
+
+
+### Features
+
+* move authorize & login component to kit package ([#2663](https://github.com/authup/authup/issues/2663)) ([defcdda](https://github.com/authup/authup/commit/defcdda91e944f7a113d872b8528c32646204000))
+* refactored internal scope handling & authorize error formatting ([#2676](https://github.com/authup/authup/issues/2676)) ([9444ec2](https://github.com/authup/authup/commit/9444ec23a12e00c3397eda2bb28cbc08193f9a69))
+* serve authorization component form via api ([#2666](https://github.com/authup/authup/issues/2666)) ([c88a13f](https://github.com/authup/authup/commit/c88a13f2f5f60b28a76526b0469b623c73b3ab78))
+* track authroization through idp redirect & callback ([#2669](https://github.com/authup/authup/issues/2669)) ([5cab0f4](https://github.com/authup/authup/commit/5cab0f405c2d9361f62d1aeb03f83fe8e23c7326))
+
+
+### Bug Fixes
+
+* cleanup policy evaluator function signature ([4cd41db](https://github.com/authup/authup/commit/4cd41db762d00b60303165630f93c8da3f8074da))
+* **client-web-kit:** translator composable usage ([769f624](https://github.com/authup/authup/commit/769f6242f35d17397d6fadbde29c5c7403933c7b))
+* **deps:** bump the minorandpatch group across 1 directory with 11 updates ([#2672](https://github.com/authup/authup/issues/2672)) ([242bedd](https://github.com/authup/authup/commit/242bedd9c611b84293ba75cc9427892c7ac962c6))
+* **deps:** bump the minorandpatch group across 1 directory with 21 updates ([#2653](https://github.com/authup/authup/issues/2653)) ([eb5cdcd](https://github.com/authup/authup/commit/eb5cdcd775466506ec4d86166e6de55e9868f46b))
+* **deps:** bump the minorandpatch group across 1 directory with 22 updates ([#2687](https://github.com/authup/authup/issues/2687)) ([f10970b](https://github.com/authup/authup/commit/f10970b89ae166cb33de9841bb221b40eb28081c))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2692](https://github.com/authup/authup/issues/2692)) ([b0c963a](https://github.com/authup/authup/commit/b0c963a3135ebfccc908f0b1bec2900faccdc59a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/core-kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/core-http-kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/errors bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/specs bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/core-kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/core-http-kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/errors bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+    * @authup/specs bumped from ^1.0.0-beta.26 to ^1.0.0-beta.27
+
 ## [1.0.0-beta.26](https://github.com/authup/authup/compare/v1.0.0-beta.25...v1.0.0-beta.26) (2025-04-14)
 
 

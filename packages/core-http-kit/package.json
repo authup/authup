@@ -1,6 +1,6 @@
 {
     "name": "@authup/core-http-kit",
-    "version": "1.0.0-beta.26",
+    "version": "1.0.0-beta.27",
     "description": "Package containing global constants, types & interfaces.",
     "license": "Apache-2.0",
     "exports": {
@@ -61,18 +61,18 @@
         "rapiq": "^0.9.0"
     },
     "devDependencies": {
-        "@authup/access": "^1.0.0-beta.26",
-        "@authup/errors": "^1.0.0-beta.26",
-        "@authup/kit": "^1.0.0-beta.26",
-        "@authup/core-kit": "^1.0.0-beta.26",
-        "@authup/specs": "^1.0.0-beta.26"
+        "@authup/access": "^1.0.0-beta.27",
+        "@authup/errors": "^1.0.0-beta.27",
+        "@authup/kit": "^1.0.0-beta.27",
+        "@authup/core-kit": "^1.0.0-beta.27",
+        "@authup/specs": "^1.0.0-beta.27"
     },
     "peerDependencies": {
-        "@authup/access": "^1.0.0-beta.26",
-        "@authup/errors": "^1.0.0-beta.26",
-        "@authup/kit": "^1.0.0-beta.26",
-        "@authup/core-kit": "^1.0.0-beta.26",
-        "@authup/specs": "^1.0.0-beta.26"
+        "@authup/access": "^1.0.0-beta.27",
+        "@authup/errors": "^1.0.0-beta.27",
+        "@authup/kit": "^1.0.0-beta.27",
+        "@authup/core-kit": "^1.0.0-beta.27",
+        "@authup/specs": "^1.0.0-beta.27"
     },
     "publishConfig": {
         "access": "public"
