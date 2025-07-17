@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.27) (2025-07-17)
+
+
+### Bug Fixes
+
+* set dotenv loading option to quiet ([5a1186f](https://github.com/authup/authup/commit/5a1186f8f9f634eda7a97c2e0de747ca0eebc312))
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 
