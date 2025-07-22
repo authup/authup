@@ -76,7 +76,7 @@
         "hapic": "^2.5.1",
         "ldapjs": "^3.0.7",
         "locter": "^2.1.4",
-        "morgan": "^1.10.0",
+        "morgan": "^1.10.1",
         "mysql2": "^3.14.1",
         "node-cron": "^4.2.1",
         "nodemailer": "^7.0.5",
@@ -101,7 +101,7 @@
         "@vitejs/plugin-vue": "^6.0.0",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.1.1",
-        "testcontainers": "^11.0.3",
+        "testcontainers": "^11.3.2",
         "ts-node": "^10.8.2",
         "vite": "^7.0.0"
     },
