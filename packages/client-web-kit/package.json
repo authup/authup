@@ -66,7 +66,7 @@
         "@authup/specs": "^1.0.0-beta.27",
         "@ilingo/vuelidate": "^5.0.4",
         "@posva/event-emitter": "^1.0.3",
-        "@types/node": "^24.0.10",
+        "@types/node": "^24.1.0",
         "@vitejs/plugin-vue": "^6.0.0",
         "@vuecs/form-controls": "^2.4.2",
         "@vuecs/list-controls": "^2.0.0",
@@ -79,8 +79,8 @@
         "smob": "^1.5.0",
         "socket.io-client": "^4.8.1",
         "universal-cookie": "^8.0.1",
-        "vue": "^3.5.17",
-        "vue-tsc": "^3.0.0"
+        "vue": "^3.5.18",
+        "vue-tsc": "^3.0.3"
     },
     "peerDependencies": {
         "@authup/access": "^1.0.0-beta.27",
