@@ -70,13 +70,13 @@
         "citty": "^0.1.6",
         "confinity": "^1.0.0-beta.1",
         "cors": "^2.8.5",
-        "dotenv": "^17.2.0",
+        "dotenv": "^17.2.1",
         "dycraft": "^1.1.0",
         "envix": "^1.5.0",
         "hapic": "^2.5.1",
         "ldapjs": "^3.0.7",
         "locter": "^2.1.4",
-        "morgan": "^1.10.0",
+        "morgan": "^1.10.1",
         "mysql2": "^3.14.1",
         "node-cron": "^4.2.1",
         "nodemailer": "^7.0.5",
@@ -89,7 +89,7 @@
         "typeorm-extension": "^3.7.1",
         "uncrypto": "^0.1.3",
         "validup": "^0.1.9",
-        "zod": "^4.0.5"
+        "zod": "^4.0.10"
     },
     "devDependencies": {
         "@authup/client-web-slim": "^1.0.0-beta.27",
@@ -100,8 +100,8 @@
         "@faker-js/faker": "^9.8.0",
         "@vitejs/plugin-vue": "^6.0.0",
         "jest-serial-runner": "^1.2.1",
-        "supertest": "^7.1.1",
-        "testcontainers": "^11.0.3",
+        "supertest": "^7.1.4",
+        "testcontainers": "^11.4.0",
         "ts-node": "^10.8.2",
         "vite": "^7.0.0"
     },
