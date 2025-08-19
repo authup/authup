@@ -100,8 +100,8 @@
         "@faker-js/faker": "^9.8.0",
         "@vitejs/plugin-vue": "^6.0.0",
         "jest-serial-runner": "^1.2.1",
-        "supertest": "^7.1.1",
-        "testcontainers": "^11.0.3",
+        "supertest": "^7.1.4",
+        "testcontainers": "^11.5.1",
         "ts-node": "^10.8.2",
         "vite": "^7.0.0"
     },
