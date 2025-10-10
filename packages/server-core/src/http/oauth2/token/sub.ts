@@ -65,7 +65,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
                         prefix: CachePrefix.CLIENT,
                         key: id,
                     }),
-                    milliseconds: 60.000,
+                    milliseconds: 60_000,
                 });
 
             // todo: check if attributes matches repository.metadata.columns[].databaseName
@@ -90,7 +90,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
                         prefix: CachePrefix.USER,
                         key: id,
                     }),
-                    milliseconds: 60.000,
+                    milliseconds: 60_000,
                 });
 
             // todo: check if attributes matches repository.metadata.columns[].databaseName
@@ -125,7 +125,7 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
                         prefix: CachePrefix.ROBOT,
                         key: id,
                     }),
-                    milliseconds: 60.000,
+                    milliseconds: 60_000,
                 });
 
             // todo: check if attributes matches repository.metadata.columns[].databaseName
