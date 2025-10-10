@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.27) (2025-10-10)
+
+
+### Bug Fixes
+
+* millisecond cache specification for oauth2 sub entity loading ([16c9df0](https://github.com/authup/authup/commit/16c9df05da2ee0a0f54a210cc36ca367cbc7765c))
+* set dotenv loading option to quiet ([5a1186f](https://github.com/authup/authup/commit/5a1186f8f9f634eda7a97c2e0de747ca0eebc312))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/core-http-kit bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/server-kit bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+  * devDependencies
+    * @authup/client-web-slim bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 
