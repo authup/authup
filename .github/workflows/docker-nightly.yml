@@ -12,7 +12,7 @@ jobs:
             contents: read
 
         steps:
-            -   uses: actions/checkout@v5
+            -   uses: actions/checkout@v6
 
             -   uses: tada5hi/action-docker-image-publish@v3
                 with:
