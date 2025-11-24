@@ -97,7 +97,7 @@
         "@types/ldapjs": "^3.0.6",
         "@types/morgan": "^1.9.10",
         "@types/supertest": "^6.0.3",
-        "@faker-js/faker": "^9.8.0",
+        "@faker-js/faker": "^10.1.0",
         "@vitejs/plugin-vue": "^6.0.0",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.1.1",
