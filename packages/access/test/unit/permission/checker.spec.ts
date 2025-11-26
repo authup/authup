@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { describe, expect, it } from 'vitest';
+
 import { ErrorCode } from '@authup/errors';
 import type { AttributeNamesPolicy, PermissionItem, PolicyWithType } from '../../../src';
 import {

@@ -4,7 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { Server } from 'socket.io';
@@ -15,7 +17,7 @@ describe('src/manager', () => {
     let server : Server<CTSEvents, STCEvents, STSEvents>;
     let port : number;
 
-    beforeAll((done) => {
+    beforeAll(async () => {
         const httpServer = createServer();
         server = new Server(httpServer);
         server.use((socket, next) => {
@@ -25,9 +27,13 @@ describe('src/manager', () => {
 
             next();
         });
-        httpServer.listen(() => {
-            port = (httpServer.address() as AddressInfo).port;
-            done();
+
+        return new Promise<void>((resolve) => {
+            httpServer.listen(() => {
+                port = (httpServer.address() as AddressInfo).port;
+
+                resolve();
+            });
         });
     });
 
@@ -106,7 +112,7 @@ describe('src/manager', () => {
         socket.disconnect();
     });
 
-    it('should connect with token', (done) => {
+    it('should connect with token', async () => {
         const manager = new ClientManager({
             url: `http://localhost:${port}`,
             token: () => Promise.resolve('foo-bar-baz'),
@@ -114,15 +120,15 @@ describe('src/manager', () => {
 
         expect.assertions(1);
 
-        Promise.resolve()
-            .then(() => manager.connect())
-            .then((socket) => {
-                socket.on('token', (token) => {
-                    expect(token).toEqual('foo-bar-baz');
-                    socket.disconnect();
+        const socket = await manager.connect();
 
-                    done();
-                });
+        await new Promise<void>((resolve) => {
+            socket.on('token', (token) => {
+                expect(token).toEqual('foo-bar-baz');
+                socket.disconnect();
+
+                resolve();
             });
+        });
     });
 });

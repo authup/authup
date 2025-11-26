@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
 import { createFakeRobot, createTestSuite, expectPropertiesEqualToSrc } from '../../../../utils';
 
 describe('src/http/controllers/robot', () => {

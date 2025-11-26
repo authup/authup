@@ -22,8 +22,8 @@
         "build:js": "rollup -c",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
         "build:watch": "npm run build -- --watch",
-        "test": "cross-env NODE_ENV=test jest --config ./test/jest.config.js",
-        "test:coverage": "cross-env NODE_ENV=test jest --config ./test/jest.config.js --coverage"
+        "test": "cross-env NODE_ENV=test vitest run test/unit",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
     "keywords": [
         "auth",
@@ -56,6 +56,9 @@
     "dependencies": {
         "destr": "^2.0.3",
         "nanoid": "^5.1.6"
+    },
+    "devDependencies": {
+        "vitest": "^4.0.14"
     },
     "publishConfig": {
         "access": "public"

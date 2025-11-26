@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StartedTestContainer } from 'testcontainers';
+import { inject } from 'vitest';
 import { LdapClient } from '../../src/core';
 
 export async function createLdapTestUserAccount(client: LdapClient) {
@@ -31,8 +31,7 @@ export async function dropLdapTestUserAccount(client: LdapClient) {
 }
 
 export function createLdapTestClientURL() {
-    const container : StartedTestContainer = globalThis.OPENLDAP_CONTAINER;
-    return `ldap://${container.getHost()}:${container.getFirstMappedPort()}`;
+    return `ldap://${inject('OPENLDAP_CONTAINER_HOST')}:${inject('OPENLDAP_CONTAINER_PORT')}`;
 }
 
 export function createLdapTestClient() {

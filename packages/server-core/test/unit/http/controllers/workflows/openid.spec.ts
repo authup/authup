@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { useConfig } from '../../../../../src';
 import { createTestSuite } from '../../../../utils';

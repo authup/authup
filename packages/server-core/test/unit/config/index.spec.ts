@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { describe, expect, it } from 'vitest';
 import {
     normalizeConfig,
     readConfigRawFromFS,
-} from '../../../src';
+} from '../../../src/index';
 
 describe('src/config/*.ts', () => {
     it('should build config with defaults', async () => {

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { describe, expect, it } from 'vitest';
 import type { RealmMatchPolicy } from '../../../src';
 import {
     RealmMatchPolicyEvaluator,

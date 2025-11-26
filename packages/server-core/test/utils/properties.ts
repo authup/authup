@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { expect } from 'vitest';
+
 export function expectPropertiesEqualToSrc<T extends Record<string, any>>(
     src: T,
     dest: Record<string, any>,

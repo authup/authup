@@ -4,7 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
 import { createTestSuite } from '../../../../../utils';
 
 describe('token-revoke', () => {
