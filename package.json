@@ -42,7 +42,7 @@
         "@types/node": "^24.10.1",
         "@vitest/coverage-v8": "^4.0.14",
         "cross-env": "^10.1.0",
-        "eslint": "^8.57.0",
+        "eslint": "^9.39.1",
         "husky": "^9.1.7",
         "lint-staged": "^16.2.7",
         "nx": "^22.1.2",
