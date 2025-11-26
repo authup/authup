@@ -53,24 +53,36 @@ export class AttributesPolicyEvaluator<
         return maybeInvertPolicyOutcome(testIt(ctx.input.attributes as T), ctx.config.invert);
     }
 
-    protected fixQuery(query: Record<string, any>) {
-        const keys = Object.keys(query);
-        for (let i = 0; i < keys.length; i++) {
-            const key = keys[i];
-            const value = query[key];
-
-            if (isObject(value) || Array.isArray(value)) {
-                this.fixQuery(value);
-                continue;
+    protected fixQuery(
+        query: unknown | unknown[],
+    ) {
+        if (Array.isArray(query)) {
+            for (let i = 0; i < query.length; i++) {
+                this.fixQuery(query[i]);
             }
 
-            if (
-                key === '$regex' &&
-                typeof value === 'string'
-            ) {
-                const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
-                if (fragments) {
-                    query[key] = new RegExp(fragments[1], fragments[2]);
+            return;
+        }
+
+        if (isObject(query)) {
+            const keys = Object.keys(query);
+            for (let i = 0; i < keys.length; i++) {
+                const key = keys[i];
+                const value = query[key];
+
+                if (isObject(value) || Array.isArray(value)) {
+                    this.fixQuery(value);
+                    continue;
+                }
+
+                if (
+                    key === '$regex' &&
+                    typeof value === 'string'
+                ) {
+                    const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
+                    if (fragments) {
+                        query[key] = new RegExp(fragments[1], fragments[2]);
+                    }
                 }
             }
         }
