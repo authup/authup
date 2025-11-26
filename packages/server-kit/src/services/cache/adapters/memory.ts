@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Options } from '@isaacs/ttlcache';
-import TTLCache from '@isaacs/ttlcache';
+import type { TTLCacheOptions } from '@isaacs/ttlcache';
+import { TTLCache } from '@isaacs/ttlcache';
 import type { CacheClearOptions, CacheSetOptions } from '../types';
 import type { CacheAdapter } from './types';
 
@@ -15,7 +15,7 @@ export class MemoryCacheAdapter<
 > implements CacheAdapter {
     protected instance : TTLCache<string, VALUE>;
 
-    constructor(options: Options<string, VALUE> = {}) {
+    constructor(options: TTLCacheOptions<string, VALUE> = {}) {
         this.instance = new TTLCache<string, VALUE>({
             checkAgeOnGet: true,
             ttl: Infinity,
@@ -52,6 +52,10 @@ export class MemoryCacheAdapter<
             const keys = this.instance.keys();
             let iterator = keys.next();
             while (!iterator.done) {
+                if (typeof iterator.value !== 'string') {
+                    continue;
+                }
+
                 if (iterator.value.startsWith(options.prefix)) {
                     this.instance.delete(iterator.value);
                 }
