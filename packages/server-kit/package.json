@@ -21,8 +21,8 @@
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "rollup -c",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
-        "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_ENV=test jest --config ./test/jest.config.js",
-        "test:coverage": "npm run test -- --coverage"
+        "test": "cross-env NODE_ENV=test vitest run test/unit",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
     "keywords": [
         "auth",
@@ -59,7 +59,7 @@
         "@types/nodemailer": "^6.4.17",
         "locter": "^2.1.4",
         "uncrypto": "^0.1.3",
-        "redis-extension": "^2.0.1",
+        "redis-extension": "^2.0.4",
         "smob": "^1.5.0",
         "singa": "^1.0.0",
         "winston": "^3.17.0"
@@ -68,7 +68,8 @@
         "@authup/core-realtime-kit": "^1.0.0-beta.27",
         "@authup/kit": "^1.0.0-beta.27",
         "@authup/errors": "^1.0.0-beta.27",
-        "@authup/specs": "^1.0.0-beta.27"
+        "@authup/specs": "^1.0.0-beta.27",
+        "vitest": "^4.0.14"
     },
     "peerDependencies": {
         "@authup/core-realtime-kit": "^1.0.0-beta.27",

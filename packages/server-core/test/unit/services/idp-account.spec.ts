@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
 import type { IdentityProvider, OAuth2IdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';

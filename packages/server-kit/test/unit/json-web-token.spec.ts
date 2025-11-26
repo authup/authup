@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    beforeAll, describe, expect, it,
+} from 'vitest';
 import { JWTError } from '@authup/specs';
 import type { JWTClaims } from '@authup/specs';
 import {

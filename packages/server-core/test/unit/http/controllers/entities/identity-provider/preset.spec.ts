@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
 import type { OAuth2IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderPreset } from '@authup/core-kit';
 import { createOAuth2IdentityProviderFlow } from '../../../../../../src';

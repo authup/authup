@@ -12,7 +12,9 @@
             "@authup/core-kit": ["./packages/core-kit/src"],
             "@authup/core-http-kit": ["./packages/core-http-kit/src"],
             "@authup/specs": ["./packages/specs/src"]
-        }
+        },
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
     }
 }
 

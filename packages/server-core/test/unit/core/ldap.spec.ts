@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
 import { EqualityFilter } from 'ldapjs';
 import type { LdapClient } from '../../../src/core';
 import { createLdapTestClient, createLdapTestUserAccount, dropLdapTestUserAccount } from '../../utils/ldap';

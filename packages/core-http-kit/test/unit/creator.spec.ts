@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    describe, expect, it, vi,
+} from 'vitest';
 import { KeyValueV1API } from '@hapic/vault';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import { TokenAPI } from '@hapic/oauth2';
@@ -17,13 +20,13 @@ const tokenGrantResponse : TokenGrantResponse = {
     expires_in: 3600,
 };
 
-jest.spyOn(TokenAPI.prototype, 'createWithRobotCredentials')
+vi.spyOn(TokenAPI.prototype, 'createWithRobotCredentials')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
-jest.spyOn(TokenAPI.prototype, 'createWithPassword')
+vi.spyOn(TokenAPI.prototype, 'createWithPassword')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
-jest.spyOn(KeyValueV1API.prototype, 'getOne')
+vi.spyOn(KeyValueV1API.prototype, 'getOne')
     .mockImplementation((_mount, path) => {
         if (path === 'system') {
             return Promise.resolve({
@@ -37,7 +40,7 @@ jest.spyOn(KeyValueV1API.prototype, 'getOne')
         return Promise.resolve(undefined);
     });
 
-jest.spyOn(RobotAPI.prototype, 'integrity')
+vi.spyOn(RobotAPI.prototype, 'integrity')
     .mockReturnValue(Promise.resolve(undefined));
 
 describe('src/creator', () => {
@@ -85,24 +88,23 @@ describe('src/creator', () => {
         expect(output).toEqual(tokenGrantResponse);
     });
 
-    it('should create with handler on change', (done) => {
-        const creator = createTokenCreator({
-            type: 'user',
-            baseURL: 'http://localhot:3001',
-            name: 'admin',
-            password: 'start123',
-            realmId: 'foo',
-            realmName: 'bar',
-            created: (response) => {
-                expect(response).toBeDefined();
-                expect(response.access_token).toBeDefined();
+    it('should create with handler on change', async () => {
+        const output = await new Promise<TokenGrantResponse>((resolve) => {
+            const creator = createTokenCreator({
+                type: 'user',
+                baseURL: 'http://localhot:3001',
+                name: 'admin',
+                password: 'start123',
+                realmId: 'foo',
+                realmName: 'bar',
+                created: (response) => {
+                    resolve(response);
+                },
+            });
 
-                done();
-            },
+            creator();
         });
 
-        expect(creator).toBeDefined();
-
-        creator();
+        expect(output).toEqual(tokenGrantResponse);
     });
 });
