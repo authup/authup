@@ -33,7 +33,7 @@ export class TimePolicyValidator extends Container<TimePolicy> {
         this.mount('dayOfYear', createValidator(
             z.number()
                 .min(1)
-                .max(366)
+                .max(365)
                 .or(z.null())
                 .or(z.undefined())
                 .optional(),
