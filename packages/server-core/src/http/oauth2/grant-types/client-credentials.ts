@@ -11,7 +11,8 @@ import {
     OAuth2SubKind,
 } from '@authup/specs';
 import {
-    ScopeName, UserError,
+    ClientError,
+    ScopeName,
 } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
@@ -37,20 +38,13 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,
             realmId: client.realm.id,
-            realmName: client.realm.name,
+            realmName: client.realm.id,
             clientId: client.id,
         });
-
-        const {
-            token: refreshToken,
-            payload: refreshTokenPayload,
-        } = await this.issueRefreshToken(accessTokenPayload);
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenPayload,
-            refreshToken,
-            refreshTokenPayload,
         });
     }
 
@@ -62,7 +56,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
 
         const entity = await repository.verifyCredentials(id, secret, realmId);
         if (!entity) {
-            throw UserError.credentialsInvalid();
+            throw ClientError.credentialsInvalid();
         }
 
         return entity;
@@ -75,6 +69,10 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
 
         if (!clientId && !clientSecret) {
             const { authorization: headerValue } = request.headers;
+
+            if (typeof headerValue !== 'string') {
+                throw ClientError.credentialsInvalid();
+            }
 
             const header = parseAuthorizationHeader(headerValue);
 

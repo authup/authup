@@ -48,9 +48,9 @@ export interface Client {
 
     // ------------------------------------------------------------------
 
-    realm_id: Realm['id'] | null,
+    realm_id: Realm['id'],
 
-    realm: Realm | null,
+    realm: Realm,
 
     user_id: User['id'] | null,
 

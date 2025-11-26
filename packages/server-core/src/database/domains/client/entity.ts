@@ -105,12 +105,12 @@ export class ClientEntity implements Client {
 
     // ------------------------------------------------------------------
 
-    @Column({ nullable: true })
-        realm_id: Realm['id'] | null;
+    @Column()
+        realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
-        realm: RealmEntity | null;
+        realm: RealmEntity;
 
     @Column({ nullable: true })
         user_id: User['id'] | null;

@@ -20,7 +20,6 @@ import {
     RequestHandlerOperation,
     getRequestBodyRealmID,
     getRequestParamID,
-    isRequestIdentityMasterRealmMember,
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
 } from '../../../../request';
@@ -94,9 +93,7 @@ export async function writeClientRouteHandler(
     } else {
         if (!data.realm_id) {
             const identity = useRequestIdentityOrFail(req);
-            if (!isRequestIdentityMasterRealmMember(identity)) {
-                data.realm_id = identity.realmId;
-            }
+            data.realm_id = identity.realmId;
         }
 
         await permissionChecker.check({

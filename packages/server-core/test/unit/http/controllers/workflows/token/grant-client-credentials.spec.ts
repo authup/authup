@@ -1,0 +1,60 @@
+/*
+ * Copyright (c) 2024.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+import {
+    afterAll, beforeAll, describe, expect, it,
+} from 'vitest';
+import type { Client } from '@authup/core-kit';
+import { ErrorCode } from '@authup/errors';
+import { isClientError } from 'hapic';
+import { createFakeClient, createTestSuite } from '../../../../../utils';
+
+describe('refresh-token', () => {
+    const suite = createTestSuite();
+
+    let entity : Client;
+
+    beforeAll(async () => {
+        await suite.up();
+
+        entity = await suite.client.client.create(createFakeClient());
+    });
+
+    afterAll(async () => {
+        await suite.down();
+    });
+
+    it('should grant token with client credentials', async () => {
+        const response = await suite.client
+            .token
+            .createWithClientCredentials({
+                client_id: entity.id,
+                client_secret: entity.secret,
+            });
+
+        expect(response.access_token).toBeDefined();
+        expect(response.expires_in).toBeDefined();
+        expect(response.refresh_token).toBeUndefined();
+    });
+
+    it('should not grant with client-credentials (invalid credentials)', async () => {
+        expect.assertions(2);
+
+        try {
+            await suite.client
+                .token
+                .createWithClientCredentials({
+                    client_id: entity.id,
+                    client_secret: 'foo',
+                });
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status).toEqual(400);
+                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
+            }
+        }
+    });
+});

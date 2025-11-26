@@ -113,8 +113,12 @@ export class ClientRepository extends Repository<ClientEntity> {
         });
 
         for (let i = 0; i < entities.length; i++) {
-            if (!entities[i].secret || entities[i].is_confidential) {
+            if (!entities[i].secret) {
                 continue;
+            }
+
+            if (entities[i].is_confidential) {
+                return entities[i];
             }
 
             if (secret === entities[i].secret) {
