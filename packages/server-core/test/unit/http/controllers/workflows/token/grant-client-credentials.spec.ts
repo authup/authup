@@ -40,6 +40,32 @@ describe('refresh-token', () => {
         expect(response.refresh_token).toBeUndefined();
     });
 
+    it('should not grant with client-credentials (inactive)', async () => {
+        await suite.client.client.update(entity.id, {
+            active: false,
+        });
+
+        expect.assertions(2);
+
+        try {
+            await suite.client
+                .token
+                .createWithClientCredentials({
+                    client_id: entity.id,
+                    client_secret: entity.secret,
+                });
+        } catch (e) {
+            if (isClientError(e)) {
+                expect(e.status).toEqual(400);
+                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_INACTIVE);
+            }
+        } finally {
+            await suite.client.client.update(entity.id, {
+                active: true,
+            });
+        }
+    });
+
     it('should not grant with client-credentials (invalid credentials)', async () => {
         expect.assertions(2);
 

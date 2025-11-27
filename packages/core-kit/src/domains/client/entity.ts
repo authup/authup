@@ -8,12 +8,16 @@
 import type { User } from '../user';
 import type { Realm } from '../realm';
 
-// todo: add avatar/icon ?
-
 export interface Client {
     id: string,
 
+    // ------------------------------------------------------------------
+
     built_in: boolean;
+
+    is_confidential: boolean,
+
+    // ------------------------------------------------------------------
 
     name: string,
 
@@ -37,8 +41,6 @@ export interface Client {
      * URL prepended to relative URLs.
      */
     root_url: string | null,
-
-    is_confidential: boolean,
 
     // ------------------------------------------------------------------
 

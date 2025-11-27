@@ -157,6 +157,17 @@ export class ClientRequestValidator extends Container<ClientEntity> {
         );
 
         this.mount(
+            'active',
+            { optional: true },
+            createValidator(() => {
+                const chain = createValidationChain();
+                return chain
+                    .exists()
+                    .isBoolean();
+            }),
+        );
+
+        this.mount(
             'realm_id',
             { group: RequestHandlerOperation.CREATE, optional: true },
             createValidator(() => {

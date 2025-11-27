@@ -89,6 +89,14 @@ export class ClientEntity implements Client {
     })
         root_url: string | null;
 
+    // ------------------------------------------------------------------
+
+    @Column({
+        type: 'boolean',
+        default: true,
+    })
+        active: boolean;
+
     @Column({
         type: 'boolean',
         default: false,

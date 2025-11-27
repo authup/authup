@@ -59,6 +59,10 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             throw ClientError.credentialsInvalid();
         }
 
+        if (!entity.active) {
+            throw ClientError.inactive();
+        }
+
         return entity;
     }
 
