@@ -95,20 +95,19 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
             }
         } else {
             entity = await this.verifyCredentialsWithLDAP(username, password, realmId);
-        }
+            if (!entity) {
+                throw UserError.notFound();
+            }
 
-        if (!entity) {
-            throw UserError.credentialsInvalid();
-        }
-
-        if (!entity.active) {
-            throw UserError.inactive();
+            if (!entity.active) {
+                throw UserError.inactive();
+            }
         }
 
         return entity;
     }
 
-    protected async verifyCredentialsWithLDAP(user: string, password: string, realmId?: string) : Promise<UserEntity> {
+    protected async verifyCredentialsWithLDAP(user: string, password: string, realmId?: string) : Promise<UserEntity | null> {
         const dataSource = await useDataSource();
         const repository = new IdentityProviderRepository(dataSource);
 
@@ -160,7 +159,7 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         }
 
         if (!account) {
-            return undefined;
+            return null;
         }
 
         if (
