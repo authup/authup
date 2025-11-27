@@ -208,11 +208,13 @@ export class OAuth2AuthorizationManager {
             data.scope = scopeNames.join(' ');
         }
 
-        const redirectUris = client.redirect_uri.split(',');
+        if (client.redirect_uri) {
+            const redirectUris = client.redirect_uri.split(',');
 
-        // verifying scopes
-        if (!isSimpleMatch(data.redirect_uri, redirectUris)) {
-            throw OAuth2Error.redirectUriMismatch();
+            // verifying scopes
+            if (!isSimpleMatch(data.redirect_uri, redirectUris)) {
+                throw OAuth2Error.redirectUriMismatch();
+            }
         }
 
         return {

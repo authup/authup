@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { compare } from '@authup/server-kit';
 import {
+    BeforeInsert, BeforeUpdate,
     Column,
     CreateDateColumn,
     Entity,
@@ -15,8 +17,7 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Client, Realm, User } from '@authup/core-kit';
-import { UserEntity } from '../user';
+import type { Client, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_clients' })
@@ -25,11 +26,27 @@ export class ClientEntity implements Client {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
+    // ------------------------------------------------------------------
+
+    @Column({
+        type: 'boolean',
+        default: true,
+    })
+        active: boolean;
+
     @Column({
         type: 'boolean',
         default: false,
     })
         built_in: boolean;
+
+    @Column({
+        type: 'boolean',
+        default: false,
+    })
+        is_confidential: boolean;
+
+    // ------------------------------------------------------------------
 
     @Column({
         type: 'varchar',
@@ -46,6 +63,8 @@ export class ClientEntity implements Client {
     })
         description: string | null;
 
+    // ------------------------------------------------------------------
+
     @Column({
         type: 'varchar',
         length: 256,
@@ -53,6 +72,20 @@ export class ClientEntity implements Client {
         nullable: true,
     })
         secret: string | null;
+
+    @Column({
+        type: 'boolean',
+        default: false,
+    })
+        secret_hashed: boolean;
+
+    @Column({
+        type: 'boolean',
+        default: false,
+    })
+        secret_encrypted: boolean;
+
+    // ------------------------------------------------------------------
 
     @Column({
         type: 'text',
@@ -91,25 +124,11 @@ export class ClientEntity implements Client {
 
     // ------------------------------------------------------------------
 
-    @Column({
-        type: 'boolean',
-        default: true,
-    })
-        active: boolean;
-
-    @Column({
-        type: 'boolean',
-        default: false,
-    })
-        is_confidential: boolean;
-
-    // ------------------------------------------------------------------
-
     @CreateDateColumn()
-        created_at: Date;
+        created_at: string;
 
     @UpdateDateColumn()
-        updated_at: Date;
+        updated_at: string;
 
     // ------------------------------------------------------------------
 
@@ -120,10 +139,35 @@ export class ClientEntity implements Client {
     @JoinColumn({ name: 'realm_id' })
         realm: RealmEntity;
 
-    @Column({ nullable: true })
-        user_id: User['id'] | null;
+    // ------------------------------------------------------------------
 
-    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({ name: 'user_id' })
-        user: UserEntity | null;
+    @BeforeInsert()
+    @BeforeUpdate()
+    setDisplayName() {
+        if (
+            typeof this.display_name !== 'string' ||
+            this.display_name.length === 0
+        ) {
+            this.display_name = this.name;
+        }
+    }
+
+    // ------------------------------------------------------------------
+
+    /**
+     * Verify the stored secret with a given input.
+     *
+     * @param secret
+     */
+    async verifySecret(secret: string) : Promise<boolean> {
+        if (!this.secret || this.is_confidential) {
+            return true;
+        }
+
+        if (this.secret_hashed) {
+            return compare(secret, this.secret);
+        }
+
+        return this.secret === secret;
+    }
 }

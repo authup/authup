@@ -48,6 +48,8 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
             'name',
             'display_name',
             'description',
+            'secret_hashed',
+            'secret_encrypted',
             'base_url',
             'root_url',
             'redirect_uri',
@@ -55,7 +57,6 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
             'scope',
             'is_confidential',
             'realm_id',
-            'user_id',
             'updated_at',
             'created_at',
         ],
@@ -79,10 +80,43 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         },
     });
 
-    const [entities, total] = await query.getManyAndCount();
+    const queryResult = await query.getManyAndCount();
+    const [entities] = queryResult;
+    let [, total] = queryResult;
+
+    const output : ClientEntity[] = [];
+    for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+
+        if (
+            entity.secret &&
+            !entity.secret_encrypted &&
+            !entity.secret_hashed
+        ) {
+            try {
+                await permissionChecker.checkOneOf({
+                    name: [
+                        PermissionName.CLIENT_READ,
+                        PermissionName.CLIENT_UPDATE,
+                        PermissionName.CLIENT_DELETE,
+                    ],
+                    input: {
+                        attributes: entity,
+                    },
+                });
+                output.push(entity);
+            } catch (e) {
+                total -= 1;
+            }
+
+            continue;
+        }
+
+        output.push(entity);
+    }
 
     return send(res, {
-        data: entities,
+        data: output,
         meta: {
             total,
             ...pagination,
@@ -103,11 +137,11 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
     const query = repository.createQueryBuilder('client');
 
     const identity = useRequestIdentity(req);
-    if (
-        isSelfId(id) &&
+    const isMe = isSelfId(id) &&
         identity &&
-        identity.type === 'client'
-    ) {
+        identity.type === 'client';
+
+    if (isMe) {
         const attributes = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.CLIENT, useRequestScopes(req));
         for (let i = 0; i < attributes.length; i++) {
             query.addSelect(`client.${attributes[i]}`);
@@ -130,6 +164,8 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
             'name',
             'display_name',
             'description',
+            'secret_hashed',
+            'secret_encrypted',
             'base_url',
             'root_url',
             'redirect_uri',
@@ -137,14 +173,13 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
             'scope',
             'is_confidential',
             'realm_id',
-            'user_id',
             'updated_at',
             'created_at',
         ],
         allowed: ['secret'],
     };
 
-    const output = applyQuery(query, useRequestQuery(req), {
+    applyQuery(query, useRequestQuery(req), {
         defaultPath: 'client',
         fields: options,
         relations: {
@@ -152,26 +187,29 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         },
     });
 
-    const isSecretIncluded = output.fields
-        .map((field) => field.key)
-        .filter((key) => key === 'secret')
-        .length > 0;
-
-    if (isSecretIncluded) {
-        await permissionChecker.preCheckOneOf({
-            name: [
-                PermissionName.CLIENT_READ,
-                PermissionName.CLIENT_UPDATE,
-                PermissionName.CLIENT_DELETE,
-            ],
-        });
+    const entity = await query.getOne();
+    if (!isMe) {
+        if (
+            entity.secret &&
+            !entity.secret_encrypted &&
+            !entity.secret_hashed
+        ) {
+            await permissionChecker.checkOneOf({
+                name: [
+                    PermissionName.CLIENT_READ,
+                    PermissionName.CLIENT_UPDATE,
+                    PermissionName.CLIENT_DELETE,
+                ],
+                input: {
+                    attributes: entity,
+                },
+            });
+        }
     }
 
-    const result = await query.getOne();
-
-    if (!result) {
+    if (!entity) {
         throw new NotFoundError();
     }
 
-    return send(res, result);
+    return send(res, entity);
 }

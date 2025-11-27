@@ -54,13 +54,24 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         const dataSource = await useDataSource();
         const repository = new ClientRepository(dataSource);
 
-        const entity = await repository.verifyCredentials(id, secret, realmId);
+        const entity = await repository.findOneLazy({
+            key: id,
+            realmKey: realmId,
+            withSecret: true,
+        });
         if (!entity) {
-            throw ClientError.credentialsInvalid();
+            throw ClientError.notFound();
         }
 
         if (!entity.active) {
             throw ClientError.inactive();
+        }
+
+        if (!entity.is_confidential) {
+            const verified = await entity.verifySecret(secret);
+            if (!verified) {
+                throw ClientError.credentialsInvalid();
+            }
         }
 
         return entity;

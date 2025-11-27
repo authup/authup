@@ -7,7 +7,7 @@
 
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import { ClientValidator, PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
@@ -15,7 +15,6 @@ import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeor
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../../database';
 import { ClientEntity } from '../../../../../database/domains';
-import { ClientRequestValidator } from '../utils';
 import {
     RequestHandlerOperation,
     getRequestBodyRealmID,
@@ -69,7 +68,7 @@ export async function writeClientRouteHandler(
         group = RequestHandlerOperation.CREATE;
     }
 
-    const validator = new ClientRequestValidator();
+    const validator = new ClientValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
     const data = await validatorAdapter.run(req, {
         group,
@@ -81,6 +80,11 @@ export async function writeClientRouteHandler(
     });
 
     if (entity) {
+        if (!data.realm_id && !entity.realm_id) {
+            const identity = useRequestIdentityOrFail(req);
+            data.realm_id = identity.realmId;
+        }
+
         await permissionChecker.check({
             name: PermissionName.CLIENT_UPDATE,
             input: {
