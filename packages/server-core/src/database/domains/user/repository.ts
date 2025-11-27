@@ -6,8 +6,8 @@
  */
 
 import type { Permission, Role, User } from '@authup/core-kit';
-import { createNanoID, isUUID } from '@authup/kit';
-import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
+import { isUUID } from '@authup/kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     DataSource, EntityManager, FindOptionsWhere,
 } from 'typeorm';
@@ -217,36 +217,13 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     // ------------------------------------------------------------------
 
-    /**
-     * Verify a user by id/name and password.
-     *
-     * @param idOrName
-     * @param password
-     * @param realmId
-     */
-    async verifyCredentials(
-        idOrName: string,
-        password: string,
-        realmId?: string,
-    ) : Promise<UserEntity | undefined> {
-        const entities = await this.findLazy({
-            key: idOrName,
-            realmKey: realmId,
-            withPassword: true,
-        });
-
-        for (let i = 0; i < entities.length; i++) {
-            if (!entities[i].password) {
-                continue;
-            }
-
-            const verified = await this.verifyPassword(password, entities[i].password);
-            if (verified) {
-                return entities[i];
-            }
+    async findOneLazy(options: FindLazyOptions) : Promise<UserEntity | null> {
+        const [entity] = await this.findLazy(options);
+        if (entity) {
+            return entity;
         }
 
-        return undefined;
+        return null;
     }
 
     async findLazy(options: FindLazyOptions) : Promise<UserEntity[]> {
@@ -276,28 +253,5 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         }
 
         return query.getMany();
-    }
-
-    async createWithPassword(data: Partial<User>) : Promise<{
-        entity: UserEntity,
-        password: string
-    }> {
-        const entity = this.create(data);
-
-        const password = entity.password || createNanoID(64);
-        entity.password = await this.hashPassword(password);
-
-        return {
-            entity,
-            password,
-        };
-    }
-
-    async hashPassword(password: string) : Promise<string> {
-        return hash(password);
-    }
-
-    async verifyPassword(password: string, passwordHashed: string) : Promise<boolean> {
-        return compare(password, passwordHashed);
     }
 }

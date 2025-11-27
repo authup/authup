@@ -11,10 +11,9 @@ import type {
     Role,
 } from '@authup/core-kit';
 import {
-    createNanoID,
     isUUID,
 } from '@authup/kit';
-import { buildRedisKeyPath, compare, hash } from '@authup/server-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import { CachePrefix } from '../constants';
@@ -103,52 +102,18 @@ export class RobotRepository extends Repository<RobotEntity> {
             .map((entity) => entity.permission);
     }
 
-    /**
-     * Verify a client by id/name and secret.
-     *
-     * @param idOrName
-     * @param secret
-     * @param realmId
-     */
-    async verifyCredentials(
-        idOrName: string,
-        secret: string,
-        realmId?: string,
-    ) : Promise<RobotEntity | undefined> {
-        const query = this.createQueryBuilder('robot')
-            .leftJoinAndSelect('robot.realm', 'realm');
+    // ------------------------------------------------------------------
 
-        if (isUUID(idOrName)) {
-            query.where('robot.id = :id', { id: idOrName });
-        } else {
-            query.where('robot.name LIKE :name', { name: idOrName });
-
-            if (realmId) {
-                query.andWhere('robot.realm_id = :realmId', { realmId });
-            }
+    async findOneLazy(options: FindLazyOptions) : Promise<RobotEntity | null> {
+        const [entity] = await this.findLazy(options);
+        if (entity) {
+            return entity;
         }
 
-        const entities = await this.findLazy({
-            key: idOrName,
-            realmKey: realmId,
-            withSecret: true,
-        });
-
-        for (let i = 0; i < entities.length; i++) {
-            if (!entities[i].secret) {
-                continue;
-            }
-
-            const verified = await this.verifySecret(secret, entities[i].secret);
-            if (verified) {
-                return entities[i];
-            }
-        }
-
-        return undefined;
+        return null;
     }
 
-    async findLazy(options: FindLazyOptions) {
+    async findLazy(options: FindLazyOptions) : Promise<RobotEntity[]> {
         const query = this.createQueryBuilder('robot')
             .leftJoinAndSelect('robot.realm', 'realm');
 
@@ -175,17 +140,5 @@ export class RobotRepository extends Repository<RobotEntity> {
         }
 
         return query.getMany();
-    }
-
-    createSecret() {
-        return createNanoID(64);
-    }
-
-    async hashSecret(secret: string) : Promise<string> {
-        return hash(secret);
-    }
-
-    async verifySecret(secret: string, secretHashed: string) : Promise<boolean> {
-        return compare(secret, secretHashed);
     }
 }

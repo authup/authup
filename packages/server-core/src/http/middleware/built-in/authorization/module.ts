@@ -8,7 +8,9 @@
 import type { PermissionProvider } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
-import { ScopeName } from '@authup/core-kit';
+import {
+    ClientError, RobotError, ScopeName, UserError,
+} from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
@@ -40,6 +42,11 @@ import {
     setRequestScopes,
     setRequestToken,
 } from '../../../request';
+import {
+    ClientCredentialsService,
+    RobotCredentialService,
+    UserCredentialService,
+} from '../../../../services/credential/impl';
 
 export class AuthorizationMiddleware {
     protected config : Config;
@@ -212,40 +219,62 @@ export class AuthorizationMiddleware {
         header: BasicAuthorizationHeader,
     ) {
         if (this.config.userAuthBasic) {
-            const user = await this.userRepository.verifyCredentials(
-                header.username,
-                header.password,
-            );
+            const user = await this.userRepository.findOneLazy({
+                key: header.username,
+                withPassword: true,
+            });
             if (user) {
-                await this.userRepository.extendOneWithEA(user);
+                if (!user.active) {
+                    throw UserError.inactive();
+                }
 
-                setRequestScopes(request, [ScopeName.GLOBAL]);
-                setRequestIdentity(request, {
-                    type: 'user',
-                    id: user.id,
-                    attributes: user,
-                    realmId: user.realm.id,
-                    realmName: user.realm.name,
-                });
+                const credentialsService = new UserCredentialService();
+                const verified = await credentialsService.verify(
+                    header.password,
+                    user,
+                );
+                if (verified) {
+                    await this.userRepository.extendOneWithEA(user);
 
-                return;
+                    setRequestScopes(request, [ScopeName.GLOBAL]);
+                    setRequestIdentity(request, {
+                        type: 'user',
+                        id: user.id,
+                        attributes: user,
+                        realmId: user.realm.id,
+                        realmName: user.realm.name,
+                    });
+
+                    return;
+                }
             }
         }
 
         if (this.config.robotAuthBasic) {
-            const robot = await this.robotRepository.verifyCredentials(
-                header.username,
-                header.password,
-            );
+            const robot = await this.robotRepository.findOneLazy({
+                key: header.username,
+                withSecret: true,
+            });
             if (robot) {
-                setRequestScopes(request, [ScopeName.GLOBAL]);
-                setRequestIdentity(request, {
-                    type: 'robot',
-                    id: robot.id,
-                    attributes: robot,
-                    realmId: robot.realm.id,
-                    realmName: robot.realm.name,
-                });
+                if (!robot.active) {
+                    throw RobotError.inactive();
+                }
+
+                const credentialsService = new RobotCredentialService();
+                const verified = await credentialsService.verify(
+                    header.password,
+                    robot,
+                );
+                if (verified) {
+                    setRequestScopes(request, [ScopeName.GLOBAL]);
+                    setRequestIdentity(request, {
+                        type: 'robot',
+                        id: robot.id,
+                        attributes: robot,
+                        realmId: robot.realm.id,
+                        realmName: robot.realm.name,
+                    });
+                }
             }
         }
 
@@ -255,7 +284,15 @@ export class AuthorizationMiddleware {
                 withSecret: true,
             });
             if (client) {
-                const verified = await client.verifySecret(header.password);
+                if (!client.active) {
+                    throw ClientError.inactive();
+                }
+
+                const credentialsService = new ClientCredentialsService();
+                const verified = await credentialsService.verify(
+                    header.password,
+                    client,
+                );
                 if (verified) {
                     setRequestScopes(request, [ScopeName.GLOBAL]);
                     setRequestIdentity(request, {

@@ -20,6 +20,7 @@ import { RobotRepository } from '../../../database/domains';
 import { AbstractGrant } from './abstract';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { Grant } from './type';
+import { RobotCredentialService } from '../../../services/credential/impl';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
@@ -44,18 +45,32 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     }
 
     async validate(request: Request) : Promise<RobotEntity> {
-        const { id, secret } = useRequestBody(request);
+        const {
+            id,
+            secret,
+            realm_id: realmId,
+        } = useRequestBody(request);
 
         const dataSource = await useDataSource();
         const repository = new RobotRepository(dataSource);
-        const entity = await repository.verifyCredentials(id, secret);
+        const entity = await repository.findOneLazy({
+            key: id,
+            realmKey: realmId,
+            withSecret: true,
+        });
 
         if (!entity) {
-            throw RobotError.credentialsInvalid();
+            throw RobotError.notFound();
         }
 
         if (!entity.active) {
             throw RobotError.inactive();
+        }
+
+        const credentialsService = new RobotCredentialService();
+        const verified = await credentialsService.verify(secret, entity);
+        if (!verified) {
+            throw RobotError.credentialsInvalid();
         }
 
         return entity;

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { compare } from '@authup/server-kit';
 import {
     BeforeInsert, BeforeUpdate,
     Column,
@@ -150,24 +149,5 @@ export class ClientEntity implements Client {
         ) {
             this.display_name = this.name;
         }
-    }
-
-    // ------------------------------------------------------------------
-
-    /**
-     * Verify the stored secret with a given input.
-     *
-     * @param secret
-     */
-    async verifySecret(secret: string) : Promise<boolean> {
-        if (!this.secret || this.is_confidential) {
-            return true;
-        }
-
-        if (this.secret_hashed) {
-            return compare(secret, this.secret);
-        }
-
-        return this.secret === secret;
     }
 }

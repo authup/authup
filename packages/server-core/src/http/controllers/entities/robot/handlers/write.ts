@@ -26,6 +26,7 @@ import { RobotRequestValidator } from '../utils';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
 } from '../../../../request';
+import { RobotCredentialService } from '../../../../../services/credential/impl';
 
 export async function writeRobotRouteHandler(
     req: Request,
@@ -98,6 +99,8 @@ export async function writeRobotRouteHandler(
 
     // ----------------------------------------------
 
+    const credentialsService = new RobotCredentialService();
+
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.ROBOT_UPDATE,
@@ -123,7 +126,7 @@ export async function writeRobotRouteHandler(
 
         entity = repository.merge(entity, data);
         if (data.secret) {
-            entity.secret = await repository.hashSecret(data.secret);
+            entity.secret = await credentialsService.protect(data.secret);
         }
 
         await repository.save(entity);
@@ -154,12 +157,12 @@ export async function writeRobotRouteHandler(
     });
 
     if (!data.secret) {
-        data.secret = repository.createSecret();
+        data.secret = credentialsService.generateRawSecret();
     }
 
     entity = repository.create(data);
 
-    entity.secret = await repository.hashSecret(data.secret);
+    entity.secret = await credentialsService.protect(data.secret);
     await repository.save(entity);
 
     entity.secret = data.secret;

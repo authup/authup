@@ -24,6 +24,7 @@ import { ClientRepository } from '../../../database/domains';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
 import { buildOAuth2BearerTokenResponse } from '../response';
+import { ClientCredentialsService } from '../../../services/credential/impl';
 
 export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
@@ -68,7 +69,8 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         }
 
         if (!entity.is_confidential) {
-            const verified = await entity.verifySecret(secret);
+            const credentialsService = new ClientCredentialsService();
+            const verified = await credentialsService.verify(secret, entity);
             if (!verified) {
                 throw ClientError.credentialsInvalid();
             }

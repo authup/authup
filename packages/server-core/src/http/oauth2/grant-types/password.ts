@@ -36,6 +36,7 @@ import { IdentityProviderAccountService } from '../../../services';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
+import { UserCredentialService } from '../../../services/credential/impl';
 
 export class PasswordGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
@@ -76,13 +77,23 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);
 
-        let entity = await repository.verifyCredentials(
-            username,
-            password,
-            realmId,
-        );
+        let entity = await repository.findOneLazy({
+            key: username,
+            realmKey: realmId,
+            withPassword: true,
+        });
 
-        if (!entity) {
+        if (entity) {
+            if (!entity.active) {
+                throw UserError.inactive();
+            }
+
+            const credentialsService = new UserCredentialService();
+            const verified = await credentialsService.verify(password, entity);
+            if (!verified) {
+                throw UserError.credentialsInvalid();
+            }
+        } else {
             entity = await this.verifyCredentialsWithLDAP(username, password, realmId);
         }
 
