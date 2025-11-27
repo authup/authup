@@ -12,8 +12,7 @@
         "build:server": "rm -rf ./dist && tsc -p tsconfig.build.json",
         "build:swagger": "npm run cli -- swagger generate",
         "build": "npm run build:client && npm run build:server && npm run build:swagger",
-        "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts test/unit",
-        "testi": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts test/unit/config/index.spec.ts",
+        "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
         "test:coverage": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts --coverage"
     },
     "files": [

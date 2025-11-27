@@ -11,7 +11,8 @@ import {
     OAuth2SubKind,
 } from '@authup/specs';
 import {
-    ScopeName, UserError,
+    ClientError,
+    ScopeName,
 } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
@@ -37,20 +38,13 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             sub: client.id,
             subKind: OAuth2SubKind.CLIENT,
             realmId: client.realm.id,
-            realmName: client.realm.name,
+            realmName: client.realm.id,
             clientId: client.id,
         });
-
-        const {
-            token: refreshToken,
-            payload: refreshTokenPayload,
-        } = await this.issueRefreshToken(accessTokenPayload);
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenPayload,
-            refreshToken,
-            refreshTokenPayload,
         });
     }
 
@@ -60,9 +54,24 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
         const dataSource = await useDataSource();
         const repository = new ClientRepository(dataSource);
 
-        const entity = await repository.verifyCredentials(id, secret, realmId);
+        const entity = await repository.findOneLazy({
+            key: id,
+            realmKey: realmId,
+            withSecret: true,
+        });
         if (!entity) {
-            throw UserError.credentialsInvalid();
+            throw ClientError.notFound();
+        }
+
+        if (!entity.active) {
+            throw ClientError.inactive();
+        }
+
+        if (!entity.is_confidential) {
+            const verified = await entity.verifySecret(secret);
+            if (!verified) {
+                throw ClientError.credentialsInvalid();
+            }
         }
 
         return entity;
@@ -75,6 +84,10 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
 
         if (!clientId && !clientSecret) {
             const { authorization: headerValue } = request.headers;
+
+            if (typeof headerValue !== 'string') {
+                throw ClientError.credentialsInvalid();
+            }
 
             const header = parseAuthorizationHeader(headerValue);
 

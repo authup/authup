@@ -78,6 +78,10 @@ export async function loadOAuth2SubEntity<T extends `${OAuth2SubKind}`>(
                 throw ClientError.notFound();
             }
 
+            if (!entity.active) {
+                throw ClientError.inactive();
+            }
+
             return entity as OAuth2SubEntity<T>;
         }
         case OAuth2SubKind.USER: {

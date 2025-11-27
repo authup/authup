@@ -250,19 +250,22 @@ export class AuthorizationMiddleware {
         }
 
         if (this.config.clientAuthBasic) {
-            const client = await this.clientRepository.verifyCredentials(
-                header.username,
-                header.password,
-            );
+            const client = await this.clientRepository.findOneLazy({
+                key: header.username,
+                withSecret: true,
+            });
             if (client) {
-                setRequestScopes(request, [ScopeName.GLOBAL]);
-                setRequestIdentity(request, {
-                    type: 'client',
-                    id: client.id,
-                    attributes: client,
-                    realmId: client.realm.id,
-                    realmName: client.realm.name,
-                });
+                const verified = await client.verifySecret(header.password);
+                if (verified) {
+                    setRequestScopes(request, [ScopeName.GLOBAL]);
+                    setRequestIdentity(request, {
+                        type: 'client',
+                        id: client.id,
+                        attributes: client,
+                        realmId: client.realm.id,
+                        realmName: client.realm.name,
+                    });
+                }
             }
         }
     }

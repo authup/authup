@@ -94,35 +94,13 @@ export class ClientRepository extends Repository<ClientEntity> {
         return entities.map((entity) => entity.permission);
     }
 
-    /**
-     * Verify a client by id and secret.
-     *
-     * @param idOrName
-     * @param secret
-     * @param realmId
-     */
-    async verifyCredentials(
-        idOrName: string,
-        secret: string,
-        realmId?: string,
-    ) : Promise<ClientEntity | undefined> {
-        const entities = await this.findLazy({
-            key: idOrName,
-            realmKey: realmId,
-            withSecret: true,
-        });
-
-        for (let i = 0; i < entities.length; i++) {
-            if (!entities[i].secret || entities[i].is_confidential) {
-                continue;
-            }
-
-            if (secret === entities[i].secret) {
-                return entities[i];
-            }
+    async findOneLazy(options: FindLazyOptions) : Promise<ClientEntity | null> {
+        const [entity] = await this.findLazy(options);
+        if (entity) {
+            return entity;
         }
 
-        return undefined;
+        return null;
     }
 
     async findLazy(options: FindLazyOptions) : Promise<ClientEntity[]> {

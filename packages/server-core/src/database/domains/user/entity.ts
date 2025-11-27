@@ -20,6 +20,7 @@ import {
 } from 'typeorm';
 import type { Client, User } from '@authup/core-kit';
 import { Realm } from '@authup/core-kit';
+import { ClientEntity } from '../client';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_users' })
@@ -128,7 +129,7 @@ export class UserEntity implements User {
     @Column({ nullable: true })
         client_id: Client['id'] | null;
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
+    @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_id' })
         client: Client | null;
 

@@ -5,15 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { User } from '../user';
 import type { Realm } from '../realm';
-
-// todo: add avatar/icon ?
 
 export interface Client {
     id: string,
 
+    // ------------------------------------------------------------------
+
+    active: boolean;
+
     built_in: boolean;
+
+    is_confidential: boolean,
+
+    // ------------------------------------------------------------------
 
     name: string,
 
@@ -21,7 +26,15 @@ export interface Client {
 
     description: string | null,
 
+    // ------------------------------------------------------------------
+
     secret: string,
+
+    secret_hashed: boolean,
+
+    secret_encrypted: boolean,
+
+    // ------------------------------------------------------------------
 
     redirect_uri: string | null,
 
@@ -38,21 +51,15 @@ export interface Client {
      */
     root_url: string | null,
 
-    is_confidential: boolean,
+    // ------------------------------------------------------------------
+
+    created_at: string,
+
+    updated_at: string,
 
     // ------------------------------------------------------------------
 
-    created_at: Date | string,
+    realm_id: Realm['id'],
 
-    updated_at: Date | string,
-
-    // ------------------------------------------------------------------
-
-    realm_id: Realm['id'] | null,
-
-    realm: Realm | null,
-
-    user_id: User['id'] | null,
-
-    user: User | null
+    realm: Realm,
 }

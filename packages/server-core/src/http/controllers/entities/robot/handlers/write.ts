@@ -14,9 +14,10 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
-import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../../config';
+import { DatabaseConflictError } from '../../../../../database';
 import {
     RobotEntity, RobotRepository, resolveRealm,
 } from '../../../../../database/domains';
@@ -81,6 +82,21 @@ export async function writeRobotRouteHandler(
         dataSource,
         entityTarget: RobotEntity,
     });
+
+    // ----------------------------------------------
+
+    const isUnique = await isEntityUnique({
+        dataSource,
+        entityTarget: RobotEntity,
+        entity: data,
+        entityExisting: entity,
+    });
+
+    if (!isUnique) {
+        throw new DatabaseConflictError();
+    }
+
+    // ----------------------------------------------
 
     if (entity) {
         await permissionChecker.check({

@@ -33,17 +33,18 @@ export async function serveAuthorizationRouteHandler(
 
         codeRequest = result.data;
     } catch (e) {
-        error = sanitizeError(e);
+        const normalized = sanitizeError(e);
+        error = {
+            ...normalized,
+            message: normalized.message,
+        };
     }
 
     return sendClientResponse(req, res, {
         path: '/authorize',
         data: {
             codeRequest,
-            error: {
-                ...error,
-                message: error.message,
-            },
+            error,
             client,
             scopes,
         },
