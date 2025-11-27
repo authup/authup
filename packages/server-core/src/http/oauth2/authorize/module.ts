@@ -177,11 +177,11 @@ export class OAuth2AuthorizationManager {
             realmKey: data.realm_id,
         });
 
-        if (clients.length !== 1) {
+        const [client] = clients;
+
+        if (!client) {
             throw OAuth2Error.clientInvalid();
         }
-
-        const [client] = clients;
 
         data.realm_id = client.realm_id;
 
