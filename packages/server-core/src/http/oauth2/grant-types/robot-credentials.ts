@@ -60,17 +60,17 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
         });
 
         if (!entity) {
-            throw RobotError.notFound();
-        }
-
-        if (!entity.active) {
-            throw RobotError.inactive();
+            throw RobotError.credentialsInvalid();
         }
 
         const credentialsService = new RobotCredentialService();
         const verified = await credentialsService.verify(secret, entity);
         if (!verified) {
             throw RobotError.credentialsInvalid();
+        }
+
+        if (!entity.active) {
+            throw RobotError.inactive();
         }
 
         return entity;

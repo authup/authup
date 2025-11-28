@@ -38,7 +38,7 @@ describe('src/http/controllers/token', () => {
 
     it('should not grant token with password grant (credentials invalid)', async () => {
         const credentials = {
-            username: 'test',
+            username: 'admin',
             password: 'foo-bar-baz',
         };
 

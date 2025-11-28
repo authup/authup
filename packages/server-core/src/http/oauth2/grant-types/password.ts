@@ -84,19 +84,19 @@ export class PasswordGrantType extends AbstractGrant implements Grant {
         });
 
         if (entity) {
-            if (!entity.active) {
-                throw UserError.inactive();
-            }
-
             const credentialsService = new UserCredentialService();
             const verified = await credentialsService.verify(password, entity);
             if (!verified) {
                 throw UserError.credentialsInvalid();
             }
+
+            if (!entity.active) {
+                throw UserError.inactive();
+            }
         } else {
             entity = await this.verifyCredentialsWithLDAP(username, password, realmId);
             if (!entity) {
-                throw UserError.notFound();
+                throw UserError.credentialsInvalid();
             }
 
             if (!entity.active) {

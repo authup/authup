@@ -61,11 +61,7 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             withSecret: true,
         });
         if (!entity) {
-            throw ClientError.notFound();
-        }
-
-        if (!entity.active) {
-            throw ClientError.inactive();
+            throw ClientError.credentialsInvalid();
         }
 
         if (!entity.is_confidential) {
@@ -74,6 +70,10 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
             if (!verified) {
                 throw ClientError.credentialsInvalid();
             }
+        }
+
+        if (!entity.active) {
+            throw ClientError.inactive();
         }
 
         return entity;
