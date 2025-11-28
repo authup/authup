@@ -18,13 +18,11 @@ import { useRequestBody } from '@routup/basic/body';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { useDataSource } from 'typeorm-extension';
 import type { ClientEntity } from '../../../database/domains';
-import { ClientRepository } from '../../../database/domains';
+import { ClientAuthenticationService } from '../../../services';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
 import { buildOAuth2BearerTokenResponse } from '../response';
-import { ClientCredentialsService } from '../../../services/credential/impl';
 
 export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
@@ -52,31 +50,9 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     async validate(request: Request) : Promise<ClientEntity> {
         const [id, secret, realmId] = this.getClientCredentials(request);
 
-        const dataSource = await useDataSource();
-        const repository = new ClientRepository(dataSource);
+        const authenticationService = new ClientAuthenticationService();
 
-        const entity = await repository.findOneLazy({
-            key: id,
-            realmKey: realmId,
-            withSecret: true,
-        });
-        if (!entity) {
-            throw ClientError.credentialsInvalid();
-        }
-
-        if (!entity.is_confidential) {
-            const credentialsService = new ClientCredentialsService();
-            const verified = await credentialsService.verify(secret, entity);
-            if (!verified) {
-                throw ClientError.credentialsInvalid();
-            }
-        }
-
-        if (!entity.active) {
-            throw ClientError.inactive();
-        }
-
-        return entity;
+        return authenticationService.authenticate(id, secret, realmId);
     }
 
     protected getClientCredentials(request: Request) : [string, string, string | undefined] {

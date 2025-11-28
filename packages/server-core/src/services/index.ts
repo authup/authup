@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './authentication';
+export * from './credential';
 export * from './identity-permission';
 export * from './identity-provider';
 export * from './robot-synchronization';

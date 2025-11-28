@@ -24,7 +24,7 @@ import {
 } from '../../../../../database/domains';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../services';
 import { useRequestParamID } from '../../../../request';
-import { RobotCredentialService } from '../../../../../services/credential/impl';
+import { RobotCredentialsService } from '../../../../../services/credential/impl';
 
 export async function handleRobotIntegrityRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req, {
@@ -70,7 +70,7 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
         return sendAccepted(res);
     }
 
-    const credentialsService = new RobotCredentialService();
+    const credentialsService = new RobotCredentialsService();
 
     let refreshCredentials : boolean = false;
     if (entity.secret) {

@@ -15,6 +15,13 @@ export class ClientError extends AuthupError {
         });
     }
 
+    static invalid() {
+        return new ClientError({
+            code: ErrorCode.OAUTH_CLIENT_INVALID,
+            message: 'The client is invalid.',
+        });
+    }
+
     static notFound() {
         return new ClientError({
             code: ErrorCode.ENTITY_NOT_FOUND,

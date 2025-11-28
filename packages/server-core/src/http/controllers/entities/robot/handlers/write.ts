@@ -26,7 +26,7 @@ import { RobotRequestValidator } from '../utils';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
 } from '../../../../request';
-import { RobotCredentialService } from '../../../../../services/credential/impl';
+import { RobotCredentialsService } from '../../../../../services/credential/impl';
 
 export async function writeRobotRouteHandler(
     req: Request,
@@ -99,7 +99,7 @@ export async function writeRobotRouteHandler(
 
     // ----------------------------------------------
 
-    const credentialsService = new RobotCredentialService();
+    const credentialsService = new RobotCredentialsService();
 
     if (entity) {
         await permissionChecker.check({

@@ -20,7 +20,7 @@ import { RobotRepository } from '../../../database/domains';
 import { AbstractGrant } from './abstract';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { Grant } from './type';
-import { RobotCredentialService } from '../../../services/credential/impl';
+import { RobotCredentialsService } from '../../../services/credential/impl';
 
 export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
@@ -63,7 +63,7 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
             throw RobotError.credentialsInvalid();
         }
 
-        const credentialsService = new RobotCredentialService();
+        const credentialsService = new RobotCredentialsService();
         const verified = await credentialsService.verify(secret, entity);
         if (!verified) {
             throw RobotError.credentialsInvalid();

@@ -9,7 +9,7 @@ import { compare, hash } from '@authup/server-kit';
 import type { ICredentialService } from '../../types';
 import type { UserEntity } from '../../../../database/domains';
 
-export class UserCredentialService implements ICredentialService<UserEntity> {
+export class UserCredentialsService implements ICredentialService<UserEntity> {
     async verify(input: string, entity: UserEntity): Promise<boolean> {
         if (!entity.password) {
             return false;

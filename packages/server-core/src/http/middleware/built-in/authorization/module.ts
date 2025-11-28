@@ -9,7 +9,7 @@ import type { PermissionProvider } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
 import {
-    ClientError, RobotError, ScopeName, UserError,
+    ScopeName,
 } from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
 import { buildRedisKeyPath } from '@authup/server-kit';
@@ -34,6 +34,7 @@ import {
     RealmRepository, RobotRepository, UserRepository,
 } from '../../../../database/domains';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';
+import { ClientAuthenticationService, RobotAuthenticationService, UserAuthenticationService } from '../../../../services';
 import { OAuth2TokenManager, loadOAuth2SubEntity } from '../../../oauth2';
 import {
     RequestPermissionChecker,
@@ -42,11 +43,6 @@ import {
     setRequestScopes,
     setRequestToken,
 } from '../../../request';
-import {
-    ClientCredentialsService,
-    RobotCredentialService,
-    UserCredentialService,
-} from '../../../../services/credential/impl';
 
 export class AuthorizationMiddleware {
     protected config : Config;
@@ -219,21 +215,12 @@ export class AuthorizationMiddleware {
         header: BasicAuthorizationHeader,
     ) {
         if (this.config.userAuthBasic) {
-            const user = await this.userRepository.findOneLazy({
-                key: header.username,
-                withPassword: true,
-            });
-            if (user) {
-                if (!user.active) {
-                    throw UserError.inactive();
-                }
+            const authenticationService = new UserAuthenticationService();
+            const user = await authenticationService.resolve(header.username);
 
-                const credentialsService = new UserCredentialService();
-                const verified = await credentialsService.verify(
-                    header.password,
-                    user,
-                );
-                if (verified) {
+            if (user) {
+                const authenticated = await authenticationService.safeAuthenticate(user, header.password);
+                if (authenticated.success) {
                     await this.userRepository.extendOneWithEA(user);
 
                     setRequestScopes(request, [ScopeName.GLOBAL]);
@@ -251,21 +238,12 @@ export class AuthorizationMiddleware {
         }
 
         if (this.config.robotAuthBasic) {
-            const robot = await this.robotRepository.findOneLazy({
-                key: header.username,
-                withSecret: true,
-            });
-            if (robot) {
-                if (!robot.active) {
-                    throw RobotError.inactive();
-                }
+            const authenticationService = new RobotAuthenticationService();
+            const robot = await authenticationService.resolve(header.username);
 
-                const credentialsService = new RobotCredentialService();
-                const verified = await credentialsService.verify(
-                    header.password,
-                    robot,
-                );
-                if (verified) {
+            if (robot) {
+                const authenticated = await authenticationService.safeAuthenticate(robot, header.password);
+                if (authenticated.success) {
                     setRequestScopes(request, [ScopeName.GLOBAL]);
                     setRequestIdentity(request, {
                         type: 'robot',
@@ -279,21 +257,12 @@ export class AuthorizationMiddleware {
         }
 
         if (this.config.clientAuthBasic) {
-            const client = await this.clientRepository.findOneLazy({
-                key: header.username,
-                withSecret: true,
-            });
-            if (client) {
-                if (!client.active) {
-                    throw ClientError.inactive();
-                }
+            const authenticationService = new ClientAuthenticationService();
+            const client = await authenticationService.resolve(header.username);
 
-                const credentialsService = new ClientCredentialsService();
-                const verified = await credentialsService.verify(
-                    header.password,
-                    client,
-                );
-                if (verified) {
+            if (client) {
+                const authenticated = await authenticationService.safeAuthenticate(client, header.password);
+                if (authenticated.success) {
                     setRequestScopes(request, [ScopeName.GLOBAL]);
                     setRequestIdentity(request, {
                         type: 'client',

@@ -11,10 +11,6 @@ import type { ClientEntity } from '../../../../database/domains';
 
 export class ClientCredentialsService implements ICredentialService<ClientEntity> {
     async verify(input: string, entity: ClientEntity): Promise<boolean> {
-        if (entity.is_confidential) {
-            return true;
-        }
-
         if (!entity.secret) {
             return false;
         }

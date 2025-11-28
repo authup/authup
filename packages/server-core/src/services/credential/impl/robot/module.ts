@@ -10,7 +10,7 @@ import { createNanoID } from '@authup/kit';
 import type { ICredentialService } from '../../types';
 import type { RobotEntity } from '../../../../database/domains';
 
-export class RobotCredentialService implements ICredentialService<RobotEntity> {
+export class RobotCredentialsService implements ICredentialService<RobotEntity> {
     async verify(input: string, entity: RobotEntity): Promise<boolean> {
         if (!entity.secret) {
             return false;

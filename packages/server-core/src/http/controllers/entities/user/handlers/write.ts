@@ -21,7 +21,7 @@ import {
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
 } from '../../../../request';
-import { UserCredentialService } from '../../../../../services/credential/impl';
+import { UserCredentialsService } from '../../../../../services/credential/impl';
 
 export async function writeUserRouteHandler(
     req: Request,
@@ -100,7 +100,7 @@ export async function writeUserRouteHandler(
         delete data.status_message;
     }
 
-    const credentialsService = new UserCredentialService();
+    const credentialsService = new UserCredentialsService();
 
     if (entity) {
         entity = repository.merge(entity, data);

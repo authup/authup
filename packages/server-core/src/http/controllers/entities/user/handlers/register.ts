@@ -21,7 +21,7 @@ import { UserEntity, UserRepository, resolveRealm } from '../../../../../databas
 import { useConfig } from '../../../../../config';
 import { EnvironmentName } from '../../../../../env';
 import { RequestHandlerOperation } from '../../../../request';
-import { UserCredentialService } from '../../../../../services/credential/impl';
+import { UserCredentialsService } from '../../../../../services/credential/impl';
 
 export class AuthRegisterRequestValidator extends Container<User> {
     protected initialize() {
@@ -70,7 +70,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
     const repository = new UserRepository(dataSource);
     const entity = repository.create(data);
 
-    const credentialsService = new UserCredentialService();
+    const credentialsService = new UserCredentialsService();
     entity.password = entity.password || createNanoID(64);
     entity.password = await credentialsService.protect(entity.password);
 
