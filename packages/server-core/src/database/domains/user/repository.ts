@@ -6,7 +6,6 @@
  */
 
 import type { Permission, Role, User } from '@authup/core-kit';
-import { isUUID } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     DataSource, EntityManager, FindOptionsWhere,
@@ -32,18 +31,6 @@ type UserRelationSyncContext<T> = {
     idKey: keyof T,
     realmIdKey: keyof T
 } & UserRelationSaveContext;
-
-type FindLazyOptions = {
-    /**
-     * ID or name
-     */
-    key: string,
-    /**
-     * Realm key.
-     */
-    realmKey?: string,
-    withPassword?: boolean,
-};
 
 export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -213,45 +200,5 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
         });
 
         return entities.map((relation) => relation.permission);
-    }
-
-    // ------------------------------------------------------------------
-
-    async findOneLazy(options: FindLazyOptions) : Promise<UserEntity | null> {
-        const [entity] = await this.findLazy(options);
-        if (entity) {
-            return entity;
-        }
-
-        return null;
-    }
-
-    async findLazy(options: FindLazyOptions) : Promise<UserEntity[]> {
-        const query = this.createQueryBuilder('user')
-            .leftJoinAndSelect('user.realm', 'realm');
-
-        if (isUUID(options.key)) {
-            query.where('user.id = :id', { id: options.key });
-        } else {
-            query.where('user.name = :name', { name: options.key });
-
-            if (options.realmKey) {
-                if (isUUID(options.realmKey)) {
-                    query.andWhere('user.realm_id = :realmId', {
-                        realmId: options.realmKey,
-                    });
-                } else {
-                    query.andWhere('realm.name = :realmName', {
-                        realmName: options.realmKey,
-                    });
-                }
-            }
-        }
-
-        if (options.withPassword) {
-            query.addSelect('user.password');
-        }
-
-        return query.getMany();
     }
 }

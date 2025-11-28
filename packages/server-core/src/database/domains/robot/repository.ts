@@ -10,9 +10,6 @@ import type {
     Robot,
     Role,
 } from '@authup/core-kit';
-import {
-    isUUID,
-} from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
@@ -20,18 +17,6 @@ import { CachePrefix } from '../constants';
 import { RobotEntity } from './entity';
 import { RobotRoleEntity } from '../robot-role';
 import { RobotPermissionEntity } from '../robot-permission';
-
-type FindLazyOptions = {
-    /**
-     * ID or name
-     */
-    key: string,
-    /**
-     * Realm key.
-     */
-    realmKey?: string,
-    withSecret?: boolean,
-};
 
 export class RobotRepository extends Repository<RobotEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -100,45 +85,5 @@ export class RobotRepository extends Repository<RobotEntity> {
 
         return entities
             .map((entity) => entity.permission);
-    }
-
-    // ------------------------------------------------------------------
-
-    async findOneLazy(options: FindLazyOptions) : Promise<RobotEntity | null> {
-        const [entity] = await this.findLazy(options);
-        if (entity) {
-            return entity;
-        }
-
-        return null;
-    }
-
-    async findLazy(options: FindLazyOptions) : Promise<RobotEntity[]> {
-        const query = this.createQueryBuilder('robot')
-            .leftJoinAndSelect('robot.realm', 'realm');
-
-        if (isUUID(options.key)) {
-            query.where('robot.id = :id', { id: options.key });
-        } else {
-            query.where('robot.name = :name', { name: options.key });
-
-            if (options.realmKey) {
-                if (isUUID(options.realmKey)) {
-                    query.andWhere('robot.realm_id = :realmId', {
-                        realmId: options.realmKey,
-                    });
-                } else {
-                    query.andWhere('realm.name = :realmName', {
-                        realmName: options.realmKey,
-                    });
-                }
-            }
-        }
-
-        if (options.withSecret) {
-            query.addSelect('robot.secret');
-        }
-
-        return query.getMany();
     }
 }
