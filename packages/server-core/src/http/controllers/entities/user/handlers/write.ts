@@ -21,6 +21,7 @@ import {
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
 } from '../../../../request';
+import { UserCredentialsService } from '../../../../../services/credential/impl';
 
 export async function writeUserRouteHandler(
     req: Request,
@@ -99,6 +100,8 @@ export async function writeUserRouteHandler(
         delete data.status_message;
     }
 
+    const credentialsService = new UserCredentialsService();
+
     if (entity) {
         entity = repository.merge(entity, data);
 
@@ -133,7 +136,7 @@ export async function writeUserRouteHandler(
         }
 
         if (data.password) {
-            entity.password = await repository.hashPassword(data.password);
+            entity.password = await credentialsService.protect(data.password);
         }
 
         await repository.save(entity);
@@ -165,7 +168,7 @@ export async function writeUserRouteHandler(
     }
 
     if (data.password) {
-        entity.password = await repository.hashPassword(data.password);
+        entity.password = await credentialsService.protect(data.password);
     }
 
     await repository.save(entity);

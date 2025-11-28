@@ -19,7 +19,8 @@ import { randomBytes } from 'node:crypto';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { ClientRepository, ClientScopeEntity } from '../../../database/domains';
+import { ClientScopeEntity } from '../../../database/domains';
+import { ClientAuthenticationService } from '../../../services';
 import { useRequestIdentityOrFail } from '../../request';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
 import type { OAuth2AccessTokenBuildContext, OAuth2OpenIdTokenBuildContext } from '../token';
@@ -169,16 +170,9 @@ export class OAuth2AuthorizationManager {
     }
 
     protected async postValidation(data: OAuth2AuthorizationCodeRequest) : Promise<OAuth2AuthorizationCodeRequestContainer> {
-        const dataSource = await useDataSource();
-        const clientRepository = new ClientRepository(dataSource);
+        const authenticationService = new ClientAuthenticationService();
 
-        const clients = await clientRepository.findLazy({
-            key: data.client_id,
-            realmKey: data.realm_id,
-        });
-
-        const [client] = clients;
-
+        const client = await authenticationService.resolve(data.client_id, data.realm_id);
         if (!client) {
             throw OAuth2Error.clientInvalid();
         }
@@ -186,6 +180,7 @@ export class OAuth2AuthorizationManager {
         data.realm_id = client.realm_id;
 
         // verifying scopes
+        const dataSource = await useDataSource();
         const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
         const clientScopes = await clientScopeRepository.find({
             where: {

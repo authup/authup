@@ -6,7 +6,6 @@
  */
 
 import type { Client, Permission, Role } from '@authup/core-kit';
-import { isUUID } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
@@ -14,18 +13,6 @@ import { CachePrefix } from '../constants';
 import { ClientPermissionEntity } from '../client-permission';
 import { ClientRoleEntity } from '../client-role';
 import { ClientEntity } from './entity';
-
-type FindLazyOptions = {
-    /**
-     * ID or name
-     */
-    key: string,
-    /**
-     * Realm key.
-     */
-    realmKey?: string,
-    withSecret?: boolean,
-};
 
 export class ClientRepository extends Repository<ClientEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -92,43 +79,5 @@ export class ClientRepository extends Repository<ClientEntity> {
         });
 
         return entities.map((entity) => entity.permission);
-    }
-
-    async findOneLazy(options: FindLazyOptions) : Promise<ClientEntity | null> {
-        const [entity] = await this.findLazy(options);
-        if (entity) {
-            return entity;
-        }
-
-        return null;
-    }
-
-    async findLazy(options: FindLazyOptions) : Promise<ClientEntity[]> {
-        const query = this.createQueryBuilder('client')
-            .leftJoinAndSelect('client.realm', 'realm');
-
-        if (isUUID(options.key)) {
-            query.where('client.id = :id', { id: options.key });
-        } else {
-            query.where('client.name = :name', { name: options.key });
-
-            if (options.realmKey) {
-                if (isUUID(options.realmKey)) {
-                    query.andWhere('client.realm_id = :realmId', {
-                        realmId: options.realmKey,
-                    });
-                } else {
-                    query.andWhere('realm.name = :realmName', {
-                        realmName: options.realmKey,
-                    });
-                }
-            }
-        }
-
-        if (options.withSecret) {
-            query.addSelect('client.secret');
-        }
-
-        return query.getMany();
     }
 }

@@ -10,7 +10,6 @@ import {
     REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import {
-    createNanoID,
     isUUID,
 } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
@@ -25,6 +24,7 @@ import {
 } from '../../../../../database/domains';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../services';
 import { useRequestParamID } from '../../../../request';
+import { RobotCredentialsService } from '../../../../../services/credential/impl';
 
 export async function handleRobotIntegrityRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req, {
@@ -70,6 +70,8 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
         return sendAccepted(res);
     }
 
+    const credentialsService = new RobotCredentialsService();
+
     let refreshCredentials : boolean = false;
     if (entity.secret) {
         let credentials : Pick<Robot, 'id' | 'secret' | 'name'> | undefined;
@@ -79,7 +81,7 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
         }
 
         if (credentials) {
-            const secretHashedEqual = await repository.verifySecret(credentials.secret, entity.secret);
+            const secretHashedEqual = await credentialsService.verify(credentials.secret, entity);
             if (!secretHashedEqual) {
                 refreshCredentials = true;
             }
@@ -91,9 +93,8 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
     }
 
     if (refreshCredentials) {
-        const secret = createNanoID(64);
-
-        entity.secret = await repository.hashSecret(secret);
+        const secret = credentialsService.generateRawSecret();
+        entity.secret = await credentialsService.protect(secret);
         await repository.save(entity);
 
         if (isRobotSynchronizationServiceUsable()) {

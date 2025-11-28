@@ -15,11 +15,13 @@ import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { useLogger } from '@authup/server-kit';
 import { Container } from 'validup';
+import { createNanoID } from '@authup/kit';
 import { isSMTPClientUsable, useSMTPClient } from '../../../../../core';
 import { UserEntity, UserRepository, resolveRealm } from '../../../../../database/domains';
 import { useConfig } from '../../../../../config';
 import { EnvironmentName } from '../../../../../env';
 import { RequestHandlerOperation } from '../../../../request';
+import { UserCredentialsService } from '../../../../../services/credential/impl';
 
 export class AuthRegisterRequestValidator extends Container<User> {
     protected initialize() {
@@ -66,8 +68,11 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
     }
 
     const repository = new UserRepository(dataSource);
+    const entity = repository.create(data);
 
-    const { entity } = await repository.createWithPassword(data);
+    const credentialsService = new UserCredentialsService();
+    entity.password = entity.password || createNanoID(64);
+    entity.password = await credentialsService.protect(entity.password);
 
     const realm = await resolveRealm(entity.realm_id, true);
     entity.realm_id = realm.id;

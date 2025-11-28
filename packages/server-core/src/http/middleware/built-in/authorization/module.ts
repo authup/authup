@@ -8,7 +8,9 @@
 import type { PermissionProvider } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
-import { ScopeName } from '@authup/core-kit';
+import {
+    ScopeName,
+} from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
@@ -32,6 +34,7 @@ import {
     RealmRepository, RobotRepository, UserRepository,
 } from '../../../../database/domains';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';
+import { ClientAuthenticationService, RobotAuthenticationService, UserAuthenticationService } from '../../../../services';
 import { OAuth2TokenManager, loadOAuth2SubEntity } from '../../../oauth2';
 import {
     RequestPermissionChecker,
@@ -212,51 +215,54 @@ export class AuthorizationMiddleware {
         header: BasicAuthorizationHeader,
     ) {
         if (this.config.userAuthBasic) {
-            const user = await this.userRepository.verifyCredentials(
-                header.username,
-                header.password,
-            );
+            const authenticationService = new UserAuthenticationService();
+            const user = await authenticationService.resolve(header.username);
+
             if (user) {
-                await this.userRepository.extendOneWithEA(user);
+                const authenticated = await authenticationService.safeAuthenticate(user, header.password);
+                if (authenticated.success) {
+                    await this.userRepository.extendOneWithEA(user);
 
-                setRequestScopes(request, [ScopeName.GLOBAL]);
-                setRequestIdentity(request, {
-                    type: 'user',
-                    id: user.id,
-                    attributes: user,
-                    realmId: user.realm.id,
-                    realmName: user.realm.name,
-                });
+                    setRequestScopes(request, [ScopeName.GLOBAL]);
+                    setRequestIdentity(request, {
+                        type: 'user',
+                        id: user.id,
+                        attributes: user,
+                        realmId: user.realm.id,
+                        realmName: user.realm.name,
+                    });
 
-                return;
+                    return;
+                }
             }
         }
 
         if (this.config.robotAuthBasic) {
-            const robot = await this.robotRepository.verifyCredentials(
-                header.username,
-                header.password,
-            );
+            const authenticationService = new RobotAuthenticationService();
+            const robot = await authenticationService.resolve(header.username);
+
             if (robot) {
-                setRequestScopes(request, [ScopeName.GLOBAL]);
-                setRequestIdentity(request, {
-                    type: 'robot',
-                    id: robot.id,
-                    attributes: robot,
-                    realmId: robot.realm.id,
-                    realmName: robot.realm.name,
-                });
+                const authenticated = await authenticationService.safeAuthenticate(robot, header.password);
+                if (authenticated.success) {
+                    setRequestScopes(request, [ScopeName.GLOBAL]);
+                    setRequestIdentity(request, {
+                        type: 'robot',
+                        id: robot.id,
+                        attributes: robot,
+                        realmId: robot.realm.id,
+                        realmName: robot.realm.name,
+                    });
+                }
             }
         }
 
         if (this.config.clientAuthBasic) {
-            const client = await this.clientRepository.findOneLazy({
-                key: header.username,
-                withSecret: true,
-            });
+            const authenticationService = new ClientAuthenticationService();
+            const client = await authenticationService.resolve(header.username);
+
             if (client) {
-                const verified = await client.verifySecret(header.password);
-                if (verified) {
+                const authenticated = await authenticationService.safeAuthenticate(client, header.password);
+                if (authenticated.success) {
                     setRequestScopes(request, [ScopeName.GLOBAL]);
                     setRequestIdentity(request, {
                         type: 'client',

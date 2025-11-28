@@ -8,15 +8,13 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import {
-    RobotError,
     ScopeName,
 } from '@authup/core-kit';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { useDataSource } from 'typeorm-extension';
 import type { RobotEntity } from '../../../database/domains';
-import { RobotRepository } from '../../../database/domains';
+import { RobotAuthenticationService } from '../../../services';
 import { AbstractGrant } from './abstract';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { Grant } from './type';
@@ -44,20 +42,13 @@ export class RobotCredentialsGrantType extends AbstractGrant implements Grant {
     }
 
     async validate(request: Request) : Promise<RobotEntity> {
-        const { id, secret } = useRequestBody(request);
+        const {
+            id,
+            secret,
+            realm_id: realmId,
+        } = useRequestBody(request);
 
-        const dataSource = await useDataSource();
-        const repository = new RobotRepository(dataSource);
-        const entity = await repository.verifyCredentials(id, secret);
-
-        if (!entity) {
-            throw RobotError.credentialsInvalid();
-        }
-
-        if (!entity.active) {
-            throw RobotError.inactive();
-        }
-
-        return entity;
+        const authenticationService = new RobotAuthenticationService();
+        return authenticationService.authenticate(id, secret, realmId);
     }
 }

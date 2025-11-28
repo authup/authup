@@ -18,9 +18,8 @@ import { useRequestBody } from '@routup/basic/body';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { useDataSource } from 'typeorm-extension';
 import type { ClientEntity } from '../../../database/domains';
-import { ClientRepository } from '../../../database/domains';
+import { ClientAuthenticationService } from '../../../services';
 import { AbstractGrant } from './abstract';
 import type { Grant } from './type';
 import { buildOAuth2BearerTokenResponse } from '../response';
@@ -51,30 +50,9 @@ export class ClientCredentialsGrant extends AbstractGrant implements Grant {
     async validate(request: Request) : Promise<ClientEntity> {
         const [id, secret, realmId] = this.getClientCredentials(request);
 
-        const dataSource = await useDataSource();
-        const repository = new ClientRepository(dataSource);
+        const authenticationService = new ClientAuthenticationService();
 
-        const entity = await repository.findOneLazy({
-            key: id,
-            realmKey: realmId,
-            withSecret: true,
-        });
-        if (!entity) {
-            throw ClientError.notFound();
-        }
-
-        if (!entity.active) {
-            throw ClientError.inactive();
-        }
-
-        if (!entity.is_confidential) {
-            const verified = await entity.verifySecret(secret);
-            if (!verified) {
-                throw ClientError.credentialsInvalid();
-            }
-        }
-
-        return entity;
+        return authenticationService.authenticate(id, secret, realmId);
     }
 
     protected getClientCredentials(request: Request) : [string, string, string | undefined] {

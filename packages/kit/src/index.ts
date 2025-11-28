@@ -18,3 +18,4 @@ export * from './serialize';
 export * from './template';
 export * from './uuid';
 export * from './url';
+export * from './types';
