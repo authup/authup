@@ -7,8 +7,8 @@
 
 import type { OpenIDTokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
-import { resolveOpenIdClaimsFromSubEntity } from '../../openid';
-import { loadOAuth2SubEntity } from '../sub';
+import { resolveOpenIDClaimsForOAuth2Identity } from '../../openid';
+import { OAuth2IdentityResolver } from '../../identity';
 import { buildOAuth2AccessTokenPayload } from './access-token';
 import type { OAuth2OpenIdTokenBuildContext } from './type';
 
@@ -33,14 +33,10 @@ export async function extendOpenIdTokenPayload(
         return payload;
     }
 
-    const claims : Partial<OpenIDTokenPayload> = resolveOpenIdClaimsFromSubEntity(
-        payload.sub_kind,
-        await loadOAuth2SubEntity(
-            payload.sub_kind,
-            payload.sub,
-            payload.scope,
-        ),
-    );
+    const identityResolver = new OAuth2IdentityResolver();
+    const identity = await identityResolver.resolve(payload);
+
+    const claims = resolveOpenIDClaimsForOAuth2Identity(identity);
 
     return {
         ...payload,

@@ -12,9 +12,9 @@ import { send } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityPermissionService } from '../../../../../services';
 import {
+    OAuth2IdentityResolver,
     OAuth2TokenManager,
-    loadOAuth2SubEntity,
-    resolveOpenIdClaimsFromSubEntity,
+    resolveOpenIDClaimsForOAuth2Identity,
 } from '../../../../oauth2';
 import { extractTokenFromRequest } from '../utils';
 
@@ -40,20 +40,15 @@ export async function introspectTokenRouteHandler(
         realmId: payload.realm_id,
     });
 
+    const identityResolver = new OAuth2IdentityResolver();
+    const identity = await identityResolver.resolve(payload);
+
     const output : OAuth2TokenIntrospectionResponse = {
         active: await tokenManager.isActive(token),
         // todo: permissions property should be removed.
         permissions: permissions.map((permission) => pickRecord(permission, ['name', 'client_id', 'realm_id'])),
         ...payload,
-        ...resolveOpenIdClaimsFromSubEntity(
-            payload.sub_kind,
-            await loadOAuth2SubEntity(
-                payload.sub_kind,
-                payload.sub,
-                payload.scope
-                ,
-            ),
-        ),
+        ...resolveOpenIDClaimsForOAuth2Identity(identity),
     };
 
     return send(res, output);

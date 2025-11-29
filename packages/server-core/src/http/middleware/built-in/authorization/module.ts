@@ -35,7 +35,7 @@ import {
 } from '../../../../database/domains';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';
 import { ClientAuthenticationService, RobotAuthenticationService, UserAuthenticationService } from '../../../../services';
-import { OAuth2TokenManager, loadOAuth2SubEntity } from '../../../oauth2';
+import { OAuth2IdentityResolver, OAuth2TokenManager } from '../../../oauth2';
 import {
     RequestPermissionChecker,
     setRequestIdentity,
@@ -50,6 +50,8 @@ export class AuthorizationMiddleware {
     // --------------------------------------
 
     protected oauth2TokenManager: OAuth2TokenManager;
+
+    protected oauth2IdentityResolver :OAuth2IdentityResolver;
 
     protected permissionProvider : PermissionProvider;
 
@@ -71,6 +73,8 @@ export class AuthorizationMiddleware {
         this.config = useConfig();
 
         this.oauth2TokenManager = new OAuth2TokenManager();
+        this.oauth2IdentityResolver = new OAuth2IdentityResolver();
+
         this.permissionProvider = new PermissionDBProvider(dataSource);
         this.permissionChecker = new PermissionChecker({
             provider: this.permissionProvider,
@@ -159,21 +163,17 @@ export class AuthorizationMiddleware {
             throw JWTError.payloadPropertyInvalid('kind');
         }
 
+        if (!payload.realm_id) {
+            throw JWTError.payloadPropertyInvalid('realm_id');
+        }
+
         setRequestToken(request, header.token);
 
         if (payload.scope) {
             setRequestScopes(request, deserializeOAuth2Scope(payload.scope));
         }
 
-        const sub = await loadOAuth2SubEntity(
-            payload.sub_kind,
-            payload.sub,
-            payload.scope,
-        );
-
-        if (!payload.realm_id) {
-            throw JWTError.payloadPropertyInvalid('realm_id');
-        }
+        const identity = await this.oauth2IdentityResolver.resolve(payload);
 
         let realmName: string;
 
@@ -201,9 +201,9 @@ export class AuthorizationMiddleware {
         }
 
         setRequestIdentity(request, {
-            type: payload.sub_kind,
-            id: payload.sub,
-            attributes: sub,
+            type: identity.type,
+            id: identity.data.id,
+            attributes: identity.data,
             clientId: payload.client_id,
             realmId: payload.realm_id,
             realmName,

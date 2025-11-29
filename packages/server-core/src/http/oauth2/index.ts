@@ -8,6 +8,7 @@
 export * from './authorize';
 export * from './constants';
 export * from './grant-types';
+export * from './identity';
 export * from './openid';
 export * from './response';
 export * from './scope';
