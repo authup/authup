@@ -1,5 +1,36 @@
 # Change Log
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2025-11-30)
+
+
+### Features
+
+* add active, secret_hashed & secret_encrypted property + assign client always to realm ([#2758](https://github.com/authup/authup/issues/2758)) ([2d0f112](https://github.com/authup/authup/commit/2d0f112d2ed5bb1ad7eec04bccf3ca7dae61fb4f))
+* move credentials fns of client, robot & user to dedicated services ([#2759](https://github.com/authup/authup/issues/2759)) ([0741696](https://github.com/authup/authup/commit/074169606ff994700e247e4654cfe5365b3fbd8a))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 34 updates ([#2756](https://github.com/authup/authup/issues/2756)) ([9240ce1](https://github.com/authup/authup/commit/9240ce18515ea9501a6790a53efe375a4c2b28ac))
+* migrate from jest to vitest ([#2754](https://github.com/authup/authup/issues/2754)) ([191fd23](https://github.com/authup/authup/commit/191fd23035ee31eeca444f6d2165256a4f79ae72))
+* millisecond cache specification for oauth2 sub entity loading ([16c9df0](https://github.com/authup/authup/commit/16c9df05da2ee0a0f54a210cc36ca367cbc7765c))
+* set dotenv loading option to quiet ([5a1186f](https://github.com/authup/authup/commit/5a1186f8f9f634eda7a97c2e0de747ca0eebc312))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-http-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/server-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+  * devDependencies
+    * @authup/client-web-slim bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 

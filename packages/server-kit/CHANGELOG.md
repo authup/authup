@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2025-11-30)
+
+
+### Bug Fixes
+
+* **deps:** bump the majorprod group with 4 updates ([#2749](https://github.com/authup/authup/issues/2749)) ([d1322cf](https://github.com/authup/authup/commit/d1322cf8efd2cdec823e389b22a6dc7c80f872d0))
+* **deps:** bump the minorandpatch group with 34 updates ([#2756](https://github.com/authup/authup/issues/2756)) ([9240ce1](https://github.com/authup/authup/commit/9240ce18515ea9501a6790a53efe375a4c2b28ac))
+* migrate from jest to vitest ([#2754](https://github.com/authup/authup/issues/2754)) ([191fd23](https://github.com/authup/authup/commit/191fd23035ee31eeca444f6d2165256a4f79ae72))
+* ttl cache usage ([3163abb](https://github.com/authup/authup/commit/3163abbd8506fee048bd92343c64be14c6a64fe1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+  * peerDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 

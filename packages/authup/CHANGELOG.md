@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2025-11-30)
+
+
+### Bug Fixes
+
+* **deps:** bump the majorprod group with 4 updates ([#2749](https://github.com/authup/authup/issues/2749)) ([d1322cf](https://github.com/authup/authup/commit/d1322cf8efd2cdec823e389b22a6dc7c80f872d0))
+* **deps:** bump the minorandpatch group with 34 updates ([#2756](https://github.com/authup/authup/issues/2756)) ([9240ce1](https://github.com/authup/authup/commit/9240ce18515ea9501a6790a53efe375a4c2b28ac))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/server-core bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 

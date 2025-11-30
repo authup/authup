@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2025-11-30)
+
+
+### Features
+
+* add active, secret_hashed & secret_encrypted property + assign client always to realm ([#2758](https://github.com/authup/authup/issues/2758)) ([2d0f112](https://github.com/authup/authup/commit/2d0f112d2ed5bb1ad7eec04bccf3ca7dae61fb4f))
+* move credentials fns of client, robot & user to dedicated services ([#2759](https://github.com/authup/authup/issues/2759)) ([0741696](https://github.com/authup/authup/commit/074169606ff994700e247e4654cfe5365b3fbd8a))
+
+
+### Bug Fixes
+
+* dayOfYear validator in time policy ([5c8bb9f](https://github.com/authup/authup/commit/5c8bb9fb93b9e78d3da514ad1f0433c1b93e9f9c))
+* **deps:** bump the majorprod group with 4 updates ([#2749](https://github.com/authup/authup/issues/2749)) ([d1322cf](https://github.com/authup/authup/commit/d1322cf8efd2cdec823e389b22a6dc7c80f872d0))
+* **deps:** bump the minorandpatch group with 34 updates ([#2756](https://github.com/authup/authup/issues/2756)) ([9240ce1](https://github.com/authup/authup/commit/9240ce18515ea9501a6790a53efe375a4c2b28ac))
+* fn to fix query in attributes policy ([565bd2b](https://github.com/authup/authup/commit/565bd2b11bd631af39673c9cd885c902c7d29602))
+* migrate from jest to vitest ([#2754](https://github.com/authup/authup/issues/2754)) ([191fd23](https://github.com/authup/authup/commit/191fd23035ee31eeca444f6d2165256a4f79ae72))
+* millisecond cache specification for oauth2 sub entity loading ([16c9df0](https://github.com/authup/authup/commit/16c9df05da2ee0a0f54a210cc36ca367cbc7765c))
+* set dotenv loading option to quiet ([5a1186f](https://github.com/authup/authup/commit/5a1186f8f9f634eda7a97c2e0de747ca0eebc312))
+* ttl cache usage ([3163abb](https://github.com/authup/authup/commit/3163abbd8506fee048bd92343c64be14c6a64fe1))
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 

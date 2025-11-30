@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2025-11-30)
+
+
+### Bug Fixes
+
+* dayOfYear validator in time policy ([5c8bb9f](https://github.com/authup/authup/commit/5c8bb9fb93b9e78d3da514ad1f0433c1b93e9f9c))
+* **deps:** bump the minorandpatch group with 34 updates ([#2756](https://github.com/authup/authup/issues/2756)) ([9240ce1](https://github.com/authup/authup/commit/9240ce18515ea9501a6790a53efe375a4c2b28ac))
+* fn to fix query in attributes policy ([565bd2b](https://github.com/authup/authup/commit/565bd2b11bd631af39673c9cd885c902c7d29602))
+* migrate from jest to vitest ([#2754](https://github.com/authup/authup/issues/2754)) ([191fd23](https://github.com/authup/authup/commit/191fd23035ee31eeca444f6d2165256a4f79ae72))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+  * peerDependencies
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.1-beta.27
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 
