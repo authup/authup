@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.0.1-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.1-beta.27) (2025-11-30)
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 
