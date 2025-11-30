@@ -102,7 +102,7 @@
         "unplugin-swc": "^1.5.9",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.1.4",
-        "testcontainers": "^11.8.1",
+        "testcontainers": "^11.9.0",
         "ts-node": "^10.8.2",
         "vite": "^7.0.0",
         "vitest": "^4.0.14"
