@@ -23,7 +23,7 @@ import { ClientScopeEntity } from '../../../database/domains';
 import { ClientAuthenticationService } from '../../../services';
 import { useRequestIdentityOrFail } from '../../request';
 import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
-import type { OAuth2AccessTokenBuildContext, OAuth2OpenIdTokenBuildContext } from '../token';
+import type { OAuth2AccessTokenBuildContext } from '../token';
 import {
     OAuth2TokenManager, buildOAuth2AccessTokenPayload, buildOpenIdTokenPayload, extendOpenIdTokenPayload,
 } from '../token';
@@ -68,7 +68,7 @@ export class OAuth2AuthorizationManager {
 
         const identity = useRequestIdentityOrFail(req);
 
-        const tokenBuildContext : OAuth2AccessTokenBuildContext | OAuth2OpenIdTokenBuildContext = {
+        const tokenBuildContext : OAuth2AccessTokenBuildContext = {
             issuer: this.options.issuer,
             remoteAddress: getRequestIP(req, { trustProxy: true }),
             sub: identity.id,

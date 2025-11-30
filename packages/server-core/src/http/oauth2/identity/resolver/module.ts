@@ -19,7 +19,7 @@ import { useDataSource } from 'typeorm-extension';
 import {
     CachePrefix, ClientRepository, RobotRepository, UserRepository,
 } from '../../../../database/domains';
-import { resolveOAuth2SubAttributesForScopes } from '../../scope';
+import { OAuth2ScopeAttributesResolver } from '../../scope';
 import { OAuth2IdentityResolverError } from './error';
 
 export type Oauth2ClientIdentity = {
@@ -42,6 +42,12 @@ Oauth2RobotIdentity |
 Oauth2UserIdentity;
 
 export class OAuth2IdentityResolver {
+    protected scopeAttributesResolver : OAuth2ScopeAttributesResolver;
+
+    constructor() {
+        this.scopeAttributesResolver = new OAuth2ScopeAttributesResolver();
+    }
+
     async resolve(payload: OAuth2TokenPayload) : Promise<Oauth2Identity> {
         if (!payload.sub_kind) {
             throw OAuth2IdentityResolverError.payloadPropertyInvalid('sub_kind');
@@ -86,7 +92,7 @@ export class OAuth2IdentityResolver {
 
         // todo: check if attributes matches repository.metadata.columns[].databaseName
         if (payload.scope) {
-            const attributes = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.CLIENT, payload.scope);
+            const attributes = this.scopeAttributesResolver.resolveFor(OAuth2SubKind.CLIENT, payload.scope);
             for (let i = 0; i < attributes.length; i++) {
                 query.addSelect(`client.${attributes[i]}`);
             }
@@ -133,7 +139,7 @@ export class OAuth2IdentityResolver {
 
         // todo: check if attributes matches repository.metadata.columns[].databaseName
         if (payload.scope) {
-            const attributes = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.ROBOT, payload.scope);
+            const attributes = this.scopeAttributesResolver.resolveFor(OAuth2SubKind.ROBOT, payload.scope);
             for (let i = 0; i < attributes.length; i++) {
                 query.addSelect(`robot.${attributes[i]}`);
             }
@@ -180,7 +186,7 @@ export class OAuth2IdentityResolver {
 
         // todo: check if attributes matches repository.metadata.columns[].databaseName
         if (payload.scope) {
-            const attributes = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.USER, payload.scope);
+            const attributes = this.scopeAttributesResolver.resolveFor(OAuth2SubKind.USER, payload.scope);
             for (let i = 0; i < attributes.length; i++) {
                 query.addSelect(`user.${attributes[i]}`);
             }

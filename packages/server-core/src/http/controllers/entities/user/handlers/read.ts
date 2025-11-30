@@ -16,8 +16,8 @@ import type { QueryFieldsApplyOptions } from 'typeorm-extension';
 import { applyQuery, useDataSource } from 'typeorm-extension';
 import type { UserEntity } from '../../../../../database/domains';
 import { UserRepository, resolveRealm } from '../../../../../database/domains';
-import { isSelfId } from '../../../../../utils';
-import { hasOAuth2Scope, resolveOAuth2SubAttributesForScopes } from '../../../../oauth2';
+import { isSelfToken } from '../../../../../utils';
+import { OAuth2ScopeAttributesResolver } from '../../../../oauth2';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker, useRequestScopes,
 } from '../../../../request';
@@ -128,7 +128,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
     let isMe = false;
 
     if (
-        isSelfId(id) &&
+        isSelfToken(id) &&
         !!identity &&
         identity.type === 'user'
     ) {
@@ -158,7 +158,8 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
 
     const scopes = useRequestScopes(req);
     if (isMe) {
-        const attributes: string[] = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.USER, scopes);
+        const attributesResolver = new OAuth2ScopeAttributesResolver();
+        const attributes = attributesResolver.resolveFor(OAuth2SubKind.USER, useRequestScopes(req));
 
         const validAttributes = repository.metadata.columns.map(
             (column) => column.databaseName,
@@ -193,7 +194,7 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
     }
 
     if (isMe) {
-        if (hasOAuth2Scope(scopes, ScopeName.GLOBAL)) {
+        if (scopes.includes(ScopeName.GLOBAL)) {
             await repository.extendOneWithEA(entity);
         }
     } else {

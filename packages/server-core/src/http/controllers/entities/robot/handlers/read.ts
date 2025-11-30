@@ -19,8 +19,8 @@ import {
     PermissionName,
 } from '@authup/core-kit';
 import { RobotEntity, resolveRealm } from '../../../../../database/domains';
-import { isSelfId } from '../../../../../utils';
-import { resolveOAuth2SubAttributesForScopes } from '../../../../oauth2';
+import { isSelfToken } from '../../../../../utils';
+import { OAuth2ScopeAttributesResolver } from '../../../../oauth2';
 import {
     useRequestIdentity,
     useRequestParamID,
@@ -129,7 +129,7 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
     let isMe = false;
 
     if (
-        isSelfId(id) &&
+        isSelfToken(id) &&
         identity &&
         identity.type === 'robot'
     ) {
@@ -162,9 +162,9 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
         }
     }
 
-    const scopes = useRequestScopes(req);
     if (isMe) {
-        const attributes: string[] = resolveOAuth2SubAttributesForScopes(OAuth2SubKind.ROBOT, scopes);
+        const attributesResolver = new OAuth2ScopeAttributesResolver();
+        const attributes = attributesResolver.resolveFor(OAuth2SubKind.ROBOT, useRequestScopes(req));
 
         const validAttributes = repository.metadata.columns.map(
             (column) => column.databaseName,
