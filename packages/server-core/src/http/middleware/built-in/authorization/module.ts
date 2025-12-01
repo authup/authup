@@ -37,7 +37,7 @@ import { PermissionDBProvider, PolicyEngine } from '../../../../security';
 import { ClientAuthenticationService, RobotAuthenticationService, UserAuthenticationService } from '../../../../services';
 import { OAuth2IdentityResolver, OAuth2TokenVerifier } from '../../../../core/oauth2';
 import { OAuth2KeyRepository } from '../../../../core/oauth2/key';
-import { OAuth2TokenRepository } from '../../../../core/oauth2/token/repository';
+import { OAuth2TokenRepository } from '../../../../database/adapters/oauth2/token/repository';
 import {
     RequestPermissionChecker,
     setRequestIdentity,

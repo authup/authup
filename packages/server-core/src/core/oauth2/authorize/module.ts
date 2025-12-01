@@ -5,96 +5,85 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
 import {
     isSimpleMatch,
 } from '@authup/kit';
-import type { OAuth2SubKind, OAuth2TokenPayload } from '@authup/specs';
-import { OAuth2AuthorizationResponseType, OAuth2Error, hasOAuth2Scopes } from '@authup/specs';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { randomBytes } from 'node:crypto';
-import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { ClientScopeEntity } from '../../../database/domains';
-import { ClientAuthenticationService } from '../../../services';
-import { useRequestIdentityOrFail } from '../../../http/request';
-import { OAuth2KeyRepository } from '../key';
-import { getOauth2AuthorizeResponseTypesByRequest } from '../response';
-import { OAuth2AccessTokenIssuer, OAuth2OpenIDTokenIssuer, OAuth2TokenSigner } from '../token';
-import { OAuth2TokenRepository } from '../token/repository';
-import { OAuth2AuthorizationCodeRepository } from './repository';
+import type { OAuth2TokenPayload } from '@authup/specs';
+import {
+    OAuth2AuthorizationResponseType, OAuth2Error, hasOAuth2Scopes,
+} from '@authup/specs';
+import type { IOAuth2ClientRepository } from '../client';
+import type { IOAuth2ClientScopeRepository } from '../client-scope';
+import type { OAuth2IdentityResolver } from '../identity';
+import type { IOAuth2TokenIssuer } from '../token';
+import type { IOAuth2AuthorizationCodeIssuer } from './code';
 import type {
     OAuth2AuthorizationCodeRequestContainer,
-    OAuth2AuthorizationManagerOptions,
+    OAuth2AuthorizationManagerContext,
     OAuth2AuthorizationResult,
 } from './types';
 import { AuthorizeRequestValidator } from './validation';
 
 export class OAuth2AuthorizationManager {
-    protected options: OAuth2AuthorizationManagerOptions;
+    protected clientRepository: IOAuth2ClientRepository;
 
-    protected codeRepository : OAuth2AuthorizationCodeRepository;
+    protected clientScopeRepository: IOAuth2ClientScopeRepository;
 
     protected validator : AuthorizeRequestValidator;
 
-    protected validatorAdapter : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
+    protected accessTokenIssuer : IOAuth2TokenIssuer;
 
-    protected accessTokenIssuer : OAuth2AccessTokenIssuer;
+    protected openIDIssuer : IOAuth2TokenIssuer;
 
-    protected openIDIssuer : OAuth2OpenIDTokenIssuer;
+    protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
 
-    constructor(options: OAuth2AuthorizationManagerOptions) {
-        this.options = options;
+    protected identityResolver : OAuth2IdentityResolver;
 
-        const signerRepository = new OAuth2KeyRepository();
-        const tokenRepository = new OAuth2TokenRepository();
-
-        const tokenSigner = new OAuth2TokenSigner(signerRepository);
-
-        this.accessTokenIssuer = new OAuth2AccessTokenIssuer(
-            tokenRepository,
-            tokenSigner,
-            {
-                maxAge: this.options.accessTokenMaxAge,
-            },
-        );
-        this.openIDIssuer = new OAuth2OpenIDTokenIssuer(
-            tokenRepository,
-            tokenSigner,
-            {
-                maxAge: this.options.idTokenMaxAge,
-            },
-        );
-
-        this.codeRepository = new OAuth2AuthorizationCodeRepository();
+    constructor(
+        ctx: OAuth2AuthorizationManagerContext,
+    ) {
+        this.clientRepository = ctx.clientRepository;
+        this.clientScopeRepository = ctx.clientScopeRepository;
+        this.accessTokenIssuer = ctx.accessTokenIssuer;
+        this.openIDIssuer = ctx.openIdIssuer;
+        this.codeIssuer = ctx.codeIssuer;
+        this.identityResolver = ctx.identityResolver;
 
         this.validator = new AuthorizeRequestValidator();
-        this.validatorAdapter = new RoutupContainerAdapter(this.validator);
     }
 
-    async executeWithRequest(req: Request) {
-        const { data } = await this.validateWithRequest(req);
+    async authorizeWith(
+        codeRequest: OAuth2AuthorizationCodeRequest,
+        base: OAuth2TokenPayload = {},
+    ) : Promise<OAuth2AuthorizationResult> {
+        const { data } = await this.verify(codeRequest);
 
-        const responseTypes = getOauth2AuthorizeResponseTypesByRequest(req);
+        const availableResponseTypes : string[] = Object.values(OAuth2AuthorizationResponseType);
+
+        let responseTypes : string[] = [];
+        if (data.response_type) {
+            responseTypes = Array.isArray(data.response_type) ? data.response_type : data.response_type.split(' ');
+        }
+
+        for (let i = 0; i < responseTypes.length; i++) {
+            if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
+                throw OAuth2Error.responseTypeUnsupported();
+            } else {
+                data[responseTypes[i]] = true;
+            }
+        }
 
         const output : OAuth2AuthorizationResult = {
             redirectUri: data.redirect_uri,
             ...(data.state ? { state: data.state } : {}),
         };
 
-        const identity = useRequestIdentityOrFail(req);
-
-        const payloadBase : OAuth2TokenPayload = {
-            issuer: this.options.issuer,
-            remote_address: getRequestIP(req, { trustProxy: true }),
-            sub: identity.id,
-            sub_kind: identity.type as `${OAuth2SubKind}`,
-            realm_id: identity.realmId,
-            realm_name: identity.realmName,
+        const payloadBaseNormalized : OAuth2TokenPayload = {
+            ...base,
             client_id: data.client_id,
             ...(data.scope ? { scope: data.scope } : {}),
         };
@@ -107,9 +96,7 @@ export class OAuth2AuthorizationManager {
                 hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID)
             )
         ) {
-            payloadBase.maxAge = this.options.idTokenMaxAge;
-
-            const [token] = await this.openIDIssuer.issue(payloadBase);
+            const [token] = await this.openIDIssuer.issue(payloadBaseNormalized);
 
             idToken = token;
 
@@ -119,38 +106,21 @@ export class OAuth2AuthorizationManager {
         }
 
         if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
-            payloadBase.maxAge = this.options.accessTokenMaxAge;
-
-            const [token] = await this.accessTokenIssuer.issue(payloadBase);
+            const [token] = await this.accessTokenIssuer.issue(payloadBaseNormalized);
 
             output.accessToken = token;
         }
 
         if (responseTypes[OAuth2AuthorizationResponseType.CODE]) {
-            const entity: OAuth2AuthorizationCode = {
-                id: randomBytes(10).toString('hex'),
-                redirect_uri: data.redirect_uri,
-                client_id: data.client_id,
-                realm_id: identity.realmId,
-                realm_name: identity.realmName,
-                scope: data.scope,
-                code_challenge: data.code_challenge,
-                code_challenge_method: data.code_challenge_method,
-            };
+            const identity = await this.identityResolver.resolve(payloadBaseNormalized);
 
-            if (identity.type === 'user') {
-                entity.user_id = identity.id;
-            }
-
-            if (identity.type === 'robot') {
-                entity.robot_id = identity.id;
-            }
-
-            if (idToken) {
-                entity.id_token = idToken;
-            }
-
-            await this.codeRepository.set(entity, 1000 * this.options.authorizationCodeMaxAge);
+            const entity = await this.codeIssuer.issue(
+                data,
+                identity,
+                {
+                    idToken,
+                },
+            );
 
             output.authorizationCode = entity.id;
         }
@@ -159,54 +129,29 @@ export class OAuth2AuthorizationManager {
     }
 
     /**
-     * Validate authorization request.
-     *
-     * @throws OAuth2Error
-     *
-     * @param req
-     */
-    async validateWithRequest(
-        req: Request,
-    ) : Promise<OAuth2AuthorizationCodeRequestContainer> {
-        const data = await this.validatorAdapter.run(req, {
-            locations: ['body', 'query'],
-        });
-
-        return this.postValidation(data);
-    }
-
-    /**
      * Validate raw authorization data.
      *
      * @param input
      */
-    async validate(input: Record<string, any>) : Promise<OAuth2AuthorizationCodeRequestContainer> {
-        const data = await this.validator.run(input);
-        return this.postValidation(data);
+    async validate(input: Record<string, any>) : Promise<OAuth2AuthorizationCodeRequest> {
+        return this.validator.run(input);
     }
 
-    protected async postValidation(data: OAuth2AuthorizationCodeRequest) : Promise<OAuth2AuthorizationCodeRequestContainer> {
-        const authenticationService = new ClientAuthenticationService();
-
-        const client = await authenticationService.resolve(data.client_id, data.realm_id);
+    /**
+     * Verify code request.
+     *
+     * @param data
+     * @protected
+     */
+    async verify(data: OAuth2AuthorizationCodeRequest) : Promise<OAuth2AuthorizationCodeRequestContainer> {
+        const client = await this.clientRepository.findOneByIdOrName(data.client_id, data.realm_id);
         if (!client) {
             throw OAuth2Error.clientInvalid();
         }
 
-        data.realm_id = client.realm_id;
+        data.client_id = client.id;
 
-        // verifying scopes
-        const dataSource = await useDataSource();
-        const clientScopeRepository = dataSource.getRepository(ClientScopeEntity);
-        const clientScopes = await clientScopeRepository.find({
-            where: {
-                client_id: client.id,
-            },
-            relations: {
-                scope: true,
-            },
-        });
-
+        const clientScopes = await this.clientScopeRepository.findByClientId(client.id);
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
         if (data.scope) {
             if (

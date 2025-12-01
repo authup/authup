@@ -5,47 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
+import type { Robot } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
-import { useRequestBody } from '@routup/basic/body';
-import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
-import type { RobotEntity } from '../../../database/domains';
-import { RobotAuthenticationService } from '../../../services';
 import { BaseGrant } from './base';
 import { buildOAuth2BearerTokenResponse } from '../response';
-import type { IGrant } from './type';
 
-export class RobotCredentialsGrantType extends BaseGrant implements IGrant {
-    async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
-        const entity = await this.validate(request);
-
+export class RobotCredentialsGrant extends BaseGrant<Robot> {
+    async runWith(input: Robot, base: OAuth2TokenPayload = {}) : Promise<OAuth2TokenGrantResponse> {
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            remote_address: getRequestIP(request, { trustProxy: true }),
+            ...base,
             scope: ScopeName.GLOBAL,
+            sub: input.id,
             sub_kind: OAuth2SubKind.ROBOT,
-            sub: entity.id,
-            realm_id: entity.realm.id,
-            realm_name: entity.realm.name,
+            realm_id: input.realm.id,
+            realm_name: input.realm?.id,
+            client_id: input.id,
         });
 
         return buildOAuth2BearerTokenResponse({
             accessToken,
             accessTokenPayload,
         });
-    }
-
-    async validate(request: Request) : Promise<RobotEntity> {
-        const {
-            id,
-            secret,
-            realm_id: realmId,
-        } = useRequestBody(request);
-
-        const authenticationService = new RobotAuthenticationService();
-        return authenticationService.authenticate(id, secret, realmId);
     }
 }

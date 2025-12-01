@@ -33,7 +33,7 @@ export interface OAuth2AuthorizationCode {
 
     realm_name: Realm['name'],
 
-    exp?: number
+    max_age?: number
 }
 
 export type OAuth2AuthorizationCodeRequest = {

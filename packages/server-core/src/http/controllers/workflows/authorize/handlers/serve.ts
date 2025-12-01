@@ -10,7 +10,7 @@ import type {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sanitizeError } from '../../../../../utils';
-import { useOAuth2AuthorizationService } from '../../../../../core/oauth2';
+import { HTTPOAuth2AuthorizationManager } from '../../../../oauth2';
 import { sendClientResponse } from '../../../../response';
 
 export async function serveAuthorizationRouteHandler(
@@ -25,9 +25,9 @@ export async function serveAuthorizationRouteHandler(
     let error : Error | undefined;
 
     try {
-        const authorizationService = useOAuth2AuthorizationService();
-        const result = await authorizationService.validateWithRequest(req);
-
+        const authorizationService = new HTTPOAuth2AuthorizationManager();
+        const codeRequest = await authorizationService.validateWithRequest(req);
+        const result = await authorizationService.verify(codeRequest);
         client = result.client;
         scopes = result.clientScopes.map((s) => s.scope);
 

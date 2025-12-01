@@ -23,17 +23,17 @@ import { OAuth2ScopeAttributesResolver } from '../../scope';
 import { OAuth2IdentityResolverError } from './error';
 
 export type Oauth2ClientIdentity = {
-    type: OAuth2SubKind.CLIENT,
+    type: `${OAuth2SubKind.CLIENT}`,
     data: Client
 };
 
 export type Oauth2RobotIdentity = {
-    type: OAuth2SubKind.ROBOT,
+    type: `${OAuth2SubKind.ROBOT}`,
     data: Robot
 };
 
 export type Oauth2UserIdentity = {
-    type: OAuth2SubKind.USER,
+    type: `${OAuth2SubKind.USER}`,
     data: User
 };
 

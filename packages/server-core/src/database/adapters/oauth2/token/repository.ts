@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025.
+ * Copyright (c) 2025-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -10,9 +10,9 @@ import { buildCacheKey, useCache } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind, OAuth2TokenKind } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '../../../database/domains';
-import { OAuth2CachePrefix } from '../constants';
-import type { IOAuth2TokenRepository } from './types';
+import { OAuth2RefreshTokenEntity } from '../../../domains';
+import { OAuth2CachePrefix } from '../../../../core/oauth2/constants';
+import type { IOAuth2TokenRepository } from '../../../../core/oauth2/token/types';
 
 export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     protected cache : Cache;

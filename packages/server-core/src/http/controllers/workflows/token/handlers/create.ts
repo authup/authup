@@ -6,17 +6,26 @@
  */
 
 import { CookieName } from '@authup/core-http-kit';
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { getRequestHostName, send } from 'routup';
+import { OAuth2AuthorizationCodeRepository } from '../../../../../adapters/cache/adapters/oauth2/authorize/module';
 import { ConfigDefaults, useConfig } from '../../../../../config';
+import type { IOAuth2Grant } from '../../../../../core';
 import {
-    guessOauth2GrantTypeByRequest,
-} from '../../../../../core/oauth2';
-import { createOAuth2Grant } from '../../../../../core/oauth2/grant-types/create';
+    OAuth2AccessTokenIssuer, OAuth2RefreshTokenIssuer,
+
+    OAuth2TokenRevoker, OAuth2TokenSigner, OAuth2TokenVerifier,
+} from '../../../../../core';
+import { OAuth2KeyRepository } from '../../../../../core/oauth2/key';
+import { OAuth2TokenRepository } from '../../../../../database';
+import {
+    HTTPClientCredentialsGrant, HTTPOAuth2RefreshTokenGrant, HTTPPasswordGrant, HTTPRobotCredentialsGrant, guessOauth2GrantTypeByRequest,
+} from '../../../../oauth2';
+import { OAuth2HTTPAuthorizeGrant } from '../../../../oauth2/grant_types/authorize';
 
 /**
  *
@@ -34,11 +43,66 @@ export async function createTokenRouteHandler(
         throw OAuth2Error.grantInvalid();
     }
 
-    const grant = createOAuth2Grant(grantType);
-
     const config = useConfig();
+    const tokenRepository = new OAuth2TokenRepository();
 
-    const tokenResponse : OAuth2TokenGrantResponse = await grant.run(req);
+    const signerRepository = new OAuth2KeyRepository();
+    const tokenSigner = new OAuth2TokenSigner(signerRepository);
+
+    const accessTokenIssuer = new OAuth2AccessTokenIssuer(
+        tokenRepository,
+        tokenSigner,
+        {
+            maxAge: config.tokenAccessMaxAge,
+        },
+    );
+
+    const refreshTokenIssuer = new OAuth2RefreshTokenIssuer(
+        tokenRepository,
+        tokenSigner,
+        {
+            maxAge: config.tokenRefreshMaxAge,
+        },
+    );
+
+    this.tokenVerifier = new OAuth2TokenVerifier(
+        signerRepository,
+        tokenRepository,
+    );
+
+    this.tokenRevoker = new OAuth2TokenRevoker(tokenRepository);
+
+    let grant : IOAuth2Grant;
+
+    switch (grantType) {
+        case OAuth2TokenGrant.AUTHORIZATION_CODE: {
+            grant = new OAuth2HTTPAuthorizeGrant({
+                codeRepository: new OAuth2AuthorizationCodeRepository(),
+            });
+            break;
+        }
+        case OAuth2TokenGrant.CLIENT_CREDENTIALS: {
+            grant = new HTTPClientCredentialsGrant(grantContext);
+            break;
+        }
+        case OAuth2TokenGrant.ROBOT_CREDENTIALS: {
+            grant = new HTTPRobotCredentialsGrant(grantContext);
+            break;
+        }
+        case OAuth2TokenGrant.PASSWORD: {
+            grant = new HTTPPasswordGrant(grantContext);
+            break;
+        }
+        case OAuth2TokenGrant.REFRESH_TOKEN: {
+            grant = new HTTPOAuth2RefreshTokenGrant(grantContext);
+            break;
+        }
+        default: {
+            throw new SyntaxError(`OAuth2 grant type ${grantType} is not supported.`);
+        }
+    }
+
+    const tokenResponse : OAuth2TokenGrantResponse = await grant.runWith(req);
 
     const cookieOptions : SerializeOptions = {};
     if (config.cookieDomain) {

@@ -6,15 +6,24 @@
  */
 
 import type { Client, ClientScope, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { IOAuth2ClientRepository } from '../client';
+import type { IOAuth2ClientScopeRepository } from '../client-scope';
+import type { OAuth2IdentityResolver } from '../identity';
+import type { IOAuth2TokenIssuer } from '../token';
+import type { IOAuth2AuthorizationCodeIssuer } from './code';
 
-export type OAuth2AuthorizationManagerOptions = {
-    issuer: string,
+export type OAuth2AuthorizationManagerContext = {
+    clientRepository: IOAuth2ClientRepository,
+    clientScopeRepository: IOAuth2ClientScopeRepository,
 
-    accessTokenMaxAge: number,
+    accessTokenIssuer: IOAuth2TokenIssuer,
+    openIdIssuer: IOAuth2TokenIssuer,
+    codeIssuer: IOAuth2AuthorizationCodeIssuer,
 
-    authorizationCodeMaxAge: number,
-
-    idTokenMaxAge: number
+    /**
+     * todo: avoid this.
+     */
+    identityResolver: OAuth2IdentityResolver
 };
 
 export type OAuth2AuthorizationCodeRequestContainer = {

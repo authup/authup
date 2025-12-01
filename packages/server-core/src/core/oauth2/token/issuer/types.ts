@@ -12,7 +12,12 @@ export type OAuth2TokenIssuerOptions = {
     /**
      * Max duration in seconds
      */
-    maxAge?: number
+    maxAge?: number,
+
+    /**
+     * Token issuer name.
+     */
+    issuer?: string
 };
 
 export interface IOAuth2TokenIssuer {

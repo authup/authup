@@ -5,33 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
+import type { User } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
-import { useRequestBody } from '@routup/basic/body';
-import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
-import type {
-    UserEntity,
-} from '../../../database/domains';
-import { UserAuthenticationService } from '../../../services';
 import { buildOAuth2BearerTokenResponse } from '../response';
+import type { IOAuth2TokenIssuer } from '../token';
 import { BaseGrant } from './base';
-import type { IGrant } from './type';
+import type { OAuth2PasswordGrantContext } from './types';
 
-export class PasswordGrantType extends BaseGrant implements IGrant {
-    async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
-        const user = await this.validate(request);
+export class PasswordGrantType extends BaseGrant<User> {
+    protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
+    constructor(ctx: OAuth2PasswordGrantContext) {
+        super({
+            accessTokenIssuer: ctx.accessTokenIssuer,
+        });
+
+        this.refreshTokenIssuer = ctx.refreshTokenIssuer;
+    }
+
+    async runWith(input: User, base: OAuth2TokenPayload = {}) : Promise<OAuth2TokenGrantResponse> {
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            remote_address: getRequestIP(request, { trustProxy: true }),
+            ...base,
             scope: ScopeName.GLOBAL,
-            sub: user.id,
+            sub: input.id,
             sub_kind: OAuth2SubKind.USER,
-            realm_id: user.realm.id,
-            realm_name: user.realm.name,
+            realm_id: input.realm_id,
+            realm_name: input.realm?.name,
         });
 
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(accessTokenPayload);
@@ -42,19 +45,5 @@ export class PasswordGrantType extends BaseGrant implements IGrant {
             refreshToken,
             refreshTokenPayload,
         });
-    }
-
-    async validate(request: Request) : Promise<UserEntity> {
-        const {
-            username,
-            password,
-            realm_id: realmId,
-        } = useRequestBody(request);
-
-        const authenticationService = new UserAuthenticationService({
-            withLDAP: true,
-        });
-
-        return authenticationService.authenticate(username, password, realmId);
     }
 }

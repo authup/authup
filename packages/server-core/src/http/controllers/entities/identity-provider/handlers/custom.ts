@@ -28,8 +28,9 @@ import {
 } from '../../../../../database/domains';
 import { createOAuth2IdentityProviderFlow } from '../../../../../domains';
 import { IdentityProviderAccountService } from '../../../../../services';
-import type { OAuth2AuthorizeStateData } from '../../../../../core/oauth2';
-import { InternalGrantType, OAuth2AuthorizationStateManager, useOAuth2AuthorizationService } from '../../../../../core/oauth2';
+import type { OAuth2AuthorizeStateData } from '../../../../../core';
+import { OAuth2AuthorizationManager, OAuth2AuthorizationStateManager } from '../../../../../core';
+import { HTTPOAuth2IdentityGrantType } from '../../../../oauth2';
 import { setRequestIdentity, useRequestParamID } from '../../../../request';
 import { useConfig } from '../../../../../config';
 
@@ -82,8 +83,14 @@ export async function authorizeURLIdentityProviderRouteHandler(
             throw OAuth2Error.requestInvalid('The code request is malformed and can not be parsed.');
         }
 
-        const authorizationManager = useOAuth2AuthorizationService();
-        const validationResult = await authorizationManager.validate(codeRequestRaw);
+        const config = useConfig();
+        // todo: use config publicUrl: issuer, accessTokenMaxAge, etc.
+
+        const authorizationManager = new OAuth2AuthorizationManager({
+        });
+
+        const codeRequest = await authorizationManager.validate(codeRequestRaw);
+        const validationResult = await authorizationManager.verify(codeRequest);
 
         if (
             validationResult.client.realm_id &&
@@ -136,7 +143,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
 
     // todo: identity should respect client_id
     const account = await manager.save(identity);
-    const grant = new InternalGrantType();
+    const grant = new HTTPOAuth2IdentityGrantType();
 
     setRequestIdentity(req, {
         type: 'user',
@@ -145,7 +152,7 @@ export async function authorizeCallbackIdentityProviderRouteHandler(
         realmName: entity.realm.name,
     });
 
-    const token = await grant.run(req);
+    const token = await grant.runWithRequest(req);
     const config = useConfig();
 
     const cookieDomainsRaw : string[] = [

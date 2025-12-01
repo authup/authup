@@ -6,21 +6,44 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { useRequestBody } from '@routup/basic/body';
-import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
 import { buildOAuth2BearerTokenResponse } from '../response';
+import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../token';
 import { BaseGrant } from './base';
-import type { IGrant } from './type';
+import type { IOAuth2Grant, OAuth2RefreshTokenGrantContext } from './types';
 
-export class RefreshTokenGrantType extends BaseGrant implements IGrant {
-    async run(request: Request) : Promise<OAuth2TokenGrantResponse> {
-        const payload = await this.validate(request);
+export class OAuth2RefreshTokenGrant extends BaseGrant<string | OAuth2TokenPayload> implements IOAuth2Grant {
+    protected refreshTokenIssuer : IOAuth2TokenIssuer;
+
+    protected tokenVerifier : IOAuth2TokenVerifier;
+
+    protected tokenRevoker : IOAuth2TokenRevoker;
+
+    constructor(ctx: OAuth2RefreshTokenGrantContext) {
+        super({
+            accessTokenIssuer: ctx.accessTokenIssuer,
+        });
+
+        this.refreshTokenIssuer = ctx.refreshTokenIssuer;
+
+        this.tokenVerifier = ctx.tokenVerifier;
+        this.tokenRevoker = ctx.tokenRevoker;
+    }
+
+    async runWith(
+        input: string | OAuth2TokenPayload,
+        base: OAuth2TokenPayload = {},
+    ) : Promise<OAuth2TokenGrantResponse> {
+        let payload : OAuth2TokenPayload;
+        if (typeof input === 'string') {
+            payload = await this.tokenVerifier.verify(input);
+        } else {
+            payload = input;
+        }
 
         await this.tokenRevoker.revoke(payload);
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            remote_address: getRequestIP(request, { trustProxy: true }),
+            ...base,
             ...payload,
         });
 
@@ -32,11 +55,5 @@ export class RefreshTokenGrantType extends BaseGrant implements IGrant {
             refreshToken,
             refreshTokenPayload,
         });
-    }
-
-    async validate(request: Request) : Promise<OAuth2TokenPayload> {
-        const refreshToken = useRequestBody(request, 'refresh_token');
-
-        return this.tokenVerifier.verify(refreshToken);
     }
 }

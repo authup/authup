@@ -17,7 +17,7 @@ import {
     OAuth2TokenVerifier,
 } from '../../../../../core/oauth2';
 import { OAuth2KeyRepository } from '../../../../../core/oauth2/key';
-import { OAuth2TokenRepository } from '../../../../../core/oauth2/token/repository';
+import { OAuth2TokenRepository } from '../../../../../database/adapters/oauth2/token/repository';
 import { extractTokenFromRequest } from '../utils';
 
 export async function introspectTokenRouteHandler(

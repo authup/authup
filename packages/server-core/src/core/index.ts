@@ -7,4 +7,5 @@
 
 export * from './domain-event-publisher';
 export * from './ldap';
+export * from './oauth2';
 export * from './smtp';

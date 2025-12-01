@@ -7,10 +7,8 @@
 
 export * from './authorize';
 export * from './client-credentials';
-export * from './create';
-export * from './internal';
+export * from './identity';
 export * from './password';
 export * from './refresh-token';
 export * from './robot-credentials';
-export * from './type';
-export * from './utils';
+export * from './types';
