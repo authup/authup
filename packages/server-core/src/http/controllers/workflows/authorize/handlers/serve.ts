@@ -10,7 +10,7 @@ import type {
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sanitizeError } from '../../../../../utils';
-import { useOAuth2AuthorizationService } from '../../../../oauth2';
+import { useOAuth2AuthorizationService } from '../../../../../core/oauth2';
 import { sendClientResponse } from '../../../../response';
 
 export async function serveAuthorizationRouteHandler(

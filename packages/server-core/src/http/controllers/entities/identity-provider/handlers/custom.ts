@@ -28,8 +28,8 @@ import {
 } from '../../../../../database/domains';
 import { createOAuth2IdentityProviderFlow } from '../../../../../domains';
 import { IdentityProviderAccountService } from '../../../../../services';
-import type { OAuth2AuthorizeStateData } from '../../../../oauth2';
-import { InternalGrantType, OAuth2AuthorizationStateManager, useOAuth2AuthorizationService } from '../../../../oauth2';
+import type { OAuth2AuthorizeStateData } from '../../../../../core/oauth2';
+import { InternalGrantType, OAuth2AuthorizationStateManager, useOAuth2AuthorizationService } from '../../../../../core/oauth2';
 import { setRequestIdentity, useRequestParamID } from '../../../../request';
 import { useConfig } from '../../../../../config';
 
@@ -97,7 +97,7 @@ export async function authorizeURLIdentityProviderRouteHandler(
     }
 
     const authorizationStateManager = new OAuth2AuthorizationStateManager();
-    parameters.state = await authorizationStateManager.create(req, stateData);
+    parameters.state = await authorizationStateManager.issue(req, stateData);
 
     return sendRedirect(res, flow.buildRedirectURL(parameters));
 }

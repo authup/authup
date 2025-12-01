@@ -59,7 +59,7 @@ export type OAuth2TokenPayload = JWTClaims & {
     /**
      * Expires At
      */
-    exp: number,
+    exp?: number,
 
     /**
      * Not before

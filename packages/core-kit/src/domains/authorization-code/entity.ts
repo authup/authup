@@ -32,6 +32,8 @@ export interface OAuth2AuthorizationCode {
     realm_id: Realm['id'],
 
     realm_name: Realm['name'],
+
+    exp?: number
 }
 
 export type OAuth2AuthorizationCodeRequest = {

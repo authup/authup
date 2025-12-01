@@ -35,7 +35,9 @@ import {
 } from '../../../../database/domains';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';
 import { ClientAuthenticationService, RobotAuthenticationService, UserAuthenticationService } from '../../../../services';
-import { OAuth2IdentityResolver, OAuth2TokenManager } from '../../../oauth2';
+import { OAuth2IdentityResolver, OAuth2TokenVerifier } from '../../../../core/oauth2';
+import { OAuth2KeyRepository } from '../../../../core/oauth2/key';
+import { OAuth2TokenRepository } from '../../../../core/oauth2/token/repository';
 import {
     RequestPermissionChecker,
     setRequestIdentity,
@@ -49,7 +51,7 @@ export class AuthorizationMiddleware {
 
     // --------------------------------------
 
-    protected oauth2TokenManager: OAuth2TokenManager;
+    protected oauth2TokenVerifier: OAuth2TokenVerifier;
 
     protected oauth2IdentityResolver :OAuth2IdentityResolver;
 
@@ -72,7 +74,13 @@ export class AuthorizationMiddleware {
     constructor(dataSource: DataSource) {
         this.config = useConfig();
 
-        this.oauth2TokenManager = new OAuth2TokenManager();
+        const keyRepository = new OAuth2KeyRepository();
+        const tokenRepository = new OAuth2TokenRepository();
+
+        this.oauth2TokenVerifier = new OAuth2TokenVerifier(
+            keyRepository,
+            tokenRepository,
+        );
         this.oauth2IdentityResolver = new OAuth2IdentityResolver();
 
         this.permissionProvider = new PermissionDBProvider(dataSource);
@@ -158,7 +166,7 @@ export class AuthorizationMiddleware {
         request: Request,
         header: BearerAuthorizationHeader,
     ) {
-        const payload = await this.oauth2TokenManager.verify(header.token);
+        const payload = await this.oauth2TokenVerifier.verify(header.token);
         if (payload.kind !== OAuth2TokenKind.ACCESS) {
             throw JWTError.payloadPropertyInvalid('kind');
         }

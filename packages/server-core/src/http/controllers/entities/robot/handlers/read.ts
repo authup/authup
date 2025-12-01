@@ -20,7 +20,7 @@ import {
 } from '@authup/core-kit';
 import { RobotEntity, resolveRealm } from '../../../../../database/domains';
 import { isSelfToken } from '../../../../../utils';
-import { OAuth2ScopeAttributesResolver } from '../../../../oauth2';
+import { OAuth2ScopeAttributesResolver } from '../../../../../core/oauth2';
 import {
     useRequestIdentity,
     useRequestParamID,

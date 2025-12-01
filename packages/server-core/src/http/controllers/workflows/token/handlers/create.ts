@@ -15,8 +15,8 @@ import { getRequestHostName, send } from 'routup';
 import { ConfigDefaults, useConfig } from '../../../../../config';
 import {
     guessOauth2GrantTypeByRequest,
-} from '../../../../oauth2';
-import { createOAuth2Grant } from '../../../../oauth2/grant-types/create';
+} from '../../../../../core/oauth2';
+import { createOAuth2Grant } from '../../../../../core/oauth2/grant-types/create';
 
 /**
  *

@@ -8,7 +8,7 @@
 import { URL } from 'node:url';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
-import { useOAuth2AuthorizationService } from '../../../../oauth2';
+import { useOAuth2AuthorizationService } from '../../../../../core/oauth2';
 
 export async function confirmAuthorizationRouteHandler(
     req: Request,

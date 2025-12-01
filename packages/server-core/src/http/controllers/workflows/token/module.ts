@@ -10,7 +10,7 @@ import {
     DController, DGet, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { createTokenRouteHandler, introspectTokenRouteHandler, revokeTokenRouteHandler } from './handlers';
-import { toOAuth2Error } from '../../../oauth2/helpers';
+import { toOAuth2Error } from '../../../../core/oauth2/helpers';
 
 @DTags('auth')
 @DController('/token')

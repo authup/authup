@@ -21,7 +21,7 @@ import {
 import { isUUID } from '@authup/kit';
 import { ClientEntity, resolveRealm } from '../../../../../database/domains';
 import { isSelfToken } from '../../../../../utils';
-import { OAuth2ScopeAttributesResolver } from '../../../../oauth2';
+import { OAuth2ScopeAttributesResolver } from '../../../../../core/oauth2';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker, useRequestScopes,
 } from '../../../../request';

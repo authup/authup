@@ -5,13 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2TokenKind } from '@authup/specs';
-import { BadRequestError } from '@ebec/http';
 import type { Request, Response } from 'routup';
-import { send } from 'routup';
-import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '../../../../../database/domains';
-import { OAuth2TokenManager } from '../../../../oauth2';
+import { sendAccepted } from 'routup';
+import { OAuth2TokenVerifier } from '../../../../../core/oauth2';
+import { OAuth2KeyRepository } from '../../../../../core/oauth2/key';
+import { OAuth2TokenRepository } from '../../../../../core/oauth2/token/repository';
 import { extractTokenFromRequest } from '../utils';
 
 export async function revokeTokenRouteHandler(
@@ -19,35 +17,16 @@ export async function revokeTokenRouteHandler(
     res: Response,
 ) {
     const token = await extractTokenFromRequest(req);
-    const dataSource = await useDataSource();
 
-    const tokenManager = new OAuth2TokenManager();
-    const payload = await tokenManager.verify(token);
-    if (!payload.jti) {
-        throw new BadRequestError('The json token identifier (jti) is not valid.');
-    }
+    const keyRepository = new OAuth2KeyRepository();
+    const tokenRepository = new OAuth2TokenRepository();
 
-    if (payload.kind === OAuth2TokenKind.REFRESH) {
-        const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
-        const refreshToken = await refreshTokenRepository.findOneBy({
-            id: payload.jti,
-        });
+    const tokenVerifier = new OAuth2TokenVerifier(keyRepository, tokenRepository);
 
-        if (!refreshToken) {
-            throw new BadRequestError('The refresh token does not exist.');
-        }
+    const payload = await tokenVerifier.verify(token);
 
-        await refreshTokenRepository.remove(refreshToken);
-        await tokenManager.setInactive(token);
+    await tokenRepository.remove(payload.jti);
+    await tokenRepository.setInactive(payload.jti, payload.exp);
 
-        return send(res);
-    }
-
-    if (payload.kind === OAuth2TokenKind.ACCESS) {
-        await tokenManager.setInactive(token);
-
-        return send(res);
-    }
-
-    throw new BadRequestError(`The token type ${payload.kind} is not supported.`);
+    return sendAccepted(res);
 }

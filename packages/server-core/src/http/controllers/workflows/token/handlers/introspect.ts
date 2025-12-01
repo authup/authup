@@ -13,9 +13,11 @@ import { useDataSource } from 'typeorm-extension';
 import { IdentityPermissionService } from '../../../../../services';
 import {
     OAuth2IdentityResolver,
-    OAuth2TokenManager,
-    resolveOpenIDClaimsForOAuth2Identity,
-} from '../../../../oauth2';
+    OAuth2OpenIDClaimsBuilder,
+    OAuth2TokenVerifier,
+} from '../../../../../core/oauth2';
+import { OAuth2KeyRepository } from '../../../../../core/oauth2/key';
+import { OAuth2TokenRepository } from '../../../../../core/oauth2/token/repository';
 import { extractTokenFromRequest } from '../utils';
 
 export async function introspectTokenRouteHandler(
@@ -23,16 +25,23 @@ export async function introspectTokenRouteHandler(
     res: Response,
 ) : Promise<any> {
     const token = await extractTokenFromRequest(req);
-    const tokenManager = new OAuth2TokenManager();
 
-    const payload = await tokenManager.verify(token, {
+    const keyRepository = new OAuth2KeyRepository();
+    const tokenRepository = new OAuth2TokenRepository();
+
+    const verifier = new OAuth2TokenVerifier(
+        keyRepository,
+        tokenRepository,
+    );
+
+    const payload = await verifier.verify(token, {
         skipActiveCheck: true,
     });
 
     const dataSource = await useDataSource();
     const identityPermissionService = new IdentityPermissionService(dataSource);
 
-    // only receive client specific permissions
+    // todo: only receive client specific permissions
     const permissions = await identityPermissionService.getFor({
         id: payload.sub,
         type: payload.sub_kind,
@@ -43,12 +52,15 @@ export async function introspectTokenRouteHandler(
     const identityResolver = new OAuth2IdentityResolver();
     const identity = await identityResolver.resolve(payload);
 
+    const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
+    const claims = claimsBuilder.fromIdentity(identity);
+
     const output : OAuth2TokenIntrospectionResponse = {
-        active: await tokenManager.isActive(token),
+        active: await tokenRepository.isActive(token),
         // todo: permissions property should be removed.
         permissions: permissions.map((permission) => pickRecord(permission, ['name', 'client_id', 'realm_id'])),
         ...payload,
-        ...resolveOpenIDClaimsForOAuth2Identity(identity),
+        ...claims,
     };
 
     return send(res, output);
