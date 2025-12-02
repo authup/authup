@@ -10,8 +10,8 @@ import { isUUID } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
 import { RobotCredentialsService } from '../../../credential';
 import { BaseAuthenticationService } from '../../base';
-import type { RobotEntity } from '../../../../database/domains';
-import { RobotRepository } from '../../../../database/domains';
+import type { RobotEntity } from '../../../../adapters/database/domains';
+import { RobotRepository } from '../../../../adapters/database/domains';
 
 export class RobotAuthenticationService extends BaseAuthenticationService<RobotEntity> {
     protected credentialsService : RobotCredentialsService;

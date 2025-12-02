@@ -8,7 +8,7 @@
 import { compare, hash } from '@authup/server-kit';
 import { createNanoID } from '@authup/kit';
 import type { ICredentialService } from '../../types';
-import type { RobotEntity } from '../../../../database/domains';
+import type { RobotEntity } from '../../../../adapters/database/domains';
 
 export class RobotCredentialsService implements ICredentialService<RobotEntity> {
     async verify(input: string, entity: RobotEntity): Promise<boolean> {

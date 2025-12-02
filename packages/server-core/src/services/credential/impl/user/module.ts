@@ -7,7 +7,7 @@
 
 import { compare, hash } from '@authup/server-kit';
 import type { ICredentialService } from '../../types';
-import type { UserEntity } from '../../../../database/domains';
+import type { UserEntity } from '../../../../adapters/database/domains';
 
 export class UserCredentialsService implements ICredentialService<UserEntity> {
     async verify(input: string, entity: UserEntity): Promise<boolean> {

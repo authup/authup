@@ -20,8 +20,8 @@ import {
     LdapIdentityProviderFlow,
 } from '../../../identity-provider';
 import { BaseAuthenticationService } from '../../base';
-import type { IdentityProviderEntity } from '../../../../database/domains';
-import { IdentityProviderRepository, UserEntity, UserRepository } from '../../../../database/domains';
+import type { IdentityProviderEntity } from '../../../../adapters/database/domains';
+import { IdentityProviderRepository, UserEntity, UserRepository } from '../../../../adapters/database/domains';
 
 export type UserAuthenticationServiceOptions = {
     /**

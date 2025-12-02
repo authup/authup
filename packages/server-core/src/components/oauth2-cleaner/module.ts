@@ -8,7 +8,7 @@
 import cron from 'node-cron';
 import { LessThan } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import { OAuth2RefreshTokenEntity } from '../../database/domains';
+import { OAuth2RefreshTokenEntity } from '../../adapters/database/domains';
 import type { Component } from '../types';
 
 export function createOAuth2CleanerComponent() : Component {

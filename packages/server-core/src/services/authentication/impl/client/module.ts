@@ -10,8 +10,8 @@ import { isUUID } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
 import { ClientCredentialsService } from '../../../credential';
 import { BaseAuthenticationService } from '../../base';
-import type { ClientEntity } from '../../../../database/domains';
-import { ClientRepository } from '../../../../database/domains';
+import type { ClientEntity } from '../../../../adapters/database/domains';
+import { ClientRepository } from '../../../../adapters/database/domains';
 
 export class ClientAuthenticationService extends BaseAuthenticationService<ClientEntity> {
     protected credentialsService : ClientCredentialsService;

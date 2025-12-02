@@ -20,7 +20,7 @@ import { OAuth2SubKind } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
 import {
     CachePrefix, ClientRepository, RobotRepository, UserRepository,
-} from '../../../../database/domains';
+} from '../../../../adapters/database/domains';
 import { OAuth2ScopeAttributesResolver } from '../../scope';
 import { OAuth2IdentityResolverError } from './error';
 

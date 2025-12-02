@@ -29,7 +29,7 @@ import { ValidupNestedError } from 'validup';
 import type {
     UserEntity,
     UserRelationSyncItem,
-} from '../../../database/domains';
+} from '../../../adapters/database/domains';
 import {
     IdentityProviderAccountEntity,
     IdentityProviderAttributeMappingEntity,
@@ -37,7 +37,7 @@ import {
     IdentityProviderRoleMappingEntity,
     UserRelationItemSyncOperation,
     UserRepository,
-} from '../../../database/domains';
+} from '../../../adapters/database/domains';
 import type { IdentityProviderIdentity } from '../flow';
 
 type ClaimAttribute = {
