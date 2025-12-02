@@ -8,13 +8,13 @@
 import { URL } from 'node:url';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
-import { HTTPOAuth2AuthorizationManager } from '../../../../oauth2';
+import { HTTPOAuth2Authorizer } from '../../../../oauth2';
 
 export async function confirmAuthorizationRouteHandler(
     req: Request,
     res: Response,
 ) : Promise<any> {
-    const authorizationService = new HTTPOAuth2AuthorizationManager();
+    const authorizationService = new HTTPOAuth2Authorizer();
     const result = await authorizationService.authorizeWithRequest(req);
 
     // ---------------------------------------------------------

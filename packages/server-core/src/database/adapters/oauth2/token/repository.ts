@@ -11,7 +11,7 @@ import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind, OAuth2TokenKind } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';
-import { OAuth2CachePrefix } from '../../../../core/oauth2/constants';
+import { CacheOAuth2Prefix } from '../../../../adapters';
 import type { IOAuth2TokenRepository } from '../../../../core/oauth2/token/types';
 
 export class OAuth2TokenRepository implements IOAuth2TokenRepository {
@@ -25,7 +25,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
     async findOneBySignature(signature: string): Promise<OAuth2TokenPayload | null> {
         return this.cache.get(
-            buildCacheKey({ prefix: OAuth2CachePrefix.TOKEN_CLAIMS, key: signature }),
+            buildCacheKey({ prefix: CacheOAuth2Prefix.TOKEN_CLAIMS, key: signature }),
         );
     }
 
@@ -115,7 +115,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         const normalized = await this.save(data);
 
         await this.cache.set(
-            buildCacheKey({ prefix: OAuth2CachePrefix.TOKEN_CLAIMS, key: signature }),
+            buildCacheKey({ prefix: CacheOAuth2Prefix.TOKEN_CLAIMS, key: signature }),
             normalized,
             options,
         );
@@ -128,7 +128,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     async isActive(key: string): Promise<boolean> {
         const response = await this.cache.get(
             buildCacheKey({
-                prefix: OAuth2CachePrefix.TOKEN_INACTIVE,
+                prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
                 key,
             }),
         );
@@ -146,7 +146,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
         await this.cache.set(
             buildCacheKey({
-                prefix: OAuth2CachePrefix.TOKEN_INACTIVE,
+                prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
                 key: id,
             }),
             true,

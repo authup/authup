@@ -6,14 +6,14 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import type { Identity } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import type { Oauth2Identity } from '../identity';
 import type { IOAuth2TokenIssuer } from '../token';
 import { BaseGrant } from './base';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { OAuth2IdentityGrantContext } from './types';
 
-export class IdentityGrantType extends BaseGrant<Oauth2Identity> {
+export class IdentityGrantType extends BaseGrant<Identity> {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
     constructor(ctx: OAuth2IdentityGrantContext) {
@@ -25,7 +25,7 @@ export class IdentityGrantType extends BaseGrant<Oauth2Identity> {
     }
 
     async runWith(
-        identity: Oauth2Identity,
+        identity: Identity,
         base: OAuth2TokenPayload = {},
     ): Promise<OAuth2TokenGrantResponse> {
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({

@@ -8,8 +8,8 @@
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import type { Cache } from '@authup/server-kit';
 import { buildCacheKey, useCache } from '@authup/server-kit';
-import { OAuth2CachePrefix } from '../../../../../core';
-import type { IOAuth2AuthorizationCodeRepository } from '../../../../../core/oauth2/authorize/code/repository';
+import { CacheOAuth2Prefix } from '../../constants';
+import type { IOAuth2AuthorizationCodeRepository } from '../../../../../../core';
 
 export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCodeRepository {
     protected cache : Cache;
@@ -20,7 +20,7 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
 
     async findOneById(id: string): Promise<OAuth2AuthorizationCode | null> {
         const entity = await this.cache.get(buildCacheKey({
-            prefix: OAuth2CachePrefix.AUTHORIZATION_CODE,
+            prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
             key: id,
         }));
 
@@ -39,7 +39,7 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
         }
 
         await this.cache.set(buildCacheKey({
-            prefix: OAuth2CachePrefix.AUTHORIZATION_CODE,
+            prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
             key: input.id,
         }), input, {
             ttl,

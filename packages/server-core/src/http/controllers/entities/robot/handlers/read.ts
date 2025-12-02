@@ -155,8 +155,8 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
             identity &&
             identity.type === 'robot' &&
             identity.realmId === realm.id &&
-            identity.attributes &&
-            identity.attributes.name === id
+            identity.data &&
+            identity.data.name === id
         ) {
             isMe = true;
         }

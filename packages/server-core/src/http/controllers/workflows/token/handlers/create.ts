@@ -12,7 +12,7 @@ import type { SerializeOptions } from '@routup/basic/cookie';
 import { setResponseCookie } from '@routup/basic/cookie';
 import type { Request, Response } from 'routup';
 import { getRequestHostName, send } from 'routup';
-import { OAuth2AuthorizationCodeRepository } from '../../../../../adapters/cache/adapters/oauth2/authorize/module';
+import { OAuth2AuthorizationCodeRepository } from '../../../../../adapters';
 import { ConfigDefaults, useConfig } from '../../../../../config';
 import type { IOAuth2Grant } from '../../../../../core';
 import {
@@ -65,12 +65,12 @@ export async function createTokenRouteHandler(
         },
     );
 
-    this.tokenVerifier = new OAuth2TokenVerifier(
+    const tokenVerifier = new OAuth2TokenVerifier(
         signerRepository,
         tokenRepository,
     );
 
-    this.tokenRevoker = new OAuth2TokenRevoker(tokenRepository);
+    const tokenRevoker = new OAuth2TokenRevoker(tokenRepository);
 
     let grant : IOAuth2Grant;
 
@@ -78,23 +78,37 @@ export async function createTokenRouteHandler(
         case OAuth2TokenGrant.AUTHORIZATION_CODE: {
             grant = new OAuth2HTTPAuthorizeGrant({
                 codeRepository: new OAuth2AuthorizationCodeRepository(),
+                accessTokenIssuer,
+                refreshTokenIssuer,
             });
             break;
         }
         case OAuth2TokenGrant.CLIENT_CREDENTIALS: {
-            grant = new HTTPClientCredentialsGrant(grantContext);
+            grant = new HTTPClientCredentialsGrant({
+                accessTokenIssuer,
+            });
             break;
         }
         case OAuth2TokenGrant.ROBOT_CREDENTIALS: {
-            grant = new HTTPRobotCredentialsGrant(grantContext);
+            grant = new HTTPRobotCredentialsGrant({
+                accessTokenIssuer,
+            });
             break;
         }
         case OAuth2TokenGrant.PASSWORD: {
-            grant = new HTTPPasswordGrant(grantContext);
+            grant = new HTTPPasswordGrant({
+                accessTokenIssuer,
+                refreshTokenIssuer,
+            });
             break;
         }
         case OAuth2TokenGrant.REFRESH_TOKEN: {
-            grant = new HTTPOAuth2RefreshTokenGrant(grantContext);
+            grant = new HTTPOAuth2RefreshTokenGrant({
+                accessTokenIssuer,
+                refreshTokenIssuer,
+                tokenVerifier,
+                tokenRevoker,
+            });
             break;
         }
         default: {

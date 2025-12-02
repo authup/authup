@@ -36,7 +36,7 @@ export interface OAuth2AuthorizationCode {
     max_age?: number
 }
 
-export type OAuth2AuthorizationCodeRequest = {
+export type OAuth2AuthorizeCodeRequest = {
     response_type: string,
     client_id: string,
     realm_id?: string,

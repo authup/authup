@@ -149,8 +149,8 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
             !!identity &&
             identity.type === 'user' &&
             identity.realmId === realm.id &&
-            identity.attributes &&
-            identity.attributes.name === id
+            identity.data &&
+            identity.data.name === id
         ) {
             isMe = true;
         }

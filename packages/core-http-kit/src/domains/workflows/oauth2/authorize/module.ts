@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
 import { AuthorizeAPI } from '@hapic/oauth2';
 import { nullifyEmptyObjectProperties } from '../../../../utils';
 
 export class OAuth2AuthorizeAPI extends AuthorizeAPI {
     async confirm(
-        data: OAuth2AuthorizationCodeRequest,
+        data: OAuth2AuthorizeCodeRequest,
     ) : Promise<{ url: string }> {
         const response = await this.client.post(
             'authorize',

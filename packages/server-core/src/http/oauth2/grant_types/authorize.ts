@@ -13,7 +13,7 @@ import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { undefined } from 'zod';
 import { OAuth2AuthorizeGrant, buildOAuth2CodeChallenge } from '../../../core';
-import type { IOAuth2AuthorizationCodeRepository } from '../../../core/oauth2/authorize/code/repository';
+import type { IOAuth2AuthorizationCodeRepository } from '../../../core';
 import type { HTTPOAuth2AuthorizeGrant, IHTTPGrant } from './types';
 
 export class OAuth2HTTPAuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPGrant {
@@ -87,13 +87,8 @@ export class OAuth2HTTPAuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             value = useRequestQuery(req, key);
         }
 
-        if (
-            typeof value === 'string' &&
-            value.length > 0
-        ) {
-            return value;
-        }
-
-        return undefined;
+        return typeof value === 'string' && value.length > 0 ?
+            value :
+            undefined;
     }
 }

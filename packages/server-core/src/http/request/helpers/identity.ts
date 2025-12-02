@@ -5,20 +5,65 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { REALM_MASTER_NAME } from '@authup/core-kit';
+import type { Identity } from '@authup/core-kit';
+import { IdentityType, REALM_MASTER_NAME } from '@authup/core-kit';
 import { UnauthorizedError } from '@ebec/http';
 import type { Request } from 'routup';
 import { setRequestEnv, useRequestEnv } from 'routup';
-import type { RequestIdentity } from '../types';
 
-const sym = Symbol('Identity');
+const sym = Symbol('RIdentity');
+
+export class RequestIdentity {
+    public readonly raw : Identity;
+
+    constructor(identity: Identity) {
+        this.raw = identity;
+    }
+
+    get clientId() {
+        const { raw } = this;
+        if (raw.type === IdentityType.CLIENT) {
+            return raw.data.id;
+        }
+
+        return raw.data.client_id || null;
+    }
+
+    get data() {
+        return this.raw.data;
+    }
+
+    get type() {
+        return this.raw.type;
+    }
+
+    get id() {
+        return this.raw.data.id;
+    }
+
+    get realmId() {
+        return this.raw.data.realm?.id;
+    }
+
+    get realmName() {
+        return this.raw.data.realm?.name;
+    }
+}
 
 export function useRequestIdentity(req: Request) : RequestIdentity | undefined {
     return useRequestEnv(req, sym) as RequestIdentity | undefined;
 }
 
-export function setRequestIdentity(req: Request, identity: RequestIdentity) : void {
-    setRequestEnv(req, sym, identity);
+export function setRequestIdentity(req: Request, input: Identity | RequestIdentity) : void {
+    let data : RequestIdentity;
+
+    if (input instanceof RequestIdentity) {
+        data = input;
+    } else {
+        data = new RequestIdentity(input);
+    }
+
+    setRequestEnv(req, sym, data);
 }
 
 export function useRequestIdentityOrFail(req: Request) : RequestIdentity {

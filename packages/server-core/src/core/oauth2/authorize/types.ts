@@ -5,21 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, ClientScope, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import type { IOAuth2ClientRepository } from '../client';
-import type { IOAuth2ClientScopeRepository } from '../client-scope';
+import type { Client, ClientScope, OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
 import type { OAuth2IdentityResolver } from '../identity';
 import type { IOAuth2TokenIssuer } from '../token';
 import type { IOAuth2AuthorizationCodeIssuer } from './code';
 
 export type OAuth2AuthorizationManagerContext = {
-    clientRepository: IOAuth2ClientRepository,
-    clientScopeRepository: IOAuth2ClientScopeRepository,
-
     accessTokenIssuer: IOAuth2TokenIssuer,
     openIdIssuer: IOAuth2TokenIssuer,
-    codeIssuer: IOAuth2AuthorizationCodeIssuer,
 
+    codeIssuer: IOAuth2AuthorizationCodeIssuer,
     /**
      * todo: avoid this.
      */
@@ -27,13 +22,13 @@ export type OAuth2AuthorizationManagerContext = {
 };
 
 export type OAuth2AuthorizationCodeRequestContainer = {
-    data: OAuth2AuthorizationCodeRequest,
+    data: OAuth2AuthorizeCodeRequest,
 
     client: Client,
     clientScopes: ClientScope[]
 };
 
-export type OAuth2AuthorizationResult = {
+export type OAuth2AuthorizeResult = {
     authorizationCode?: string,
     accessToken?: string,
     idToken?: string,

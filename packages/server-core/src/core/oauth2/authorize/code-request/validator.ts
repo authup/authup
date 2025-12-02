@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
@@ -16,7 +16,7 @@ import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import zod from 'zod';
 
-export class AuthorizeRequestValidator extends Container<OAuth2AuthorizationCodeRequest> {
+export class OAuth2AuthorizeCodeRequestValidator extends Container<OAuth2AuthorizeCodeRequest> {
     protected initialize() {
         super.initialize();
 

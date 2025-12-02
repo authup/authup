@@ -9,6 +9,7 @@ import type { PermissionProvider } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
 import {
+    IdentityType,
     ScopeName,
 } from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
@@ -35,9 +36,9 @@ import {
 } from '../../../../database/domains';
 import { PermissionDBProvider, PolicyEngine } from '../../../../security';
 import { ClientAuthenticationService, RobotAuthenticationService, UserAuthenticationService } from '../../../../services';
-import { OAuth2IdentityResolver, OAuth2TokenVerifier } from '../../../../core/oauth2';
+import { OAuth2IdentityResolver, OAuth2TokenVerifier } from '../../../../core';
 import { OAuth2KeyRepository } from '../../../../core/oauth2/key';
-import { OAuth2TokenRepository } from '../../../../database/adapters/oauth2/token/repository';
+import { OAuth2TokenRepository } from '../../../../database';
 import {
     RequestPermissionChecker,
     setRequestIdentity,
@@ -183,11 +184,11 @@ export class AuthorizationMiddleware {
 
         const identity = await this.oauth2IdentityResolver.resolve(payload);
 
-        let realmName: string;
+        if (!identity.data.realm) {
+            if (!payload.realm_id) {
+                throw JWTError.payloadPropertyInvalid('realm_id');
+            }
 
-        if (payload.realm_name) {
-            realmName = payload.realm_name;
-        } else {
             const realm = await this.realmRepository.findOne({
                 where: {
                     id: payload.realm_id,
@@ -205,17 +206,10 @@ export class AuthorizationMiddleware {
                 throw JWTError.payloadPropertyInvalid('realm_id');
             }
 
-            realmName = realm.name;
+            identity.data.realm = realm;
         }
 
-        setRequestIdentity(request, {
-            type: identity.type,
-            id: identity.data.id,
-            attributes: identity.data,
-            clientId: payload.client_id,
-            realmId: payload.realm_id,
-            realmName,
-        });
+        setRequestIdentity(request, identity);
     }
 
     protected async verifyBasicAuthorizationHeader(
@@ -233,11 +227,8 @@ export class AuthorizationMiddleware {
 
                     setRequestScopes(request, [ScopeName.GLOBAL]);
                     setRequestIdentity(request, {
-                        type: 'user',
-                        id: user.id,
-                        attributes: user,
-                        realmId: user.realm.id,
-                        realmName: user.realm.name,
+                        type: IdentityType.USER,
+                        data: user,
                     });
 
                     return;
@@ -254,11 +245,8 @@ export class AuthorizationMiddleware {
                 if (authenticated.success) {
                     setRequestScopes(request, [ScopeName.GLOBAL]);
                     setRequestIdentity(request, {
-                        type: 'robot',
-                        id: robot.id,
-                        attributes: robot,
-                        realmId: robot.realm.id,
-                        realmName: robot.realm.name,
+                        type: IdentityType.ROBOT,
+                        data: robot,
                     });
                 }
             }
@@ -273,11 +261,8 @@ export class AuthorizationMiddleware {
                 if (authenticated.success) {
                     setRequestScopes(request, [ScopeName.GLOBAL]);
                     setRequestIdentity(request, {
-                        type: 'client',
-                        id: client.id,
-                        attributes: client,
-                        realmId: client.realm.id,
-                        realmName: client.realm.name,
+                        type: IdentityType.CLIENT,
+                        data: client,
                     });
                 }
             }

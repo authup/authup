@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './domain-event-publisher';
-export * from './ldap';
+export * from '../adapters/domain-event-publisher';
+export * from '../adapters/ldap';
 export * from './oauth2';
-export * from './smtp';
+export * from '../adapters/smtp';

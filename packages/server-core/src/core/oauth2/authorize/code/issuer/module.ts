@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
 import { OAuth2SubKind } from '@authup/specs';
 import { randomBytes } from 'node:crypto';
-import type { Oauth2Identity } from '../../../identity';
 import type { IOAuth2AuthorizationCodeRepository } from '../repository';
 import type { IOAuth2AuthorizationCodeIssuer, OAuth2AuthorizationCodeIssuerOptions } from './types';
 
@@ -26,8 +25,8 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
     }
 
     async issue(
-        input: OAuth2AuthorizationCodeRequest,
-        identity: Oauth2Identity,
+        input: OAuth2AuthorizeCodeRequest,
+        identity: Identity,
         options: OAuth2AuthorizationCodeIssuerOptions = {},
     ) : Promise<OAuth2AuthorizationCode> {
         const entity: OAuth2AuthorizationCode = {

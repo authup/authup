@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizeCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import { injectHTTPClient } from '../../../core';
@@ -22,7 +22,7 @@ export default defineComponent({
             type: Array as PropType<Scope[]>,
         },
         codeRequest: {
-            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
+            type: Object as PropType<OAuth2AuthorizeCodeRequest>,
             required: true,
         },
     },

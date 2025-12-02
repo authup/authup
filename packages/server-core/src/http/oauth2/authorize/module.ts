@@ -6,31 +6,39 @@
  */
 
 import type { Request } from 'routup';
-import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import type { OAuth2SubKind } from '@authup/specs';
+import type { OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { getRequestIP } from 'routup';
-import type { OAuth2AuthorizationManagerContext, OAuth2AuthorizationResult } from '../../../core';
-import { OAuth2AuthorizationManager } from '../../../core';
+import type { IOAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizeResult } from '../../../core';
+import { OAuth2AuthorizeCodeRequestValidator, OAuth2Authorizer } from '../../../core';
 import { useRequestIdentityOrFail } from '../../request';
+import type { HTTPOAuth2AuthorizationManagerContext } from './types';
 
-export class HTTPOAuth2AuthorizationManager extends OAuth2AuthorizationManager {
-    protected requestValidator : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
+export class HTTPOAuth2Authorizer extends OAuth2Authorizer {
+    protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
-    constructor(ctx: OAuth2AuthorizationManagerContext) {
+    protected requestValidator : RoutupContainerAdapter<OAuth2AuthorizeCodeRequest>;
+
+    constructor(ctx: HTTPOAuth2AuthorizationManagerContext) {
         super(ctx);
 
-        this.requestValidator = new RoutupContainerAdapter(this.validator);
+        this.codeRequestVerifier = ctx.codeRequestVerifier;
+
+        const validator = new OAuth2AuthorizeCodeRequestValidator();
+        this.requestValidator = new RoutupContainerAdapter(validator);
     }
 
-    async authorizeWithRequest(req: Request) : Promise<OAuth2AuthorizationResult> {
-        const codeRequest = await this.validateWithRequest(req);
+    async authorizeWithRequest(req: Request) : Promise<OAuth2AuthorizeResult> {
+        const codeRequestValidated = await this.validateWithRequest(req);
+
+        const { data } = await this.codeRequestVerifier.verify(codeRequestValidated);
+
         const identity = useRequestIdentityOrFail(req);
 
-        return this.authorizeWith(codeRequest, {
+        return this.authorize(data, {
             remote_address: getRequestIP(req, { trustProxy: true }),
             sub: identity.id,
-            sub_kind: identity.type as `${OAuth2SubKind}`,
+            sub_kind: identity.type,
             realm_id: identity.realmId,
             realm_name: identity.realmName,
         });
@@ -45,7 +53,7 @@ export class HTTPOAuth2AuthorizationManager extends OAuth2AuthorizationManager {
      */
     async validateWithRequest(
         req: Request,
-    ) : Promise<OAuth2AuthorizationCodeRequest> {
+    ) : Promise<OAuth2AuthorizeCodeRequest> {
         return this.requestValidator.run(req, {
             locations: ['body', 'query'],
         });

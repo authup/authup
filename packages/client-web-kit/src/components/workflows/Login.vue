@@ -9,7 +9,7 @@ import {
     reactive,
     ref,
 } from 'vue';
-import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { IdentityProvider, OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import useVuelidate from '@vuelidate/core';
@@ -33,7 +33,7 @@ export default defineComponent({
     },
     props: {
         codeRequest: {
-            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
+            type: Object as PropType<OAuth2AuthorizeCodeRequest>,
         },
     },
     emits: ['done', 'failed'],

@@ -17,10 +17,7 @@ export class HTTPOAuth2IdentityGrantType extends IdentityGrantType implements IH
         const identity = useRequestIdentityOrFail(req);
 
         return this.runWith(
-            {
-                type: identity.type,
-                data: identity.attributes,
-            },
+            identity.raw,
             {
                 remote_address: getRequestIP(req, { trustProxy: true }),
             },

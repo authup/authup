@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Robot, User } from '@authup/core-kit';
+import type {
+    Client, Identity, Robot, User,
+} from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
 import type { OpenIDTokenPayload } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import type { ObjectLiteral } from 'validup';
-import type { Oauth2Identity } from '../identity';
 
 type AttributeMapTuple<T> = {
     [K in keyof T]: [K, (value: unknown) => any]
@@ -68,7 +69,7 @@ export class OAuth2OpenIDClaimsBuilder {
      *
      * @param identity
      */
-    fromIdentity(identity: Oauth2Identity) : OpenIDTokenPayload {
+    fromIdentity(identity: Identity) : OpenIDTokenPayload {
         if (identity.type === OAuth2SubKind.CLIENT) {
             return this.fromClient(identity.data);
         }

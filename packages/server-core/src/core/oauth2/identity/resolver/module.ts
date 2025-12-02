@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Robot, User } from '@authup/core-kit';
+import type {
+    ClientIdentity, Identity, RobotIdentity, UserIdentity,
+} from '@authup/core-kit';
 import {
     ClientError,
 
@@ -22,25 +24,6 @@ import {
 import { OAuth2ScopeAttributesResolver } from '../../scope';
 import { OAuth2IdentityResolverError } from './error';
 
-export type Oauth2ClientIdentity = {
-    type: `${OAuth2SubKind.CLIENT}`,
-    data: Client
-};
-
-export type Oauth2RobotIdentity = {
-    type: `${OAuth2SubKind.ROBOT}`,
-    data: Robot
-};
-
-export type Oauth2UserIdentity = {
-    type: `${OAuth2SubKind.USER}`,
-    data: User
-};
-
-export type Oauth2Identity = Oauth2ClientIdentity |
-Oauth2RobotIdentity |
-Oauth2UserIdentity;
-
 export class OAuth2IdentityResolver {
     protected scopeAttributesResolver : OAuth2ScopeAttributesResolver;
 
@@ -48,7 +31,7 @@ export class OAuth2IdentityResolver {
         this.scopeAttributesResolver = new OAuth2ScopeAttributesResolver();
     }
 
-    async resolve(payload: OAuth2TokenPayload) : Promise<Oauth2Identity> {
+    async resolve(payload: OAuth2TokenPayload) : Promise<Identity> {
         if (!payload.sub_kind) {
             throw OAuth2IdentityResolverError.payloadPropertyInvalid('sub_kind');
         }
@@ -72,7 +55,7 @@ export class OAuth2IdentityResolver {
         throw OAuth2IdentityResolverError.subKindOneOf();
     }
 
-    async resolveClient(payload: OAuth2TokenPayload) : Promise<Oauth2ClientIdentity> {
+    async resolveClient(payload: OAuth2TokenPayload) : Promise<ClientIdentity> {
         if (!payload.sub_kind || payload.sub_kind !== OAuth2SubKind.CLIENT) {
             throw OAuth2IdentityResolverError.payloadPropertyInvalid('sub_kind');
         }
@@ -119,7 +102,7 @@ export class OAuth2IdentityResolver {
         return { type: OAuth2SubKind.CLIENT, data: entity };
     }
 
-    async resolveRobot(payload: OAuth2TokenPayload) : Promise<Oauth2RobotIdentity> {
+    async resolveRobot(payload: OAuth2TokenPayload) : Promise<RobotIdentity> {
         if (!payload.sub_kind || payload.sub_kind !== OAuth2SubKind.ROBOT) {
             throw OAuth2IdentityResolverError.payloadPropertyInvalid('sub_kind');
         }
@@ -166,7 +149,7 @@ export class OAuth2IdentityResolver {
         return { type: OAuth2SubKind.ROBOT, data: entity };
     }
 
-    async resolveUser(payload: OAuth2TokenPayload) : Promise<Oauth2UserIdentity> {
+    async resolveUser(payload: OAuth2TokenPayload) : Promise<UserIdentity> {
         if (!payload.sub_kind || payload.sub_kind !== OAuth2SubKind.USER) {
             throw OAuth2IdentityResolverError.payloadPropertyInvalid('sub_kind');
         }
