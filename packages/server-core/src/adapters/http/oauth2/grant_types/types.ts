@@ -10,7 +10,7 @@ import type { Request } from 'routup';
 import type { OAuth2AuthorizeGrantContext } from '../../../../core';
 import type { IOAuth2AuthorizationCodeRepository } from '../../../../core/oauth2/authorize/code/repository';
 
-export type HTTPOAuth2AuthorizeGrant = OAuth2AuthorizeGrantContext & {
+export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeRepository: IOAuth2AuthorizationCodeRepository
 };
 

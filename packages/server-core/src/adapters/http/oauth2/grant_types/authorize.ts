@@ -11,15 +11,14 @@ import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { undefined } from 'zod';
 import { OAuth2AuthorizeGrant, buildOAuth2CodeChallenge } from '../../../../core';
 import type { IOAuth2AuthorizationCodeRepository } from '../../../../core';
-import type { HTTPOAuth2AuthorizeGrant, IHTTPGrant } from './types';
+import type { HTTPOAuth2AuthorizeGrantContext, IHTTPGrant } from './types';
 
-export class OAuth2HTTPAuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPGrant {
+export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPGrant {
     protected codeRepository : IOAuth2AuthorizationCodeRepository;
 
-    constructor(ctx: HTTPOAuth2AuthorizeGrant) {
+    constructor(ctx: HTTPOAuth2AuthorizeGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
             refreshTokenIssuer: ctx.refreshTokenIssuer,

@@ -9,3 +9,4 @@ export * from './issuer';
 export * from './revoker';
 export * from './signer';
 export * from './verifier';
+export * from './types';

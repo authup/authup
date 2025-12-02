@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authorize';
 export * from './jwks';
 export * from './openid';
 export * from './status';
-export * from './token';
+
+export * from './oauth2';

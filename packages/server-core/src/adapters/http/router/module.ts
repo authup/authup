@@ -6,7 +6,7 @@
  */
 
 import { Router } from 'routup';
-import { registerControllers } from '../controllers';
+import { registerHTTPControllers } from '../controllers';
 
 import { registerErrorMiddleware, registerMiddlewares } from '../middleware';
 
@@ -14,7 +14,7 @@ export async function createRouter() : Promise<Router> {
     const router = new Router();
 
     await registerMiddlewares(router);
-    registerControllers(router);
+    registerHTTPControllers(router);
     registerErrorMiddleware(router);
 
     return router;

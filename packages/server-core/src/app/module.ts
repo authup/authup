@@ -5,6 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import type { Logger } from '@authup/server-kit';
 import { isRedisClientUsable, isVaultClientUsable, useLogger } from '@authup/server-kit';
 import process from 'node:process';
 import { DataSource } from 'typeorm';
@@ -28,24 +29,20 @@ import {
 } from '../adapters/http';
 import type { Component } from '../components';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../services';
+import { registerOAuth2Dependencies } from './dependencies';
 
 export class Application {
     protected config : Config;
 
-    protected components : Component[];
+    protected logger : Logger;
 
     constructor(config: Config) {
+        this.logger = useLogger();
         this.config = config;
-
-        this.components = [
-            createOAuth2CleanerComponent(),
-            createDatabaseUniqueEntriesComponent(),
-        ];
     }
 
     async start() {
         const logger = useLogger();
-
         logger.info(`Environment: ${this.config.env}`);
         logger.info(`WritableDirectoryPath: ${this.config.writableDirectoryPath}`);
         logger.info(`Port: ${this.config.port}`);
@@ -58,34 +55,28 @@ export class Application {
         logger.info(`Vault: ${isVaultClientUsable() ? 'enabled' : 'disabled'}`);
         logger.info(`Robot: ${this.config.robotAdminEnabled ? 'enabled' : 'disabled'}`);
 
-        /*
-        HTTP Server & Express App
-        */
+        await this.initSwagger();
 
-        const swagger = new Swagger({
-            baseURL: this.config.publicUrl,
-        });
+        await this.initDatabase();
 
-        const swaggerCanGenerate = await swagger.canGenerate();
-        const swaggerExists = await swagger.exists();
-        if (swaggerCanGenerate && !swaggerExists) {
-            logger.info('Generating documentation...');
+        await this.initCore();
 
-            await swagger.generate();
+        await this.initComponents();
 
-            logger.info('Generated documentation.');
-        }
+        await this.initHTTPService();
+    }
 
+    async initDatabase() {
         const options = await useDataSourceOptions();
         if (!isDatabaseTypeSupported(options.type)) {
-            logger
+            this.logger
                 .error(`Database type ${options.type} is not supported (only: mysql, better-sqlite3 and postgres).`);
 
             process.exit(1);
         }
 
         if (!isDatabaseTypeSupportedForEnvironment(options.type, this.config.env)) {
-            logger
+            this.logger
                 .error(`Database type ${options.type} is not supported for ${this.config.env} environment.`);
 
             process.exit(1);
@@ -101,7 +92,7 @@ export class Application {
             await createDatabase({ options, synchronize: false, ifNotExist: true });
         }
 
-        logger.info('Establishing database connection...');
+        this.logger.info('Establishing database connection...');
 
         const dataSource = new DataSource(options);
         await dataSource.initialize();
@@ -109,14 +100,14 @@ export class Application {
         setDataSource(dataSource);
         setDataSourceSync(dataSource);
 
-        logger.info('Established database connection.');
+        this.logger.info('Established database connection.');
 
         if (!check.schema) {
-            logger.info('Applying database schema...');
+            this.logger.info('Applying database schema...');
 
             await synchronizeDatabaseSchema(dataSource);
 
-            logger.info('Applied database schema.');
+            this.logger.info('Applied database schema.');
         }
 
         const seeder = new DatabaseSeeder(this.config);
@@ -128,20 +119,54 @@ export class Application {
                     const robotSynchronizationService = useRobotSynchronizationService();
                     await robotSynchronizationService.save(seederData.robot);
                 } catch (e) {
-                    useLogger()
+                    this.logger
                         .warn(`The ${this.config.robotAdminName} robot credentials could not be saved to vault.`);
                 }
             }
         }
+    }
 
-        this.components.forEach((component) => component.start());
+    async initSwagger() {
+        const swagger = new Swagger({
+            baseURL: this.config.publicUrl,
+        });
 
-        logger.info('Starting http server...');
+        const swaggerCanGenerate = await swagger.canGenerate();
+        const swaggerExists = await swagger.exists();
+        if (swaggerCanGenerate && !swaggerExists) {
+            this.logger.info('Generating documentation...');
+
+            await swagger.generate();
+
+            this.logger.info('Generated documentation.');
+        }
+    }
+
+    async initCore() {
+        registerOAuth2Dependencies({
+            tokenAccessMaxAge: this.config.tokenAccessMaxAge,
+            tokenRefreshMaxAge: this.config.tokenRefreshMaxAge,
+            authorizationCodeMaxAge: 60 * 5,
+            idTokenMaxAge: this.config.tokenAccessMaxAge,
+        });
+    }
+
+    async initComponents() {
+        const components: Component[] = [
+            createOAuth2CleanerComponent(),
+            createDatabaseUniqueEntriesComponent(),
+        ];
+
+        components.forEach((component) => component.start());
+    }
+
+    async initHTTPService() {
+        this.logger.info('Starting http server...');
 
         const router = await createRouter();
         const httpServer = createHttpServer({ router });
         httpServer.listen(this.config.port, this.config.host, () => {
-            logger.info('Started http server.');
+            this.logger.info('Started http server.');
         });
     }
 

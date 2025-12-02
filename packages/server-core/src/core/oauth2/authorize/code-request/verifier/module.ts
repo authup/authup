@@ -12,16 +12,19 @@ import { OAuth2Error, hasOAuth2Scopes } from '@authup/specs';
 import type { IOAuth2ClientRepository } from '../../../client';
 import type { IOAuth2ClientScopeRepository } from '../../../client-scope';
 import type { OAuth2AuthorizationCodeRequestContainer } from '../../types';
-import type { IOAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationCodeRequestVerifierContext } from './types';
+import type { IOAuth2AuthorizationCodeRequestVerifier } from './types';
 
-export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCodeRequestVerifier {
+export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2AuthorizationCodeRequestVerifier {
     protected clientRepository: IOAuth2ClientRepository;
 
     protected clientScopeRepository: IOAuth2ClientScopeRepository;
 
-    constructor(ctx: OAuth2AuthorizationCodeRequestVerifierContext) {
-        this.clientRepository = ctx.clientRepository;
-        this.clientScopeRepository = ctx.clientScopeRepository;
+    constructor(
+        clientRepository: IOAuth2ClientRepository,
+        clientScopeRepository: IOAuth2ClientScopeRepository,
+    ) {
+        this.clientRepository = clientRepository;
+        this.clientScopeRepository = clientScopeRepository;
     }
 
     async verify(
@@ -33,6 +36,7 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
         }
 
         data.client_id = client.id;
+        data.realm_id = client.realm_id;
 
         const clientScopes = await this.clientScopeRepository.findByClientId(client.id);
         const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);

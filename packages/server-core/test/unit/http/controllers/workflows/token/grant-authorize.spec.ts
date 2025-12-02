@@ -61,7 +61,7 @@ describe('refresh-token', () => {
         const url = new URL(response.url);
         expect(url.searchParams.get('access_token')).toBeFalsy();
         expect(url.searchParams.get('code')).toBeDefined();
-        expect(url.searchParams.get('id_token')).toBeDefined();
+        expect(url.searchParams.get('id_token')).toEqual(null);
 
         const code = url.searchParams.get('code');
 

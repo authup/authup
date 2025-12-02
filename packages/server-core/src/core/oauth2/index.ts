@@ -10,7 +10,10 @@ export * from './client';
 export * from './client-scope';
 export * from './grant-types';
 export * from './identity';
+export * from './key';
 export * from './openid';
 export * from './response';
 export * from './scope';
 export * from './token';
+
+export * from './constants';

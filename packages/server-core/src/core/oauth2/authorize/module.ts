@@ -24,17 +24,15 @@ import type {
 export class OAuth2Authorizer {
     protected accessTokenIssuer : IOAuth2TokenIssuer;
 
-    protected openIDIssuer : IOAuth2TokenIssuer;
+    protected openIdTokenIssuer : IOAuth2TokenIssuer;
 
     protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
 
     protected identityResolver : OAuth2IdentityResolver;
 
-    constructor(
-        ctx: OAuth2AuthorizationManagerContext,
-    ) {
+    constructor(ctx: OAuth2AuthorizationManagerContext) {
         this.accessTokenIssuer = ctx.accessTokenIssuer;
-        this.openIDIssuer = ctx.openIdIssuer;
+        this.openIdTokenIssuer = ctx.openIdTokenIssuer;
         this.codeIssuer = ctx.codeIssuer;
         this.identityResolver = ctx.identityResolver;
     }
@@ -53,14 +51,18 @@ export class OAuth2Authorizer {
 
         let responseTypes : string[] = [];
         if (data.response_type) {
-            responseTypes = Array.isArray(data.response_type) ? data.response_type : data.response_type.split(' ');
+            responseTypes = Array.isArray(data.response_type) ?
+                data.response_type :
+                data.response_type.split(' ');
         }
+
+        const enabledResponseTypes : Record<string, boolean> = {};
 
         for (let i = 0; i < responseTypes.length; i++) {
             if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
                 throw OAuth2Error.responseTypeUnsupported();
             } else {
-                data[responseTypes[i]] = true;
+                enabledResponseTypes[responseTypes[i]] = true;
             }
         }
 
@@ -71,34 +73,35 @@ export class OAuth2Authorizer {
 
         const payloadBaseNormalized : OAuth2TokenPayload = {
             ...base,
-            client_id: data.client_id,
+            client_id: data.client_id || base.client_id,
+            realm_id: data.realm_id || base.realm_id,
             ...(data.scope ? { scope: data.scope } : {}),
         };
 
         let idToken : string | undefined;
         if (
-            responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
+            enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
             (
                 data.scope &&
                 hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID)
             )
         ) {
-            const [token] = await this.openIDIssuer.issue(payloadBaseNormalized);
+            const [token] = await this.openIdTokenIssuer.issue(payloadBaseNormalized);
 
             idToken = token;
 
-            if (responseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
+            if (enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
                 output.idToken = token;
             }
         }
 
-        if (responseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
+        if (enabledResponseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
             const [token] = await this.accessTokenIssuer.issue(payloadBaseNormalized);
 
             output.accessToken = token;
         }
 
-        if (responseTypes[OAuth2AuthorizationResponseType.CODE]) {
+        if (enabledResponseTypes[OAuth2AuthorizationResponseType.CODE]) {
             const identity = await this.identityResolver.resolve(payloadBaseNormalized);
 
             const entity = await this.codeIssuer.issue(

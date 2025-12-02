@@ -8,7 +8,7 @@
 import type { OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
 
 export type OAuth2AuthorizeState = {
-    codeRequest: OAuth2AuthorizeCodeRequest,
+    codeRequest?: OAuth2AuthorizeCodeRequest,
     ip: string,
     userAgent: string
 };

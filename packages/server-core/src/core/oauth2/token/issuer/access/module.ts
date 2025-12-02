@@ -17,13 +17,14 @@ export class OAuth2AccessTokenIssuer implements IOAuth2TokenIssuer {
 
     protected signer : OAuth2TokenSigner;
 
-    protected options: OAuth2TokenIssuerOptions;
+    readonly options: OAuth2TokenIssuerOptions;
 
     constructor(
         repository: IOAuth2TokenRepository,
         signer: OAuth2TokenSigner,
         options: OAuth2TokenIssuerOptions = {},
     ) {
+        this.repository = repository;
         this.signer = signer;
         this.options = options;
     }

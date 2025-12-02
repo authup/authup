@@ -19,7 +19,7 @@ export class OAuth2OpenIDTokenIssuer implements IOAuth2TokenIssuer {
 
     protected signer : OAuth2TokenSigner;
 
-    protected options: OAuth2TokenIssuerOptions;
+    readonly options: OAuth2TokenIssuerOptions;
 
     protected identityResolver : OAuth2IdentityResolver;
 
@@ -44,7 +44,7 @@ export class OAuth2OpenIDTokenIssuer implements IOAuth2TokenIssuer {
 
         const utc = Math.floor(new Date().getTime() / 1000);
 
-        const data = this.repository.save({
+        const data = await this.repository.save({
             ...input,
             ...claims,
             jti: input.jti || randomUUID(),

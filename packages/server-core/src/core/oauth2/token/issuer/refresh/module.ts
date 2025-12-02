@@ -16,7 +16,7 @@ export class OAuth2RefreshTokenIssuer implements IOAuth2TokenIssuer {
 
     protected signer : OAuth2TokenSigner;
 
-    protected options: OAuth2TokenIssuerOptions;
+    readonly options: OAuth2TokenIssuerOptions;
 
     constructor(
         repository: IOAuth2TokenRepository,

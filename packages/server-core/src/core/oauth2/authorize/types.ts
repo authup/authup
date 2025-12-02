@@ -12,8 +12,7 @@ import type { IOAuth2AuthorizationCodeIssuer } from './code';
 
 export type OAuth2AuthorizationManagerContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,
-    openIdIssuer: IOAuth2TokenIssuer,
-
+    openIdTokenIssuer: IOAuth2TokenIssuer,
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
     /**
      * todo: avoid this.

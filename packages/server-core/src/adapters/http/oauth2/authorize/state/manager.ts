@@ -21,7 +21,7 @@ export class HTTPOAuth2AuthorizeStateManager {
 
     async save(
         req: Request,
-        codeRequest: OAuth2AuthorizeCodeRequest,
+        codeRequest?: OAuth2AuthorizeCodeRequest,
     ) : Promise<string> {
         const ip = getRequestIP(req, {
             trustProxy: true,

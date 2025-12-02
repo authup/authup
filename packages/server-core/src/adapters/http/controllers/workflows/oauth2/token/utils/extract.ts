@@ -8,7 +8,7 @@
 import type { Request } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { ValidupNestedError, ValidupValidatorError } from 'validup';
-import { useRequestToken } from '../../../../request';
+import { useRequestToken } from '../../../../../request';
 import { TokenRequestValidator } from './validator';
 
 export async function extractTokenFromRequest(req: Request) : Promise<string> {

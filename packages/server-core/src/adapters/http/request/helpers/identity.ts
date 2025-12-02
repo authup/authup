@@ -42,7 +42,7 @@ export class RequestIdentity {
     }
 
     get realmId() {
-        return this.raw.data.realm?.id;
+        return this.raw.data.realm_id || this.raw.data.realm?.id;
     }
 
     get realmName() {

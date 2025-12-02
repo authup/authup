@@ -22,7 +22,6 @@ import {
     ClientPermissionController,
     ClientRoleController,
     ClientScopeController,
-    IdentityProviderController,
     OAuth2ProviderRoleController,
     PermissionController,
     PolicyController,
@@ -38,31 +37,32 @@ import {
     UserController,
     UserPermissionController,
     UserRoleController,
-    registerIdentityProviderController,
+    createIdentityProviderController,
 } from './entities';
 import {
-    AuthorizeController, JwkController, OpenIDController, StatusController, TokenController,
+    JwkController,
+    OpenIDController,
+    StatusController,
+    buildOAuth2Controllers,
 } from './workflows';
 
-export function registerControllers(
+export function registerHTTPControllers(
     router: Router,
 ) {
-    registerIdentityProviderController(router);
-
     router.use(decorators({
         controllers: [
-            AuthorizeController,
+            ...buildOAuth2Controllers(),
             JwkController,
             OpenIDController,
+
             StatusController,
-            TokenController,
 
             ClientController,
             ClientPermissionController,
             ClientRoleController,
             ClientScopeController,
             OAuth2ProviderRoleController,
-            IdentityProviderController,
+            createIdentityProviderController(),
             PermissionController,
             PolicyController,
             RobotController,

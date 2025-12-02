@@ -12,7 +12,7 @@ import { OAuth2SubKind, OAuth2TokenKind } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../../domains';
 import { CacheOAuth2Prefix } from '../../../../index';
-import type { IOAuth2TokenRepository } from '../../../../../core/oauth2/token/types';
+import type { IOAuth2TokenRepository } from '../../../../../core';
 
 export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     protected cache : Cache;
@@ -126,12 +126,12 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     // -----------------------------------------------------
 
     async isActive(key: string): Promise<boolean> {
-        const response = await this.cache.get(
-            buildCacheKey({
-                prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
-                key,
-            }),
-        );
+        const cacheKey = buildCacheKey({
+            prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
+            key,
+        });
+
+        const response = await this.cache.get(cacheKey);
 
         return !response;
     }
@@ -141,14 +141,16 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         if (exp) {
             ttl = this.transformUnixTimestampToTTL(exp);
         } else {
-            ttl = 1000 * 3_600;
+            ttl = 1_000 * 3_600;
         }
 
+        const cacheKey = buildCacheKey({
+            prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
+            key: id,
+        });
+
         await this.cache.set(
-            buildCacheKey({
-                prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
-                key: id,
-            }),
+            cacheKey,
             true,
             {
                 ttl,
