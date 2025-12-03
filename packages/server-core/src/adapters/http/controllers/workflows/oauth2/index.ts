@@ -9,4 +9,3 @@ export * from './authorize';
 export * from './token';
 
 export * from './build';
-export * from './types';
