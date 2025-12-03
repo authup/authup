@@ -7,8 +7,7 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Request } from 'routup';
-import type { OAuth2AuthorizeGrantContext } from '../../../../core';
-import type { IOAuth2AuthorizationCodeRepository } from '../../../../core/oauth2/authorize/code/repository';
+import type { IOAuth2AuthorizationCodeRepository, OAuth2AuthorizeGrantContext } from '../../../../core';
 
 export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeRepository: IOAuth2AuthorizationCodeRepository

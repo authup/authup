@@ -7,6 +7,8 @@
 
 export const OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN = Symbol('OAuth2AuthorizationCodeIssuer');
 
+export const OAUTH2_AUTHORIZATION_STATE_MANAGER_TOKEN = Symbol('OAuth2AuthorizationStateManager');
+
 export const OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN = Symbol('OAuth2AuthorizationCodeRequestVerifier');
 
 // ------------------------------------

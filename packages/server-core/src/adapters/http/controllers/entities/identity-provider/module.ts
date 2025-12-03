@@ -8,12 +8,14 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { getRequestHostName, sendRedirect } from 'routup';
+import {
+    type Request, getRequestHeader, getRequestHostName, getRequestIP, sendRedirect,
+} from 'routup';
 import {
     IdentityProvider,
     IdentityProviderProtocol,
     IdentityType,
-    type OAuth2AuthorizeCodeRequest,
+    type OAuth2AuthorizationCodeRequest,
 } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@ebec/http';
@@ -26,7 +28,7 @@ import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { DataSource } from 'typeorm';
 import { IdentityProviderAccountService, createOAuth2IdentityProviderFlow } from '../../../../../services';
-import { setRequestIdentity, useRequestParamID } from '../../../request';
+import { useRequestParamID } from '../../../request';
 import { ForceLoggedInMiddleware } from '../../../middleware';
 import {
     deleteIdentityProviderRouteHandler,
@@ -36,16 +38,12 @@ import {
 } from './handlers';
 import {
     IOAuth2AuthorizationCodeRequestVerifier,
-    OAuth2AccessTokenIssuer,
-    OAuth2AuthorizeCodeRequestValidator, OAuth2KeyRepository,
-    OAuth2RefreshTokenIssuer,
-    OAuth2TokenSigner,
+    IOAuth2AuthorizationStateManager,
+    IdentityGrantType,
+    OAuth2AuthorizationCodeRequestValidator,
+    OAuth2AuthorizationState,
 } from '../../../../../core';
-import { OAuth2TokenRepository } from '../../../../database';
-import { OAuth2AuthorizeStateRepository } from '../../../../cache';
-import { HTTPOAuth2AuthorizeStateManager } from '../../../oauth2/authorize/state/manager';
 import { useConfig } from '../../../../../config';
-import { HTTPOAuth2IdentityGrantType } from '../../../oauth2';
 import { IdentityProviderRepository } from '../../../../database/domains';
 import { IdentityProviderControllerOptions } from './types';
 
@@ -54,13 +52,23 @@ import { IdentityProviderControllerOptions } from './types';
 export class IdentityProviderController {
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
-    protected codeRequestValidator : OAuth2AuthorizeCodeRequestValidator;
+    protected codeRequestValidator : OAuth2AuthorizationCodeRequestValidator;
+
+    protected stateManager : IOAuth2AuthorizationStateManager;
+
+    protected identityGrant : IdentityGrantType;
 
     // ---------------------------------------------------------
 
     constructor(options: IdentityProviderControllerOptions) {
         this.codeRequestVerifier = options.codeRequestVerifier;
-        this.codeRequestValidator = new OAuth2AuthorizeCodeRequestValidator();
+        this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
+        this.stateManager = options.stateManager;
+
+        this.identityGrant = new IdentityGrantType({
+            accessTokenIssuer: options.accessTokenIssuer,
+            refreshTokenIssuer: options.refreshTokenIssuer,
+        });
     }
 
     // ---------------------------------------------------------
@@ -145,10 +153,10 @@ export class IdentityProviderController {
 
         const parameters : AuthorizeParameters = {};
 
-        let codeRequest: OAuth2AuthorizeCodeRequest | undefined;
+        let codeRequest: OAuth2AuthorizationCodeRequest | undefined;
         const query = useRequestQuery(req);
         if (typeof query.codeRequest === 'string') {
-            let codeRequestDecoded: OAuth2AuthorizeCodeRequest;
+            let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
 
             try {
                 codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
@@ -170,11 +178,7 @@ export class IdentityProviderController {
             codeRequest = data.data;
         }
 
-        const authorizationStateRepository = new OAuth2AuthorizeStateRepository();
-        const authorizationStateManager = new HTTPOAuth2AuthorizeStateManager(
-            authorizationStateRepository,
-        );
-        parameters.state = await authorizationStateManager.save(req, codeRequest);
+        parameters.state = await this.saveAuthorizationState(req, codeRequest);
 
         return sendRedirect(res, flow.buildRedirectURL(parameters));
     }
@@ -197,11 +201,7 @@ export class IdentityProviderController {
             throw new Error(`The provider protocol ${entity.protocol} is not valid.`);
         }
 
-        const authorizationStateRepository = new OAuth2AuthorizeStateRepository();
-
-        // todo: use dependency injection
-        const authorizationStateManager = new HTTPOAuth2AuthorizeStateManager(authorizationStateRepository);
-        const data = await authorizationStateManager.verify(req);
+        const data = await this.verifyAuthorizationState(req);
         if (
             entity.realm_id &&
             data.codeRequest &&
@@ -221,39 +221,13 @@ export class IdentityProviderController {
 
         const config = useConfig();
 
-        const keyRepository = new OAuth2KeyRepository();
-        const tokenSigner = new OAuth2TokenSigner(keyRepository);
-
-        const tokenRepository = new OAuth2TokenRepository();
-
-        const grant = new HTTPOAuth2IdentityGrantType({
-            accessTokenIssuer: new OAuth2AccessTokenIssuer(
-                tokenRepository,
-                tokenSigner,
-                {
-                    issuer: config.publicUrl,
-                    maxAge: config.tokenAccessMaxAge,
-                },
-            ),
-            refreshTokenIssuer: new OAuth2RefreshTokenIssuer(
-                tokenRepository,
-                tokenSigner,
-                {
-                    issuer: config.publicUrl,
-                    maxAge: config.tokenRefreshMaxAge,
-                },
-            ),
-        });
-
-        setRequestIdentity(req, {
+        const token = await this.identityGrant.runWith({
             type: IdentityType.USER,
             data: {
                 ...account.user,
                 realm: entity.realm,
             },
         });
-
-        const token = await grant.runWithRequest(req);
 
         const cookieDomainsRaw : string[] = [
             new URL(config.publicUrl).hostname,
@@ -327,5 +301,37 @@ export class IdentityProviderController {
         }
 
         return entity;
+    }
+
+    // ---------------------------------------------------------
+
+    private async saveAuthorizationState(
+        req: Request,
+        codeRequest?: OAuth2AuthorizationCodeRequest,
+    ) : Promise<string> {
+        const ip = getRequestIP(req, {
+            trustProxy: true,
+        });
+        const userAgent = getRequestHeader(req, 'user-agent');
+
+        return this.stateManager.save({
+            codeRequest,
+            ip,
+            userAgent,
+        });
+    }
+
+    private async verifyAuthorizationState(req: Request): Promise<OAuth2AuthorizationState> {
+        const query = useRequestQuery(req);
+        if (typeof query.state !== 'string') {
+            throw OAuth2Error.stateInvalid();
+        }
+
+        return this.stateManager.verify(query.state, {
+            ip: getRequestIP(req, {
+                trustProxy: true,
+            }),
+            userAgent: getRequestHeader(req, 'user-agent'),
+        });
     }
 }

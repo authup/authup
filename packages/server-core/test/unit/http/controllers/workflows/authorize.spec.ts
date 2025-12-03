@@ -7,7 +7,7 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import type { OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
+import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import type {
     OAuth2TokenPayload,
@@ -21,7 +21,7 @@ import { extractTokenPayload } from '@authup/server-kit';
 import { createFakeClient, createTestSuite } from '../../../../utils';
 
 describe('src/http/controllers/token', () => {
-    let payload : OAuth2AuthorizeCodeRequest;
+    let payload : OAuth2AuthorizationCodeRequest;
 
     const suite = createTestSuite();
 

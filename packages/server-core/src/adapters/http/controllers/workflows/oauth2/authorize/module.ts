@@ -11,12 +11,12 @@ import {
 import { URL } from 'node:url';
 import { send } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { type Client, OAuth2AuthorizeCodeRequest, type Scope } from '@authup/core-kit';
+import { type Client, OAuth2AuthorizationCodeRequest, type Scope } from '@authup/core-kit';
 import { ForceUserLoggedInMiddleware } from '../../../../middleware';
 import { HTTPOAuth2Authorizer } from '../../../../oauth2';
 import {
     IOAuth2AuthorizationCodeRequestVerifier,
-    OAuth2AuthorizeCodeRequestValidator,
+    OAuth2AuthorizationCodeRequestValidator,
 } from '../../../../../../core';
 import { sanitizeError } from '../../../../../../utils';
 import { sendClientResponse } from '../../../../response';
@@ -29,7 +29,7 @@ export class AuthorizeController {
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
-    protected codeRequestValidator : RoutupContainerAdapter<OAuth2AuthorizeCodeRequest>;
+    protected codeRequestValidator : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
 
     protected authorizer: HTTPOAuth2Authorizer;
 
@@ -38,7 +38,7 @@ export class AuthorizeController {
     constructor(ctx: AuthorizeControllerContext) {
         this.codeRequestVerifier = ctx.codeRequestVerifier;
 
-        const validator = new OAuth2AuthorizeCodeRequestValidator();
+        const validator = new OAuth2AuthorizationCodeRequestValidator();
         this.codeRequestValidator = new RoutupContainerAdapter(validator);
 
         this.authorizer = new HTTPOAuth2Authorizer({
@@ -84,7 +84,7 @@ export class AuthorizeController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<void> {
-        let codeRequest : OAuth2AuthorizeCodeRequest | undefined;
+        let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
 
         let client : Client | undefined;
         let scopes : Scope[] | undefined;

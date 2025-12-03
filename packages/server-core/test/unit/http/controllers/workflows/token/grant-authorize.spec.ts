@@ -7,7 +7,7 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import type { Client, OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
@@ -84,7 +84,7 @@ describe('refresh-token', () => {
         const codeVerifier = generateOAuth2CodeVerifier();
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
 
-        const payload : OAuth2AuthorizeCodeRequest = {
+        const payload : OAuth2AuthorizationCodeRequest = {
             response_type: OAuth2AuthorizationResponseType.CODE,
             client_id: client.id,
             redirect_uri: 'https://example.com/redirect',
@@ -118,7 +118,7 @@ describe('refresh-token', () => {
         const codeVerifier = generateOAuth2CodeVerifier();
         const codeChallenge = await buildOAuth2CodeChallenge(codeVerifier);
 
-        const payload : OAuth2AuthorizeCodeRequest = {
+        const payload : OAuth2AuthorizationCodeRequest = {
             state,
             response_type: OAuth2AuthorizationResponseType.CODE,
             client_id: client.id,

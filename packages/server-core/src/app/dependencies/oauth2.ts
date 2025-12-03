@@ -14,21 +14,26 @@ import {
 import {
     OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
     OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN,
-    OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN, OAUTH2_IDENTITY_RESOLVER_TOKEN, OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN,
+    OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
+    OAUTH2_AUTHORIZATION_STATE_MANAGER_TOKEN,
+    OAUTH2_IDENTITY_RESOLVER_TOKEN,
+    OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN,
     OAUTH2_REFRESH_TOKEN_ISSUER_TOKEN,
     OAUTH2_TOKEN_REVOKER_TOKEN,
     OAUTH2_TOKEN_VERIFIER_TOKEN,
     OAuth2AccessTokenIssuer,
 
     OAuth2AuthorizationCodeIssuer,
-    OAuth2AuthorizationCodeRequestVerifier, OAuth2IdentityResolver,
-    OAuth2KeyRepository, OAuth2OpenIDTokenIssuer,
+    OAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationStateManager,
+    OAuth2IdentityResolver,
+    OAuth2KeyRepository,
+    OAuth2OpenIDTokenIssuer,
     OAuth2RefreshTokenIssuer,
     OAuth2TokenRevoker,
     OAuth2TokenSigner,
     OAuth2TokenVerifier,
 } from '../../core';
-import { OAuth2AuthorizationCodeRepository } from '../../adapters';
+import { OAuth2AuthorizationCodeRepository, OAuth2AuthorizationStateRepository } from '../../adapters';
 
 export type OAuth2BootstrapOptions = {
     tokenAccessMaxAge: number,
@@ -40,7 +45,10 @@ export type OAuth2BootstrapOptions = {
 export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
     const clientRepository = new OAuth2ClientRepository();
     const clientScopeRepository = new OAuth2ClientScopeRepository();
+
     const codeRepository = new OAuth2AuthorizationCodeRepository();
+
+    const stateRepository = new OAuth2AuthorizationStateRepository();
 
     const tokenRepository = new OAuth2TokenRepository();
     const keyRepository = new OAuth2KeyRepository();
@@ -59,10 +67,14 @@ export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
 
     // authorization code request verifier
     container.register(OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN, {
-        useFactory: () => new OAuth2AuthorizationCodeRequestVerifier(
+        useFactory: () => new OAuth2AuthorizationCodeRequestVerifier({
             clientRepository,
             clientScopeRepository,
-        ),
+        }),
+    });
+
+    container.register(OAUTH2_AUTHORIZATION_STATE_MANAGER_TOKEN, {
+        useFactory: () => new OAuth2AuthorizationStateManager(stateRepository),
     });
 
     // identity resolver

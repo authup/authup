@@ -5,31 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
+import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { isSimpleMatch } from '@authup/kit';
 import { OAuth2Error, hasOAuth2Scopes } from '@authup/specs';
 import type { IOAuth2ClientRepository } from '../../../client';
 import type { IOAuth2ClientScopeRepository } from '../../../client-scope';
-import type { OAuth2AuthorizationCodeRequestContainer } from '../../types';
-import type { IOAuth2AuthorizationCodeRequestVerifier } from './types';
+import type {
+    IOAuth2AuthorizationCodeRequestVerifier,
+    OAuth2AuthorizationCodeRequestVerificationResult,
+    OAuth2AuthorizationCodeRequestVerifierContext,
+} from './types';
 
 export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2AuthorizationCodeRequestVerifier {
     protected clientRepository: IOAuth2ClientRepository;
 
     protected clientScopeRepository: IOAuth2ClientScopeRepository;
 
-    constructor(
-        clientRepository: IOAuth2ClientRepository,
-        clientScopeRepository: IOAuth2ClientScopeRepository,
-    ) {
-        this.clientRepository = clientRepository;
-        this.clientScopeRepository = clientScopeRepository;
+    constructor(ctx: OAuth2AuthorizationCodeRequestVerifierContext) {
+        this.clientRepository = ctx.clientRepository;
+        this.clientScopeRepository = ctx.clientScopeRepository;
     }
 
+    /**
+     * Verify validated authorization code request.
+     * @param data
+     */
     async verify(
-        data: OAuth2AuthorizeCodeRequest,
-    ) : Promise<OAuth2AuthorizationCodeRequestContainer> {
+        data: OAuth2AuthorizationCodeRequest,
+    ) : Promise<OAuth2AuthorizationCodeRequestVerificationResult> {
         const client = await this.clientRepository.findOneByIdOrName(data.client_id, data.realm_id);
         if (!client) {
             throw OAuth2Error.clientInvalid();

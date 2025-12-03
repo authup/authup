@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizeCodeRequest } from '@authup/core-kit';
+import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
@@ -18,10 +18,10 @@ import type { IOAuth2TokenIssuer } from '../token';
 import type { IOAuth2AuthorizationCodeIssuer } from './code';
 import type {
     OAuth2AuthorizationManagerContext,
-    OAuth2AuthorizeResult,
+    OAuth2AuthorizationResult,
 } from './types';
 
-export class OAuth2Authorizer {
+export class OAuth2Authorization {
     protected accessTokenIssuer : IOAuth2TokenIssuer;
 
     protected openIdTokenIssuer : IOAuth2TokenIssuer;
@@ -44,9 +44,9 @@ export class OAuth2Authorizer {
      * @param base
      */
     async authorize(
-        data: OAuth2AuthorizeCodeRequest,
+        data: OAuth2AuthorizationCodeRequest,
         base: OAuth2TokenPayload = {},
-    ) : Promise<OAuth2AuthorizeResult> {
+    ) : Promise<OAuth2AuthorizationResult> {
         const availableResponseTypes : string[] = Object.values(OAuth2AuthorizationResponseType);
 
         let responseTypes : string[] = [];
@@ -66,7 +66,7 @@ export class OAuth2Authorizer {
             }
         }
 
-        const output : OAuth2AuthorizeResult = {
+        const output : OAuth2AuthorizationResult = {
             redirectUri: data.redirect_uri,
             ...(data.state ? { state: data.state } : {}),
         };

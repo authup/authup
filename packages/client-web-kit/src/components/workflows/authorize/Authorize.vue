@@ -6,7 +6,7 @@
   -->
 <script lang="ts">
 import type {
-    Client, OAuth2AuthorizeCodeRequest, Scope,
+    Client, OAuth2AuthorizationCodeRequest, Scope,
 } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
@@ -40,7 +40,7 @@ export default defineComponent({
     },
     props: {
         codeRequest: {
-            type: Object as PropType<OAuth2AuthorizeCodeRequest>,
+            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
         },
         client: {
             type: Object as PropType<Client>,

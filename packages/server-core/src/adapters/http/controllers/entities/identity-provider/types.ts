@@ -5,8 +5,16 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core';
+import type {
+    IOAuth2AuthorizationCodeRequestVerifier,
+    IOAuth2AuthorizationStateManager,
+    IOAuth2TokenIssuer,
+} from '../../../../../core';
 
 export type IdentityProviderControllerOptions = {
-    codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier;
+    codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
+    stateManager: IOAuth2AuthorizationStateManager,
+
+    accessTokenIssuer: IOAuth2TokenIssuer,
+    refreshTokenIssuer: IOAuth2TokenIssuer,
 };

@@ -8,17 +8,17 @@
 import { createNanoID } from '@authup/kit';
 import type { Cache } from '@authup/server-kit';
 import { buildCacheKey, useCache } from '@authup/server-kit';
-import type { IOAuth2AuthorizeStateRepository, OAuth2AuthorizeState } from '../../../../../../core';
+import type { IOAuth2AuthorizeStateRepository, OAuth2AuthorizationState } from '../../../../../../core';
 import { CacheOAuth2Prefix } from '../../constants';
 
-export class OAuth2AuthorizeStateRepository implements IOAuth2AuthorizeStateRepository {
+export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeStateRepository {
     protected cache : Cache;
 
     constructor() {
         this.cache = useCache();
     }
 
-    async findOneById(key: string): Promise<OAuth2AuthorizeState | null> {
+    async findOneById(key: string): Promise<OAuth2AuthorizationState | null> {
         const id = buildCacheKey({ prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE, key });
         const payload = await this.cache.get(id);
         if (payload) {
@@ -34,7 +34,7 @@ export class OAuth2AuthorizeStateRepository implements IOAuth2AuthorizeStateRepo
         );
     }
 
-    async insert(data: OAuth2AuthorizeState): Promise<string> {
+    async insert(data: OAuth2AuthorizationState): Promise<string> {
         const state = createNanoID();
 
         await this.cache.set(
