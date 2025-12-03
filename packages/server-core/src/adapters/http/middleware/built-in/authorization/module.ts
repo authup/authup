@@ -28,7 +28,7 @@ import { useConfig } from '../../../../../config';
 import { PermissionDBProvider, PolicyEngine } from '../../../../../security';
 import {
     ClientAuthenticator,
-    RobotAuthenticationService,
+    RobotAuthenticator,
     UserAuthenticator,
 } from '../../../../../core';
 import type {
@@ -204,7 +204,7 @@ export class AuthorizationMiddleware {
                 identity &&
                 identity.type === IdentityType.ROBOT
             ) {
-                const authenticationService = new RobotAuthenticationService();
+                const authenticationService = new RobotAuthenticator();
                 const authenticated = await authenticationService.safeAuthenticate(
                     identity.data,
                     header.password,

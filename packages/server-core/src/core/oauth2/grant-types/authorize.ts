@@ -7,7 +7,6 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import {
-    OAuth2SubKind,
     hasOAuth2Scopes,
 } from '@authup/specs';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
@@ -37,8 +36,8 @@ export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> imp
     ) : Promise<OAuth2TokenGrantResponse> {
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             ...base,
-            sub: authorizationCode.user_id,
-            sub_kind: OAuth2SubKind.USER,
+            sub: authorizationCode.sub,
+            sub_kind: authorizationCode.sub_kind,
             realm_id: authorizationCode.realm_id,
             realm_name: authorizationCode.realm_name,
             scope: authorizationCode.scope,

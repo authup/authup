@@ -5,13 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { Identity, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import {
-    OAuth2AuthorizationResponseType, OAuth2Error, hasOAuth2Scopes,
+    OAuth2AuthorizationResponseType,
+    OAuth2Error,
+    hasOAuth2Scopes,
 } from '@authup/specs';
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token';
 import type { IOAuth2AuthorizationCodeIssuer } from './code';
@@ -41,11 +43,11 @@ export class OAuth2Authorization {
      * Authorize with validated codeRequest.
      *
      * @param data
-     * @param base
+     * @param identity
      */
     async authorize(
         data: OAuth2AuthorizationCodeRequest,
-        base: OAuth2TokenPayload = {},
+        identity: Identity,
     ) : Promise<OAuth2AuthorizationResult> {
         const availableResponseTypes : string[] = Object.values(OAuth2AuthorizationResponseType);
 
@@ -72,16 +74,15 @@ export class OAuth2Authorization {
         };
 
         const payloadBaseNormalized : OAuth2TokenPayload = {
-            ...base,
-            client_id: data.client_id || base.client_id,
-            realm_id: data.realm_id || base.realm_id,
+
+            sub: identity.data.id,
+            sub_kind: identity.type,
+            realm_id: identity.data.realm.id,
+            realm_name: identity.data.realm.name,
+
+            client_id: data.client_id,
             ...(data.scope ? { scope: data.scope } : {}),
         };
-
-        const identity = await this.identityResolver.resolve(
-            payloadBaseNormalized.sub_kind,
-            payloadBaseNormalized.sub,
-        );
 
         if (!identity) {
             throw OAuth2Error.identityInvalid();

@@ -8,7 +8,7 @@
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { User } from '@authup/core-kit';
-import type { IUserIdentityRepository } from '../../../../core/identity';
+import type { IUserIdentityRepository } from '../../../../core';
 import { UserRepository } from '../../domains';
 
 export class UserIdentityRepository implements IUserIdentityRepository {
@@ -44,11 +44,16 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             }
         }
 
-        query.addSelect('user.password');
+        const { columns } = repository.metadata;
+        for (let i = 0; i < columns.length; i++) {
+            if (!columns[i].isSelect) {
+                query.addSelect(`user.${columns[i].databaseName}`);
+            }
+        }
 
         const entity = await query.getOne();
         if (entity) {
-            await repository.extendOneWithEA(entity);
+            return repository.extendOneWithEA(entity);
         }
 
         return null;

@@ -48,7 +48,11 @@ export class OAuth2OpenIDTokenIssuer implements IOAuth2OpenIDTokenIssuer {
         return this.issueWithIdentity(input, identity, options);
     }
 
-    async issueWithIdentity(input: OAuth2TokenPayload, identity: Identity, options?: OAuth2TokenIssuerOptions): Promise<OAuth2TokenIssuerResponse> {
+    async issueWithIdentity(
+        input: OAuth2TokenPayload,
+        identity: Identity,
+        options: OAuth2TokenIssuerOptions = {},
+    ): Promise<OAuth2TokenIssuerResponse> {
         const claims = this.claimsBuilder.fromIdentity(identity);
 
         const utc = Math.floor(new Date().getTime() / 1000);

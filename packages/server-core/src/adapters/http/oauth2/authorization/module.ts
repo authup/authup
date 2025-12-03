@@ -8,7 +8,6 @@
 import type { Request } from 'routup';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { getRequestIP } from 'routup';
 import type { IOAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationResult } from '../../../../core';
 import { OAuth2Authorization, OAuth2AuthorizationCodeRequestValidator } from '../../../../core';
 import { useRequestIdentityOrFail } from '../../request';
@@ -35,13 +34,7 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
 
         const identity = useRequestIdentityOrFail(req);
 
-        return this.authorize(data, {
-            remote_address: getRequestIP(req, { trustProxy: true }),
-            sub: identity.id,
-            sub_kind: identity.type,
-            realm_id: identity.realmId,
-            realm_name: identity.realmName,
-        });
+        return this.authorize(data, identity.raw);
     }
 
     /**

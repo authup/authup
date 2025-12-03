@@ -8,5 +8,11 @@
 import type { Client } from '@authup/core-kit';
 
 export interface IOAuth2ClientRepository {
+    /**
+     * Find client with realm.
+     *
+     * @param idOrName
+     * @param realmId
+     */
     findOneByIdOrName(idOrName: string, realmId?: string) : Promise<Client>
 }

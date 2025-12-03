@@ -10,7 +10,7 @@ import { RobotError } from '@authup/core-kit';
 import { RobotCredentialsService } from '../../credential';
 import { BaseAuthenticator } from '../../base';
 
-export class RobotAuthenticationService extends BaseAuthenticator<Robot> {
+export class RobotAuthenticator extends BaseAuthenticator<Robot> {
     protected credentialsService : RobotCredentialsService;
 
     constructor() {

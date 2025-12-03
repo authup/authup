@@ -7,8 +7,19 @@
 
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 
+export type OAuth2AuthorizationCodeRepositorySaveOptions = {
+    maxAge?: number
+};
+
+export type OAuth2AuthorizationCodeInput = Omit<OAuth2AuthorizationCode, 'id'> & {
+    id?: string
+};
+
 export interface IOAuth2AuthorizationCodeRepository {
     findOneById(id: string) : Promise<OAuth2AuthorizationCode | null>;
 
-    save(input: OAuth2AuthorizationCode) : Promise<OAuth2AuthorizationCode>;
+    save(
+        input: OAuth2AuthorizationCodeInput,
+        options?: OAuth2AuthorizationCodeRepositorySaveOptions
+    ) : Promise<OAuth2AuthorizationCode>;
 }

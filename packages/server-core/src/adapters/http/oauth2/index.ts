@@ -6,4 +6,4 @@
  */
 
 export * from './authorization';
-export * from './grant_types';
+export * from './grant-types';

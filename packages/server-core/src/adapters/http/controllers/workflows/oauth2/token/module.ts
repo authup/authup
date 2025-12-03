@@ -21,7 +21,6 @@ import { SerializeOptions, setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { useDataSource } from 'typeorm-extension';
 import { pickRecord } from '@authup/kit';
-import { NotFoundError } from '@ebec/http';
 import { toOAuth2Error } from '../../../../../../core/oauth2/helpers';
 import { TokenControllerContext } from './types';
 import {
@@ -39,7 +38,7 @@ import {
     IHTTPGrant,
     guessOauth2GrantTypeByRequest,
 } from '../../../../oauth2';
-import { HTTPOAuth2AuthorizeGrant } from '../../../../oauth2/grant_types/authorize';
+import { HTTPOAuth2AuthorizeGrant } from '../../../../oauth2/grant-types/authorize';
 import { OAuth2AuthorizationCodeRepository } from '../../../../../cache';
 import { extractTokenFromRequest } from './utils';
 import { IdentityPermissionService } from '../../../../../../services';
@@ -79,13 +78,16 @@ export class TokenController {
             }),
             [OAuth2TokenGrant.CLIENT_CREDENTIALS]: new HTTPClientCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
+                identityResolver: ctx.identityResolver,
             }),
             [OAuth2TokenGrant.ROBOT_CREDENTIALS]: new HTTPRobotCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
+                identityResolver: ctx.identityResolver,
             }),
             [OAuth2TokenGrant.PASSWORD]: new HTTPPasswordGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
+                identityResolver: ctx.identityResolver,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
@@ -128,7 +130,7 @@ export class TokenController {
             const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
             if (!identity) {
                 // todo: differentiate between client, robot & user
-                throw new NotFoundError();
+                throw OAuth2Error.identityInvalid();
             }
 
             const claimsBuilder = new OAuth2OpenIDClaimsBuilder();

@@ -8,8 +8,13 @@
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import type { Cache } from '@authup/server-kit';
 import { buildCacheKey, useCache } from '@authup/server-kit';
+import { randomBytes } from 'node:crypto';
 import { CacheOAuth2Prefix } from '../../constants';
-import type { IOAuth2AuthorizationCodeRepository } from '../../../../../../core';
+import type {
+    IOAuth2AuthorizationCodeRepository,
+    OAuth2AuthorizationCodeInput,
+    OAuth2AuthorizationCodeRepositorySaveOptions,
+} from '../../../../../../core';
 
 export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCodeRepository {
     protected cache : Cache;
@@ -31,11 +36,18 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
         return null;
     }
 
-    async save(input: OAuth2AuthorizationCode): Promise<OAuth2AuthorizationCode> {
+    async save(
+        input: OAuth2AuthorizationCodeInput,
+        options: OAuth2AuthorizationCodeRepositorySaveOptions = {},
+    ): Promise<OAuth2AuthorizationCode> {
         let ttl: number | undefined;
 
-        if (input.max_age) {
-            ttl = input.max_age * 1_000;
+        if (options.maxAge) {
+            ttl = options.maxAge * 1_000;
+        }
+
+        if (!input.id) {
+            input.id = randomBytes(10).toString('hex');
         }
 
         await this.cache.set(buildCacheKey({
@@ -45,6 +57,6 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
             ttl,
         });
 
-        return input;
+        return input as OAuth2AuthorizationCode;
     }
 }

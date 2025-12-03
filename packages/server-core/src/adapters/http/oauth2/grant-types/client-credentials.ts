@@ -8,15 +8,29 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2Error } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
-import { ClientError } from '@authup/core-kit';
+import { ClientError, IdentityType } from '@authup/core-kit';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { ClientCredentialsGrant } from '../../../../core';
-import { ClientAuthenticator } from '../../../../services';
-import type { IHTTPGrant } from './types';
+import type { IIdentityResolver } from '../../../../core';
+import {
+    ClientAuthenticator,
+    ClientCredentialsGrant,
+} from '../../../../core';
+import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPGrant } from './types';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPGrant {
+    protected authenticator : ClientAuthenticator;
+
+    protected identityResolver: IIdentityResolver;
+
+    constructor(ctx: HTTPOAuth2ClientCredentialsGrantContext) {
+        super(ctx);
+
+        this.authenticator = new ClientAuthenticator();
+        this.identityResolver = ctx.identityResolver;
+    }
+
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
         let clientId = useRequestBody(req, 'client_id');
         let clientSecret = useRequestBody(req, 'client_secret');
@@ -39,9 +53,17 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
             clientSecret = header.password;
         }
 
-        const authenticationService = new ClientAuthenticator();
+        const identity = await this.identityResolver.resolve(
+            IdentityType.CLIENT,
+            clientId,
+            realmId,
+        );
 
-        const client = await authenticationService.authenticate(clientId, clientSecret, realmId);
+        if (!identity || identity.type !== IdentityType.CLIENT) {
+            throw ClientError.credentialsInvalid();
+        }
+
+        const client = await this.authenticator.authenticate(identity.data, clientSecret);
 
         return this.runWith(client, {
             remote_address: getRequestIP(req, { trustProxy: true }),
