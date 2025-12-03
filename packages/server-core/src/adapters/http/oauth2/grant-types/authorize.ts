@@ -57,9 +57,13 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             }
         }
 
-        return this.runWith(entity, {
+        const tokenGrantResponse = await this.runWith(entity, {
             remote_address: getRequestIP(req, { trustProxy: true }),
         });
+
+        await this.codeRepository.remove(entity.id);
+
+        return tokenGrantResponse;
     }
 
     protected extractRedirectURIParam(request: Request) : string {

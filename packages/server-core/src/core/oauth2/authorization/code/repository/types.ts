@@ -16,6 +16,10 @@ export type OAuth2AuthorizationCodeInput = Omit<OAuth2AuthorizationCode, 'id'> &
 };
 
 export interface IOAuth2AuthorizationCodeRepository {
+    removeById(id: string): Promise<void>;
+
+    remove(entity: OAuth2AuthorizationCode): Promise<void>;
+
     findOneById(id: string) : Promise<OAuth2AuthorizationCode | null>;
 
     save(

@@ -55,4 +55,15 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
 
         return input as OAuth2AuthorizationCode;
     }
+
+    async remove(entity: OAuth2AuthorizationCode): Promise<void> {
+        return this.removeById(entity.id);
+    }
+
+    async removeById(id: string): Promise<void> {
+        await this.cache.drop(buildCacheKey({
+            prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
+            key: id,
+        }));
+    }
 }
