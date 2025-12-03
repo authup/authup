@@ -9,16 +9,17 @@ import { container } from 'tsyringe';
 import { AuthorizeController } from './authorize';
 import { TokenController } from './token';
 import type {
-    IOAuth2AuthorizationCodeIssuer, IOAuth2AuthorizationCodeRequestVerifier,
+    IIdentityResolver,
+    IOAuth2AuthorizationCodeIssuer, IOAuth2AuthorizationCodeRequestVerifier, IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
-    IOAuth2TokenVerifier, OAuth2IdentityResolver,
+    IOAuth2TokenVerifier,
 } from '../../../../../core';
 import {
-    OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
+    IDENTITY_RESOLVER_TOKEN, OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
+
     OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN,
     OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
-    OAUTH2_IDENTITY_RESOLVER_TOKEN,
     OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN,
     OAUTH2_REFRESH_TOKEN_ISSUER_TOKEN,
     OAUTH2_TOKEN_REVOKER_TOKEN,
@@ -32,11 +33,11 @@ export function buildOAuth2Controllers() {
     const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
         OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
     );
-    const identityResolver = container.resolve<OAuth2IdentityResolver>(OAUTH2_IDENTITY_RESOLVER_TOKEN);
+    const identityResolver = container.resolve<IIdentityResolver>(IDENTITY_RESOLVER_TOKEN);
 
     const accessTokenIssuer = container.resolve<IOAuth2TokenIssuer>(OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN);
     const refreshTokenIssuer = container.resolve<IOAuth2TokenIssuer>(OAUTH2_REFRESH_TOKEN_ISSUER_TOKEN);
-    const openIdTokenIssuer = container.resolve<IOAuth2TokenIssuer>(OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN);
+    const openIdTokenIssuer = container.resolve<IOAuth2OpenIDTokenIssuer>(OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN);
 
     const tokenRevoker = container.resolve<IOAuth2TokenRevoker>(OAUTH2_TOKEN_REVOKER_TOKEN);
     const tokenVerifier = container.resolve<IOAuth2TokenVerifier>(OAUTH2_TOKEN_VERIFIER_TOKEN);
@@ -59,6 +60,8 @@ export function buildOAuth2Controllers() {
 
             tokenVerifier,
             tokenRevoker,
+
+            identityResolver,
         }),
     ];
 }

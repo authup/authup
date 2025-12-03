@@ -13,22 +13,22 @@ import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2AuthorizationResponseType, OAuth2Error, hasOAuth2Scopes,
 } from '@authup/specs';
-import type { OAuth2IdentityResolver } from '../identity';
-import type { IOAuth2TokenIssuer } from '../token';
+import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token';
 import type { IOAuth2AuthorizationCodeIssuer } from './code';
 import type {
     OAuth2AuthorizationManagerContext,
     OAuth2AuthorizationResult,
 } from './types';
+import type { IIdentityResolver } from '../../identity';
 
 export class OAuth2Authorization {
     protected accessTokenIssuer : IOAuth2TokenIssuer;
 
-    protected openIdTokenIssuer : IOAuth2TokenIssuer;
+    protected openIdTokenIssuer : IOAuth2OpenIDTokenIssuer;
 
     protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
 
-    protected identityResolver : OAuth2IdentityResolver;
+    protected identityResolver : IIdentityResolver;
 
     constructor(ctx: OAuth2AuthorizationManagerContext) {
         this.accessTokenIssuer = ctx.accessTokenIssuer;
@@ -78,6 +78,15 @@ export class OAuth2Authorization {
             ...(data.scope ? { scope: data.scope } : {}),
         };
 
+        const identity = await this.identityResolver.resolve(
+            payloadBaseNormalized.sub_kind,
+            payloadBaseNormalized.sub,
+        );
+
+        if (!identity) {
+            throw OAuth2Error.identityInvalid();
+        }
+
         let idToken : string | undefined;
         if (
             enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
@@ -86,7 +95,10 @@ export class OAuth2Authorization {
                 hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID)
             )
         ) {
-            const [token] = await this.openIdTokenIssuer.issue(payloadBaseNormalized);
+            const [token] = await this.openIdTokenIssuer.issueWithIdentity(
+                payloadBaseNormalized,
+                identity,
+            );
 
             idToken = token;
 
@@ -102,17 +114,17 @@ export class OAuth2Authorization {
         }
 
         if (enabledResponseTypes[OAuth2AuthorizationResponseType.CODE]) {
-            const identity = await this.identityResolver.resolve(payloadBaseNormalized);
+            if (identity) {
+                const entity = await this.codeIssuer.issue(
+                    data,
+                    identity,
+                    {
+                        idToken,
+                    },
+                );
 
-            const entity = await this.codeIssuer.issue(
-                data,
-                identity,
-                {
-                    idToken,
-                },
-            );
-
-            output.authorizationCode = entity.id;
+                output.authorizationCode = entity.id;
+            }
         }
 
         return output;

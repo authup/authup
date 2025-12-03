@@ -10,7 +10,7 @@ import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { PasswordGrantType } from '../../../../core';
-import { UserAuthenticationService } from '../../../../services';
+import { UserAuthenticator } from '../../../../services';
 import type { IHTTPGrant } from './types';
 
 export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
@@ -21,7 +21,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
             realm_id: realmId,
         } = useRequestBody(req);
 
-        const authenticationService = new UserAuthenticationService({
+        const authenticationService = new UserAuthenticator({
             withLDAP: true,
         });
 

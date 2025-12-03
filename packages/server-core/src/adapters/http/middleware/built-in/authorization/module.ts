@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionProvider } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
 import {
@@ -13,13 +12,11 @@ import {
     ScopeName,
 } from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
-import { buildRedisKeyPath } from '@authup/server-kit';
 import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
 import type { SerializeOptions } from '@routup/basic/cookie';
 import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
 import { getRequestHostName } from 'routup';
 import type { Next, Request, Response } from 'routup';
-import type { DataSource } from 'typeorm';
 import {
     AuthorizationHeaderType,
     type BasicAuthorizationHeader,
@@ -27,18 +24,17 @@ import {
     parseAuthorizationHeader,
     stringifyAuthorizationHeader,
 } from 'hapic';
-import type { Config } from '../../../../../config';
 import { useConfig } from '../../../../../config';
-import {
-    CachePrefix,
-    ClientRepository,
-    RealmRepository, RobotRepository, UserRepository,
-} from '../../../../database/domains';
 import { PermissionDBProvider, PolicyEngine } from '../../../../../security';
-import { ClientAuthenticationService, RobotAuthenticationService, UserAuthenticationService } from '../../../../../services';
-import { OAuth2IdentityResolver, OAuth2TokenVerifier } from '../../../../../core';
-import { OAuth2KeyRepository } from '../../../../../core/oauth2/key';
-import { OAuth2TokenRepository } from '../../../../database';
+import {
+    ClientAuthenticator,
+    RobotAuthenticationService,
+    UserAuthenticator,
+} from '../../../../../core';
+import type {
+    IIdentityResolver,
+    IOAuth2TokenVerifier,
+} from '../../../../../core';
 import {
     RequestPermissionChecker,
     setRequestIdentity,
@@ -46,55 +42,32 @@ import {
     setRequestScopes,
     setRequestToken,
 } from '../../../request';
+import type { HTTPAuthorizationMiddlewareContext, HTTPAuthorizationMiddlewareOptions } from './types';
 
 export class AuthorizationMiddleware {
-    protected config : Config;
+    protected options: HTTPAuthorizationMiddlewareOptions;
 
     // --------------------------------------
 
-    protected oauth2TokenVerifier: OAuth2TokenVerifier;
-
-    protected oauth2IdentityResolver :OAuth2IdentityResolver;
-
-    protected permissionProvider : PermissionProvider;
+    protected oauth2TokenVerifier: IOAuth2TokenVerifier;
 
     protected permissionChecker: PermissionChecker;
 
-    // --------------------------------------
-
-    protected realmRepository : RealmRepository;
-
-    protected userRepository : UserRepository;
-
-    protected robotRepository : RobotRepository;
-
-    protected clientRepository : ClientRepository;
+    protected identityResolver : IIdentityResolver;
 
     // --------------------------------------
 
-    constructor(dataSource: DataSource) {
-        this.config = useConfig();
+    constructor(ctx: HTTPAuthorizationMiddlewareContext) {
+        this.options = ctx.options || {};
 
-        const keyRepository = new OAuth2KeyRepository();
-        const tokenRepository = new OAuth2TokenRepository();
+        this.identityResolver = ctx.identityResolver;
+        this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
-        this.oauth2TokenVerifier = new OAuth2TokenVerifier(
-            keyRepository,
-            tokenRepository,
-        );
-        this.oauth2IdentityResolver = new OAuth2IdentityResolver();
-
-        this.permissionProvider = new PermissionDBProvider(dataSource);
+        const provider = new PermissionDBProvider(ctx.dataSource);
         this.permissionChecker = new PermissionChecker({
-            provider: this.permissionProvider,
+            provider,
             policyEngine: new PolicyEngine(),
         });
-
-        this.realmRepository = new RealmRepository(dataSource);
-
-        this.userRepository = new UserRepository(dataSource);
-        this.robotRepository = new RobotRepository(dataSource);
-        this.clientRepository = new ClientRepository(dataSource);
     }
 
     // --------------------------------------
@@ -182,88 +155,82 @@ export class AuthorizationMiddleware {
             setRequestScopes(request, deserializeOAuth2Scope(payload.scope));
         }
 
-        const identity = await this.oauth2IdentityResolver.resolve(payload);
+        const identity = await this.identityResolver.resolve(
+            payload.sub_kind,
+            payload.sub,
+        );
 
-        if (!identity.data.realm) {
-            if (!payload.realm_id) {
-                throw JWTError.payloadPropertyInvalid('realm_id');
-            }
-
-            const realm = await this.realmRepository.findOne({
-                where: {
-                    id: payload.realm_id,
-                },
-                cache: {
-                    id: buildRedisKeyPath({
-                        prefix: CachePrefix.REALM,
-                        key: payload.realm_id,
-                    }),
-                    milliseconds: 60_000,
-                },
-            });
-
-            if (!realm) {
-                throw JWTError.payloadPropertyInvalid('realm_id');
-            }
-
-            identity.data.realm = realm;
+        if (identity) {
+            setRequestIdentity(request, identity);
         }
-
-        setRequestIdentity(request, identity);
     }
 
     protected async verifyBasicAuthorizationHeader(
         request: Request,
         header: BasicAuthorizationHeader,
     ) {
-        if (this.config.userAuthBasic) {
-            const authenticationService = new UserAuthenticationService();
-            const user = await authenticationService.resolve(header.username);
+        if (this.options.userAuthBasic) {
+            const identity = await this.identityResolver.resolve(
+                IdentityType.USER,
+                header.username,
+            );
 
-            if (user) {
-                const authenticated = await authenticationService.safeAuthenticate(user, header.password);
+            if (
+                identity &&
+                identity.type === IdentityType.USER
+            ) {
+                const authenticationService = new UserAuthenticator();
+                const authenticated = await authenticationService.safeAuthenticate(
+                    identity.data,
+                    header.password,
+                );
+
                 if (authenticated.success) {
-                    await this.userRepository.extendOneWithEA(user);
-
                     setRequestScopes(request, [ScopeName.GLOBAL]);
-                    setRequestIdentity(request, {
-                        type: IdentityType.USER,
-                        data: user,
-                    });
+                    setRequestIdentity(request, identity);
 
                     return;
                 }
             }
         }
 
-        if (this.config.robotAuthBasic) {
-            const authenticationService = new RobotAuthenticationService();
-            const robot = await authenticationService.resolve(header.username);
+        if (this.options.robotAuthBasic) {
+            const identity = await this.identityResolver.resolve(
+                IdentityType.ROBOT,
+                header.username,
+            );
 
-            if (robot) {
-                const authenticated = await authenticationService.safeAuthenticate(robot, header.password);
+            if (
+                identity &&
+                identity.type === IdentityType.ROBOT
+            ) {
+                const authenticationService = new RobotAuthenticationService();
+                const authenticated = await authenticationService.safeAuthenticate(
+                    identity.data,
+                    header.password,
+                );
                 if (authenticated.success) {
                     setRequestScopes(request, [ScopeName.GLOBAL]);
-                    setRequestIdentity(request, {
-                        type: IdentityType.ROBOT,
-                        data: robot,
-                    });
+                    setRequestIdentity(request, identity);
                 }
             }
         }
 
-        if (this.config.clientAuthBasic) {
-            const authenticationService = new ClientAuthenticationService();
-            const client = await authenticationService.resolve(header.username);
+        if (this.options.clientAuthBasic) {
+            const identity = await this.identityResolver.resolve(
+                IdentityType.CLIENT,
+                header.username,
+            );
 
-            if (client) {
-                const authenticated = await authenticationService.safeAuthenticate(client, header.password);
+            if (
+                identity &&
+                identity.type === IdentityType.CLIENT
+            ) {
+                const authenticationService = new ClientAuthenticator();
+                const authenticated = await authenticationService.safeAuthenticate(identity.data, header.password);
                 if (authenticated.success) {
                     setRequestScopes(request, [ScopeName.GLOBAL]);
-                    setRequestIdentity(request, {
-                        type: IdentityType.CLIENT,
-                        data: client,
-                    });
+                    setRequestIdentity(request, identity);
                 }
             }
         }

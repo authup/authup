@@ -7,12 +7,35 @@
 
 import { coreHandler } from 'routup';
 import type { Router } from 'routup';
+import { container } from 'tsyringe';
 import { useDataSourceSync } from '../../../../database';
 import { AuthorizationMiddleware } from './module';
+import type { IIdentityResolver, IOAuth2TokenVerifier } from '../../../../../core';
+import { IDENTITY_RESOLVER_TOKEN, OAUTH2_TOKEN_VERIFIER_TOKEN } from '../../../../../core';
+import { useConfig } from '../../../../../config';
 
 export function registerAuthorizationMiddleware(router: Router) {
+    const config = useConfig();
+
+    const identityResolver = container.resolve<IIdentityResolver>(
+        IDENTITY_RESOLVER_TOKEN,
+    );
+
+    const oauth2TokenVerifier = container.resolve<IOAuth2TokenVerifier>(
+        OAUTH2_TOKEN_VERIFIER_TOKEN,
+    );
+
     const dataSource = useDataSourceSync();
-    const middleware = new AuthorizationMiddleware(dataSource);
+    const middleware = new AuthorizationMiddleware({
+        identityResolver,
+        dataSource,
+        oauth2TokenVerifier,
+        options: {
+            clientAuthBasic: config.clientAuthBasic,
+            robotAuthBasic: config.robotAuthBasic,
+            userAuthBasic: config.userAuthBasic,
+        },
+    });
 
     router.use(coreHandler(async (
         request,

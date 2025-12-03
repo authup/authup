@@ -21,7 +21,7 @@ import { UserEntity, UserRepository, resolveRealm } from '../../../../../databas
 import { useConfig } from '../../../../../../config';
 import { EnvironmentName } from '../../../../../../env';
 import { RequestHandlerOperation } from '../../../../request';
-import { UserCredentialsService } from '../../../../../../services/credential/impl';
+import { UserCredentialsService } from '../../../../../../core/authentication/credential/entities';
 
 export class AuthRegisterRequestValidator extends Container<User> {
     protected initialize() {

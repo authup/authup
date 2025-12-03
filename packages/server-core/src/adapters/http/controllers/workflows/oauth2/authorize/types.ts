@@ -6,18 +6,19 @@
  */
 
 import type {
+    IIdentityResolver,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
+    IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
-    OAuth2IdentityResolver,
 } from '../../../../../../core';
 
 export type AuthorizeControllerContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,
-    openIdTokenIssuer: IOAuth2TokenIssuer,
+    openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
 
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
 
-    identityResolver: OAuth2IdentityResolver
+    identityResolver: IIdentityResolver
 };

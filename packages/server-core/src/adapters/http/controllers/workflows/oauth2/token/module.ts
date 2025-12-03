@@ -21,13 +21,14 @@ import { SerializeOptions, setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { useDataSource } from 'typeorm-extension';
 import { pickRecord } from '@authup/kit';
+import { NotFoundError } from '@ebec/http';
 import { toOAuth2Error } from '../../../../../../core/oauth2/helpers';
 import { TokenControllerContext } from './types';
 import {
+    IIdentityResolver,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
-    OAuth2IdentityResolver,
     OAuth2OpenIDClaimsBuilder,
 } from '../../../../../../core';
 import {
@@ -56,6 +57,8 @@ export class TokenController {
 
     protected tokenRevoker: IOAuth2TokenRevoker;
 
+    protected identityResolver : IIdentityResolver;
+
     protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPGrant>;
 
     // -------------------------------------------
@@ -66,6 +69,7 @@ export class TokenController {
         this.accessTokenIssuer = ctx.accessTokenIssuer;
         this.tokenVerifier = ctx.tokenVerifier;
         this.tokenRevoker = ctx.tokenRevoker;
+        this.identityResolver = ctx.identityResolver;
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
@@ -121,8 +125,11 @@ export class TokenController {
                 realmId: payload.realm_id,
             });
 
-            const identityResolver = new OAuth2IdentityResolver();
-            const identity = await identityResolver.resolve(payload);
+            const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
+            if (!identity) {
+                // todo: differentiate between client, robot & user
+                throw new NotFoundError();
+            }
 
             const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
             const claims = claimsBuilder.fromIdentity(identity);

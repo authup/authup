@@ -5,7 +5,12 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../../../../../../core';
+import type {
+    IIdentityResolver,
+    IOAuth2TokenIssuer,
+    IOAuth2TokenRevoker,
+    IOAuth2TokenVerifier,
+} from '../../../../../../core';
 
 export type TokenControllerContext = {
     /**
@@ -17,4 +22,6 @@ export type TokenControllerContext = {
     refreshTokenIssuer: IOAuth2TokenIssuer,
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRevoker: IOAuth2TokenRevoker,
+
+    identityResolver: IIdentityResolver
 };

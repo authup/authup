@@ -13,7 +13,7 @@ import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { ClientCredentialsGrant } from '../../../../core';
-import { ClientAuthenticationService } from '../../../../services';
+import { ClientAuthenticator } from '../../../../services';
 import type { IHTTPGrant } from './types';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPGrant {
@@ -39,7 +39,7 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
             clientSecret = header.password;
         }
 
-        const authenticationService = new ClientAuthenticationService();
+        const authenticationService = new ClientAuthenticator();
 
         const client = await authenticationService.authenticate(clientId, clientSecret, realmId);
 

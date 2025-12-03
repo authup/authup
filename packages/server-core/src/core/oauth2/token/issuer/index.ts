@@ -6,7 +6,7 @@
  */
 
 export * from './access';
-export * from './id';
+export * from './open-id';
 export * from './refresh';
 
 export * from './types';

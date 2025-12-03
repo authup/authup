@@ -11,21 +11,22 @@ import {
     OAuth2ClientScopeRepository,
     OAuth2TokenRepository,
 } from '../../adapters/database';
+import type { IIdentityResolver } from '../../core';
 import {
+    IDENTITY_RESOLVER_TOKEN,
     OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
     OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN,
     OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
     OAUTH2_AUTHORIZATION_STATE_MANAGER_TOKEN,
-    OAUTH2_IDENTITY_RESOLVER_TOKEN,
     OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN,
     OAUTH2_REFRESH_TOKEN_ISSUER_TOKEN,
     OAUTH2_TOKEN_REVOKER_TOKEN,
     OAUTH2_TOKEN_VERIFIER_TOKEN,
-    OAuth2AccessTokenIssuer,
 
+    OAuth2AccessTokenIssuer,
     OAuth2AuthorizationCodeIssuer,
-    OAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationStateManager,
-    OAuth2IdentityResolver,
+    OAuth2AuthorizationCodeRequestVerifier,
+    OAuth2AuthorizationStateManager,
     OAuth2KeyRepository,
     OAuth2OpenIDTokenIssuer,
     OAuth2RefreshTokenIssuer,
@@ -77,11 +78,6 @@ export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
         useFactory: () => new OAuth2AuthorizationStateManager(stateRepository),
     });
 
-    // identity resolver
-    container.register(OAUTH2_IDENTITY_RESOLVER_TOKEN, {
-        useFactory: () => new OAuth2IdentityResolver(),
-    });
-
     // token revoker
     container.register(OAUTH2_TOKEN_REVOKER_TOKEN, {
         useFactory: () => new OAuth2TokenRevoker(tokenRepository),
@@ -116,12 +112,20 @@ export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
 
     // refresh token issuer
     container.register(OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN, {
-        useFactory: () => new OAuth2OpenIDTokenIssuer(
-            tokenRepository,
-            tokenSigner,
-            {
-                maxAge: options.idTokenMaxAge,
-            },
-        ),
+        useFactory: (c) => {
+            const identityResolver = c.resolve<IIdentityResolver>(
+                IDENTITY_RESOLVER_TOKEN,
+            );
+            return new OAuth2OpenIDTokenIssuer({
+                repository: tokenRepository,
+                signer: tokenSigner,
+
+                identityResolver,
+
+                options: {
+                    maxAge: options.idTokenMaxAge,
+                },
+            });
+        },
     });
 }

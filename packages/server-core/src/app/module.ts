@@ -29,7 +29,7 @@ import {
 } from '../adapters/http';
 import type { Component } from '../components';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../services';
-import { registerOAuth2Dependencies } from './dependencies';
+import { registerIdentityDependencies, registerOAuth2Dependencies } from './dependencies';
 
 export class Application {
     protected config : Config;
@@ -143,6 +143,8 @@ export class Application {
     }
 
     async initCore() {
+        registerIdentityDependencies();
+
         registerOAuth2Dependencies({
             tokenAccessMaxAge: this.config.tokenAccessMaxAge,
             tokenRefreshMaxAge: this.config.tokenRefreshMaxAge,

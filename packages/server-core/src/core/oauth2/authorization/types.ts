@@ -5,18 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityResolver } from '../identity';
-import type { IOAuth2TokenIssuer } from '../token';
+import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token';
 import type { IOAuth2AuthorizationCodeIssuer } from './code';
+import type { IIdentityResolver } from '../../identity';
 
 export type OAuth2AuthorizationManagerContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,
-    openIdTokenIssuer: IOAuth2TokenIssuer,
+    openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
     codeIssuer: IOAuth2AuthorizationCodeIssuer,
-    /**
-     * todo: avoid this.
-     */
-    identityResolver: OAuth2IdentityResolver
+    identityResolver: IIdentityResolver
 };
 
 export type OAuth2AuthorizationResult = {

@@ -21,7 +21,7 @@ import {
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
 } from '../../../../request';
-import { UserCredentialsService } from '../../../../../../services/credential/impl';
+import { UserCredentialsService } from '../../../../../../core/authentication/credential/entities';
 
 export async function writeUserRouteHandler(
     req: Request,

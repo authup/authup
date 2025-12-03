@@ -7,5 +7,8 @@
 
 export * from '../adapters/domain-event-publisher';
 export * from '../adapters/ldap';
-export * from './oauth2';
 export * from '../adapters/smtp';
+
+export * from './authentication';
+export * from './oauth2';
+export * from './identity';

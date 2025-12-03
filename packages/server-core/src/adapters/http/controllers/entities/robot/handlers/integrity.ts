@@ -24,7 +24,7 @@ import {
 } from '../../../../../database/domains';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services';
 import { useRequestParamID } from '../../../../request';
-import { RobotCredentialsService } from '../../../../../../services/credential/impl';
+import { RobotCredentialsService } from '../../../../../../core/authentication/credential/entities';
 
 export async function handleRobotIntegrityRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req, {

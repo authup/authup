@@ -7,9 +7,9 @@
 
 import { buildPermissionItemKey, mergePermissionItems } from '../helpers';
 import type { PermissionItem } from '../types';
-import type { PermissionGetOptions, PermissionProvider } from './types';
+import type { IPermissionProvider, PermissionGetOptions } from './types';
 
-export class PermissionMemoryProvider implements PermissionProvider {
+export class PermissionMemoryProvider implements IPermissionProvider {
     protected items : Record<string, PermissionItem> = {};
 
     constructor(items: PermissionItem[] = []) {
