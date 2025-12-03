@@ -9,3 +9,4 @@ export * from './entities';
 export * from './resolver';
 
 export * from './constants';
+export * from './types';

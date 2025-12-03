@@ -6,9 +6,8 @@
  */
 
 import type { Robot } from '@authup/core-kit';
+import type { IIdentityRepository } from '../../types';
 
-export interface IRobotIdentityRepository {
-    findById(id: string) : Promise<Robot | null>;
+export interface IRobotIdentityRepository extends IIdentityRepository<Robot> {
 
-    findByName(id: string, realm?: string) : Promise<Robot | null>;
 }

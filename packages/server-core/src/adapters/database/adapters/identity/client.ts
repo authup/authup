@@ -8,7 +8,7 @@
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Client } from '@authup/core-kit';
-import type { IClientIdentityRepository } from '../../../../core/identity';
+import type { IClientIdentityRepository } from '../../../../core';
 import { ClientRepository } from '../../domains';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
@@ -43,8 +43,12 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
                 }
             }
         }
-
-        query.addSelect('client.secret');
+        const { columns } = repository.metadata;
+        for (let i = 0; i < columns.length; i++) {
+            if (!columns[i].isSelect) {
+                query.addSelect(`client.${columns[i].databaseName}`);
+            }
+        }
 
         return query.getOne();
     }

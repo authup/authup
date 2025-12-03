@@ -8,7 +8,7 @@
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
-import type { IRobotIdentityRepository } from '../../../../core/identity';
+import type { IRobotIdentityRepository } from '../../../../core';
 import { RobotRepository } from '../../domains';
 
 export class RobotIdentityRepository implements IRobotIdentityRepository {
@@ -44,7 +44,12 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
             }
         }
 
-        query.addSelect('robot.secret');
+        const { columns } = repository.metadata;
+        for (let i = 0; i < columns.length; i++) {
+            if (!columns[i].isSelect) {
+                query.addSelect(`robot.${columns[i].databaseName}`);
+            }
+        }
 
         return query.getOne();
     }

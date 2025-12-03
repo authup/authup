@@ -6,9 +6,8 @@
  */
 
 import type { User } from '@authup/core-kit';
+import type { IIdentityRepository } from '../../types';
 
-export interface IUserIdentityRepository {
-    findById(id: string) : Promise<User | null>;
+export interface IUserIdentityRepository extends IIdentityRepository<User> {
 
-    findByName(id: string, realm?: string) : Promise<User | null>;
 }

@@ -6,9 +6,8 @@
  */
 
 import type { Client } from '@authup/core-kit';
+import type { IIdentityRepository } from '../../types';
 
-export interface IClientIdentityRepository {
-    findById(id: string) : Promise<Client | null>;
+export interface IClientIdentityRepository extends IIdentityRepository<Client> {
 
-    findByName(id: string, realm?: string) : Promise<Client | null>;
 }
