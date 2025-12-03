@@ -8,9 +8,6 @@
 import { type Factory, singa } from 'singa';
 import type { Logger } from 'winston';
 
-export type {
-    Logger,
-};
 const instance = singa<Logger>({
     name: 'logger',
 });

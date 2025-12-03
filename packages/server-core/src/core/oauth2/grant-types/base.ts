@@ -7,7 +7,7 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker } from '../token';
+import type { IOAuth2TokenIssuer } from '../token';
 import type { BaseGrantContext, IOAuth2Grant } from './types';
 
 export abstract class BaseGrant<

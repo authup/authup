@@ -29,8 +29,6 @@
             }
         ],
         "import/no-relative-packages": "off",
-        "no-useless-constructor": "off",
-        "no-empty-function": "off",
         "no-use-before-define": "off",
         "no-underscore-dangle": "off",
         "no-shadow": "off",
