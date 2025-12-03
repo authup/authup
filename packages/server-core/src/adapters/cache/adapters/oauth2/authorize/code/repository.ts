@@ -40,11 +40,7 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
         input: OAuth2AuthorizationCodeInput,
         options: OAuth2AuthorizationCodeRepositorySaveOptions = {},
     ): Promise<OAuth2AuthorizationCode> {
-        let ttl: number | undefined;
-
-        if (options.maxAge) {
-            ttl = options.maxAge * 1_000;
-        }
+        const ttl = (options.maxAge || 300) * 1_000;
 
         if (!input.id) {
             input.id = randomBytes(10).toString('hex');
