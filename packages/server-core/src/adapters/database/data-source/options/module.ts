@@ -16,7 +16,7 @@ import { DatabaseQueryResultCache } from '../../cache';
 
 export function extendDataSourceOptions(options: DataSourceOptions) : DataSourceOptions {
     if (options.type === 'mysql' || options.type === 'postgres') {
-        let migrationPath = `src/database/migrations/${options.type}/*.{ts,js}`;
+        let migrationPath = `src/adapters/database/migrations/${options.type}/*.{ts,js}`;
         if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
             migrationPath = transformFilePath(migrationPath, './dist', './src');
         }
