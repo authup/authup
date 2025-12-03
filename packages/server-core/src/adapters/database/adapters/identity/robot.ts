@@ -5,6 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
@@ -50,6 +51,14 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
                 query.addSelect(`robot.${columns[i].databaseName}`);
             }
         }
+
+        query.cache(
+            buildRedisKeyPath({
+                prefix: CachePrefix.ROBOT,
+                key: payload.realm_id,
+            }),
+            60_000,
+        );
 
         return query.getOne();
     }

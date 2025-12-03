@@ -5,6 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { User } from '@authup/core-kit';
@@ -50,6 +51,14 @@ export class UserIdentityRepository implements IUserIdentityRepository {
                 query.addSelect(`user.${columns[i].databaseName}`);
             }
         }
+
+        query.cache(
+            buildRedisKeyPath({
+                prefix: CachePrefix.USER,
+                key: payload.realm_id,
+            }),
+            60_000,
+        );
 
         const entity = await query.getOne();
         if (entity) {
