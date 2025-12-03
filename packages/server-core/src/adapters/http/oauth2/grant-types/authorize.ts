@@ -61,7 +61,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             remote_address: getRequestIP(req, { trustProxy: true }),
         });
 
-        await this.codeRepository.remove(entity.id);
+        await this.codeRepository.removeById(entity.id);
 
         return tokenGrantResponse;
     }
