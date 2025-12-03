@@ -66,7 +66,7 @@
         "@validup/adapter-routup": "^0.1.10",
         "@validup/adapter-validator": "^0.2.1",
         "@validup/adapter-zod": "^0.1.11",
-        "better-sqlite3": "^12.4.6",
+        "better-sqlite3": "^12.5.0",
         "citty": "^0.1.6",
         "confinity": "^1.0.0-beta.1",
         "cors": "^2.8.5",
@@ -102,9 +102,9 @@
         "unplugin-swc": "^1.5.9",
         "jest-serial-runner": "^1.2.1",
         "supertest": "^7.1.4",
-        "testcontainers": "^11.8.1",
+        "testcontainers": "^11.9.0",
         "ts-node": "^10.8.2",
-        "vite": "^7.0.0",
+        "vite": "^7.2.6",
         "vitest": "^4.0.14"
     },
     "publishConfig": {
