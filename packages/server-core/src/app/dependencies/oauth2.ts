@@ -9,6 +9,7 @@ import { container } from 'tsyringe';
 import {
     OAuth2ClientRepository,
     OAuth2ClientScopeRepository,
+    OAuth2KeyRepository,
     OAuth2TokenRepository,
 } from '../../adapters/database';
 import type { IIdentityResolver } from '../../core';
@@ -27,7 +28,6 @@ import {
     OAuth2AuthorizationCodeIssuer,
     OAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationStateManager,
-    OAuth2KeyRepository,
     OAuth2OpenIDTokenIssuer,
     OAuth2RefreshTokenIssuer,
     OAuth2TokenRevoker,

@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2025-2025.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
+ * Copyright (c) 2025.
+ *  Author Peter Placzek (tada5hi)
+ *  For the full copyright and license information,
+ *  view the LICENSE file that was distributed with this source code.
  */
 
 import type { Key } from '@authup/core-kit';
 import { CryptoAsymmetricAlgorithm, CryptoKeyContainer, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWTAlgorithm } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '../../../adapters/database/domains';
-import type { IOAuth2KeyRepository } from './index';
+import { KeyEntity } from '../../../domains';
+import type { IOAuth2KeyRepository } from '../../../../../core/oauth2/key';
 
 export class OAuth2KeyRepository implements IOAuth2KeyRepository {
     async findByRealmId(realmId: string): Promise<Key | null> {
