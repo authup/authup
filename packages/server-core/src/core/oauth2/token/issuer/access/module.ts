@@ -9,7 +9,7 @@ import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import { randomUUID } from 'node:crypto';
 import type { OAuth2TokenSigner } from '../../signer';
-import type { IOAuth2TokenRepository } from '../../types';
+import type { IOAuth2TokenRepository } from '../../repository/types';
 import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types';
 
 export class OAuth2AccessTokenIssuer implements IOAuth2TokenIssuer {

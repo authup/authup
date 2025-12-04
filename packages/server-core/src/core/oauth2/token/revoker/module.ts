@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/specs';
-import type { IOAuth2TokenRepository } from '../types';
+import type { IOAuth2TokenRepository } from '../repository/types';
 import type { IOAuth2TokenRevoker } from './types';
 
 export class OAuth2TokenRevoker implements IOAuth2TokenRevoker {

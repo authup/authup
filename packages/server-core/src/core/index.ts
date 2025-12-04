@@ -12,3 +12,5 @@ export * from '../adapters/smtp';
 export * from './authentication';
 export * from './oauth2';
 export * from './identity';
+
+export * from './ldap';

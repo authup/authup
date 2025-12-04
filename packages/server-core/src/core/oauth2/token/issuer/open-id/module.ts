@@ -11,7 +11,7 @@ import { randomUUID } from 'node:crypto';
 import type { Identity } from '@authup/core-kit';
 import { OAuth2OpenIDClaimsBuilder } from '../../../openid';
 import type { OAuth2TokenSigner } from '../../signer';
-import type { IOAuth2TokenRepository } from '../../types';
+import type { IOAuth2TokenRepository } from '../../repository/types';
 import type {
     OAuth2TokenIssuerOptions,
     OAuth2TokenIssuerResponse,

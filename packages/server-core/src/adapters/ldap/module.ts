@@ -10,9 +10,10 @@ import {
     DN,
     createClient, parseDN,
 } from 'ldapjs';
+import type { ILdapClient } from '../../core';
 import type { LdapClientOptions } from './types';
 
-export class LdapClient {
+export class LdapClient implements ILdapClient {
     protected options : LdapClientOptions;
 
     protected driver : Client;
