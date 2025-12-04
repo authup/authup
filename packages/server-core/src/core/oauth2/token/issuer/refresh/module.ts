@@ -8,7 +8,7 @@
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import type { OAuth2TokenSigner } from '../../signer';
-import type { IOAuth2TokenRepository } from '../../repository/types';
+import type { IOAuth2TokenRepository } from '../../repository';
 import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types';
 
 export class OAuth2RefreshTokenIssuer implements IOAuth2TokenIssuer {
@@ -16,7 +16,7 @@ export class OAuth2RefreshTokenIssuer implements IOAuth2TokenIssuer {
 
     protected signer : OAuth2TokenSigner;
 
-    readonly options: OAuth2TokenIssuerOptions;
+    protected options: OAuth2TokenIssuerOptions;
 
     constructor(
         repository: IOAuth2TokenRepository,

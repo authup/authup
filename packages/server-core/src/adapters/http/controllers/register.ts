@@ -37,13 +37,14 @@ import {
     UserController,
     UserPermissionController,
     UserRoleController,
-    createIdentityProviderController,
+    createHTTPIdentityProviderController,
 } from './entities';
 import {
     JwkController,
     OpenIDController,
     StatusController,
-    buildOAuth2Controllers,
+    createHTTPAuthorizeController,
+    createHTTPTokenController,
 } from './workflows';
 
 export function registerHTTPControllers(
@@ -51,7 +52,8 @@ export function registerHTTPControllers(
 ) {
     router.use(decorators({
         controllers: [
-            ...buildOAuth2Controllers(),
+            createHTTPAuthorizeController(),
+            createHTTPTokenController(),
             JwkController,
             OpenIDController,
 
@@ -62,7 +64,7 @@ export function registerHTTPControllers(
             ClientRoleController,
             ClientScopeController,
             OAuth2ProviderRoleController,
-            createIdentityProviderController(),
+            createHTTPIdentityProviderController(),
             PermissionController,
             PolicyController,
             RobotController,

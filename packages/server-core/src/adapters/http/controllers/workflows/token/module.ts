@@ -21,7 +21,7 @@ import { SerializeOptions, setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { useDataSource } from 'typeorm-extension';
 import { pickRecord } from '@authup/kit';
-import { toOAuth2Error } from '../../../../../../core/oauth2/helpers';
+import { toOAuth2Error } from '../../../../../core/oauth2/helpers';
 import { TokenControllerContext } from './types';
 import {
     IIdentityResolver,
@@ -29,7 +29,7 @@ import {
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
     OAuth2OpenIDClaimsBuilder,
-} from '../../../../../../core';
+} from '../../../../../core';
 import {
     HTTPClientCredentialsGrant,
     HTTPOAuth2AuthorizeGrant,
@@ -38,9 +38,9 @@ import {
     HTTPRobotCredentialsGrant,
     IHTTPGrant,
     guessOauth2GrantTypeByRequest,
-} from '../../../../adapters';
+} from '../../../adapters';
 import { extractTokenFromRequest } from './utils';
-import { IdentityPermissionService } from '../../../../../../services';
+import { IdentityPermissionService } from '../../../../../services';
 
 @DTags('auth')
 @DController('/token')
@@ -197,19 +197,24 @@ export class TokenController {
             grantResponse.access_token,
             {
                 ...cookieOptions,
-                maxAge: (this.accessTokenIssuer.options.maxAge || 3600) * 1000,
+                maxAge: grantResponse.expires_in * 1_000,
             },
         );
 
-        setResponseCookie(
-            res,
-            CookieName.REFRESH_TOKEN,
-            grantResponse.refresh_token,
-            {
-                ...cookieOptions,
-                maxAge: (this.accessTokenIssuer.options.maxAge || 3600) * 1000,
-            },
-        );
+        if (
+            grantResponse.refresh_token &&
+            grantResponse.refresh_token_expires_in
+        ) {
+            setResponseCookie(
+                res,
+                CookieName.REFRESH_TOKEN,
+                grantResponse.refresh_token,
+                {
+                    ...cookieOptions,
+                    maxAge: grantResponse.refresh_token_expires_in * 1_000,
+                },
+            );
+        }
 
         return grantResponse;
     }

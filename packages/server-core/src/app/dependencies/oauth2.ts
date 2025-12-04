@@ -38,6 +38,10 @@ import {
 import { OAuth2AuthorizationCodeRepository, OAuth2AuthorizationStateRepository } from '../../adapters';
 
 export type OAuth2BootstrapOptions = {
+    /**
+     * Issuer of tokens.
+     */
+    issuer: string,
     tokenAccessMaxAge: number,
     tokenRefreshMaxAge: number,
     authorizationCodeMaxAge: number,
@@ -99,6 +103,7 @@ export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
             tokenSigner,
             {
                 maxAge: options.tokenAccessMaxAge,
+                issuer: options.issuer,
             },
         ),
     });
@@ -110,11 +115,12 @@ export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
             tokenSigner,
             {
                 maxAge: options.tokenAccessMaxAge,
+                issuer: options.issuer,
             },
         ),
     });
 
-    // refresh token issuer
+    // open-id token issuer
     container.register(OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN, {
         useFactory: (c) => {
             const identityResolver = c.resolve<IIdentityResolver>(
@@ -128,6 +134,7 @@ export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
 
                 options: {
                     maxAge: options.idTokenMaxAge,
+                    issuer: options.issuer,
                 },
             });
         },

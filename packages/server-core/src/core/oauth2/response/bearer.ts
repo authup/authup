@@ -5,25 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import type { OAuth2BearerResponseBuildContext } from './type';
+
+function resolveExpiresIn(payload?: OAuth2TokenPayload, fallbackValue?: number) : number | null {
+    if (payload && payload.exp) {
+        return payload.exp - Math.floor(new Date().getTime() / 1000);
+    }
+
+    return fallbackValue || 3_600;
+}
 
 export function buildOAuth2BearerTokenResponse(
     context: OAuth2BearerResponseBuildContext,
 ) : OAuth2TokenGrantResponse {
-    let accessTokenMaxAge : number;
-    if (
-        context.accessTokenPayload &&
-        context.accessTokenPayload.exp
-    ) {
-        accessTokenMaxAge = Math.max(3600, context.accessTokenPayload.exp - Math.floor(new Date().getTime() / 1000));
-    } else {
-        accessTokenMaxAge = 3600;
-    }
-
     const response : OAuth2TokenGrantResponse = {
         access_token: context.accessToken,
-        expires_in: accessTokenMaxAge,
+        expires_in: resolveExpiresIn(context.accessTokenPayload),
         token_type: 'Bearer',
     };
 
@@ -35,6 +33,7 @@ export function buildOAuth2BearerTokenResponse(
 
     if (context.refreshToken) {
         response.refresh_token = context.refreshToken;
+        response.refresh_token_expires_in = resolveExpiresIn(context.refreshTokenPayload);
     }
 
     if (context.idToken) {

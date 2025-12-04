@@ -21,7 +21,5 @@ export type OAuth2TokenIssuerOptions = {
 };
 
 export interface IOAuth2TokenIssuer {
-    readonly options: OAuth2TokenIssuerOptions;
-
     issue(input: OAuth2TokenPayload, options?: OAuth2TokenIssuerOptions) : Promise<OAuth2TokenIssuerResponse>;
 }

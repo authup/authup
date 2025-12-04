@@ -119,6 +119,7 @@ class TestSuite {
             tokenRefreshMaxAge: this.config.tokenRefreshMaxAge,
             authorizationCodeMaxAge: 60 * 5,
             idTokenMaxAge: this.config.tokenAccessMaxAge,
+            issuer: this.config.publicUrl,
         });
     }
 

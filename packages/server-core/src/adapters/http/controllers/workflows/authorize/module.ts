@@ -12,14 +12,14 @@ import { URL } from 'node:url';
 import { send } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { type Client, OAuth2AuthorizationCodeRequest, type Scope } from '@authup/core-kit';
-import { ForceUserLoggedInMiddleware } from '../../../../middleware';
-import { HTTPOAuth2Authorizer } from '../../../../adapters/oauth2';
+import { ForceUserLoggedInMiddleware } from '../../../middleware';
+import { HTTPOAuth2Authorizer } from '../../../adapters/oauth2';
 import {
     IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestValidator,
-} from '../../../../../../core';
-import { sanitizeError } from '../../../../../../utils';
-import { sendClientResponse } from '../../../../response';
+} from '../../../../../core';
+import { sanitizeError } from '../../../../../utils';
+import { sendClientResponse } from '../../../response';
 import { AuthorizeControllerContext } from './types';
 
 @DController('/authorize')

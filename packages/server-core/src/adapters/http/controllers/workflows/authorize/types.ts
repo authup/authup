@@ -11,7 +11,7 @@ import type {
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
-} from '../../../../../../core';
+} from '../../../../../core';
 
 export type AuthorizeControllerContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,

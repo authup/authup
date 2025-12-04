@@ -11,12 +11,9 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
-} from '../../../../../../core';
+} from '../../../../../core';
 
 export type TokenControllerContext = {
-    /**
-     * config.cookieDomain or config.publicUrl
-     */
     cookieDomain?: string,
 
     codeVerifier: IOAuth2AuthorizationCodeVerifier,

@@ -20,7 +20,7 @@ import {
 } from '../../../../../core';
 import { IdentityProviderController } from './module';
 
-export function createIdentityProviderController() {
+export function createHTTPIdentityProviderController() {
     const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
         OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
     );
