@@ -85,6 +85,7 @@
         "routup": "^4.0.0",
         "smob": "^1.5.0",
         "singa": "^1.1.0",
+        "tsyringe": "^4.10.0",
         "typeorm": "^0.3.27",
         "typeorm-extension": "^3.7.2",
         "uncrypto": "^0.1.3",

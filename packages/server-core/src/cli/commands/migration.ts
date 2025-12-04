@@ -15,7 +15,7 @@ import {
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { applyConfig, useConfig } from '../../config';
-import { extendDataSourceOptions } from '../../database';
+import { extendDataSourceOptions } from '../../adapters/database';
 
 enum MigrationOperation {
     GENERATE = 'generate',

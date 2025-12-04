@@ -7,11 +7,11 @@
 
 import type {
     CompositePolicy,
+    IPermissionProvider,
     IdentityPolicy,
     PermissionBindingPolicy,
     PermissionGetOptions,
     PermissionItem,
-    PermissionProvider,
     PolicyWithType,
     RealmMatchPolicy,
 } from '@authup/access';
@@ -19,9 +19,9 @@ import { BuiltInPolicyType, DecisionStrategy, buildPermissionItemKey } from '@au
 import type { Permission } from '@authup/core-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { CachePrefix, PermissionEntity, PolicyRepository } from '../../../database/domains';
+import { CachePrefix, PermissionEntity, PolicyRepository } from '../../../adapters/database/domains';
 
-export class PermissionDBProvider implements PermissionProvider {
+export class PermissionDBProvider implements IPermissionProvider {
     protected dataSource: DataSource;
 
     protected repository : Repository<PermissionEntity>;

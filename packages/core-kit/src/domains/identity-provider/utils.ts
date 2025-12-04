@@ -9,11 +9,11 @@ import type { NameValidOptions } from '../../helpers';
 import { isNameValid } from '../../helpers';
 
 export function buildIdentityProviderAuthorizeCallbackPath(id: string | number) {
-    return `/identity-providers/${id}/authorize-callback`;
+    return `/identity-providers/${id}/authorize-in`;
 }
 
 export function buildIdentityProviderAuthorizePath(id: string | number) {
-    return `/identity-providers/${id}/authorize-url`;
+    return `/identity-providers/${id}/authorize-out`;
 }
 
 export function isIdentityProviderNameValid(input: string, options: NameValidOptions = {}) : boolean {

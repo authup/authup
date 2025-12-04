@@ -6,7 +6,7 @@
  */
 
 import { useDataSource } from 'typeorm-extension';
-import { PermissionEntity, RoleEntity } from '../../database/domains';
+import { PermissionEntity, RoleEntity } from '../../adapters/database/domains';
 import type { Component } from '../types';
 
 export class DatabaseUniqueEntriesComponent implements Component {

@@ -18,6 +18,7 @@ import type { Config } from '../../src';
 import {
     DatabaseSeeder, applyConfig, createRouter, extendDataSourceOptions, normalizeConfig, readConfigRawFromEnv, setConfig, setDataSourceSync,
 } from '../../src';
+import { registerIdentityDependencies, registerOAuth2Dependencies } from '../../src/app/dependencies';
 
 class TestSuite {
     protected config : Config;
@@ -68,9 +69,11 @@ class TestSuite {
     }
 
     async up() {
-        await this.startDatabase();
+        await this.initDatabase();
 
-        await this.startServer();
+        await this.initDependencies();
+
+        await this.initServer();
     }
 
     async down() {
@@ -79,7 +82,7 @@ class TestSuite {
         this.stopServer();
     }
 
-    protected async startServer() : Promise<void> {
+    protected async initServer() : Promise<void> {
         const router = await createRouter();
         const server = createServer(createNodeDispatcher(router));
 
@@ -108,7 +111,19 @@ class TestSuite {
         this._server = undefined;
     }
 
-    protected async startDatabase() {
+    protected initDependencies() {
+        registerIdentityDependencies();
+
+        registerOAuth2Dependencies({
+            tokenAccessMaxAge: this.config.tokenAccessMaxAge,
+            tokenRefreshMaxAge: this.config.tokenRefreshMaxAge,
+            authorizationCodeMaxAge: 60 * 5,
+            idTokenMaxAge: this.config.tokenAccessMaxAge,
+            issuer: this.config.publicUrl,
+        });
+    }
+
+    protected async initDatabase() {
         if (this._dataSource) {
             return;
         }
@@ -122,7 +137,13 @@ class TestSuite {
             migrations: [],
         });
 
+        const { subscribers } = options;
+
         await createDatabase({ options });
+
+        Object.assign(options, {
+            subscribers,
+        });
 
         const dataSource = new DataSource(options);
         await dataSource.initialize();

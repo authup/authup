@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot } from '../robot';
-import type { User } from '../user';
+import type { OAuth2SubKind } from '@authup/specs';
 import type { Client } from '../client';
 import type { Realm } from '../realm';
 
@@ -25,9 +24,9 @@ export interface OAuth2AuthorizationCode {
 
     client_id?: Client['id'] | null,
 
-    user_id?: User['id'] | null,
+    sub?: string | null,
 
-    robot_id?: Robot['id'] | null,
+    sub_kind?: `${OAuth2SubKind}`,
 
     realm_id: Realm['id'],
 
@@ -43,4 +42,5 @@ export type OAuth2AuthorizationCodeRequest = {
     state?: string,
     code_challenge?: string,
     code_challenge_method?: string,
+
 };

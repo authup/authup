@@ -9,7 +9,7 @@ import type { DecisionStrategy } from '../constants';
 import type {
     PolicyEngine, PolicyInput, PolicyWithType,
 } from '../policy';
-import type { PermissionProvider } from './provider';
+import type { IPermissionProvider } from './provider';
 
 export type PermissionItem = {
     name: string,
@@ -19,7 +19,7 @@ export type PermissionItem = {
 };
 
 export type PermissionCheckerOptions = {
-    provider?: PermissionProvider,
+    provider?: IPermissionProvider,
     policyEngine?: PolicyEngine,
     realmId?: string | null,
     clientId?: string | null

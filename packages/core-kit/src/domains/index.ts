@@ -14,6 +14,7 @@ export * from './client';
 export * from './client-role';
 export * from './client-permission';
 export * from './client-scope';
+export * from './identity';
 export * from './identity-provider';
 export * from './identity-provider-attribute';
 export * from './identity-provider-account';

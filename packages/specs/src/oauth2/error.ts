@@ -56,6 +56,25 @@ export class OAuth2Error extends AuthupError {
         });
     }
 
+    static identityInvalid() {
+        return new OAuth2Error({
+            message: 'The identity is not valid.',
+            data: {
+                error: OAuth2ErrorCode.INVALID_REQUEST,
+            },
+        });
+    }
+
+    static codeRequestInvalid() {
+        return new OAuth2Error({
+            message: 'The authorization code request is invalid.',
+            data: {
+                hint: 'Check if the code request is valid and contains all required parameters',
+                error: OAuth2ErrorCode.INVALID_REQUEST,
+            },
+        });
+    }
+
     static requestInvalid(message?: string) {
         return new OAuth2Error({
             message: message || 'The request is missing a required parameter, includes an unsupported parameter value, ' +

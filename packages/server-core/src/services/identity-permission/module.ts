@@ -14,7 +14,7 @@ import {
     RobotRepository,
     RoleRepository,
     UserRepository,
-} from '../../database/domains';
+} from '../../adapters/database/domains';
 
 export class IdentityPermissionService {
     protected dataSource: DataSource;

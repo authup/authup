@@ -13,6 +13,8 @@ export type OAuth2TokenGrantResponse = {
 
     refresh_token?: string,
 
+    refresh_token_expires_in?: number,
+
     expires_in: number,
 
     token_type: string,
@@ -25,6 +27,7 @@ export type OAuth2TokenGrantResponse = {
 
     scope?: string
 };
+
 export type OAuth2TokenPayload = JWTClaims & {
     /**
      * Token type
@@ -59,7 +62,7 @@ export type OAuth2TokenPayload = JWTClaims & {
     /**
      * Expires At
      */
-    exp: number,
+    exp?: number,
 
     /**
      * Not before

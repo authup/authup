@@ -10,7 +10,7 @@ import process from 'node:process';
 import {
     applyConfig, useConfig,
 } from '../../config';
-import { Application } from '../../module';
+import { Application } from '../../app/module';
 
 export function defineCLIResetCommand() {
     return defineCommand({

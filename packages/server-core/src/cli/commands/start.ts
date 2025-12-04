@@ -7,7 +7,7 @@
 
 import { defineCommand } from 'citty';
 import { applyConfig, useConfig } from '../../config';
-import { Application } from '../../module';
+import { Application } from '../../app/module';
 
 export function defineCLIStartCommand() {
     return defineCommand({
