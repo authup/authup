@@ -8,8 +8,9 @@
 import type { ConfigInput } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
+import type { IdentityProviderIdentity } from '../../../../core';
 import { OAuth2IdentityProviderFlow } from '../core';
-import type { IOAuth2IdentityProviderFlow, IdentityProviderIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
+import type { IOAuth2IdentityProviderFlow, OAuth2IdentityProviderFlowOptions } from '../types';
 
 export class GoogleIdentityProviderFlow extends OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

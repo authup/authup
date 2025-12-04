@@ -6,8 +6,13 @@
  */
 
 import type { User } from '@authup/core-kit';
+import type { IdentityProviderMapperElement } from '../../provider/mapper';
 import type { IIdentityRepository } from '../../types';
 
 export interface IUserIdentityRepository extends IIdentityRepository<User> {
+    savePermissions(user: User, items: IdentityProviderMapperElement[]) : Promise<void>;
 
+    saveRoles(user: User, items: IdentityProviderMapperElement[]) : Promise<void>;
+
+    saveOneWithEA(user: User, extraAttributes: Record<string, any>) : Promise<void>;
 }

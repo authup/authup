@@ -6,7 +6,9 @@
  */
 
 export * from './entities';
+export * from './provider';
 export * from './resolver';
 
 export * from './constants';
 export * from './types';
+export * from './provider';

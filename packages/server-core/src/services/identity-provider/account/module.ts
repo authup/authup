@@ -38,7 +38,7 @@ import {
     UserRelationItemSyncOperation,
     UserRepository,
 } from '../../../adapters/database/domains';
-import type { IdentityProviderIdentity } from '../flow';
+import type { IdentityProviderIdentity } from '../../../core';
 
 type ClaimAttribute = {
     value: unknown[],
@@ -90,7 +90,7 @@ export class IdentityProviderAccountService {
         if (account) {
             account.user = await this.updateUser(identity, account.user);
 
-            identity.status = 'updated';
+            identity.operation = 'updated';
         } else {
             const user = await this.createUser(identity);
 
@@ -104,7 +104,7 @@ export class IdentityProviderAccountService {
                 user_realm_id: user.realm_id,
             });
 
-            identity.status = 'created';
+            identity.operation = 'created';
         }
 
         await this.providerAccountRepository.save(account);
@@ -173,7 +173,7 @@ export class IdentityProviderAccountService {
         let operation : UserRelationItemSyncOperation;
         if (
             mapping.synchronization_mode === IdentityProviderMappingSyncMode.ONCE &&
-            identity.status === 'updated'
+            identity.operation === 'updated'
         ) {
             operation = UserRelationItemSyncOperation.NONE;
         } else if (!mapping.name || !mapping.value) {
@@ -230,7 +230,7 @@ export class IdentityProviderAccountService {
 
             if (entity.target_value) {
                 attributes[entity.target_name] = {
-                    value: [entity.target_value],
+                    value: entity.target_value,
                     mode: entity.synchronization_mode,
                 };
             } else {

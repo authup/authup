@@ -6,6 +6,7 @@
  */
 
 import type { DN, SearchOptions } from 'ldapjs';
+import type { LdapClientOptions } from '../../adapters/ldap';
 
 export interface ILdapClient {
     connected : boolean;
@@ -27,4 +28,8 @@ export interface ILdapClient {
     resolveDn(...input: (string | undefined)[]) : string | undefined;
 
     isDn(input: string | DN) : boolean;
+}
+
+export interface ILdapClientFactory {
+    create(options: LdapClientOptions) : ILdapClient;
 }

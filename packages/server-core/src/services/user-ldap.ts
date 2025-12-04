@@ -12,7 +12,8 @@ import type { FindOptionsWhere } from 'typeorm';
 import { isUUID } from '@authup/kit';
 import type { IdentityProviderEntity } from '../adapters/database/domains';
 import { IdentityProviderRepository, UserEntity } from '../adapters/database/domains';
-import type { IdentityProviderIdentity, LdapIdentityProviderFlowOptions } from './identity-provider';
+import type { IdentityProviderIdentity } from '../core';
+import type { LdapIdentityProviderFlowOptions } from './identity-provider';
 import { IdentityProviderAccountService, LdapIdentityProviderFlow } from './identity-provider';
 
 export class UserLdapAuthenticator {
