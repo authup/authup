@@ -5,29 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase, User,
-} from '@authup/core-kit';
+import type { IdentityProvider, LdapIdentityProvider, OAuth2IdentityProviderBase } from '@authup/core-kit';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import type { Request } from 'routup';
-
-export type IdentityProviderIdentityStatus = 'created' | 'updated';
-export type IdentityProviderIdentity = {
-    id: string,
-    /**
-     * Required for ldap authentication.
-     */
-    roles?: string[],
-    /**
-     * Attribute candidates discovered during
-     * authentication step (ldap, oauth2, ...).
-     */
-    attributeCandidates?: {
-        [K in keyof User]?: unknown[]
-    },
-    data: Record<string, any>
-    status?: IdentityProviderIdentityStatus,
-};
+import type { IdentityProviderIdentity } from '../../../core';
 
 export type LdapIdentityProviderFlowOptions = Omit<LdapIdentityProvider, keyof IdentityProvider>;
 export interface ILdapIdentityProviderFlow {

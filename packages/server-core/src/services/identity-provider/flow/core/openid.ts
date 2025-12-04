@@ -7,7 +7,8 @@
 
 import { extractTokenPayload } from '@authup/server-kit';
 import type { Request } from 'routup';
-import type { IOAuth2IdentityProviderFlow, IdentityProviderIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
+import type { IdentityProviderIdentity } from '../../../../core';
+import type { IOAuth2IdentityProviderFlow, OAuth2IdentityProviderFlowOptions } from '../types';
 import { OAuth2IdentityProviderFlow } from './oauth2';
 
 export class OpenIDIdentityProviderFlow extends OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {

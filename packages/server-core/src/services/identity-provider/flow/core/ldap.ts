@@ -10,8 +10,9 @@ import {
     AndFilter, EqualityFilter, OrFilter,
 } from 'ldapjs';
 import type { Filter } from 'ldapjs';
+import type { IdentityProviderIdentity } from '../../../../core';
 import { LdapClient } from '../../../../core';
-import type { ILdapIdentityProviderFlow, IdentityProviderIdentity, LdapIdentityProviderFlowOptions } from '../types';
+import type { ILdapIdentityProviderFlow, LdapIdentityProviderFlowOptions } from '../types';
 
 export class LdapIdentityProviderFlow implements ILdapIdentityProviderFlow {
     protected options : LdapIdentityProviderFlowOptions;

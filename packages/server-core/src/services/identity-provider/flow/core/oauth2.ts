@@ -12,7 +12,8 @@ import { OAuth2Client } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { useConfig } from '../../../../config';
-import type { IOAuth2IdentityProviderFlow, IdentityProviderIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
+import type { IdentityProviderIdentity } from '../../../../core';
+import type { IOAuth2IdentityProviderFlow, OAuth2IdentityProviderFlowOptions } from '../types';
 
 export class OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     protected client : OAuth2Client;

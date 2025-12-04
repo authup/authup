@@ -8,8 +8,9 @@
 import { extractTokenPayload } from '@authup/server-kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
+import type { IdentityProviderIdentity } from '../../../../core';
 import { OAuth2IdentityProviderFlow } from '../core';
-import type { IOAuth2IdentityProviderFlow, IdentityProviderIdentity, OAuth2IdentityProviderFlowOptions } from '../types';
+import type { IOAuth2IdentityProviderFlow, OAuth2IdentityProviderFlowOptions } from '../types';
 
 export class PaypalIdentityProviderFlow extends OAuth2IdentityProviderFlow implements IOAuth2IdentityProviderFlow {
     constructor(options: OAuth2IdentityProviderFlowOptions) {

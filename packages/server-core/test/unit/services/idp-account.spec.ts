@@ -12,8 +12,8 @@ import type { IdentityProvider, OAuth2IdentityProvider, Realm } from '@authup/co
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { undefined } from 'zod';
+import type { IdentityProviderIdentity } from '../../../src/core';
 import claims from '../../data/jwt.json';
-import type { IdentityProviderIdentity } from '../../../src';
 import {
     IdentityProviderAccountService,
     IdentityProviderPermissionMappingEntity,
