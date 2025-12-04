@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './adapters';
 export * from './controllers/entities';
 export * from './middleware';
 export * from './request';
 export * from './router';
 export * from './server';
 export * from './swagger';
-export * from '../../core/oauth2';

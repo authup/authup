@@ -13,7 +13,7 @@ import type {
     IOAuth2AuthorizationCodeRepository,
     OAuth2AuthorizeGrantContext,
     OAuth2PasswordGrantContext,
-} from '../../../../core';
+} from '../../../../../core';
 
 export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeRepository: IOAuth2AuthorizationCodeRepository

@@ -10,7 +10,7 @@ import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { User } from '@authup/core-kit';
 import type { IUserIdentityRepository } from '../../../../core';
-import { UserRepository } from '../../domains';
+import { CachePrefix, UserRepository } from '../../domains';
 
 export class UserIdentityRepository implements IUserIdentityRepository {
     async findById(id: string): Promise<User | null> {
@@ -27,7 +27,8 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         const query = repository.createQueryBuilder('user')
             .leftJoinAndSelect('user.realm', 'realm');
 
-        if (isUUID(key)) {
+        const isId = isUUID(key);
+        if (isId) {
             query.where('user.id = :id', { id: key });
         } else {
             query.where('user.name = :name', { name: key });
@@ -52,13 +53,15 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             }
         }
 
-        query.cache(
-            buildRedisKeyPath({
-                prefix: CachePrefix.USER,
-                key: payload.realm_id,
-            }),
-            60_000,
-        );
+        if (isId) {
+            query.cache(
+                buildRedisKeyPath({
+                    prefix: CachePrefix.USER,
+                    key,
+                }),
+                60_000,
+            );
+        }
 
         const entity = await query.getOne();
         if (entity) {

@@ -10,7 +10,7 @@ import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Client } from '@authup/core-kit';
 import type { IClientIdentityRepository } from '../../../../core';
-import { ClientRepository } from '../../domains';
+import { CachePrefix, ClientRepository } from '../../domains';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
     async findById(id: string): Promise<Client | null> {
@@ -27,7 +27,8 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
         const query = repository.createQueryBuilder('client')
             .leftJoinAndSelect('client.realm', 'realm');
 
-        if (isUUID(key)) {
+        const isId = isUUID(key);
+        if (isId) {
             query.where('client.id = :id', { id: key });
         } else {
             query.where('client.name = :name', { name: key });
@@ -51,13 +52,15 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
             }
         }
 
-        query.cache(
-            buildRedisKeyPath({
-                prefix: CachePrefix.CLIENT,
-                key: payload.realm_id,
-            }),
-            60_000,
-        );
+        if (isId) {
+            query.cache(
+                buildRedisKeyPath({
+                    prefix: CachePrefix.CLIENT,
+                    key,
+                }),
+                60_000,
+            );
+        }
 
         return query.getOne();
     }

@@ -8,8 +8,8 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { IdentityGrantType } from '../../../../core';
-import { useRequestIdentityOrFail } from '../../request';
+import { IdentityGrantType } from '../../../../../core';
+import { useRequestIdentityOrFail } from '../../../request';
 import type { IHTTPGrant } from './types';
 
 export class HTTPOAuth2IdentityGrantType extends IdentityGrantType implements IHTTPGrant {

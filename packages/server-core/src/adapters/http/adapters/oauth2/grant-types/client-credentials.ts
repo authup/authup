@@ -12,11 +12,11 @@ import { ClientError, IdentityType } from '@authup/core-kit';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import type { IIdentityResolver } from '../../../../core';
+import type { IIdentityResolver } from '../../../../../core';
 import {
     ClientAuthenticator,
     ClientCredentialsGrant,
-} from '../../../../core';
+} from '../../../../../core';
 import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPGrant } from './types';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPGrant {

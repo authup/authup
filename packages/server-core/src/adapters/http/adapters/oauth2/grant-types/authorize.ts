@@ -11,8 +11,8 @@ import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { OAuth2AuthorizeGrant, buildOAuth2CodeChallenge } from '../../../../core';
-import type { IOAuth2AuthorizationCodeRepository } from '../../../../core';
+import { OAuth2AuthorizeGrant, buildOAuth2CodeChallenge } from '../../../../../core';
+import type { IOAuth2AuthorizationCodeRepository } from '../../../../../core';
 import type { HTTPOAuth2AuthorizeGrantContext, IHTTPGrant } from './types';
 
 export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPGrant {

@@ -10,7 +10,7 @@ import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
 import type { IRobotIdentityRepository } from '../../../../core';
-import { RobotRepository } from '../../domains';
+import { CachePrefix, RobotRepository } from '../../domains';
 
 export class RobotIdentityRepository implements IRobotIdentityRepository {
     async findById(id: string): Promise<Robot | null> {
@@ -27,7 +27,8 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
         const query = repository.createQueryBuilder('robot')
             .leftJoinAndSelect('robot.realm', 'realm');
 
-        if (isUUID(key)) {
+        const isId = isUUID(key);
+        if (isId) {
             query.where('robot.id = :id', { id: key });
         } else {
             query.where('robot.name = :name', { name: key });
@@ -52,13 +53,15 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
             }
         }
 
-        query.cache(
-            buildRedisKeyPath({
-                prefix: CachePrefix.ROBOT,
-                key: payload.realm_id,
-            }),
-            60_000,
-        );
+        if (isId) {
+            query.cache(
+                buildRedisKeyPath({
+                    prefix: CachePrefix.ROBOT,
+                    key,
+                }),
+                60_000,
+            );
+        }
 
         return query.getOne();
     }

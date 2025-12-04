@@ -37,8 +37,8 @@ import {
     HTTPRobotCredentialsGrant,
     IHTTPGrant,
     guessOauth2GrantTypeByRequest,
-} from '../../../../oauth2';
-import { HTTPOAuth2AuthorizeGrant } from '../../../../oauth2/grant-types/authorize';
+} from '../../../../adapters/oauth2';
+import { HTTPOAuth2AuthorizeGrant } from '../../../../adapters/oauth2/grant-types/authorize';
 import { OAuth2AuthorizationCodeRepository } from '../../../../../cache';
 import { extractTokenFromRequest } from './utils';
 import { IdentityPermissionService } from '../../../../../../services';

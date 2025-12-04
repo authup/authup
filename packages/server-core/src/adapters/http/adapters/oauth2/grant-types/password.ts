@@ -10,46 +10,45 @@ import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { IdentityType, UserError } from '@authup/core-kit';
-import {
-    type IIdentityResolver,
-    RobotAuthenticator,
-    RobotCredentialsGrant,
-} from '../../../../core';
-import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPGrant } from './types';
+import type { IIdentityResolver } from '../../../../../core';
+import { PasswordGrantType, UserAuthenticator } from '../../../../../core';
+import type { HTTPOAuth2PasswordGrantContext, IHTTPGrant } from './types';
 
-export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPGrant {
-    protected authenticator : RobotAuthenticator;
+export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
+    protected authenticator : UserAuthenticator;
 
     protected identityResolver: IIdentityResolver;
 
-    constructor(ctx: HTTPOAuth2RobotCredentialsGrantContext) {
+    constructor(ctx: HTTPOAuth2PasswordGrantContext) {
         super(ctx);
 
-        this.authenticator = new RobotAuthenticator();
+        this.authenticator = new UserAuthenticator();
         this.identityResolver = ctx.identityResolver;
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
         const {
-            id,
-            secret,
+            username,
+            password,
             realm_id: realmId,
         } = useRequestBody(req);
 
+        // todo: alt lookup ldap service, grab and save account/user, set provider: LdapProvider
         const identity = await this.identityResolver.resolve(
-            IdentityType.ROBOT,
-            id,
+            IdentityType.USER,
+            username,
             realmId,
         );
 
-        if (!identity || identity.type !== IdentityType.ROBOT) {
+        if (!identity || identity.type !== IdentityType.USER) {
             throw UserError.credentialsInvalid();
         }
 
-        const entity = await this.authenticator.authenticate(identity.data, secret);
+        // todo: check in authenticator if authenticate is set.
+        const data = await this.authenticator.authenticate(identity.data, password);
 
         return this.runWith(
-            entity,
+            data,
             {
                 remote_address: getRequestIP(req, { trustProxy: true }),
             },

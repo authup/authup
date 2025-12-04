@@ -10,45 +10,46 @@ import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
 import { IdentityType, UserError } from '@authup/core-kit';
-import type { IIdentityResolver } from '../../../../core';
-import { PasswordGrantType, UserAuthenticator } from '../../../../core';
-import type { HTTPOAuth2PasswordGrantContext, IHTTPGrant } from './types';
+import {
+    type IIdentityResolver,
+    RobotAuthenticator,
+    RobotCredentialsGrant,
+} from '../../../../../core';
+import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPGrant } from './types';
 
-export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
-    protected authenticator : UserAuthenticator;
+export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPGrant {
+    protected authenticator : RobotAuthenticator;
 
     protected identityResolver: IIdentityResolver;
 
-    constructor(ctx: HTTPOAuth2PasswordGrantContext) {
+    constructor(ctx: HTTPOAuth2RobotCredentialsGrantContext) {
         super(ctx);
 
-        this.authenticator = new UserAuthenticator();
+        this.authenticator = new RobotAuthenticator();
         this.identityResolver = ctx.identityResolver;
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
         const {
-            username,
-            password,
+            id,
+            secret,
             realm_id: realmId,
         } = useRequestBody(req);
 
-        // todo: alt lookup ldap service, grab and save account/user, set provider: LdapProvider
         const identity = await this.identityResolver.resolve(
-            IdentityType.USER,
-            username,
+            IdentityType.ROBOT,
+            id,
             realmId,
         );
 
-        if (!identity || identity.type !== IdentityType.USER) {
+        if (!identity || identity.type !== IdentityType.ROBOT) {
             throw UserError.credentialsInvalid();
         }
 
-        // todo: check in authenticator if authenticate is set.
-        const data = await this.authenticator.authenticate(identity.data, password);
+        const entity = await this.authenticator.authenticate(identity.data, secret);
 
         return this.runWith(
-            data,
+            entity,
             {
                 remote_address: getRequestIP(req, { trustProxy: true }),
             },
