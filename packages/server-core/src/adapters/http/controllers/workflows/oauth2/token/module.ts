@@ -32,14 +32,13 @@ import {
 } from '../../../../../../core';
 import {
     HTTPClientCredentialsGrant,
+    HTTPOAuth2AuthorizeGrant,
     HTTPOAuth2RefreshTokenGrant,
     HTTPPasswordGrant,
     HTTPRobotCredentialsGrant,
     IHTTPGrant,
     guessOauth2GrantTypeByRequest,
-} from '../../../../adapters/oauth2';
-import { HTTPOAuth2AuthorizeGrant } from '../../../../adapters/oauth2/grant-types/authorize';
-import { OAuth2AuthorizationCodeRepository } from '../../../../../cache';
+} from '../../../../adapters';
 import { extractTokenFromRequest } from './utils';
 import { IdentityPermissionService } from '../../../../../../services';
 
@@ -72,7 +71,7 @@ export class TokenController {
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
-                codeRepository: new OAuth2AuthorizationCodeRepository(),
+                codeVerifier: ctx.codeVerifier,
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
             }),

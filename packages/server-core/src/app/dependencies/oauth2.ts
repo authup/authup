@@ -14,19 +14,20 @@ import {
 } from '../../adapters/database';
 import type { IIdentityResolver } from '../../core';
 import {
-    IDENTITY_RESOLVER_TOKEN,
-    OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
+    IDENTITY_RESOLVER_TOKEN, OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
     OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN,
     OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
+    OAUTH2_AUTHORIZATION_CODE_VERIFIER_TOKEN,
     OAUTH2_AUTHORIZATION_STATE_MANAGER_TOKEN,
     OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN,
     OAUTH2_REFRESH_TOKEN_ISSUER_TOKEN,
     OAUTH2_TOKEN_REVOKER_TOKEN,
     OAUTH2_TOKEN_VERIFIER_TOKEN,
-
     OAuth2AccessTokenIssuer,
+
     OAuth2AuthorizationCodeIssuer,
     OAuth2AuthorizationCodeRequestVerifier,
+    OAuth2AuthorizationCodeVerifier,
     OAuth2AuthorizationStateManager,
     OAuth2OpenIDTokenIssuer,
     OAuth2RefreshTokenIssuer,
@@ -64,6 +65,9 @@ export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
                 maxAge: options.authorizationCodeMaxAge,
             },
         ),
+    });
+    container.register(OAUTH2_AUTHORIZATION_CODE_VERIFIER_TOKEN, {
+        useFactory: () => new OAuth2AuthorizationCodeVerifier(codeRepository),
     });
 
     // authorization code request verifier

@@ -12,7 +12,7 @@ import { ScopeName } from '@authup/core-kit';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';
-import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src';
+import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
 import { createFakeClient, createTestSuite } from '../../../../../utils';
 
 describe('refresh-token', () => {

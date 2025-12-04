@@ -10,13 +10,13 @@ import type { Request } from 'routup';
 import type {
     BaseGrantContext,
     IIdentityResolver,
-    IOAuth2AuthorizationCodeRepository,
+    IOAuth2AuthorizationCodeVerifier,
     OAuth2AuthorizeGrantContext,
     OAuth2PasswordGrantContext,
 } from '../../../../../core';
 
 export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
-    codeRepository: IOAuth2AuthorizationCodeRepository
+    codeVerifier: IOAuth2AuthorizationCodeVerifier
 };
 
 export interface IHTTPGrant {

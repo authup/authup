@@ -66,7 +66,7 @@ export class LdapClient implements ILdapClient {
         });
     }
 
-    connected() : boolean {
+    get connected() : boolean {
         return this.driver.connected;
     }
 

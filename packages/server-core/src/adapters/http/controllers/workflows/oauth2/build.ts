@@ -10,16 +10,18 @@ import { AuthorizeController } from './authorize';
 import { TokenController } from './token';
 import type {
     IIdentityResolver,
-    IOAuth2AuthorizationCodeIssuer, IOAuth2AuthorizationCodeRequestVerifier, IOAuth2OpenIDTokenIssuer,
+    IOAuth2AuthorizationCodeIssuer, IOAuth2AuthorizationCodeRequestVerifier, IOAuth2AuthorizationCodeVerifier, IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
 } from '../../../../../core';
 import {
-    IDENTITY_RESOLVER_TOKEN, OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
+    IDENTITY_RESOLVER_TOKEN,
 
-    OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN,
+    OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN, OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN,
+
     OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
+    OAUTH2_AUTHORIZATION_CODE_VERIFIER_TOKEN,
     OAUTH2_OPEN_ID_TOKEN_ISSUER_TOKEN,
     OAUTH2_REFRESH_TOKEN_ISSUER_TOKEN,
     OAUTH2_TOKEN_REVOKER_TOKEN,
@@ -30,6 +32,10 @@ export function buildOAuth2Controllers() {
     const codeIssuer = container.resolve<IOAuth2AuthorizationCodeIssuer>(
         OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN,
     );
+    const codeVerifier = container.resolve<IOAuth2AuthorizationCodeVerifier>(
+        OAUTH2_AUTHORIZATION_CODE_VERIFIER_TOKEN,
+    );
+
     const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
         OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
     );
@@ -55,6 +61,7 @@ export function buildOAuth2Controllers() {
         new TokenController({
             cookieDomain: 'http://localhost:3000/',
 
+            codeVerifier,
             accessTokenIssuer,
             refreshTokenIssuer,
 

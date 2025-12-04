@@ -6,14 +6,11 @@
  */
 
 export const OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN = Symbol('OAuth2AuthorizationCodeIssuer');
+export const OAUTH2_AUTHORIZATION_CODE_VERIFIER_TOKEN = Symbol('OAuth2AuthorizationCodeVerifier');
 
 export const OAUTH2_AUTHORIZATION_STATE_MANAGER_TOKEN = Symbol('OAuth2AuthorizationStateManager');
 
 export const OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN = Symbol('OAuth2AuthorizationCodeRequestVerifier');
-
-// ------------------------------------
-
-export const OAUTH2_IDENTITY_RESOLVER_TOKEN = Symbol('OAuth2IdentityResolver');
 
 // ------------------------------------
 

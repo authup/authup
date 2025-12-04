@@ -7,6 +7,7 @@
 
 import type {
     IIdentityResolver,
+    IOAuth2AuthorizationCodeVerifier,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
@@ -17,6 +18,8 @@ export type TokenControllerContext = {
      * config.cookieDomain or config.publicUrl
      */
     cookieDomain?: string,
+
+    codeVerifier: IOAuth2AuthorizationCodeVerifier,
 
     accessTokenIssuer: IOAuth2TokenIssuer,
     refreshTokenIssuer: IOAuth2TokenIssuer,

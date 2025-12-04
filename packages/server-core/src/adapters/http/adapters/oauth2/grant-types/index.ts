@@ -7,6 +7,7 @@
 
 export * from './utils';
 
+export * from './authorize';
 export * from './client-credentials';
 export * from './identity';
 export * from './password';
