@@ -13,11 +13,11 @@ import type { IClientIdentityRepository } from '../../../../core';
 import { CachePrefix, ClientRepository } from '../../domains';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
-    async findById(id: string): Promise<Client | null> {
+    async findOneById(id: string): Promise<Client | null> {
         return this.find(id);
     }
 
-    async findByName(id: string, realm?: string): Promise<Client | null> {
+    async findOneByName(id: string, realm?: string): Promise<Client | null> {
         return this.find(id, realm);
     }
 

@@ -13,11 +13,11 @@ import type { IRobotIdentityRepository } from '../../../../core';
 import { CachePrefix, RobotRepository } from '../../domains';
 
 export class RobotIdentityRepository implements IRobotIdentityRepository {
-    async findById(id: string): Promise<Robot | null> {
+    async findOneById(id: string): Promise<Robot | null> {
         return this.find(id);
     }
 
-    async findByName(id: string, realm?: string): Promise<Robot | null> {
+    async findOneByName(id: string, realm?: string): Promise<Robot | null> {
         return this.find(id, realm);
     }
 

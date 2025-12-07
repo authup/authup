@@ -7,5 +7,5 @@
 import type { IdentityProviderAttributeMapping } from '@authup/core-kit';
 
 export interface IIdentityProviderAttributeMappingRepository {
-    findByProviderId(providerId: string) : Promise<IdentityProviderAttributeMapping>;
+    findByProviderId(providerId: string) : Promise<IdentityProviderAttributeMapping[]>;
 }

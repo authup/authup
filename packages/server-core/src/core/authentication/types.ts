@@ -8,8 +8,10 @@
 import type { Result } from '@authup/kit';
 import type { ObjectLiteral } from 'validup';
 
-export interface IAuthenticator<T extends ObjectLiteral = ObjectLiteral> {
-    authenticate(name: string | T, secret: string, realmId?: string) : Promise<T>;
+export interface ICredentialsAuthenticator<
+    OUTPUT extends ObjectLiteral = ObjectLiteral,
+> {
+    authenticate(key: string, value: string, realmId?: string) : Promise<OUTPUT>;
 
-    safeAuthenticate(name: string | T, secret: string, realmId?: string) : Promise<Result<T>>;
+    safeAuthenticate(key: string, value: string, realmId?: string) : Promise<Result<OUTPUT>>;
 }

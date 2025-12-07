@@ -6,5 +6,4 @@
  */
 
 export * from './account';
-export * from './flow';
 export * from './protocol';

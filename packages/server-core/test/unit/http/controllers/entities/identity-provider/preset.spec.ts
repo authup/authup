@@ -10,7 +10,7 @@ import {
 } from 'vitest';
 import type { OAuth2IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderPreset } from '@authup/core-kit';
-import { createOAuth2IdentityProviderFlow } from '../../../../../../src';
+import { createIdentityProviderOAuth2Authenticator } from '../../../../../../src';
 import { createTestSuite } from '../../../../../utils';
 
 describe('src/http/controllers/identity-provider', () => {

@@ -6,29 +6,38 @@
  */
 
 import type { User } from '@authup/core-kit';
-import { UserError } from '@authup/core-kit';
+import { IdentityType, UserError } from '@authup/core-kit';
+import type { IIdentityResolver } from '../../../identity';
 import { UserCredentialsService } from '../../credential';
-import { BaseAuthenticator } from '../../base';
+import { BaseCredentialsAuthenticator } from '../../base';
 
-export class UserAuthenticator extends BaseAuthenticator<User> {
+export class UserAuthenticator extends BaseCredentialsAuthenticator<User> {
+    protected identityResolver : IIdentityResolver;
+
     protected credentialsService : UserCredentialsService;
 
-    constructor() {
+    constructor(identityResolver: IIdentityResolver) {
         super();
 
+        this.identityResolver = identityResolver;
         this.credentialsService = new UserCredentialsService();
     }
 
-    async authenticate(entity: User, secret: string): Promise<User> {
-        const verified = await this.credentialsService.verify(secret, entity);
+    async authenticate(key: string, secret: string, realmId?: string): Promise<User> {
+        const identity = await this.identityResolver.resolve(IdentityType.USER, key, realmId);
+        if (!identity || identity.type !== IdentityType.USER) {
+            throw UserError.credentialsInvalid();
+        }
+
+        const verified = await this.credentialsService.verify(secret, identity.data);
         if (!verified) {
             throw UserError.credentialsInvalid();
         }
 
-        if (!entity.active) {
+        if (!identity.data.active) {
             throw UserError.inactive();
         }
 
-        return entity;
+        return identity.data;
     }
 }

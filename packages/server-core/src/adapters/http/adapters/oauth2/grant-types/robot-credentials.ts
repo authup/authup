@@ -20,13 +20,10 @@ import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPGrant } from './types
 export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPGrant {
     protected authenticator : RobotAuthenticator;
 
-    protected identityResolver: IIdentityResolver;
-
     constructor(ctx: HTTPOAuth2RobotCredentialsGrantContext) {
         super(ctx);
 
-        this.authenticator = new RobotAuthenticator();
-        this.identityResolver = ctx.identityResolver;
+        this.authenticator = new RobotAuthenticator(ctx.identityResolver);
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
@@ -35,18 +32,7 @@ export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements 
             secret,
             realm_id: realmId,
         } = useRequestBody(req);
-
-        const identity = await this.identityResolver.resolve(
-            IdentityType.ROBOT,
-            id,
-            realmId,
-        );
-
-        if (!identity || identity.type !== IdentityType.ROBOT) {
-            throw UserError.credentialsInvalid();
-        }
-
-        const entity = await this.authenticator.authenticate(identity.data, secret);
+        const entity = await this.authenticator.authenticate(id, secret, realmId);
 
         return this.runWith(
             entity,

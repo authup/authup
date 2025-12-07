@@ -7,7 +7,6 @@
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import type { DeepPartial } from 'typeorm';
-import type { IdentityProviderAccountEntity } from '../../../../adapters/database/domains';
 import type { IUserIdentityRepository } from '../../entities';
 import type { IIdentityProviderMapper } from '../mapper';
 import type { IdentityProviderIdentity } from '../types';
@@ -24,7 +23,7 @@ export interface IIdentityProviderAccountRepository {
 }
 
 export type IdentityProviderAccountManagerContext = {
-    attributesMapper: IIdentityProviderMapper,
+    attributeMapper: IIdentityProviderMapper,
     permissionMapper: IIdentityProviderMapper,
     roleMapper: IIdentityProviderMapper,
 
@@ -38,5 +37,5 @@ export interface IIdentityProviderAccountManager {
      *
      * @param identity
      */
-    save(identity: IdentityProviderIdentity) : Promise<IdentityProviderAccountEntity>;
+    save(identity: IdentityProviderIdentity) : Promise<IdentityProviderAccount>;
 }

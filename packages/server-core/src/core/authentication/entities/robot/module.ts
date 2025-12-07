@@ -6,29 +6,38 @@
  */
 
 import type { Robot } from '@authup/core-kit';
-import { RobotError } from '@authup/core-kit';
+import { IdentityType, RobotError, UserError } from '@authup/core-kit';
+import type { IIdentityResolver } from '../../../identity';
 import { RobotCredentialsService } from '../../credential';
-import { BaseAuthenticator } from '../../base';
+import { BaseCredentialsAuthenticator } from '../../base';
 
-export class RobotAuthenticator extends BaseAuthenticator<Robot> {
+export class RobotAuthenticator extends BaseCredentialsAuthenticator<Robot> {
+    protected identityResolver : IIdentityResolver;
+
     protected credentialsService : RobotCredentialsService;
 
-    constructor() {
+    constructor(identityResolver: IIdentityResolver) {
         super();
 
+        this.identityResolver = identityResolver;
         this.credentialsService = new RobotCredentialsService();
     }
 
-    async authenticate(entity: Robot, secret: string): Promise<Robot> {
-        const verified = await this.credentialsService.verify(secret, entity);
+    async authenticate(key: string, secret: string, realmId?: string): Promise<Robot> {
+        const identity = await this.identityResolver.resolve(IdentityType.ROBOT, key, realmId);
+        if (!identity || identity.type !== IdentityType.ROBOT) {
+            throw UserError.credentialsInvalid();
+        }
+
+        const verified = await this.credentialsService.verify(secret, identity.data);
         if (!verified) {
             throw RobotError.credentialsInvalid();
         }
 
-        if (!entity.active) {
+        if (!identity.data.active) {
             throw RobotError.inactive();
         }
 
-        return entity;
+        return identity.data;
     }
 }

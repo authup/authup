@@ -8,14 +8,14 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import type { IdentityProvider, OAuth2IdentityProvider, Realm } from '@authup/core-kit';
+import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { undefined } from 'zod';
 import type { IdentityProviderIdentity } from '../../../src/core';
+import { IdentityProviderAccountManager } from '../../../src/core';
 import claims from '../../data/jwt.json';
 import {
-    IdentityProviderAccountService,
     IdentityProviderPermissionMappingEntity,
     IdentityProviderRepository,
     IdentityProviderRoleMappingEntity,
@@ -32,17 +32,11 @@ describe('idp-manager-service', () => {
 
     let realm : Realm;
 
-    let idp : OAuth2IdentityProvider;
+    let provider : OAuth2IdentityProvider;
 
-    let idpAccountService : IdentityProviderAccountService;
+    let accountManager : IdentityProviderAccountManager;
 
-    const identity : IdentityProviderIdentity = {
-        id: 'foo',
-        data: claims,
-        attributeCandidates: {
-            name: ['fooBarBaz'],
-        },
-    };
+    let identity : IdentityProviderIdentity;
 
     beforeAll(async () => {
         await suite.up();
@@ -50,7 +44,7 @@ describe('idp-manager-service', () => {
         realm = await resolveRealm('', true);
 
         const repository = new IdentityProviderRepository(suite.dataSource);
-        idp = {
+        provider = {
             authorize_url: '',
             token_url: '',
             name: 'keycloak',
@@ -61,20 +55,29 @@ describe('idp-manager-service', () => {
             realm_id: realm.id,
         } as OAuth2IdentityProvider;
 
-        await repository.save(idp);
+        await repository.save(provider);
 
-        idpAccountService = new IdentityProviderAccountService(suite.dataSource, idp as IdentityProvider);
+        identity = {
+            id: 'foo',
+            data: claims,
+            attributeCandidates: {
+                name: ['fooBarBaz'],
+            },
+            provider,
+        };
+
+        accountManager = new IdentityProviderAccountManager();
     });
 
     afterAll(async () => {
         await suite.down();
 
         realm = undefined;
-        idpAccountService = undefined;
+        accountManager = undefined;
     });
 
     it('should create user', async () => {
-        const account = await idpAccountService.save(identity);
+        const account = await accountManager.save(identity);
         expect(account).toBeDefined();
 
         expect(account.id).toBeDefined();
@@ -83,7 +86,7 @@ describe('idp-manager-service', () => {
     });
 
     it('should create user with alternative name', async () => {
-        const account = await idpAccountService.save({
+        const account = await accountManager.save({
             data: claims,
             id: 'bar',
             attributeCandidates: {
@@ -93,6 +96,7 @@ describe('idp-manager-service', () => {
                     'bar', // valid
                 ],
             },
+            provider,
         });
 
         expect(account.id).toBeDefined();
@@ -101,7 +105,7 @@ describe('idp-manager-service', () => {
     });
 
     it('should create user with random name', async () => {
-        const account = await idpAccountService.save({
+        const account = await accountManager.save({
             data: claims,
             id: 'baz',
             attributeCandidates: {
@@ -109,6 +113,7 @@ describe('idp-manager-service', () => {
                     'admin', // exists
                 ],
             },
+            provider,
         });
 
         expect(account.id).toBeDefined();
@@ -117,13 +122,13 @@ describe('idp-manager-service', () => {
     });
 
     it('should create user only once', async () => {
-        let account = await idpAccountService.save(identity);
+        let account = await accountManager.save(identity);
         expect(account).toBeDefined();
 
         const accountId = account.id;
         const userId = account.user.id;
 
-        account = await idpAccountService.save(identity);
+        account = await accountManager.save(identity);
         expect(account).toBeDefined();
 
         expect(account.id).toEqual(accountId);
@@ -145,13 +150,13 @@ describe('idp-manager-service', () => {
             value: 'movies:read',
             role_id: role.id,
             role_realm_id: role.realm_id,
-            provider_id: idp.id,
-            provider_realm_id: idp.realm_id,
+            provider_id: provider.id,
+            provider_realm_id: provider.realm_id,
         });
 
         await idpRoleMappingRepository.save(idpRoleMapping);
 
-        const account = await idpAccountService.save(identity);
+        const account = await accountManager.save(identity);
         expect(account).toBeDefined();
 
         const userRoleRepository = suite.dataSource.getRepository(UserRoleEntity);
@@ -180,13 +185,13 @@ describe('idp-manager-service', () => {
             value: 'admin',
             role_id: role.id,
             role_realm_id: role.realm_id,
-            provider_id: idp.id,
-            provider_realm_id: idp.realm_id,
+            provider_id: provider.id,
+            provider_realm_id: provider.realm_id,
         });
 
         await idpRoleMappingRepository.save(idpRoleMapping);
 
-        const account = await idpAccountService.save(identity);
+        const account = await accountManager.save(identity);
         expect(account).toBeDefined();
 
         const userRoleRepository = suite.dataSource.getRepository(UserRoleEntity);
@@ -215,13 +220,13 @@ describe('idp-manager-service', () => {
             value: 'movies:read',
             permission_id: permission.id,
             permission_realm_id: permission.realm_id,
-            provider_id: idp.id,
-            provider_realm_id: idp.realm_id,
+            provider_id: provider.id,
+            provider_realm_id: provider.realm_id,
         });
 
         await idpPermissionMappingRepository.save(idpPermissionMapping);
 
-        const account = await idpAccountService.save(identity);
+        const account = await accountManager.save(identity);
         expect(account).toBeDefined();
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
@@ -256,13 +261,13 @@ describe('idp-manager-service', () => {
             value: 'admin',
             permission_id: permission.id,
             permission_realm_id: permission.realm_id,
-            provider_id: idp.id,
-            provider_realm_id: idp.realm_id,
+            provider_id: provider.id,
+            provider_realm_id: provider.realm_id,
         });
 
         await idpPermissionMappingRepository.save(idpPermissionMapping);
 
-        const account = await idpAccountService.save(identity);
+        const account = await accountManager.save(identity);
         expect(account).toBeDefined();
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);

@@ -12,7 +12,7 @@ import type { IdentityProvider } from '@authup/core-kit';
 import {
     buildIdentityProviderAuthorizePath,
 } from '@authup/core-kit';
-import { createOAuth2IdentityProviderFlow } from '../../../../../../src';
+import { createIdentityProviderOAuth2Authenticator } from '../../../../../../src';
 import {
     createFakeOAuth2IdentityProvider,
     createTestSuite,

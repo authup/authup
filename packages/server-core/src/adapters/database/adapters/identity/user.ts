@@ -13,11 +13,11 @@ import type { IUserIdentityRepository } from '../../../../core';
 import { CachePrefix, UserRepository } from '../../domains';
 
 export class UserIdentityRepository implements IUserIdentityRepository {
-    async findById(id: string): Promise<User | null> {
+    async findOneById(id: string): Promise<User | null> {
         return this.find(id);
     }
 
-    async findByName(id: string, realm?: string): Promise<User | null> {
+    async findOneByName(id: string, realm?: string): Promise<User | null> {
         return this.find(id, realm);
     }
 

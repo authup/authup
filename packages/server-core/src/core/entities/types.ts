@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025.
+ * Copyright (c) 2025-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -7,7 +7,7 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 
-export interface IIdentityRepository<
+export interface IEntityRepository<
     T extends ObjectLiteral = ObjectLiteral,
 > {
     /**
@@ -15,7 +15,7 @@ export interface IIdentityRepository<
      *
      * @param id
      */
-    findById(id: string) : Promise<T | null>;
+    findOneById(id: string) : Promise<T | null>;
 
     /**
      * Find entity by name with realm.
@@ -23,5 +23,5 @@ export interface IIdentityRepository<
      * @param name
      * @param realm
      */
-    findByName(name: string, realm?: string) : Promise<T | null>;
+    findOneByName(name: string, realm?: string) : Promise<T | null>;
 }

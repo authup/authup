@@ -13,9 +13,10 @@ import {
 } from 'routup';
 import {
     IdentityProvider,
-    IdentityProviderProtocol,
     IdentityType,
     type OAuth2AuthorizationCodeRequest,
+    isOAuth2IdentityProvider,
+    isOpenIDIdentityProvider,
 } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@ebec/http';
@@ -27,7 +28,14 @@ import { URL } from 'node:url';
 import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { DataSource } from 'typeorm';
-import { IdentityProviderAccountService, createOAuth2IdentityProviderFlow } from '../../../../../services';
+import {
+    IOAuth2AuthorizationCodeRequestVerifier,
+    IOAuth2AuthorizationStateManager,
+    IdentityGrantType,
+    OAuth2AuthorizationCodeRequestValidator,
+    OAuth2AuthorizationState,
+    createIdentityProviderOAuth2Authenticator,
+} from '../../../../../core';
 import { useRequestParamID } from '../../../request';
 import { ForceLoggedInMiddleware } from '../../../middleware';
 import {
@@ -36,13 +44,6 @@ import {
     getOneIdentityProviderRouteHandler,
     writeIdentityProviderRouteHandler,
 } from './handlers';
-import {
-    IOAuth2AuthorizationCodeRequestVerifier,
-    IOAuth2AuthorizationStateManager,
-    IdentityGrantType,
-    OAuth2AuthorizationCodeRequestValidator,
-    OAuth2AuthorizationState,
-} from '../../../../../core';
 import { useConfig } from '../../../../../config';
 import { IdentityProviderRepository } from '../../../../database/domains';
 import { IdentityProviderControllerOptions } from './types';
@@ -142,14 +143,14 @@ export class IdentityProviderController {
         const dataSource = await useDataSource();
         const entity = await this.resolve(dataSource, id);
 
-        if (
-            entity.protocol !== IdentityProviderProtocol.OAUTH2 &&
-            entity.protocol !== IdentityProviderProtocol.OIDC
-        ) {
+        if (!isOAuth2IdentityProvider(entity) && !isOpenIDIdentityProvider(entity)) {
             throw new BadRequestError('Only an identity-provider based on the oauth protocol supports authorize redirect.');
         }
 
-        const flow = createOAuth2IdentityProviderFlow(entity);
+        const authenticator = createIdentityProviderOAuth2Authenticator({
+            provider: entity,
+            baseURL: 'http://localhost:8080', // todo: config.publicUrl
+        });
 
         const parameters : AuthorizeParameters = {};
 
@@ -180,7 +181,7 @@ export class IdentityProviderController {
 
         parameters.state = await this.saveAuthorizationState(req, codeRequest);
 
-        return sendRedirect(res, flow.buildRedirectURL(parameters));
+        return sendRedirect(res, authenticator.buildRedirectURL(parameters));
     }
 
     @DGet('/:id/authorize-in', [])
@@ -194,10 +195,7 @@ export class IdentityProviderController {
 
         const entity = await this.resolve(dataSource, id);
 
-        if (
-            entity.protocol !== IdentityProviderProtocol.OAUTH2 &&
-            entity.protocol !== IdentityProviderProtocol.OIDC
-        ) {
+        if (!isOAuth2IdentityProvider(entity) && !isOpenIDIdentityProvider(entity)) {
             throw new Error(`The provider protocol ${entity.protocol} is not valid.`);
         }
 
@@ -211,20 +209,22 @@ export class IdentityProviderController {
             throw OAuth2Error.requestInvalid('The provider and client realm do not match.');
         }
 
-        const flow = createOAuth2IdentityProviderFlow(entity);
+        const { code } = useRequestQuery(req);
 
-        const identity = await flow.getIdentityForRequest(req);
-        const manager = new IdentityProviderAccountService(dataSource, entity);
+        const authenticator = createIdentityProviderOAuth2Authenticator({
+            provider: entity,
+            baseURL: 'http://localhost:8080', // todo: config.publicUrl
+        });
 
         // todo: identity should respect client_id
-        const account = await manager.save(identity);
+        const user = await authenticator.authenticate(code);
 
         const config = useConfig();
 
         const token = await this.identityGrant.runWith({
             type: IdentityType.USER,
             data: {
-                ...account.user,
+                ...user,
                 realm: entity.realm,
             },
         });

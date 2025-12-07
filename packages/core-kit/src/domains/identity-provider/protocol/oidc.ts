@@ -9,6 +9,6 @@ import type { OAuth2IdentityProviderBase } from './oauth2';
 import type { IdentityProviderProtocol } from '../constants';
 import type { IdentityProvider } from '../entity';
 
-export interface OpenIDConnectIdentityProvider extends IdentityProvider, OAuth2IdentityProviderBase {
-    protocol: IdentityProviderProtocol.OIDC | `${IdentityProviderProtocol.OIDC}`;
+export interface OpenIDIdentityProvider extends IdentityProvider, OAuth2IdentityProviderBase {
+    protocol: `${IdentityProviderProtocol.OIDC}`;
 }

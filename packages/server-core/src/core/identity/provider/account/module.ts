@@ -30,7 +30,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
     protected userValidator : UserValidator;
 
     constructor(ctx: IdentityProviderAccountManagerContext) {
-        this.attributesMapper = ctx.attributesMapper;
+        this.attributesMapper = ctx.attributeMapper;
         this.permissionMapper = ctx.permissionMapper;
         this.roleMapper = ctx.roleMapper;
         this.repository = ctx.repository;
@@ -124,7 +124,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
         const entityKeys = Object.keys(entity);
         for (let i = 0; i < entityKeys.length; i++) {
-            const index = attributesSelfKeys.index(entityKeys[i]);
+            const index = attributesSelfKeys.indexOf(entityKeys[i]);
             if (index !== -1) {
                 continue;
             }
@@ -146,7 +146,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     identity.attributeCandidates.name &&
                     identity.attributeCandidates.name.length > 0
                 ) {
-                    output.name = identity.attributeCandidates.name.shift();
+                    output.name = `${identity.attributeCandidates.name.shift()}`;
                 } else {
                     output.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
                 }
@@ -223,7 +223,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             }
 
             if (retry) {
-                return this.validateAttributes(retry, identity, attempts);
+                return this.validateAttributes(entity, identity, attempts);
             }
 
             return null;
@@ -234,9 +234,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         identity: IdentityProviderIdentity,
         user: User,
     ) {
-        const entities = await this.permissionMapper.execute(
-            identity,
-        );
+        const entities = await this.permissionMapper.execute(identity);
 
         await this.userRepository.savePermissions(user, entities);
     }
@@ -245,9 +243,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         identity: IdentityProviderIdentity,
         user: User,
     ) {
-        const entities = await this.roleMapper.execute(
-            identity,
-        );
+        const entities = await this.roleMapper.execute(identity);
 
         await this.userRepository.savePermissions(user, entities);
     }

@@ -6,4 +6,6 @@
  */
 
 export * from './account';
+export * from './authentication';
+export * from './mapper';
 export * from './types';

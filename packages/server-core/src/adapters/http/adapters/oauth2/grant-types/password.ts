@@ -9,21 +9,18 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { IdentityType, UserError } from '@authup/core-kit';
-import type { IIdentityResolver } from '../../../../../core';
 import { PasswordGrantType, UserAuthenticator } from '../../../../../core';
 import type { HTTPOAuth2PasswordGrantContext, IHTTPGrant } from './types';
 
 export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
+    // todo: alt lookup ldap service, grab and save account/user, set provider: LdapProvider
+    // todo: use composite authenticator (UserAuthenticator + IdentityProviderLdapAuthenticator)
     protected authenticator : UserAuthenticator;
-
-    protected identityResolver: IIdentityResolver;
 
     constructor(ctx: HTTPOAuth2PasswordGrantContext) {
         super(ctx);
 
-        this.authenticator = new UserAuthenticator();
-        this.identityResolver = ctx.identityResolver;
+        this.authenticator = new UserAuthenticator(ctx.identityResolver);
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
@@ -33,19 +30,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
             realm_id: realmId,
         } = useRequestBody(req);
 
-        // todo: alt lookup ldap service, grab and save account/user, set provider: LdapProvider
-        const identity = await this.identityResolver.resolve(
-            IdentityType.USER,
-            username,
-            realmId,
-        );
-
-        if (!identity || identity.type !== IdentityType.USER) {
-            throw UserError.credentialsInvalid();
-        }
-
-        // todo: check in authenticator if authenticate is set.
-        const data = await this.authenticator.authenticate(identity.data, password);
+        const data = await this.authenticator.authenticate(username, password, realmId);
 
         return this.runWith(
             data,

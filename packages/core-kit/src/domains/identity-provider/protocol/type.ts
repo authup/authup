@@ -7,8 +7,8 @@
 
 import type { OAuth2IdentityProvider } from './oauth2';
 import type { LdapIdentityProvider } from './ldap';
-import type { OpenIDConnectIdentityProvider } from './oidc';
+import type { OpenIDIdentityProvider } from './oidc';
 
 export type IdentityProviderProtocolType = OAuth2IdentityProvider |
 LdapIdentityProvider |
-OpenIDConnectIdentityProvider;
+OpenIDIdentityProvider;

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderAccount } from '@authup/core-kit';
 import type { IdentityProviderIdentity } from '../../types';
 import { IdentityProviderAccountBaseMapper } from '../base';
 import type { IdentityProviderMapperElement } from '../types';
@@ -14,8 +13,14 @@ import type { IIdentityProviderRoleMappingRepository } from './types';
 export class IdentityProviderRoleMapper extends IdentityProviderAccountBaseMapper {
     protected repository: IIdentityProviderRoleMappingRepository;
 
-    async execute(identity: IdentityProviderIdentity, account: IdentityProviderAccount): Promise<void> {
-        const entities = await this.repository.findByProviderId(account.provider_id);
+    constructor(repository: IIdentityProviderRoleMappingRepository) {
+        super();
+
+        this.repository = repository;
+    }
+
+    async execute(identity: IdentityProviderIdentity): Promise<IdentityProviderMapperElement[]> {
+        const entities = await this.repository.findByProviderId(identity.provider.id);
 
         const items : IdentityProviderMapperElement[] = [];
         for (let i = 0; i < entities.length; i++) {
@@ -24,8 +29,8 @@ export class IdentityProviderRoleMapper extends IdentityProviderAccountBaseMappe
             const [operation] = this.resolve(identity, entity);
 
             items.push({
-                id: entity.permission_id,
-                realmId: entity.permission_realm_id,
+                value: entity.role_id,
+                realmId: entity.role_realm_id,
                 operation,
             });
         }

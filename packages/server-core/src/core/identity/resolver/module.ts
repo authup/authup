@@ -53,9 +53,9 @@ export class IdentityResolver implements IIdentityResolver {
         let data : Client | undefined;
 
         if (isUUID(key)) {
-            data = await this.clientRepository.findById(key);
+            data = await this.clientRepository.findOneById(key);
         } else {
-            data = await this.clientRepository.findByName(key, realmKey);
+            data = await this.clientRepository.findOneByName(key, realmKey);
         }
 
         if (data) {
@@ -72,9 +72,9 @@ export class IdentityResolver implements IIdentityResolver {
         let data : Robot | undefined;
 
         if (isUUID(key)) {
-            data = await this.robotRepository.findById(key);
+            data = await this.robotRepository.findOneById(key);
         } else {
-            data = await this.robotRepository.findByName(key, realmKey);
+            data = await this.robotRepository.findOneByName(key, realmKey);
         }
 
         if (data) {
@@ -91,9 +91,9 @@ export class IdentityResolver implements IIdentityResolver {
         let data : User | undefined;
 
         if (isUUID(key)) {
-            data = await this.userRepository.findById(key);
+            data = await this.userRepository.findOneById(key);
         } else {
-            data = await this.userRepository.findByName(key, realmKey);
+            data = await this.userRepository.findOneByName(key, realmKey);
         }
 
         if (data) {

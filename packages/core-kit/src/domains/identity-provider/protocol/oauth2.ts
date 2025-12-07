@@ -25,5 +25,5 @@ export interface OAuth2IdentityProviderBase {
 }
 
 export interface OAuth2IdentityProvider extends IdentityProvider, OAuth2IdentityProviderBase {
-    protocol: IdentityProviderProtocol.OAUTH2 | `${IdentityProviderProtocol.OAUTH2}`;
+    protocol: `${IdentityProviderProtocol.OAUTH2}`;
 }
