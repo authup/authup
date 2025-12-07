@@ -113,6 +113,12 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             }
         }
 
+        if (!user) {
+            (entity as User).realm_id = identity.provider.realm_id;
+            (entity as User).active = true;
+            (entity as User).name_locked = true;
+        }
+
         const attributesSelf = await this.validateAttributes(entity, identity, 10);
         if (!attributesSelf) {
             // todo: better error name
@@ -132,23 +138,37 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             attributesExtra[entityKeys[i]] = entity[entityKeys[i]];
         }
 
-        const output = user ?
-            extendObject(user, attributesSelf) :
-            attributesSelf;
+        let output : User;
+        if (user) {
+            output = extendObject(user, attributesSelf);
+        } else {
+            output = attributesSelf;
+        }
 
-        let attempts = (identity.attributeCandidates.name?.length || 0) + 1;
+        let attempts = Math.max((identity.attributeCandidates.name?.length || 0) + 1, 10);
         while (attempts > 0) {
             try {
+                // todo: we also need to remove existing ones via idp login flow ( but not other attributes!)
                 return await this.userRepository.saveOneWithEA(output, attributesExtra);
             } catch (e) {
-                if (
-                    identity.attributeCandidates &&
-                    identity.attributeCandidates.name &&
-                    identity.attributeCandidates.name.length > 0
-                ) {
-                    output.name = `${identity.attributeCandidates.name.shift()}`;
+                const names = identity.attributeCandidates?.name || [];
+                if (names.length > 0) {
+                    while (names.length > 0) {
+                        output.name = `${names.shift()}`;
+
+                        try {
+                            await this.userValidator.run(output, {
+                                group: identity.operation === IdentityProviderIdentityOperation.CREATE ?
+                                    ValidatorGroup.CREATE :
+                                    ValidatorGroup.UPDATE,
+                            });
+                            break;
+                        } catch (e) {
+                            // todo: do nothing.
+                        }
+                    }
                 } else {
-                    output.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 30);
+                    output.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 10);
                 }
 
                 attempts -= 1;
@@ -245,6 +265,6 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
     ) {
         const entities = await this.roleMapper.execute(identity);
 
-        await this.userRepository.savePermissions(user, entities);
+        await this.userRepository.saveRoles(user, entities);
     }
 }

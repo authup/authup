@@ -29,13 +29,13 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
         synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
-        source_name: string | null;
+        name: string | null;
 
     @Column({ type: 'varchar', length: 128, nullable: true })
-        source_value: string | null;
+        value: string | null;
 
     @Column({ type: 'boolean', default: false })
-        source_value_is_regex: boolean;
+        value_is_regex: boolean;
 
     @Column({ type: 'varchar', length: 64 })
         target_name: string;

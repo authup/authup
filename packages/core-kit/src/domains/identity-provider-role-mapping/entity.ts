@@ -5,18 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, IdentityProviderMappingRelation } from '../identity-provider';
+import type { IdentityProvider, IdentityProviderBaseMapping } from '../identity-provider';
 import type { Role } from '../role';
 import type { Realm } from '../realm';
 
-export interface IdentityProviderRoleMapping extends IdentityProviderMappingRelation {
+export interface IdentityProviderRoleMapping extends IdentityProviderBaseMapping {
     id: string;
-
-    name: string | null;
-
-    value: string | null;
-
-    value_is_regex: boolean;
 
     created_at: Date;
 

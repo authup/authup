@@ -31,7 +31,13 @@ export interface IdentityProvider {
     realm: Realm;
 }
 
-export interface IdentityProviderMappingRelation {
+export interface IdentityProviderBaseMapping {
+    name: string | null;
+
+    value: string | null;
+
+    value_is_regex: boolean;
+
     synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
 
     provider_id: IdentityProvider['id'];

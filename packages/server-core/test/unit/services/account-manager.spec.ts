@@ -11,16 +11,25 @@ import {
 import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import { undefined } from 'zod';
 import type { IdentityProviderIdentity } from '../../../src/core';
-import { IdentityProviderAccountManager } from '../../../src/core';
+import {
+    IdentityProviderAccountManager,
+    IdentityProviderAttributeMapper,
+    IdentityProviderPermissionMapper,
+    IdentityProviderRoleMapper,
+} from '../../../src/core';
 import claims from '../../data/jwt.json';
 import {
+    IdentityProviderAccountRepository,
+    IdentityProviderAttributeMappingRepository,
     IdentityProviderPermissionMappingEntity,
+    IdentityProviderPermissionMappingRepository,
     IdentityProviderRepository,
     IdentityProviderRoleMappingEntity,
+    IdentityProviderRoleMappingRepository,
     PermissionEntity,
     RoleRepository,
+    UserIdentityRepository,
     UserPermissionEntity,
     UserRoleEntity,
     resolveRealm,
@@ -66,7 +75,26 @@ describe('idp-manager-service', () => {
             provider,
         };
 
-        accountManager = new IdentityProviderAccountManager();
+        const attributeMapperRepository = new IdentityProviderAttributeMappingRepository();
+        const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperRepository);
+
+        const roleMapperRepository = new IdentityProviderRoleMappingRepository();
+        const roleMapper = new IdentityProviderRoleMapper(roleMapperRepository);
+
+        const permissionMapperRepository = new IdentityProviderPermissionMappingRepository();
+        const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
+
+        const providerAccountRepository = new IdentityProviderAccountRepository();
+
+        const userRepository = new UserIdentityRepository();
+
+        accountManager = new IdentityProviderAccountManager({
+            attributeMapper,
+            roleMapper,
+            permissionMapper,
+            userRepository,
+            repository: providerAccountRepository,
+        });
     });
 
     afterAll(async () => {
@@ -178,8 +206,8 @@ describe('idp-manager-service', () => {
 
         await roleRepository.save(role);
 
-        const idpRoleMappingRepository = suite.dataSource.getRepository(IdentityProviderRoleMappingEntity);
-        const idpRoleMapping = idpRoleMappingRepository.create({
+        const roleMappingRepository = suite.dataSource.getRepository(IdentityProviderRoleMappingEntity);
+        const roleMapping = roleMappingRepository.create({
             synchronization_mode: 'always',
             name: 'realm_access.roles.*',
             value: 'admin',
@@ -189,7 +217,7 @@ describe('idp-manager-service', () => {
             provider_realm_id: provider.realm_id,
         });
 
-        await idpRoleMappingRepository.save(idpRoleMapping);
+        await roleMappingRepository.save(roleMapping);
 
         const account = await accountManager.save(identity);
         expect(account).toBeDefined();
@@ -238,9 +266,11 @@ describe('idp-manager-service', () => {
         });
 
         expect(userPermission).toBeDefined();
+
+        await userPermissionRepository.remove(userPermission);
     });
 
-    it('should not synchronize roles', async () => {
+    it('should not synchronize permissions', async () => {
         const permissionRepository = suite
             .dataSource
             .getRepository(PermissionEntity);

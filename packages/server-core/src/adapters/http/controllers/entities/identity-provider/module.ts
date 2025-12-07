@@ -29,12 +29,12 @@ import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { DataSource } from 'typeorm';
 import {
+    type IIdentityProviderAccountManager,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
     IdentityGrantType,
     OAuth2AuthorizationCodeRequestValidator,
-    OAuth2AuthorizationState,
-    createIdentityProviderOAuth2Authenticator,
+    OAuth2AuthorizationState, createIdentityProviderOAuth2Authenticator,
 } from '../../../../../core';
 import { useRequestParamID } from '../../../request';
 import { ForceLoggedInMiddleware } from '../../../middleware';
@@ -46,11 +46,15 @@ import {
 } from './handlers';
 import { useConfig } from '../../../../../config';
 import { IdentityProviderRepository } from '../../../../database/domains';
-import { IdentityProviderControllerOptions } from './types';
+import { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types';
 
 @DTags('identity')
 @DController('/identity-providers')
 export class IdentityProviderController {
+    protected options: IdentityProviderControllerOptions;
+
+    protected accountManager: IIdentityProviderAccountManager;
+
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
     protected codeRequestValidator : OAuth2AuthorizationCodeRequestValidator;
@@ -61,14 +65,16 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
-    constructor(options: IdentityProviderControllerOptions) {
-        this.codeRequestVerifier = options.codeRequestVerifier;
+    constructor(ctx: IdentityProviderControllerContext) {
+        this.options = ctx.options;
+        this.accountManager = ctx.accountManager;
+        this.codeRequestVerifier = ctx.codeRequestVerifier;
         this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
-        this.stateManager = options.stateManager;
+        this.stateManager = ctx.stateManager;
 
         this.identityGrant = new IdentityGrantType({
-            accessTokenIssuer: options.accessTokenIssuer,
-            refreshTokenIssuer: options.refreshTokenIssuer,
+            accessTokenIssuer: ctx.accessTokenIssuer,
+            refreshTokenIssuer: ctx.refreshTokenIssuer,
         });
     }
 
@@ -148,8 +154,9 @@ export class IdentityProviderController {
         }
 
         const authenticator = createIdentityProviderOAuth2Authenticator({
+            accountManager: this.accountManager,
             provider: entity,
-            baseURL: 'http://localhost:8080', // todo: config.publicUrl
+            baseURL: this.options.baseURL,
         });
 
         const parameters : AuthorizeParameters = {};
@@ -212,8 +219,9 @@ export class IdentityProviderController {
         const { code } = useRequestQuery(req);
 
         const authenticator = createIdentityProviderOAuth2Authenticator({
+            accountManager: this.accountManager,
             provider: entity,
-            baseURL: 'http://localhost:8080', // todo: config.publicUrl
+            baseURL: this.options.baseURL,
         });
 
         // todo: identity should respect client_id

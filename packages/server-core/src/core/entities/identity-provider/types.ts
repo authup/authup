@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderProtocol } from '@authup/core-kit';
+import type { IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 
 export interface IIdentityProviderRepository {
     /**

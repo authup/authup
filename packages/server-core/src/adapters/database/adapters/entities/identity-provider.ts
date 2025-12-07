@@ -7,12 +7,14 @@
 
 import type { IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
+import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import type { IIdentityProviderRepository } from '../../../../core/entities';
+import type { IdentityProviderEntity } from '../../domains';
 import { IdentityProviderRepository } from '../../domains';
 
 export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepository {
-    findByProtocol(protocol: IdentityProviderProtocol, realmKey?: string): Promise<IdentityProvider[]> {
+    async findByProtocol(protocol: IdentityProviderProtocol, realmKey?: string): Promise<IdentityProvider[]> {
         const dataSource = await useDataSource();
         const repository = new IdentityProviderRepository(dataSource);
 

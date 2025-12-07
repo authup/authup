@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderAccount, IdentityProviderMappingRelation } from '@authup/core-kit';
+import type { IdentityProviderBaseMapping } from '@authup/core-kit';
 import { IdentityProviderMappingSyncMode } from '@authup/core-kit';
 import { getJWTClaimByPattern } from '@authup/specs';
+import { IdentityProviderIdentityOperation } from '../constants';
 import type { IdentityProviderIdentity } from '../types';
 import { IdentityProviderMapperOperation } from './constants';
 import type { IIdentityProviderMapper, IdentityProviderMapperElement } from './types';
@@ -15,12 +16,12 @@ import type { IIdentityProviderMapper, IdentityProviderMapperElement } from './t
 export abstract class IdentityProviderAccountBaseMapper implements IIdentityProviderMapper {
     protected resolve(
         identity: IdentityProviderIdentity,
-        mapping: IdentityProviderMappingRelation,
-    ) : [IdentityProviderMapperOperation, unknown | undefined] {
+        mapping: IdentityProviderBaseMapping,
+    ) : [IdentityProviderMapperOperation, unknown] | [IdentityProviderMapperOperation] {
         let operation : IdentityProviderMapperOperation;
         if (
             mapping.synchronization_mode === IdentityProviderMappingSyncMode.ONCE &&
-            identity.operation === 'updated'
+            identity.operation === IdentityProviderIdentityOperation.UPDATE
         ) {
             operation = IdentityProviderMapperOperation.NONE;
 
@@ -50,7 +51,6 @@ export abstract class IdentityProviderAccountBaseMapper implements IIdentityProv
     }
 
     abstract execute(
-        identity: IdentityProviderIdentity,
-        account: IdentityProviderAccount
+        identity: IdentityProviderIdentity
     ): Promise<IdentityProviderMapperElement[]>;
 }

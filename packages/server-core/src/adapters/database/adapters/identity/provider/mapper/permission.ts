@@ -7,7 +7,7 @@
 
 import type { IdentityProviderPermissionMapping } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
-import type { IIdentityProviderPermissionMappingRepository } from '../../../../../../core/identity/provider/mapper';
+import type { IIdentityProviderPermissionMappingRepository } from '../../../../../../core';
 import { IdentityProviderPermissionMappingEntity } from '../../../../domains';
 
 export class IdentityProviderPermissionMappingRepository implements IIdentityProviderPermissionMappingRepository {

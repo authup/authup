@@ -15,7 +15,6 @@ import {
     RobotIdentityRepository,
     UserIdentityRepository,
 } from '../../adapters/database';
-import { IdentityProviderRepository } from '../../adapters/database/domains';
 import {
     IDENTITY_PROVIDER_ACCOUNT_MANAGER_TOKEN,
     IDENTITY_RESOLVER_TOKEN,
@@ -39,9 +38,7 @@ export function registerIdentityDependencies() {
         }),
     });
 
-    const providerRepository = new IdentityProviderRepository();
     // for ldap authenticator
-
     const attributeMapperRepository = new IdentityProviderAttributeMappingRepository();
     const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperRepository);
 

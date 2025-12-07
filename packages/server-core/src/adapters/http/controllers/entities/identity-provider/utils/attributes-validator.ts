@@ -13,10 +13,7 @@ import { BadRequestError } from '@ebec/http';
 import { buildError } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { ZodError } from 'zod';
-import {
-    validateLdapIdentityProviderProtocol,
-    validateOAuth2IdentityProviderProtocol,
-} from '../../../../../../domains';
+import { validateLdapIdentityProviderProtocol, validateOAuth2IdentityProviderProtocol } from '../../../../../../services';
 
 export class IdentityProviderAttributesValidator extends Container {
     override async run(

@@ -5,12 +5,19 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { buildRedisKeyPath } from '@authup/server-kit';
-import { useDataSource } from 'typeorm-extension';
-import { isUUID } from '@authup/kit';
 import type { User } from '@authup/core-kit';
-import type { IUserIdentityRepository } from '../../../../core';
-import { CachePrefix, UserRepository } from '../../domains';
+import { isUUID } from '@authup/kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
+import { In } from 'typeorm';
+import { useDataSource } from 'typeorm-extension';
+import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core';
+import { IdentityProviderMapperOperation } from '../../../../core';
+import {
+    CachePrefix,
+    UserPermissionEntity,
+    UserRepository,
+    UserRoleEntity,
+} from '../../domains';
 
 export class UserIdentityRepository implements IUserIdentityRepository {
     async findOneById(id: string): Promise<User | null> {
@@ -69,5 +76,128 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         }
 
         return null;
+    }
+
+    async saveOneWithEA(user: Partial<User>, extraAttributes: Record<string, any>): Promise<User> {
+        const dataSource = await useDataSource();
+        const repository = new UserRepository(dataSource);
+
+        const entity = repository.create(user);
+        return repository.saveOneWithEA(entity, extraAttributes);
+    }
+
+    async savePermissions(user: User, items: IdentityProviderMapperElement[]): Promise<void> {
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(UserPermissionEntity);
+
+        const ids = items.map((item) => item.value);
+
+        const idsToDelete = items
+            .filter((item) => item.operation === IdentityProviderMapperOperation.DELETE)
+            .map((item) => item.value);
+
+        const entities = await repository.findBy({
+            user_id: user.id,
+            permission_id: In(ids),
+        });
+
+        const entitiesToDelete : UserPermissionEntity[] = [];
+        for (let i = 0; i < entities.length; i++) {
+            const index = idsToDelete.indexOf(entities[i].permission_id);
+            if (index === -1) {
+                continue;
+            }
+
+            entitiesToDelete.push(entities[i]);
+        }
+
+        if (entitiesToDelete.length > 0) {
+            await repository.remove(entitiesToDelete);
+        }
+
+        const entitiesToCreate : UserPermissionEntity[] = [];
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+
+            if (item.operation !== IdentityProviderMapperOperation.CREATE) {
+                continue;
+            }
+
+            const index = entities.findIndex(
+                (entity) => entity.permission_id === item.value,
+            );
+            if (index !== -1) {
+                continue;
+            }
+
+            const entity = repository.create({
+                user_id: user.id,
+                user_realm_id: user.realm_id,
+                permission_id: item.value as string,
+                permission_realm_id: item.realmId as string,
+            });
+
+            entitiesToCreate.push(entity);
+        }
+
+        if (entitiesToCreate.length > 0) {
+            await repository.save(entitiesToCreate);
+        }
+    }
+
+    async saveRoles(user: User, items: IdentityProviderMapperElement[]): Promise<void> {
+        const dataSource = await useDataSource();
+        const repository = dataSource.getRepository(UserRoleEntity);
+
+        const ids = items.map((item) => item.value);
+
+        const idsToDelete = items
+            .filter((item) => item.operation === IdentityProviderMapperOperation.DELETE)
+            .map((item) => item.value);
+
+        const entities = await repository.findBy({
+            user_id: user.id,
+            role_id: In(ids),
+        });
+
+        const entitiesToDelete : UserRoleEntity[] = [];
+        for (let i = 0; i < entities.length; i++) {
+            const index = idsToDelete.indexOf(entities[i].role_id);
+            if (index === -1) {
+                continue;
+            }
+
+            entitiesToDelete.push(entities[i]);
+        }
+
+        if (entitiesToDelete.length > 0) {
+            await repository.remove(entitiesToDelete);
+        }
+
+        const entitiesToCreate : UserRoleEntity[] = [];
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item.operation !== IdentityProviderMapperOperation.CREATE) {
+                continue;
+            }
+
+            const index = entities.findIndex((entity) => entity.role_id === item.value);
+            if (index !== -1) {
+                continue;
+            }
+
+            const entity = repository.create({
+                user_id: user.id,
+                user_realm_id: user.realm_id,
+                role_id: item.value as string,
+                role_realm_id: item.realmId as string,
+            });
+
+            entitiesToCreate.push(entity);
+        }
+
+        if (entitiesToCreate.length > 0) {
+            await repository.save(entitiesToCreate);
+        }
     }
 }
