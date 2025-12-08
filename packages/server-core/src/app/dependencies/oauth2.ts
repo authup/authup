@@ -48,7 +48,7 @@ export type OAuth2BootstrapOptions = {
     idTokenMaxAge: number
 };
 
-export function registerOAuth2Dependencies(options: OAuth2BootstrapOptions) {
+export function registerOAuth2DependencyInjections(options: OAuth2BootstrapOptions) {
     const clientRepository = new OAuth2ClientRepository();
     const clientScopeRepository = new OAuth2ClientScopeRepository();
 

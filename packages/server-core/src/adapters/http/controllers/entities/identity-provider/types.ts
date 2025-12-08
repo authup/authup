@@ -6,12 +6,20 @@
  */
 
 import type {
+    IIdentityProviderAccountManager,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
     IOAuth2TokenIssuer,
 } from '../../../../../core';
 
 export type IdentityProviderControllerOptions = {
+    baseURL: string,
+};
+
+export type IdentityProviderControllerContext = {
+    options: IdentityProviderControllerOptions,
+
+    accountManager: IIdentityProviderAccountManager,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
     stateManager: IOAuth2AuthorizationStateManager,
 

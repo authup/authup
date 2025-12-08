@@ -22,16 +22,22 @@ export interface IdentityProvider {
 
     enabled: boolean;
 
-    created_at: Date | string;
+    created_at: string;
 
-    updated_at: Date | string;
+    updated_at: string;
 
     realm_id: Realm['id'];
 
     realm: Realm;
 }
 
-export interface IdentityProviderMappingRelation {
+export interface IdentityProviderBaseMapping {
+    name: string | null;
+
+    value: string | null;
+
+    value_is_regex: boolean;
+
     synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
 
     provider_id: IdentityProvider['id'];

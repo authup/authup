@@ -13,9 +13,10 @@ import {
 } from 'routup';
 import {
     IdentityProvider,
-    IdentityProviderProtocol,
     IdentityType,
     type OAuth2AuthorizationCodeRequest,
+    isOAuth2IdentityProvider,
+    isOpenIDIdentityProvider,
 } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@ebec/http';
@@ -27,7 +28,14 @@ import { URL } from 'node:url';
 import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { DataSource } from 'typeorm';
-import { IdentityProviderAccountService, createOAuth2IdentityProviderFlow } from '../../../../../services';
+import {
+    type IIdentityProviderAccountManager,
+    IOAuth2AuthorizationCodeRequestVerifier,
+    IOAuth2AuthorizationStateManager,
+    IdentityGrantType,
+    OAuth2AuthorizationCodeRequestValidator,
+    OAuth2AuthorizationState, createIdentityProviderOAuth2Authenticator,
+} from '../../../../../core';
 import { useRequestParamID } from '../../../request';
 import { ForceLoggedInMiddleware } from '../../../middleware';
 import {
@@ -36,20 +44,17 @@ import {
     getOneIdentityProviderRouteHandler,
     writeIdentityProviderRouteHandler,
 } from './handlers';
-import {
-    IOAuth2AuthorizationCodeRequestVerifier,
-    IOAuth2AuthorizationStateManager,
-    IdentityGrantType,
-    OAuth2AuthorizationCodeRequestValidator,
-    OAuth2AuthorizationState,
-} from '../../../../../core';
 import { useConfig } from '../../../../../config';
 import { IdentityProviderRepository } from '../../../../database/domains';
-import { IdentityProviderControllerOptions } from './types';
+import { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types';
 
 @DTags('identity')
 @DController('/identity-providers')
 export class IdentityProviderController {
+    protected options: IdentityProviderControllerOptions;
+
+    protected accountManager: IIdentityProviderAccountManager;
+
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
     protected codeRequestValidator : OAuth2AuthorizationCodeRequestValidator;
@@ -60,14 +65,16 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
-    constructor(options: IdentityProviderControllerOptions) {
-        this.codeRequestVerifier = options.codeRequestVerifier;
+    constructor(ctx: IdentityProviderControllerContext) {
+        this.options = ctx.options;
+        this.accountManager = ctx.accountManager;
+        this.codeRequestVerifier = ctx.codeRequestVerifier;
         this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
-        this.stateManager = options.stateManager;
+        this.stateManager = ctx.stateManager;
 
         this.identityGrant = new IdentityGrantType({
-            accessTokenIssuer: options.accessTokenIssuer,
-            refreshTokenIssuer: options.refreshTokenIssuer,
+            accessTokenIssuer: ctx.accessTokenIssuer,
+            refreshTokenIssuer: ctx.refreshTokenIssuer,
         });
     }
 
@@ -142,14 +149,17 @@ export class IdentityProviderController {
         const dataSource = await useDataSource();
         const entity = await this.resolve(dataSource, id);
 
-        if (
-            entity.protocol !== IdentityProviderProtocol.OAUTH2 &&
-            entity.protocol !== IdentityProviderProtocol.OIDC
-        ) {
+        if (!isOAuth2IdentityProvider(entity) && !isOpenIDIdentityProvider(entity)) {
             throw new BadRequestError('Only an identity-provider based on the oauth protocol supports authorize redirect.');
         }
 
-        const flow = createOAuth2IdentityProviderFlow(entity);
+        const authenticator = createIdentityProviderOAuth2Authenticator({
+            accountManager: this.accountManager,
+            provider: entity,
+            options: {
+                baseURL: this.options.baseURL,
+            },
+        });
 
         const parameters : AuthorizeParameters = {};
 
@@ -180,7 +190,7 @@ export class IdentityProviderController {
 
         parameters.state = await this.saveAuthorizationState(req, codeRequest);
 
-        return sendRedirect(res, flow.buildRedirectURL(parameters));
+        return sendRedirect(res, authenticator.buildRedirectURL(parameters));
     }
 
     @DGet('/:id/authorize-in', [])
@@ -194,10 +204,7 @@ export class IdentityProviderController {
 
         const entity = await this.resolve(dataSource, id);
 
-        if (
-            entity.protocol !== IdentityProviderProtocol.OAUTH2 &&
-            entity.protocol !== IdentityProviderProtocol.OIDC
-        ) {
+        if (!isOAuth2IdentityProvider(entity) && !isOpenIDIdentityProvider(entity)) {
             throw new Error(`The provider protocol ${entity.protocol} is not valid.`);
         }
 
@@ -211,20 +218,25 @@ export class IdentityProviderController {
             throw OAuth2Error.requestInvalid('The provider and client realm do not match.');
         }
 
-        const flow = createOAuth2IdentityProviderFlow(entity);
+        const { code } = useRequestQuery(req);
 
-        const identity = await flow.getIdentityForRequest(req);
-        const manager = new IdentityProviderAccountService(dataSource, entity);
+        const authenticator = createIdentityProviderOAuth2Authenticator({
+            accountManager: this.accountManager,
+            provider: entity,
+            options: {
+                baseURL: this.options.baseURL,
+                clientId: data.codeRequest?.client_id,
+            },
+        });
 
-        // todo: identity should respect client_id
-        const account = await manager.save(identity);
+        const user = await authenticator.authenticate(code);
 
         const config = useConfig();
 
         const token = await this.identityGrant.runWith({
             type: IdentityType.USER,
             data: {
-                ...account.user,
+                ...user,
                 realm: entity.realm,
             },
         });

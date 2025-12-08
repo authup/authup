@@ -6,7 +6,7 @@
  */
 
 import { inject } from 'vitest';
-import { LdapClient } from '../../src/core';
+import { LdapClient } from '../../src/adapters/ldap';
 
 export async function createLdapTestUserAccount(client: LdapClient) {
     try {

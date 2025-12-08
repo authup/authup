@@ -17,11 +17,12 @@ import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { useConfig } from '../../../../../../config';
+import { RobotCredentialsService } from '../../../../../../core';
 import { DatabaseConflictError } from '../../../../../database';
 import {
     RobotEntity, RobotRepository, resolveRealm,
 } from '../../../../../database/domains';
-import { RobotCredentialsService, isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services';
 import { RobotRequestValidator } from '../utils';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,

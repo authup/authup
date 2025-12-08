@@ -9,8 +9,8 @@ import { IdentityProviderProtocol } from '../constants';
 import { IdentityProviderPreset } from './constants';
 
 export function getIdentityProviderProtocolForPreset(
-    id: `${IdentityProviderPreset}`,
-) : `${IdentityProviderProtocol}` | undefined {
+    id: string,
+) : `${IdentityProviderProtocol}` | null {
     switch (id) {
         case IdentityProviderPreset.GITHUB:
         case IdentityProviderPreset.GITLAB:
@@ -23,5 +23,5 @@ export function getIdentityProviderProtocolForPreset(
             return IdentityProviderProtocol.OIDC;
     }
 
-    return undefined;
+    return null;
 }

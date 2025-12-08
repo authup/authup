@@ -7,17 +7,19 @@
 
 import type { Result } from '@authup/kit';
 import type { ObjectLiteral } from 'validup';
-import type { IAuthenticator } from './types';
+import type { ICredentialsAuthenticator } from './types';
 
-export abstract class BaseAuthenticator<T extends ObjectLiteral = ObjectLiteral> implements IAuthenticator<T> {
-    async safeAuthenticate(entity: T, secret: string): Promise<Result<T>> {
+export abstract class BaseCredentialsAuthenticator<
+    OUTPUT extends ObjectLiteral = ObjectLiteral,
+> implements ICredentialsAuthenticator<OUTPUT> {
+    async safeAuthenticate(key: string, value: string, realmId?: string): Promise<Result<OUTPUT>> {
         try {
-            const data = await this.authenticate(entity, secret);
+            const data = await this.authenticate(key, value, realmId);
             return { success: true, data };
         } catch (e) {
             return { success: false, error: e };
         }
     }
 
-    abstract authenticate(entity: T, secret: string): Promise<T>;
+    abstract authenticate(key: string, value: string, realmId?: string): Promise<OUTPUT>;
 }

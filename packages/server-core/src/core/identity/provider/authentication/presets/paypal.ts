@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) 2023-2023.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { extractTokenPayload } from '@authup/server-kit';
+import type { TokenGrantResponse } from '@hapic/oauth2';
+import type { IdentityProviderIdentity } from '../../types';
+import type { IdentityProviderOAuth2AuthenticatorContext } from '../protocols';
+import { IdentityProviderOAuth2Authenticator } from '../protocols';
+
+export class IdentityProviderPaypalAuthenticator extends IdentityProviderOAuth2Authenticator {
+    constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
+        ctx.provider.scope = 'openid profile email';
+        ctx.provider.authorize_url = 'https://www.paypal.com/signin/authorize';
+        ctx.provider.token_url = 'https://api.paypal.com/v1/identity/openidconnect/tokenservice';
+        ctx.provider.user_info_url = 'https://api.paypal.com/v1/oauth2/token/userinfo?schema=openid';
+
+        super(ctx);
+    }
+
+    protected async buildIdentityWithTokenGrantResponse(input: TokenGrantResponse): Promise<IdentityProviderIdentity> {
+        const userInfo = await this.client.userInfo.get({
+            type: 'Bearer',
+            token: input.access_token,
+        });
+
+        const payload = extractTokenPayload(input.access_token);
+
+        return {
+            id: userInfo.user_id,
+            attributeCandidates: {
+                name: [
+                    userInfo.name,
+                    userInfo.user_id,
+                ],
+                email: [
+                    userInfo.email,
+                ],
+            },
+            data: payload,
+            provider: this.provider,
+        };
+    }
+}

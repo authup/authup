@@ -15,12 +15,10 @@ import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { Container } from 'validup';
-import {
-    isSMTPClientUsable, useSMTPClient,
-} from '../../../../../../core';
 import { UserRepository, resolveRealm } from '../../../../../database/domains';
 import { useConfig } from '../../../../../../config';
 import { EnvironmentName } from '../../../../../../env';
+import { isSMTPClientUsable, useSMTPClient } from '../../../../../smtp';
 
 export class AuthPasswordForgotRequestValidator extends Container<User> {
     protected initialize() {

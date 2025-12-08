@@ -7,16 +7,17 @@
 
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import {
+    IdentityProviderAttributesValidator, IdentityProviderValidator, PermissionName, ValidatorGroup,
+} from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../../database/domains';
-import { IdentityProviderAttributesValidator, IdentityProviderValidator } from '../utils';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
+    getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
 } from '../../../../request';
 
 export async function writeIdentityProviderRouteHandler(
@@ -57,11 +58,11 @@ export async function writeIdentityProviderRouteHandler(
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
 
-        group = RequestHandlerOperation.UPDATE;
+        group = ValidatorGroup.UPDATE;
     } else {
         await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_CREATE });
 
-        group = RequestHandlerOperation.CREATE;
+        group = ValidatorGroup.CREATE;
     }
 
     // ----------------------------------------------

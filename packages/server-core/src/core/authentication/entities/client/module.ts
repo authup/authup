@@ -6,22 +6,31 @@
  */
 
 import type { Client } from '@authup/core-kit';
-import { ClientError } from '@authup/core-kit';
+import { ClientError, IdentityType, UserError } from '@authup/core-kit';
+import type { IIdentityResolver } from '../../../identity';
 import { ClientCredentialsService } from '../../credential';
-import { BaseAuthenticator } from '../../base';
+import { BaseCredentialsAuthenticator } from '../../base';
 
-export class ClientAuthenticator extends BaseAuthenticator<Client> {
+export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
+    protected identityResolver : IIdentityResolver;
+
     protected credentialsService : ClientCredentialsService;
 
-    constructor() {
+    constructor(identityResolver: IIdentityResolver) {
         super();
 
+        this.identityResolver = identityResolver;
         this.credentialsService = new ClientCredentialsService();
     }
 
-    async authenticate(entity: Client, secret: string): Promise<Client> {
-        if (entity.is_confidential) {
-            const verified = await this.credentialsService.verify(secret, entity);
+    async authenticate(key: string, secret: string, realmId?: string): Promise<Client> {
+        const identity = await this.identityResolver.resolve(IdentityType.CLIENT, key, realmId);
+        if (!identity || identity.type !== IdentityType.CLIENT) {
+            throw UserError.credentialsInvalid();
+        }
+
+        if (identity.data.is_confidential) {
+            const verified = await this.credentialsService.verify(secret, identity.data);
             if (!verified) {
                 throw ClientError.credentialsInvalid();
             }
@@ -29,10 +38,10 @@ export class ClientAuthenticator extends BaseAuthenticator<Client> {
             throw ClientError.invalid();
         }
 
-        if (!entity.active) {
+        if (!identity.data.active) {
             throw ClientError.inactive();
         }
 
-        return entity;
+        return identity.data;
     }
 }

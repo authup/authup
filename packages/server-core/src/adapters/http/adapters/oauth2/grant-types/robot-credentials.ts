@@ -9,24 +9,20 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { IdentityType, UserError } from '@authup/core-kit';
+import type { Robot } from '@authup/core-kit';
+import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
-    type IIdentityResolver,
-    RobotAuthenticator,
     RobotCredentialsGrant,
 } from '../../../../../core';
 import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPGrant } from './types';
 
 export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPGrant {
-    protected authenticator : RobotAuthenticator;
-
-    protected identityResolver: IIdentityResolver;
+    protected authenticator : ICredentialsAuthenticator<Robot>;
 
     constructor(ctx: HTTPOAuth2RobotCredentialsGrantContext) {
         super(ctx);
 
-        this.authenticator = new RobotAuthenticator();
-        this.identityResolver = ctx.identityResolver;
+        this.authenticator = ctx.authenticator;
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
@@ -35,18 +31,7 @@ export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements 
             secret,
             realm_id: realmId,
         } = useRequestBody(req);
-
-        const identity = await this.identityResolver.resolve(
-            IdentityType.ROBOT,
-            id,
-            realmId,
-        );
-
-        if (!identity || identity.type !== IdentityType.ROBOT) {
-            throw UserError.credentialsInvalid();
-        }
-
-        const entity = await this.authenticator.authenticate(identity.data, secret);
+        const entity = await this.authenticator.authenticate(id, secret, realmId);
 
         return this.runWith(
             entity,

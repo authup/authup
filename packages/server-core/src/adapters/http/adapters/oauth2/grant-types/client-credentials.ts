@@ -8,27 +8,24 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2Error } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
-import { ClientError, IdentityType } from '@authup/core-kit';
+import type { Client } from '@authup/core-kit';
+import { ClientError } from '@authup/core-kit';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import type { IIdentityResolver } from '../../../../../core';
+import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
-    ClientAuthenticator,
     ClientCredentialsGrant,
 } from '../../../../../core';
 import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPGrant } from './types';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPGrant {
-    protected authenticator : ClientAuthenticator;
-
-    protected identityResolver: IIdentityResolver;
+    protected authenticator : ICredentialsAuthenticator<Client>;
 
     constructor(ctx: HTTPOAuth2ClientCredentialsGrantContext) {
         super(ctx);
 
-        this.authenticator = new ClientAuthenticator();
-        this.identityResolver = ctx.identityResolver;
+        this.authenticator = ctx.authenticator;
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
@@ -53,17 +50,7 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
             clientSecret = header.password;
         }
 
-        const identity = await this.identityResolver.resolve(
-            IdentityType.CLIENT,
-            clientId,
-            realmId,
-        );
-
-        if (!identity || identity.type !== IdentityType.CLIENT) {
-            throw ClientError.credentialsInvalid();
-        }
-
-        const client = await this.authenticator.authenticate(identity.data, clientSecret);
+        const client = await this.authenticator.authenticate(clientId, clientSecret, realmId);
 
         return this.runWith(client, {
             remote_address: getRequestIP(req, { trustProxy: true }),

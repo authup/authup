@@ -5,4 +5,6 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+export const IDENTITY_PROVIDER_ACCOUNT_MANAGER_TOKEN = Symbol('IdentityProviderAccountManager');
+
 export const IDENTITY_RESOLVER_TOKEN = Symbol('IdentityResolver');

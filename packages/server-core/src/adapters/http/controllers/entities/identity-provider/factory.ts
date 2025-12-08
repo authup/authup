@@ -6,12 +6,16 @@
  */
 
 import { container } from 'tsyringe';
+import { useConfig } from '../../../../../config';
 import type {
+    IIdentityProviderAccountManager,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
     IOAuth2TokenIssuer,
 } from '../../../../../core';
 import {
+    IDENTITY_PROVIDER_ACCOUNT_MANAGER_TOKEN,
+
     OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
     OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
 
@@ -21,6 +25,12 @@ import {
 import { IdentityProviderController } from './module';
 
 export function createHTTPIdentityProviderController() {
+    const config = useConfig();
+
+    const accountManager = container.resolve<IIdentityProviderAccountManager>(
+        IDENTITY_PROVIDER_ACCOUNT_MANAGER_TOKEN,
+    );
+
     const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
         OAUTH2_AUTHORIZATION_CODE_REQUEST_VERIFIER_TOKEN,
     );
@@ -33,6 +43,12 @@ export function createHTTPIdentityProviderController() {
     const refreshTokenIssuer = container.resolve<IOAuth2TokenIssuer>(OAUTH2_REFRESH_TOKEN_ISSUER_TOKEN);
 
     return new IdentityProviderController({
+        options: {
+            baseURL: config.publicUrl,
+        },
+
+        accountManager,
+
         codeRequestVerifier,
         stateManager,
 

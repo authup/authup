@@ -5,7 +5,9 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client, Robot, User } from '@authup/core-kit';
 import type {
+    ICredentialsAuthenticator,
     IIdentityResolver,
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2TokenIssuer,
@@ -23,5 +25,9 @@ export type TokenControllerContext = {
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRevoker: IOAuth2TokenRevoker,
 
-    identityResolver: IIdentityResolver
+    identityResolver: IIdentityResolver,
+
+    clientAuthenticator: ICredentialsAuthenticator<Client>
+    robotAuthenticator: ICredentialsAuthenticator<Robot>
+    userAuthenticator: ICredentialsAuthenticator<User>
 };

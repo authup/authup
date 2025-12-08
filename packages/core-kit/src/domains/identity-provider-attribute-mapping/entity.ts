@@ -5,16 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderMappingRelation } from '../identity-provider';
+import type { IdentityProviderBaseMapping } from '../identity-provider';
 
-export interface IdentityProviderAttributeMapping extends IdentityProviderMappingRelation {
+export interface IdentityProviderAttributeMapping extends IdentityProviderBaseMapping {
     id: string;
-
-    source_name: string | null;
-
-    source_value: string | null;
-
-    source_value_is_regex: boolean;
 
     target_name: string;
 

@@ -2,6 +2,21 @@
     "extends": "./tsconfig.build.json",
     "compilerOptions": {
         "baseUrl": ".",
-        "noEmit": true
+        "noEmit": true,
+        "paths": {
+            "@authup/access": ["packages/access/src"],
+            "@authup/authup": ["packages/authup/src"],
+            "@authup/client-web-kit": ["packages/client-web-kit/src"],
+            "@authup/client-web-nuxt": ["packages/client-web-nuxt/src"],
+            "@authup/client-web-slim": ["packages/client-web-slim/src"],
+            "@authup/core-http-kit": ["packages/core-http-kit/src"],
+            "@authup/core-kit": ["packages/core-kit/src"],
+            "@authup/core-realtime-kit": ["packages/core-realtime-kit/src"],
+            "@authup/errors": ["packages/errors/src"],
+            "@authup/kit": ["packages/kit/src"],
+            "@authup/server-core": ["packages/server-core/src"],
+            "@authup/server-kit": ["packages/server-kit/src"],
+            "@authup/specs": ["packages/specs/src"]
+        }
     }
 }

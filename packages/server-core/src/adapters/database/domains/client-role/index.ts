@@ -6,3 +6,5 @@
  */
 
 export * from './entity';
+
+export * from './subscriber';

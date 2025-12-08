@@ -5,8 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './attributes-validator';
 export * from './constants';
 export * from './entity';
 export * from './utils';
-export * from './protocol';
+
+export * from './ldap';
+export * from './oauth2';
+export * from './oidc';
+
 export * from './preset';
+export * from './validator';

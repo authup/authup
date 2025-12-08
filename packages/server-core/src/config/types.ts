@@ -16,7 +16,7 @@ import type { CorsOptions } from 'cors';
 import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
-import type { SMTPOptions } from '../core';
+import type { SMTPOptions } from '../adapters/smtp';
 
 export type Config = {
     /**

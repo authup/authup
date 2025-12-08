@@ -7,6 +7,7 @@
 
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
+import type { Client, Robot, User } from '@authup/core-kit';
 import {
     IdentityType,
     ScopeName,
@@ -26,14 +27,15 @@ import {
 } from 'hapic';
 import { useConfig } from '../../../../../config';
 import { PermissionDBProvider, PolicyEngine } from '../../../../../security';
+import type {
+    ICredentialsAuthenticator, IIdentityResolver,
+    IOAuth2TokenVerifier,
+} from '../../../../../core';
 import {
     ClientAuthenticator,
     RobotAuthenticator,
+
     UserAuthenticator,
-} from '../../../../../core';
-import type {
-    IIdentityResolver,
-    IOAuth2TokenVerifier,
 } from '../../../../../core';
 import {
     RequestPermissionChecker,
@@ -53,7 +55,17 @@ export class AuthorizationMiddleware {
 
     protected permissionChecker: PermissionChecker;
 
-    protected identityResolver : IIdentityResolver;
+    // --------------------------------------
+
+    protected identityResolver: IIdentityResolver;
+
+    // --------------------------------------
+
+    protected clientAuthenticator : ICredentialsAuthenticator<Client>;
+
+    protected robotAuthenticator : ICredentialsAuthenticator<Robot>;
+
+    protected userAuthenticator : ICredentialsAuthenticator<User>;
 
     // --------------------------------------
 
@@ -61,6 +73,11 @@ export class AuthorizationMiddleware {
         this.options = ctx.options || {};
 
         this.identityResolver = ctx.identityResolver;
+
+        this.clientAuthenticator = new ClientAuthenticator(ctx.identityResolver);
+        this.robotAuthenticator = new RobotAuthenticator(ctx.identityResolver);
+        this.userAuthenticator = new UserAuthenticator(ctx.identityResolver);
+
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
         const provider = new PermissionDBProvider(ctx.dataSource);
@@ -169,69 +186,48 @@ export class AuthorizationMiddleware {
         request: Request,
         header: BasicAuthorizationHeader,
     ) {
-        if (this.options.userAuthBasic) {
-            const identity = await this.identityResolver.resolve(
-                IdentityType.USER,
+        if (this.options.clientAuthBasic) {
+            const authenticator = await this.clientAuthenticator.safeAuthenticate(
                 header.username,
+                header.password,
+            );
+            if (authenticator.success) {
+                setRequestScopes(request, [ScopeName.GLOBAL]);
+                setRequestIdentity(request, {
+                    type: IdentityType.CLIENT,
+                    data: authenticator.data,
+                });
+            }
+        }
+
+        if (this.options.userAuthBasic) {
+            const authenticated = await this.userAuthenticator.safeAuthenticate(
+                header.username,
+                header.password,
             );
 
-            if (
-                identity &&
-                identity.type === IdentityType.USER
-            ) {
-                const authenticationService = new UserAuthenticator();
-                const authenticated = await authenticationService.safeAuthenticate(
-                    identity.data,
-                    header.password,
-                );
+            if (authenticated.success) {
+                setRequestScopes(request, [ScopeName.GLOBAL]);
+                setRequestIdentity(request, {
+                    type: IdentityType.USER,
+                    data: authenticated.data,
+                });
 
-                if (authenticated.success) {
-                    setRequestScopes(request, [ScopeName.GLOBAL]);
-                    setRequestIdentity(request, identity);
-
-                    return;
-                }
+                return;
             }
         }
 
         if (this.options.robotAuthBasic) {
-            const identity = await this.identityResolver.resolve(
-                IdentityType.ROBOT,
+            const authenticated = await this.robotAuthenticator.safeAuthenticate(
                 header.username,
+                header.password,
             );
-
-            if (
-                identity &&
-                identity.type === IdentityType.ROBOT
-            ) {
-                const authenticationService = new RobotAuthenticator();
-                const authenticated = await authenticationService.safeAuthenticate(
-                    identity.data,
-                    header.password,
-                );
-                if (authenticated.success) {
-                    setRequestScopes(request, [ScopeName.GLOBAL]);
-                    setRequestIdentity(request, identity);
-                }
-            }
-        }
-
-        if (this.options.clientAuthBasic) {
-            const identity = await this.identityResolver.resolve(
-                IdentityType.CLIENT,
-                header.username,
-            );
-
-            if (
-                identity &&
-                identity.type === IdentityType.CLIENT
-            ) {
-                const authenticationService = new ClientAuthenticator();
-                const authenticated = await authenticationService.safeAuthenticate(identity.data, header.password);
-                if (authenticated.success) {
-                    setRequestScopes(request, [ScopeName.GLOBAL]);
-                    setRequestIdentity(request, identity);
-                }
+            if (authenticated.success) {
+                setRequestScopes(request, [ScopeName.GLOBAL]);
+                setRequestIdentity(request, {
+                    type: IdentityType.ROBOT,
+                    data: authenticated.data,
+                });
             }
         }
     }

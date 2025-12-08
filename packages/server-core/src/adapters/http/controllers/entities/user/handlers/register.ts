@@ -16,12 +16,12 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { useLogger } from '@authup/server-kit';
 import { Container } from 'validup';
 import { createNanoID } from '@authup/kit';
-import { isSMTPClientUsable, useSMTPClient } from '../../../../../../core';
+import { isSMTPClientUsable, useSMTPClient } from '../../../../../smtp';
 import { UserEntity, UserRepository, resolveRealm } from '../../../../../database/domains';
 import { useConfig } from '../../../../../../config';
 import { EnvironmentName } from '../../../../../../env';
 import { RequestHandlerOperation } from '../../../../request';
-import { UserCredentialsService } from '../../../../../../core/authentication/credential/entities';
+import { UserCredentialsService } from '../../../../../../core';
 
 export class AuthRegisterRequestValidator extends Container<User> {
     protected initialize() {

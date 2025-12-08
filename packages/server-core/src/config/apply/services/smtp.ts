@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { SMTPOptions } from '../../../core';
-import { createSMTPClient, setSMTPClientFactory } from '../../../core';
+import type { SMTPOptions } from '../../../adapters/smtp';
+import { createSMTPClient, setSMTPClientFactory } from '../../../adapters/smtp';
 
 export function applyConfigSMTP(
     data: string | boolean | SMTPOptions,
