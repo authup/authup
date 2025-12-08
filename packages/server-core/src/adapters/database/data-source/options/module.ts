@@ -9,7 +9,7 @@ import type { DataSourceOptions } from 'typeorm';
 import {
     CodeTransformation, isCodeTransformation, transformFilePath,
 } from 'typeorm-extension';
-import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
+import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
 import { extendDataSourceOptionsWithEntities } from './entities';
 import { extendDataSourceOptionsWithSubscribers } from './subscribers';
 import { DatabaseQueryResultCache } from '../../cache';

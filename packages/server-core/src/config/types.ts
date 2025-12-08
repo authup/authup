@@ -13,9 +13,9 @@ import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
 import type { UIOptions as SwaggerUIOptions } from '@routup/swagger';
 import type { Options as BodyOptions } from '@routup/basic/body';
 import type { CorsOptions } from 'cors';
-import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions';
-import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
-import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
+import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions.js';
+import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
+import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
 import type { SMTPOptions } from '../adapters/smtp';
 
 export type Config = {

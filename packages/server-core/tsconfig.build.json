@@ -4,9 +4,7 @@
     "compilerOptions": {
         "outDir": "./dist",
         "strict": false,
-        "resolveJsonModule": true,
-        "module": "CommonJS",
-        "moduleResolution": "node"
+        "resolveJsonModule": true
     },
 
     "include": [

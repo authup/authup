@@ -7,8 +7,8 @@
 
 import type { Cache } from '@authup/server-kit';
 import { escapeRedisKey, useCache } from '@authup/server-kit';
-import type { QueryResultCache } from 'typeorm/cache/QueryResultCache';
-import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions';
+import type { QueryResultCache } from 'typeorm/cache/QueryResultCache.js';
+import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions.js';
 
 export class DatabaseQueryResultCache implements QueryResultCache {
     protected instance : Cache;
@@ -40,7 +40,11 @@ export class DatabaseQueryResultCache implements QueryResultCache {
             return this.instance.get(this.buildKey(options.identifier));
         }
 
-        return this.instance.get(this.buildKey(encodeURIComponent(options.query)));
+        if (typeof options.query !== 'undefined') {
+            return this.instance.get(this.buildKey(encodeURIComponent(options.query)));
+        }
+
+        return undefined;
     }
 
     isExpired(savedCache: QueryResultCacheOptions): boolean {
@@ -69,13 +73,15 @@ export class DatabaseQueryResultCache implements QueryResultCache {
             return;
         }
 
-        await this.instance.set(
-            this.buildKey(encodeURIComponent(options.query)),
-            options,
-            {
-                ttl: options.duration,
-            },
-        );
+        if (typeof options.query !== 'undefined') {
+            await this.instance.set(
+                this.buildKey(encodeURIComponent(options.query)),
+                options,
+                {
+                    ttl: options.duration,
+                },
+            );
+        }
     }
 
     synchronize(): Promise<void> {

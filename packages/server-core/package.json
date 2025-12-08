@@ -1,9 +1,11 @@
 {
     "name": "@authup/server-core",
+    "type": "module",
     "version": "1.0.0-beta.27",
     "description": "This is a standalone application.",
     "license": "Apache-2.0",
     "main": "dist/index.js",
+    "module": "dist/index.js",
     "scripts": {
         "debug": "node --inspect dist/cli/index.js start",
         "cli": "node dist/cli/index.js",

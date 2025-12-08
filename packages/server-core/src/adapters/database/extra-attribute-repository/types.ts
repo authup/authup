@@ -4,8 +4,9 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import type { ObjectLiteral } from '@authup/kit';
 import type { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
-import type { EntityTarget } from 'typeorm/common/EntityTarget';
+import type { EntityTarget } from 'typeorm/common/EntityTarget.js';
 
 export type EARepositoryOptions<
     T,
@@ -30,8 +31,8 @@ export type EARepositoryEntityBase = {
 export type EARepositoryPropertiesModifyFn<T, A> = (input: A, parent: T) => A;
 
 export type EARepositoryAdapterOptions<
-    T,
-    A extends EARepositoryEntityBase,
+    T extends ObjectLiteral = ObjectLiteral,
+    A extends EARepositoryEntityBase = EARepositoryEntityBase,
 > = Omit<EARepositoryOptions<T, A>, 'entity' | 'attributeEntity'> & {
     repository: Repository<T>,
     attributeRepository: Repository<A>
