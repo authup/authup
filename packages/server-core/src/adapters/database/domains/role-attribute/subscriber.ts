@@ -1,19 +1,15 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    RolePermission,
-} from '@authup/core-kit';
+import type { RoleAttribute } from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType,
-    buildEntityChannelName,
-    buildEntityNamespaceName,
+    EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
 } from '@authup/core-kit';
-import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -22,47 +18,40 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, RolePermissionEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { RoleAttributeEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: RolePermission,
+    data: RoleAttribute,
 ) {
-    const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id) },
-    ];
-    if (data.role_realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id),
-            namespace: buildEntityNamespaceName(data.role_realm_id),
-        });
-    }
-    if (data.permission_realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id),
-            namespace: buildEntityNamespaceName(data.permission_realm_id),
-        });
-    }
-
     await publishDomainEvent({
         content: {
-            type: EntityType.ROLE_PERMISSION,
+            type: EntityType.ROLE_ATTRIBUTE,
             event,
             data,
         },
-        destinations,
+        destinations: [
+            {
+                channel: (id) => buildEntityChannelName(EntityType.ROLE_ATTRIBUTE, id),
+                namespace: buildEntityNamespaceName(data.realm_id),
+            },
+            {
+                channel: (id) => buildEntityChannelName(EntityType.ROLE_ATTRIBUTE, id),
+            },
+        ],
     });
 }
 
 @EventSubscriber()
-export class RolePermissionSubscriber implements EntitySubscriberInterface<RolePermissionEntity> {
+export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAttributeEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return RolePermissionEntity;
+        return RoleAttributeEntity;
     }
 
-    async afterInsert(event: InsertEvent<RolePermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RoleAttributeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -79,7 +68,7 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<RolePermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RoleAttributeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -93,10 +82,10 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RolePermission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RoleAttribute);
     }
 
-    async afterRemove(event: RemoveEvent<RolePermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<RoleAttributeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }

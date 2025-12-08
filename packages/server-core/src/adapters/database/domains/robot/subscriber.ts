@@ -1,12 +1,18 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientScope } from '@authup/core-kit';
-import { EntityDefaultEventName, EntityType, buildEntityChannelName } from '@authup/core-kit';
+import type {
+    Robot,
+} from '@authup/core-kit';
+import {
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
+} from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
@@ -16,62 +22,48 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, ClientScopeEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { RobotEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: ClientScope,
+    data: Robot,
 ) {
     await publishDomainEvent({
         content: {
-            type: EntityType.CLIENT_SCOPE,
+            type: EntityType.ROBOT,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildEntityChannelName(EntityType.CLIENT_SCOPE, id),
+                channel: (id) => buildEntityChannelName(EntityType.ROBOT, id),
+                namespace: buildEntityNamespaceName(data.realm_id),
             },
-
-            // todo: realm attribute
+            {
+                channel: (id) => buildEntityChannelName(EntityType.ROBOT, id),
+            },
         ],
     });
 }
 
 @EventSubscriber()
-export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientScopeEntity> {
+export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return ClientScopeEntity;
+        return RobotEntity;
     }
 
-    async afterInsert(event: InsertEvent<ClientScopeEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RobotEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as ClientScope);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Robot);
     }
 
-    async afterUpdate(event: UpdateEvent<ClientScopeEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT_SCOPE,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientScope);
-    }
-
-    async afterRemove(event: RemoveEvent<ClientScopeEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RobotEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -79,12 +71,29 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT_SCOPE,
+                    prefix: CachePrefix.ROBOT,
                     key: event.entity.id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as ClientScope);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Robot);
+    }
+
+    async afterRemove(event: RemoveEvent<RobotEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
+        if (event.connection.queryResultCache) {
+            await event.connection.queryResultCache.remove([
+                buildRedisKeyPath({
+                    prefix: CachePrefix.ROBOT,
+                    key: event.entity.id,
+                }),
+            ]);
+        }
+
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Robot);
     }
 }

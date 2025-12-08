@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type {
-    ClientPermission,
+    RobotPermission,
 } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType,
@@ -22,32 +22,33 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, ClientPermissionEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { RobotPermissionEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: ClientPermission,
+    data: RobotPermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id) },
+        { channel: (id) => buildEntityChannelName(EntityType.ROBOT_PERMISSION, id) },
     ];
-    if (data.client_realm_id) {
+    if (data.robot_realm_id) {
         destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id),
-            namespace: buildEntityNamespaceName(data.client_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.ROBOT_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.robot_realm_id),
         });
     }
     if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id),
+            channel: (id) => buildEntityChannelName(EntityType.ROBOT_PERMISSION, id),
             namespace: buildEntityNamespaceName(data.permission_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: EntityType.CLIENT_PERMISSION,
+            type: EntityType.ROBOT_PERMISSION,
             event,
             data,
         },
@@ -56,18 +57,18 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class ClientPermissionSubscriber implements EntitySubscriberInterface<ClientPermissionEntity> {
+export class RobotPermissionSubscriber implements EntitySubscriberInterface<RobotPermissionEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return ClientPermissionEntity;
+        return RobotPermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<ClientPermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RobotPermissionEntity>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
-                    key: event.entity.client_id,
+                    prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
@@ -77,7 +78,7 @@ export class ClientPermissionSubscriber implements EntitySubscriberInterface<Cli
         return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<ClientPermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RobotPermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -85,16 +86,16 @@ export class ClientPermissionSubscriber implements EntitySubscriberInterface<Cli
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
-                    key: event.entity.client_id,
+                    prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientPermission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RobotPermission);
     }
 
-    async afterRemove(event: RemoveEvent<ClientPermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<RobotPermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -102,8 +103,8 @@ export class ClientPermissionSubscriber implements EntitySubscriberInterface<Cli
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
-                    key: event.entity.client_id,
+                    prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }

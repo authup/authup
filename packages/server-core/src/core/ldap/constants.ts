@@ -1,10 +1,8 @@
 /*
- * Copyright (c) 2021-2021.
+ * Copyright (c) 2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './entity';
-
-export * from './subscriber';
+export const LDAP_CLIENT_FACTORY_TOKEN = Symbol('LdapClientFactory');

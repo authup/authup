@@ -77,16 +77,16 @@ export class TokenController {
             }),
             [OAuth2TokenGrant.CLIENT_CREDENTIALS]: new HTTPClientCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
-                identityResolver: ctx.identityResolver,
+                authenticator: ctx.clientAuthenticator,
             }),
             [OAuth2TokenGrant.ROBOT_CREDENTIALS]: new HTTPRobotCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
-                identityResolver: ctx.identityResolver,
+                authenticator: ctx.robotAuthenticator,
             }),
             [OAuth2TokenGrant.PASSWORD]: new HTTPPasswordGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
-                identityResolver: ctx.identityResolver,
+                authenticator: ctx.userAuthenticator,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,

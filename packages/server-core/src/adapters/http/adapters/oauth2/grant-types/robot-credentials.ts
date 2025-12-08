@@ -9,21 +9,20 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { IdentityType, UserError } from '@authup/core-kit';
+import type { Robot } from '@authup/core-kit';
+import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
-    type IIdentityResolver,
-    RobotAuthenticator,
     RobotCredentialsGrant,
 } from '../../../../../core';
 import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPGrant } from './types';
 
 export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPGrant {
-    protected authenticator : RobotAuthenticator;
+    protected authenticator : ICredentialsAuthenticator<Robot>;
 
     constructor(ctx: HTTPOAuth2RobotCredentialsGrantContext) {
         super(ctx);
 
-        this.authenticator = new RobotAuthenticator(ctx.identityResolver);
+        this.authenticator = ctx.authenticator;
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {

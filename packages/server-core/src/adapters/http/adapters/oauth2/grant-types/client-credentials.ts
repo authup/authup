@@ -8,23 +8,24 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2Error } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
+import type { Client } from '@authup/core-kit';
 import { ClientError } from '@authup/core-kit';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
+import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
-    ClientAuthenticator,
     ClientCredentialsGrant,
 } from '../../../../../core';
 import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPGrant } from './types';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPGrant {
-    protected authenticator : ClientAuthenticator;
+    protected authenticator : ICredentialsAuthenticator<Client>;
 
     constructor(ctx: HTTPOAuth2ClientCredentialsGrantContext) {
         super(ctx);
 
-        this.authenticator = new ClientAuthenticator(ctx.identityResolver);
+        this.authenticator = ctx.authenticator;
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {

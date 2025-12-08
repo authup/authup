@@ -1,15 +1,19 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RoleAttribute } from '@authup/core-kit';
-import {
-    EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
+import type {
+    RolePermission,
 } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
+import {
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
+} from '@authup/core-kit';
+import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -18,39 +22,48 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, RoleAttributeEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { RolePermissionEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: RoleAttribute,
+    data: RolePermission,
 ) {
+    const destinations : DomainEventDestination[] = [
+        { channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id) },
+    ];
+    if (data.role_realm_id) {
+        destinations.push({
+            channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.role_realm_id),
+        });
+    }
+    if (data.permission_realm_id) {
+        destinations.push({
+            channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.permission_realm_id),
+        });
+    }
+
     await publishDomainEvent({
         content: {
-            type: EntityType.ROLE_ATTRIBUTE,
+            type: EntityType.ROLE_PERMISSION,
             event,
             data,
         },
-        destinations: [
-            {
-                channel: (id) => buildEntityChannelName(EntityType.ROLE_ATTRIBUTE, id),
-                namespace: buildEntityNamespaceName(data.realm_id),
-            },
-            {
-                channel: (id) => buildEntityChannelName(EntityType.ROLE_ATTRIBUTE, id),
-            },
-        ],
+        destinations,
     });
 }
 
 @EventSubscriber()
-export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAttributeEntity> {
+export class RolePermissionSubscriber implements EntitySubscriberInterface<RolePermissionEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return RoleAttributeEntity;
+        return RolePermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<RoleAttributeEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RolePermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -67,7 +80,7 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<RoleAttributeEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RolePermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -81,10 +94,10 @@ export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAt
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RoleAttribute);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RolePermission);
     }
 
-    async afterRemove(event: RemoveEvent<RoleAttributeEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<RolePermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }

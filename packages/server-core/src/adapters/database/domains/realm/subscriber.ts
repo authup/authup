@@ -1,15 +1,17 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type {
-    Client,
+    Realm,
 } from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
+    EntityDefaultEventName,
+    EntityType,
+    buildEntityChannelName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -20,64 +22,44 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, ClientEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { RealmEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: Client,
+    data: Realm,
 ) {
     await publishDomainEvent({
         content: {
-            type: EntityType.CLIENT,
+            type: EntityType.REALM,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildEntityChannelName(EntityType.CLIENT, id),
-                namespace: buildEntityNamespaceName(data.realm_id),
-            },
-            {
-                channel: (id) => buildEntityChannelName(EntityType.CLIENT, id),
+                channel: (id) => buildEntityChannelName(EntityType.REALM, id),
             },
         ],
     });
 }
 
 @EventSubscriber()
-export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity> {
+export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return ClientEntity;
+        return RealmEntity;
     }
 
-    async afterInsert(event: InsertEvent<ClientEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RealmEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Client);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Realm);
     }
 
-    async afterUpdate(event: UpdateEvent<ClientEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Client);
-    }
-
-    async afterRemove(event: RemoveEvent<ClientEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RealmEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -85,12 +67,29 @@ export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity>
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT,
+                    prefix: CachePrefix.REALM,
                     key: event.entity.id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Client);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Realm);
+    }
+
+    async afterRemove(event: RemoveEvent<RealmEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
+        if (event.connection.queryResultCache) {
+            await event.connection.queryResultCache.remove([
+                buildRedisKeyPath({
+                    prefix: CachePrefix.REALM,
+                    key: event.entity.id,
+                }),
+            ]);
+        }
+
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Realm);
     }
 }

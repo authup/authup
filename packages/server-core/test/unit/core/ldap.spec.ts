@@ -9,7 +9,7 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { EqualityFilter } from 'ldapjs';
-import type { LdapClient } from '../../../src/core';
+import type { LdapClient } from '../../../src/adapters/ldap';
 import { createLdapTestClient, createLdapTestUserAccount, dropLdapTestUserAccount } from '../../utils/ldap';
 
 describe('src/domains/identity-provider/flow/ldap', () => {

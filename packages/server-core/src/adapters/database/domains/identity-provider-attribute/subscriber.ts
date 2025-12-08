@@ -1,17 +1,16 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type {
-    Robot,
+    IdentityProviderAttribute,
 } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType,
     buildEntityChannelName,
-    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -22,64 +21,46 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, RobotEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { IdentityProviderAttributeEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: Robot,
+    data: IdentityProviderAttribute,
 ) {
     await publishDomainEvent({
         content: {
-            type: EntityType.ROBOT,
+            type: EntityType.IDENTITY_PROVIDER_ATTRIBUTE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildEntityChannelName(EntityType.ROBOT, id),
-                namespace: buildEntityNamespaceName(data.realm_id),
+                channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ATTRIBUTE, id),
             },
-            {
-                channel: (id) => buildEntityChannelName(EntityType.ROBOT, id),
-            },
+
+            // todo: realm attribute
         ],
     });
 }
 
 @EventSubscriber()
-export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
+export class IdentityProviderAttributeSubscriber implements EntitySubscriberInterface<IdentityProviderAttributeEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return RobotEntity;
+        return IdentityProviderAttributeEntity;
     }
 
-    async afterInsert(event: InsertEvent<RobotEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<IdentityProviderAttributeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Robot);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as IdentityProviderAttribute);
     }
 
-    async afterUpdate(event: UpdateEvent<RobotEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.ROBOT,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Robot);
-    }
-
-    async afterRemove(event: RemoveEvent<RobotEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<IdentityProviderAttributeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -87,12 +68,29 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.ROBOT,
+                    prefix: CachePrefix.IDENTITY_PROVIDER_ATTRIBUTE,
                     key: event.entity.id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Robot);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProviderAttribute);
+    }
+
+    async afterRemove(event: RemoveEvent<IdentityProviderAttributeEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
+        if (event.connection.queryResultCache) {
+            await event.connection.queryResultCache.remove([
+                buildRedisKeyPath({
+                    prefix: CachePrefix.IDENTITY_PROVIDER_ATTRIBUTE,
+                    key: event.entity.id,
+                }),
+            ]);
+        }
+
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as IdentityProviderAttribute);
     }
 }

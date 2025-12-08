@@ -33,7 +33,7 @@ import {
     UserPermissionSubscriber,
     UserRoleSubscriber,
     UserSubscriber,
-} from '../../subscribers';
+} from '../../domains';
 
 export function extendDataSourceOptionsWithSubscribers<T extends DataSourceOptions>(options: T) : T {
     return Object.assign(options, {

@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client, Robot, User } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Request } from 'routup';
 import type {
     BaseGrantContext,
-    IIdentityResolver,
+    ICredentialsAuthenticator,
     IOAuth2AuthorizationCodeVerifier,
     OAuth2AuthorizeGrantContext,
     OAuth2PasswordGrantContext,
@@ -24,13 +25,13 @@ export interface IHTTPGrant {
 }
 
 export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
-    identityResolver: IIdentityResolver
+    authenticator : ICredentialsAuthenticator<User>
 };
 
 export type HTTPOAuth2ClientCredentialsGrantContext = BaseGrantContext & {
-    identityResolver: IIdentityResolver
+    authenticator : ICredentialsAuthenticator<Client>
 };
 
 export type HTTPOAuth2RobotCredentialsGrantContext = BaseGrantContext & {
-    identityResolver: IIdentityResolver
+    authenticator : ICredentialsAuthenticator<Robot>
 };

@@ -1,17 +1,15 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type {
-    Policy,
+    Client,
 } from '@authup/core-kit';
 import {
-    EntityDefaultEventName,
-    EntityType,
-    buildEntityChannelName,
+    EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -22,60 +20,48 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, PolicyEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { ClientEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: Policy,
+    data: Client,
 ) {
     await publishDomainEvent({
         content: {
-            type: EntityType.POLICY,
+            type: EntityType.CLIENT,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildEntityChannelName(EntityType.POLICY, id),
+                channel: (id) => buildEntityChannelName(EntityType.CLIENT, id),
+                namespace: buildEntityNamespaceName(data.realm_id),
+            },
+            {
+                channel: (id) => buildEntityChannelName(EntityType.CLIENT, id),
             },
         ],
     });
 }
 
 @EventSubscriber()
-export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity> {
+export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return PolicyEntity;
+        return ClientEntity;
     }
 
-    async afterInsert(event: InsertEvent<PolicyEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<ClientEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Policy);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Client);
     }
 
-    async afterUpdate(event: UpdateEvent<PolicyEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.REALM,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Policy);
-    }
-
-    async afterRemove(event: RemoveEvent<PolicyEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<ClientEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -83,12 +69,29 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.POLICY,
+                    prefix: CachePrefix.CLIENT,
                     key: event.entity.id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Policy);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Client);
+    }
+
+    async afterRemove(event: RemoveEvent<ClientEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
+        if (event.connection.queryResultCache) {
+            await event.connection.queryResultCache.remove([
+                buildRedisKeyPath({
+                    prefix: CachePrefix.CLIENT,
+                    key: event.entity.id,
+                }),
+            ]);
+        }
+
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Client);
     }
 }

@@ -8,4 +8,5 @@
 export * from './protocols';
 export * from './presets';
 
+export * from './constants';
 export * from './factory';

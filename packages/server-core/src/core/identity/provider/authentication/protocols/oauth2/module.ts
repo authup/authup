@@ -16,6 +16,7 @@ import type { IdentityProviderIdentity } from '../../../types';
 import type {
     IOAuth2Authenticator,
     IdentityProviderOAuth2AuthenticatorContext,
+    IdentityProviderOAuth2AuthenticatorOptions,
     OAuth2AuthorizationCodeGrantPayload,
 } from './types';
 

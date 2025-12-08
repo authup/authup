@@ -1,81 +1,70 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider } from '@authup/core-kit';
+import type {
+    Scope,
+} from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
+    EntityDefaultEventName, EntityType,
+    buildEntityChannelName,
+    buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface, InsertEvent,
+    EntitySubscriberInterface,
+    InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, IdentityProviderEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { ScopeEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: IdentityProvider,
+    data: Scope,
 ) {
     await publishDomainEvent({
         content: {
-            type: EntityType.IDENTITY_PROVIDER,
+            type: EntityType.SCOPE,
             event,
             data,
         },
         destinations: [
             {
-                channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER, id),
+                channel: (id) => buildEntityChannelName(EntityType.USER, id),
                 namespace: buildEntityNamespaceName(data.realm_id),
             },
             {
-                channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER, id),
+                channel: (id) => buildEntityChannelName(EntityType.USER, id),
             },
         ],
     });
 }
 
 @EventSubscriber()
-export class IdentityProviderSubscriber implements EntitySubscriberInterface<IdentityProviderEntity> {
+export class ScopeSubscriber implements EntitySubscriberInterface<ScopeEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return IdentityProviderEntity;
+        return ScopeEntity;
     }
 
-    async afterInsert(event: InsertEvent<IdentityProviderEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<ScopeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as IdentityProvider);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<IdentityProviderEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.IDENTITY_PROVIDER,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProvider);
-    }
-
-    async afterRemove(event: RemoveEvent<IdentityProviderEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<ScopeEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -83,12 +72,29 @@ export class IdentityProviderSubscriber implements EntitySubscriberInterface<Ide
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.IDENTITY_PROVIDER,
+                    prefix: CachePrefix.USER,
                     key: event.entity.id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as IdentityProvider);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ScopeEntity);
+    }
+
+    async afterRemove(event: RemoveEvent<ScopeEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
+        if (event.connection.queryResultCache) {
+            await event.connection.queryResultCache.remove([
+                buildRedisKeyPath({
+                    prefix: CachePrefix.USER,
+                    key: event.entity.id,
+                }),
+            ]);
+        }
+
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as ScopeEntity);
     }
 }

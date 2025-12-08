@@ -36,7 +36,7 @@ describe('src/http/controllers/identity-provider', () => {
         await client.unbind();
     });
 
-    it.skip('should use ldap provider for login', async () => {
+    it('should use ldap provider for login', async () => {
         const data : Partial<LdapIdentityProvider> = {
             name: 'ldapLdap',
             enabled: true,

@@ -1,76 +1,86 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type {
-    UserAttribute,
+    UserRole,
 } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType,
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
+import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface,
-    InsertEvent,
+    EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, UserAttributeEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { UserRoleEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: UserAttribute,
+    data: UserRole,
 ) {
+    const destinations : DomainEventDestination[] = [
+        { channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id) },
+    ];
+    if (data.user_realm_id) {
+        destinations.push({
+            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id),
+            namespace: buildEntityNamespaceName(data.user_realm_id),
+        });
+    }
+    if (data.role_realm_id) {
+        destinations.push({
+            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id),
+            namespace: buildEntityNamespaceName(data.role_realm_id),
+        });
+    }
+
     await publishDomainEvent({
         content: {
-            type: EntityType.USER_ATTRIBUTE,
+            type: EntityType.USER_ROLE,
             event,
             data,
         },
-        destinations: [
-            {
-                channel: (id) => buildEntityChannelName(EntityType.USER_ATTRIBUTE, id),
-                namespace: buildEntityNamespaceName(data.realm_id),
-            },
-            {
-                channel: (id) => buildEntityChannelName(EntityType.USER_ATTRIBUTE, id),
-            },
-        ],
+        destinations,
     });
 }
 
 @EventSubscriber()
-export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAttributeEntity> {
+export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return UserAttributeEntity;
+        return UserRoleEntity;
     }
 
-    async afterInsert(event: InsertEvent<UserAttributeEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<UserRoleEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
+                    prefix: CachePrefix.USER_OWNED_ROLES,
                     key: event.entity.user_id,
                 }),
             ]);
         }
 
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-
-        return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<UserAttributeEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<UserRoleEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -78,16 +88,16 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
+                    prefix: CachePrefix.USER_OWNED_ROLES,
                     key: event.entity.user_id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserAttributeEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserRoleEntity);
     }
 
-    async afterRemove(event: RemoveEvent<UserAttributeEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<UserRoleEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -95,7 +105,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ATTRIBUTES,
+                    prefix: CachePrefix.USER_OWNED_ROLES,
                     key: event.entity.user_id,
                 }),
             ]);

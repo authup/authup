@@ -10,22 +10,26 @@ import {
     ClientIdentityRepository,
     IdentityProviderAccountRepository,
     IdentityProviderAttributeMappingRepository,
-    IdentityProviderPermissionMappingRepository,
+    IdentityProviderPermissionMappingRepository, IdentityProviderRepositoryAdapter,
     IdentityProviderRoleMappingRepository,
     RobotIdentityRepository,
     UserIdentityRepository,
 } from '../../adapters/database';
+import type { IIdentityProviderAccountManager, ILdapClientFactory } from '../../core';
 import {
     IDENTITY_PROVIDER_ACCOUNT_MANAGER_TOKEN,
+    IDENTITY_PROVIDER_LDAP_COLLECTION_AUTHENTICATOR_TOKEN,
     IDENTITY_RESOLVER_TOKEN,
     IdentityProviderAccountManager,
     IdentityProviderAttributeMapper,
+    IdentityProviderLdapCollectionAuthenticator,
     IdentityProviderPermissionMapper,
     IdentityProviderRoleMapper,
     IdentityResolver,
+    LDAP_CLIENT_FACTORY_TOKEN,
 } from '../../core';
 
-export function registerIdentityDependencies() {
+export function registerIdentityDependencyInjections() {
     const clientRepository = new ClientIdentityRepository();
     const robotRepository = new RobotIdentityRepository();
     const userRepository = new UserIdentityRepository();
@@ -38,7 +42,8 @@ export function registerIdentityDependencies() {
         }),
     });
 
-    // for ldap authenticator
+    // ---------------------------------------------
+
     const attributeMapperRepository = new IdentityProviderAttributeMappingRepository();
     const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperRepository);
 
@@ -57,6 +62,17 @@ export function registerIdentityDependencies() {
             attributeMapper,
             roleMapper,
             permissionMapper,
+        }),
+    });
+
+    // ---------------------------------------------
+
+    const identityProviderRepository = new IdentityProviderRepositoryAdapter();
+    container.register(IDENTITY_PROVIDER_LDAP_COLLECTION_AUTHENTICATOR_TOKEN, {
+        useFactory: (c) => new IdentityProviderLdapCollectionAuthenticator({
+            repository: identityProviderRepository,
+            accountManager: c.resolve<IIdentityProviderAccountManager>(IDENTITY_PROVIDER_ACCOUNT_MANAGER_TOKEN),
+            clientFactory: c.resolve<ILdapClientFactory>(LDAP_CLIENT_FACTORY_TOKEN),
         }),
     });
 }

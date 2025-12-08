@@ -105,9 +105,9 @@ describe('src/http/controllers/identity-provider', () => {
         expect(responseURL.searchParams.get('client_id'))
             .toEqual(details.client_id);
 
-        console.log(responseURL.searchParams.get('redirect_uri'));
-        expect(responseURL.searchParams.get('redirect_uri'))
-            .matches(new RegExp(`/${buildIdentityProviderAuthorizeCallbackPath(details.id)}/`, 'i'));
+        expect(
+            responseURL.searchParams.get('redirect_uri').endsWith(buildIdentityProviderAuthorizeCallbackPath(details.id)),
+        ).toBeTruthy();
 
         expect(responseURL.searchParams.get('state')).toBeDefined();
     });

@@ -30,6 +30,7 @@ export class IdentityProviderLdapCollectionAuthenticator extends BaseCredentials
     }
 
     async authenticate(name: string, password: string, realmId?: string): Promise<User> {
+        let error : Error | undefined;
         const entities = await this.repository.findByProtocol(IdentityProviderProtocol.LDAP, realmId);
 
         for (let i = 0; i < entities.length; i++) {
@@ -46,9 +47,15 @@ export class IdentityProviderLdapCollectionAuthenticator extends BaseCredentials
             });
 
             const response = await authenticator.safeAuthenticate(name, password);
-            if (response.success) {
+            if (response.success === true) {
                 return response.data;
             }
+
+            error = response.error;
+        }
+
+        if (error) {
+            throw error;
         }
 
         throw UserError.credentialsInvalid();

@@ -18,7 +18,11 @@ import type { Config } from '../../src';
 import {
     DatabaseSeeder, applyConfig, createRouter, extendDataSourceOptions, normalizeConfig, readConfigRawFromEnv, setConfig, setDataSourceSync,
 } from '../../src';
-import { registerIdentityDependencies, registerOAuth2Dependencies } from '../../src/app/dependencies';
+import {
+    registerIdentityDependencyInjections,
+    registerLdapDependencyInjections,
+    registerOAuth2DependencyInjections,
+} from '../../src/app/dependencies';
 
 class TestSuite {
     protected config : Config;
@@ -112,9 +116,11 @@ class TestSuite {
     }
 
     protected initDependencies() {
-        registerIdentityDependencies();
+        registerLdapDependencyInjections();
 
-        registerOAuth2Dependencies({
+        registerIdentityDependencyInjections();
+
+        registerOAuth2DependencyInjections({
             tokenAccessMaxAge: this.config.tokenAccessMaxAge,
             tokenRefreshMaxAge: this.config.tokenRefreshMaxAge,
             authorizationCodeMaxAge: 60 * 5,

@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type {
-    ClientRole,
+    ClientPermission,
 } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType,
@@ -22,32 +22,33 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, ClientRoleEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { CachePrefix } from '../constants';
+import { ClientPermissionEntity } from './entity';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: ClientRole,
+    data: ClientPermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.CLIENT_ROLE, id) },
+        { channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id) },
     ];
     if (data.client_realm_id) {
         destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.CLIENT_ROLE, id),
+            channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id),
             namespace: buildEntityNamespaceName(data.client_realm_id),
         });
     }
-    if (data.role_realm_id) {
+    if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.CLIENT_ROLE, id),
-            namespace: buildEntityNamespaceName(data.role_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.permission_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: EntityType.CLIENT_ROLE,
+            type: EntityType.CLIENT_PERMISSION,
             event,
             data,
         },
@@ -56,30 +57,28 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRoleEntity> {
+export class ClientPermissionSubscriber implements EntitySubscriberInterface<ClientPermissionEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return ClientRoleEntity;
+        return ClientPermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<ClientRoleEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
+    async afterInsert(event: InsertEvent<ClientPermissionEntity>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT_OWNED_ROLES,
+                    prefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
                     key: event.entity.client_id,
                 }),
             ]);
         }
 
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
+
+        return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<ClientRoleEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<ClientPermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -87,16 +86,16 @@ export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRol
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT_OWNED_ROLES,
+                    prefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
                     key: event.entity.client_id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientRoleEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientPermission);
     }
 
-    async afterRemove(event: RemoveEvent<ClientRoleEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<ClientPermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -104,7 +103,7 @@ export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRol
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.CLIENT_OWNED_ROLES,
+                    prefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,
                     key: event.entity.client_id,
                 }),
             ]);

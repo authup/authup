@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type {
-    UserPermission,
+    RobotRole,
 } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType,
@@ -22,35 +22,33 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, UserPermissionEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { CachePrefix } from '../constants';
+import { RobotRoleEntity } from './entity';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: UserPermission,
+    data: RobotRole,
 ) {
     const destinations : DomainEventDestination[] = [
-        {
-            channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id),
-        },
+        { channel: (id) => buildEntityChannelName(EntityType.ROBOT_ROLE, id) },
     ];
-    if (data.user_realm_id) {
+    if (data.robot_realm_id) {
         destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id),
-            namespace: buildEntityNamespaceName(data.user_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.ROBOT_ROLE, id),
+            namespace: buildEntityNamespaceName(data.robot_realm_id),
         });
     }
-
-    if (data.permission_realm_id) {
+    if (data.role_realm_id) {
         destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id),
-            namespace: buildEntityNamespaceName(data.permission_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.ROBOT_ROLE, id),
+            namespace: buildEntityNamespaceName(data.role_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: EntityType.USER_PERMISSION,
+            type: EntityType.ROBOT_ROLE,
             event,
             data,
         },
@@ -59,28 +57,30 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class UserPermissionSubscriber implements EntitySubscriberInterface<UserPermissionEntity> {
+export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return UserPermissionEntity;
+        return RobotRoleEntity;
     }
 
-    async afterInsert(event: InsertEvent<UserPermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RobotRoleEntity>): Promise<any> {
+        if (!event.entity) {
+            return;
+        }
+
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    key: event.entity.user_id,
+                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
 
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-
-        return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<UserPermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RobotRoleEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -88,16 +88,16 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    key: event.entity.user_id,
+                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserPermission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RobotRoleEntity);
     }
 
-    async afterRemove(event: RemoveEvent<UserPermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<RobotRoleEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -105,12 +105,12 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    key: event.entity.user_id,
+                    prefix: CachePrefix.ROBOT_OWNED_ROLES,
+                    key: event.entity.robot_id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as UserPermission);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

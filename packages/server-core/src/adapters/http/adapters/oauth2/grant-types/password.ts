@@ -5,22 +5,24 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { User } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestIP } from 'routup';
-import { PasswordGrantType, UserAuthenticator } from '../../../../../core';
+import type { ICredentialsAuthenticator } from '../../../../../core';
+import { PasswordGrantType } from '../../../../../core';
 import type { HTTPOAuth2PasswordGrantContext, IHTTPGrant } from './types';
 
 export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
     // todo: alt lookup ldap service, grab and save account/user, set provider: LdapProvider
     // todo: use composite authenticator (UserAuthenticator + IdentityProviderLdapAuthenticator)
-    protected authenticator : UserAuthenticator;
+    protected authenticator : ICredentialsAuthenticator<User>;
 
     constructor(ctx: HTTPOAuth2PasswordGrantContext) {
         super(ctx);
 
-        this.authenticator = new UserAuthenticator(ctx.identityResolver);
+        this.authenticator = ctx.authenticator;
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {

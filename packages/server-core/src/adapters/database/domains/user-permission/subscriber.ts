@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type {
-    UserRole,
+    UserPermission,
 } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType,
@@ -22,32 +22,36 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../core';
-import { CachePrefix, UserRoleEntity } from '../domains';
+import { publishDomainEvent } from '../../../domain-event-publisher';
+import { UserPermissionEntity } from './entity';
+import { CachePrefix } from '../constants';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,
-    data: UserRole,
+    data: UserPermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id) },
+        {
+            channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id),
+        },
     ];
     if (data.user_realm_id) {
         destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id),
+            channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id),
             namespace: buildEntityNamespaceName(data.user_realm_id),
         });
     }
-    if (data.role_realm_id) {
+
+    if (data.permission_realm_id) {
         destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id),
-            namespace: buildEntityNamespaceName(data.role_realm_id),
+            channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id),
+            namespace: buildEntityNamespaceName(data.permission_realm_id),
         });
     }
 
     await publishDomainEvent({
         content: {
-            type: EntityType.USER_ROLE,
+            type: EntityType.USER_PERMISSION,
             event,
             data,
         },
@@ -56,30 +60,28 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEntity> {
+export class UserPermissionSubscriber implements EntitySubscriberInterface<UserPermissionEntity> {
     // eslint-disable-next-line @typescript-eslint/ban-types
     listenTo(): Function | string {
-        return UserRoleEntity;
+        return UserPermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<UserRoleEntity>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
+    async afterInsert(event: InsertEvent<UserPermissionEntity>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ROLES,
+                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
                     key: event.entity.user_id,
                 }),
             ]);
         }
 
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
+
+        return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<UserRoleEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<UserPermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -87,16 +89,16 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ROLES,
+                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
                     key: event.entity.user_id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserRoleEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserPermission);
     }
 
-    async afterRemove(event: RemoveEvent<UserRoleEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<UserPermissionEntity>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -104,12 +106,12 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ROLES,
+                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
                     key: event.entity.user_id,
                 }),
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as UserPermission);
     }
 }
