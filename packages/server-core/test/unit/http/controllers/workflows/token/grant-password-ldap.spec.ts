@@ -13,7 +13,7 @@ import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createTestSuite } from '../../../../../utils';
 import {
     createLdapTestClient, createLdapTestClientURL, createLdapTestUserAccount, dropLdapTestUserAccount,
-} from '../../../../../utils/ldap';
+} from '../../../../adapters/ldap/helpers';
 
 describe('src/http/controllers/identity-provider', () => {
     const suite = createTestSuite();

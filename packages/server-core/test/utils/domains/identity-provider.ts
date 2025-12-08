@@ -6,7 +6,8 @@
  */
 
 import { faker } from '@faker-js/faker';
-import { IdentityProviderProtocol, type OAuth2IdentityProvider } from '@authup/core-kit';
+import type { LdapIdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
+import { IdentityProviderProtocol } from '@authup/core-kit';
 
 export function createFakeOAuth2IdentityProvider(data: Partial<OAuth2IdentityProvider> = {}) {
     return {
@@ -20,4 +21,19 @@ export function createFakeOAuth2IdentityProvider(data: Partial<OAuth2IdentityPro
         authorize_url: faker.internet.url(),
         ...data,
     } satisfies Partial<OAuth2IdentityProvider>;
+}
+
+export function createFakeLdapIdentityProvider(data: Partial<LdapIdentityProvider> = {}): Partial<LdapIdentityProvider> {
+    return {
+        name: faker.string.alpha({ length: 16, casing: 'lower' }),
+        display_name: faker.internet.displayName(),
+        enabled: true,
+        protocol: IdentityProviderProtocol.LDAP,
+        url: 'ldap://localhost:4000',
+        user: 'cn=admin,dc=example,dc=com',
+        password: faker.string.alphanumeric({ length: 64 }),
+        base_dn: 'dc=example,dc=com',
+        user_name_attribute: 'cn',
+        ...data,
+    };
 }

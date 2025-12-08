@@ -13,6 +13,7 @@ import {
     buildIdentityProviderAuthorizePath,
 } from '@authup/core-kit';
 import {
+    createFakeLdapIdentityProvider,
     createFakeOAuth2IdentityProvider,
     createTestSuite,
     expectPropertiesEqualToSrc,
@@ -29,18 +30,31 @@ describe('src/http/controllers/identity-provider', () => {
         await suite.down();
     });
 
-    const details = createFakeOAuth2IdentityProvider();
+    const oAuth2IdentityProvider = createFakeOAuth2IdentityProvider();
+    const ldapIdentityProvider = createFakeLdapIdentityProvider();
 
-    it('should create resource', async () => {
+    it('should create resource (oauth2)', async () => {
         const response = await suite.client
             .identityProvider
-            .create(details);
+            .create(oAuth2IdentityProvider);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response);
+        expectPropertiesEqualToSrc(oAuth2IdentityProvider, response);
 
-        details.id = response.id;
+        oAuth2IdentityProvider.id = response.id;
+    });
+
+    it('should create resource (ldap)', async () => {
+        const response = await suite.client
+            .identityProvider
+            .create(ldapIdentityProvider);
+
+        expect(response).toBeDefined();
+
+        expectPropertiesEqualToSrc(ldapIdentityProvider, response);
+
+        ldapIdentityProvider.id = response.id;
     });
 
     it('should read collection', async () => {
@@ -49,46 +63,56 @@ describe('src/http/controllers/identity-provider', () => {
             .getMany();
 
         expect(response.data).toBeDefined();
-        expect(response.data.length).toBeGreaterThanOrEqual(1);
+        expect(response.data.length).toBeGreaterThanOrEqual(2);
     });
 
-    it('should read resource', async () => {
+    it('should read resource (oauth2)', async () => {
         const response = await suite.client
             .identityProvider
-            .getOne(details.id);
+            .getOne(oAuth2IdentityProvider.id);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response);
+        expectPropertiesEqualToSrc(oAuth2IdentityProvider, response);
+    });
+
+    it('should read resource (ldap)', async () => {
+        const response = await suite.client
+            .identityProvider
+            .getOne(ldapIdentityProvider.id);
+
+        expect(response).toBeDefined();
+
+        expectPropertiesEqualToSrc(ldapIdentityProvider, response);
     });
 
     it('should read resource by name', async () => {
         const response = await suite.client
             .identityProvider
-            .getOne(details.name);
+            .getOne(oAuth2IdentityProvider.name);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response);
+        expectPropertiesEqualToSrc(oAuth2IdentityProvider, response);
     });
 
     it('should update resource', async () => {
-        details.name = 'TestA';
-        details.client_secret = 'start1234';
+        oAuth2IdentityProvider.name = 'TestA';
+        oAuth2IdentityProvider.client_secret = 'start1234';
 
         const response = await suite.client
             .identityProvider
-            .update(details.id, details);
+            .update(oAuth2IdentityProvider.id, oAuth2IdentityProvider);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response);
+        expectPropertiesEqualToSrc(oAuth2IdentityProvider, response);
     });
 
     it('should build authorize url', async () => {
         const response = await suite.client
             .get(
-                buildIdentityProviderAuthorizePath(details.id),
+                buildIdentityProviderAuthorizePath(oAuth2IdentityProvider.id),
                 {
                     redirect: 'manual',
                 },
@@ -103,19 +127,27 @@ describe('src/http/controllers/identity-provider', () => {
             .toEqual('code');
 
         expect(responseURL.searchParams.get('client_id'))
-            .toEqual(details.client_id);
+            .toEqual(oAuth2IdentityProvider.client_id);
 
         expect(
-            responseURL.searchParams.get('redirect_uri').endsWith(buildIdentityProviderAuthorizeCallbackPath(details.id)),
+            responseURL.searchParams.get('redirect_uri').endsWith(buildIdentityProviderAuthorizeCallbackPath(oAuth2IdentityProvider.id)),
         ).toBeTruthy();
 
         expect(responseURL.searchParams.get('state')).toBeDefined();
     });
 
-    it('should delete resource', async () => {
+    it('should delete resource (oauth2)', async () => {
         const response = await suite.client
             .identityProvider
-            .delete(details.id);
+            .delete(oAuth2IdentityProvider.id);
+
+        expect(response.id).toBeDefined();
+    });
+
+    it('should delete resource (ldap)', async () => {
+        const response = await suite.client
+            .identityProvider
+            .delete(ldapIdentityProvider.id);
 
         expect(response.id).toBeDefined();
     });

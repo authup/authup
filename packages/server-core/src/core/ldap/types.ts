@@ -13,17 +13,29 @@ export interface ILdapClient {
 
     connect() : Promise<void>;
 
+    // ----------------------------------------------------
+
     bind(user?: string, password?: string) : Promise<void>;
 
     unbind() : Promise<void>;
+
+    // ----------------------------------------------------
 
     add(name: string, data: Record<string, any>) : Promise<void>;
 
     del(name: string) : Promise<void>;
 
-    modify(name: string, data: Record<string, any>) : Promise<void>;
+    // ----------------------------------------------------
 
+    /**
+     * Find entries (e.g. user or groups).
+     *
+     * @param options
+     * @param dn
+     */
     search(options: SearchOptions, dn?: string) : Promise<Record<string, any>[]>;
+
+    // ----------------------------------------------------
 
     resolveDn(...input: (string | undefined)[]) : string | undefined;
 

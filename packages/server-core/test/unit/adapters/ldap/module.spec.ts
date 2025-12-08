@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -9,11 +9,11 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { EqualityFilter } from 'ldapjs';
-import type { LdapClient } from '../../../src/adapters/ldap';
-import { createLdapTestClient, createLdapTestUserAccount, dropLdapTestUserAccount } from '../../utils/ldap';
+import type { ILdapClient } from '../../../../src/core';
+import { createLdapTestClient, createLdapTestUserAccount, dropLdapTestUserAccount } from './helpers';
 
-describe('src/domains/identity-provider/flow/ldap', () => {
-    let client : LdapClient;
+describe('adapters/ldap', () => {
+    let client : ILdapClient;
 
     beforeAll(async () => {
         client = createLdapTestClient();
@@ -43,7 +43,6 @@ describe('src/domains/identity-provider/flow/ldap', () => {
     });
 
     it('should search and login with user', async () => {
-        await client.bind();
         const users = await client.search({
             filter: new EqualityFilter({
                 attribute: 'cn',

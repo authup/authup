@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -11,14 +11,14 @@ import {
 import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import type { IdentityProviderIdentity } from '../../../src/core';
+import type { IdentityProviderIdentity } from '../../../../../src/core';
 import {
     IdentityProviderAccountManager,
     IdentityProviderAttributeMapper,
     IdentityProviderPermissionMapper,
     IdentityProviderRoleMapper,
-} from '../../../src/core';
-import claims from '../../data/jwt.json';
+} from '../../../../../src/core';
+import claims from '../../../../data/jwt.json';
 import {
     IdentityProviderAccountRepository,
     IdentityProviderAttributeMappingRepository,
@@ -33,10 +33,10 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
     resolveRealm,
-} from '../../../src';
-import { createTestSuite } from '../../utils';
+} from '../../../../../src';
+import { createTestSuite } from '../../../../utils';
 
-describe('idp-manager-service', () => {
+describe('core/identity/provider/account', () => {
     const suite = createTestSuite();
 
     let realm : Realm;
