@@ -8,11 +8,10 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import type { IdentityProvider } from '@authup/core-kit';
 import {
+    buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
 } from '@authup/core-kit';
-import { createIdentityProviderOAuth2Authenticator } from '../../../../../../src';
 import {
     createFakeOAuth2IdentityProvider,
     createTestSuite,
@@ -98,19 +97,17 @@ describe('src/http/controllers/identity-provider', () => {
         expect(response.status).toEqual(302);
         expect(response.headers.get('location')).toBeDefined();
 
-        const flow = createOAuth2IdentityProviderFlow(details as IdentityProvider);
-
         const responseURL = new URL(response.headers.get('location') as string);
-        const flowURL = new URL(flow.buildRedirectURL());
 
         expect(responseURL.searchParams.get('response_type'))
-            .toEqual(flowURL.searchParams.get('response_type'));
+            .toEqual('code');
 
         expect(responseURL.searchParams.get('client_id'))
-            .toEqual(flowURL.searchParams.get('client_id'));
+            .toEqual(details.client_id);
 
+        console.log(responseURL.searchParams.get('redirect_uri'));
         expect(responseURL.searchParams.get('redirect_uri'))
-            .toEqual(flowURL.searchParams.get('redirect_uri'));
+            .matches(new RegExp(`/${buildIdentityProviderAuthorizeCallbackPath(details.id)}/`, 'i'));
 
         expect(responseURL.searchParams.get('state')).toBeDefined();
     });

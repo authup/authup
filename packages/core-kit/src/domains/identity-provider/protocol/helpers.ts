@@ -16,9 +16,9 @@ export function isLdapIdentityProvider(input: IdentityProvider) : input is LdapI
 }
 
 export function isOAuth2IdentityProvider(input: IdentityProvider) : input is OAuth2IdentityProvider {
-    return input.protocol === IdentityProviderProtocol.LDAP;
+    return input.protocol === IdentityProviderProtocol.OAUTH2;
 }
 
 export function isOpenIDIdentityProvider(input: IdentityProvider) : input is OpenIDIdentityProvider {
-    return input.protocol === IdentityProviderProtocol.LDAP;
+    return input.protocol === IdentityProviderProtocol.OIDC;
 }

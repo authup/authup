@@ -12,13 +12,18 @@ export type IdentityProviderIdentity = {
     id: string,
 
     /**
-     * Required for ldap authentication.
+     * Client used for authentication
+     */
+    clientId?: string,
+
+    /**
+     * Required for ldap authentication
      */
     roles?: string[],
 
     /**
      * Attribute candidates discovered during
-     * authentication step (ldap, oauth2, ...).
+     * authentication step (ldap, oauth2, ...)
      */
     attributeCandidates?: {
         [K in keyof User]?: unknown[]

@@ -156,7 +156,9 @@ export class IdentityProviderController {
         const authenticator = createIdentityProviderOAuth2Authenticator({
             accountManager: this.accountManager,
             provider: entity,
-            baseURL: this.options.baseURL,
+            options: {
+                baseURL: this.options.baseURL,
+            },
         });
 
         const parameters : AuthorizeParameters = {};
@@ -221,10 +223,12 @@ export class IdentityProviderController {
         const authenticator = createIdentityProviderOAuth2Authenticator({
             accountManager: this.accountManager,
             provider: entity,
-            baseURL: this.options.baseURL,
+            options: {
+                baseURL: this.options.baseURL,
+                clientId: data.codeRequest?.client_id,
+            },
         });
 
-        // todo: identity should respect client_id
         const user = await authenticator.authenticate(code);
 
         const config = useConfig();

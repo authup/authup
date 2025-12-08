@@ -22,8 +22,13 @@ export interface IOAuth2Authenticator<T extends ObjectLiteral = ObjectLiteral> {
     buildRedirectURL(parameters?: Partial<AuthorizeParameters>): string;
 }
 
+export type IdentityProviderOAuth2AuthenticatorOptions = {
+    baseURL: string,
+    clientId?: string
+};
+
 export type IdentityProviderOAuth2AuthenticatorContext = {
+    options: IdentityProviderOAuth2AuthenticatorOptions,
     accountManager: IIdentityProviderAccountManager
     provider: OAuth2IdentityProvider | OpenIDIdentityProvider,
-    baseURL: string
 };

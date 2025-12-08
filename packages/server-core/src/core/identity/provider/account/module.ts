@@ -117,6 +117,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             (entity as User).realm_id = identity.provider.realm_id;
             (entity as User).active = true;
             (entity as User).name_locked = true;
+            (entity as User).client_id = identity.clientId;
         }
 
         const attributesSelf = await this.validateAttributes(entity, identity, 10);
