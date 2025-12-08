@@ -62,7 +62,7 @@
         "redis-extension": "^2.0.4",
         "smob": "^1.5.0",
         "singa": "^1.1.0",
-        "winston": "^3.18.3"
+        "winston": "^3.19.0"
     },
     "devDependencies": {
         "@authup/core-realtime-kit": "^1.0.0-beta.27",
