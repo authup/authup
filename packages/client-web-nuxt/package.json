@@ -15,7 +15,6 @@
             "import": "./dist/module.mjs"
         }
     },
-    "main": "./dist/module.mjs",
     "module": "./dist/module.mjs",
     "types": "./dist/types.d.mts",
     "files": [

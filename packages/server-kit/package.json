@@ -1,5 +1,6 @@
 {
     "name": "@authup/server-kit",
+    "type": "module",
     "version": "1.0.0-beta.27",
     "description": "A toolkit for server-side services.",
     "license": "Apache-2.0",
@@ -7,11 +8,10 @@
         "./package.json": "./package.json",
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs"
+            "import": "./dist/index.mjs"
         }
     },
-    "main": "./dist/index.cjs",
+    "main": "./dist/index.mjs",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
     "files": [

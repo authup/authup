@@ -3,12 +3,7 @@
 
     "compilerOptions": {
         "outDir": "./dist",
-        "declarationDir": "dist",
-        "declaration": true,
-
-        "importHelpers": true,
-        "allowSyntheticDefaultImports": true,
-        "isolatedModules": true
+        "strict": false
     },
 
     "include": [

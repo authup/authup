@@ -7,14 +7,7 @@
             "dom",
             "ESNext"
         ],
-        "importHelpers": true,
-        "allowSyntheticDefaultImports": true,
-        "sourceMap": false,
-        "module": "ESNext",
-        "jsx": "preserve",
-        "moduleResolution": "bundler",
-        "declaration": true,
-        "declarationDir": "dist"
+        "strict": false
     },
     "exclude": [
         "node_modules",

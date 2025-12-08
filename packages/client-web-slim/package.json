@@ -4,15 +4,13 @@
     "version": "1.0.0-beta.27",
     "description": "This package contains a slim web app.",
     "license": "Apache-2.0",
-    "main": "dist/index.cjs",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts",
     "exports": {
         "./package.json": "./package.json",
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs"
+            "import": "./dist/index.mjs"
         },
         "./dist/index.css": "./dist/index.css"
     },

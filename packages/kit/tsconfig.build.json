@@ -2,14 +2,7 @@
     "extends": "../../tsconfig.build.json",
 
     "compilerOptions": {
-        "outDir": "./dist",
-        "declarationDir": "dist",
-        "declaration": true,
-
-        "importHelpers": true,
-        "allowSyntheticDefaultImports": true,
-        "isolatedModules": true,
-        "strict": true
+        "outDir": "./dist"
     },
 
     "include": [
