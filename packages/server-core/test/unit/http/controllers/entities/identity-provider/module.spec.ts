@@ -31,7 +31,7 @@ describe('src/http/controllers/identity-provider', () => {
 
     const details = createFakeOAuth2IdentityProvider();
 
-    it.only('should create resource', async () => {
+    it('should create resource', async () => {
         const response = await suite.client
             .identityProvider
             .create(details);
