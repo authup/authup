@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { User } from '@authup/core-kit';
 import { extractTokenPayload } from '@authup/server-kit';
+import type { OpenIDTokenPayload } from '@authup/specs';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import type { IdentityProviderIdentity } from '../../types';
 import type { IdentityProviderOAuth2AuthenticatorContext } from '../protocols';
@@ -22,17 +24,37 @@ export class IdenityProviderGoogleAuthenticator extends IdentityProviderOAuth2Au
     }
 
     protected async buildIdentityWithTokenGrantResponse(input: TokenGrantResponse): Promise<IdentityProviderIdentity> {
-        // todo additional parameter like hd required
-        // read: https://developers.google.com/identity/openid-connect/openid-connect?hl=de#createxsrftoken
-
-        const userInfo = await this.client.userInfo.get({
-            type: 'Bearer',
-            token: input.access_token,
-        });
-
         const payload = extractTokenPayload(input.access_token);
 
-        // todo: extract open id credentials
-        throw new Error('Not implemented yet.');
+        const attributeCandidates : Record<keyof User, unknown[]> = {};
+
+        /**
+         * @see https://developers.google.com/identity/openid-connect/openid-connect?hl=de#server-flow
+         */
+        if (input.id_token) {
+            const idTokenPayload = extractTokenPayload(input.id_token) as OpenIDTokenPayload;
+
+            attributeCandidates.name = [
+                idTokenPayload.name,
+            ];
+
+            attributeCandidates.email = [
+                idTokenPayload.email,
+            ];
+
+            attributeCandidates.first_name = [
+                idTokenPayload.given_name,
+            ];
+            attributeCandidates.last_name = [
+                idTokenPayload.family_name,
+            ];
+        }
+
+        return {
+            id: payload.sub,
+            attributeCandidates,
+            data: payload,
+            provider: this.provider,
+        };
     }
 }
