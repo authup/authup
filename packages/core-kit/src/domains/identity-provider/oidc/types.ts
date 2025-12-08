@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2IdentityProviderBase } from './oauth2';
+import type { OAuth2IdentityProviderBase } from '../oauth2/types';
 import type { IdentityProviderProtocol } from '../constants';
 import type { IdentityProvider } from '../entity';
 

@@ -41,10 +41,10 @@ export class IdentityProviderEntity implements IdentityProvider {
         enabled: boolean;
 
     @CreateDateColumn()
-        created_at: Date;
+        created_at: string;
 
     @UpdateDateColumn()
-        updated_at: Date;
+        updated_at: string;
 
     @Index()
     @Column()

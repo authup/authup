@@ -6,5 +6,4 @@
  */
 
 export * from './identity-permission';
-export * from './identity-provider';
 export * from './robot-synchronization';

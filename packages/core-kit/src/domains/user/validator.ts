@@ -106,7 +106,7 @@ export class UserValidator extends Container<User> {
         this.mount(
             'realm_id',
             { group: ValidatorGroup.CREATE, optional: true },
-            createValidator(zod.string().uuid()),
+            createValidator(zod.uuid()),
         );
 
         this.mount(
