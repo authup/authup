@@ -65,9 +65,9 @@
         "@routup/prometheus": "^2.4.2",
         "@routup/rate-limit": "^2.4.2",
         "@routup/swagger": "^2.4.3",
-        "@validup/adapter-routup": "^0.1.10",
-        "@validup/adapter-validator": "^0.2.1",
-        "@validup/adapter-zod": "^0.1.11",
+        "@validup/adapter-routup": "^0.1.11",
+        "@validup/adapter-validator": "^0.2.2",
+        "@validup/adapter-zod": "^0.1.12",
         "better-sqlite3": "^12.5.0",
         "citty": "^0.1.6",
         "confinity": "^1.0.0-beta.1",
@@ -107,7 +107,7 @@
         "supertest": "^7.1.4",
         "testcontainers": "^11.9.0",
         "ts-node": "^10.8.2",
-        "vite": "^7.2.6",
+        "vite": "^7.2.7",
         "vitest": "^4.0.14"
     },
     "publishConfig": {
