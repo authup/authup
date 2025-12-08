@@ -1,5 +1,6 @@
 {
     "name": "authup",
+    "type": "module",
     "version": "1.0.0-beta.27",
     "description": "This is the CLI for the authup ecosystem.",
     "license": "Apache-2.0",
@@ -7,25 +8,23 @@
         "./package.json": "./package.json",
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs"
+            "import": "./dist/index.mjs"
         }
     },
-    "main": "./dist/index.cjs",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
     "files": [
         "dist"
     ],
     "scripts": {
-        "cli": "node dist/index.cjs",
+        "cli": "node dist/index.mjs",
         "cli-dev": "npm run build && npm run cli",
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "rollup -c",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types"
     },
     "bin": {
-        "authup": "dist/index.cjs"
+        "authup": "dist/index.mjs"
     },
     "keywords": [],
     "author": {

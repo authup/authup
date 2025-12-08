@@ -8,6 +8,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import swc from '@rollup/plugin-swc';
 import vue from '@vitejs/plugin-vue';
+import esmShim from '@rollup/plugin-esm-shim';
 import postcss from 'rollup-plugin-postcss';
 
 import { builtinModules } from 'node:module';
@@ -30,28 +31,36 @@ export function createConfig(
         .concat(builtinModules)
         .concat(external);
 
+    const output = [];
+    if (pkg.main) {
+        output.push({
+            format: 'cjs',
+            file: pkg.main,
+            exports: 'named',
+            ...(defaultExport ? { footer: 'module.exports = Object.assign(exports.default, exports);' } : {}),
+            sourcemap: true,
+        });
+    }
+
+    if (pkg.module) {
+        output.push({
+            format: 'es',
+            file: pkg.module,
+            sourcemap: true,
+        });
+    }
+
     return {
         input: 'src/index.ts',
         external,
-        output: [
-            {
-                format: 'cjs',
-                file: pkg.main,
-                exports: 'named',
-                ...(defaultExport ? { footer: 'module.exports = Object.assign(exports.default, exports);' } : {}),
-                sourcemap: true,
-            },
-            {
-                format: 'es',
-                file: pkg.module,
-                sourcemap: true,
-            },
-        ],
+        output,
         plugins: [
             ...pluginsPre,
 
             // Allows node_modules resolution
             resolve({ extensions }),
+
+            esmShim(),
 
             vue(),
 
