@@ -12,9 +12,11 @@
 
         "esModuleInterop": true,
         "lib": ["ESNext", "DOM"],
-        "target": "ES2020",
+        // compiled code js version
+        "target": "ES2022",
 
-        "moduleResolution": "Node",
+        "moduleResolution": "bundler",
+        // compiled code format (esm/cjs)
         "module": "ESNext"
     },
     "exclude": [

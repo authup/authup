@@ -48,7 +48,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
         const identity = useRequestIdentityOrFail(req);
         const identityPermissionService = new IdentityPermissionService(dataSource);
-        const hasPermissions = await identityPermissionService.hasSuperset(identity, {
+        const hasPermissions = await identityPermissionService.isSuperset(identity, {
             type: 'role',
             id: data.role_id,
             clientId: data.role.client_id,

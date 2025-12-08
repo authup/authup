@@ -66,7 +66,7 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     const identity = useRequestIdentityOrFail(req);
     const identityPermissionService = new IdentityPermissionService(dataSource);
-    const hasPermissions = await identityPermissionService.hasSuperset(identity, {
+    const hasPermissions = await identityPermissionService.isSuperset(identity, {
         type: 'role',
         id: data.role_id,
         clientId: data.role.client_id,

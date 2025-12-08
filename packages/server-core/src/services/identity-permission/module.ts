@@ -36,7 +36,7 @@ export class IdentityPermissionService {
         this.robotRepository = new RobotRepository(dataSource);
     }
 
-    async hasSuperset(parent: PolicyIdentity, child: PolicyIdentity) : Promise<boolean> {
+    async isSuperset(parent: PolicyIdentity, child: PolicyIdentity) : Promise<boolean> {
         const parentPermissions = await this.getFor(parent);
         const childPermissions = await this.getFor(child);
 
