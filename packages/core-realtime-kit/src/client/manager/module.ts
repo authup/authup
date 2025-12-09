@@ -131,11 +131,12 @@ export class ClientManager<
     }
 
     inject(namespace = '/') : Socket<ListenEvents, EmitEvents> {
-        if (this.sockets.has(namespace)) {
-            return this.sockets.get(namespace);
+        let socket = this.sockets.get(namespace);
+        if (socket) {
+            return socket;
         }
 
-        const socket = this.manager.socket(namespace, {
+        socket = this.manager.socket(namespace, {
             auth: (cb: CallableFunction) => {
                 Promise.resolve()
                     .then(() => this.tokenFn())
@@ -152,9 +153,11 @@ export class ClientManager<
     }
 
     eject(namespace = '/') {
-        if (this.sockets[namespace]) {
-            this.sockets[namespace].disconnect();
-            delete this.sockets[namespace];
+        const socket = this.sockets.get(namespace);
+
+        if (socket) {
+            socket.disconnect();
+            this.sockets.delete(namespace);
         }
     }
 }
