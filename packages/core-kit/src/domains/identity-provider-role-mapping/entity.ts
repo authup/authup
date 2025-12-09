@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, IdentityProviderBaseMapping } from '../identity-provider';
+import type { IdentityProviderBaseMapping } from '../identity-provider';
 import type { Role } from '../role';
 import type { Realm } from '../realm';
 
@@ -25,12 +25,4 @@ export interface IdentityProviderRoleMapping extends IdentityProviderBaseMapping
     role_realm_id: Realm['id'] | null;
 
     role_realm: Realm | null;
-
-    provider_id: IdentityProvider['id'];
-
-    provider: IdentityProvider;
-
-    provider_realm_id: Realm['id'] | null;
-
-    provider_realm: Realm | null;
 }
