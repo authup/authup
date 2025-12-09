@@ -7,7 +7,7 @@
 
 import { SymmetricAlgorithm } from './constants';
 
-export function getKeyUsagesForSymmetricAlgorithm(name: string) : KeyUsage[] | undefined {
+export function getKeyUsagesForSymmetricAlgorithm(name: string) : KeyUsage[] {
     /**
      * @see https://nodejs.org/api/webcrypto.html#cryptokeyusages
      */

@@ -25,9 +25,9 @@ export async function verifyToken(
     token: string,
     context: TokenVerifyOptions,
 ) : Promise<OAuth2TokenPayload> {
-    let promise : Promise<JWTClaims>;
+    let promise : Promise<JWTClaims> | undefined;
 
-    let output : JWTClaims;
+    let output : JWTClaims | undefined;
 
     try {
         switch (context.type) {
@@ -93,12 +93,14 @@ export async function verifyToken(
             }
         }
 
-        output = await promise;
+        if (promise) {
+            output = await promise;
+        }
     } catch (e) {
         throw createErrorForJWTError(e);
     }
 
-    if (typeof output === 'undefined') {
+    if (!output) {
         throw new OAuth2Error({ message: 'Invalid type.' });
     }
 

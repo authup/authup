@@ -7,14 +7,14 @@
 
 import { singa } from 'singa';
 import { isRedisClientUsable } from '../redis';
-import type { CacheAdapter } from './adapters';
+import type { ICacheAdapter } from './adapters';
 import { MemoryCacheAdapter, RedisCacheAdapter } from './adapters';
 import { Cache } from './module';
 
 const instance = singa<Cache>({
     name: 'cache',
     factory: () => {
-        let adapter : CacheAdapter;
+        let adapter : ICacheAdapter;
         if (isRedisClientUsable()) {
             adapter = new RedisCacheAdapter();
         } else {

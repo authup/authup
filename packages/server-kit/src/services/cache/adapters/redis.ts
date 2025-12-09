@@ -9,9 +9,9 @@ import type { Client } from 'redis-extension';
 import { JsonAdapter } from 'redis-extension';
 import { useRedisClient } from '../../redis';
 import type { CacheClearOptions, CacheSetOptions } from '../types';
-import type { CacheAdapter } from './types';
+import type { ICacheAdapter } from './types';
 
-export class RedisCacheAdapter implements CacheAdapter {
+export class RedisCacheAdapter implements ICacheAdapter {
     protected client : Client;
 
     protected instance : JsonAdapter;
@@ -22,7 +22,12 @@ export class RedisCacheAdapter implements CacheAdapter {
     }
 
     async get(key: string): Promise<any> {
-        return this.instance.get(key);
+        const output = await this.instance.get(key);
+        if (output) {
+            return output;
+        }
+
+        return null;
     }
 
     async has(key: string) : Promise<boolean> {

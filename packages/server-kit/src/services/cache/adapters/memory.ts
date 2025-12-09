@@ -8,11 +8,11 @@
 import type { TTLCacheOptions } from '@isaacs/ttlcache';
 import { TTLCache } from '@isaacs/ttlcache';
 import type { CacheClearOptions, CacheSetOptions } from '../types';
-import type { CacheAdapter } from './types';
+import type { ICacheAdapter } from './types';
 
 export class MemoryCacheAdapter<
     VALUE = any,
-> implements CacheAdapter {
+> implements ICacheAdapter {
     protected instance : TTLCache<string, VALUE>;
 
     constructor(options: TTLCacheOptions<string, VALUE> = {}) {
@@ -27,8 +27,13 @@ export class MemoryCacheAdapter<
         return this.instance.has(key);
     }
 
-    async get(key: string): Promise<VALUE> {
-        return this.instance.get(key);
+    async get(key: string): Promise<VALUE | null> {
+        const output = await this.instance.get(key);
+        if (output) {
+            return output;
+        }
+
+        return null;
     }
 
     async set(key: string, value: VALUE, options: CacheSetOptions): Promise<void> {

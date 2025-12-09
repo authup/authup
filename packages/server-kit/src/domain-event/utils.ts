@@ -5,17 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ObjectLiteral } from '@authup/kit';
 import { isObject } from '@authup/kit';
 import type { DomainEventChannelName } from './type';
 
-export function transformDomainEventData<T>(input: T) : T {
-    if (isObject(input)) {
-        const keys = Object.keys(input);
-        for (let i = 0; i < keys.length; i++) {
-            const value = input[keys[i]];
-            if (value instanceof Date) {
-                input[keys[i]] = value.toISOString();
-            }
+export function transformDomainEventData<T extends ObjectLiteral>(input: T) : T {
+    const keys = Object.keys(input);
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i] as keyof T;
+
+        const value = input[key] as T[keyof T];
+        if (!isObject(value)) {
+            continue;
+        }
+
+        if ((value as Record<string, any>) instanceof Date) {
+            input[key] = value.toISOString() as T[keyof T];
         }
     }
 

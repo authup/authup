@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CacheAdapter } from './adapters';
+import type { ICacheAdapter } from './adapters';
 import type { CacheClearOptions, CacheSetOptions } from './types';
 
 export class Cache {
-    protected adapter : CacheAdapter;
+    protected adapter : ICacheAdapter;
 
-    constructor(adapter: CacheAdapter) {
+    constructor(adapter: ICacheAdapter) {
         this.adapter = adapter;
     }
 

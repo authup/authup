@@ -7,12 +7,12 @@
 
 import type { CacheClearOptions, CacheSetOptions } from '../types';
 
-export interface CacheAdapter {
+export interface ICacheAdapter {
     has(key: string) : Promise<boolean>;
 
     set(key: string, value: any, options: CacheSetOptions): Promise<void>;
 
-    get(key: string): Promise<any | undefined>;
+    get(key: string): Promise<any | null>;
 
     drop(key: string): Promise<void>;
 
