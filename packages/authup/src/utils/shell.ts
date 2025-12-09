@@ -43,30 +43,33 @@ export async function execShellCommand(
             resolve(childProcess);
         });
 
-        childProcess.stderr.setEncoding('utf-8');
-        childProcess.stderr.on('data', (data) => {
-            if (typeof data !== 'string' || data.length === 0) {
-                return;
-            }
+        if (childProcess.stderr) {
+            childProcess.stderr.setEncoding('utf-8');
+            childProcess.stderr.on('data', (data) => {
+                if (typeof data !== 'string' || data.length === 0) {
+                    return;
+                }
 
-            if (ctx.logErrorStream) {
-                ctx.logErrorStream(data);
-            }
-        });
+                if (ctx.logErrorStream) {
+                    ctx.logErrorStream(data);
+                }
+            });
+        }
+        if (childProcess.stdout) {
+            childProcess.stdout.on('data', (data) => {
+                if (typeof data !== 'string' || data.length === 0) {
+                    return;
+                }
 
-        childProcess.stdout.on('data', (data) => {
-            if (typeof data !== 'string' || data.length === 0) {
-                return;
-            }
+                if (!ctx.logDataStream) {
+                    return;
+                }
 
-            if (!ctx.logDataStream) {
-                return;
-            }
-
-            const lines = parseProcessOutputData(data);
-            for (let i = 0; i < lines.length; i++) {
-                ctx.logDataStream(lines[i]);
-            }
-        });
+                const lines = parseProcessOutputData(data);
+                for (let i = 0; i < lines.length; i++) {
+                    ctx.logDataStream(lines[i]);
+                }
+            });
+        }
     });
 }

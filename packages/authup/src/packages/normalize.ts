@@ -7,7 +7,7 @@
 
 import { PackageID } from './constants';
 
-export function normalizePackageID(input: string) {
+export function normalizePackageID(input: string) : `${PackageID}` | null {
     const value = input.trim().toLowerCase();
 
     switch (value) {
@@ -23,5 +23,5 @@ export function normalizePackageID(input: string) {
         }
     }
 
-    return undefined;
+    return null;
 }

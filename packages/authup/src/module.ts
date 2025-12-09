@@ -47,24 +47,25 @@ export async function createCLIEntryPointCommand() {
             },
         },
         async run(ctx) {
-            let pkgs = ctx.args.package ?
+            let packages = ctx.args.package ?
                 ctx.args.package.split(',') :
                 [];
 
-            if (pkgs.length > 0) {
-                pkgs = pkgs
+            if (packages.length > 0) {
+                packages = packages
                     .map((pkg) => normalizePackageID(pkg))
-                    .filter((pkg) => Boolean(pkg));
+                    .filter((pkg) => Boolean(pkg))
+                    .map((pkg) => `${pkg}`);
             }
 
-            if (pkgs.length === 0) {
-                pkgs = Object.values(PackageID);
+            if (packages.length === 0) {
+                packages = Object.values(PackageID);
             }
 
             const promises : Promise<ChildProcess>[] = [];
-            for (let i = 0; i < pkgs.length; i++) {
+            for (let i = 0; i < packages.length; i++) {
                 promises.push(executePackageCommand(
-                    pkgs[i],
+                    packages[i],
                     ctx.args.command,
                     {
                         configFile: ctx.args.configFile,
