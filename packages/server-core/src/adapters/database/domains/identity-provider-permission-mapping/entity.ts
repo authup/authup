@@ -15,8 +15,9 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
+import type { Realm, Role } from '@authup/core-kit';
 import {
-    IdentityProviderMappingSyncMode, IdentityProviderPermissionMapping, Realm, Role,
+    IdentityProviderMappingSyncMode, IdentityProviderPermissionMapping,
 } from '@authup/core-kit';
 import { IdentityProviderEntity } from '../identity-provider';
 import { PermissionEntity } from '../permission';

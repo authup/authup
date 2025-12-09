@@ -14,15 +14,14 @@ import {
 import {
     DController, DGet, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import {
-    Request, Response, getRequestHostName, sendAccepted,
-} from 'routup';
+import type { Request, Response } from 'routup';
+import { getRequestHostName, sendAccepted } from 'routup';
 import { SerializeOptions, setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { useDataSource } from 'typeorm-extension';
 import { pickRecord } from '@authup/kit';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers';
-import { TokenControllerContext } from './types';
+import type { TokenControllerContext } from './types';
 import {
     IIdentityResolver,
     IOAuth2TokenIssuer,

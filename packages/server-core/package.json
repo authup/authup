@@ -7,11 +7,13 @@
     "main": "dist/index.js",
     "module": "dist/index.js",
     "scripts": {
-        "debug": "node --inspect dist/cli/index.js start",
-        "cli": "node dist/cli/index.js",
+        "debug": "node --inspect dist/cli.mjs start",
+        "cli": "node dist/cli.mjs",
         "cli-dev": "ts-node src/cli/index.ts",
         "build:client": "npm run build --workspace=../client-web-slim",
-        "build:server": "rm -rf ./dist && tsc -p tsconfig.build.json",
+        "build:server:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:server:js": "rollup -c",
+        "build:server": "rimraf ./dist && cross-env NODE_ENV=production npm run build:server:js && npm run build:server:types",
         "build:swagger": "npm run cli -- swagger generate",
         "build": "npm run build:client && npm run build:server && npm run build:swagger",
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
@@ -21,7 +23,7 @@
         "dist"
     ],
     "bin": {
-        "authup-server": "dist/cli/index.js"
+        "authup-server": "dist/cli.mjs"
     },
     "keywords": [
         "auth",

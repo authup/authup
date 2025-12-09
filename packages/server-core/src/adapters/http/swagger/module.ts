@@ -26,7 +26,12 @@ export class Swagger {
         this.distPath = getDistPath();
         this.srcPath = getSrcPath();
 
-        this.entrypointPath = path.join(this.srcPath, 'http', 'controllers');
+        this.entrypointPath = path.join(
+            this.srcPath,
+            'adapters',
+            'http',
+            'controllers',
+        );
 
         this.options = options;
     }

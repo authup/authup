@@ -14,15 +14,15 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import {
+import type {
     Permission,
-    Policy, Realm,
-
+    Policy,
+    Realm,
     User, UserPermission,
 } from '@authup/core-kit';
 import { PolicyEntity } from '../policy';
 import { UserEntity } from '../user/entity';
-import { PermissionEntity } from '../permission';
+import { PermissionEntity } from '../permission/entity';
 import { RealmEntity } from '../realm';
 
 @Entity({ name: 'auth_user_permissions' })

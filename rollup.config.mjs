@@ -6,7 +6,7 @@
  */
 
 import resolve from '@rollup/plugin-node-resolve';
-import swc from '@rollup/plugin-swc';
+import swc from 'unplugin-swc';
 import vue from '@vitejs/plugin-vue';
 import esmShim from '@rollup/plugin-esm-shim';
 import postcss from 'rollup-plugin-postcss';
@@ -23,7 +23,6 @@ export function createConfig(
         pluginsPre = [],
         pluginsPost = [],
         external = [],
-        defaultExport = false,
     },
 ) {
     external = Object.keys(pkg.dependencies || {})
@@ -31,29 +30,16 @@ export function createConfig(
         .concat(builtinModules)
         .concat(external);
 
-    const output = [];
-    if (pkg.main) {
-        output.push({
-            format: 'cjs',
-            file: pkg.main,
-            exports: 'named',
-            ...(defaultExport ? { footer: 'module.exports = Object.assign(exports.default, exports);' } : {}),
-            sourcemap: true,
-        });
-    }
-
-    if (pkg.module) {
-        output.push({
-            format: 'es',
-            file: pkg.module,
-            sourcemap: true,
-        });
-    }
-
     return {
         input: 'src/index.ts',
         external,
-        output,
+        output: [
+            {
+                format: 'es',
+                file: pkg.module,
+                sourcemap: true,
+            },
+        ],
         plugins: [
             ...pluginsPre,
 
@@ -68,8 +54,7 @@ export function createConfig(
                 extract: true,
             }),
 
-            // Compile TypeScript/JavaScript files
-            swc(),
+            swc.rollup(),
 
             ...pluginsPost,
         ],

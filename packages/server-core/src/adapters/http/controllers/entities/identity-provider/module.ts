@@ -8,8 +8,9 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
+import type { Request } from 'routup';
 import {
-    type Request, getRequestHeader, getRequestHostName, getRequestIP, sendRedirect,
+    getRequestHeader, getRequestHostName, getRequestIP, sendRedirect,
 } from 'routup';
 import {
     IdentityProvider,
@@ -46,7 +47,7 @@ import {
 } from './handlers';
 import { useConfig } from '../../../../../config';
 import { IdentityProviderRepository } from '../../../../database/domains';
-import { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types';
+import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types';
 
 @DTags('identity')
 @DController('/identity-providers')

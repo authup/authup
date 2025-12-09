@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Transporter as SMTPClient } from 'nodemailer';
+import type { Transporter as SMTPClient } from 'nodemailer';
 
-export {
+export type {
     SMTPClient,
 };
 

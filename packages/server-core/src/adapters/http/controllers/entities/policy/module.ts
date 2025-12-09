@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyAPICheckResponse } from '@authup/core-http-kit';
-import { Policy } from '@authup/core-kit';
-import { PolicyInput } from '@authup/access';
+import type { PolicyAPICheckResponse } from '@authup/core-http-kit';
+import type { Policy } from '@authup/core-kit';
+import type { PolicyInput } from '@authup/access';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';

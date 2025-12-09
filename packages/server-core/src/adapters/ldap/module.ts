@@ -6,10 +6,7 @@
  */
 
 import type { Change, Client, SearchOptions } from 'ldapjs';
-import {
-    DN,
-    createClient, parseDN,
-} from 'ldapjs';
+import ldap from 'ldapjs';
 import type { ILdapClient } from '../../core';
 import type { LdapClientOptions } from './types';
 
@@ -20,7 +17,7 @@ export class LdapClient implements ILdapClient {
 
     constructor(options: LdapClientOptions) {
         this.options = options;
-        this.driver = createClient({
+        this.driver = ldap.createClient({
             url: options.url,
             tlsOptions: options.tls,
             connectTimeout: 3000,
@@ -205,7 +202,7 @@ export class LdapClient implements ILdapClient {
                 continue;
             }
 
-            const dn = parseDN(output);
+            const dn = ldap.parseDN(output);
             if (dn.childOf(input[i]) || dn.equals(input[i])) {
                 continue;
             }
@@ -216,14 +213,14 @@ export class LdapClient implements ILdapClient {
         return output;
     }
 
-    isDn(input: string | DN) : boolean {
+    isDn(input: string | ldap.DN) : boolean {
         try {
             if (typeof input !== 'string') {
-                return DN.isDN(input);
+                return ldap.DN.isDN(input);
             }
 
-            if (typeof (DN as Record<string, any>).fromString === 'function') {
-                const dn = (DN as Record<string, any>).fromString(input);
+            if (typeof (ldap.DN as Record<string, any>).fromString === 'function') {
+                const dn = (ldap.DN as Record<string, any>).fromString(input);
                 return typeof dn !== 'undefined';
             }
 

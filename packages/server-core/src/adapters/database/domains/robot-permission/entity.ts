@@ -14,10 +14,10 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import {
-    Permission, Policy, Robot,
+import type {
+    Permission, Policy, Realm,
+    Robot, RobotPermission,
 } from '@authup/core-kit';
-import type { Realm, RobotPermission } from '@authup/core-kit';
 import { PermissionEntity } from '../permission';
 import { PolicyEntity } from '../policy';
 import { RobotEntity } from '../robot/entity';

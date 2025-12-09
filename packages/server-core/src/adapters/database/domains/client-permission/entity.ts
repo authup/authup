@@ -14,13 +14,13 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import {
+import type {
     Client,
     ClientPermission,
     Permission,
     Policy,
+    Realm,
 } from '@authup/core-kit';
-import type { Realm } from '@authup/core-kit';
 import { PermissionEntity } from '../permission';
 import { PolicyEntity } from '../policy';
 import { ClientEntity } from '../client/entity';

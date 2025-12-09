@@ -15,9 +15,10 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { ClientScope, Realm } from '@authup/core-kit';
-import {
+import type {
     Client,
+    ClientScope,
+    Realm,
     Scope,
 } from '@authup/core-kit';
 import { ClientEntity } from '../client';

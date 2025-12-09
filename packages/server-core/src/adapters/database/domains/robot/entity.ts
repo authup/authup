@@ -18,9 +18,11 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Client, Robot, User } from '@authup/core-kit';
-import {
+import type {
+    Client,
     Realm,
+    Robot,
+    User,
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';

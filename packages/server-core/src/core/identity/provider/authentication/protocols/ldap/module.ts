@@ -7,9 +7,7 @@
 
 import type { LdapIdentityProvider, User } from '@authup/core-kit';
 import { template } from '@authup/kit';
-import {
-    AndFilter, EqualityFilter, OrFilter,
-} from 'ldapjs';
+import ldap from 'ldapjs';
 import type { Filter } from 'ldapjs';
 import { BaseCredentialsAuthenticator } from '../../../../../authentication';
 import type { ILdapClient } from '../../../../../ldap';
@@ -112,18 +110,18 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
                 display_name_attribute: this.provider.user_display_name_attribute || 'cn',
             });
         } else if (this.provider.user_name_attribute) {
-            filter = new EqualityFilter({
+            filter = new ldap.EqualityFilter({
                 attribute: this.provider.user_name_attribute,
                 value: input,
             });
         } else {
-            filter = new OrFilter({
+            filter = new ldap.OrFilter({
                 filters: [
-                    new EqualityFilter({
+                    new ldap.EqualityFilter({
                         attribute: 'cn',
                         value: input,
                     }),
-                    new EqualityFilter({
+                    new ldap.EqualityFilter({
                         attribute: 'sAMAccountName',
                         value: input,
                     }),
@@ -155,13 +153,13 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
                 member_attribute: memberAttribute,
             });
         } else {
-            filter = new AndFilter({
+            filter = new ldap.AndFilter({
                 filters: [
-                    new EqualityFilter({
+                    new ldap.EqualityFilter({
                         attribute: 'objectClass',
                         value: this.provider.group_class || 'group',
                     }),
-                    new EqualityFilter({
+                    new ldap.EqualityFilter({
                         attribute: memberAttribute,
                         value: user[this.provider.group_member_user_attribute || 'dn'],
                     }),

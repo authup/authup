@@ -13,14 +13,14 @@ import { send } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { type Client, OAuth2AuthorizationCodeRequest, type Scope } from '@authup/core-kit';
 import { ForceUserLoggedInMiddleware } from '../../../middleware';
-import { HTTPOAuth2Authorizer } from '../../../adapters/oauth2';
+import { HTTPOAuth2Authorizer } from '../../../adapters';
 import {
     IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestValidator,
 } from '../../../../../core';
 import { sanitizeError } from '../../../../../utils';
 import { sendClientResponse } from '../../../response';
-import { AuthorizeControllerContext } from './types';
+import type { AuthorizeControllerContext } from './types';
 
 @DController('/authorize')
 export class AuthorizeController {

@@ -7,7 +7,6 @@
 
 import {
     Client as RedisClient,
-    ClientOptions as RedisClientOptions,
     JsonAdapter as RedisJsonAdapter,
     Watcher as RedisWatcher,
     buildKeyPath as buildRedisKeyPath,
@@ -17,10 +16,17 @@ import {
     parseKeyPath as parseRedisKeyPath,
 } from 'redis-extension';
 
+import type {
+    ClientOptions as RedisClientOptions,
+} from 'redis-extension';
+
+export type {
+    RedisClientOptions,
+};
+
 export {
     createRedisClient,
     RedisClient,
-    RedisClientOptions,
     RedisJsonAdapter,
     RedisWatcher,
 

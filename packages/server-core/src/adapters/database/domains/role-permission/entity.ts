@@ -14,11 +14,12 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import {
+import type {
     Permission,
-    Policy, Realm,
-
-    Role, RolePermission,
+    Policy,
+    Realm,
+    Role,
+    RolePermission,
 } from '@authup/core-kit';
 import { PolicyEntity } from '../policy';
 import { RoleEntity } from '../role/entity';
