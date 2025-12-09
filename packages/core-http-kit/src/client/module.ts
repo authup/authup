@@ -99,7 +99,10 @@ export class Client extends BaseClient {
         if (typeof baseURL === 'string') {
             const keys = Object.keys(options);
             for (let i = 0; i < keys.length; i++) {
-                options[keys[i]] = new URL(options[keys[i]], baseURL).href;
+                const key = keys[i] as keyof Options;
+                if (typeof options[key] === 'string') {
+                    options[key] = new URL(options[key], baseURL).href;
+                }
             }
         }
 

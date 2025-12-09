@@ -116,71 +116,73 @@ export class ClientAuthenticationHook extends EventEmitter<{
         }
 
         if (!this.isAttached(client)) {
-            client[HOOK_SYMBOL] = client.on(
-                HookName.RESPONSE_ERROR,
-                (err) => {
-                    if (!this.isActive) {
-                        return Promise.reject(err);
-                    }
+            Object.assign(client, {
+                [HOOK_SYMBOL]: client.on(
+                    HookName.RESPONSE_ERROR,
+                    (err) => {
+                        if (!this.isActive) {
+                            return Promise.reject(err);
+                        }
 
-                    const { request } = err;
+                        const { request } = err;
 
-                    const currentState = getClientRequestRetryState(request);
-                    if (currentState.retryCount > 0) {
-                        return Promise.reject(err);
-                    }
+                        const currentState = getClientRequestRetryState(request);
+                        if (currentState.retryCount > 0) {
+                            return Promise.reject(err);
+                        }
 
-                    currentState.retryCount += 1;
+                        currentState.retryCount += 1;
 
-                    const code = getClientErrorCode(err);
+                        const code = getClientErrorCode(err);
 
-                    if (isJWKErrorCode(code)) {
-                        this.unsetAuthorizationHeader();
+                        if (isJWKErrorCode(code)) {
+                            this.unsetAuthorizationHeader();
 
-                        if (request.headers) {
-                            unsetHeader(
-                                request.headers,
-                                HeaderName.AUTHORIZATION,
-                            );
+                            if (request.headers) {
+                                unsetHeader(
+                                    request.headers,
+                                    HeaderName.AUTHORIZATION,
+                                );
+                            }
+
+                            return Promise.reject(err);
+                        }
+
+                        if (
+                            isJWTErrorCode(code) ||
+                            (isObject(err.response) && err.response.status === 401)
+                        ) {
+                            return this.refresh()
+                                .then((response) => {
+                                    if (request.headers) {
+                                        setHeader(
+                                            request.headers,
+                                            HeaderName.AUTHORIZATION,
+                                            stringifyAuthorizationHeader({
+                                                type: 'Bearer',
+                                                token: response.access_token,
+                                            }),
+                                        );
+                                    }
+
+                                    return client.request(request);
+                                })
+                                .catch((err) => {
+                                    if (request.headers) {
+                                        unsetHeader(
+                                            request.headers,
+                                            HeaderName.AUTHORIZATION,
+                                        );
+                                    }
+
+                                    return Promise.reject(err);
+                                });
                         }
 
                         return Promise.reject(err);
-                    }
-
-                    if (
-                        isJWTErrorCode(code) ||
-                        (isObject(err.response) && err.response.status === 401)
-                    ) {
-                        return this.refresh()
-                            .then((response) => {
-                                if (request.headers) {
-                                    setHeader(
-                                        request.headers,
-                                        HeaderName.AUTHORIZATION,
-                                        stringifyAuthorizationHeader({
-                                            type: 'Bearer',
-                                            token: response.access_token,
-                                        }),
-                                    );
-                                }
-
-                                return client.request(request);
-                            })
-                            .catch((err) => {
-                                if (request.headers) {
-                                    unsetHeader(
-                                        request.headers,
-                                        HeaderName.AUTHORIZATION,
-                                    );
-                                }
-
-                                return Promise.reject(err);
-                            });
-                    }
-
-                    return Promise.reject(err);
-                },
-            );
+                    },
+                ),
+            });
         }
     }
 

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ObjectLiteral } from '@authup/kit';
 import type { Client, RequestBaseOptions } from 'hapic';
 import type { BuildInput } from 'rapiq';
 
@@ -26,14 +27,14 @@ export type DomainEntityID<T> = T extends DomainEntityWithID ?
     T['id'] :
     never;
 
-export interface EntityAPISlim<T> {
+export interface EntityAPISlim<T extends ObjectLiteral> {
     getMany(record?: BuildInput<T>) : Promise<EntityCollectionResponse<T>>;
     getOne(id: DomainEntityID<T>, record?: BuildInput<T>) : Promise<EntityRecordResponse<T>>;
     delete(id: DomainEntityID<T>) : Promise<EntityRecordResponse<T>>;
     create(data: Partial<T>) : Promise<EntityRecordResponse<T>>;
 }
 
-export interface EntityAPI<T> extends EntityAPISlim<T> {
+export interface EntityAPI<T extends ObjectLiteral> extends EntityAPISlim<T> {
     update(id: DomainEntityID<T>, data: Partial<T>) : Promise<EntityRecordResponse<T>>;
 }
 

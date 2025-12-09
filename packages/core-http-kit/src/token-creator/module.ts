@@ -17,17 +17,19 @@ import type {
 } from './type';
 
 export function createTokenCreator(options: TokenCreatorOptions) : TokenCreator {
-    switch (options.type) {
-        case TokenCreatorVariation.USER: {
-            return createTokenCreatorWithUser(options);
-        }
-        case TokenCreatorVariation.ROBOT: {
-            return createTokenCreatorWithRobot(options);
-        }
-        case TokenCreatorVariation.ROBOT_IN_VAULT: {
-            return createTokenCreatorWithRobotInVault(options);
+    if (options) {
+        switch (options.type) {
+            case TokenCreatorVariation.USER: {
+                return createTokenCreatorWithUser(options);
+            }
+            case TokenCreatorVariation.ROBOT: {
+                return createTokenCreatorWithRobot(options);
+            }
+            case TokenCreatorVariation.ROBOT_IN_VAULT: {
+                return createTokenCreatorWithRobotInVault(options);
+            }
         }
     }
 
-    return undefined;
+    throw new SyntaxError('Unknown token creator type');
 }
