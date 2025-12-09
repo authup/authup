@@ -7,6 +7,7 @@
 
 import type { LdapIdentityProvider, User } from '@authup/core-kit';
 import { UserError } from '@authup/core-kit';
+import type { Result } from '@authup/kit';
 import { template } from '@authup/kit';
 import ldap from 'ldapjs';
 import type { Filter } from 'ldapjs';
@@ -40,7 +41,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
     }
 
     async authenticate(name: string, password: string) : Promise<User> {
-        await this.bind();
+        let bind = await this.safeBind();
+        if (!bind.success) {
+            await this.safeUnbind();
+
+            throw UserError.credentialsInvalid();
+        }
 
         const entity = await this.findOneByName(name);
         if (!entity) {
@@ -63,17 +69,16 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         };
 
         try {
-            await this.bind(identity.id, password);
-        } catch (e) {
-            throw UserError.credentialsInvalid();
-        } finally {
-            await this.unbind();
-        }
-
-        try {
             identity.roles = await this.findUserGroups(entity);
         } catch (e) {
             // todo: log event
+        }
+
+        bind = await this.safeBind(identity.id, password);
+        await this.safeUnbind();
+
+        if (!bind.success) {
+            throw UserError.credentialsInvalid();
         }
 
         const account = await this.accountManager.save(identity);
@@ -94,8 +99,28 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         return this.client.bind(user, password);
     }
 
+    protected async safeBind(user?: string, password?: string) : Promise<Result<null>> {
+        try {
+            await this.bind(user, password);
+
+            return { success: true, data: null };
+        } catch (e) {
+            return { success: false, error: e as Error };
+        }
+    }
+
     protected async unbind() : Promise<void> {
         return this.client.unbind();
+    }
+
+    protected async safeUnbind() : Promise<Result<null>> {
+        try {
+            await this.unbind();
+
+            return { success: true, data: null };
+        } catch (e) {
+            return { success: false, error: e as Error };
+        }
     }
 
     protected async findOneByName(input: string) : Promise<Record<string, any> | null> {
