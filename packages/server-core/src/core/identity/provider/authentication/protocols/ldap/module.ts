@@ -6,6 +6,7 @@
  */
 
 import type { LdapIdentityProvider, User } from '@authup/core-kit';
+import { UserError } from '@authup/core-kit';
 import { template } from '@authup/kit';
 import ldap from 'ldapjs';
 import type { Filter } from 'ldapjs';
@@ -38,48 +39,46 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         });
     }
 
-    async authenticate(user: string, password: string) : Promise<User> {
-        let identity : IdentityProviderIdentity;
+    async authenticate(name: string, password: string) : Promise<User> {
+        await this.bind();
+
+        const entity = await this.findOneByName(name);
+        if (!entity) {
+            throw UserError.credentialsInvalid();
+        }
+
+        const identity : IdentityProviderIdentity = {
+            id: entity.dn,
+            attributeCandidates: {
+                name: [
+                    entity[this.provider.user_name_attribute || 'cn'],
+                    entity.dn,
+                ],
+                email: [
+                    entity[this.provider.user_mail_attribute || 'mail'],
+                ],
+            },
+            data: entity,
+            provider: this.provider,
+        };
 
         try {
-            identity = await this.getIdentity(user);
-
             await this.bind(identity.id, password);
+        } catch (e) {
+            throw UserError.credentialsInvalid();
         } finally {
             await this.unbind();
+        }
+
+        try {
+            identity.roles = await this.findUserGroups(entity);
+        } catch (e) {
+            // todo: log event
         }
 
         const account = await this.accountManager.save(identity);
 
         return account.user;
-    }
-
-    protected async getIdentity(input: string): Promise<IdentityProviderIdentity> {
-        await this.bind();
-
-        const user = await this.findUser(input);
-        const identity : IdentityProviderIdentity = {
-            id: user.dn,
-            attributeCandidates: {
-                name: [
-                    user[this.provider.user_name_attribute || 'cn'],
-                    user.dn,
-                ],
-                email: [
-                    user[this.provider.user_mail_attribute || 'mail'],
-                ],
-            },
-            data: user,
-            provider: this.provider,
-        };
-
-        try {
-            identity.roles = await this.findUserGroups(user);
-        } catch (e) {
-            // todo: log event
-        }
-
-        return identity;
     }
 
     protected async bind(user?: string, password?: string) : Promise<void> {
@@ -99,7 +98,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         return this.client.unbind();
     }
 
-    protected async findUser(input: string) : Promise<Record<string, any> | undefined> {
+    protected async findOneByName(input: string) : Promise<Record<string, any> | null> {
         let filter : Filter | string;
 
         if (this.provider.user_filter) {
@@ -135,7 +134,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         }, this.client.resolveDn(this.provider.user_base_dn, this.provider.base_dn));
 
         if (entities.length === 0) {
-            return undefined;
+            return null;
         }
 
         return entities[0];
