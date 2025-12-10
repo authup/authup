@@ -13,11 +13,11 @@ import { merge } from 'smob';
 
 export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
     const options : CorsOptions = merge(input || {}, {
-        origin(origin, callback) {
+        origin(_origin, callback) {
             callback(null, true);
         },
         credentials: true,
-    });
+    } satisfies CorsOptions);
 
     router.use(coreHandler((req, res, next) => cors(options)(req, res, next)));
 }

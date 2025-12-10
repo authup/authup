@@ -254,9 +254,12 @@ export class IdentityProviderController {
             cookieDomainsRaw.push(new URL(config.authorizeRedirectUrl).hostname);
         }
 
-        cookieDomainsRaw.push(getRequestHostName(req, {
+        const requestHostName = getRequestHostName(req, {
             trustProxy: true,
-        }));
+        });
+        if (requestHostName) {
+            cookieDomainsRaw.push(requestHostName);
+        }
 
         const cookieDomains = [...new Set(cookieDomainsRaw)];
 
@@ -271,15 +274,17 @@ export class IdentityProviderController {
                 },
             );
 
-            setResponseCookie(
-                res,
-                CookieName.REFRESH_TOKEN,
-                token.refresh_token,
-                {
-                    domain: cookieDomains[i],
-                    maxAge: config.tokenRefreshMaxAge * 1000,
-                },
-            );
+            if (token.refresh_token) {
+                setResponseCookie(
+                    res,
+                    CookieName.REFRESH_TOKEN,
+                    token.refresh_token,
+                    {
+                        domain: cookieDomains[i],
+                        maxAge: config.tokenRefreshMaxAge * 1000,
+                    },
+                );
+            }
         }
 
         if (data.codeRequest) {
@@ -287,7 +292,10 @@ export class IdentityProviderController {
 
             const url = new URL('/authorize', config.publicUrl);
             for (let i = 0; i < codeRequestKeys.length; i++) {
-                url.searchParams.set(codeRequestKeys[i], data.codeRequest[codeRequestKeys[i]]);
+                const codeRequestKey = codeRequestKeys[i] as keyof OAuth2AuthorizationCodeRequest;
+                if (data.codeRequest[codeRequestKey]) {
+                    url.searchParams.set(codeRequestKey, data.codeRequest[codeRequestKey]);
+                }
             }
 
             return sendRedirect(res, url.href);
@@ -322,15 +330,12 @@ export class IdentityProviderController {
         req: Request,
         codeRequest?: OAuth2AuthorizationCodeRequest,
     ) : Promise<string> {
-        const ip = getRequestIP(req, {
-            trustProxy: true,
-        });
-        const userAgent = getRequestHeader(req, 'user-agent');
-
         return this.stateManager.save({
             codeRequest,
-            ip,
-            userAgent,
+            ip: getRequestIP(req, {
+                trustProxy: true,
+            }),
+            userAgent: getRequestHeader(req, 'user-agent'),
         });
     }
 

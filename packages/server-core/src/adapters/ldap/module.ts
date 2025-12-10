@@ -28,14 +28,18 @@ export class LdapClient implements ILdapClient {
         return new Promise<void>((resolve, reject) => {
             const listener = () => {
                 if (this.options.startTLS) {
-                    this.driver.starttls(this.options.tls, null, (err) => {
-                        if (err) {
-                            reject(err);
-                            return;
-                        }
+                    this.driver.starttls(
+                        this.options.tls || {},
+                        null,
+                        (err) => {
+                            if (err) {
+                                reject(err);
+                                return;
+                            }
 
-                        resolve();
-                    });
+                            resolve();
+                        },
+                    );
                 } else {
                     resolve();
                 }
@@ -74,6 +78,16 @@ export class LdapClient implements ILdapClient {
                     if (!user) {
                         user = this.options.user;
                         password = this.options.password;
+                    }
+
+                    if (!user) {
+                        reject(new Error('User name not defined.'));
+                        return;
+                    }
+
+                    if (!password) {
+                        reject(new Error('User password not defined.'));
+                        return;
                     }
 
                     this.driver.bind(user, password, (err) => {
@@ -166,7 +180,7 @@ export class LdapClient implements ILdapClient {
                             const attribute = searchEntry.attributes[i];
 
                             entry[attribute.type] = Array.isArray(attribute.values) ?
-                                attribute.values.map((el) => el.trim()).filter(Boolean) :
+                                attribute.values.map((el: string) => el.trim()).filter(Boolean) :
                                 attribute.values;
                         }
 
@@ -178,7 +192,7 @@ export class LdapClient implements ILdapClient {
                     });
 
                     res.on('end', (searchResult) => {
-                        if (searchResult.status !== 0) {
+                        if (!searchResult || searchResult.status !== 0) {
                             reject(new Error('The ldap search was not successfully'));
                         } else {
                             resolve(entries);
@@ -189,25 +203,30 @@ export class LdapClient implements ILdapClient {
         });
     }
 
-    resolveDn(...input: (string | undefined)[]) : string | undefined {
+    resolveDn(...input: unknown[]) : string {
         let output : string | undefined;
 
         for (let i = 0; i <= input.length; i++) {
-            if (typeof input[i] === 'undefined') {
+            const el = input[i];
+            if (typeof el !== 'string') {
                 continue;
             }
 
             if (!output) {
-                output = input[i];
+                output = el;
                 continue;
             }
 
             const dn = ldap.parseDN(output);
-            if (dn.childOf(input[i]) || dn.equals(input[i])) {
+            if (dn.childOf(el) || dn.equals(el)) {
                 continue;
             }
 
             output += `,${input[i]}`;
+        }
+
+        if (!output) {
+            throw new SyntaxError('Dn could not be resolved.');
         }
 
         return output;

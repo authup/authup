@@ -40,7 +40,7 @@ export async function writeRoleRouteHandler(
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);
-    let entity : RoleEntity | undefined;
+    let entity : RoleEntity | null | undefined;
     if (id) {
         const where: FindOptionsWhere<RoleEntity> = {};
         if (isUUID(id)) {
@@ -117,7 +117,7 @@ export async function writeRoleRouteHandler(
         dataSource,
         entityTarget: RoleEntity,
         entity: data,
-        entityExisting: entity,
+        entityExisting: entity || undefined,
     });
 
     if (!isUnique) {

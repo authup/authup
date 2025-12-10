@@ -15,7 +15,7 @@ export class IdentityProviderOpenIDAuthenticator extends IdentityProviderOAuth2A
         const payload = extractTokenPayload(input.access_token);
 
         return {
-            id: payload.sub,
+            id: payload.sub!,
             attributeCandidates: {
                 name: [
                     payload.preferred_username,

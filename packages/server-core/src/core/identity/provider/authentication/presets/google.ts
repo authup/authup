@@ -13,7 +13,7 @@ import type { IdentityProviderIdentity } from '../../types';
 import type { IdentityProviderOAuth2AuthenticatorContext } from '../protocols';
 import { IdentityProviderOAuth2Authenticator } from '../protocols';
 
-export class IdenityProviderGoogleAuthenticator extends IdentityProviderOAuth2Authenticator {
+export class IdentityProviderGoogleAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {
         ctx.provider.scope = 'openid profile email';
         ctx.provider.authorize_url = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -51,7 +51,7 @@ export class IdenityProviderGoogleAuthenticator extends IdentityProviderOAuth2Au
         }
 
         return {
-            id: payload.sub,
+            id: payload.sub!,
             attributeCandidates,
             data: payload,
             provider: this.provider,

@@ -60,6 +60,11 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
         entityTarget: UserEntity,
     });
 
+    if (!data.email) {
+        // todo: validation error
+        throw new BadRequestError('User email is required');
+    }
+
     data.name ??= data.email;
 
     if (config.emailVerification) {
@@ -80,6 +85,7 @@ export async function createAuthRegisterRouteHandler(req: Request, res: Response
     await repository.save(entity);
 
     if (
+        entity.email &&
         config.emailVerification &&
         config.env !== EnvironmentName.TEST
     ) {

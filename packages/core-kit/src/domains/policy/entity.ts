@@ -29,11 +29,11 @@ export interface Policy {
 
     invert: boolean;
 
-    children: PolicyWithType[];
+    children: PolicyWithType<Policy>[];
 
-    parent_id: string | null;
+    parent_id: Policy['id'] | null;
 
-    parent: PolicyWithType | null;
+    parent: PolicyWithType<Policy> | null;
 
     // ------------------------------------------------------------------
 
@@ -43,7 +43,7 @@ export interface Policy {
 
     // ------------------------------------------------------------------
 
-    created_at: Date;
+    created_at: string;
 
-    updated_at: Date;
+    updated_at: string;
 }

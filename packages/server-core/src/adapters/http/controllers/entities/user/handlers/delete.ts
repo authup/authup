@@ -12,7 +12,7 @@ import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import { UserRepository } from '../../../../../database/domains';
 import {
-    useRequestIdentity, useRequestParamID, useRequestPermissionChecker,
+    useRequestIdentityOrFail, useRequestParamID, useRequestPermissionChecker,
 } from '../../../../request';
 
 export async function deleteUserRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -21,7 +21,7 @@ export async function deleteUserRouteHandler(req: Request, res: Response) : Prom
     const permissionChecker = useRequestPermissionChecker(req);
     await permissionChecker.preCheck({ name: PermissionName.USER_DELETE });
 
-    const identity = useRequestIdentity(req);
+    const identity = useRequestIdentityOrFail(req);
     if (
         identity.type === 'user' &&
         identity.id === id

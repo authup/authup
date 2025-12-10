@@ -8,7 +8,7 @@
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import type { OAuth2BearerResponseBuildContext } from './type';
 
-function resolveExpiresIn(payload?: OAuth2TokenPayload, fallbackValue?: number) : number | null {
+function resolveExpiresIn(payload?: OAuth2TokenPayload, fallbackValue?: number) : number {
     if (payload && payload.exp) {
         return payload.exp - Math.floor(new Date().getTime() / 1000);
     }

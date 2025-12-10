@@ -9,7 +9,7 @@ import type { PolicyAttribute } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
 } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
+import { DomainEventDestinations, buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -26,21 +26,24 @@ async function publishEvent(
     event: `${EntityDefaultEventName}`,
     data: PolicyAttribute,
 ) {
+    const destinations : DomainEventDestinations = [
+        {
+            channel: (id) => buildEntityChannelName(EntityType.POLICY_ATTRIBUTE, id),
+        },
+    ];
+    if (data.realm_id) {
+        destinations.push({
+            channel: (id) => buildEntityChannelName(EntityType.POLICY_ATTRIBUTE, id),
+            namespace: buildEntityNamespaceName(data.realm_id),
+        });
+    }
     await publishDomainEvent({
         content: {
             type: EntityType.POLICY_ATTRIBUTE,
             event,
             data,
         },
-        destinations: [
-            {
-                channel: (id) => buildEntityChannelName(EntityType.POLICY_ATTRIBUTE, id),
-                namespace: buildEntityNamespaceName(data.realm_id),
-            },
-            {
-                channel: (id) => buildEntityChannelName(EntityType.POLICY_ATTRIBUTE, id),
-            },
-        ],
+        destinations,
     });
 }
 

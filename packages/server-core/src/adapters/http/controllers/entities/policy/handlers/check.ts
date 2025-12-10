@@ -14,6 +14,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import type { FindOptionsWhere } from 'typeorm';
 import type { PolicyEntity } from '../../../../../database/domains';
 import { PolicyRepository, resolveRealm } from '../../../../../database/domains';
 import { PolicyEngine } from '../../../../../../security';
@@ -24,7 +25,7 @@ export async function checkPolicyRouteHandler(req: Request, res: Response) : Pro
 
     const dataSource = await useDataSource();
     const repository = new PolicyRepository(dataSource);
-    let criteria : Partial<PolicyEntity>;
+    let criteria : FindOptionsWhere<PolicyEntity>;
 
     if (isUUID(id)) {
         criteria = {
@@ -70,7 +71,7 @@ export async function checkPolicyRouteHandler(req: Request, res: Response) : Pro
     } catch (e) {
         output = {
             status: 'error',
-            data: e,
+            data: e as Error,
         };
     }
 

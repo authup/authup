@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/specs';
-import { OAuth2TokenKind } from '@authup/specs';
+import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import { randomUUID } from 'node:crypto';
 import type { Identity } from '@authup/core-kit';
 import { OAuth2OpenIDClaimsBuilder } from '../../../openid';
@@ -33,17 +33,29 @@ export class OAuth2OpenIDTokenIssuer implements IOAuth2OpenIDTokenIssuer {
     constructor(ctx: OAuth2OpenIDTokenIssuerContext) {
         this.repository = ctx.repository;
         this.signer = ctx.signer;
-        this.options = ctx.options;
+        this.options = ctx.options || {};
 
         this.identityResolver = ctx.identityResolver;
         this.claimsBuilder = new OAuth2OpenIDClaimsBuilder();
     }
 
     async issue(input: OAuth2TokenPayload = {}, options: OAuth2TokenIssuerOptions = {}) : Promise<OAuth2TokenIssuerResponse> {
+        if (!input.sub_kind) {
+            throw JWTError.payloadPropertyInvalid('sub_kind');
+        }
+
+        if (!input.sub) {
+            throw JWTError.payloadPropertyInvalid('sub');
+        }
+
         const identity = await this.identityResolver.resolve(
             input.sub_kind,
             input.sub,
         );
+
+        if (!identity) {
+            throw JWTError.payloadInvalid();
+        }
 
         return this.issueWithIdentity(input, identity, options);
     }

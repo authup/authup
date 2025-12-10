@@ -28,7 +28,7 @@ export interface Client {
 
     // ------------------------------------------------------------------
 
-    secret: string,
+    secret: string | null,
 
     secret_hashed: boolean,
 

@@ -107,7 +107,10 @@ export async function createAuthPasswordForgotRouteHandler(req: Request, res: Re
     entity.reset_expires = new Date(Date.now() + (1000 * 60 * 30)).toISOString();
     entity.reset_hash = randomBytes(32).toString('hex');
 
-    if (config.env !== EnvironmentName.TEST) {
+    if (
+        entity.email &&
+        config.env !== EnvironmentName.TEST
+    ) {
         const smtpClient = useSMTPClient();
         await smtpClient.sendMail({
             to: entity.email,

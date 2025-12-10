@@ -9,7 +9,7 @@ import {
     OAuth2Error,
     OAuth2TokenGrant,
     OAuth2TokenGrantResponse,
-    type OAuth2TokenIntrospectionResponse,
+    type OAuth2TokenIntrospectionResponse, OAuth2TokenPermission,
 } from '@authup/specs';
 import {
     DController, DGet, DPost, DRequest, DResponse, DTags,
@@ -117,6 +117,10 @@ export class TokenController {
             const dataSource = await useDataSource();
             const identityPermissionService = new IdentityPermissionService(dataSource);
 
+            if (!payload.sub || !payload.sub_kind) {
+                throw OAuth2Error.identityInvalid();
+            }
+
             // todo: only receive client specific permissions
             const permissions = await identityPermissionService.getFor({
                 id: payload.sub,
@@ -135,9 +139,10 @@ export class TokenController {
             const claims = claimsBuilder.fromIdentity(identity);
 
             return {
-                active: await this.tokenVerifier.isActive(payload.jti),
+                active: payload.jti ? await this.tokenVerifier.isActive(payload.jti) : false,
                 // todo: permissions property should be removed.
-                permissions: permissions.map((permission) => pickRecord(permission, ['name', 'client_id', 'realm_id'])),
+                permissions: permissions
+                    .map((permission) => pickRecord(permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission),
                 ...payload,
                 ...claims,
             };
@@ -174,6 +179,10 @@ export class TokenController {
             @DResponse() res: Response,
     ): Promise<OAuth2TokenGrantResponse> {
         const grantType = guessOauth2GrantTypeByRequest(req);
+        if (!grantType) {
+            throw OAuth2Error.grantInvalid();
+        }
+
         const grant = this.tokenGrants[grantType];
         if (!grant) {
             throw OAuth2Error.grantInvalid();

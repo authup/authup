@@ -36,12 +36,12 @@ export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> imp
     ) : Promise<OAuth2TokenGrantResponse> {
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             ...base,
-            sub: authorizationCode.sub,
+            sub: authorizationCode.sub || undefined,
             sub_kind: authorizationCode.sub_kind,
             realm_id: authorizationCode.realm_id,
             realm_name: authorizationCode.realm_name,
-            scope: authorizationCode.scope,
-            client_id: authorizationCode.client_id,
+            scope: authorizationCode.scope || undefined,
+            client_id: authorizationCode.client_id || undefined,
         });
 
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(accessTokenPayload);
@@ -57,7 +57,7 @@ export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> imp
             authorizationCode.scope &&
             hasOAuth2Scopes(authorizationCode.scope, ScopeName.OPEN_ID)
         ) {
-            buildContext.idToken = authorizationCode.id_token;
+            buildContext.idToken = authorizationCode.id_token || undefined;
         }
 
         return buildOAuth2BearerTokenResponse(buildContext);

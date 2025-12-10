@@ -11,7 +11,7 @@ import type { IdentityProviderMapperOperation } from './constants';
 export type IdentityProviderMapperElement = {
     key?: string,
     value: unknown,
-    realmId?: string,
+    realmId?: string | null,
     operation: IdentityProviderMapperOperation
 };
 

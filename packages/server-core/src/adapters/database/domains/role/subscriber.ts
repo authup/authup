@@ -13,7 +13,7 @@ import {
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import { buildRedisKeyPath } from '@authup/server-kit';
+import { DomainEventDestinations, buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface,
     InsertEvent,
@@ -31,21 +31,24 @@ async function publishEvent(
     event: `${EntityDefaultEventName}`,
     data: Role,
 ) {
+    const destinations : DomainEventDestinations = [
+        {
+            channel: (id) => buildEntityChannelName(EntityType.ROLE, id),
+        },
+    ];
+    if (data.realm_id) {
+        destinations.push({
+            channel: (id) => buildEntityChannelName(EntityType.ROLE, id),
+            namespace: buildEntityNamespaceName(data.realm_id),
+        });
+    }
     await publishDomainEvent({
         content: {
             type: EntityType.ROLE,
             event,
             data,
         },
-        destinations: [
-            {
-                channel: (id) => buildEntityChannelName(EntityType.ROLE, id),
-                namespace: buildEntityNamespaceName(data.realm_id),
-            },
-            {
-                channel: (id) => buildEntityChannelName(EntityType.ROLE, id),
-            },
-        ],
+        destinations,
     });
 }
 

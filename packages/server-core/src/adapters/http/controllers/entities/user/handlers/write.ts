@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isUUID } from '@authup/kit';
+import { isUUID, removeObjectProperty } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName, UserValidator, ValidatorGroup } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -21,7 +21,7 @@ import {
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
 } from '../../../../request';
-import { UserCredentialsService } from '../../../../../../core/authentication/credential/entities';
+import { UserCredentialsService } from '../../../../../../core';
 
 export async function writeUserRouteHandler(
     req: Request,
@@ -36,7 +36,7 @@ export async function writeUserRouteHandler(
 
     const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
-    let entity : UserEntity | undefined;
+    let entity : UserEntity | null | undefined;
     if (id) {
         const where: FindOptionsWhere<UserEntity> = {};
         if (isUUID(id)) {
@@ -57,7 +57,7 @@ export async function writeUserRouteHandler(
         throw new NotFoundError();
     }
 
-    let hasAbility : boolean;
+    let hasAbility : boolean | undefined;
     const permissionChecker = useRequestPermissionChecker(req);
     if (entity) {
         try {
@@ -94,10 +94,10 @@ export async function writeUserRouteHandler(
     });
 
     if (!hasAbility) {
-        delete data.name_locked;
-        delete data.active;
-        delete data.status;
-        delete data.status_message;
+        removeObjectProperty(data, 'name_locked');
+        removeObjectProperty(data, 'active');
+        removeObjectProperty(data, 'status');
+        removeObjectProperty(data, 'status_message');
     }
 
     const credentialsService = new UserCredentialsService();
@@ -114,7 +114,7 @@ export async function writeUserRouteHandler(
             }
 
             if (entity.name_locked) {
-                delete data.name;
+                removeObjectProperty(data, 'name');
             }
 
             const config = useConfig();

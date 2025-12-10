@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ObjectLiteral } from './types';
+
 export function isObject(input: unknown) : input is Record<string, any> {
     return !!input &&
         typeof input === 'object' &&
@@ -44,4 +46,8 @@ export function flattenObject(input: Record<string, any>) : Record<string, any> 
     }
 
     return output;
+}
+
+export function removeObjectProperty<T extends ObjectLiteral>(input: Partial<T>, key: keyof T) {
+    delete input[key];
 }

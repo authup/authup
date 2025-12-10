@@ -6,6 +6,7 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/specs';
+import { JWTError } from '@authup/specs';
 import type { IOAuth2TokenRepository } from '../repository/types';
 import type { IOAuth2TokenRevoker } from './types';
 
@@ -16,8 +17,12 @@ export class OAuth2TokenRevoker implements IOAuth2TokenRevoker {
         this.repository = repository;
     }
 
-    async revoke(payload: OAuth2TokenPayload) : Promise<void> {
-        await this.repository.remove(payload.jti);
-        await this.repository.setInactive(payload.jti, payload.exp);
+    async revoke(input: OAuth2TokenPayload) : Promise<void> {
+        if (!input.jti) {
+            throw JWTError.payloadPropertyInvalid('jti');
+        }
+
+        await this.repository.remove(input.jti);
+        await this.repository.setInactive(input.jti, input.exp);
     }
 }

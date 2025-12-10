@@ -27,7 +27,9 @@ function base64URLEncode(arrayBuffer: ArrayBuffer) {
     // btoa takes chars from 0-255 and base64 encodes.
     // Then convert the base64 encoded to base64url encoded.
     // (replace + with -, replace / with _, trim trailing =)
-    return btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer)))
+    const charCode = Array.from(new Uint8Array(arrayBuffer));
+
+    return btoa(String.fromCharCode.apply(charCode))
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');

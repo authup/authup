@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ObjectLiteral } from '@authup/kit';
 import { hasOwnProperty } from '@authup/kit';
 import type {
     FindManyOptions,
@@ -23,8 +24,8 @@ import type {
 } from './types';
 
 export class ExtraAttributesRepositoryAdapter<
-    T,
-    A extends EARepositoryEntityBase,
+    T extends ObjectLiteral = ObjectLiteral,
+    A extends EARepositoryEntityBase = EARepositoryEntityBase,
 > {
     protected repository : Repository<T>;
 
@@ -145,7 +146,8 @@ export class ExtraAttributesRepositoryAdapter<
         const attributes = await this.findOneWithEAByPrimaryColumn(entity[this.primaryColumn], extraOptions);
         const attributeKeys = Object.keys(attributes);
         for (let i = 0; i < attributeKeys.length; i++) {
-            entity[attributeKeys[i]] = attributes[attributeKeys[i]];
+            const attributeKey = attributeKeys[i];
+            entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
         }
 
         return entity as T & E;
@@ -197,7 +199,8 @@ export class ExtraAttributesRepositoryAdapter<
 
             const attributeKeys = Object.keys(attributes);
             for (let j = 0; j < attributeKeys.length; j++) {
-                entities[i][attributeKeys[j]] = attributes[attributeKeys[j]];
+                const attributeKey = attributeKeys[j];
+                entities[i][attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
             }
         }
 
@@ -265,10 +268,6 @@ export class ExtraAttributesRepositoryAdapter<
         if (itemsToAdd.length > 0) {
             await this.attributeRepository.insert(itemsToAdd);
         }
-    }
-
-    getPrimaryKeyValue(entity: T) : T[keyof T] {
-        return entity[this.primaryColumn as keyof T];
     }
 
     getPrimaryKeyValues(entities: T[]) : T[keyof T][] {

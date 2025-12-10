@@ -44,7 +44,7 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
                 scope: ctx.provider.scope,
                 authorizationEndpoint: ctx.provider.authorize_url,
                 tokenEndpoint: ctx.provider.token_url,
-                userinfoEndpoint: ctx.provider.user_info_url,
+                userinfoEndpoint: ctx.provider.user_info_url || undefined,
             },
         });
     }
@@ -75,7 +75,7 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
             const data = await this.authenticate(params);
             return { success: true, data };
         } catch (e) {
-            return { success: false, error: e };
+            return { success: false, error: e as Error };
         }
     }
 
@@ -85,7 +85,7 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
         const payload = extractTokenPayload(input.access_token);
 
         return {
-            id: payload.sub,
+            id: payload.sub!,
             attributeCandidates: {
                 name: [
                     payload.sub,

@@ -14,5 +14,5 @@ export interface IOAuth2ClientRepository {
      * @param idOrName
      * @param realmId
      */
-    findOneByIdOrName(idOrName: string, realmId?: string) : Promise<Client>
+    findOneByIdOrName(idOrName: string, realmId?: string) : Promise<Client | null>
 }

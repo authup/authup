@@ -140,7 +140,7 @@ export class AuthorizationMiddleware {
             unsetResponseCookie(response, CookieName.REFRESH_TOKEN, cookieOptions);
             unsetResponseCookie(response, CookieName.ACCESS_TOKEN_EXPIRE_DATE, cookieOptions);
 
-            next(e);
+            next(e as Error);
         }
     }
 
@@ -170,6 +170,14 @@ export class AuthorizationMiddleware {
 
         if (payload.scope) {
             setRequestScopes(request, deserializeOAuth2Scope(payload.scope));
+        }
+
+        if (!payload.sub_kind) {
+            throw JWTError.payloadPropertyInvalid('sub_kind');
+        }
+
+        if (!payload.sub) {
+            throw JWTError.payloadPropertyInvalid('sub');
         }
 
         const identity = await this.identityResolver.resolve(

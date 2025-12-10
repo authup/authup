@@ -9,14 +9,15 @@ import type {
     DataSource, EntityManager, FindManyOptions, FindOneOptions,
 } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
+import type { ObjectLiteral } from '@authup/kit';
 import { ExtraAttributesRepositoryAdapter } from './adapter';
 import type {
     EARepositoryEntityBase, EARepositoryFindOptions, EARepositoryOptions, EARepositorySaveOptions, IEARepository,
 } from './types';
 
 export class EARepository<
-    T,
-    A extends EARepositoryEntityBase,
+    T extends ObjectLiteral = ObjectLiteral,
+    A extends EARepositoryEntityBase = EARepositoryEntityBase,
 > extends Repository<T> implements IEARepository <T> {
     protected adapter : ExtraAttributesRepositoryAdapter<T, A>;
 
