@@ -39,7 +39,7 @@
         "@swc/core": "^1.15.3",
         "@tada5hi/commitlint-config": "^1.2.5",
         "@tada5hi/eslint-config-vue-typescript": "^1.3.16",
-        "@types/node": "^24.10.1",
+        "@types/node": "^24.10.2",
         "@vitejs/plugin-vue": "^6.0.2",
         "@vitest/coverage-v8": "^4.0.15",
         "cross-env": "^10.1.0",
