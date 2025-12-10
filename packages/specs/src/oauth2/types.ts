@@ -35,11 +35,6 @@ export type OAuth2TokenPayload = JWTClaims & {
     kind?: `${OAuth2TokenKind}`,
 
     /**
-     * Subject (userId | robotId | clientId)
-     */
-    sub?: string,
-
-    /**
      * Self: Subject type (robot | user | client)
      */
     sub_kind?: `${OAuth2SubKind}`,
@@ -50,37 +45,7 @@ export type OAuth2TokenPayload = JWTClaims & {
     sub_name?: string,
 
     /**
-     * Audience
-     */
-    aud?: string | string[],
-
-    /**
-     * Issuer (token endpoint, f.e "https://...")
-     */
-    iss?: string,
-
-    /**
-     * Expires At
-     */
-    exp?: number,
-
-    /**
-     * Not before
-     */
-    nbf?: number,
-
-    /**
-     * Issued At
-     */
-    iat?: number,
-
-    /**
-     * (JWT ID) Claim
-     */
-    jti?: string | number,
-
-    /**
-     * Scopes (f.e: "scope1 scope2")
+     * Scopes (e.g. "scope1 scope2")
      */
     scope?: string,
 
@@ -103,11 +68,6 @@ export type OAuth2TokenPayload = JWTClaims & {
      * Self: remote address
      */
     remote_address?: string
-
-    /**
-     * Additional parameters
-     */
-    [key: string]: any
 };
 
 // todo: this should be removed.

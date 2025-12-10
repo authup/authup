@@ -29,7 +29,7 @@ function base64URLEncode(arrayBuffer: ArrayBuffer) {
     // (replace + with -, replace / with _, trim trailing =)
     const charCode = Array.from(new Uint8Array(arrayBuffer));
 
-    return btoa(String.fromCharCode.apply(charCode))
+    return btoa(String.fromCharCode.apply(null, charCode))
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
