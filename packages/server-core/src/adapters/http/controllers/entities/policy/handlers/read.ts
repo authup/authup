@@ -36,6 +36,8 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
     const { pagination } = applyQuery(queryBuilder, query, {
         defaultAlias: 'policy',
         relations: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             allowed: ['children', 'realm'],
         },
         fields: {
@@ -54,6 +56,8 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
             ],
         },
         filters: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             allowed: ['id', 'name', 'type', 'parent_id', 'realm_id', 'realm.name'],
         },
         sort: {
@@ -130,6 +134,8 @@ export async function getOnePolicyRouteHandler(
             ],
         },
         relations: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             allowed: ['children', 'realm'],
         },
     });

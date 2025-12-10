@@ -14,6 +14,7 @@ import {
     InstanceChecker,
     TreeRepository, TreeRepositoryUtils,
 } from 'typeorm';
+import type { ObjectLiteral } from '@authup/kit';
 import type { ExtraAttributesRepositoryAdapter } from '../adapter';
 import type {
     EARepositoryEntityBase, EARepositoryFindOptions, EARepositoryOptions, EARepositorySaveOptions, IEARepository,
@@ -24,8 +25,8 @@ import { ExtraAttributesTreeRepositoryAdapter } from './adapter';
  * @see https://github.com/typeorm/typeorm/blob/master/src/repository/TreeRepository.ts
  */
 export class EATreeRepository<
-    T,
-    A extends EARepositoryEntityBase,
+    T extends ObjectLiteral = ObjectLiteral,
+    A extends EARepositoryEntityBase = EARepositoryEntityBase,
 > extends TreeRepository<T> implements IEARepository<T> {
     protected adapter: ExtraAttributesRepositoryAdapter<T, A>;
 
@@ -221,6 +222,10 @@ export class EATreeRepository<
                            ${descendantColumn.databasePath} = '${primaryKeyValue}' AND
                            ${ancestorColumn.databasePath} != '${primaryKeyValue}';`,
             );
+
+            if (!this.metadata.treeParentRelation) {
+                return;
+            }
 
             const parentId = this.metadata.treeParentRelation.joinColumns[0].getEntityValue(entity);
 

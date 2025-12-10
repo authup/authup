@@ -28,6 +28,10 @@ export class OAuth2TokenSigner implements IOAuth2TokenSigner {
             throw JWKError.notFoundForRealm(payload.realm_id, payload.realm_name);
         }
 
+        if (!key.decryption_key) {
+            throw JWKError.decryptionKeyMissing();
+        }
+
         let token : string;
         if (key.type === JWKType.OCT) {
             token = await signToken(

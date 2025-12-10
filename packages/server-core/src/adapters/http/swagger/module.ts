@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getDistPath, getSrcPath } from '../../../path';
 import type { SwaggerOptions } from './type';
+import { ConfigDefaults } from '../../../config';
 
 export class Swagger {
     protected distPath : string;
@@ -68,7 +69,9 @@ export class Swagger {
                         '**/@authup/**',
                     ],
                 },
-                servers: [this.options.baseURL],
+                servers: [
+                    this.options.baseURL || `http://${ConfigDefaults.HOST}:${ConfigDefaults.PORT}`,
+                ],
                 name: 'API Documentation',
                 outputDirectory: this.distPath,
                 securityDefinitions: {

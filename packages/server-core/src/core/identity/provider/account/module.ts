@@ -101,7 +101,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             const attributeCandidateKeys = Object.keys(identity.attributeCandidates);
             for (let i = 0; i < attributeCandidateKeys.length; i++) {
                 const key = attributeCandidateKeys[i];
-                if (!entity[key]) {
+                if (!entity[key] || !identity.attributeCandidates[key]) {
                     continue;
                 }
 
@@ -117,7 +117,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             (entity as User).realm_id = identity.provider.realm_id;
             (entity as User).active = true;
             (entity as User).name_locked = true;
-            (entity as User).client_id = identity.clientId;
+            (entity as User).client_id = identity.clientId || null;
         }
 
         const attributesSelf = await this.validateAttributes(entity, identity, 10);
@@ -146,7 +146,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             output = attributesSelf;
         }
 
-        let attempts = Math.max((identity.attributeCandidates.name?.length || 0) + 1, 10);
+        let attempts = Math.max((identity.attributeCandidates?.name?.length || 0) + 1, 10);
         while (attempts > 0) {
             try {
                 // todo: we also need to remove existing ones via idp login flow ( but not other attributes!)
@@ -220,7 +220,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                             identity.attributeCandidates[child.path] = [];
                         }
 
-                        identity.attributeCandidates[child.path].push(...rest);
+                        identity.attributeCandidates[child.path]!.push(...rest);
                     }
 
                     retry = true;
@@ -230,9 +230,9 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                 if (
                     identity.attributeCandidates &&
                     identity.attributeCandidates[child.path] &&
-                    identity.attributeCandidates[child.path].length > 0
+                    identity.attributeCandidates[child.path]!.length > 0
                 ) {
-                    entity[child.path] = identity.attributeCandidates[child.path].shift();
+                    entity[child.path] = identity.attributeCandidates[child.path]!.shift();
                     retry = true;
                     break;
                 }

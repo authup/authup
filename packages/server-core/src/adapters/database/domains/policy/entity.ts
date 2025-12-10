@@ -55,23 +55,23 @@ export class PolicyEntity implements Policy {
         children: PolicyEntity[];
 
     @Column({ nullable: true })
-        parent_id: string | null;
+        parent_id: Policy['id'] | null;
 
     @TreeParent({ onDelete: 'CASCADE' })
     @JoinColumn({ name: 'parent_id' })
-        parent: PolicyEntity;
-
-    @CreateDateColumn()
-        created_at: Date;
-
-    @UpdateDateColumn()
-        updated_at: Date;
+        parent: Policy | null;
 
     @Index()
     @Column({ nullable: true })
-        realm_id: string | null;
+        realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
         realm: Realm | null;
+
+    @CreateDateColumn()
+        created_at: string;
+
+    @UpdateDateColumn()
+        updated_at: string;
 }

@@ -15,11 +15,12 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import {
-    Client, Permission, Realm,
+import type {
+    Client, Permission, Policy, Realm,
 } from '@authup/core-kit';
 import { PolicyEntity } from '../policy';
 import { RealmEntity } from '../realm';
+import { ClientEntity } from '../client/entity';
 
 @Unique(['name', 'client_id', 'realm_id'])
 @Entity({ name: 'auth_permissions' })
@@ -39,17 +40,14 @@ export class PermissionEntity implements Permission {
     @Column({ type: 'text', nullable: true })
         description: string | null;
 
-    @Column({ type: 'varchar', length: 16, nullable: true })
-        target: string | null;
-
     // ------------------------------------------------------------------
 
     @Column({ type: 'varchar', nullable: true })
-        policy_id: string | null;
+        policy_id: Policy['id'] | null;
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'policy_id' })
-        policy: PolicyEntity | null;
+        policy: Policy | null;
 
     // ------------------------------------------------------------------
 
@@ -57,7 +55,7 @@ export class PermissionEntity implements Permission {
     @Column({ nullable: true })
         client_id: Client['id'] | null;
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'SET NULL', nullable: true })
+    @ManyToOne(() => ClientEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'client_id' })
         client: Client | null;
 
@@ -74,8 +72,8 @@ export class PermissionEntity implements Permission {
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: Date;
+        created_at: string;
 
     @UpdateDateColumn()
-        updated_at: Date;
+        updated_at: string;
 }

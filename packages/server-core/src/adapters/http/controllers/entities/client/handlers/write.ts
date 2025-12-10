@@ -36,7 +36,7 @@ export async function writeClientRouteHandler(
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientEntity);
-    let entity : ClientEntity | undefined;
+    let entity : ClientEntity | null | undefined;
     if (id) {
         const where: FindOptionsWhere<ClientEntity> = {};
         if (isUUID(id)) {
@@ -114,7 +114,7 @@ export async function writeClientRouteHandler(
         dataSource,
         entityTarget: ClientEntity,
         entity: data,
-        entityExisting: entity,
+        entityExisting: entity || undefined,
     });
 
     if (!isUnique) {

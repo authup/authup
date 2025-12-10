@@ -12,7 +12,7 @@ import type { IOAuth2ClientRepository } from '../../../../../core';
 import { ClientRepository } from '../../../domains';
 
 export class OAuth2ClientRepository implements IOAuth2ClientRepository {
-    async findOneByIdOrName(key: string, realmKey?: string): Promise<Client> {
+    async findOneByIdOrName(key: string, realmKey?: string): Promise<Client | null> {
         const dataSource = await useDataSource();
         const repository = new ClientRepository(dataSource);
         const query = repository.createQueryBuilder('client')

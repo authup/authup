@@ -44,15 +44,22 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
             return null;
         }
 
-        return {
-            scope: entity.scope,
-            client_id: entity.client_id,
+        const payload : OAuth2TokenPayload = {
             exp: new Date(entity.expires).getTime(),
             sub: this.getSubject(entity),
             sub_kind: this.getSubjectKind(entity),
             realm_id: entity.realm.id,
             realm_nam: entity.realm.name,
         };
+        if (entity.scope) {
+            payload.scope = entity.scope;
+        }
+
+        if (entity.client_id) {
+            payload.client_id = entity.client_id;
+        }
+
+        return payload;
     }
 
     // -----------------------------------------------------
@@ -109,7 +116,9 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
     async saveWithSignature(data: OAuth2TokenPayload, signature: string): Promise<OAuth2TokenPayload> {
         const options : CacheSetOptions = {
-            ttl: this.transformUnixTimestampToTTL(data.exp),
+            ttl: data.exp ?
+                this.transformUnixTimestampToTTL(data.exp) :
+                3_600 * 1000,
         };
 
         const normalized = await this.save(data);

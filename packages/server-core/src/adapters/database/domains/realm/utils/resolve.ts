@@ -10,13 +10,13 @@ import { isUUID } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
 import { RealmEntity } from '../entity';
 
-export async function resolveRealm(id: string | undefined) : Promise<RealmEntity | undefined>;
+export async function resolveRealm(id: string | undefined) : Promise<RealmEntity | null>;
 export async function resolveRealm(id: string | undefined, withFallback: true) : Promise<RealmEntity>;
 export async function resolveRealm(id: string | undefined, withFallback?: boolean) : Promise<any> {
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
 
-    let entity : RealmEntity | null;
+    let entity : RealmEntity | undefined | null;
 
     if (id) {
         const query = repository.createQueryBuilder('realm');
@@ -38,5 +38,9 @@ export async function resolveRealm(id: string | undefined, withFallback?: boolea
         });
     }
 
-    return entity;
+    if (entity) {
+        return entity;
+    }
+
+    return null;
 }

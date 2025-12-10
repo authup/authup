@@ -9,7 +9,7 @@ import { JWKType } from '@authup/specs';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
 import { In } from 'typeorm';
-import { NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../database/domains';
 import { transformBase64KeyToJsonWebKey } from '../../../../../../domains';
@@ -35,17 +35,19 @@ export async function getJwksRouteHandler(
         },
     });
 
-    const promises = entities.map(
-        (entity) => transformBase64KeyToJsonWebKey(
-            'spki',
-            entity.encryption_key,
-            entity.signature_algorithm,
-        )
-            .then((key) => ({
-                ...key,
-                kid: entity.id,
-            })),
-    );
+    const promises = entities
+        .filter((entity) => !!entity.encryption_key)
+        .map(
+            (entity) => transformBase64KeyToJsonWebKey(
+                'spki',
+                entity.encryption_key!,
+                entity.signature_algorithm,
+            )
+                .then((key) => ({
+                    ...key,
+                    kid: entity.id,
+                })),
+        );
 
     const keys = await Promise.all(promises);
 
@@ -73,6 +75,10 @@ export async function getJwkRouteHandler(
 
     if (!entity) {
         throw new NotFoundError();
+    }
+
+    if (!entity.encryption_key) {
+        throw new BadRequestError('The encryption key does not exist');
     }
 
     const jsonWebKey = await transformBase64KeyToJsonWebKey(

@@ -19,7 +19,7 @@ export function registerRateLimitMiddleware(router: Router, input?: OptionsInput
         skip(req: Request) {
             const identity = useRequestIdentity(req);
 
-            return identity &&
+            return !!identity &&
                 identity.type === 'robot' &&
                 identity.realmName === REALM_MASTER_NAME &&
                 !!identity.data &&

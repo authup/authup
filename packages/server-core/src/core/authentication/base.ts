@@ -17,7 +17,7 @@ export abstract class BaseCredentialsAuthenticator<
             const data = await this.authenticate(key, value, realmId);
             return { success: true, data };
         } catch (e) {
-            return { success: false, error: e };
+            return { success: false, error: e as Error };
         }
     }
 

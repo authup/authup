@@ -3,8 +3,8 @@
 
     "compilerOptions": {
         "outDir": "./dist",
-        "strict": false,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "strictPropertyInitialization": false
     },
 
     "include": [

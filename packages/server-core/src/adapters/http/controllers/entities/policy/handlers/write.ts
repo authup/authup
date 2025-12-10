@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType } from '@authup/access';
-import { isUUID } from '@authup/kit';
+import { extendObject, isUUID } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -43,7 +43,7 @@ export async function writePolicyRouteHandler(
 
     const dataSource = await useDataSource();
     const repository = new PolicyRepository(dataSource);
-    let entity : PolicyEntity | undefined;
+    let entity : PolicyEntity | null | undefined;
     if (id) {
         const where: FindOptionsWhere<PolicyEntity> = {};
         if (isUUID(id)) {
@@ -102,7 +102,7 @@ export async function writePolicyRouteHandler(
         dataSource,
         entityTarget: PolicyEntity,
         entity: data,
-        entityExisting: entity,
+        entityExisting: entity || undefined,
     });
 
     if (!isUnique) {
@@ -139,10 +139,7 @@ export async function writePolicyRouteHandler(
     // ----------------------------------------------
 
     if (entity) {
-        const keys = Object.keys(data);
-        for (let i = 0; i < keys.length; i++) {
-            entity[keys[i]] = data[keys[i]];
-        }
+        extendObject(entity, data);
 
         await repository.saveOneWithEA(entity);
         await repository.updateClosureTable(entity);

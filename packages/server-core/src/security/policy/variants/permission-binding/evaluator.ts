@@ -54,46 +54,44 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
     PermissionBindingPolicy,
     PolicyInput
     >): Promise<boolean> {
+        if (!ctx.input.identity) {
+            return maybeInvertPolicyOutcome(false, ctx.config.invert);
+        }
+
         const dataSource = await useDataSource();
         const identityPermissionService = new IdentityPermissionService(dataSource);
 
         // get all identity permissions with applicable client(_id) restriction
         const identityPermissions = await identityPermissionService.getFor(ctx.input.identity)
             .then((permissions) => permissions.filter((item) => {
-                if (item.name !== ctx.input.permission.name) {
+                if (item.name !== ctx.input?.permission?.name) {
                     return false;
                 }
 
-                let realmId : string | null;
-                if (typeof ctx.input.permission.realmId === 'undefined') {
-                    realmId = null;
-                } else {
-                    realmId = ctx.input.permission.realmId;
-                }
-
-                let clientId : string | null;
-                if (typeof ctx.input.permission.clientId === 'undefined') {
-                    clientId = null;
-                } else {
-                    clientId = ctx.input.permission.clientId;
-                }
-
                 // we are comparing only string with null (db resources always null or string)
-                return realmId === item.realm_id && clientId === item.client_id;
+                return (ctx.input?.permission?.realmId ?? null) === item.realm_id &&
+                    (ctx.input?.permission?.clientId ?? null) === item.client_id;
             }));
 
         if (identityPermissions.length === 0) {
             return maybeInvertPolicyOutcome(false, ctx.config.invert);
         }
 
-        const permissionsMerged = mergePermissionItems(identityPermissions);
+        const permissionsMerged = mergePermissionItems(
+            identityPermissions.map((raw) => ({
+                name: raw.name,
+                realmId: raw.realm_id,
+                clientId: raw.client_id,
+                policyId: raw.policy,
+            })),
+        );
         if (permissionsMerged.length === 0) {
             return maybeInvertPolicyOutcome(false, ctx.config.invert);
         }
 
-        const policies = permissionsMerged
-            .filter((permission) => !!permission.policy)
-            .map((permission) => permission.policy);
+        const policies : PolicyWithType[] = permissionsMerged
+            .map((permission) => permission.policy)
+            .filter((policy) => !!policy);
 
         if (policies.length === 0) {
             return maybeInvertPolicyOutcome(true, ctx.config.invert);

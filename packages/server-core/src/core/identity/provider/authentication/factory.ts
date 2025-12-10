@@ -10,9 +10,9 @@ import { IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core-k
 import type { IOAuth2Authenticator, IdentityProviderOAuth2AuthenticatorContext } from './protocols';
 import { IdentityProviderOAuth2Authenticator, IdentityProviderOpenIDAuthenticator } from './protocols';
 import {
-    IdenityProviderGoogleAuthenticator,
     IdentityProviderFacebookAuthenticator,
     IdentityProviderGithubAuthenticator,
+    IdentityProviderGoogleAuthenticator,
     IdentityProviderInstagramAuthenticator,
     IdentityProviderPaypalAuthenticator,
 } from './presets';
@@ -27,7 +27,7 @@ export function createIdentityProviderOAuth2Authenticator(ctx: IdentityProviderO
     }
 
     if (ctx.provider.preset === IdentityProviderPreset.GOOGLE) {
-        return new IdenityProviderGoogleAuthenticator(ctx);
+        return new IdentityProviderGoogleAuthenticator(ctx);
     }
 
     if (ctx.provider.preset === IdentityProviderPreset.INSTAGRAM) {

@@ -60,6 +60,10 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
 
         switch (key.type) {
             case JWKType.OCT: {
+                if (!key.decryption_key) {
+                    throw JWKError.decryptionKeyMissing();
+                }
+
                 payload = await verifyToken(
                     token,
                     {
@@ -70,6 +74,10 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                 break;
             }
             case JWKType.EC: {
+                if (!key.encryption_key) {
+                    throw JWKError.decryptionKeyMissing();
+                }
+
                 payload = await verifyToken(
                     token,
                     {
@@ -85,6 +93,10 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                 break;
             }
             default: {
+                if (!key.encryption_key) {
+                    throw JWKError.decryptionKeyMissing();
+                }
+
                 payload = await verifyToken(
                     token,
                     {

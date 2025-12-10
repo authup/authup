@@ -13,12 +13,13 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
-import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
+import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../../database/domains';
 import {
     getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
 } from '../../../../request';
+import { DatabaseConflictError } from '../../../../../database';
 
 export async function writeIdentityProviderRouteHandler(
     req: Request,
@@ -33,7 +34,7 @@ export async function writeIdentityProviderRouteHandler(
 
     const dataSource = await useDataSource();
     const repository = new IdentityProviderRepository(dataSource);
-    let entity : IdentityProviderEntity | undefined;
+    let entity : IdentityProviderEntity | null | undefined;
     if (id) {
         const where: FindOptionsWhere<IdentityProviderEntity> = {};
         if (isUUID(id)) {
@@ -106,6 +107,19 @@ export async function writeIdentityProviderRouteHandler(
                 attributes: data,
             },
         });
+    }
+
+    // ----------------------------------------------
+
+    const isUnique = await isEntityUnique({
+        dataSource,
+        entityTarget: IdentityProviderEntity,
+        entity: data,
+        entityExisting: entity || undefined,
+    });
+
+    if (!isUnique) {
+        throw new DatabaseConflictError();
     }
 
     // ----------------------------------------------

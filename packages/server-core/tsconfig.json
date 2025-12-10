@@ -1,6 +1,7 @@
 {
     "extends": "../../tsconfig.json",
     "compilerOptions": {
+        "strictPropertyInitialization": false,
         "paths": {
             "@authup/access": ["./packages/access/src"],
             "@authup/server-kit": ["./packages/server-kit/src"],

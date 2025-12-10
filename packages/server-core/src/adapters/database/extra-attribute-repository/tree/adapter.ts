@@ -5,11 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ObjectLiteral } from '@authup/kit';
 import { ExtraAttributesRepositoryAdapter } from '../adapter';
 import type { EARepositoryEntityBase, EARepositoryFindOptions, EARepositorySaveOptions } from '../types';
 
-export class ExtraAttributesTreeRepositoryAdapter<T,
-    A extends EARepositoryEntityBase,
+export class ExtraAttributesTreeRepositoryAdapter<
+    T extends ObjectLiteral = ObjectLiteral,
+    A extends EARepositoryEntityBase = EARepositoryEntityBase,
 > extends ExtraAttributesRepositoryAdapter<T, A> {
     async saveWithEA<E extends Record<string, any>>(
         input: T & E,
@@ -90,7 +92,7 @@ export class ExtraAttributesTreeRepositoryAdapter<T,
 
             const keys = Object.keys(value);
             for (let i = 0; i < keys.length; i++) {
-                entity[keys[i]] = value[keys[i]];
+                entity[keys[i] as keyof T] = value[keys[i]] as T[keyof T];
             }
 
             return entity;

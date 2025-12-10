@@ -38,6 +38,20 @@ export class JWKError extends AuthupError {
         });
     }
 
+    static decryptionKeyMissing() {
+        return new JWKError({
+            code: ErrorCode.JWK_NOT_FOUND,
+            message: 'The decryption key is missing.',
+        });
+    }
+
+    static encryptionKeyMissing() {
+        return new JWKError({
+            code: ErrorCode.JWK_NOT_FOUND,
+            message: 'The encryption key is missing.',
+        });
+    }
+
     static notFoundForRealm(id: string, name?: string) {
         let key : string;
         if (name) {

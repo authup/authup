@@ -20,7 +20,7 @@ import {
 } from '@authup/core-kit';
 import { RobotEntity, resolveRealm } from '../../../../../database/domains';
 import { isSelfToken } from '../../../../../../utils';
-import { OAuth2ScopeAttributesResolver } from '../../../../../../core/oauth2';
+import { OAuth2ScopeAttributesResolver } from '../../../../../../core';
 import {
     useRequestIdentity,
     useRequestParamID,
@@ -67,6 +67,8 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
             maxLimit: 50,
         },
         relations: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             allowed: ['realm', 'user'],
         },
         sort: {
@@ -204,6 +206,8 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
             ],
         },
         relations: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             allowed: ['realm', 'user'],
         },
     });

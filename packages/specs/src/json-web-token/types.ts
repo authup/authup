@@ -22,13 +22,49 @@ export interface JWTHeader {
 // standard claims https://datatracker.ietf.org/doc/html/rfc7519#section-4.1
 export interface JWTClaims {
     [key: string]: any;
+
+    /**
+     * issuer (token endpoint, f.e "https://...")
+     */
     iss?: string;
+
+    /**
+     * subject
+     *
+     * subject of the JWT
+     */
     sub?: string;
+
+    /**
+     * audience
+     *
+     *  Recipient for which the JWT is intended
+     */
     aud?: string | string[];
+
+    /**
+     * expiration time
+     *
+     * Time after which the JWT expires
+     */
     exp?: number;
+
+    /**
+     * not before time
+     *
+     * Time before which the JWT must not be accepted for processing
+     */
     nbf?: number;
+
+    /**
+     * issued at time
+     */
     iat?: number;
+
+    /**
+     * JWT ID
+     *
+     * Unique identifier; can be used to prevent the JWT from being replayed (allows a token to be used only once)
+     */
     jti?: string;
 }
-
-// -----------------------------------------------------------------

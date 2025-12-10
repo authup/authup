@@ -41,7 +41,7 @@ export async function writeRobotRouteHandler(
 
     const dataSource = await useDataSource();
     const repository = new RobotRepository(dataSource);
-    let entity : RobotEntity | undefined;
+    let entity : RobotEntity | null | undefined;
     if (id) {
         const where: FindOptionsWhere<RobotEntity> = {};
         if (isUUID(id)) {
@@ -90,7 +90,7 @@ export async function writeRobotRouteHandler(
         dataSource,
         entityTarget: RobotEntity,
         entity: data,
-        entityExisting: entity,
+        entityExisting: entity || undefined,
     });
 
     if (!isUnique) {
@@ -114,12 +114,13 @@ export async function writeRobotRouteHandler(
 
         const config = useConfig();
         if (
-            typeof data.name === 'string' &&
+            config.robotAdminName &&
+            data.name &&
             entity.name.toLowerCase() !== data.name.toLowerCase() &&
             entity.name.toLowerCase() === config.robotAdminName.toLowerCase()
         ) {
             const realm = await resolveRealm(entity.realm_id);
-            if (realm.name === REALM_MASTER_NAME) {
+            if (realm && realm.name === REALM_MASTER_NAME) {
                 throw new BadRequestError('The system robot name can not be changed.');
             }
         }

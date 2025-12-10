@@ -14,6 +14,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
+import type { FindOptionsWhere } from 'typeorm';
 import { PermissionEntity, resolveRealm } from '../../../../../database/domains';
 import { PermissionDBProvider, PolicyEngine } from '../../../../../../security';
 import { useRequestIdentity } from '../../../../request';
@@ -23,7 +24,7 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);
-    let criteria : Partial<PermissionEntity>;
+    let criteria : FindOptionsWhere<PermissionEntity>;
 
     if (isUUID(id)) {
         criteria = {
@@ -64,7 +65,7 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
 
     let output : PermissionAPICheckResponse;
     try {
-        if (ctx.input.attributes) {
+        if (ctx.input && ctx.input.attributes) {
             await permissionChecker.check(ctx);
         } else {
             await permissionChecker.preCheck(ctx);
@@ -76,7 +77,7 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
     } catch (e) {
         output = {
             status: 'error',
-            data: e,
+            data: e as Error,
         };
     }
 

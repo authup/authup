@@ -37,7 +37,7 @@ function buildSymmetricImportOptionsForJWTAlgorithm(
         };
     }
 
-    throw new Error(`Signature algorithm ${this.key.signature_algorithm} is not supported.`);
+    throw new Error(`Signature algorithm ${signingAlgorithm} is not supported.`);
 }
 
 function buildAsymmetricImportOptionsForJWTAlgorithm(
@@ -85,7 +85,7 @@ function buildAsymmetricImportOptionsForJWTAlgorithm(
         };
     }
 
-    throw new Error(`Signature algorithm ${this.key.signature_algorithm} is not supported.`);
+    throw new Error(`Signature algorithm ${signingAlgorithm} is not supported.`);
 }
 
 export async function transformBase64KeyToJsonWebKey(

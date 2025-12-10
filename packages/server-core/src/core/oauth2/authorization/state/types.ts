@@ -10,7 +10,7 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 export type OAuth2AuthorizationState = {
     codeRequest?: OAuth2AuthorizationCodeRequest,
     ip: string,
-    userAgent: string
+    userAgent?: string | null
 };
 
 export interface IOAuth2AuthorizeStateRepository {
@@ -24,5 +24,5 @@ export interface IOAuth2AuthorizeStateRepository {
 export interface IOAuth2AuthorizationStateManager {
     save(data: OAuth2AuthorizationState) : Promise<string>;
 
-    verify(state: string, input: OAuth2AuthorizationState): Promise<OAuth2AuthorizationState>;
+    verify(state: string, input: Partial<OAuth2AuthorizationState>): Promise<OAuth2AuthorizationState>;
 }

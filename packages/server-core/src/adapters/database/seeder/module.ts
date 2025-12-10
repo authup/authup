@@ -12,6 +12,7 @@ import {
 import { createNanoID } from '@authup/kit';
 import { hash } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere } from 'typeorm';
+import { IsNull } from 'typeorm';
 import type { Seeder } from 'typeorm-extension';
 import {
     PermissionEntity,
@@ -114,7 +115,7 @@ export class DatabaseSeeder implements Seeder {
         const roleRepository = dataSource.getRepository(RoleEntity);
         let role = await roleRepository.findOneBy({
             name: ROLE_ADMIN_NAME,
-            realm_id: null,
+            realm_id: IsNull(),
         });
         if (!role) {
             role = roleRepository.create({
@@ -239,10 +240,10 @@ export class DatabaseSeeder implements Seeder {
          * Create all permissions
          */
         let permissionNames : string[];
-        const permissionNamesRaw = this.options.permissions;
+        const permissionNamesRaw = this.options.permissions || [];
         if (Array.isArray(permissionNamesRaw)) {
             permissionNames = getPermissions(permissionNamesRaw);
-        } else if (typeof permissionNamesRaw === 'string') {
+        } else {
             permissionNames = getPermissions([permissionNamesRaw]);
         }
 

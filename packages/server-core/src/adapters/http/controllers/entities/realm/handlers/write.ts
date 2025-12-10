@@ -29,7 +29,7 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RealmEntity);
-    let entity : RealmEntity | undefined;
+    let entity : RealmEntity | null | undefined;
     if (id) {
         const where: FindOptionsWhere<RealmEntity> = {};
         if (isUUID(id)) {
@@ -85,6 +85,8 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
             },
         });
     }
+
+    // ----------------------------------------------
 
     if (entity) {
         entity = repository.merge(entity, data);

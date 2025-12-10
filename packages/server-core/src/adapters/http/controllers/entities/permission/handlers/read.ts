@@ -40,6 +40,8 @@ export async function getManyPermissionRouteHandler(req: Request, res: Response)
             maxLimit: 50,
         },
         relations: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             allowed: ['policy'],
         },
         sort: {
@@ -52,8 +54,9 @@ export async function getManyPermissionRouteHandler(req: Request, res: Response)
     // todo: this should be optimized, first check query input
     const policyRepository = new PolicyRepository(dataSource);
     for (let i = 0; i < entities.length; i++) {
-        if (entities[i].policy) {
-            await policyRepository.findDescendantsTree(entities[i].policy);
+        const entity = entities[i];
+        if (entity.policy) {
+            await policyRepository.findDescendantsTree(entity.policy);
         }
     }
 
@@ -98,6 +101,8 @@ export async function getOnePermissionRouteHandler(req: Request, res: Response):
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'permission',
         relations: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             allowed: ['policy'],
         },
     });

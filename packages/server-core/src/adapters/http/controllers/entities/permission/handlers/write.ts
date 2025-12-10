@@ -11,6 +11,7 @@ import { PermissionName, ROLE_ADMIN_NAME } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
+import { IsNull } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../../database';
@@ -38,7 +39,7 @@ export async function writePermissionRouteHandler(
 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);
-    let entity : PermissionEntity | undefined;
+    let entity : PermissionEntity | null | undefined;
     if (id) {
         const where: FindOptionsWhere<PermissionEntity> = {};
         if (isUUID(id)) {
@@ -119,7 +120,7 @@ export async function writePermissionRouteHandler(
         dataSource,
         entityTarget: PermissionEntity,
         entity: data,
-        entityExisting: entity,
+        entityExisting: entity || undefined,
     });
 
     if (!isUnique) {
@@ -161,18 +162,20 @@ export async function writePermissionRouteHandler(
         const roleRepository = new RoleRepository(entityManager);
         const role = await roleRepository.findOneBy({
             name: ROLE_ADMIN_NAME,
-            realm_id: null,
+            realm_id: IsNull(),
         });
 
-        const rolePermissionRepository = entityManager.getRepository(RolePermissionEntity);
-        await rolePermissionRepository.insert({
-            role_id: role.id,
-            role_realm_id: role.realm_id,
-            permission_id: entity.id,
-            permission_realm_id: entity.realm_id,
-        });
+        if (role) {
+            const rolePermissionRepository = entityManager.getRepository(RolePermissionEntity);
+            await rolePermissionRepository.insert({
+                role_id: role.id,
+                role_realm_id: role.realm_id,
+                permission_id: entity.id,
+                permission_realm_id: entity.realm_id,
+            });
 
-        await roleRepository.clearBoundPermissionsCache(role);
+            await roleRepository.clearBoundPermissionsCache(role);
+        }
     });
 
     return sendCreated(res, entity);

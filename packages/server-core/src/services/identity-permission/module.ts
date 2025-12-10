@@ -6,7 +6,7 @@
  */
 
 import type { Permission } from '@authup/core-kit';
-import type { PolicyIdentity } from '@authup/access';
+import type { PermissionItem, PolicyIdentity } from '@authup/access';
 import { isPermissionItemEqual } from '@authup/access';
 import type { DataSource } from 'typeorm';
 import {
@@ -42,7 +42,10 @@ export class IdentityPermissionService {
 
         for (let i = 0; i < childPermissions.length; i++) {
             const index = parentPermissions.findIndex(
-                (permission) => isPermissionItemEqual(permission, childPermissions[i]),
+                (permission) => isPermissionItemEqual(
+                    this.toPermissionItem(permission),
+                    this.toPermissionItem(childPermissions[i]),
+                ),
             );
             if (index === -1) {
                 return false;
@@ -135,5 +138,14 @@ export class IdentityPermissionService {
         }
 
         return entities.filter((entity) => entity.client_id === identity.clientId);
+    }
+
+    private toPermissionItem(input: Permission) : PermissionItem {
+        return {
+            name: input.name,
+            clientId: input.client_id,
+            realmId: input.realm_id,
+            policy: input.policy || undefined,
+        };
     }
 }

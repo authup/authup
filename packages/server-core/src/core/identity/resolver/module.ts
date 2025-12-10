@@ -50,7 +50,7 @@ export class IdentityResolver implements IIdentityResolver {
         key: string,
         realmKey?: string,
     ) : Promise<ClientIdentity | null> {
-        let data : Client | undefined;
+        let data : Client | null;
 
         if (isUUID(key)) {
             data = await this.clientRepository.findOneById(key);
@@ -69,7 +69,7 @@ export class IdentityResolver implements IIdentityResolver {
         key: string,
         realmKey?: string,
     ) : Promise<RobotIdentity | null> {
-        let data : Robot | undefined;
+        let data : Robot | null;
 
         if (isUUID(key)) {
             data = await this.robotRepository.findOneById(key);
@@ -88,7 +88,7 @@ export class IdentityResolver implements IIdentityResolver {
         key: string,
         realmKey?: string,
     ) : Promise<UserIdentity | null> {
-        let data : User | undefined;
+        let data : User | null;
 
         if (isUUID(key)) {
             data = await this.userRepository.findOneById(key);

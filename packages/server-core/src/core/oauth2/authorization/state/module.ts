@@ -23,7 +23,7 @@ export class OAuth2AuthorizationStateManager implements IOAuth2AuthorizationStat
         return this.repository.insert(data);
     }
 
-    async verify(state: string, input: OAuth2AuthorizationState): Promise<OAuth2AuthorizationState> {
+    async verify(state: string, input: Partial<OAuth2AuthorizationState>): Promise<OAuth2AuthorizationState> {
         const payload = await this.repository.findOneById(state);
         if (!payload) {
             throw OAuth2Error.stateInvalid();
@@ -32,11 +32,17 @@ export class OAuth2AuthorizationStateManager implements IOAuth2AuthorizationStat
         // avoid replay attacks
         await this.repository.remove(state);
 
-        if (input.ip !== payload.ip) {
+        if (
+            payload.ip &&
+            input.ip !== payload.ip
+        ) {
             throw OAuth2Error.stateInvalid();
         }
 
-        if (input.userAgent !== payload.userAgent) {
+        if (
+            payload.userAgent &&
+            input.userAgent !== payload.userAgent
+        ) {
             throw OAuth2Error.stateInvalid();
         }
 

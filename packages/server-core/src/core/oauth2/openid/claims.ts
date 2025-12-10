@@ -29,9 +29,17 @@ export class OAuth2OpenIDClaimsBuilder {
         preferred_username: 'name',
         updated_at: [
             'updated_at',
-            (value: Date | string) => (typeof value === 'string' ?
-                new Date(value).getTime() :
-                value.getTime()),
+            (value: unknown) => {
+                if (typeof value === 'string') {
+                    return new Date(value).getTime();
+                }
+
+                if (value instanceof Date) {
+                    return value.getTime();
+                }
+
+                return value;
+            },
         ],
     };
 
@@ -41,9 +49,17 @@ export class OAuth2OpenIDClaimsBuilder {
         preferred_username: 'name',
         updated_at: [
             'updated_at',
-            (value: Date | string) => (typeof value === 'string' ?
-                new Date(value).getTime() :
-                value.getTime()),
+            (value: unknown) => {
+                if (typeof value === 'string') {
+                    return new Date(value).getTime();
+                }
+
+                if (value instanceof Date) {
+                    return value.getTime();
+                }
+
+                return value;
+            },
         ],
     };
 
@@ -55,9 +71,17 @@ export class OAuth2OpenIDClaimsBuilder {
         preferred_username: 'display_name',
         updated_at: [
             'updated_at',
-            (value: Date | string) => (typeof value === 'string' ?
-                new Date(value).getTime() :
-                value.getTime()),
+            (value: unknown) => {
+                if (typeof value === 'string') {
+                    return new Date(value).getTime();
+                }
+
+                if (value instanceof Date) {
+                    return value.getTime();
+                }
+
+                return value;
+            },
         ],
 
         email: 'email',

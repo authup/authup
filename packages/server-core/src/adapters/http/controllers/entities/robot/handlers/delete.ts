@@ -48,9 +48,12 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     }
 
     const config = useConfig();
-    if (entity.name.toLowerCase() === config.robotAdminName.toLowerCase()) {
+    if (
+        config.robotAdminName &&
+        entity.name.toLowerCase() === config.robotAdminName.toLowerCase()
+    ) {
         const realm = await resolveRealm(entity.realm_id);
-        if (realm.name === REALM_MASTER_NAME) {
+        if (realm && realm.name === REALM_MASTER_NAME) {
             throw new BadRequestError('The system robot can not be deleted.');
         }
     }

@@ -195,6 +195,10 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
     });
 
     const entity = await query.getOne();
+    if (!entity) {
+        throw new NotFoundError();
+    }
+
     if (!isMe) {
         if (
             entity.secret &&
@@ -212,10 +216,6 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
                 },
             });
         }
-    }
-
-    if (!entity) {
-        throw new NotFoundError();
     }
 
     return send(res, entity);
