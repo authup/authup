@@ -1,5 +1,52 @@
 # Change Log
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2025-12-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* ESM only
+
+### Features
+
+* add active, secret_hashed & secret_encrypted property + assign client always to realm ([#2758](https://github.com/authup/authup/issues/2758)) ([2d0f112](https://github.com/authup/authup/commit/2d0f112d2ed5bb1ad7eec04bccf3ca7dae61fb4f))
+* move credentials fns of client, robot & user to dedicated services ([#2759](https://github.com/authup/authup/issues/2759)) ([0741696](https://github.com/authup/authup/commit/074169606ff994700e247e4654cfe5365b3fbd8a))
+
+
+### Bug Fixes
+
+* authenticatation in ldap identity provider authenticator ([e9365a9](https://github.com/authup/authup/commit/e9365a9c0cc12a31db0c748c76d1137b4123b92e))
+* **deps:** bump the minorandpatch group across 1 directory with 8 updates ([#2764](https://github.com/authup/authup/issues/2764)) ([04ee74b](https://github.com/authup/authup/commit/04ee74b8abdb275c3de3c97170a33c3ca8e1069f))
+* **deps:** bump the minorandpatch group with 34 updates ([#2756](https://github.com/authup/authup/issues/2756)) ([9240ce1](https://github.com/authup/authup/commit/9240ce18515ea9501a6790a53efe375a4c2b28ac))
+* **deps:** bump the minorandpatch group with 5 updates ([#2770](https://github.com/authup/authup/issues/2770)) ([141c50d](https://github.com/authup/authup/commit/141c50d4a76e5d5aa27b336365ca02e9f12ddf7b))
+* **deps:** bump the minorandpatch group with 8 updates ([#2769](https://github.com/authup/authup/issues/2769)) ([d86fa30](https://github.com/authup/authup/commit/d86fa30bed013f4245cecc0d03758b1f8b219da1))
+* **deps:** bump typeorm from 0.3.27 to 0.3.28 in the minorandpatch group ([#2765](https://github.com/authup/authup/issues/2765)) ([56c8043](https://github.com/authup/authup/commit/56c80434ec8405259507b9102f2b09017c1400d9))
+* **deps:** bump typeorm-extension in the minorandpatch group ([#2775](https://github.com/authup/authup/issues/2775)) ([d6d374a](https://github.com/authup/authup/commit/d6d374ad2081beeb780cc5cc19f3da1ee53e2c98))
+* migrate from jest to vitest ([#2754](https://github.com/authup/authup/issues/2754)) ([191fd23](https://github.com/authup/authup/commit/191fd23035ee31eeca444f6d2165256a4f79ae72))
+* millisecond cache specification for oauth2 sub entity loading ([16c9df0](https://github.com/authup/authup/commit/16c9df05da2ee0a0f54a210cc36ca367cbc7765c))
+* set dotenv loading option to quiet ([5a1186f](https://github.com/authup/authup/commit/5a1186f8f9f634eda7a97c2e0de747ca0eebc312))
+* use explicit type imports + bundler for core package ([7c714e3](https://github.com/authup/authup/commit/7c714e39bd6b476a0e6daf14bd4012a9c430e4ce))
+
+
+### Code Refactoring
+
+* migrated to esm only packages ([f988074](https://github.com/authup/authup/commit/f9880742e8fa6487afaf5878aedc520b37622a37))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-http-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/server-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+  * devDependencies
+    * @authup/client-web-slim bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 
