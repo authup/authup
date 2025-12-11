@@ -143,13 +143,7 @@ class TestSuite {
             migrations: [],
         });
 
-        const { subscribers } = options;
-
         await createDatabase({ options });
-
-        Object.assign(options, {
-            subscribers,
-        });
 
         const dataSource = new DataSource(options);
         await dataSource.initialize();
