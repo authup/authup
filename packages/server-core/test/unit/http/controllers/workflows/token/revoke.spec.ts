@@ -7,17 +7,17 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import { createTestSuite } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 
 describe('token-revoke', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should revoke access token', async () => {

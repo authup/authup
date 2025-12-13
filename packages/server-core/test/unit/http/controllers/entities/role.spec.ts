@@ -9,17 +9,18 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { isClientError } from 'hapic';
-import { createFakeRole, createTestSuite, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
+import { createFakeRole, expectPropertiesEqualToSrc } from '../../../../utils';
 
 describe('src/http/controllers/role', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     const details = createFakeRole();

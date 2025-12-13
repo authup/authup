@@ -13,19 +13,19 @@ import type {
 import {
     createFakeRole,
     createFakeUser,
-    createTestSuite,
     expectPropertiesEqualToSrc,
 } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/user-role', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     let details : UserRole | undefined;

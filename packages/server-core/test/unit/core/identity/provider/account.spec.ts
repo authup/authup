@@ -34,10 +34,10 @@ import {
     UserRoleEntity,
     resolveRealm,
 } from '../../../../../src';
-import { createTestSuite } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('core/identity/provider/account', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     let realm : Realm;
 
@@ -48,7 +48,7 @@ describe('core/identity/provider/account', () => {
     let identity : IdentityProviderIdentity;
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
 
         realm = await resolveRealm('', true);
 
@@ -98,7 +98,7 @@ describe('core/identity/provider/account', () => {
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
 
         realm = undefined;
         accountManager = undefined;

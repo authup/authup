@@ -12,18 +12,19 @@ import type {
     ClientRole,
 } from '@authup/core-kit';
 import {
-    createFakeClient, createFakeRole, createTestSuite, expectPropertiesEqualToSrc,
+    createFakeClient, createFakeRole, expectPropertiesEqualToSrc,
 } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/client-role', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     let entity : ClientRole | undefined;

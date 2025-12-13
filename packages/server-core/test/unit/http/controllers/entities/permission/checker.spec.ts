@@ -18,25 +18,25 @@ import {
     PermissionEntity,
     PolicyRepository, UserPermissionEntity, UserRepository,
 } from '../../../../../../src';
-import { createTestSuite } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 
 describe('src/security/permission/checker', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     let adminUser : UserEntity;
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
 
         const repository = new UserRepository(suite.dataSource);
 
-        adminUser = await repository.findOneBy({
+        adminUser = await repository.findOneByOrFail({
             name: 'admin',
         });
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     /*

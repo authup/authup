@@ -9,17 +9,18 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import type { User } from '@authup/core-kit';
-import { createFakeUser, createTestSuite, expectPropertiesEqualToSrc } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
+import { createFakeUser, expectPropertiesEqualToSrc } from '../../../../../utils';
 
 describe('src/http/controllers/user', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     const details : Partial<User> = createFakeUser();

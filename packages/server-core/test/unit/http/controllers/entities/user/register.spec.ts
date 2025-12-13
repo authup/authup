@@ -10,17 +10,17 @@ import {
 } from 'vitest';
 import { isClientError } from 'hapic';
 import { useConfig } from '../../../../../../src';
-import { createTestSuite } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 
 describe('src/http/controllers/auth/handlers/*.ts', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should not register a new user', async () => {

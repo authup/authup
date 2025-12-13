@@ -10,17 +10,17 @@ import {
 } from 'vitest';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { useConfig } from '../../../../../src';
-import { createTestSuite } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/auth/openid/*.ts', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should return openid configuration', async () => {

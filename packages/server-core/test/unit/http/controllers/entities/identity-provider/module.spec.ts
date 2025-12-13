@@ -15,19 +15,19 @@ import {
 import {
     createFakeLdapIdentityProvider,
     createFakeOAuth2IdentityProvider,
-    createTestSuite,
     expectPropertiesEqualToSrc,
 } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 
 describe('src/http/controllers/identity-provider', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     const oAuth2IdentityProvider = createFakeOAuth2IdentityProvider();

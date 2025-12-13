@@ -7,4 +7,3 @@
 
 export * from './domains';
 export * from './properties';
-export * from './suite';

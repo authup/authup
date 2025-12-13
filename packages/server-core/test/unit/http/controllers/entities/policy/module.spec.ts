@@ -9,18 +9,18 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
-import { createTestSuite } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 import { createFakeTimePolicy } from '../../../../../utils/domains/policy';
 
 describe('src/http/controllers/policy', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     const ids : string[] = [];

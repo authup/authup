@@ -12,19 +12,19 @@ import type { UserPermission } from '@authup/core-kit';
 import {
     createFakePermission,
     createFakeUser,
-    createTestSuite,
     expectPropertiesEqualToSrc,
 } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/user-permission', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     let details : UserPermission | undefined;

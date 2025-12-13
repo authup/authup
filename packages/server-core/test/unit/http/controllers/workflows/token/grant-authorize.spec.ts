@@ -13,15 +13,16 @@ import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';
 import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { createFakeClient, createTestSuite } from '../../../../../utils';
+import { createFakeClient } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 
 describe('refresh-token', () => {
     let client : Client;
 
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
 
         client = await suite.client
             .client
@@ -35,7 +36,7 @@ describe('refresh-token', () => {
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should build oauth2 code challenge', async () => {
