@@ -9,17 +9,18 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';
-import { createFakeUser, createTestSuite } from '../../../../../utils';
+import { createFakeUser } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 
 describe('src/http/controllers/token', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should grant token with password', async () => {

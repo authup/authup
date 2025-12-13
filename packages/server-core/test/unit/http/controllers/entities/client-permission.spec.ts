@@ -11,18 +11,19 @@ import {
 import type {
     ClientPermission,
 } from '@authup/core-kit';
-import { createFakeClient, createFakePermission, createTestSuite } from '../../../../utils';
-import { expectPropertiesEqualToSrc } from '../../../../utils/properties';
+
+import { createTestApplication } from '../../../../app';
+import { createFakeClient, createFakePermission, expectPropertiesEqualToSrc } from '../../../../utils';
 
 describe('src/http/controllers/client-permission', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     let entity : ClientPermission | undefined;

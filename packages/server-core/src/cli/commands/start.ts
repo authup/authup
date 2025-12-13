@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useLogger } from '@authup/server-kit';
 import { defineCommand } from 'citty';
+import { ModuleContextContainer, createApplication } from '../../app';
 import { applyConfig, useConfig } from '../../config';
-import { Application } from '../../app/module';
 
 export function defineCLIStartCommand() {
     return defineCommand({
@@ -18,7 +19,11 @@ export function defineCLIStartCommand() {
             const config = useConfig();
             applyConfig(config);
 
-            const app = new Application(config);
+            const container = new ModuleContextContainer();
+            container.register('config', config);
+            container.register('logger', useLogger());
+            const app = createApplication(container);
+
             await app.start();
         },
     });

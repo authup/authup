@@ -10,21 +10,22 @@ import {
 import type { Client } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';
-import { createFakeClient, createTestSuite } from '../../../../../utils';
+import { createFakeClient } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 
 describe('refresh-token', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     let entity : Client;
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
 
         entity = await suite.client.client.create(createFakeClient());
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should grant token with client credentials', async () => {

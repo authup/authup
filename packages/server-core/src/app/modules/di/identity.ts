@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2025.
- *  Author Peter Placzek (tada5hi)
- *  For the full copyright and license information,
- *  view the LICENSE file that was distributed with this source code.
+ * Copyright (c) 2025-2025.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
  */
 
 import { container } from 'tsyringe';
@@ -14,8 +14,8 @@ import {
     IdentityProviderRoleMappingRepository,
     RobotIdentityRepository,
     UserIdentityRepository,
-} from '../../adapters/database';
-import type { IIdentityProviderAccountManager, ILdapClientFactory } from '../../core';
+} from '../../../adapters/database';
+import type { IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core';
 import {
     IDENTITY_PROVIDER_ACCOUNT_MANAGER_TOKEN,
     IDENTITY_PROVIDER_LDAP_COLLECTION_AUTHENTICATOR_TOKEN,
@@ -27,7 +27,7 @@ import {
     IdentityProviderRoleMapper,
     IdentityResolver,
     LDAP_CLIENT_FACTORY_TOKEN,
-} from '../../core';
+} from '../../../core';
 
 export function registerIdentityDependencyInjections() {
     const clientRepository = new ClientIdentityRepository();

@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2025.
- *  Author Peter Placzek (tada5hi)
- *  For the full copyright and license information,
- *  view the LICENSE file that was distributed with this source code.
+ * Copyright (c) 2025-2025.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
  */
 
 import { container } from 'tsyringe';
@@ -11,8 +11,8 @@ import {
     OAuth2ClientScopeRepository,
     OAuth2KeyRepository,
     OAuth2TokenRepository,
-} from '../../adapters/database';
-import type { IIdentityResolver } from '../../core';
+} from '../../../adapters/database';
+import type { IIdentityResolver } from '../../../core';
 import {
     IDENTITY_RESOLVER_TOKEN, OAUTH2_ACCESS_TOKEN_ISSUER_TOKEN,
     OAUTH2_AUTHORIZATION_CODE_ISSUER_TOKEN,
@@ -34,8 +34,8 @@ import {
     OAuth2TokenRevoker,
     OAuth2TokenSigner,
     OAuth2TokenVerifier,
-} from '../../core';
-import { OAuth2AuthorizationCodeRepository, OAuth2AuthorizationStateRepository } from '../../adapters';
+} from '../../../core';
+import { OAuth2AuthorizationCodeRepository, OAuth2AuthorizationStateRepository } from '../../../adapters';
 
 export type OAuth2BootstrapOptions = {
     /**

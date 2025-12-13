@@ -12,18 +12,19 @@ import type {
     RobotRole,
 } from '@authup/core-kit';
 import {
-    createFakeRobot, createFakeRole, createTestSuite, expectPropertiesEqualToSrc,
+    createFakeRobot, createFakeRole, expectPropertiesEqualToSrc,
 } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/robot-role', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     let entity : RobotRole | undefined;

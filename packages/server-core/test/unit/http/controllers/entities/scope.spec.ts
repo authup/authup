@@ -10,17 +10,18 @@ import {
 } from 'vitest';
 import type { Scope } from '@authup/core-kit';
 import { isClientError } from 'hapic';
-import { createFakeScope, createTestSuite, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
+import { createFakeScope, expectPropertiesEqualToSrc } from '../../../../utils';
 
 describe('src/http/controllers/scope', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     const details = createFakeScope();

@@ -8,17 +8,18 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import { createFakeRealm, createTestSuite, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createFakeRealm, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/realm', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     const details = createFakeRealm();

@@ -10,21 +10,22 @@ import {
 import type { Robot } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';
-import { createFakeRobot, createTestSuite } from '../../../../../utils';
+import { createFakeRobot } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 
 describe('refresh-token', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     let robot : Robot;
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
 
         robot = await suite.client.robot.create(createFakeRobot());
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should grant token with robot credentials', async () => {

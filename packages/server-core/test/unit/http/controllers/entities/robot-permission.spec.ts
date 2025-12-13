@@ -11,18 +11,18 @@ import {
 import type {
     RobotPermission,
 } from '@authup/core-kit';
-import { createFakePermission, createFakeRobot, createTestSuite } from '../../../../utils';
-import { expectPropertiesEqualToSrc } from '../../../../utils/properties';
+import { createFakePermission, createFakeRobot, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/robot-permission', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     let entity : RobotPermission | undefined;
