@@ -6,6 +6,7 @@
  */
 
 export * from './authentication';
+export * from './di';
 export * from './entities';
 export * from './oauth2';
 export * from './identity';

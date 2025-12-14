@@ -8,31 +8,15 @@
 import { Client } from '@authup/core-http-kit';
 import type { AddressInfo } from 'node:net';
 import type { DataSource } from 'typeorm';
-import { Application, DatabaseSeeder } from '../../src';
+import { Application } from '../../src';
 
 export class TestApplication extends Application {
     protected _client: Client | undefined;
 
     // ----------------------------------------------------
 
-    async start() {
-        await super.start();
-
-        const config = this.context.require('config');
-        const dataSource = this.context.require('dataSource');
-
-        const core = new DatabaseSeeder(config);
-        await core.run(dataSource);
-    }
-
-    async stop() {
-        await super.stop();
-    }
-
-    // ----------------------------------------------------
-
     get dataSource(): DataSource {
-        return this.context.require('dataSource');
+        return this.container.resolve('dataSource');
     }
 
     // ----------------------------------------------------
@@ -46,7 +30,7 @@ export class TestApplication extends Application {
     }
 
     protected createClient() {
-        const httpServer = this.context.require('httpServer');
+        const httpServer = this.container.resolve('httpServer');
 
         const address = httpServer.address() as AddressInfo;
         const baseURL = `http://localhost:${address.port}`;

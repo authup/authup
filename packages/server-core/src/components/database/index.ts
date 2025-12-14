@@ -5,8 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DatabaseUniqueEntriesComponent } from './module';
-
-export function createDatabaseUniqueEntriesComponent() {
-    return new DatabaseUniqueEntriesComponent();
-}
+export * from './unique-entries';

@@ -5,11 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useDataSource } from 'typeorm-extension';
-import { PermissionEntity, RoleEntity } from '../../adapters/database/domains';
-import type { Component } from '../types';
+import type { DataSource } from 'typeorm';
+import { PermissionEntity, RoleEntity } from '../../../adapters/database/domains';
+import type { Component } from '../../types';
 
 export class DatabaseUniqueEntriesComponent implements Component {
+    protected dataSource: DataSource;
+
+    constructor(dataSource: DataSource) {
+        this.dataSource = dataSource;
+    }
+
     /**
      * Thus a unique check failed for mysql driver,
      * existing duplicate entries must be removed.
@@ -20,8 +26,7 @@ export class DatabaseUniqueEntriesComponent implements Component {
     }
 
     async enforceUniqueRoles() {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(RoleEntity);
+        const repository = this.dataSource.getRepository(RoleEntity);
         const queryBuilder = repository.createQueryBuilder('role');
 
         queryBuilder.orderBy('role.created_at', 'ASC');
@@ -55,8 +60,7 @@ export class DatabaseUniqueEntriesComponent implements Component {
     }
 
     async enforceUniquePermissions() {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(PermissionEntity);
+        const repository = this.dataSource.getRepository(PermissionEntity);
         const queryBuilder = repository.createQueryBuilder('permission');
 
         queryBuilder.orderBy('permission.created_at', 'ASC');

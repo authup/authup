@@ -6,23 +6,23 @@
  */
 
 import { Swagger } from '../../../adapters/http';
-import type { ModuleContextContainer } from '../context';
-import type { ApplicationModule } from '../types';
+import type { DependencyContainer } from '../../../core';
+import type { ApplicationModule, ApplicationModuleContext } from '../types';
 
 export class SwaggerModule implements ApplicationModule {
-    protected container : ModuleContextContainer;
+    protected container : DependencyContainer<ApplicationModuleContext>;
 
     // ----------------------------------------------------
 
-    constructor(container: ModuleContextContainer) {
+    constructor(container: DependencyContainer<ApplicationModuleContext>) {
         this.container = container;
     }
 
     // ----------------------------------------------------
 
     async start(): Promise<void> {
-        const config = this.container.require('config');
-        const logger = this.container.require('logger');
+        const config = this.container.resolve('config');
+        const logger = this.container.resolve('logger');
 
         const swagger = new Swagger({
             baseURL: config.publicUrl,

@@ -9,7 +9,8 @@ import { useLogger } from '@authup/server-kit';
 import {
     applyConfig, normalizeConfig, readConfigRawFromEnv, setConfig,
 } from '../../src';
-import { DIModule, HTTPModule, ModuleContextContainer } from '../../src/app';
+import { type ApplicationModuleContext, DIModule, HTTPModule } from '../../src/app';
+import { DependencyContainer } from '../../src/core';
 import { TestApplication } from './module';
 import { TestDatabaseModule } from './database';
 
@@ -33,7 +34,7 @@ export function createTestApplication() : TestApplication {
     setConfig(config);
     applyConfig(config);
 
-    const container = new ModuleContextContainer();
+    const container = new DependencyContainer<ApplicationModuleContext>();
     container.register('config', config);
     container.register('logger', useLogger());
 

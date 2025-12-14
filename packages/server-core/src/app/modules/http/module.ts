@@ -7,24 +7,24 @@
 
 import type { IServer } from '../../../adapters/http';
 import { createHttpServer, createRouter } from '../../../adapters/http';
-import type { ModuleContextContainer } from '../context';
-import type { ApplicationModule } from '../types';
+import type { DependencyContainer } from '../../../core';
+import type { ApplicationModule, ApplicationModuleContext } from '../types';
 
 export class HTTPModule implements ApplicationModule {
-    protected container : ModuleContextContainer;
+    protected container : DependencyContainer<ApplicationModuleContext>;
 
     protected instance : IServer | undefined;
 
     // ----------------------------------------------------
 
-    constructor(container: ModuleContextContainer) {
+    constructor(container: DependencyContainer<ApplicationModuleContext>) {
         this.container = container;
     }
 
     // ----------------------------------------------------
 
     async start(): Promise<void> {
-        const logger = this.container.require('logger');
+        const logger = this.container.resolve('logger');
 
         logger.info('Starting http server...');
 

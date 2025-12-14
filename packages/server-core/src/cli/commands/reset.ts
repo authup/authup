@@ -11,7 +11,9 @@ import process from 'node:process';
 import {
     applyConfig, useConfig,
 } from '../../config';
-import { ModuleContextContainer, createApplication } from '../../app';
+import type { ApplicationModuleContext } from '../../app';
+import { createApplication } from '../../app';
+import { DependencyContainer } from '../../core';
 
 export function defineCLIResetCommand() {
     return defineCommand({
@@ -22,7 +24,7 @@ export function defineCLIResetCommand() {
             const config = useConfig();
             applyConfig(config);
 
-            const container = new ModuleContextContainer();
+            const container = new DependencyContainer<ApplicationModuleContext>();
             container.register('config', config);
             container.register('logger', useLogger());
 

@@ -6,15 +6,14 @@
  */
 
 import cron from 'node-cron';
+import type { DataSource } from 'typeorm';
 import { LessThan } from 'typeorm';
-import { useDataSource } from 'typeorm-extension';
 import { OAuth2RefreshTokenEntity } from '../../adapters/database/domains';
 import type { Component } from '../types';
 
-export function createOAuth2CleanerComponent() : Component {
+export function createOAuth2CleanerComponent(dataSource: DataSource) : Component {
     return {
         async start() {
-            const dataSource = await useDataSource();
             const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
             const execute = async () => {

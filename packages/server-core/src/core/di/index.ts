@@ -5,11 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './components';
-export * from './database';
-export * from './di';
-export * from './http';
-export * from './runtime';
-export * from './swagger';
-
-export * from './types';
+export * from './module';

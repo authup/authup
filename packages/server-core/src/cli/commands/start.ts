@@ -7,8 +7,9 @@
 
 import { useLogger } from '@authup/server-kit';
 import { defineCommand } from 'citty';
-import { ModuleContextContainer, createApplication } from '../../app';
+import { type ApplicationModuleContext, createApplication } from '../../app';
 import { applyConfig, useConfig } from '../../config';
+import { DependencyContainer } from '../../core';
 
 export function defineCLIStartCommand() {
     return defineCommand({
@@ -19,7 +20,7 @@ export function defineCLIStartCommand() {
             const config = useConfig();
             applyConfig(config);
 
-            const container = new ModuleContextContainer();
+            const container = new DependencyContainer<ApplicationModuleContext>();
             container.register('config', config);
             container.register('logger', useLogger());
             const app = createApplication(container);

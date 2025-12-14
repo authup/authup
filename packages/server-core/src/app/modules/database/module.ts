@@ -12,27 +12,28 @@ import {
     checkDatabase, createDatabase, setDataSource, synchronizeDatabaseSchema, unsetDataSource, useDataSourceOptions,
 } from 'typeorm-extension';
 import {
+    DatabaseSeeder,
     extendDataSourceOptions,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
     setDataSourceSync,
 } from '../../../adapters/database';
-import type { ModuleContextContainer } from '../context';
-import type { ApplicationModule } from '../types';
+import type { DependencyContainer } from '../../../core';
+import type { ApplicationModule, ApplicationModuleContext } from '../types';
 
 export class DatabaseModule implements ApplicationModule {
-    protected ctx : ModuleContextContainer;
+    protected ctx : DependencyContainer<ApplicationModuleContext>;
 
     // ----------------------------------------------------
 
-    constructor(container: ModuleContextContainer) {
+    constructor(container: DependencyContainer<ApplicationModuleContext>) {
         this.ctx = container;
     }
 
     // ----------------------------------------------------
 
     async start(): Promise<void> {
-        const logger = this.ctx.require('logger');
+        const logger = this.ctx.resolve('logger');
 
         const options = await this.createDataSourceOptions();
 
@@ -58,10 +59,12 @@ export class DatabaseModule implements ApplicationModule {
         if (!check.schema) {
             logger.info('Applying database schema...');
 
-            this.synchronize(dataSource);
+            await this.synchronize(dataSource);
 
             logger.info('Applied database schema.');
         }
+
+        await this.runSeeder(dataSource);
 
         this.ctx.register('dataSource', dataSource);
     }
@@ -80,13 +83,23 @@ export class DatabaseModule implements ApplicationModule {
 
     // ----------------------------------------------------
 
+    // todo: this should be a component/module
+    protected async runSeeder(dataSource: DataSource): Promise<void> {
+        const config = this.ctx.resolve('config');
+        const seeder = new DatabaseSeeder(config);
+
+        await seeder.run(dataSource);
+    }
+
+    // ----------------------------------------------------
+
     /**
      * Load data source options for connection.
      *
      * @protected
      */
     protected async createDataSourceOptions() : Promise<DataSourceOptions> {
-        const config = this.ctx.require('config');
+        const config = this.ctx.resolve('config');
 
         const options = await useDataSourceOptions();
 

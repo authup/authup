@@ -7,24 +7,26 @@
 
 import type { Component } from '../../../components';
 import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components';
-import type { ModuleContextContainer } from '../context';
-import type { ApplicationModule } from '../types';
+import type { DependencyContainer } from '../../../core';
+import type { ApplicationModule, ApplicationModuleContext } from '../types';
 
 export class ComponentsModule implements ApplicationModule {
-    protected container : ModuleContextContainer;
+    protected container : DependencyContainer<ApplicationModuleContext>;
 
     // ----------------------------------------------------
 
-    constructor(container: ModuleContextContainer) {
+    constructor(container: DependencyContainer<ApplicationModuleContext>) {
         this.container = container;
     }
 
     // ----------------------------------------------------
 
     async start(): Promise<void> {
+        const dataSource = this.container.resolve('dataSource');
+
         const components: Component[] = [
-            createOAuth2CleanerComponent(),
-            createDatabaseUniqueEntriesComponent(),
+            createOAuth2CleanerComponent(dataSource),
+            createDatabaseUniqueEntriesComponent(dataSource),
         ];
 
         components.forEach((component) => component.start());

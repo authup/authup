@@ -5,17 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { DependencyContainer } from '../core';
 import { Application } from './module';
-import type { ModuleContextContainer } from './modules';
 import {
+    type ApplicationModuleContext,
     DIModule,
     DatabaseModule,
     HTTPModule,
-    RuntimeModule,
-    SwaggerModule,
+    RuntimeModule, SwaggerModule,
 } from './modules';
 
-export function createApplication(container: ModuleContextContainer) {
+export function createApplication(container: DependencyContainer<ApplicationModuleContext>) {
     return new Application(container, [
         new RuntimeModule(container),
         new SwaggerModule(container),

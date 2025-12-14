@@ -5,20 +5,21 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { ApplicationModule, ModuleContextContainer } from './modules';
+import type { DependencyContainer } from '../core';
+import type { ApplicationModule, ApplicationModuleContext } from './modules';
 
 export class Application {
-    public readonly context: ModuleContextContainer;
+    public readonly container: DependencyContainer<ApplicationModuleContext>;
 
     public readonly modules: ApplicationModule[];
 
     // ----------------------------------------------------
 
     constructor(
-        context: ModuleContextContainer,
+        container: DependencyContainer<ApplicationModuleContext>,
         modules: ApplicationModule[],
     ) {
-        this.context = context;
+        this.container = container;
         this.modules = modules;
     }
 
