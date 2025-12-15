@@ -9,8 +9,9 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import { useConfig } from '../../../../../src';
+import type { Config } from '../../../../../src';
 import { createTestApplication } from '../../../../app';
+import { ConfigInjectionKey } from '../../../../../src/app';
 
 describe('src/http/controllers/auth/openid/*.ts', () => {
     const suite = createTestApplication();
@@ -24,7 +25,7 @@ describe('src/http/controllers/auth/openid/*.ts', () => {
     });
 
     it('should return openid configuration', async () => {
-        const config = useConfig();
+        const config = suite.container.resolve<Config>(ConfigInjectionKey);
 
         const response = await suite.client.getWellKnownOpenIDConfiguration();
         expect(response).toBeDefined();

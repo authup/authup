@@ -10,7 +10,7 @@ import type { AddressInfo } from 'node:net';
 import type { DataSource } from 'typeorm';
 import type { IServer } from '../../src';
 import { Application } from '../../src';
-import { HTTPInjectionKey } from '../../src/app';
+import { DatabaseInjectionKey, HTTPInjectionKey } from '../../src/app';
 
 export class TestApplication extends Application {
     protected _client: Client | undefined;
@@ -18,7 +18,7 @@ export class TestApplication extends Application {
     // ----------------------------------------------------
 
     get dataSource(): DataSource {
-        return this.container.resolve('dataSource');
+        return this.container.resolve(DatabaseInjectionKey.DataSource);
     }
 
     // ----------------------------------------------------

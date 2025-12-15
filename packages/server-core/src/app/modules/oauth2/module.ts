@@ -38,12 +38,13 @@ import {
     OAuth2TokenVerifier,
 } from '../../../core';
 import { OAuth2InjectionToken } from './constants';
-import { IdentityInjectionKey } from '../identity/constants';
+import { IdentityInjectionKey } from '../identity';
 import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/domains';
+import { ConfigInjectionKey } from '../config';
 
 export class OAuth2Module implements Module {
     async start(container: IDIContainer) : Promise<void> {
-        const config = container.resolve<Config>('config');
+        const config = container.resolve<Config>(ConfigInjectionKey);
 
         container.register(OAuth2InjectionToken.ClientRepository, {
             useFactory: (c) => {

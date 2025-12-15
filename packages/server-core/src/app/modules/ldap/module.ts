@@ -8,7 +8,7 @@
 import { LdapClientFactory } from '../../../adapters/ldap';
 import type { Module } from '../types';
 import { LDAPInjectionKey } from './constants';
-import type { IDIContainer } from '../../../core/di/types';
+import type { IDIContainer } from '../../../core';
 
 export class LdapModule implements Module {
     async start(container: IDIContainer): Promise<void> {

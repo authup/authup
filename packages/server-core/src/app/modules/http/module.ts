@@ -15,6 +15,7 @@ import type { Module } from '../types';
 import { HTTPInjectionKey } from './constants';
 import type { IDIContainer } from '../../../core';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules';
+import { LoggerInjectionKey } from '../logger';
 
 export class HTTPModule implements Module {
     protected instance : IServer | undefined;
@@ -31,7 +32,7 @@ export class HTTPModule implements Module {
     // ----------------------------------------------------
 
     async start(container: IDIContainer): Promise<void> {
-        const logger = container.resolve<Logger>('logger');
+        const logger = container.resolve<Logger>(LoggerInjectionKey);
 
         logger.info('Starting http server...');
 

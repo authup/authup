@@ -9,8 +9,9 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { isClientError } from 'hapic';
-import { useConfig } from '../../../../../../src';
+import type { Config } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
+import { ConfigInjectionKey } from '../../../../../../src/app';
 
 describe('src/http/controllers/auth/handlers/*.ts', () => {
     const suite = createTestApplication();
@@ -26,7 +27,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
     it('should not register a new user', async () => {
         expect.assertions(1);
 
-        const config = useConfig();
+        const config = suite.container.resolve<Config>(ConfigInjectionKey);
         config.registration = false;
 
         try {
@@ -45,7 +46,7 @@ describe('src/http/controllers/auth/handlers/*.ts', () => {
     });
 
     it('should register a new user', async () => {
-        const config = useConfig();
+        const config = suite.container.resolve<Config>(ConfigInjectionKey);
 
         config.registration = true;
         config.emailVerification = true;

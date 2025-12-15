@@ -6,10 +6,258 @@
  */
 
 import type { Router } from 'routup';
-import type { IDIContainer } from '../../../../core/di/types';
+import { decorators } from '@routup/decorators';
+import { useRequestBody } from '@routup/basic/body';
+import { useRequestCookie, useRequestCookies } from '@routup/basic/cookie';
+import { useRequestQuery } from '@routup/basic/query';
+import type { User } from '@authup/core-kit';
+import {
+    ClientController,
+    ClientPermissionController,
+    ClientRoleController,
+    ClientScopeController, IdentityProviderController,
+    OAuth2ProviderRoleController,
+    PermissionController,
+    PolicyController,
+    RealmController,
+    RobotController,
+    RobotPermissionController,
+    RobotRoleController,
+    RoleAttributeController,
+    RoleController,
+    RolePermissionController,
+    ScopeController,
+    UserAttributeController,
+    UserController,
+    UserPermissionController,
+    UserRoleController,
+} from '../../../../adapters/http';
+import {
+    AuthorizeController,
+    JwkController,
+    OpenIDController,
+    StatusController, TokenController,
+} from '../../../../adapters/http/controllers';
+import type {
+    ICredentialsAuthenticator,
+    IDIContainer,
+    IIdentityProviderAccountManager,
+    IIdentityResolver,
+    IOAuth2AuthorizationCodeIssuer,
+    IOAuth2AuthorizationCodeRequestVerifier,
+    IOAuth2AuthorizationCodeVerifier,
+    IOAuth2AuthorizationStateManager,
+    IOAuth2OpenIDTokenIssuer,
+    IOAuth2TokenIssuer,
+    IOAuth2TokenRevoker,
+    IOAuth2TokenVerifier,
+} from '../../../../core';
+import {
+    ClientAuthenticator,
+    CredentialsAuthenticator,
+    RobotAuthenticator,
+    UserAuthenticator,
+} from '../../../../core';
+import { OAuth2InjectionToken } from '../../oauth2';
+import { IdentityInjectionKey } from '../../identity';
+import type { Config } from '../../../../config';
+import { ConfigDefaults } from '../../../../config';
+import { ConfigInjectionKey } from '../../config';
 
 export class HTTPControllerModule {
     async mount(router: Router, container: IDIContainer): Promise<void> {
-        return Promise.resolve(undefined);
+        router.use(decorators({
+            controllers: [
+                this.createAuthorize(container),
+                this.createToken(container),
+                JwkController,
+                OpenIDController,
+
+                StatusController,
+
+                ClientController,
+                ClientPermissionController,
+                ClientRoleController,
+                ClientScopeController,
+                OAuth2ProviderRoleController,
+                this.createIdentityProvider(container),
+                PermissionController,
+                PolicyController,
+                RobotController,
+                RobotPermissionController,
+                RobotRoleController,
+                this.createRealmController(container),
+                RoleController,
+                RoleAttributeController,
+                RolePermissionController,
+                ScopeController,
+                UserController,
+                UserAttributeController,
+                UserPermissionController,
+                UserRoleController,
+            ],
+            parameter: {
+                body: (context, name) => {
+                    if (name) {
+                        return useRequestBody(context.request, name);
+                    }
+
+                    return useRequestBody(context.request);
+                },
+                cookie: (context, name) => {
+                    if (name) {
+                        return useRequestCookie(context.request, name);
+                    }
+
+                    return useRequestCookies(context.request);
+                },
+                query: (context, name) => {
+                    if (name) {
+                        return useRequestQuery(context.request, name);
+                    }
+
+                    return useRequestQuery(context.request);
+                },
+            },
+        }));
+    }
+
+    // ----------------------------------------------------
+
+    createAuthorize(container: IDIContainer) {
+        const accessTokenIssuer = container.resolve<IOAuth2TokenIssuer>(OAuth2InjectionToken.AccessTokenIssuer);
+        const openIdTokenIssuer = container.resolve<IOAuth2OpenIDTokenIssuer>(OAuth2InjectionToken.OpenIDTokenIssuer);
+
+        const codeIssuer = container.resolve<IOAuth2AuthorizationCodeIssuer>(
+            OAuth2InjectionToken.AuthorizationCodeIssuer,
+        );
+        const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
+            OAuth2InjectionToken.AuthorizationCodeRequestVerifier,
+        );
+
+        const identityResolver = container.resolve<IIdentityResolver>(IdentityInjectionKey.Resolver);
+
+        return new AuthorizeController({
+            accessTokenIssuer,
+            openIdTokenIssuer,
+
+            codeIssuer,
+            codeRequestVerifier,
+
+            identityResolver,
+        });
+    }
+
+    createToken(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+
+        let cookieDomain : string | undefined;
+        if (config.cookieDomain) {
+            cookieDomain = config.cookieDomain;
+        } else if (config.authorizeRedirectUrl !== ConfigDefaults.AUTHORIZE_REDIRECT_URL) {
+            cookieDomain = new URL(config.publicUrl).hostname;
+        }
+
+        const codeVerifier = container.resolve<IOAuth2AuthorizationCodeVerifier>(
+            OAuth2InjectionToken.AuthorizationCodeVerifier,
+        );
+
+        const accessTokenIssuer = container.resolve<IOAuth2TokenIssuer>(
+            OAuth2InjectionToken.AccessTokenIssuer,
+        );
+        const refreshTokenIssuer = container.resolve<IOAuth2TokenIssuer>(
+            OAuth2InjectionToken.RefreshTokenIssuer,
+        );
+
+        const tokenRevoker = container.resolve<IOAuth2TokenRevoker>(
+            OAuth2InjectionToken.TokenRevoker,
+        );
+        const tokenVerifier = container.resolve<IOAuth2TokenVerifier>(
+            OAuth2InjectionToken.TokenVerifier,
+        );
+
+        const identityResolver = container.resolve<IIdentityResolver>(
+            IdentityInjectionKey.Resolver,
+        );
+        const identityProviderLdapCollectionAuthenticator = container.resolve<ICredentialsAuthenticator<User>>(
+            IdentityInjectionKey.ProviderLdapCollectionAuthenticator,
+        );
+
+        const clientAuthenticator = new ClientAuthenticator(identityResolver);
+        const robotAuthenticator = new RobotAuthenticator(identityResolver);
+
+        const userAuthenticator = new CredentialsAuthenticator([
+            identityProviderLdapCollectionAuthenticator,
+            new UserAuthenticator(identityResolver),
+        ]);
+
+        return new TokenController({
+            cookieDomain,
+
+            codeVerifier,
+
+            accessTokenIssuer,
+            refreshTokenIssuer,
+
+            tokenVerifier,
+            tokenRevoker,
+
+            identityResolver,
+
+            clientAuthenticator,
+            robotAuthenticator,
+            userAuthenticator,
+        });
+    }
+
+    createIdentityProvider(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+
+        const accountManager = container.resolve<IIdentityProviderAccountManager>(
+            IdentityInjectionKey.ProviderAccountManager,
+        );
+
+        const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
+            OAuth2InjectionToken.AuthorizationCodeRequestVerifier,
+        );
+
+        const stateManager = container.resolve<IOAuth2AuthorizationStateManager>(
+            OAuth2InjectionToken.AuthorizationStateManager,
+        );
+
+        const accessTokenIssuer = container.resolve<IOAuth2TokenIssuer>(
+            OAuth2InjectionToken.AccessTokenIssuer,
+        );
+        const refreshTokenIssuer = container.resolve<IOAuth2TokenIssuer>(
+            OAuth2InjectionToken.RefreshTokenIssuer,
+        );
+
+        return new IdentityProviderController({
+            options: {
+                baseURL: config.publicUrl,
+                cookieDomain: config.cookieDomain,
+                authorizeRedirectURL: config.authorizeRedirectUrl,
+                accessTokenMaxAge: config.tokenAccessMaxAge,
+                refreshTokenMaxAge: config.tokenRefreshMaxAge,
+            },
+
+            accountManager,
+
+            codeRequestVerifier,
+            stateManager,
+
+            accessTokenIssuer,
+            refreshTokenIssuer,
+        });
+    }
+
+    createRealmController(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+
+        return new RealmController({
+            options: {
+                baseURL: config.publicUrl,
+            },
+        });
     }
 }

@@ -267,7 +267,7 @@ describe('core/identity/provider/account', () => {
 
         expect(userPermission).toBeDefined();
 
-        await userPermissionRepository.remove(userPermission);
+        await userPermissionRepository.remove(userPermission!);
     });
 
     it('should not synchronize permissions', async () => {

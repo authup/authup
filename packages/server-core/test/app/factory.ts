@@ -9,7 +9,7 @@ import {
     normalizeConfig, readConfigRawFromEnv,
 } from '../../src';
 import {
-    ConfigModule, HTTPModule, IdentityModule, LoggerModule, OAuth2Module,
+    ConfigModule, HTTPModule, IdentityModule, LdapModule, LoggerModule, OAuth2Module,
 } from '../../src/app';
 
 import { TestApplication } from './module';
@@ -35,6 +35,7 @@ export function createTestApplication() : TestApplication {
     return new TestApplication([
         new ConfigModule(config),
         new LoggerModule(),
+        new LdapModule(),
 
         new TestDatabaseModule(),
         new IdentityModule(),

@@ -28,7 +28,7 @@ import type { Config } from '../../../config';
 import type { Module } from '../types';
 import { DatabaseInjectionKey } from './constants';
 import { ConfigInjectionKey } from '../config';
-import type { IDIContainer } from '../../../core/di/types';
+import type { IDIContainer } from '../../../core';
 import { LoggerInjectionKey } from '../logger';
 
 export class DatabaseModule implements Module {
@@ -130,14 +130,12 @@ export class DatabaseModule implements Module {
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
 
-            if (typeof entity === 'function') {
-                continue;
-            }
-
             if (InstanceChecker.isEntitySchema(entity)) {
                 continue;
             }
 
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             container.register(entity, {
                 useFactory: () => dataSource.getRepository(entity),
             });

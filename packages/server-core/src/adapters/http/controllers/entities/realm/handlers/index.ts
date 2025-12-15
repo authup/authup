@@ -6,6 +6,5 @@
  */
 
 export * from './delete';
-export * from './openid';
 export * from './read';
 export * from './write';
