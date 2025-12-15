@@ -5,12 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export type DependencyInjectionKey = symbol | string;
+import type { Result } from '@authup/kit';
+import type { DIFactoryProvider, DIValueProvider } from './provider';
 
-export interface IDependencyContainer {
-    resolve<T>(key: DependencyInjectionKey): T;
+type ClassConstructor<T> = {
+    new (...args: any[]): T;
+};
+export type DIKey<T = any> = ClassConstructor<T> | symbol | string;
+export type DIProvider<T> = DIValueProvider<T> | DIFactoryProvider<T>;
 
-    register<T>(key: DependencyInjectionKey, value: T): void;
+export interface IDIContainer {
+    resolve<T>(key: DIKey): T;
 
-    unregister(key: DependencyInjectionKey): void;
+    safeResolve<T>(key: DIKey): Result<T>;
+
+    register<T>(key: DIKey, value: DIProvider<T>): void;
+
+    unregister(key: DIKey): void;
 }

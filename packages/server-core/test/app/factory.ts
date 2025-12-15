@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useLogger } from '@authup/server-kit';
 import {
-    applyConfig, normalizeConfig, readConfigRawFromEnv, setConfig,
+    normalizeConfig, readConfigRawFromEnv,
 } from '../../src';
-import { type ApplicationModuleContext, HTTPModule, IdentityModule } from '../../src/app';
-import { DependencyContainer } from '../../src/core';
+import {
+    ConfigModule, HTTPModule, IdentityModule, LoggerModule, OAuth2Module,
+} from '../../src/app';
+
 import { TestApplication } from './module';
 import { TestDatabaseModule } from './database';
 
@@ -31,16 +32,14 @@ export function createTestApplication() : TestApplication {
     config.redis = false;
     config.vault = false;
 
-    setConfig(config);
-    applyConfig(config);
+    return new TestApplication([
+        new ConfigModule(config),
+        new LoggerModule(),
 
-    const container = new DependencyContainer<ApplicationModuleContext>();
-    container.register('config', config);
-    container.register('logger', useLogger());
+        new TestDatabaseModule(),
+        new IdentityModule(),
+        new OAuth2Module(),
 
-    return new TestApplication(container, [
-        new TestDatabaseModule(container),
-        new IdentityModule(container),
-        new HTTPModule(container),
+        new HTTPModule(),
     ]);
 }

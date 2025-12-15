@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { container } from 'tsyringe';
 import {
     ClientIdentityRepository,
     IdentityProviderAccountRepository,
@@ -15,8 +14,8 @@ import {
     IdentityProviderRoleMappingRepository,
     RobotIdentityRepository,
     UserIdentityRepository,
-} from '../../../adapters/database';
-import type { DependencyContainer, IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core';
+} from './repositories';
+import type { IDIContainer, IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core';
 import {
     IdentityProviderAccountManager,
     IdentityProviderAttributeMapper,
@@ -27,21 +26,11 @@ import {
 } from '../../../core';
 import { LDAPInjectionKey } from '../ldap';
 
-import type { ApplicationModule } from '../types';
+import type { Module } from '../types';
 import { IdentityInjectionKey } from './constants';
 
-export class IdentityModule implements ApplicationModule {
-    protected container : DependencyContainer;
-
-    // ----------------------------------------------------
-
-    constructor(container: DependencyContainer) {
-        this.container = container;
-    }
-
-    // ----------------------------------------------------
-
-    async start(): Promise<void> {
+export class IdentityModule implements Module {
+    async start(container: IDIContainer): Promise<void> {
         const clientRepository = new ClientIdentityRepository();
         const robotRepository = new RobotIdentityRepository();
         const userRepository = new UserIdentityRepository();
@@ -67,7 +56,7 @@ export class IdentityModule implements ApplicationModule {
 
         const providerAccountRepository = new IdentityProviderAccountRepository();
 
-        this.container.register(IdentityInjectionKey.ProviderAccountManager, {
+        container.register(IdentityInjectionKey.ProviderAccountManager, {
             useFactory: () => new IdentityProviderAccountManager({
                 repository: providerAccountRepository,
                 userRepository,
@@ -80,7 +69,7 @@ export class IdentityModule implements ApplicationModule {
         // ---------------------------------------------
 
         const identityProviderRepository = new IdentityProviderRepositoryAdapter();
-        this.container.register(IdentityInjectionKey.ProviderLdapCollectionAuthenticator, {
+        container.register(IdentityInjectionKey.ProviderLdapCollectionAuthenticator, {
             useFactory: (c) => new IdentityProviderLdapCollectionAuthenticator({
                 repository: identityProviderRepository,
                 accountManager: c.resolve<IIdentityProviderAccountManager>(IdentityInjectionKey.ProviderAccountManager),

@@ -6,10 +6,17 @@
  */
 
 export * from './components';
+export * from './config';
 export * from './database';
-export * from './identity';
 export * from './http';
+export * from './identity';
+export * from './ldap';
+export * from './logger';
+export * from './oauth2';
+export * from './redis';
 export * from './runtime';
 export * from './swagger';
+export * from './smtp';
+export * from './vault';
 
 export * from './types';

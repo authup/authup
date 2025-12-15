@@ -8,7 +8,9 @@
 import { Client } from '@authup/core-http-kit';
 import type { AddressInfo } from 'node:net';
 import type { DataSource } from 'typeorm';
+import type { IServer } from '../../src';
 import { Application } from '../../src';
+import { HTTPInjectionKey } from '../../src/app';
 
 export class TestApplication extends Application {
     protected _client: Client | undefined;
@@ -30,7 +32,7 @@ export class TestApplication extends Application {
     }
 
     protected createClient() {
-        const httpServer = this.container.resolve('httpServer');
+        const httpServer = this.container.resolve<IServer>(HTTPInjectionKey.Server);
 
         const address = httpServer.address() as AddressInfo;
         const baseURL = `http://localhost:${address.port}`;

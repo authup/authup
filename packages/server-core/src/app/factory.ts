@@ -5,28 +5,47 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DependencyContainer } from '../core';
 import { Application } from './module';
 import {
+    ComponentsModule,
+    ConfigModule,
     DatabaseModule,
     HTTPModule,
     IdentityModule,
-    RuntimeModule, SwaggerModule,
+    LdapModule,
+    LoggerModule,
+    OAuth2Module,
+    RedisModule,
+    RuntimeModule,
+    SMTPModule,
+    SwaggerModule,
+    VaultModule,
 } from './modules';
-import { LdapModule } from './modules/ldap';
-import { OAuth2Module } from './modules/oauth2/module';
 
-export function createApplication(container: DependencyContainer) {
-    return new Application(container, [
-        new RuntimeModule(container),
-        new SwaggerModule(container),
+export function createApplication() {
+    return new Application([
+        new ConfigModule(),
+        new LoggerModule(),
 
-        new DatabaseModule(container),
-        new LdapModule(container),
+        // todo: rename to CacheModule
+        new RedisModule(),
 
-        new IdentityModule(container),
-        new OAuth2Module(container),
+        // todo: rename to mail module
+        new SMTPModule(),
 
-        new HTTPModule(container),
+        new VaultModule(),
+
+        new RuntimeModule(),
+
+        new SwaggerModule(),
+        new DatabaseModule(),
+        new LdapModule(),
+
+        new IdentityModule(),
+        new OAuth2Module(),
+
+        new ComponentsModule(),
+
+        new HTTPModule(),
     ]);
 }

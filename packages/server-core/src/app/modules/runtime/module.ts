@@ -5,23 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DependencyContainer } from '../../../core';
-import type { ApplicationModule, ApplicationModuleContext } from '../types';
+import type { Logger } from '@authup/server-kit';
+import type { Module } from '../types';
+import type { IDIContainer } from '../../../core/di/types';
+import { LoggerInjectionKey } from '../logger';
+import type { Config } from '../../../config';
+import { ConfigInjectionKey } from '../config';
 
-export class RuntimeModule implements ApplicationModule {
-    protected container : DependencyContainer<ApplicationModuleContext>;
-
-    // ----------------------------------------------------
-
-    constructor(container: DependencyContainer<ApplicationModuleContext>) {
-        this.container = container;
-    }
-
-    // ----------------------------------------------------
-
-    async start(): Promise<void> {
-        const config = this.container.resolve('config');
-        const logger = this.container.resolve('logger');
+export class RuntimeModule implements Module {
+    async start(container: IDIContainer): Promise<void> {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+        const logger = container.resolve<Logger>(LoggerInjectionKey);
 
         logger.info(`Environment: ${config.env}`);
         logger.info(`WritableDirectoryPath: ${config.writableDirectoryPath}`);

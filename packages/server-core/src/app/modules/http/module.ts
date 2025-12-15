@@ -5,42 +5,41 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Logger } from '@auhtup/server-kit';
+import type { Logger } from '@authup/server-kit';
 import { Router } from 'routup';
-import type { HTTPMiddlewareRegistrationOptions, IServer } from '../../../adapters/http';
+import type { IServer } from '../../../adapters/http';
 import {
     createHttpServer,
-    registerErrorMiddleware,
-    registerHTTPMiddlewares,
 } from '../../../adapters/http';
-import type { Config } from '../../../config';
-import type { DependencyContainer } from '../../../core';
-import type { ApplicationModule } from '../types';
+import type { Module } from '../types';
 import { HTTPInjectionKey } from './constants';
+import type { IDIContainer } from '../../../core';
+import { HTTPControllerModule, HTTPMiddlewareModule } from './modules';
 
-export class HTTPModule implements ApplicationModule {
-    protected container : DependencyContainer;
-
+export class HTTPModule implements Module {
     protected instance : IServer | undefined;
 
-    // ----------------------------------------------------
+    protected middleware : HTTPMiddlewareModule;
 
-    constructor(container: DependencyContainer) {
-        this.container = container;
+    protected controller : HTTPControllerModule;
+
+    constructor() {
+        this.controller = new HTTPControllerModule();
+        this.middleware = new HTTPMiddlewareModule();
     }
 
     // ----------------------------------------------------
 
-    async start(): Promise<void> {
-        const logger = this.container.resolve<Logger>('logger');
+    async start(container: IDIContainer): Promise<void> {
+        const logger = container.resolve<Logger>('logger');
 
         logger.info('Starting http server...');
 
         const router = new Router();
 
-        await this.mountRouterMiddlewaresBefore(router);
-        await this.mountRouterControllers(router);
-        await this.mountRouterMiddlewaresAfter(router);
+        await this.middleware.mountBefore(router, container);
+        await this.controller.mount(router, container);
+        await this.middleware.mountAfter(router, container);
 
         const server = createHttpServer({ router });
 
@@ -59,7 +58,7 @@ export class HTTPModule implements ApplicationModule {
             server.listen();
         });
 
-        this.container.register(HTTPInjectionKey.Server, {
+        container.register(HTTPInjectionKey.Server, {
             useValue: server,
         });
 
@@ -68,39 +67,12 @@ export class HTTPModule implements ApplicationModule {
 
     // ----------------------------------------------------
 
-    async stop(): Promise<void> {
+    async stop(container: IDIContainer): Promise<void> {
         if (!this.instance) return;
 
-        this.container.unregister(HTTPInjectionKey.Server);
+        container.unregister(HTTPInjectionKey.Server);
 
         this.instance.close();
         this.instance = undefined;
-    }
-
-    // ----------------------------------------------------
-
-    async mountRouterControllers(router: Router) {
-        // todo: create and mount controllers
-    }
-
-    async mountRouterMiddlewaresBefore(router: Router) {
-        const config = this.container.resolve<Config>('config');
-
-        const httpMiddlewareOptions : HTTPMiddlewareRegistrationOptions = {
-            cors: config.middlewareCors,
-            prometheus: config.middlewarePrometheus,
-            rateLimit: config.middlewareRateLimit,
-            swagger: config.middlewareSwagger,
-
-            publicURL: config.publicUrl,
-        };
-
-        await registerHTTPMiddlewares(router, {
-            options: httpMiddlewareOptions,
-        });
-    }
-
-    async mountRouterMiddlewaresAfter(router: Router) {
-        registerErrorMiddleware(router);
     }
 }

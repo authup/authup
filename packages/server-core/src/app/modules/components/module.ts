@@ -8,23 +8,13 @@
 import type { DataSource } from 'typeorm';
 import type { Component } from '../../../components';
 import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components';
-import type { DependencyContainer } from '../../../core';
 import { DatabaseInjectionKey } from '../database';
-import type { ApplicationModule } from '../types';
+import type { Module } from '../types';
+import type { IDIContainer } from '../../../core/di/types';
 
-export class ComponentsModule implements ApplicationModule {
-    protected container : DependencyContainer;
-
-    // ----------------------------------------------------
-
-    constructor(container: DependencyContainer) {
-        this.container = container;
-    }
-
-    // ----------------------------------------------------
-
-    async start(): Promise<void> {
-        const dataSource = this.container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+export class ComponentsModule implements Module {
+    async start(container: IDIContainer): Promise<void> {
+        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
 
         const components: Component[] = [
             createOAuth2CleanerComponent(dataSource),

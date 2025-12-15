@@ -6,15 +6,25 @@
  */
 
 export const OAuth2InjectionToken = {
+    ClientRepository: Symbol('ClientRepository'),
+    ClientScopeRepository: Symbol('ClientScopeRepository'),
+
     AuthorizationCodeIssuer: Symbol('AuthorizationCodeIssuer'),
+    AuthorizationCodeRepository: Symbol('AuthorizationCodeRepository'),
     AuthorizationCodeVerifier: Symbol('AuthorizationCodeVerifier'),
     AuthorizationStateManager: Symbol('AuthorizationStateManager'),
     AuthorizationCodeRequestVerifier: Symbol('AuthorizationCodeRequestVerifier'),
+
+    AuthorizationStateRepository: Symbol('AuthorizationStateRepository'),
+
+    KeyRepository: Symbol('KeyRepository'),
 
     AccessTokenIssuer: Symbol('AccessTokenIssuer'),
     OpenIDTokenIssuer: Symbol('OpenIDTokenIssuer'),
     RefreshTokenIssuer: Symbol('RefreshTokenIssuer'),
 
+    TokenRepository: Symbol('TokenRepository'),
     TokenRevoker: Symbol('TokenRevoker'),
+    TokenSigner: Symbol('TokenSigner'),
     TokenVerifier: Symbol('TokenVerifier'),
 };

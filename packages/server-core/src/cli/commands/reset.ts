@@ -5,15 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { useLogger } from '@authup/server-kit';
 import { defineCommand } from 'citty';
 import process from 'node:process';
-import {
-    applyConfig, useConfig,
-} from '../../config';
-import type { ApplicationModuleContext } from '../../app';
 import { createApplication } from '../../app';
-import { DependencyContainer } from '../../core';
 
 export function defineCLIResetCommand() {
     return defineCommand({
@@ -21,14 +15,7 @@ export function defineCLIResetCommand() {
             name: 'reset',
         },
         async setup() {
-            const config = useConfig();
-            applyConfig(config);
-
-            const container = new DependencyContainer<ApplicationModuleContext>();
-            container.register('config', config);
-            container.register('logger', useLogger());
-
-            const app = createApplication(container);
+            const app = createApplication();
             await app.reset();
 
             process.exit(0);

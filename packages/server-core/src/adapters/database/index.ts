@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './adapters';
-
 export * from './cache';
 export * from './data-source';
 export * from './errors';

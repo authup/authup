@@ -111,17 +111,4 @@ export class Swagger {
             return false;
         }
     }
-
-    existsSync() : boolean {
-        try {
-            fs.accessSync(path.join(
-                this.distPath,
-                'swagger.json',
-            ), fs.constants.R_OK | fs.constants.F_OK);
-
-            return true;
-        } catch (e) {
-            return false;
-        }
-    }
 }

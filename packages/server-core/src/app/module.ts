@@ -5,43 +5,43 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { DependencyContainer } from '../core';
-import type { ApplicationModule } from './modules';
+import { DependencyContainer } from '../core';
+import type { Module } from './modules';
+import type { IDIContainer } from '../core/di/types';
 
 export class Application {
-    public readonly container: DependencyContainer;
+    public readonly container: IDIContainer;
 
-    public readonly modules: ApplicationModule[];
+    public readonly modules: Module[];
 
     // ----------------------------------------------------
 
     constructor(
-        container: DependencyContainer,
-        modules: ApplicationModule[],
+        modules: Module[],
     ) {
-        this.container = container;
+        this.container = new DependencyContainer();
         this.modules = modules;
     }
 
     // ----------------------------------------------------
 
-    async start() {
+    async start() : Promise<void> {
         for (let i = 0; i < this.modules.length; i++) {
             const module = this.modules[i];
 
-            await module.start();
+            await module.start(this.container);
         }
     }
 
-    async stop() {
+    async stop() : Promise<void> {
         for (let i = this.modules.length - 1; i >= 0; i--) {
             const module = this.modules[i];
 
-            await module.stop?.();
+            await module.stop?.(this.container);
         }
     }
 
-    async reset() {
+    async reset() : Promise<void> {
         // todo.
     }
 }

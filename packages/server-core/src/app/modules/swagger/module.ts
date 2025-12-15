@@ -5,24 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Logger } from '@authup/server-kit';
 import { Swagger } from '../../../adapters/http';
-import type { DependencyContainer } from '../../../core';
-import type { ApplicationModule, ApplicationModuleContext } from '../types';
+import type { Module } from '../types';
+import type { IDIContainer } from '../../../core/di/types';
+import type { Config } from '../../../config';
+import { ConfigInjectionKey } from '../config';
+import { LoggerInjectionKey } from '../logger';
 
-export class SwaggerModule implements ApplicationModule {
-    protected container : DependencyContainer<ApplicationModuleContext>;
-
-    // ----------------------------------------------------
-
-    constructor(container: DependencyContainer<ApplicationModuleContext>) {
-        this.container = container;
-    }
-
-    // ----------------------------------------------------
-
-    async start(): Promise<void> {
-        const config = this.container.resolve('config');
-        const logger = this.container.resolve('logger');
+export class SwaggerModule implements Module {
+    async start(container: IDIContainer): Promise<void> {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+        const logger = container.resolve<Logger>(LoggerInjectionKey);
 
         const swagger = new Swagger({
             baseURL: config.publicUrl,

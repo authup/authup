@@ -8,37 +8,37 @@
 import type { Logger } from '@authup/server-kit';
 import { AuthupError } from '@authup/errors';
 import type { DataSourceOptions } from 'typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, InstanceChecker } from 'typeorm';
 import {
-    checkDatabase, createDatabase, setDataSource, synchronizeDatabaseSchema, unsetDataSource, useDataSourceOptions,
+    checkDatabase,
+    createDatabase,
+    setDataSource,
+    synchronizeDatabaseSchema,
+    unsetDataSource,
+    useDataSourceOptions,
 } from 'typeorm-extension';
+import type { DatabaseSeederOptions } from '../../../adapters/database';
 import {
     DatabaseSeeder,
     extendDataSourceOptions,
     isDatabaseTypeSupported,
-    isDatabaseTypeSupportedForEnvironment,
     setDataSourceSync,
 } from '../../../adapters/database';
 import type { Config } from '../../../config';
-import type { DependencyContainer } from '../../../core';
-import type { ApplicationModule } from '../types';
+import type { Module } from '../types';
 import { DatabaseInjectionKey } from './constants';
+import { ConfigInjectionKey } from '../config';
+import type { IDIContainer } from '../../../core/di/types';
+import { LoggerInjectionKey } from '../logger';
 
-export class DatabaseModule implements ApplicationModule {
-    protected ctx : DependencyContainer;
+export class DatabaseModule implements Module {
+    async start(container: IDIContainer): Promise<void> {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+        const logger = container.resolve<Logger>(LoggerInjectionKey);
 
-    // ----------------------------------------------------
-
-    constructor(container: DependencyContainer) {
-        this.ctx = container;
-    }
-
-    // ----------------------------------------------------
-
-    async start(): Promise<void> {
-        const logger = this.ctx.resolve<Logger>('logger');
-
-        const options = await this.createDataSourceOptions();
+        const options = await this.createDataSourceOptions(
+            config.db,
+        );
 
         const check = await checkDatabase({
             options,
@@ -67,15 +67,17 @@ export class DatabaseModule implements ApplicationModule {
             logger.info('Applied database schema.');
         }
 
-        await this.runSeeder(dataSource);
+        await this.runSeeder(dataSource, config);
 
-        this.ctx.register(DatabaseInjectionKey.DataSource, {
+        container.register(DatabaseInjectionKey.DataSource, {
             useValue: dataSource,
         });
+
+        this.registerRepositories(container, dataSource);
     }
 
-    async stop(): Promise<void> {
-        this.ctx.unregister(DatabaseInjectionKey.DataSource);
+    async stop(container: IDIContainer): Promise<void> {
+        container.unregister(DatabaseInjectionKey.DataSource);
 
         unsetDataSource();
     }
@@ -89,9 +91,8 @@ export class DatabaseModule implements ApplicationModule {
     // ----------------------------------------------------
 
     // todo: this should be a component/module
-    protected async runSeeder(dataSource: DataSource): Promise<void> {
-        const config = this.ctx.resolve<Config>('config');
-        const seeder = new DatabaseSeeder(config);
+    protected async runSeeder(dataSource: DataSource, options: Partial<DatabaseSeederOptions>): Promise<void> {
+        const seeder = new DatabaseSeeder(options);
 
         await seeder.run(dataSource);
     }
@@ -103,21 +104,43 @@ export class DatabaseModule implements ApplicationModule {
      *
      * @protected
      */
-    protected async createDataSourceOptions() : Promise<DataSourceOptions> {
-        const config = this.ctx.resolve<Config>('config');
-
-        const options = await useDataSourceOptions();
+    protected async createDataSourceOptions(input?: DataSourceOptions) : Promise<DataSourceOptions> {
+        let options : DataSourceOptions;
+        if (input) {
+            options = input;
+        } else {
+            options = await useDataSourceOptions();
+        }
 
         if (!isDatabaseTypeSupported(options.type)) {
             throw new AuthupError(`Database type ${options.type} is not supported (only: mysql, better-sqlite3 and postgres).`);
         }
 
-        if (!isDatabaseTypeSupportedForEnvironment(options.type, config.env)) {
-            throw new AuthupError(`Database type ${options.type} is not supported for ${config.env} environment.`);
-        }
-
         extendDataSourceOptions(options);
 
         return options;
+    }
+
+    protected registerRepositories(container: IDIContainer, dataSource: DataSource) : void {
+        const entities = dataSource.options.entities || [];
+        if (!Array.isArray(entities)) {
+            return;
+        }
+
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+
+            if (typeof entity === 'function') {
+                continue;
+            }
+
+            if (InstanceChecker.isEntitySchema(entity)) {
+                continue;
+            }
+
+            container.register(entity, {
+                useFactory: () => dataSource.getRepository(entity),
+            });
+        }
     }
 }

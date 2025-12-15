@@ -6,23 +6,13 @@
  */
 
 import { LdapClientFactory } from '../../../adapters/ldap';
-import type { DependencyContainer } from '../../../core';
-import type { ApplicationModule } from '../types';
+import type { Module } from '../types';
 import { LDAPInjectionKey } from './constants';
+import type { IDIContainer } from '../../../core/di/types';
 
-export class LdapModule implements ApplicationModule {
-    protected container : DependencyContainer;
-
-    // ----------------------------------------------------
-
-    constructor(container: DependencyContainer) {
-        this.container = container;
-    }
-
-    // ----------------------------------------------------
-
-    async start(): Promise<void> {
-        this.container.register(LDAPInjectionKey.ClientFactory, {
+export class LdapModule implements Module {
+    async start(container: IDIContainer): Promise<void> {
+        container.register(LDAPInjectionKey.ClientFactory, {
             useFactory: () => new LdapClientFactory(),
         });
     }

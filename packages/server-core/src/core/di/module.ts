@@ -4,15 +4,16 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+
 import { AuthupError } from '@authup/errors';
-import type { FactoryProvider, ValueProvider } from 'tsyringe';
+import type { Result } from '@authup/kit';
 import { isFactoryProvider, isValueProvider } from './provider';
-import type { DependencyInjectionKey, IDependencyContainer } from './types';
+import type { DIKey, DIProvider, IDIContainer } from './types';
 
-export class DependencyContainer implements IDependencyContainer {
-    protected factories: Map<DependencyInjectionKey, ValueProvider<any> | FactoryProvider<any>>;
+export class DependencyContainer implements IDIContainer {
+    protected factories: Map<DIKey, DIProvider<any>>;
 
-    protected instances : Map<DependencyInjectionKey, any>;
+    protected instances : Map<DIKey, any>;
 
     // ----------------------------------------------------
 
@@ -23,7 +24,7 @@ export class DependencyContainer implements IDependencyContainer {
 
     // ----------------------------------------------------
 
-    resolve<T>(key: DependencyInjectionKey): T {
+    resolve<T>(key: DIKey): T {
         let instance = this.instances.get(key);
         if (instance) {
             return instance;
@@ -36,19 +37,29 @@ export class DependencyContainer implements IDependencyContainer {
         return instance;
     }
 
+    safeResolve<T>(key: DIKey): Result<T> {
+        try {
+            const data = this.resolve<T>(key);
+
+            return { success: true, data };
+        } catch (e) {
+            return { success: false, error: e as Error };
+        }
+    }
+
     // ----------------------------------------------------
 
-    register<T>(key: DependencyInjectionKey, value: ValueProvider<T> | FactoryProvider<T>): void {
+    register<T>(key: DIKey, value: DIProvider<T>): void {
         this.factories.set(key, value);
     }
 
-    unregister(key: DependencyInjectionKey): void {
+    unregister(key: DIKey): void {
         this.factories.delete(key);
     }
 
     // ----------------------------------------------------
 
-    protected createInstance<T>(key: DependencyInjectionKey) : T {
+    protected createInstance<T>(key: DIKey) : T {
         const factory = this.factories.get(key);
 
         if (typeof factory === 'undefined') {
@@ -56,11 +67,11 @@ export class DependencyContainer implements IDependencyContainer {
         }
 
         if (isFactoryProvider(factory)) {
-            return factory.useFactory(this);
+            return factory.useFactory(this) as T;
         }
 
         if (isValueProvider(factory)) {
-            return factory.useValue;
+            return factory.useValue as T;
         }
 
         throw new AuthupError('Not factory pattern found.');

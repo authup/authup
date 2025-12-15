@@ -10,7 +10,7 @@ import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import { randomUUID } from 'node:crypto';
 import type { Identity } from '@authup/core-kit';
 import { OAuth2OpenIDClaimsBuilder } from '../../../openid';
-import type { OAuth2TokenSigner } from '../../signer';
+import type { IOAuth2TokenSigner } from '../../signer';
 import type { IOAuth2TokenRepository } from '../../repository';
 import type {
     OAuth2TokenIssuerOptions,
@@ -22,7 +22,7 @@ import type { IIdentityResolver } from '../../../../identity';
 export class OAuth2OpenIDTokenIssuer implements IOAuth2OpenIDTokenIssuer {
     protected repository: IOAuth2TokenRepository;
 
-    protected signer : OAuth2TokenSigner;
+    protected signer : IOAuth2TokenSigner;
 
     protected options: OAuth2TokenIssuerOptions;
 

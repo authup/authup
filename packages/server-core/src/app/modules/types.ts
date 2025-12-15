@@ -5,20 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Logger } from '@authup/server-kit';
-import type { DataSource } from 'typeorm';
-import type { IServer } from '../../adapters/http';
-import type { Config } from '../../config';
+import type { IDIContainer } from '../../core/di/types';
 
-export interface ApplicationModule {
-    start() : Promise<void>;
+export interface Module {
+    start(container: IDIContainer) : Promise<void>;
 
-    stop?(): Promise<void>
+    stop?(container: IDIContainer): Promise<void>
 }
-
-export type ApplicationModuleContext = {
-    config: Config,
-    logger: Logger,
-    dataSource: DataSource,
-    httpServer: IServer
-};
