@@ -96,7 +96,7 @@
         "typeorm-extension": "^3.7.3",
         "uncrypto": "^0.1.3",
         "validup": "^0.1.9",
-        "zod": "^4.1.13"
+        "zod": "^4.2.0"
     },
     "devDependencies": {
         "@authup/client-web-slim": "^1.0.0-beta.27",
