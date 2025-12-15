@@ -7,22 +7,23 @@
 
 import morgan from 'morgan';
 import type {
-    Next, Request, Response, Router,
+    Handler,
+    Next, Request, Response,
 } from 'routup';
 import { coreHandler, getRequestIP, useRequestPath } from 'routup';
 import { useLogger } from '@authup/server-kit';
-import { useConfig } from '../../../../config';
 import { EnvironmentName } from '../../../../env';
 import { useRequestIdentity } from '../../request';
 
-export function registerLoggerMiddleware(router: Router) {
-    router.use(coreHandler((
+type LoggerMiddlewareOptions = {
+    env: string
+};
+export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handler {
+    return coreHandler((
         request: Request,
         response: Response,
         next: Next,
     ) => {
-        const config = useConfig();
-
         morgan(
             (tokens, req: Request, res: Response) => {
                 const parts = [
@@ -47,7 +48,7 @@ export function registerLoggerMiddleware(router: Router) {
             {
                 stream: {
                     write(message) {
-                        if (config.env !== EnvironmentName.TEST) {
+                        if (options.env !== EnvironmentName.TEST) {
                             useLogger()
                                 .http(message.replace('\n', ''));
                         }
@@ -59,7 +60,7 @@ export function registerLoggerMiddleware(router: Router) {
                         return true;
                     }
 
-                    if (config.env === EnvironmentName.PRODUCTION) {
+                    if (options.env === EnvironmentName.PRODUCTION) {
                         return res.statusCode < 400;
                     }
 
@@ -67,5 +68,5 @@ export function registerLoggerMiddleware(router: Router) {
                 },
             },
         )(request, response, next);
-    }));
+    });
 }

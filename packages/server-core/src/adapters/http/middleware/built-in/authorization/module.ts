@@ -25,8 +25,7 @@ import {
     parseAuthorizationHeader,
     stringifyAuthorizationHeader,
 } from 'hapic';
-import { useConfig } from '../../../../../config';
-import { PermissionDBProvider, PolicyEngine } from '../../../../../security';
+import { PolicyEngine } from '../../../../../security';
 import type {
     ICredentialsAuthenticator, IIdentityResolver,
     IOAuth2TokenVerifier,
@@ -80,9 +79,8 @@ export class AuthorizationMiddleware {
 
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
-        const provider = new PermissionDBProvider(ctx.dataSource);
         this.permissionChecker = new PermissionChecker({
-            provider,
+            provider: ctx.permissionProvider,
             policyEngine: new PolicyEngine(),
         });
     }
@@ -125,11 +123,10 @@ export class AuthorizationMiddleware {
 
             next(HTTPError.unsupportedHeaderType(header.type));
         } catch (e) {
-            const config = useConfig();
             const cookieOptions : SerializeOptions = {};
 
-            if (config.cookieDomain) {
-                cookieOptions.domain = config.cookieDomain;
+            if (this.options.cookieDomain) {
+                cookieOptions.domain = this.options.cookieDomain;
             } else {
                 cookieOptions.domain = getRequestHostName(response.req, {
                     trustProxy: true,

@@ -5,19 +5,20 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { DataSource } from 'typeorm';
+import type { IPermissionProvider } from '@authup/access';
 import type { IIdentityResolver, IOAuth2TokenVerifier } from '../../../../../core';
 
 export type HTTPAuthorizationMiddlewareOptions = {
+    cookieDomain?: string;
     clientAuthBasic?: boolean,
     robotAuthBasic?: boolean,
     userAuthBasic?: boolean,
 };
 
 export type HTTPAuthorizationMiddlewareContext = {
-    dataSource: DataSource
     identityResolver: IIdentityResolver,
-
     oauth2TokenVerifier: IOAuth2TokenVerifier,
+    permissionProvider: IPermissionProvider,
+
     options?: HTTPAuthorizationMiddlewareOptions
 };

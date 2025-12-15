@@ -6,4 +6,3 @@
  */
 
 export * from './built-in';
-export * from './module';
