@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) 2025.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+export const OAuth2InjectionToken = {
+    AuthorizationCodeIssuer: Symbol('AuthorizationCodeIssuer'),
+    AuthorizationCodeVerifier: Symbol('AuthorizationCodeVerifier'),
+    AuthorizationStateManager: Symbol('AuthorizationStateManager'),
+    AuthorizationCodeRequestVerifier: Symbol('AuthorizationCodeRequestVerifier'),
+
+    AccessTokenIssuer: Symbol('AccessTokenIssuer'),
+    OpenIDTokenIssuer: Symbol('OpenIDTokenIssuer'),
+    RefreshTokenIssuer: Symbol('RefreshTokenIssuer'),
+
+    TokenRevoker: Symbol('TokenRevoker'),
+    TokenVerifier: Symbol('TokenVerifier'),
+};

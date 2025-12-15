@@ -5,14 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ObjectLiteral } from '@authup/kit';
+export type DependencyInjectionKey = symbol | string;
 
-export interface IDependencyContainer<
-    CONTEXT extends ObjectLiteral = ObjectLiteral,
-> {
-    resolve<T extends keyof CONTEXT>(key: T): CONTEXT[T];
+export interface IDependencyContainer {
+    resolve<T>(key: DependencyInjectionKey): T;
 
-    register<T extends keyof CONTEXT>(key: T, value: CONTEXT[T]): void;
+    register<T>(key: DependencyInjectionKey, value: T): void;
 
-    unregister<T extends keyof CONTEXT>(key: T): void;
+    unregister(key: DependencyInjectionKey): void;
 }

@@ -5,39 +5,64 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import { AuthupError } from '@authup/errors';
-import type { ObjectLiteral } from '@authup/kit';
-import type { IDependencyContainer } from './types';
+import type { FactoryProvider, ValueProvider } from 'tsyringe';
+import { isFactoryProvider, isValueProvider } from './provider';
+import type { DependencyInjectionKey, IDependencyContainer } from './types';
 
-export class DependencyContainer<
-    CONTEXT extends ObjectLiteral = ObjectLiteral,
-> implements IDependencyContainer<CONTEXT> {
-    protected instances: Partial<CONTEXT>;
+export class DependencyContainer implements IDependencyContainer {
+    protected factories: Map<DependencyInjectionKey, ValueProvider<any> | FactoryProvider<any>>;
+
+    protected instances : Map<DependencyInjectionKey, any>;
 
     // ----------------------------------------------------
 
     constructor() {
-        this.instances = {};
+        this.factories = new Map();
+        this.instances = new Map();
     }
 
     // ----------------------------------------------------
 
-    resolve<T extends keyof CONTEXT>(key: T): CONTEXT[T] {
-        const instance = this.instances[key];
-
-        if (typeof instance === 'undefined') {
-            throw new AuthupError(`${String(key)} is no initialized.`);
+    resolve<T>(key: DependencyInjectionKey): T {
+        let instance = this.instances.get(key);
+        if (instance) {
+            return instance;
         }
+
+        instance = this.createInstance(key);
+
+        this.instances.set(key, instance);
 
         return instance;
     }
 
     // ----------------------------------------------------
 
-    register<T extends keyof CONTEXT>(key: T, value: CONTEXT[T]): void {
-        this.instances[key] = value;
+    register<T>(key: DependencyInjectionKey, value: ValueProvider<T> | FactoryProvider<T>): void {
+        this.factories.set(key, value);
     }
 
-    unregister<T extends keyof CONTEXT>(key: T): void {
-        delete this.instances[key];
+    unregister(key: DependencyInjectionKey): void {
+        this.factories.delete(key);
+    }
+
+    // ----------------------------------------------------
+
+    protected createInstance<T>(key: DependencyInjectionKey) : T {
+        const factory = this.factories.get(key);
+
+        if (typeof factory === 'undefined') {
+            throw new AuthupError(`Not factory for ${String(key)} defined.`);
+        }
+
+        if (isFactoryProvider(factory)) {
+            return factory.useFactory(this);
+        }
+
+        if (isValueProvider(factory)) {
+            return factory.useValue;
+        }
+
+        throw new AuthupError('Not factory pattern found.');
     }
 }

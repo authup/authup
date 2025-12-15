@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Logger } from '@authup/server-kit';
 import { AuthupError } from '@authup/errors';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource } from 'typeorm';
@@ -18,22 +19,24 @@ import {
     isDatabaseTypeSupportedForEnvironment,
     setDataSourceSync,
 } from '../../../adapters/database';
+import type { Config } from '../../../config';
 import type { DependencyContainer } from '../../../core';
-import type { ApplicationModule, ApplicationModuleContext } from '../types';
+import type { ApplicationModule } from '../types';
+import { DatabaseInjectionKey } from './constants';
 
 export class DatabaseModule implements ApplicationModule {
-    protected ctx : DependencyContainer<ApplicationModuleContext>;
+    protected ctx : DependencyContainer;
 
     // ----------------------------------------------------
 
-    constructor(container: DependencyContainer<ApplicationModuleContext>) {
+    constructor(container: DependencyContainer) {
         this.ctx = container;
     }
 
     // ----------------------------------------------------
 
     async start(): Promise<void> {
-        const logger = this.ctx.resolve('logger');
+        const logger = this.ctx.resolve<Logger>('logger');
 
         const options = await this.createDataSourceOptions();
 
@@ -66,11 +69,13 @@ export class DatabaseModule implements ApplicationModule {
 
         await this.runSeeder(dataSource);
 
-        this.ctx.register('dataSource', dataSource);
+        this.ctx.register(DatabaseInjectionKey.DataSource, {
+            useValue: dataSource,
+        });
     }
 
     async stop(): Promise<void> {
-        this.ctx.unregister('dataSource');
+        this.ctx.unregister(DatabaseInjectionKey.DataSource);
 
         unsetDataSource();
     }
@@ -85,7 +90,7 @@ export class DatabaseModule implements ApplicationModule {
 
     // todo: this should be a component/module
     protected async runSeeder(dataSource: DataSource): Promise<void> {
-        const config = this.ctx.resolve('config');
+        const config = this.ctx.resolve<Config>('config');
         const seeder = new DatabaseSeeder(config);
 
         await seeder.run(dataSource);
@@ -99,7 +104,7 @@ export class DatabaseModule implements ApplicationModule {
      * @protected
      */
     protected async createDataSourceOptions() : Promise<DataSourceOptions> {
-        const config = this.ctx.resolve('config');
+        const config = this.ctx.resolve<Config>('config');
 
         const options = await useDataSourceOptions();
 

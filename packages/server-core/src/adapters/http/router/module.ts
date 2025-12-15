@@ -8,12 +8,12 @@
 import { Router } from 'routup';
 import { registerHTTPControllers } from '../controllers';
 
-import { registerErrorMiddleware, registerMiddlewares } from '../middleware';
+import { registerErrorMiddleware, registerHTTPMiddlewares } from '../middleware';
 
 export async function createRouter() : Promise<Router> {
     const router = new Router();
 
-    await registerMiddlewares(router);
+    await registerHTTPMiddlewares(router);
     registerHTTPControllers(router);
     registerErrorMiddleware(router);
 

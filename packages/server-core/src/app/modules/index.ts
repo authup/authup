@@ -7,7 +7,7 @@
 
 export * from './components';
 export * from './database';
-export * from './di';
+export * from './identity';
 export * from './http';
 export * from './runtime';
 export * from './swagger';

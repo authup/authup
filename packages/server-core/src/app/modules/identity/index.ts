@@ -8,4 +8,3 @@
 export * from './module';
 export * from './identity';
 export * from './ldap';
-export * from './oauth2';

@@ -20,9 +20,11 @@ export function defineCLIStartCommand() {
             const config = useConfig();
             applyConfig(config);
 
-            const container = new DependencyContainer<ApplicationModuleContext>();
+            const container = new DependencyContainer();
+
             container.register('config', config);
             container.register('logger', useLogger());
+
             const app = createApplication(container);
 
             await app.start();

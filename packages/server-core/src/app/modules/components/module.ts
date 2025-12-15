@@ -5,24 +5,26 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { DataSource } from 'typeorm';
 import type { Component } from '../../../components';
 import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components';
 import type { DependencyContainer } from '../../../core';
-import type { ApplicationModule, ApplicationModuleContext } from '../types';
+import { DatabaseInjectionKey } from '../database';
+import type { ApplicationModule } from '../types';
 
 export class ComponentsModule implements ApplicationModule {
-    protected container : DependencyContainer<ApplicationModuleContext>;
+    protected container : DependencyContainer;
 
     // ----------------------------------------------------
 
-    constructor(container: DependencyContainer<ApplicationModuleContext>) {
+    constructor(container: DependencyContainer) {
         this.container = container;
     }
 
     // ----------------------------------------------------
 
     async start(): Promise<void> {
-        const dataSource = this.container.resolve('dataSource');
+        const dataSource = this.container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
 
         const components: Component[] = [
             createOAuth2CleanerComponent(dataSource),

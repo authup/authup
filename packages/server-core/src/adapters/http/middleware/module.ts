@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ObjectLiteral } from '@authup/kit';
 import path from 'node:path';
 import type { Router } from 'routup';
-import { useConfig } from '../../../config';
 import { resolvePackagePath } from '../../../path';
 import {
     registerAssetsMiddleware,
@@ -24,37 +24,42 @@ import {
     transformBoolToEmptyObject,
 } from './utils';
 
-export async function registerMiddlewares(router: Router) {
-    const config = useConfig();
+export type HTTPMiddlewareRegistrationOptions = {
+    cors?: boolean | ObjectLiteral,
+    prometheus?: boolean | ObjectLiteral,
+    rateLimit?: boolean | ObjectLiteral,
+    swagger?: boolean | ObjectLiteral,
+
+    publicURL?: string
+};
+
+export async function registerHTTPMiddlewares(router: Router, ctx: { options : HTTPMiddlewareRegistrationOptions }) {
+    const { options } = ctx;
 
     registerLoggerMiddleware(router);
 
-    const cors = config.middlewareCors;
-    if (isBuiltInMiddlewareEnabled(cors)) {
-        registerCorsMiddleware(router, transformBoolToEmptyObject(cors));
+    if (isBuiltInMiddlewareEnabled(options.cors)) {
+        registerCorsMiddleware(router, transformBoolToEmptyObject(options.cors));
     }
 
     await registerAssetsMiddleware(router);
 
     registerBasicMiddleware(router);
 
-    const prometheus = config.middlewarePrometheus;
-    if (isBuiltInMiddlewareEnabled(prometheus)) {
-        registerPrometheusMiddleware(router, transformBoolToEmptyObject(prometheus));
+    if (isBuiltInMiddlewareEnabled(options.prometheus)) {
+        registerPrometheusMiddleware(router, transformBoolToEmptyObject(options.prometheus));
     }
 
-    const rateLimit = config.middlewareRateLimit;
-    if (isBuiltInMiddlewareEnabled(rateLimit)) {
-        registerRateLimitMiddleware(router, transformBoolToEmptyObject(rateLimit));
+    if (isBuiltInMiddlewareEnabled(options.rateLimit)) {
+        registerRateLimitMiddleware(router, transformBoolToEmptyObject(options.rateLimit));
     }
 
-    const swagger = config.middlewareSwagger;
-    if (isBuiltInMiddlewareEnabled(swagger)) {
+    if (isBuiltInMiddlewareEnabled(options.swagger)) {
         registerSwaggerMiddleware(router, {
             documentPath: path.join(resolvePackagePath(), 'dist', 'swagger.json'),
             options: {
-                baseURL: config.publicUrl,
-                ...transformBoolToEmptyObject(swagger),
+                baseURL: options.publicURL,
+                ...transformBoolToEmptyObject(options.swagger),
             },
         });
     }

@@ -6,17 +6,17 @@
  */
 
 import type { DependencyContainer } from '../core';
-import type { ApplicationModule, ApplicationModuleContext } from './modules';
+import type { ApplicationModule } from './modules';
 
 export class Application {
-    public readonly container: DependencyContainer<ApplicationModuleContext>;
+    public readonly container: DependencyContainer;
 
     public readonly modules: ApplicationModule[];
 
     // ----------------------------------------------------
 
     constructor(
-        container: DependencyContainer<ApplicationModuleContext>,
+        container: DependencyContainer,
         modules: ApplicationModule[],
     ) {
         this.container = container;
