@@ -12,7 +12,8 @@ import {
     DController, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { Request, Response, sendAccepted } from 'routup';
+import type { Request, Response } from 'routup';
+import { sendAccepted } from 'routup';
 import type { FindOptionsWhere, Repository } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { UserEntity, resolveRealm } from '../../../../database/domains';

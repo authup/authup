@@ -13,6 +13,7 @@ import {
 } from '@routup/decorators';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
+import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere, Repository } from 'typeorm';
 import { IMailClient } from '../../../../../core';
@@ -51,8 +52,8 @@ export class PasswordForgotController {
 
     @DPost('', [])
     async execute(
-        @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: Request,
+            @DResponse() res: Response,
     ): Promise<PasswordForgotResponse> {
         if (!this.options.registration) {
             throw new BadRequestError('User registration is not enabled.');

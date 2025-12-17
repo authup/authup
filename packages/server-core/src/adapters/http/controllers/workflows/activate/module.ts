@@ -11,6 +11,7 @@ import {
     DController, DPost, DRequest, DResponse,
 } from '@routup/decorators';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { Repository } from 'typeorm';
 import { ActivateRequestValidator } from './validator';
@@ -34,8 +35,8 @@ export class ActivateController {
 
     @DPost('', [])
     async execute(
-        @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: Request,
+            @DResponse() res: Response,
     ): Promise<any> {
         const data = await this.validator.run(req);
 

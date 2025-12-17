@@ -14,7 +14,8 @@ import {
 } from '@routup/decorators';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
-import { Request, Response, sendAccepted } from 'routup';
+import type { Request, Response } from 'routup';
+import { sendAccepted } from 'routup';
 import type { Repository } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { IMailClient, UserCredentialsService } from '../../../../../core';
