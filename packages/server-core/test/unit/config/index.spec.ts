@@ -6,10 +6,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import {
-    normalizeConfig,
-    readConfigRawFromFS,
-} from '../../../src/index';
+import { normalizeConfig } from '../../../src/app/modules/config/normalize';
+import { readConfigRawFromFS } from '../../../src/app/modules/config/read';
 
 describe('src/config/*.ts', () => {
     it('should build config with defaults', async () => {

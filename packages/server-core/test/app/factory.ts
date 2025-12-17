@@ -6,10 +6,16 @@
  */
 
 import {
-    ConfigModule, HTTPModule,
-
-    IdentityModule, LdapModule, LoggerModule, MailModule, OAuth2Module, normalizeConfig, readConfigRawFromEnv,
+    ConfigModule,
+    HTTPModule,
+    IdentityModule,
+    LdapModule,
+    LoggerModule,
+    MailModule,
+    OAuth2Module,
 } from '../../src';
+import { normalizeConfig } from '../../src/app/modules/config/normalize';
+import { readConfigRawFromEnv } from '../../src/app/modules/config/read';
 
 import { TestApplication } from './module';
 import { TestDatabaseModule } from './database';
