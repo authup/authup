@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024.
+ * Copyright (c) 2021-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -9,8 +9,8 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import type { User } from '@authup/core-kit';
-import { createTestApplication } from '../../../../../app';
-import { createFakeUser, expectPropertiesEqualToSrc } from '../../../../../utils';
+import { createTestApplication } from '../../../../app';
+import { createFakeUser, expectPropertiesEqualToSrc } from '../../../../utils';
 
 describe('src/http/controllers/user', () => {
     const suite = createTestApplication();

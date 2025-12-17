@@ -10,7 +10,7 @@ import type { Component } from '../../../components';
 import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components';
 import { DatabaseInjectionKey } from '../database';
 import type { Module } from '../types';
-import type { IDIContainer } from '../../../core/di/types';
+import type { IDIContainer } from '../../../core';
 
 export class ComponentsModule implements Module {
     async start(container: IDIContainer): Promise<void> {

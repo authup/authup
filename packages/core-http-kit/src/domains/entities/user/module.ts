@@ -12,6 +12,18 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
+export type PasswordForgotResponse = {
+    reset_expires: string;
+};
+
+export type PasswordResetResponse = {
+    reset_at: string;
+};
+
+export type RegisterResponse = {
+    active: true
+};
+
 export class UserAPI extends BaseAPI implements EntityAPI<User> {
     async getMany(
         options?: BuildInput<User>,
@@ -73,7 +85,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     async activate(
         token: string,
     ): Promise<User> {
-        const response = await this.client.post('users/activate', {
+        const response = await this.client.post('activate', {
             token,
         });
 
@@ -82,16 +94,16 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
 
     async register(
         data: Partial<Pick<User, 'email' | 'name' | 'password' | 'realm_id'>>,
-    ): Promise<User> {
-        const response = await this.client.post('users/register', nullifyEmptyObjectProperties(data));
+    ): Promise<RegisterResponse> {
+        const response = await this.client.post('register', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
     async passwordForgot(
         data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>>,
-    ) : Promise<User> {
-        const response = await this.client.post('users/password-forgot', nullifyEmptyObjectProperties(data));
+    ) : Promise<PasswordForgotResponse> {
+        const response = await this.client.post('password-forgot', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
@@ -99,8 +111,8 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     async passwordReset(
         data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>> &
         { token: string, password: string },
-    ) : Promise<User> {
-        const response = await this.client.post('users/password-reset', nullifyEmptyObjectProperties(data));
+    ) : Promise<PasswordResetResponse> {
+        const response = await this.client.post('password-reset', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }

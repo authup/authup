@@ -5,4 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const SMTPInjectionKey = Symbol('Redis');
+export * from './smtp';
+export * from './void';

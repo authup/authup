@@ -5,8 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './activate';
 export * from './authorize';
 export * from './jwks';
 export * from './openid';
+export * from './password-forgot';
+export * from './password-reset';
+export * from './register';
 export * from './status';
 export * from './token';

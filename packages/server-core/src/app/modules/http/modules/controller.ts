@@ -11,6 +11,8 @@ import { useRequestBody } from '@routup/basic/body';
 import { useRequestCookie, useRequestCookies } from '@routup/basic/cookie';
 import { useRequestQuery } from '@routup/basic/query';
 import type { User } from '@authup/core-kit';
+import type { Repository } from 'typeorm';
+import { UserEntity } from '../../../../adapters/database/domains';
 import {
     ClientController,
     ClientPermissionController,
@@ -33,16 +35,21 @@ import {
     UserRoleController,
 } from '../../../../adapters/http';
 import {
+    ActivateController,
     AuthorizeController,
     JwkController,
     OpenIDController,
-    StatusController, TokenController,
+    PasswordForgotController,
+    PasswordResetController,
+    StatusController,
+    TokenController,
 } from '../../../../adapters/http/controllers';
+import { RegisterController } from '../../../../adapters/http/controllers/workflows/register';
 import type {
     ICredentialsAuthenticator,
     IDIContainer,
     IIdentityProviderAccountManager,
-    IIdentityResolver,
+    IIdentityResolver, IMailClient,
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationCodeVerifier,
@@ -63,6 +70,7 @@ import { IdentityInjectionKey } from '../../identity';
 import type { Config } from '../../../../config';
 import { ConfigDefaults } from '../../../../config';
 import { ConfigInjectionKey } from '../../config';
+import { MailInjectionKey } from '../../mail';
 
 export class HTTPControllerModule {
     async mount(router: Router, container: IDIContainer): Promise<void> {
@@ -72,6 +80,10 @@ export class HTTPControllerModule {
                 this.createToken(container),
                 JwkController,
                 OpenIDController,
+                this.createActivateController(container),
+                this.createPasswordForgotController(container),
+                this.createPasswordResetController(container),
+                this.createRegisterController(container),
 
                 StatusController,
 
@@ -207,6 +219,52 @@ export class HTTPControllerModule {
             clientAuthenticator,
             robotAuthenticator,
             userAuthenticator,
+        });
+    }
+
+    createActivateController(container: IDIContainer) {
+        const repository = container.resolve<Repository<User>>(UserEntity);
+
+        return new ActivateController({
+            repository,
+        });
+    }
+
+    createPasswordForgotController(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+        const repository = container.resolve<Repository<User>>(UserEntity);
+        const mailClient = container.resolve<IMailClient>(MailInjectionKey);
+
+        return new PasswordForgotController({
+            mailClient,
+            repository,
+            options: {
+                registration: config.registration,
+                emailVerification: config.emailVerification,
+            },
+        });
+    }
+
+    createPasswordResetController(container: IDIContainer) {
+        const repository = container.resolve<Repository<User>>(UserEntity);
+
+        return new PasswordResetController({
+            repository,
+        });
+    }
+
+    createRegisterController(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+        const repository = container.resolve<Repository<User>>(UserEntity);
+        const mailClient = container.resolve<IMailClient>(MailInjectionKey);
+
+        return new RegisterController({
+            mailClient,
+            repository,
+            options: {
+                registration: config.registration,
+                emailVerification: config.emailVerification,
+            },
         });
     }
 

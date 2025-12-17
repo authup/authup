@@ -14,10 +14,10 @@ import {
     IdentityModule,
     LdapModule,
     LoggerModule,
+    MailModule,
     OAuth2Module,
     RedisModule,
     RuntimeModule,
-    SMTPModule,
     SwaggerModule,
     VaultModule,
 } from './modules';
@@ -31,7 +31,7 @@ export function createApplication() {
         new RedisModule(),
 
         // todo: rename to mail module
-        new SMTPModule(),
+        new MailModule(),
 
         new VaultModule(),
 

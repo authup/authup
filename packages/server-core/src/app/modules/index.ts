@@ -16,7 +16,7 @@ export * from './oauth2';
 export * from './redis';
 export * from './runtime';
 export * from './swagger';
-export * from './smtp';
+export * from './mail';
 export * from './vault';
 
 export * from './types';

@@ -6,11 +6,10 @@
  */
 
 import {
-    normalizeConfig, readConfigRawFromEnv,
+    ConfigModule, HTTPModule,
+
+    IdentityModule, LdapModule, LoggerModule, MailModule, OAuth2Module, normalizeConfig, readConfigRawFromEnv,
 } from '../../src';
-import {
-    ConfigModule, HTTPModule, IdentityModule, LdapModule, LoggerModule, OAuth2Module,
-} from '../../src/app';
 
 import { TestApplication } from './module';
 import { TestDatabaseModule } from './database';
@@ -32,10 +31,14 @@ export function createTestApplication() : TestApplication {
     config.redis = false;
     config.vault = false;
 
+    config.registration = true;
+    config.emailVerification = true;
+
     return new TestApplication([
         new ConfigModule(config),
         new LoggerModule(),
         new LdapModule(),
+        new MailModule(),
 
         new TestDatabaseModule(),
         new IdentityModule(),
