@@ -10,9 +10,9 @@ import { createRedisClient, setRedisFactory } from '@authup/server-kit';
 import { isObject } from 'smob';
 import type { Module } from '../types';
 import { RedisInjectionKey } from './constants';
-import type { Config } from '../../../config';
+import type { Config } from '../config';
 import { ConfigInjectionKey } from '../config';
-import type { IDIContainer } from '../../../core/di/types';
+import type { IDIContainer } from '../../../core';
 
 export class RedisModule implements Module {
     async start(container: IDIContainer): Promise<void> {

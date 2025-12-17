@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2023.
+ * Copyright (c) 2023-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -8,8 +8,9 @@
 import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
-import { EnvironmentName } from '../env';
-import { toPublicHost } from '../utils/host';
+import { EnvironmentName } from '../../../env';
+import { toPublicHost } from '../../../utils/host';
+
 import { ConfigDefaults } from './constants';
 import { parseConfig } from './parse';
 import type { Config, ConfigInput } from './types';

@@ -8,7 +8,7 @@
 import type { Module } from '../types';
 import { SMTPMailClientAdapter, VoidMailClientAdapter } from './adapter';
 import { MailInjectionKey } from './constants';
-import type { Config } from '../../../config';
+import type { Config } from '../config';
 import { ConfigInjectionKey } from '../config';
 import type { IDIContainer } from '../../../core';
 

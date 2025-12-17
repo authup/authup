@@ -11,9 +11,9 @@ import {
 } from '@authup/server-kit';
 import type { Module } from '../types';
 import { VaultInjectionKey } from './constants';
-import type { Config } from '../../../config';
+import type { Config } from '../config';
 import { ConfigInjectionKey } from '../config';
-import type { IDIContainer } from '../../../core/di/types';
+import type { IDIContainer } from '../../../core';
 
 export class VaultModule implements Module {
     async start(container: IDIContainer): Promise<void> {

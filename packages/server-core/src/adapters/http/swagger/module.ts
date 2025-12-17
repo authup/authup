@@ -12,7 +12,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { getDistPath, getSrcPath } from '../../../path';
 import type { SwaggerOptions } from './type';
-import { ConfigDefaults } from '../../../config';
 
 export class Swagger {
     protected distPath : string;
@@ -23,7 +22,7 @@ export class Swagger {
 
     protected options : SwaggerOptions;
 
-    constructor(options: SwaggerOptions = {}) {
+    constructor(options: SwaggerOptions) {
         this.distPath = getDistPath();
         this.srcPath = getSrcPath();
 
@@ -70,7 +69,7 @@ export class Swagger {
                     ],
                 },
                 servers: [
-                    this.options.baseURL || `http://${ConfigDefaults.HOST}:${ConfigDefaults.PORT}`,
+                    this.options.baseURL,
                 ],
                 name: 'API Documentation',
                 outputDirectory: this.distPath,

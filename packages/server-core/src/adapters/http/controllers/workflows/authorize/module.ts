@@ -8,10 +8,15 @@
 import {
     DController, DGet, DPost, DRequest, DResponse,
 } from '@routup/decorators';
+import { load } from 'locter';
+import fs from 'node:fs';
+import path from 'node:path';
 import { URL } from 'node:url';
-import { send } from 'routup';
+import { send, useRequestParam } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { type Client, OAuth2AuthorizationCodeRequest, type Scope } from '@authup/core-kit';
+import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
+import { resolveClientWebSlimPackagePath } from '../../../../../path';
 import { ForceUserLoggedInMiddleware } from '../../../middleware';
 import { HTTPOAuth2Authorizer } from '../../../adapters';
 import {
@@ -19,13 +24,14 @@ import {
     OAuth2AuthorizationCodeRequestValidator,
 } from '../../../../../core';
 import { sanitizeError } from '../../../../../utils';
-import { sendClientResponse } from '../../../response';
-import type { AuthorizeControllerContext } from './types';
+import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types';
 
 @DController('/authorize')
 export class AuthorizeController {
     // todo: maybe /realms/<realm>/protocol/openid-connect/authorize
     // todo: maybe /realms/<realm>/[...]/authorize
+
+    protected options: AuthorizeControllerOptions;
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
@@ -36,6 +42,8 @@ export class AuthorizeController {
     // ---------------------------------------------------------
 
     constructor(ctx: AuthorizeControllerContext) {
+        this.options = ctx.options;
+
         this.codeRequestVerifier = ctx.codeRequestVerifier;
 
         const validator = new OAuth2AuthorizationCodeRequestValidator();
@@ -109,14 +117,64 @@ export class AuthorizeController {
             };
         }
 
-        return sendClientResponse(req, res, {
-            path: '/authorize',
+        const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
+
+        const payload = {
+            config: {
+                baseURL: this.options.baseURL,
+            },
             data: {
                 codeRequest,
                 error,
                 client,
                 scopes,
             },
+        };
+
+        let html : string;
+        let manifest : Record<string, any>;
+        let render : CallableFunction;
+
+        const clientWebSlimPackagePath = resolveClientWebSlimPackagePath();
+
+        if (isJIT) {
+            /**
+             * @type {import('vite').ViteDevServer}
+             */
+            const vite = useRequestParam(req, 'viteServer');
+
+            html = await fs.promises.readFile(
+                path.join(clientWebSlimPackagePath, 'index.html'),
+                'utf-8',
+            );
+            html = await vite.transformIndexHtml('/', html);
+            manifest = {};
+            render = (await vite.ssrLoadModule('/src/server.ts')).render;
+        } else {
+            html = await fs.promises.readFile(
+                path.join(clientWebSlimPackagePath, 'dist', 'client', 'index.html'),
+                'utf-8',
+            );
+
+            manifest = JSON.parse(await fs.promises.readFile(
+                path.join(clientWebSlimPackagePath, 'dist', 'client', '.vite', 'ssr-manifest.json'),
+                'utf-8',
+            ));
+
+            render = (await load(path.join(clientWebSlimPackagePath, 'dist', 'server', 'server.js'))).render;
+        }
+
+        const [appHtml, preloadLinks] = await render({
+            url: '/authorize',
+            manifest,
+            payload,
         });
+
+        return send(
+            res,
+            html
+                .replace('<!--preload-links-->', preloadLinks)
+                .replace('<!--app-html-->', appHtml),
+        );
     }
 }

@@ -6,7 +6,7 @@
  */
 
 import type { Repository } from 'typeorm';
-import type { Config } from '../../../config';
+import type { Config } from '../config';
 import type {
     IDIContainer,
     IIdentityResolver,

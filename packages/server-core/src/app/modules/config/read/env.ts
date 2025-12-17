@@ -12,7 +12,7 @@ import { hasEnvDataSourceOptions, readDataSourceOptionsFromEnv } from 'typeorm-e
 import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions.js';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
-import { EnvironmentVariableName } from '../../env';
+import { EnvironmentVariableName } from '../../../../env';
 import type { ConfigInput } from '../types';
 
 export function readConfigRawFromEnv() : ConfigInput {

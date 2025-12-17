@@ -7,10 +7,10 @@
 
 import { createLogger, setLoggerFactory } from '@authup/server-kit';
 import type { Module } from '../types';
-import type { Config } from '../../../config';
+import type { Config } from '../config';
 import { ConfigInjectionKey } from '../config';
 import { LoggerInjectionKey } from './constants';
-import type { IDIContainer } from '../../../core/di/types';
+import type { IDIContainer } from '../../../core';
 
 export class LoggerModule implements Module {
     async start(container: IDIContainer): Promise<void> {

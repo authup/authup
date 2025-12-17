@@ -25,7 +25,7 @@ import {
     registerRateLimitMiddleware,
 } from '../../../../adapters/http';
 import { resolvePackagePath } from '../../../../path';
-import type { Config } from '../../../../config';
+import type { Config } from '../../config';
 import { ConfigInjectionKey } from '../../config';
 import { IdentityInjectionKey } from '../../identity';
 import { OAuth2InjectionToken } from '../../oauth2';

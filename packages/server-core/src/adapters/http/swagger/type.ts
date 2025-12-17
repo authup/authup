@@ -6,5 +6,5 @@
  */
 
 export type SwaggerOptions = {
-    baseURL?: string
+    baseURL: string
 };

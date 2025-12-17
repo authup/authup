@@ -8,8 +8,8 @@
 import type { Logger } from '@authup/server-kit';
 import { Swagger } from '../../../adapters/http';
 import type { Module } from '../types';
-import type { IDIContainer } from '../../../core/di/types';
-import type { Config } from '../../../config';
+import type { IDIContainer } from '../../../core';
+import type { Config } from '../config';
 import { ConfigInjectionKey } from '../config';
 import { LoggerInjectionKey } from '../logger';
 

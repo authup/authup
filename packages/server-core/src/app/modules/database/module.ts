@@ -24,7 +24,7 @@ import {
     isDatabaseTypeSupported,
     setDataSourceSync,
 } from '../../../adapters/database';
-import type { Config } from '../../../config';
+import type { Config } from '../config';
 import type { Module } from '../types';
 import { DatabaseInjectionKey } from './constants';
 import { ConfigInjectionKey } from '../config';

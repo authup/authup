@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2022.
+ * Copyright (c) 2022-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -16,7 +16,7 @@ import type { CorsOptions } from 'cors';
 import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions.js';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
-import type { SMTPOptions } from '../adapters/smtp';
+import type { SMTPOptions } from '../../../adapters/smtp';
 
 export type Config = {
     /**

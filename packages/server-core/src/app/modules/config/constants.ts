@@ -6,3 +6,13 @@
  */
 
 export const ConfigInjectionKey = Symbol('Config');
+
+export enum ConfigDefaults {
+    PORT = 3001,
+    HOST = '0.0.0.0',
+
+    AUTHORIZE_REDIRECT_URL = 'http://localhost:3000',
+
+    TOKEN_REFRESH_MAG_AGE = 259_200,
+    TOKEN_ACCESS_MAX_AGE = 3_600,
+}

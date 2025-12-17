@@ -7,7 +7,7 @@
 
 import { defineCommand } from 'citty';
 import process from 'node:process';
-import type { Config } from '../../config';
+import type { Config } from '../../app';
 import { Swagger } from '../../adapters/http';
 import { Application, ConfigInjectionKey, ConfigModule } from '../../app';
 

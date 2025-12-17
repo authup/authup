@@ -7,9 +7,11 @@
 
 import type { Module } from '../types';
 import { ConfigInjectionKey } from './constants';
-import type { Config, ConfigRawReadOptions } from '../../../config';
-import { normalizeConfig, readConfigRaw, setConfig } from '../../../config';
 import type { IDIContainer } from '../../../core';
+import { normalizeConfig } from './normalize';
+import type { ConfigRawReadOptions } from './read';
+import { readConfigRaw } from './read';
+import type { Config } from './types';
 
 export class ConfigModule implements Module {
     protected instance : Config | undefined;
@@ -29,8 +31,6 @@ export class ConfigModule implements Module {
         } else {
             instance = await this.read();
         }
-
-        setConfig(instance);
 
         container.register(ConfigInjectionKey, {
             useValue: instance,

@@ -6,21 +6,19 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import {
     PermissionName,
-    REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { useConfig } from '../../../../../../config';
 import { RobotCredentialsService } from '../../../../../../core';
 import { DatabaseConflictError } from '../../../../../database';
 import {
-    RobotEntity, RobotRepository, resolveRealm,
+    RobotEntity, RobotRepository,
 } from '../../../../../database/domains';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services';
 import { RobotRequestValidator } from '../utils';
@@ -111,19 +109,6 @@ export async function writeRobotRouteHandler(
                 },
             },
         });
-
-        const config = useConfig();
-        if (
-            config.robotAdminName &&
-            data.name &&
-            entity.name.toLowerCase() !== data.name.toLowerCase() &&
-            entity.name.toLowerCase() === config.robotAdminName.toLowerCase()
-        ) {
-            const realm = await resolveRealm(entity.realm_id);
-            if (realm && realm.name === REALM_MASTER_NAME) {
-                throw new BadRequestError('The system robot name can not be changed.');
-            }
-        }
 
         entity = repository.merge(entity, data);
         if (data.secret) {

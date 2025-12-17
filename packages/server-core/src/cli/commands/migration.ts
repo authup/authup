@@ -19,7 +19,7 @@ import {
     Application, ConfigInjectionKey, ConfigModule, LoggerInjectionKey, LoggerModule,
 } from '../../app';
 import type { IDIContainer } from '../../core';
-import type { Config } from '../../config';
+import type { Config } from '../../app';
 
 enum MigrationOperation {
     GENERATE = 'generate',

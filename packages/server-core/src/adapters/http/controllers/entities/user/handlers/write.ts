@@ -6,14 +6,13 @@
  */
 
 import { isUUID, removeObjectProperty } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { PermissionName, UserValidator, ValidatorGroup } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { useConfig } from '../../../../../../config';
 import { UserEntity, UserRepository } from '../../../../../database/domains';
 import {
     getRequestBodyRealmID,
@@ -115,11 +114,6 @@ export async function writeUserRouteHandler(
 
             if (entity.name_locked) {
                 removeObjectProperty(data, 'name');
-            }
-
-            const config = useConfig();
-            if (entity.name === config.userAdminName) {
-                throw new BadRequestError('The default user name can not be changed.');
             }
         }
 

@@ -41,10 +41,10 @@ import {
     OpenIDController,
     PasswordForgotController,
     PasswordResetController,
+    RegisterController,
     StatusController,
     TokenController,
 } from '../../../../adapters/http/controllers';
-import { RegisterController } from '../../../../adapters/http/controllers/workflows/register';
 import type {
     ICredentialsAuthenticator,
     IDIContainer,
@@ -67,9 +67,8 @@ import {
 } from '../../../../core';
 import { OAuth2InjectionToken } from '../../oauth2';
 import { IdentityInjectionKey } from '../../identity';
-import type { Config } from '../../../../config';
-import { ConfigDefaults } from '../../../../config';
-import { ConfigInjectionKey } from '../../config';
+import type { Config } from '../../config';
+import { ConfigDefaults, ConfigInjectionKey } from '../../config';
 import { MailInjectionKey } from '../../mail';
 
 export class HTTPControllerModule {
@@ -79,7 +78,7 @@ export class HTTPControllerModule {
                 this.createAuthorize(container),
                 this.createToken(container),
                 JwkController,
-                OpenIDController,
+                this.createOpenIDController(container),
                 this.createActivateController(container),
                 this.createPasswordForgotController(container),
                 this.createPasswordResetController(container),
@@ -137,6 +136,7 @@ export class HTTPControllerModule {
     // ----------------------------------------------------
 
     createAuthorize(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
         const accessTokenIssuer = container.resolve<IOAuth2TokenIssuer>(OAuth2InjectionToken.AccessTokenIssuer);
         const openIdTokenIssuer = container.resolve<IOAuth2OpenIDTokenIssuer>(OAuth2InjectionToken.OpenIDTokenIssuer);
 
@@ -150,6 +150,10 @@ export class HTTPControllerModule {
         const identityResolver = container.resolve<IIdentityResolver>(IdentityInjectionKey.Resolver);
 
         return new AuthorizeController({
+            options: {
+                baseURL: config.publicUrl,
+            },
+
             accessTokenIssuer,
             openIdTokenIssuer,
 
@@ -219,6 +223,14 @@ export class HTTPControllerModule {
             clientAuthenticator,
             robotAuthenticator,
             userAuthenticator,
+        });
+    }
+
+    createOpenIDController(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+
+        return new OpenIDController({
+            baseURL: config.publicUrl,
         });
     }
 

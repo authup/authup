@@ -7,9 +7,9 @@
 
 import type { Logger } from '@authup/server-kit';
 import type { Module } from '../types';
-import type { IDIContainer } from '../../../core/di/types';
+import type { IDIContainer } from '../../../core';
 import { LoggerInjectionKey } from '../logger';
-import type { Config } from '../../../config';
+import type { Config } from '../config';
 import { ConfigInjectionKey } from '../config';
 
 export class RuntimeModule implements Module {

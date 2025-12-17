@@ -9,7 +9,6 @@ import 'reflect-metadata';
 
 export * from './app';
 export * from './cli/commands';
-export * from './config';
 export * from './adapters/database/domains';
 export * from './adapters/database';
 export * from './adapters/http';

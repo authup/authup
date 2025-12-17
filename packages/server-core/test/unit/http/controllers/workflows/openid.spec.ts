@@ -11,7 +11,7 @@ import {
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import type { Config } from '../../../../../src';
 import { createTestApplication } from '../../../../app';
-import { ConfigInjectionKey } from '../../../../../src/app';
+import { ConfigInjectionKey } from '../../../../../src';
 
 describe('src/http/controllers/auth/openid/*.ts', () => {
     const suite = createTestApplication();
