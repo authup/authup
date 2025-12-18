@@ -239,34 +239,26 @@ export class IdentityProviderController {
             },
         });
 
-        const cookieDomainsRaw : string[] = [
-            new URL(this.options.baseURL).hostname,
+        const domainsRaw : string[] = [
+            ...this.options.cookieDomains,
         ];
-
-        if (this.options.cookieDomain) {
-            cookieDomainsRaw.push(this.options.cookieDomain);
-        }
-
-        if (this.options.authorizeRedirectURL) {
-            cookieDomainsRaw.push(new URL(this.options.authorizeRedirectURL).hostname);
-        }
 
         const requestHostName = getRequestHostName(req, {
             trustProxy: true,
         });
         if (requestHostName) {
-            cookieDomainsRaw.push(requestHostName);
+            domainsRaw.push(requestHostName);
         }
 
-        const cookieDomains = [...new Set(cookieDomainsRaw)];
+        const domains = [...new Set(domainsRaw)];
 
-        for (let i = 0; i < cookieDomains.length; i++) {
+        for (let i = 0; i < domains.length; i++) {
             setResponseCookie(
                 res,
                 CookieName.ACCESS_TOKEN,
                 token.access_token,
                 {
-                    domain: cookieDomains[i],
+                    domain: domains[i],
                     maxAge: this.options.accessTokenMaxAge * 1000,
                 },
             );
@@ -277,7 +269,7 @@ export class IdentityProviderController {
                     CookieName.REFRESH_TOKEN,
                     token.refresh_token,
                     {
-                        domain: cookieDomains[i],
+                        domain: domains[i],
                         maxAge: this.options.refreshTokenMaxAge * 1000,
                     },
                 );
@@ -298,7 +290,7 @@ export class IdentityProviderController {
             return sendRedirect(res, url.href);
         }
 
-        return sendRedirect(res, this.options.authorizeRedirectURL || this.options.baseURL);
+        return sendRedirect(res, this.options.baseURL);
     }
 
     // ---------------------------------------------------------

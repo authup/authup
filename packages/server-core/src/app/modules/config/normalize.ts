@@ -8,10 +8,8 @@
 import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
-import { EnvironmentName } from '../../../env';
+import { EnvironmentName } from '@authup/kit';
 import { toPublicHost } from '../../../utils/host';
-
-import { ConfigDefaults } from './constants';
 import { parseConfig } from './parse';
 import type { Config, ConfigInput } from './types';
 
@@ -21,8 +19,8 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
     const writableDirectoryPath = parsed.writableDirectoryPath ||
         path.join(process.cwd(), 'writable');
 
-    const port = parsed.port || ConfigDefaults.PORT;
-    let host = parsed.host || ConfigDefaults.HOST;
+    const port = parsed.port || 3001;
+    let host = parsed.host || '0.0.0.0';
 
     let publicUrl : string;
     if (parsed.publicUrl) {
@@ -51,7 +49,6 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         port,
         host,
         publicUrl,
-        authorizeRedirectUrl: `${ConfigDefaults.AUTHORIZE_REDIRECT_URL}`,
 
         db: {
             type: 'better-sqlite3',
@@ -65,8 +62,8 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         middlewareQuery: true,
         middlewareRateLimit: true,
         middlewareSwagger: true,
-        tokenRefreshMaxAge: Number(ConfigDefaults.TOKEN_REFRESH_MAG_AGE),
-        tokenAccessMaxAge: Number(ConfigDefaults.TOKEN_ACCESS_MAX_AGE),
+        tokenRefreshMaxAge: 259_200,
+        tokenAccessMaxAge: 3_600,
         registration: false,
         emailVerification: false,
         forgotPassword: false,

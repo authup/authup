@@ -14,9 +14,7 @@ import type {
 
 export type IdentityProviderControllerOptions = {
     baseURL: string,
-    cookieDomain?: string,
-
-    authorizeRedirectURL?: string,
+    cookieDomains: string[],
 
     accessTokenMaxAge: number,
     refreshTokenMaxAge: number,

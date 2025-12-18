@@ -68,7 +68,7 @@ import {
 import { OAuth2InjectionToken } from '../../oauth2';
 import { IdentityInjectionKey } from '../../identity';
 import type { Config } from '../../config';
-import { ConfigDefaults, ConfigInjectionKey } from '../../config';
+import { ConfigInjectionKey } from '../../config';
 import { MailInjectionKey } from '../../mail';
 
 export class HTTPControllerModule {
@@ -167,11 +167,12 @@ export class HTTPControllerModule {
     createToken(container: IDIContainer) {
         const config = container.resolve<Config>(ConfigInjectionKey);
 
-        let cookieDomain : string | undefined;
+        const cookieDomains : string[] = [
+            new URL(config.publicUrl).hostname,
+        ];
+
         if (config.cookieDomain) {
-            cookieDomain = config.cookieDomain;
-        } else if (config.authorizeRedirectUrl !== ConfigDefaults.AUTHORIZE_REDIRECT_URL) {
-            cookieDomain = new URL(config.publicUrl).hostname;
+            cookieDomains.push(config.cookieDomain);
         }
 
         const codeVerifier = container.resolve<IOAuth2AuthorizationCodeVerifier>(
@@ -208,7 +209,9 @@ export class HTTPControllerModule {
         ]);
 
         return new TokenController({
-            cookieDomain,
+            options: {
+                cookieDomains,
+            },
 
             codeVerifier,
 
@@ -283,6 +286,14 @@ export class HTTPControllerModule {
     createIdentityProvider(container: IDIContainer) {
         const config = container.resolve<Config>(ConfigInjectionKey);
 
+        const cookieDomains : string[] = [
+            new URL(config.publicUrl).hostname,
+        ];
+
+        if (config.cookieDomain) {
+            cookieDomains.push(config.cookieDomain);
+        }
+
         const accountManager = container.resolve<IIdentityProviderAccountManager>(
             IdentityInjectionKey.ProviderAccountManager,
         );
@@ -305,8 +316,7 @@ export class HTTPControllerModule {
         return new IdentityProviderController({
             options: {
                 baseURL: config.publicUrl,
-                cookieDomain: config.cookieDomain,
-                authorizeRedirectURL: config.authorizeRedirectUrl,
+                cookieDomains,
                 accessTokenMaxAge: config.tokenAccessMaxAge,
                 refreshTokenMaxAge: config.tokenRefreshMaxAge,
             },

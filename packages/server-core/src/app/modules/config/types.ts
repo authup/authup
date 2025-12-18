@@ -89,15 +89,10 @@ export type Config = {
     /**
      * Domain for setting cookies after authorization.
      * default: undefined
+     *
+     * @deprecated
      */
     cookieDomain?: string,
-
-    /**
-     * Redirect URL after successful login with
-     * external identity provider.
-     * default: http://localhost:3000
-     */
-    authorizeRedirectUrl: string,
 
     // ----------------------------------------------------
 

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { EnvironmentName } from '@authup/kit';
 import type { Logger } from '@authup/server-kit';
 import { AuthupError } from '@authup/errors';
 import type { DataSourceOptions } from 'typeorm';
@@ -22,6 +23,7 @@ import {
     DatabaseSeeder,
     extendDataSourceOptions,
     isDatabaseTypeSupported,
+    isDatabaseTypeSupportedForEnvironment,
     setDataSourceSync,
 } from '../../../adapters/database';
 import type { Config } from '../config';
@@ -33,12 +35,10 @@ import { LoggerInjectionKey } from '../logger';
 
 export class DatabaseModule implements Module {
     async start(container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
         const logger = container.resolve<Logger>(LoggerInjectionKey);
+        const config = container.resolve<Config>(ConfigInjectionKey);
 
-        const options = await this.createDataSourceOptions(
-            config.db,
-        );
+        const options = await this.createDataSourceOptions(config.db, config.env);
 
         const check = await checkDatabase({
             options,
@@ -104,7 +104,7 @@ export class DatabaseModule implements Module {
      *
      * @protected
      */
-    protected async createDataSourceOptions(input?: DataSourceOptions) : Promise<DataSourceOptions> {
+    protected async createDataSourceOptions(input?: DataSourceOptions, env?: string) : Promise<DataSourceOptions> {
         let options : DataSourceOptions;
         if (input) {
             options = input;
@@ -114,6 +114,10 @@ export class DatabaseModule implements Module {
 
         if (!isDatabaseTypeSupported(options.type)) {
             throw new AuthupError(`Database type ${options.type} is not supported (only: mysql, better-sqlite3 and postgres).`);
+        }
+
+        if (!isDatabaseTypeSupportedForEnvironment(options.type, env || EnvironmentName.PRODUCTION)) {
+            throw new AuthupError(`Database type ${options.type} is not supported for ${env || EnvironmentName.PRODUCTION}.`);
         }
 
         extendDataSourceOptions(options);

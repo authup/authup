@@ -21,7 +21,7 @@ export class RuntimeModule implements Module {
         logger.info(`WritableDirectoryPath: ${config.writableDirectoryPath}`);
         logger.info(`Port: ${config.port}`);
         logger.info(`Host: ${config.host}`);
-        logger.info(`Public-URL: ${config.publicUrl}`);
+        logger.info(`Base-URL: ${config.publicUrl}`);
         logger.info(`Docs-URL: ${new URL('docs', config.publicUrl).href}`);
     }
 
