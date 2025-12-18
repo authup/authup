@@ -25,7 +25,7 @@ export function createTestApplication() : TestApplication {
     const raw = readConfigRawFromEnv();
     const config = normalizeConfig(raw);
 
-    config.env = 'test';
+    config.port = 0;
     config.middlewareRateLimit = false;
     config.middlewarePrometheus = false;
     config.middlewareSwagger = false;

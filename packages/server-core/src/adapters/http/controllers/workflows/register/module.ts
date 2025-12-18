@@ -73,13 +73,6 @@ export class RegisterController {
             entityTarget: UserEntity,
         });
 
-        if (!data.email) {
-            // todo: validation error
-            throw new BadRequestError('User email is required');
-        }
-
-        data.name ??= data.email;
-
         if (this.options.emailVerification) {
             data.active = false;
             data.activate_hash = randomBytes(32).toString('hex');
@@ -100,7 +93,7 @@ export class RegisterController {
 
         if (this.options.emailVerification) {
             await this.mailClient.send({
-                to: entity.email || data.email,
+                to: entity.email,
                 subject: 'Registration - Activation code',
                 html: `
                 <p>Please use the code below to activate your account and start using the site.</p>

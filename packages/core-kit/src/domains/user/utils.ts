@@ -35,3 +35,15 @@ export function isUserNameValid(input: string, options: NameValidOptions = {}) :
 export function isValidUserEmail(input: string) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
 }
+
+export function buildUserFakeEmail(input: string) {
+    if (isUserFakeEmail(input)) {
+        return input;
+    }
+
+    return `${input}@example.com`;
+}
+
+export function isUserFakeEmail(input: string) : boolean {
+    return input.endsWith('@example.com');
+}

@@ -6,7 +6,7 @@
  */
 
 import type { Realm, User } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import { EntityType, buildUserFakeEmail, isUserFakeEmail } from '@authup/core-kit';
 import {
     buildFormGroup, buildFormInput, buildFormInputCheckbox,
 } from '@vuecs/form-controls';
@@ -84,6 +84,7 @@ export const AUserForm = defineComponent({
                 minLength: minLength(5),
                 maxLength: maxLength(255),
                 email,
+                required,
             },
             realm_id: {
                 required,
@@ -160,6 +161,10 @@ export const AUserForm = defineComponent({
                     value: $v.value.name.$model,
                     onChange(input) {
                         $v.value.name.$model = input;
+
+                        if (!$v.value.email.$model || isUserFakeEmail($v.value.email.$model)) {
+                            $v.value.email.$model = buildUserFakeEmail(input);
+                        }
                     },
                     props: {
                         disabled: form.name_locked,
