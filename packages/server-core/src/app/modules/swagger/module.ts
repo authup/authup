@@ -25,11 +25,11 @@ export class SwaggerModule implements Module {
         const swaggerCanGenerate = await swagger.canGenerate();
         const swaggerExists = await swagger.exists();
         if (swaggerCanGenerate && !swaggerExists) {
-            logger.info('Generating documentation...');
+            logger.debug('Generating documentation...');
 
             await swagger.generate();
 
-            logger.info('Generated documentation.');
+            logger.debug('Generated documentation.');
         }
     }
 

@@ -54,7 +54,7 @@ export class DatabaseModule implements Module {
             await createDatabase({ options, synchronize: false, ifNotExist: true });
         }
 
-        logger.info('Establishing database connection...');
+        logger.debug('Establishing database connection...');
 
         const dataSource = new DataSource(options);
         await dataSource.initialize();
@@ -63,14 +63,14 @@ export class DatabaseModule implements Module {
         setDataSource(dataSource);
         setDataSourceSync(dataSource);
 
-        logger.info('Established database connection.');
+        logger.debug('Established database connection.');
 
         if (!check.schema) {
-            logger.info('Applying database schema...');
+            logger.debug('Applying database schema...');
 
             await this.synchronize(dataSource);
 
-            logger.info('Applied database schema.');
+            logger.debug('Applied database schema.');
         }
 
         await this.runSeeder(dataSource, config);

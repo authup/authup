@@ -9,6 +9,7 @@
     "scripts": {
         "debug": "node --inspect dist/cli.mjs start",
         "cli": "node dist/cli.mjs",
+        "cli-dev": "npm run build:server && node dist/cli.mjs",
         "cli-dev-src": "nodemon --watch src --exec \"npm run build:server && node dist/cli.mjs\"",
         "cli-dev-dist": "nodemon --watch dist --exec \"node dist/cli.mjs\"",
         "build:client": "npm run build --workspace=../client-web-slim",

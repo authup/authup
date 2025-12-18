@@ -14,7 +14,7 @@ import { resolvePackagePath } from '../../../../../path';
 
 export type EndpointInfo = {
     version: string,
-    timestamp: number
+    date: string
 };
 
 @DController('')
@@ -22,10 +22,11 @@ export class StatusController {
     @DGet('/', [])
     async status(): Promise<EndpointInfo> {
         const pkgJson = await load(path.join(resolvePackagePath(), 'package.json'));
+        const isoDate = new Date().toISOString();
 
         return {
             version: pkgJson.version,
-            timestamp: Date.now(),
+            date: isoDate,
         };
     }
 }

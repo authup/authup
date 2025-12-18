@@ -58,17 +58,17 @@ export function defineCLIMigrationCommand() {
                             const options = config.db;
                             extendDataSourceOptions(options);
 
-                            logger.info(`Type: ${options.type}`);
-                            logger.info(`Database: ${options.database}`);
+                            logger.debug(`Type: ${options.type}`);
+                            logger.debug(`Database: ${options.database}`);
 
                             if (Array.isArray(options.migrations)) {
                                 for (let i = 0; i < options.migrations.length; i++) {
                                     if (typeof options.migrations[i] === 'string') {
-                                        logger.info(`Migration-Directory: ${options.migrations[i]}`);
+                                        logger.debug(`Migration-Directory: ${options.migrations[i]}`);
                                     }
                                 }
                             } else if (typeof options.migrations === 'string') {
-                                logger.info(`Migration-Directory: ${options.migrations}`);
+                                logger.debug(`Migration-Directory: ${options.migrations}`);
                             }
 
                             const check = await checkDatabase({

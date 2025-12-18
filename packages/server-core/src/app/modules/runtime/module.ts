@@ -17,12 +17,12 @@ export class RuntimeModule implements Module {
         const config = container.resolve<Config>(ConfigInjectionKey);
         const logger = container.resolve<Logger>(LoggerInjectionKey);
 
-        logger.info(`Environment: ${config.env}`);
-        logger.info(`WritableDirectoryPath: ${config.writableDirectoryPath}`);
-        logger.info(`Port: ${config.port}`);
-        logger.info(`Host: ${config.host}`);
-        logger.info(`Base-URL: ${config.publicUrl}`);
-        logger.info(`Docs-URL: ${new URL('docs', config.publicUrl).href}`);
+        logger.debug(`Environment: ${config.env}`);
+        logger.debug(`WritableDirectoryPath: ${config.writableDirectoryPath}`);
+        logger.debug(`Port: ${config.port}`);
+        logger.debug(`Host: ${config.host}`);
+        logger.debug(`Base-URL: ${config.publicUrl}`);
+        logger.debug(`Docs-URL: ${new URL('docs', config.publicUrl).href}`);
     }
 
     // ----------------------------------------------------

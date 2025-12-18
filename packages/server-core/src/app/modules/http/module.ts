@@ -11,6 +11,8 @@ import type { IServer } from '../../../adapters/http';
 import {
     createHttpServer,
 } from '../../../adapters/http';
+import type { Config } from '../config';
+import { ConfigInjectionKey } from '../config';
 import type { Module } from '../types';
 import { HTTPInjectionKey } from './constants';
 import type { IDIContainer } from '../../../core';
@@ -32,9 +34,10 @@ export class HTTPModule implements Module {
     // ----------------------------------------------------
 
     async start(container: IDIContainer): Promise<void> {
+        const config = container.resolve<Config>(ConfigInjectionKey);
         const logger = container.resolve<Logger>(LoggerInjectionKey);
 
-        logger.info('Starting http server...');
+        logger.debug('Starting http server...');
 
         const router = new Router();
 
@@ -56,14 +59,23 @@ export class HTTPModule implements Module {
                 resolve();
             });
 
-            server.listen();
+            server.listen(config.port, config.host);
         });
+
+        const address = server.address();
+        if (address) {
+            if (typeof address === 'string') {
+                logger.debug(`Listening on ${address}`);
+            } else {
+                logger.debug(`Listening on ${address.address}:${address.port}`);
+            }
+        }
 
         container.register(HTTPInjectionKey.Server, {
             useValue: server,
         });
 
-        logger.info('Started http server.');
+        logger.debug('Started http server.');
     }
 
     // ----------------------------------------------------
