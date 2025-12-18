@@ -21,7 +21,7 @@ export interface User {
 
     display_name: string | null;
 
-    email: string | null;
+    email: string;
 
     password: string | null;
 

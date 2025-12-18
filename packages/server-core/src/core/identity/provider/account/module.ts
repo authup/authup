@@ -94,25 +94,6 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             }
         }
 
-        if (
-            identity.operation === IdentityProviderIdentityOperation.CREATE &&
-            identity.attributeCandidates
-        ) {
-            const attributeCandidateKeys = Object.keys(identity.attributeCandidates);
-            for (let i = 0; i < attributeCandidateKeys.length; i++) {
-                const key = attributeCandidateKeys[i];
-                if (!entity[key] || !identity.attributeCandidates[key]) {
-                    continue;
-                }
-
-                attributes.push({
-                    key,
-                    value: identity.attributeCandidates[key].shift(),
-                    operation: IdentityProviderMapperOperation.CREATE,
-                });
-            }
-        }
-
         if (!user) {
             (entity as User).realm_id = identity.provider.realm_id;
             (entity as User).active = true;
@@ -170,6 +151,10 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     }
                 } else {
                     output.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 10);
+                }
+
+                if (output.email.endsWith('@example.com')) {
+                    output.email = `${output.name}@example.com`;
                 }
 
                 attempts -= 1;
@@ -233,6 +218,15 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     identity.attributeCandidates[child.path]!.length > 0
                 ) {
                     entity[child.path] = identity.attributeCandidates[child.path]!.shift();
+                    retry = true;
+                    break;
+                }
+
+                if (
+                    entity.name &&
+                    child.path === 'email'
+                ) {
+                    entity[child.path] = `${entity.name}@example.com`;
                     retry = true;
                     break;
                 }

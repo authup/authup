@@ -111,6 +111,7 @@ describe('core/identity/provider/account', () => {
         expect(account.id).toBeDefined();
         expect(account.user.id).toBeDefined();
         expect(account.user.name).toEqual('fooBarBaz');
+        expect(account.user.email).toEqual('fooBarBaz@example.com');
     });
 
     it('should create user with alternative name', async () => {
@@ -130,6 +131,7 @@ describe('core/identity/provider/account', () => {
         expect(account.id).toBeDefined();
         expect(account.user.id).toBeDefined();
         expect(account.user.name).toEqual('bar');
+        expect(account.user.email).toEqual('bar@example.com');
     });
 
     it('should create user with random name', async () => {

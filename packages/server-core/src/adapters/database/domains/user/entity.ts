@@ -46,9 +46,9 @@ export class UserEntity implements User {
 
     @Index()
     @Column({
-        type: 'varchar', length: 256, default: null, nullable: true, select: false,
+        type: 'varchar', length: 256, select: false,
     })
-        email: string | null;
+        email: string;
 
     @Column({
         type: 'varchar', length: 512, default: null, nullable: true, select: false,

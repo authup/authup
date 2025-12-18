@@ -142,7 +142,7 @@ export class DatabaseSeeder implements Seeder {
             user = userRepository.create({
                 name: this.options.userAdminName,
                 password: await hash(userPassword),
-                email: 'peter.placzek1996@gmail.com',
+                email: 'admin@example.com',
                 realm_id: realm.id,
                 active: this.options.userAdminEnabled,
             });

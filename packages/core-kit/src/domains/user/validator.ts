@@ -75,10 +75,17 @@ export class UserValidator extends Container<User> {
 
         // ----------------------------------------------
 
+        const emailValidator = createValidator(zod.email());
+
         this.mount(
             'email',
-            { optional: true },
-            createValidator(zod.string().email().nullable()),
+            { group: ValidatorGroup.CREATE },
+            emailValidator,
+        );
+        this.mount(
+            'email',
+            { optional: true, group: ValidatorGroup.UPDATE },
+            emailValidator,
         );
 
         // ----------------------------------------------

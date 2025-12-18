@@ -83,11 +83,6 @@ export class PasswordForgotController {
             throw new NotFoundError();
         }
 
-        if (!entity.email) {
-            // todo: throw validation error
-            throw new BadRequestError('User has no email address.');
-        }
-
         entity.reset_expires = new Date(Date.now() + (1000 * 60 * 30)).toISOString();
         entity.reset_hash = randomBytes(32).toString('hex');
 
