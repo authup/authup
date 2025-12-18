@@ -6,7 +6,10 @@
  */
 
 import type { IdentityProviderAccount, User } from '@authup/core-kit';
-import { UserValidator, ValidatorGroup } from '@authup/core-kit';
+import {
+    UserValidator, ValidatorGroup,
+    buildUserFakeEmail, isUserFakeEmail,
+} from '@authup/core-kit';
 import { createNanoID, extendObject } from '@authup/kit';
 import { ValidupNestedError } from 'validup';
 import type { IUserIdentityRepository } from '../../entities';
@@ -153,8 +156,8 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     output.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 10);
                 }
 
-                if (output.email.endsWith('@example.com')) {
-                    output.email = `${output.name}@example.com`;
+                if (isUserFakeEmail(output.email)) {
+                    output.email = buildUserFakeEmail(output.name);
                 }
 
                 attempts -= 1;
@@ -226,7 +229,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     entity.name &&
                     child.path === 'email'
                 ) {
-                    entity[child.path] = `${entity.name}@example.com`;
+                    entity[child.path] = buildUserFakeEmail(entity.name);
                     retry = true;
                     break;
                 }

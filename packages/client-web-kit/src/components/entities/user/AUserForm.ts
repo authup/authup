@@ -6,7 +6,7 @@
  */
 
 import type { Realm, User } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import { EntityType, buildUserFakeEmail, isUserFakeEmail } from '@authup/core-kit';
 import {
     buildFormGroup, buildFormInput, buildFormInputCheckbox,
 } from '@vuecs/form-controls';
@@ -162,8 +162,8 @@ export const AUserForm = defineComponent({
                     onChange(input) {
                         $v.value.name.$model = input;
 
-                        if (!$v.value.email.$model || $v.value.email.$model.endsWith('@example.com')) {
-                            $v.value.email.$model = `${input}@example.com`;
+                        if (!$v.value.email.$model || isUserFakeEmail($v.value.email.$model)) {
+                            $v.value.email.$model = buildUserFakeEmail(input);
                         }
                     },
                     props: {

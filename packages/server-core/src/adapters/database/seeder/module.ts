@@ -7,7 +7,11 @@
 
 import type { Robot, RobotRole, UserRole } from '@authup/core-kit';
 import {
-    PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ScopeName,
+    PermissionName,
+    REALM_MASTER_NAME,
+    ROLE_ADMIN_NAME,
+    ScopeName,
+    buildUserFakeEmail,
 } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { hash } from '@authup/server-kit';
@@ -142,7 +146,7 @@ export class DatabaseSeeder implements Seeder {
             user = userRepository.create({
                 name: this.options.userAdminName,
                 password: await hash(userPassword),
-                email: 'admin@example.com',
+                email: buildUserFakeEmail(this.options.userAdminName),
                 realm_id: realm.id,
                 active: this.options.userAdminEnabled,
             });

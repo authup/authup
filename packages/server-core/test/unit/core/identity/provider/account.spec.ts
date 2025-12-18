@@ -9,7 +9,7 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import type { OAuth2IdentityProvider, Realm } from '@authup/core-kit';
-import { IdentityProviderProtocol } from '@authup/core-kit';
+import { IdentityProviderProtocol, buildUserFakeEmail } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import type { IdentityProviderIdentity } from '../../../../../src/core';
 import {
@@ -111,7 +111,7 @@ describe('core/identity/provider/account', () => {
         expect(account.id).toBeDefined();
         expect(account.user.id).toBeDefined();
         expect(account.user.name).toEqual('fooBarBaz');
-        expect(account.user.email).toEqual('fooBarBaz@example.com');
+        expect(account.user.email).toEqual(buildUserFakeEmail('fooBarBaz'));
     });
 
     it('should create user with alternative name', async () => {
@@ -131,7 +131,7 @@ describe('core/identity/provider/account', () => {
         expect(account.id).toBeDefined();
         expect(account.user.id).toBeDefined();
         expect(account.user.name).toEqual('bar');
-        expect(account.user.email).toEqual('bar@example.com');
+        expect(account.user.email).toEqual(buildUserFakeEmail('bar'));
     });
 
     it('should create user with random name', async () => {
