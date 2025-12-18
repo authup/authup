@@ -14,5 +14,3 @@ export * from './openid';
 export * from './response';
 export * from './scope';
 export * from './token';
-
-export * from './constants';

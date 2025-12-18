@@ -7,8 +7,9 @@
 
 import { defineCommand } from 'citty';
 import process from 'node:process';
-import { useConfig } from '../../config';
+import type { Config } from '../../app';
 import { Swagger } from '../../adapters/http';
+import { Application, ConfigInjectionKey, ConfigModule } from '../../app';
 
 export function defineCLISwaggerCommand() {
     return defineCommand({
@@ -25,7 +26,13 @@ export function defineCLISwaggerCommand() {
             },
         },
         async setup(context) {
-            const config = useConfig();
+            const app = new Application([
+                new ConfigModule(),
+            ]);
+
+            await app.start();
+
+            const config = app.container.resolve<Config>(ConfigInjectionKey);
 
             const swagger = new Swagger({
                 baseURL: config.publicUrl,

@@ -5,16 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import {
     PermissionName,
-    REALM_MASTER_NAME,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { useConfig } from '../../../../../../config';
-import { RobotEntity, resolveRealm } from '../../../../../database/domains';
+import { RobotEntity } from '../../../../../database/domains';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker,
@@ -45,17 +43,6 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
                 attributes: entity,
             },
         });
-    }
-
-    const config = useConfig();
-    if (
-        config.robotAdminName &&
-        entity.name.toLowerCase() === config.robotAdminName.toLowerCase()
-    ) {
-        const realm = await resolveRealm(entity.realm_id);
-        if (realm && realm.name === REALM_MASTER_NAME) {
-            throw new BadRequestError('The system robot can not be deleted.');
-        }
     }
 
     // ----------------------------------------------

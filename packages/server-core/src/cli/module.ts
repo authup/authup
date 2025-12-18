@@ -9,7 +9,8 @@ import { defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { normalizeConfig, readConfigRaw, setConfig } from '../config';
+import { normalizeConfig } from '../app/modules/config/normalize';
+import { readConfigRaw } from '../app/modules/config/read';
 import {
     defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
@@ -58,8 +59,8 @@ export async function createCLIEntryPointCommand() {
                     file: context.args.configFile,
                 },
             });
-            const config = normalizeConfig(raw);
-            setConfig(config);
+
+            normalizeConfig(raw);
         },
     });
 }

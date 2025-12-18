@@ -7,6 +7,4 @@
 
 export * from './adapters';
 export * from './helper';
-export * from './singleton';
-export * from './module';
 export * from './types';

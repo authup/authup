@@ -6,18 +6,26 @@
  */
 
 import {
-    DController, DGet, DRequest, DResponse,
+    DController, DGet,
 } from '@routup/decorators';
-import type { EndpointInfo } from './handlers';
-import { useStatusRouteHandler } from './handlers';
+import { load } from 'locter';
+import path from 'node:path';
+import { resolvePackagePath } from '../../../../../path';
+
+export type EndpointInfo = {
+    version: string,
+    timestamp: number
+};
 
 @DController('')
 export class StatusController {
     @DGet('/', [])
-    async status(
-        @DRequest() req: any,
-            @DResponse() res: any,
-    ): Promise<EndpointInfo> {
-        return useStatusRouteHandler(req, res);
+    async status(): Promise<EndpointInfo> {
+        const pkgJson = await load(path.join(resolvePackagePath(), 'package.json'));
+
+        return {
+            version: pkgJson.version,
+            timestamp: Date.now(),
+        };
     }
 }

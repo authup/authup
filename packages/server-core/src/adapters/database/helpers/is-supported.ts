@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { DatabaseType } from 'typeorm';
-import { EnvironmentName } from 'typeorm-extension';
+import { EnvironmentName } from '@authup/kit';
 
 export function isDatabaseTypeSupported(type: DatabaseType) : boolean {
     return type === 'mysql' ||

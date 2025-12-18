@@ -6,9 +6,6 @@
  */
 
 import type { EventPayload } from '@authup/core-realtime-kit';
-import { isRedisClientUsable, useRedisClient } from '../services';
-import { DomainEventRedisPublisher } from './redis';
-import { DomainEventSocketPublisher } from './socket';
 import type { DomainEventPublishContext, IDomainEventPublisher } from './type';
 
 export class DomainEventPublisher implements IDomainEventPublisher {
@@ -16,13 +13,10 @@ export class DomainEventPublisher implements IDomainEventPublisher {
 
     constructor() {
         this.publishers = new Set<IDomainEventPublisher>();
+    }
 
-        if (isRedisClientUsable()) {
-            const client = useRedisClient();
-
-            this.publishers.add(new DomainEventRedisPublisher(client));
-            this.publishers.add(new DomainEventSocketPublisher(client));
-        }
+    mount(publisher: IDomainEventPublisher): void {
+        this.publishers.add(publisher);
     }
 
     async publish<T extends EventPayload>(

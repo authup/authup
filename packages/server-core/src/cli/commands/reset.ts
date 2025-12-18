@@ -7,10 +7,7 @@
 
 import { defineCommand } from 'citty';
 import process from 'node:process';
-import {
-    applyConfig, useConfig,
-} from '../../config';
-import { Application } from '../../app/module';
+import { createApplication } from '../../app';
 
 export function defineCLIResetCommand() {
     return defineCommand({
@@ -18,10 +15,7 @@ export function defineCLIResetCommand() {
             name: 'reset',
         },
         async setup() {
-            const config = useConfig();
-            applyConfig(config);
-
-            const app = new Application(config);
+            const app = createApplication();
             await app.reset();
 
             process.exit(0);

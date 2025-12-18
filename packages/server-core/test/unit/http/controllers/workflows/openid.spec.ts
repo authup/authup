@@ -9,22 +9,23 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import { useConfig } from '../../../../../src';
-import { createTestSuite } from '../../../../utils';
+import type { Config } from '../../../../../src';
+import { createTestApplication } from '../../../../app';
+import { ConfigInjectionKey } from '../../../../../src';
 
 describe('src/http/controllers/auth/openid/*.ts', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should return openid configuration', async () => {
-        const config = useConfig();
+        const config = suite.container.resolve<Config>(ConfigInjectionKey);
 
         const response = await suite.client.getWellKnownOpenIDConfiguration();
         expect(response).toBeDefined();

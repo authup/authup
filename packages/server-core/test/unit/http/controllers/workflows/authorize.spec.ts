@@ -18,15 +18,16 @@ import {
     OAuth2TokenKind,
 } from '@authup/specs';
 import { extractTokenPayload } from '@authup/server-kit';
-import { createFakeClient, createTestSuite } from '../../../../utils';
+import { createFakeClient } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/token', () => {
     let payload : OAuth2AuthorizationCodeRequest;
 
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
 
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const client = await suite.client.client.create(createFakeClient());
@@ -45,7 +46,7 @@ describe('src/http/controllers/token', () => {
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     it('should authorize with response_type: code', async () => {

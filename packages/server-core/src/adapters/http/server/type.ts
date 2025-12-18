@@ -12,6 +12,6 @@ export interface HttpServerContext {
     router: Router
 }
 
-export interface HttpServerInterface extends Server {
+export interface IServer extends Server {
 
 }

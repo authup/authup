@@ -18,7 +18,7 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../domain-event-publisher';
+import { publishDomainEvent } from '../../event-publisher';
 import { PolicyAttributeEntity } from './entity';
 import { CachePrefix } from '../constants';
 

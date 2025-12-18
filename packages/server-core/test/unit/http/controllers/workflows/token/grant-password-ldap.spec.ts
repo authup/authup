@@ -10,16 +10,16 @@ import {
 } from 'vitest';
 import type { LdapIdentityProvider } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
-import { createTestSuite } from '../../../../../utils';
+import { createTestApplication } from '../../../../../app';
 import {
     createLdapTestClient, createLdapTestClientURL, createLdapTestUserAccount, dropLdapTestUserAccount,
 } from '../../../../adapters/ldap/helpers';
 
 describe('src/http/controllers/identity-provider', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
 
         const client = createLdapTestClient();
         await client.bind();
@@ -28,7 +28,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
 
         const client = createLdapTestClient();
         await client.bind();

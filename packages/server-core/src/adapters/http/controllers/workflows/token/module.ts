@@ -16,12 +16,12 @@ import {
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import { getRequestHostName, sendAccepted } from 'routup';
-import { SerializeOptions, setResponseCookie } from '@routup/basic/cookie';
+import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { useDataSource } from 'typeorm-extension';
 import { pickRecord } from '@authup/kit';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers';
-import type { TokenControllerContext } from './types';
+import type { TokenControllerContext, TokenControllerOptions } from './types';
 import {
     IIdentityResolver,
     IOAuth2TokenIssuer,
@@ -44,7 +44,7 @@ import { IdentityPermissionService } from '../../../../../services';
 @DTags('auth')
 @DController('/token')
 export class TokenController {
-    protected cookieDomain: string | undefined;
+    protected options: TokenControllerOptions;
 
     protected refreshTokenIssuer: IOAuth2TokenIssuer;
 
@@ -61,7 +61,7 @@ export class TokenController {
     // -------------------------------------------
 
     constructor(ctx: TokenControllerContext) {
-        this.cookieDomain = ctx.cookieDomain;
+        this.options = ctx.options;
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.accessTokenIssuer = ctx.accessTokenIssuer;
         this.tokenVerifier = ctx.tokenVerifier;
@@ -190,38 +190,45 @@ export class TokenController {
 
         const grantResponse = await grant.runWithRequest(req);
 
-        const cookieOptions : SerializeOptions = {};
-        if (this.cookieDomain) {
-            cookieOptions.domain = this.cookieDomain;
-        } else {
-            cookieOptions.domain = getRequestHostName(req, {
-                trustProxy: true,
-            });
+        const domainsRaw = [
+            ...this.options.cookieDomains,
+        ];
+        const requestHostName = getRequestHostName(req, {
+            trustProxy: true,
+        });
+        if (requestHostName) {
+            domainsRaw.push(requestHostName);
         }
 
-        setResponseCookie(
-            res,
-            CookieName.ACCESS_TOKEN,
-            grantResponse.access_token,
-            {
-                ...cookieOptions,
-                maxAge: grantResponse.expires_in * 1_000,
-            },
-        );
+        const domains = [...new Set(domainsRaw)];
 
-        if (
-            grantResponse.refresh_token &&
-            grantResponse.refresh_token_expires_in
-        ) {
+        for (let i = 0; i < domains.length; i++) {
+            const domain = domains[i];
+
             setResponseCookie(
                 res,
-                CookieName.REFRESH_TOKEN,
-                grantResponse.refresh_token,
+                CookieName.ACCESS_TOKEN,
+                grantResponse.access_token,
                 {
-                    ...cookieOptions,
-                    maxAge: grantResponse.refresh_token_expires_in * 1_000,
+                    domain,
+                    maxAge: grantResponse.expires_in * 1_000,
                 },
             );
+
+            if (
+                grantResponse.refresh_token &&
+                grantResponse.refresh_token_expires_in
+            ) {
+                setResponseCookie(
+                    res,
+                    CookieName.REFRESH_TOKEN,
+                    grantResponse.refresh_token,
+                    {
+                        domain,
+                        maxAge: grantResponse.refresh_token_expires_in * 1_000,
+                    },
+                );
+            }
         }
 
         return grantResponse;

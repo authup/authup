@@ -45,7 +45,6 @@ import {
     getOneIdentityProviderRouteHandler,
     writeIdentityProviderRouteHandler,
 } from './handlers';
-import { useConfig } from '../../../../../config';
 import { IdentityProviderRepository } from '../../../../database/domains';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types';
 
@@ -232,8 +231,6 @@ export class IdentityProviderController {
 
         const user = await authenticator.authenticate(code);
 
-        const config = useConfig();
-
         const token = await this.identityGrant.runWith({
             type: IdentityType.USER,
             data: {
@@ -242,35 +239,27 @@ export class IdentityProviderController {
             },
         });
 
-        const cookieDomainsRaw : string[] = [
-            new URL(config.publicUrl).hostname,
+        const domainsRaw : string[] = [
+            ...this.options.cookieDomains,
         ];
-
-        if (config.cookieDomain) {
-            cookieDomainsRaw.push(config.cookieDomain);
-        }
-
-        if (config.authorizeRedirectUrl) {
-            cookieDomainsRaw.push(new URL(config.authorizeRedirectUrl).hostname);
-        }
 
         const requestHostName = getRequestHostName(req, {
             trustProxy: true,
         });
         if (requestHostName) {
-            cookieDomainsRaw.push(requestHostName);
+            domainsRaw.push(requestHostName);
         }
 
-        const cookieDomains = [...new Set(cookieDomainsRaw)];
+        const domains = [...new Set(domainsRaw)];
 
-        for (let i = 0; i < cookieDomains.length; i++) {
+        for (let i = 0; i < domains.length; i++) {
             setResponseCookie(
                 res,
                 CookieName.ACCESS_TOKEN,
                 token.access_token,
                 {
-                    domain: cookieDomains[i],
-                    maxAge: config.tokenAccessMaxAge * 1000,
+                    domain: domains[i],
+                    maxAge: this.options.accessTokenMaxAge * 1000,
                 },
             );
 
@@ -280,8 +269,8 @@ export class IdentityProviderController {
                     CookieName.REFRESH_TOKEN,
                     token.refresh_token,
                     {
-                        domain: cookieDomains[i],
-                        maxAge: config.tokenRefreshMaxAge * 1000,
+                        domain: domains[i],
+                        maxAge: this.options.refreshTokenMaxAge * 1000,
                     },
                 );
             }
@@ -290,7 +279,7 @@ export class IdentityProviderController {
         if (data.codeRequest) {
             const codeRequestKeys = Object.keys(data.codeRequest);
 
-            const url = new URL('/authorize', config.publicUrl);
+            const url = new URL('/authorize', this.options.baseURL);
             for (let i = 0; i < codeRequestKeys.length; i++) {
                 const codeRequestKey = codeRequestKeys[i] as keyof OAuth2AuthorizationCodeRequest;
                 if (data.codeRequest[codeRequestKey]) {
@@ -301,7 +290,7 @@ export class IdentityProviderController {
             return sendRedirect(res, url.href);
         }
 
-        return sendRedirect(res, config.authorizeRedirectUrl || config.publicUrl);
+        return sendRedirect(res, this.options.baseURL);
     }
 
     // ---------------------------------------------------------

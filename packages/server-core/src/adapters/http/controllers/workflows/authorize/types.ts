@@ -13,7 +13,13 @@ import type {
     IOAuth2TokenIssuer,
 } from '../../../../../core';
 
+export type AuthorizeControllerOptions = {
+    baseURL: string;
+};
+
 export type AuthorizeControllerContext = {
+    options: AuthorizeControllerOptions,
+
     accessTokenIssuer: IOAuth2TokenIssuer,
     openIdTokenIssuer: IOAuth2OpenIDTokenIssuer,
 

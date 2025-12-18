@@ -10,36 +10,36 @@ import path from 'node:path';
 import process from 'node:process';
 import type { UIOptions } from '@routup/swagger';
 import { swaggerUI } from '@routup/swagger';
-import { buildFilePath, loadSync, locateSync } from 'locter';
-import type { Router } from 'routup';
-import { useLogger } from '@authup/server-kit';
+import type { Plugin } from 'routup';
+import {
+    buildFilePath, load, locate,
+} from 'locter';
+import { AuthupError } from '@authup/errors';
 
 type SwaggerMiddlewareOptions = {
     documentPath: string,
-    mountPath: string,
     options?: UIOptions
 };
-export function registerSwaggerMiddleware(router: Router, input: Partial<SwaggerMiddlewareOptions> = {}) {
-    const mountPath : string = input.mountPath || '/docs';
+export async function createSwaggerMiddleware(input: Partial<SwaggerMiddlewareOptions> = {}) : Promise<Plugin> {
     let documentPath : string;
     if (input.documentPath) {
         documentPath = path.isAbsolute(input.documentPath) ?
             input.documentPath :
             path.join(process.cwd(), input.documentPath);
     } else {
-        const locatorInfo = locateSync('**/swagger.json');
+        const locatorInfo = await locate('**/swagger.json');
         if (!locatorInfo) {
-            return;
+            throw new AuthupError('Swagger file not found.');
         }
 
         documentPath = buildFilePath(locatorInfo);
     }
 
     if (!fs.existsSync(documentPath)) {
-        useLogger().warn(`Swagger file ( ${documentPath} ) does not exist.`);
-        return;
+        throw new AuthupError(`Swagger file ( ${documentPath} ) does not exist.`);
     }
 
-    const document = loadSync(documentPath);
-    router.use(mountPath, swaggerUI(document, input.options));
+    const document = await load(documentPath);
+
+    return swaggerUI(document, input.options);
 }

@@ -12,9 +12,10 @@ import {
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
 import { extendDataSourceOptionsWithEntities } from './entities';
 import { extendDataSourceOptionsWithSubscribers } from './subscribers';
-import { DatabaseQueryResultCache } from '../../cache';
 
-export function extendDataSourceOptions(options: DataSourceOptions) : DataSourceOptions {
+export function extendDataSourceOptions(
+    options: DataSourceOptions,
+) : DataSourceOptions {
     if (options.type === 'mysql' || options.type === 'postgres') {
         let migrationPath = `src/adapters/database/migrations/${options.type}/*.{ts,js}`;
         if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
@@ -30,11 +31,6 @@ export function extendDataSourceOptions(options: DataSourceOptions) : DataSource
     Object.assign(options, {
         logging: ['error'],
         // logger: new DatabaseLogger(logger),
-        cache: {
-            provider() {
-                return new DatabaseQueryResultCache();
-            },
-        },
     } as Partial<DataSourceOptions>);
 
     extendDataSourceOptionsWithEntities(options);

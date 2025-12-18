@@ -7,4 +7,3 @@
 
 export * from './entities';
 export * from './workflows';
-export * from './register';

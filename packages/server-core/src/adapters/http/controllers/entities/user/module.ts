@@ -11,10 +11,6 @@ import {
 import type { User } from '@authup/core-kit';
 import { ForceLoggedInMiddleware } from '../../../middleware';
 import {
-    createAuthActivateRouteHandler,
-    createAuthPasswordForgotRouteHandler,
-    createAuthPasswordResetRouteHandler,
-    createAuthRegisterRouteHandler,
     deleteUserRouteHandler,
     getManyUserRouteHandler,
     getOneUserRouteHandler,
@@ -24,40 +20,6 @@ import {
 @DTags('user')
 @DController('/users')
 export class UserController {
-    @DPost('/activate', [])
-    async activate(
-        @DRequest() req: any,
-            @DResponse() res: any,
-    ): Promise<void> {
-        return createAuthActivateRouteHandler(req, res);
-    }
-
-    @DPost('/register', [])
-    async register(
-        @DRequest() req: any,
-            @DResponse() res: any,
-    ): Promise<void> {
-        return createAuthRegisterRouteHandler(req, res);
-    }
-
-    @DPost('/password-forgot', [])
-    async forgotPassword(
-        @DRequest() req: any,
-            @DResponse() res: any,
-    ): Promise<void> {
-        return createAuthPasswordForgotRouteHandler(req, res);
-    }
-
-    @DPost('/password-reset', [])
-    async resetPassword(
-        @DRequest() req: any,
-            @DResponse() res: any,
-    ): Promise<void> {
-        return createAuthPasswordResetRouteHandler(req, res);
-    }
-
-    // -----------------------------------------------------
-
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DRequest() req: any,

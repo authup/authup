@@ -14,6 +14,10 @@ import type {
 
 export type IdentityProviderControllerOptions = {
     baseURL: string,
+    cookieDomains: string[],
+
+    accessTokenMaxAge: number,
+    refreshTokenMaxAge: number,
 };
 
 export type IdentityProviderControllerContext = {

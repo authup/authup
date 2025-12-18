@@ -15,7 +15,12 @@ import type {
     IOAuth2TokenVerifier,
 } from '../../../../../core';
 
+export type TokenControllerOptions = {
+    cookieDomains: string[]
+};
+
 export type TokenControllerContext = {
+    options: TokenControllerOptions,
     cookieDomain?: string,
 
     codeVerifier: IOAuth2AuthorizationCodeVerifier,

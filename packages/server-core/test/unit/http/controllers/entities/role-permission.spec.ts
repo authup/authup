@@ -12,19 +12,21 @@ import type {
     RolePermission,
 } from '@authup/core-kit';
 import {
-    createFakePermission, createFakeRole, createTestSuite,
+    createFakePermission,
+    createFakeRole,
     expectPropertiesEqualToSrc,
 } from '../../../../utils';
+import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/role-permission', () => {
-    const suite = createTestSuite();
+    const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.up();
+        await suite.start();
     });
 
     afterAll(async () => {
-        await suite.down();
+        await suite.stop();
     });
 
     let entity : RolePermission | undefined;

@@ -7,14 +7,16 @@
 
 import { buildEventFullName } from '@authup/core-realtime-kit';
 import { Emitter } from '@socket.io/redis-emitter';
-import type { Client } from 'redis-extension';
+import type { RedisClientCreateInput } from '../../services';
+import { createRedisClient } from '../../services';
 import type { DomainEventPublishContext, IDomainEventPublisher } from '../type';
 import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
 
 export class DomainEventSocketPublisher implements IDomainEventPublisher {
     protected driver : Emitter;
 
-    constructor(client: Client) {
+    constructor(input: RedisClientCreateInput) {
+        const client = createRedisClient(input);
         this.driver = new Emitter(client);
     }
 
