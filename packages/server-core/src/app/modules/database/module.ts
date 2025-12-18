@@ -5,8 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EnvironmentName } from '@authup/kit';
-import type { Logger } from '@authup/server-kit';
+import type { ICache, Logger } from '@authup/server-kit';
+import {
+    DomainEventPublisher, DomainEventRedisPublisher,
+    DomainEventSocketPublisher, createRedisClient,
+} from '@authup/server-kit';
 import { AuthupError } from '@authup/errors';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource, InstanceChecker } from 'typeorm';
@@ -20,12 +23,15 @@ import {
 } from 'typeorm-extension';
 import type { DatabaseSeederOptions } from '../../../adapters/database';
 import {
+    DatabaseQueryResultCache,
     DatabaseSeeder,
     extendDataSourceOptions,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
     setDataSourceSync,
 } from '../../../adapters/database';
+import { setDomainEventPublisher } from '../../../adapters/database/event-publisher';
+import { CacheInjectionKey } from '../cache';
 import type { Config } from '../config';
 import type { Module } from '../types';
 import { DatabaseInjectionKey } from './constants';
@@ -38,7 +44,7 @@ export class DatabaseModule implements Module {
         const logger = container.resolve<Logger>(LoggerInjectionKey);
         const config = container.resolve<Config>(ConfigInjectionKey);
 
-        const options = await this.createDataSourceOptions(config.db, config.env);
+        const options = await this.createDataSourceOptions(container);
 
         const check = await checkDatabase({
             options,
@@ -74,6 +80,7 @@ export class DatabaseModule implements Module {
         });
 
         this.registerRepositories(container, dataSource);
+        this.registerEventPublisher(container);
     }
 
     async stop(container: IDIContainer): Promise<void> {
@@ -104,10 +111,13 @@ export class DatabaseModule implements Module {
      *
      * @protected
      */
-    protected async createDataSourceOptions(input?: DataSourceOptions, env?: string) : Promise<DataSourceOptions> {
+    protected async createDataSourceOptions(container: IDIContainer) : Promise<DataSourceOptions> {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+        const cache = container.resolve<ICache>(CacheInjectionKey);
+
         let options : DataSourceOptions;
-        if (input) {
-            options = input;
+        if (config.db) {
+            options = config.db;
         } else {
             options = await useDataSourceOptions();
         }
@@ -116,11 +126,19 @@ export class DatabaseModule implements Module {
             throw new AuthupError(`Database type ${options.type} is not supported (only: mysql, better-sqlite3 and postgres).`);
         }
 
-        if (!isDatabaseTypeSupportedForEnvironment(options.type, env || EnvironmentName.PRODUCTION)) {
-            throw new AuthupError(`Database type ${options.type} is not supported for ${env || EnvironmentName.PRODUCTION}.`);
+        if (!isDatabaseTypeSupportedForEnvironment(options.type, config.env)) {
+            throw new AuthupError(`Database type ${options.type} is not supported for ${config.env}.`);
         }
 
         extendDataSourceOptions(options);
+
+        Object.assign(options, {
+            cache: {
+                provider() {
+                    return new DatabaseQueryResultCache(cache);
+                },
+            },
+        } satisfies Partial<DataSourceOptions>);
 
         return options;
     }
@@ -144,5 +162,20 @@ export class DatabaseModule implements Module {
                 useFactory: () => dataSource.getRepository(entity),
             });
         }
+    }
+
+    // todo: move, wrong place
+    protected registerEventPublisher(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+
+        const publisher = new DomainEventPublisher();
+        if (config.redis) {
+            const client = createRedisClient(config.redis);
+
+            publisher.mount(new DomainEventRedisPublisher(client));
+            publisher.mount(new DomainEventSocketPublisher(client));
+        }
+
+        setDomainEventPublisher(publisher);
     }
 }

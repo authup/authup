@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Cache, CacheSetOptions } from '@authup/server-kit';
-import { buildCacheKey, useCache } from '@authup/server-kit';
+import type { CacheSetOptions, ICache } from '@authup/server-kit';
+import { buildCacheKey } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind, OAuth2TokenKind } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
@@ -15,10 +15,10 @@ import type { IOAuth2TokenRepository } from '../../../../../core';
 import { CacheOAuth2Prefix } from '../constants';
 
 export class OAuth2TokenRepository implements IOAuth2TokenRepository {
-    protected cache : Cache;
+    protected cache : ICache;
 
-    constructor() {
-        this.cache = useCache();
+    constructor(cache: ICache) {
+        this.cache = cache;
     }
 
     // -----------------------------------------------------

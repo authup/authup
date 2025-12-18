@@ -6,21 +6,21 @@
  */
 
 import { createNanoID } from '@authup/kit';
-import type { Cache } from '@authup/server-kit';
-import { buildCacheKey, useCache } from '@authup/server-kit';
+import type { ICache } from '@authup/server-kit';
+import { buildCacheKey } from '@authup/server-kit';
 import type { IOAuth2AuthorizeStateRepository, OAuth2AuthorizationState } from '../../../../../../core';
 import { CacheOAuth2Prefix } from '../../constants';
 
 export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeStateRepository {
-    protected cache : Cache;
+    protected cache : ICache;
 
-    constructor() {
-        this.cache = useCache();
+    constructor(cache: ICache) {
+        this.cache = cache;
     }
 
     async findOneById(key: string): Promise<OAuth2AuthorizationState | null> {
         const id = buildCacheKey({ prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE, key });
-        const payload = await this.cache.get(id);
+        const payload = await this.cache.get<OAuth2AuthorizationState>(id);
         if (payload) {
             return payload;
         }

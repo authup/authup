@@ -22,3 +22,17 @@ export type CacheClearOptions = {
     prefix?: string,
     suffix?: string
 };
+
+export interface ICache {
+    set(key: string, value: any, options?: CacheSetOptions) : Promise<void>;
+
+    has(key: string) : Promise<boolean>;
+
+    get<T = unknown>(key: string): Promise<T | null>;
+
+    drop(key: string): Promise<void>;
+
+    dropMany(keys: string[]): Promise<void>;
+
+    clear(options?: CacheClearOptions) : Promise<void>;
+}

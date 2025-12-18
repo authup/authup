@@ -6,8 +6,8 @@
  */
 
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
-import type { Cache } from '@authup/server-kit';
-import { buildCacheKey, useCache } from '@authup/server-kit';
+import type { ICache } from '@authup/server-kit';
+import { buildCacheKey } from '@authup/server-kit';
 import { randomBytes } from 'node:crypto';
 import { CacheOAuth2Prefix } from '../../constants';
 import type {
@@ -17,14 +17,14 @@ import type {
 } from '../../../../../../core';
 
 export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCodeRepository {
-    protected cache : Cache;
+    protected cache : ICache;
 
-    constructor() {
-        this.cache = useCache();
+    constructor(cache: ICache) {
+        this.cache = cache;
     }
 
     async findOneById(id: string): Promise<OAuth2AuthorizationCode | null> {
-        const entity = await this.cache.get(buildCacheKey({
+        const entity = await this.cache.get<OAuth2AuthorizationCode>(buildCacheKey({
             prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
             key: id,
         }));

@@ -5,12 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICache } from '@authup/server-kit';
 import type { DataSource, DataSourceOptions } from 'typeorm';
-import { extendDataSourceOptions } from '../../src';
-import { DatabaseModule } from '../../src/app';
+import {
+    CacheInjectionKey, DatabaseModule, DatabaseQueryResultCache, extendDataSourceOptions,
+} from '../../src';
+import type { IDIContainer } from '../../src/core';
 
 export class TestDatabaseModule extends DatabaseModule {
-    protected async createDataSourceOptions(): Promise<DataSourceOptions> {
+    protected async createDataSourceOptions(container: IDIContainer): Promise<DataSourceOptions> {
+        const cache = container.resolve<ICache>(CacheInjectionKey);
+
         const options = extendDataSourceOptions({
             type: 'better-sqlite3',
             database: ':memory:',
@@ -18,6 +23,11 @@ export class TestDatabaseModule extends DatabaseModule {
 
         Object.assign(options, {
             migrations: [],
+            cache: {
+                provider() {
+                    return new DatabaseQueryResultCache(cache);
+                },
+            },
         });
 
         return options;

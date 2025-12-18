@@ -23,7 +23,7 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../../domain-event-publisher';
+import { publishDomainEvent } from '../../event-publisher';
 import { IdentityProviderRoleMappingEntity } from './entity';
 import { CachePrefix } from '../constants';
 

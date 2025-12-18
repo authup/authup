@@ -6,14 +6,16 @@
  */
 
 import type { Client } from 'redis-extension';
+import type { RedisClientCreateInput } from '../../services';
+import { createRedisClient } from '../../services';
 import type { DomainEventPublishContext, IDomainEventPublisher } from '../type';
 import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
 
 export class DomainEventRedisPublisher implements IDomainEventPublisher {
     protected driver : Client;
 
-    constructor(client: Client) {
-        this.driver = client;
+    constructor(input: RedisClientCreateInput) {
+        this.driver = createRedisClient(input);
     }
 
     async publish(ctx: DomainEventPublishContext) : Promise<void> {

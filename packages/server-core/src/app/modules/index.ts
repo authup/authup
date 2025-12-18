@@ -13,7 +13,7 @@ export * from './identity';
 export * from './ldap';
 export * from './logger';
 export * from './oauth2';
-export * from './redis';
+export * from './cache';
 export * from './runtime';
 export * from './swagger';
 export * from './mail';

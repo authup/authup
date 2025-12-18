@@ -20,6 +20,10 @@ export function useDomainEventPublisher() {
     return singleton.use();
 }
 
+export function setDomainEventPublisher(domainEventPublisher: DomainEventPublisher) {
+    singleton.set(domainEventPublisher);
+}
+
 export async function publishDomainEvent(ctx: DomainEventPublishContext) : Promise<void> {
     await useDomainEventPublisher()
         .publish(ctx);

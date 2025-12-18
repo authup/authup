@@ -7,16 +7,13 @@
 
 import type { TTLCacheOptions } from '@isaacs/ttlcache';
 import { TTLCache } from '@isaacs/ttlcache';
-import type { CacheClearOptions, CacheSetOptions } from '../types';
-import type { ICacheAdapter } from './types';
+import type { CacheClearOptions, CacheSetOptions, ICache } from '../types';
 
-export class MemoryCacheAdapter<
-    VALUE = any,
-> implements ICacheAdapter {
-    protected instance : TTLCache<string, VALUE>;
+export class MemoryCache implements ICache {
+    protected instance : TTLCache<string, unknown>;
 
-    constructor(options: TTLCacheOptions<string, VALUE> = {}) {
-        this.instance = new TTLCache<string, VALUE>({
+    constructor(options: TTLCacheOptions<string, unknown> = {}) {
+        this.instance = new TTLCache<string, unknown>({
             checkAgeOnGet: true,
             ttl: Infinity,
             ...(options || {}),
@@ -27,16 +24,16 @@ export class MemoryCacheAdapter<
         return this.instance.has(key);
     }
 
-    async get(key: string): Promise<VALUE | null> {
+    async get<T =unknown>(key: string): Promise<T | null> {
         const output = await this.instance.get(key);
         if (output) {
-            return output;
+            return output as T;
         }
 
         return null;
     }
 
-    async set(key: string, value: VALUE, options: CacheSetOptions): Promise<void> {
+    async set(key: string, value: unknown, options: CacheSetOptions): Promise<void> {
         this.instance.set(key, value, {
             ttl: options.ttl,
         });

@@ -7,6 +7,7 @@
 
 import { Application } from './module';
 import {
+    CacheModule,
     ComponentsModule,
     ConfigModule,
     DatabaseModule,
@@ -16,7 +17,6 @@ import {
     LoggerModule,
     MailModule,
     OAuth2Module,
-    RedisModule,
     RuntimeModule,
     SwaggerModule,
     VaultModule,
@@ -28,7 +28,7 @@ export function createApplication() {
         new LoggerModule(),
 
         // todo: rename to CacheModule
-        new RedisModule(),
+        new CacheModule(),
 
         // todo: rename to mail module
         new MailModule(),

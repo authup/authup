@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ICache } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
+import { CacheInjectionKey } from '../cache';
 import type { Config } from '../config';
 import type {
     IDIContainer,
@@ -61,18 +63,24 @@ export class OAuth2Module implements Module {
         });
 
         container.register(OAuth2InjectionToken.AuthorizationCodeRepository, {
-            // todo: cache use here
-            useFactory: () => new OAuth2AuthorizationCodeRepository(),
+            useFactory: (c) => {
+                const cache = c.resolve<ICache>(CacheInjectionKey);
+                return new OAuth2AuthorizationCodeRepository(cache);
+            },
         });
 
         container.register(OAuth2InjectionToken.AuthorizationStateRepository, {
-            // todo: cache use here
-            useFactory: () => new OAuth2AuthorizationStateRepository(),
+            useFactory: (c) => {
+                const cache = c.resolve<ICache>(CacheInjectionKey);
+                return new OAuth2AuthorizationStateRepository(cache);
+            },
         });
 
         container.register(OAuth2InjectionToken.TokenRepository, {
-            // todo: cache use here
-            useFactory: () => new OAuth2TokenRepository(),
+            useFactory: (c) => {
+                const cache = c.resolve<ICache>(CacheInjectionKey);
+                return new OAuth2TokenRepository(cache);
+            },
         });
 
         container.register(OAuth2InjectionToken.KeyRepository, {

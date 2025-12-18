@@ -6,4 +6,5 @@
  */
 
 export * from './module';
-export * from './singleton';
+export * from './factory';
+export * from './check';

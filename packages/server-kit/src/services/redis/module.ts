@@ -11,7 +11,6 @@ import {
     Watcher as RedisWatcher,
     buildKeyPath as buildRedisKeyPath,
 
-    createClient as createRedisClient,
     escapeKey as escapeRedisKey,
     parseKeyPath as parseRedisKeyPath,
 } from 'redis-extension';
@@ -25,7 +24,6 @@ export type {
 };
 
 export {
-    createRedisClient,
     RedisClient,
     RedisJsonAdapter,
     RedisWatcher,

@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Cache } from '@authup/server-kit';
-import { escapeRedisKey, useCache } from '@authup/server-kit';
+import type { ICache } from '@authup/server-kit';
+import { escapeRedisKey } from '@authup/server-kit';
 import type { QueryResultCache } from 'typeorm/cache/QueryResultCache.js';
 import type { QueryResultCacheOptions } from 'typeorm/cache/QueryResultCacheOptions.js';
 
 export class DatabaseQueryResultCache implements QueryResultCache {
-    protected instance : Cache;
+    protected instance : ICache;
 
-    constructor() {
-        this.instance = useCache();
+    constructor(cache: ICache) {
+        this.instance = cache;
     }
 
     protected buildKey(id: string) {
@@ -36,12 +36,15 @@ export class DatabaseQueryResultCache implements QueryResultCache {
     }
 
     async getFromCache(options: QueryResultCacheOptions): Promise<QueryResultCacheOptions | undefined> {
+        let output : QueryResultCacheOptions | undefined | null;
         if (options.identifier) {
-            return this.instance.get(this.buildKey(options.identifier));
+            output = await this.instance.get(this.buildKey(options.identifier));
+        } else if (typeof options.query !== 'undefined') {
+            output = await this.instance.get(this.buildKey(encodeURIComponent(options.query)));
         }
 
-        if (typeof options.query !== 'undefined') {
-            return this.instance.get(this.buildKey(encodeURIComponent(options.query)));
+        if (output) {
+            return output;
         }
 
         return undefined;

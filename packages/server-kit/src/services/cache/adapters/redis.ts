@@ -7,22 +7,22 @@
 
 import type { Client } from 'redis-extension';
 import { JsonAdapter } from 'redis-extension';
-import { useRedisClient } from '../../redis';
-import type { CacheClearOptions, CacheSetOptions } from '../types';
-import type { ICacheAdapter } from './types';
+import type { RedisClient, RedisClientOptions } from '../../redis';
+import { createRedisClient } from '../../redis';
+import type { CacheClearOptions, CacheSetOptions, ICache } from '../types';
 
-export class RedisCacheAdapter implements ICacheAdapter {
+export class RedisCache implements ICache {
     protected client : Client;
 
-    protected instance : JsonAdapter;
+    protected jsonAdapter : JsonAdapter;
 
-    constructor() {
-        this.client = useRedisClient();
-        this.instance = new JsonAdapter(this.client);
+    constructor(input: string | boolean | RedisClient | RedisClientOptions) {
+        this.client = createRedisClient(input);
+        this.jsonAdapter = new JsonAdapter(this.client);
     }
 
     async get(key: string): Promise<any> {
-        const output = await this.instance.get(key);
+        const output = await this.jsonAdapter.get(key);
         if (output) {
             return output;
         }
@@ -33,17 +33,17 @@ export class RedisCacheAdapter implements ICacheAdapter {
     async has(key: string) : Promise<boolean> {
         const output = await this.get(key);
 
-        return typeof output !== 'undefined';
+        return !!output;
     }
 
     async set(key: string, value: any, options: CacheSetOptions): Promise<void> {
-        await this.instance.set(key, value, {
+        await this.jsonAdapter.set(key, value, {
             milliseconds: options.ttl,
         });
     }
 
     async drop(key: string): Promise<void> {
-        await this.instance.drop(key);
+        await this.jsonAdapter.drop(key);
     }
 
     async dropMany(keys: string[]) : Promise<void> {
