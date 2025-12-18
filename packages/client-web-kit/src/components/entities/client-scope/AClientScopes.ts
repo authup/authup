@@ -24,8 +24,8 @@ import {
 
 export const AClientScopes = defineComponent({
     props: defineEntityCollectionVProps<ClientScope>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<ClientScope>>,
     emits: defineEntityCollectionVEmitOptions<ClientScope>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<ClientScope>>,
     setup(props, ctx) {
         const {
             render,

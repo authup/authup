@@ -24,8 +24,8 @@ import {
 
 export const AScopes = defineComponent({
     props: defineEntityCollectionVProps<Scope>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<Scope>>,
     emits: defineEntityCollectionVEmitOptions<Scope>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Scope>>,
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
             type: EntityType.SCOPE,

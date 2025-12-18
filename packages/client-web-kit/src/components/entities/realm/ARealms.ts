@@ -24,8 +24,8 @@ import {
 
 export const ARealms = defineComponent({
     props: defineEntityCollectionVProps<Realm>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<Realm>>,
     emits: defineEntityCollectionVEmitOptions<Realm>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Realm>>,
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
             type: `${EntityType.REALM}`,

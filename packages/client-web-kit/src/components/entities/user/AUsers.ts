@@ -24,8 +24,8 @@ import {
 
 export const AUsers = defineComponent({
     props: defineEntityCollectionVProps<User>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<User>>,
     emits: defineEntityCollectionVEmitOptions<User>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<User>>,
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
             type: `${EntityType.USER}`,

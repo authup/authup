@@ -25,8 +25,8 @@ import {
 
 export const AIdentityProviders = defineComponent({
     props: defineEntityCollectionVProps<IdentityProvider>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<IdentityProvider>>,
     emits: defineEntityCollectionVEmitOptions<IdentityProvider>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<IdentityProvider>>,
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
             type: `${EntityType.IDENTITY_PROVIDER}`,

@@ -23,8 +23,8 @@ import {
 
 export const APolicies = defineComponent({
     props: defineEntityCollectionVProps<Policy>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<Policy>>,
     emits: defineEntityCollectionVEmitOptions<Policy>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Policy>>,
     setup(props, setup) {
         const { render } = defineEntityCollectionManager({
             type: `${EntityType.POLICY}`,

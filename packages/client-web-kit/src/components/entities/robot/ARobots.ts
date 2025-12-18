@@ -22,8 +22,8 @@ import {
 
 export const ARobots = defineComponent({
     props: defineEntityCollectionVProps<Robot>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<Robot>>,
     emits: defineEntityCollectionVEmitOptions<Robot>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Robot>>,
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
             type: `${EntityType.ROBOT}`,

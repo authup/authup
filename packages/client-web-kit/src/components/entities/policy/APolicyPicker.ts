@@ -23,8 +23,8 @@ export const APolicyPicker = defineComponent({
         },
         ...defineEntityPickerVProps<Policy>(),
     },
-    slots: Object as SlotsType<EntityPickerVSlots<Policy>>,
     emits: defineEntityPickerVEmitOptions<Policy>(),
+    slots: Object as SlotsType<EntityPickerVSlots<Policy>>,
     setup(props, { slots, ...setup }) {
         const { render } = defineEntityPicker({
             component: APolicies,

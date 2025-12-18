@@ -24,8 +24,8 @@ import {
 
 export const ARoles = defineComponent({
     props: defineEntityCollectionVProps<Role>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<Role>>,
     emits: defineEntityCollectionVEmitOptions<Role>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Role>>,
     setup(props, ctx) {
         const { render } = defineEntityCollectionManager({
             type: `${EntityType.ROLE}`,

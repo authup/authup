@@ -23,8 +23,8 @@ import {
 
 export const APermissions = defineComponent({
     props: defineEntityCollectionVProps<Permission>(),
-    slots: Object as SlotsType<EntityCollectionVSlots<Permission>>,
     emits: defineEntityCollectionVEmitOptions<Permission>(),
+    slots: Object as SlotsType<EntityCollectionVSlots<Permission>>,
     setup(props, setup) {
         const { render } = defineEntityCollectionManager({
             type: `${EntityType.PERMISSION}`,
