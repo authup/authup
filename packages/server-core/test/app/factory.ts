@@ -6,6 +6,7 @@
  */
 
 import {
+    CacheModule,
     ConfigModule,
     HTTPModule,
     IdentityModule,
@@ -43,6 +44,7 @@ export function createTestApplication() : TestApplication {
     return new TestApplication([
         new ConfigModule(config),
         new LoggerModule(),
+        new CacheModule(),
         new LdapModule(),
         new MailModule(),
 
