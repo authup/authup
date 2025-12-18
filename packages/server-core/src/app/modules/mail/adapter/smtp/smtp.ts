@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2025.
+ * Copyright (c) 2025-2025.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type { Transporter } from 'nodemailer';
-import type { SMTPOptions } from '../../../../adapters/smtp';
-import { createSMTPClient } from '../../../../adapters/smtp';
-import type { IMailClient, MailSendOptions } from '../../../../core';
+import type { IMailClient, MailSendOptions } from '../../../../../core';
+import { createSMTPClient } from './module';
+import type { SMTPOptions } from './types';
 
 export class SMTPMailClientAdapter implements IMailClient {
     protected transporter : Transporter;

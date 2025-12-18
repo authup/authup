@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LdapClientFactory } from '../../../adapters/ldap';
+import { LdapClientFactory } from '../../../adapters/shared/ldap';
 import type { Module } from '../types';
 import { LDAPInjectionKey } from './constants';
 import type { IDIContainer } from '../../../core';

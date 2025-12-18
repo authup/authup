@@ -7,7 +7,7 @@
 
 import type { Change, Client, SearchOptions } from 'ldapjs';
 import ldap from 'ldapjs';
-import type { ILdapClient } from '../../core';
+import type { ILdapClient } from '../../../core';
 import type { LdapClientOptions } from './types';
 
 export class LdapClient implements ILdapClient {
