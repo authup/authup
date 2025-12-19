@@ -6,6 +6,7 @@
  */
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import { ScopeName } from '@authup/core-kit';
 import { isSimpleMatch } from '@authup/kit';
 import { OAuth2Error, hasOAuth2Scopes } from '@authup/specs';
 import type { IOAuth2ClientRepository } from '../../../client';
@@ -44,7 +45,10 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         const scopes = await this.scopeRepository.findByClientId(client.id);
         const scopeNames = scopes.map((scope) => scope.name);
         if (data.scope) {
-            if (!hasOAuth2Scopes(scopeNames, data.scope)) {
+            if (
+                !hasOAuth2Scopes(scopeNames, data.scope) &&
+                !hasOAuth2Scopes(data.scope, ScopeName.GLOBAL)
+            ) {
                 throw OAuth2Error.scopeInsufficient();
             }
         } else {
