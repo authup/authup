@@ -7,7 +7,6 @@
 
 export * from './authorization';
 export * from './client';
-export * from './client-scope';
 export * from './grant-types';
 export * from './key';
 export * from './openid';

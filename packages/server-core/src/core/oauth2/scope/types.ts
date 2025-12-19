@@ -5,4 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './types';
+import type { Scope } from '@authup/core-kit';
+
+export interface IOAuth2ScopeRepository {
+    findByClientId(clientId: string) : Promise<Scope[]>;
+}

@@ -20,14 +20,14 @@ export class PolicyError extends AuthupError {
     }
 
     static evaluatorNotProcessable() {
-        throw new PolicyError(
+        return new PolicyError(
             'The evaluator can not process the policy.',
             ErrorCode.POLICY_EVALUATOR_NOT_PROCESSABLE,
         );
     }
 
     static evaluatorContextInvalid() {
-        throw new PolicyError(
+        return new PolicyError(
             'The evaluator context is not valid.',
             ErrorCode.POLICY_EVALUATOR_CONTEXT_INVALID,
         );

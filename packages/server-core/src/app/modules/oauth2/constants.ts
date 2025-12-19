@@ -7,7 +7,7 @@
 
 export const OAuth2InjectionToken = {
     ClientRepository: Symbol('ClientRepository'),
-    ClientScopeRepository: Symbol('ClientScopeRepository'),
+    ScopeRepository: Symbol('ScopeRepository'),
 
     AuthorizationCodeIssuer: Symbol('AuthorizationCodeIssuer'),
     AuthorizationCodeRepository: Symbol('AuthorizationCodeRepository'),

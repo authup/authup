@@ -14,8 +14,8 @@ import type {
     IIdentityResolver,
     IOAuth2AuthorizationCodeRepository,
     IOAuth2ClientRepository,
-    IOAuth2ClientScopeRepository,
-    IOAuth2KeyRepository, IOAuth2TokenRepository,
+    IOAuth2KeyRepository,
+    IOAuth2ScopeRepository, IOAuth2TokenRepository,
     IOAuth2TokenSigner,
 } from '../../../core';
 import type { Module } from '../types';
@@ -24,8 +24,8 @@ import {
     OAuth2AuthorizationCodeRepository,
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
-    OAuth2ClientScopeRepository,
-    OAuth2KeyRepository, OAuth2TokenRepository,
+    OAuth2KeyRepository,
+    OAuth2ScopeRepository, OAuth2TokenRepository,
 } from './repositories';
 import {
     OAuth2AccessTokenIssuer,
@@ -55,10 +55,10 @@ export class OAuth2Module implements Module {
             },
         });
 
-        container.register(OAuth2InjectionToken.ClientScopeRepository, {
+        container.register(OAuth2InjectionToken.ScopeRepository, {
             useFactory: (c) => {
                 const repository = c.resolve<Repository<ClientScopeEntity>>(ClientScopeEntity);
-                return new OAuth2ClientScopeRepository(repository);
+                return new OAuth2ScopeRepository(repository);
             },
         });
 
@@ -127,13 +127,13 @@ export class OAuth2Module implements Module {
                 const clientRepository = c.resolve<IOAuth2ClientRepository>(
                     OAuth2InjectionToken.ClientRepository,
                 );
-                const clientScopeRepository = c.resolve<IOAuth2ClientScopeRepository>(
-                    OAuth2InjectionToken.ClientScopeRepository,
+                const clientScopeRepository = c.resolve<IOAuth2ScopeRepository>(
+                    OAuth2InjectionToken.ScopeRepository,
                 );
 
                 return new OAuth2AuthorizationCodeRequestVerifier({
                     clientRepository,
-                    clientScopeRepository,
+                    scopeRepository: clientScopeRepository,
                 });
             },
         });

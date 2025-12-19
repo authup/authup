@@ -106,7 +106,7 @@ export class AuthorizeController {
 
             const result = await this.codeRequestVerifier.verify(data);
             client = result.client;
-            scopes = result.clientScopes.map((s) => s.scope);
+            scopes = result.scopes;
 
             codeRequest = result.data;
         } catch (e) {

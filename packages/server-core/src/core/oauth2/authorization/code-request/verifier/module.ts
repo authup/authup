@@ -6,11 +6,10 @@
  */
 
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { ScopeName } from '@authup/core-kit';
 import { isSimpleMatch } from '@authup/kit';
 import { OAuth2Error, hasOAuth2Scopes } from '@authup/specs';
 import type { IOAuth2ClientRepository } from '../../../client';
-import type { IOAuth2ClientScopeRepository } from '../../../client-scope';
+import type { IOAuth2ScopeRepository } from '../../../scope';
 import type {
     IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestVerificationResult,
@@ -20,11 +19,11 @@ import type {
 export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2AuthorizationCodeRequestVerifier {
     protected clientRepository: IOAuth2ClientRepository;
 
-    protected clientScopeRepository: IOAuth2ClientScopeRepository;
+    protected scopeRepository: IOAuth2ScopeRepository;
 
     constructor(ctx: OAuth2AuthorizationCodeRequestVerifierContext) {
         this.clientRepository = ctx.clientRepository;
-        this.clientScopeRepository = ctx.clientScopeRepository;
+        this.scopeRepository = ctx.scopeRepository;
     }
 
     /**
@@ -42,13 +41,10 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         data.client_id = client.id;
         data.realm_id = client.realm_id;
 
-        const clientScopes = await this.clientScopeRepository.findByClientId(client.id);
-        const scopeNames = clientScopes.map((clientScope) => clientScope.scope.name);
+        const scopes = await this.scopeRepository.findByClientId(client.id);
+        const scopeNames = scopes.map((scope) => scope.name);
         if (data.scope) {
-            if (
-                !hasOAuth2Scopes(scopeNames, data.scope) &&
-                !hasOAuth2Scopes(data.scope, ScopeName.GLOBAL)
-            ) {
+            if (!hasOAuth2Scopes(scopeNames, data.scope)) {
                 throw OAuth2Error.scopeInsufficient();
             }
         } else {
@@ -67,7 +63,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         return {
             data,
             client,
-            clientScopes,
+            scopes,
         };
     }
 }

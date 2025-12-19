@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientScope } from '@authup/core-kit';
+import type { ClientScope, Scope } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import type { IOAuth2ClientScopeRepository } from '../../../../../core';
+import type { IOAuth2ScopeRepository } from '../../../../../core';
 
-export class OAuth2ClientScopeRepository implements IOAuth2ClientScopeRepository {
+export class OAuth2ScopeRepository implements IOAuth2ScopeRepository {
     private readonly repository: Repository<ClientScope>;
 
     constructor(
@@ -18,8 +18,8 @@ export class OAuth2ClientScopeRepository implements IOAuth2ClientScopeRepository
         this.repository = repository;
     }
 
-    async findByClientId(clientId: string): Promise<ClientScope[]> {
-        return this.repository.find({
+    async findByClientId(clientId: string): Promise<Scope[]> {
+        const clientScopes = await this.repository.find({
             where: {
                 client_id: clientId,
             },
@@ -27,5 +27,7 @@ export class OAuth2ClientScopeRepository implements IOAuth2ClientScopeRepository
                 scope: true,
             },
         });
+
+        return clientScopes.map((clientScope) => clientScope.scope);
     }
 }

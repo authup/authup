@@ -7,6 +7,6 @@
 
 export * from './authorize';
 export * from './client';
-export * from './client-scope';
+export * from './scope';
 export * from './key';
 export * from './token';

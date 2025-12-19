@@ -15,7 +15,8 @@ export function serializeOAuth2Scope(scope: string[]) {
  * @param scope
  */
 export function deserializeOAuth2Scope(scope: string) : string[] {
-    return scope.split(/\s+|,+/);
+    return scope.split(/\s+|,+/)
+        .map((el) => el.toLowerCase());
 }
 
 export function unwrapOAuth2Scope(input: string | string[]) : string[] {
