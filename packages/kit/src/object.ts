@@ -51,3 +51,21 @@ export function flattenObject(input: Record<string, any>) : Record<string, any> 
 export function removeObjectProperty<T extends ObjectLiteral>(input: Partial<T>, key: keyof T) {
     delete input[key];
 }
+
+export function omitObjectProperties<
+    T extends ObjectLiteral,
+>(input: Record<string, any>, excludeKeys: (keyof T)[]): T {
+    const output : T = {} as T;
+    const keys = Object.keys(input);
+
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (excludeKeys.indexOf(key) !== -1) {
+            continue;
+        }
+
+        output[key as keyof T] = input[key] as T[keyof T];
+    }
+
+    return output;
+}

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { omitObjectProperties } from '@authup/kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import { randomUUID } from 'node:crypto';
@@ -12,6 +13,7 @@ import type { Identity } from '@authup/core-kit';
 import { OAuth2OpenIDClaimsBuilder } from '../../../openid';
 import type { IOAuth2TokenSigner } from '../../signer';
 import type { IOAuth2TokenRepository } from '../../repository';
+import { OAuth2BaseTokenIssuer } from '../base';
 import type {
     OAuth2TokenIssuerOptions,
     OAuth2TokenIssuerResponse,
@@ -19,21 +21,20 @@ import type {
 import type { IOAuth2OpenIDTokenIssuer, OAuth2OpenIDTokenIssuerContext } from './types';
 import type { IIdentityResolver } from '../../../../identity';
 
-export class OAuth2OpenIDTokenIssuer implements IOAuth2OpenIDTokenIssuer {
+export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IOAuth2OpenIDTokenIssuer {
     protected repository: IOAuth2TokenRepository;
 
     protected signer : IOAuth2TokenSigner;
-
-    protected options: OAuth2TokenIssuerOptions;
 
     protected identityResolver : IIdentityResolver;
 
     protected claimsBuilder: OAuth2OpenIDClaimsBuilder;
 
     constructor(ctx: OAuth2OpenIDTokenIssuerContext) {
+        super(ctx.options);
+
         this.repository = ctx.repository;
         this.signer = ctx.signer;
-        this.options = ctx.options || {};
 
         this.identityResolver = ctx.identityResolver;
         this.claimsBuilder = new OAuth2OpenIDClaimsBuilder();
@@ -70,12 +71,15 @@ export class OAuth2OpenIDTokenIssuer implements IOAuth2OpenIDTokenIssuer {
         const utc = Math.floor(new Date().getTime() / 1000);
 
         const data = await this.repository.save({
-            ...input,
+            ...omitObjectProperties(input, [
+                'jti',
+                'exp',
+            ]),
             ...claims,
-            jti: input.jti || randomUUID(),
+            jti: randomUUID(),
             kind: OAuth2TokenKind.ID_TOKEN,
             auth_time: utc,
-            exp: utc + (options.maxAge || this.options.maxAge || 3600),
+            exp: this.buildExp(input, options),
             updated_at: utc,
         });
 

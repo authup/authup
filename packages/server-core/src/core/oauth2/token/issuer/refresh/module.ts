@@ -5,37 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { omitObjectProperties } from '@authup/kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import type { IOAuth2TokenSigner } from '../../signer';
 import type { IOAuth2TokenRepository } from '../../repository';
+import { OAuth2BaseTokenIssuer } from '../base';
 import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types';
 
-export class OAuth2RefreshTokenIssuer implements IOAuth2TokenIssuer {
+export class OAuth2RefreshTokenIssuer extends OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
     protected repository: IOAuth2TokenRepository;
 
     protected signer : IOAuth2TokenSigner;
-
-    protected options: OAuth2TokenIssuerOptions;
 
     constructor(
         repository: IOAuth2TokenRepository,
         signer: IOAuth2TokenSigner,
         options: OAuth2TokenIssuerOptions = {},
     ) {
+        super(options);
+
         this.repository = repository;
         this.signer = signer;
-        this.options = options;
     }
 
     async issue(input: OAuth2TokenPayload = {}, options: OAuth2TokenIssuerOptions = {}) : Promise<OAuth2TokenIssuerResponse> {
         const data = await this.repository.save({
-            ...input,
+            ...omitObjectProperties(input, [
+                'jti',
+                'exp',
+            ]),
             kind: OAuth2TokenKind.REFRESH,
-            exp: input.exp ||
-                Math.floor(new Date().getTime() / 1000) + (
-                    options.maxAge || this.options.maxAge || 3600
-                ),
+            exp: this.buildExp(input, options),
         });
 
         const token = await this.signer.sign(data);

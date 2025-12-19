@@ -27,8 +27,8 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         this.tokenRepository = tokenRepository;
     }
 
-    async isActive(id: string): Promise<boolean> {
-        return this.tokenRepository.isActive(id);
+    async isInactive(id: string): Promise<boolean> {
+        return this.tokenRepository.isInactive(id);
     }
 
     async verify(token: string, options: OAuth2TokenVerifyOptions = {}) : Promise<OAuth2TokenPayload> {
@@ -39,8 +39,8 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
             }
 
             if (!options.skipActiveCheck) {
-                const isActive = await this.isActive(payload.jti);
-                if (!isActive) {
+                const isInactive = await this.isInactive(payload.jti);
+                if (isInactive) {
                     throw JWTError.notActive();
                 }
             }
@@ -119,7 +119,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         await this.tokenRepository.saveWithSignature(payload, token);
 
         if (!options.skipActiveCheck) {
-            const isActive = await this.isActive(payload.jti);
+            const isActive = await this.isInactive(payload.jti);
             if (!isActive) {
                 throw JWTError.notActive();
             }

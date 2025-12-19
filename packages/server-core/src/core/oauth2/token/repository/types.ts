@@ -21,7 +21,7 @@ export interface IOAuth2TokenRepository {
      *
      * @param id JTI
      */
-    isActive(id: string): Promise<boolean>;
+    isInactive(id: string): Promise<boolean>;
 
     // -----------------------------------------------------
 

@@ -138,8 +138,16 @@ export class TokenController {
             const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
             const claims = claimsBuilder.fromIdentity(identity);
 
+            let active : boolean;
+            if (payload.jti) {
+                const isInactive = await this.tokenVerifier.isInactive(payload.jti);
+                active = !isInactive;
+            } else {
+                active = false;
+            }
+
             return {
-                active: payload.jti ? await this.tokenVerifier.isActive(payload.jti) : false,
+                active,
                 // todo: permissions property should be removed.
                 permissions: permissions
                     .map((permission) => pickRecord(permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission),

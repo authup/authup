@@ -12,7 +12,7 @@ export type OAuth2TokenVerifyOptions = {
 };
 
 export interface IOAuth2TokenVerifier {
-    isActive(token: string) : Promise<boolean>;
+    isInactive(token: string) : Promise<boolean>;
 
     verify(token: string, options?: OAuth2TokenVerifyOptions) : Promise<OAuth2TokenPayload>
 }

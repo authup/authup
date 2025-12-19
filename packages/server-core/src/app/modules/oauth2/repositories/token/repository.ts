@@ -116,9 +116,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
     async saveWithSignature(data: OAuth2TokenPayload, signature: string): Promise<OAuth2TokenPayload> {
         const options : CacheSetOptions = {
-            ttl: data.exp ?
-                this.transformUnixTimestampToTTL(data.exp) :
-                3_600 * 1000,
+            ttl: this.buildTTL(data.exp),
         };
 
         const normalized = await this.save(data);
@@ -134,7 +132,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
     // -----------------------------------------------------
 
-    async isActive(key: string): Promise<boolean> {
+    async isInactive(key: string): Promise<boolean> {
         const cacheKey = buildCacheKey({
             prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
             key,
@@ -142,20 +140,15 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
         const response = await this.cache.get(cacheKey);
 
-        return !response;
+        return !!response;
     }
 
-    async setInactive(id: string, exp?: number): Promise<void> {
-        let ttl : number;
-        if (exp) {
-            ttl = this.transformUnixTimestampToTTL(exp);
-        } else {
-            ttl = 1_000 * 3_600;
-        }
+    async setInactive(key: string, exp?: number): Promise<void> {
+        const ttl = this.buildTTL(exp);
 
         const cacheKey = buildCacheKey({
             prefix: CacheOAuth2Prefix.TOKEN_INACTIVE,
-            key: id,
+            key,
         });
 
         await this.cache.set(
@@ -170,13 +163,20 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     // -----------------------------------------------------
 
     /**
-     * Transform exp claim to time to live.
-     * @param exp
+     * Transform timestamp in seconds to ttl in ms.
+     *
+     * @param utc
+     * @protected
      */
-    protected transformUnixTimestampToTTL(exp: number) {
-        const ttl = (exp * 1000) - Date.now();
+    protected buildTTL(utc?: number) {
+        if (typeof utc === 'number') {
+            const ttl = (utc * 1000) - Date.now();
+            if (ttl > 0) {
+                return ttl;
+            }
+        }
 
-        return ttl > 0 ? ttl : 0;
+        return 3_600 * 1000;
     }
 
     protected getSubject(entity: OAuth2RefreshTokenEntity) {
