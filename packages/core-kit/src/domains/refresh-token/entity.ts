@@ -11,11 +11,16 @@ import type { User } from '../user';
 import type { Robot } from '../robot';
 
 export interface OAuth2RefreshToken {
+    /**
+     * JTI
+     */
     id: string;
 
     expires: string;
 
     scope: string | null;
+
+    access_token: string | null;
 
     // ------------------------------------------------------------------
 
@@ -30,8 +35,6 @@ export interface OAuth2RefreshToken {
     robot_id: Robot['id'] | null,
 
     robot: Robot | null,
-
-    access_token: string | null;
 
     realm_id: Realm['id'];
 

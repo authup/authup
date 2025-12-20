@@ -22,7 +22,7 @@ export class OAuth2TokenRevoker implements IOAuth2TokenRevoker {
             throw JWTError.payloadPropertyInvalid('jti');
         }
 
-        await this.repository.remove(input.jti);
+        await this.repository.removeById(input.jti);
         await this.repository.setInactive(input.jti, input.exp);
     }
 }

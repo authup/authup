@@ -64,7 +64,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
     // -----------------------------------------------------
 
-    async remove(id: string): Promise<void> {
+    async removeById(id: string): Promise<void> {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(OAuth2RefreshTokenEntity);
 
@@ -79,12 +79,8 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
     // -----------------------------------------------------
 
-    async save(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
+    async insert(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
         if (payload.kind !== OAuth2TokenKind.REFRESH) {
-            return payload;
-        }
-
-        if (payload.jti) {
             return payload;
         }
 
@@ -99,7 +95,7 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
                     Date.now() + (1_000 * 3_600),
             ).toISOString(),
             scope: payload.scope,
-            access_token: payload.jti,
+            // access_token: payload.jti,
             realm_id: payload.realm_id,
             ...(payload.sub_kind === OAuth2SubKind.CLIENT ? { client_id: payload.sub } : {}),
             ...(payload.sub_kind === OAuth2SubKind.USER ? { user_id: payload.sub } : {}),
@@ -112,6 +108,15 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
             ...payload,
             jti: entity.id,
         };
+    }
+
+    async save(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
+        // we don't update tokens
+        if (payload.kind !== OAuth2TokenKind.REFRESH || payload.jti) {
+            return payload;
+        }
+
+        return this.insert(payload);
     }
 
     async saveWithSignature(data: OAuth2TokenPayload, signature: string): Promise<OAuth2TokenPayload> {

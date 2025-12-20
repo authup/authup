@@ -45,9 +45,16 @@ export interface IOAuth2TokenRepository {
      *
      * @param id JTI
      */
-    remove(id: string) : Promise<void>;
+    removeById(id: string) : Promise<void>;
 
     // -----------------------------------------------------
+
+    /**
+     * Insert token.
+     *
+     * @param payload
+     */
+    insert(payload: OAuth2TokenPayload) : Promise<OAuth2TokenPayload>;
 
     /**
      * Create or update token.
