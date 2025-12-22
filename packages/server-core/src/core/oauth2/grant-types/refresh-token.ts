@@ -63,12 +63,14 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             ...payload,
+            user_agent: session.user_agent,
             remote_address: session.ip_address,
             exp: this.accessTokenIssuer.buildExp(),
         });
 
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue({
             ...payload,
+            user_agent: session.user_agent,
             remote_address: session.ip_address,
             exp: this.refreshTokenIssuer.buildExp(),
         });

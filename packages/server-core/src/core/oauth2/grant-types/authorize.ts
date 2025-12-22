@@ -7,7 +7,6 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import {
-    OAuth2SubKind,
     hasOAuth2Scopes,
 } from '@authup/specs';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
@@ -44,8 +43,8 @@ export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCod
             ip_address: options.ipAddress,
             realm_id: authorizationCode.realm_id,
             client_id: authorizationCode.client_id,
-            ...(authorizationCode.sub_kind === OAuth2SubKind.USER ? { user_id: authorizationCode.sub } : {}),
-            ...(authorizationCode.sub_kind === OAuth2SubKind.ROBOT ? { robot_id: authorizationCode.sub } : {}),
+            sub_kind: authorizationCode.sub_kind,
+            sub: authorizationCode.sub,
         });
 
         const issuePayload : Partial<OAuth2TokenPayload> = {

@@ -11,6 +11,7 @@ import {
 } from '@authup/specs';
 import type { Client } from '@authup/core-kit';
 import {
+    IdentityType,
     ScopeName,
 } from '@authup/core-kit';
 import { OAuth2BaseGrant } from './base';
@@ -26,11 +27,13 @@ export class ClientCredentialsGrant extends OAuth2BaseGrant<Client> {
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
             realm_id: input.realm_id,
-            client_id: input.id,
+            sub: input.id,
+            sub_kind: IdentityType.CLIENT,
         });
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            remote_address: options.ipAddress,
+            user_agent: session.user_agent,
+            remote_address: session.ip_address,
             session_id: session.id,
             scope: ScopeName.GLOBAL,
             sub: input.id,

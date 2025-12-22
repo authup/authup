@@ -7,7 +7,7 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import type { Identity, Session } from '@authup/core-kit';
-import { IdentityType, ScopeName } from '@authup/core-kit';
+import { ScopeName } from '@authup/core-kit';
 import type { IOAuth2TokenIssuer } from '../token';
 import { OAuth2BaseGrant } from './base';
 import { buildOAuth2BearerTokenResponse } from '../response';
@@ -36,30 +36,16 @@ export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
             realm_id: identity.data.realm_id,
+            sub: identity.data.id,
+            sub_kind: identity.type,
         };
 
-        switch (identity.type) {
-            case IdentityType.CLIENT: {
-                session.client_id = identity.data.id;
-                break;
-            }
-            case IdentityType.USER: {
-                session.user_id = identity.data.id;
-                session.client_id = identity.data.client_id;
-                break;
-            }
-
-            case IdentityType.ROBOT: {
-                session.robot_id = identity.data.id;
-                session.client_id = identity.data.client_id;
-                break;
-            }
-        }
         const { id: sessionId } = await this.sessionManager.save(session);
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
             session_id: sessionId,
-            remote_address: options.ipAddress,
+            user_agent: session.user_agent,
+            remote_address: session.ip_address,
             scope: ScopeName.GLOBAL,
             realm_id: identity.data.realm_id,
             realm_name: identity.data.realm?.name,

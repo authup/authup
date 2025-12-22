@@ -27,7 +27,13 @@ export class SessionEntity implements Session {
     })
         expires: string;
 
-    // ------------------------------------------------------------------
+    @Index()
+    @Column({ type: 'varchar', length: 64 })
+        sub: string;
+
+    @Index()
+    @Column({ type: 'varchar', length: 64 })
+        sub_kind: string;
 
     @Index()
     @Column({ type: 'varchar', length: 15 })

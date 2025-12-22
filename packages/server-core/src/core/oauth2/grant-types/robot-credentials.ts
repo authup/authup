@@ -9,6 +9,7 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import type { Robot } from '@authup/core-kit';
 import {
+    IdentityType,
     ScopeName,
 } from '@authup/core-kit';
 import { OAuth2BaseGrant } from './base';
@@ -24,11 +25,13 @@ export class RobotCredentialsGrant extends OAuth2BaseGrant<Robot> {
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
             realm_id: input.realm_id,
-            robot_id: input.id,
+            sub: input.id,
+            sub_kind: IdentityType.ROBOT,
         });
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             session_id: session.id,
+            user_agent: session.user_agent,
             remote_address: session.ip_address,
             scope: ScopeName.GLOBAL,
             sub: input.id,

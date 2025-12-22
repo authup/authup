@@ -6,14 +6,13 @@
  */
 
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
+import type { ObjectOptional } from '@authup/kit';
 
 export type OAuth2AuthorizationCodeRepositorySaveOptions = {
     maxAge?: number
 };
 
-export type OAuth2AuthorizationCodeInput = Omit<OAuth2AuthorizationCode, 'id'> & {
-    id?: string
-};
+export type OAuth2AuthorizationCodeInput = ObjectOptional<OAuth2AuthorizationCode, 'id'>;
 
 export interface IOAuth2AuthorizationCodeRepository {
     removeById(id: string): Promise<void>;

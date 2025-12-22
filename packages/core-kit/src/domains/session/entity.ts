@@ -21,7 +21,15 @@ export interface Session {
      */
     expires: string,
 
-    // ------------------------------------------------------------------
+    /**
+     * Subject ID
+     */
+    sub: string,
+
+    /**
+     * Subject kind (e.g. user, robot, client)
+     */
+    sub_kind: string,
 
     /**
      * Last used ip address.

@@ -9,6 +9,7 @@ import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs
 import { OAuth2SubKind } from '@authup/specs';
 import type { User } from '@authup/core-kit';
 import {
+    IdentityType,
     ScopeName,
 } from '@authup/core-kit';
 import { buildOAuth2BearerTokenResponse } from '../response';
@@ -36,12 +37,16 @@ export class PasswordGrantType extends OAuth2BaseGrant<User> {
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
             realm_id: input.realm_id,
-            user_id: input.id,
+            client_id: input.client_id || undefined,
+            sub: input.id,
+            sub_kind: IdentityType.USER,
         });
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
+            client_id: input.client_id || undefined,
             session_id: session.id,
-            remote_address: options.ipAddress,
+            user_agent: session.user_agent,
+            remote_address: session.ip_address,
             scope: ScopeName.GLOBAL,
             sub: input.id,
             sub_kind: OAuth2SubKind.USER,
