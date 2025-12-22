@@ -9,7 +9,7 @@ import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../token';
 import { BaseGrant } from './base';
-import type { IOAuth2Grant, OAuth2RefreshTokenGrantContext } from './types';
+import type { IOAuth2Grant, OAuth2GrantRunWIthOptions, OAuth2RefreshTokenGrantContext } from './types';
 
 export class OAuth2RefreshTokenGrant extends BaseGrant<string | OAuth2TokenPayload> implements IOAuth2Grant {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
@@ -31,7 +31,7 @@ export class OAuth2RefreshTokenGrant extends BaseGrant<string | OAuth2TokenPaylo
 
     async runWith(
         input: string | OAuth2TokenPayload,
-        base: OAuth2TokenPayload = {},
+        options: OAuth2GrantRunWIthOptions = {},
     ) : Promise<OAuth2TokenGrantResponse> {
         let payload : OAuth2TokenPayload;
         if (typeof input === 'string') {
@@ -43,8 +43,8 @@ export class OAuth2RefreshTokenGrant extends BaseGrant<string | OAuth2TokenPaylo
         await this.tokenRevoker.revoke(payload);
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            ...base,
             ...payload,
+            remote_address: options.ipAddress || payload.remote_address,
         });
 
         const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(accessTokenPayload);

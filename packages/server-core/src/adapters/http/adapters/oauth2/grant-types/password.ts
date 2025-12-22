@@ -9,7 +9,7 @@ import type { User } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
+import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator } from '../../../../../core';
 import { PasswordGrantType } from '../../../../../core';
 import type { HTTPOAuth2PasswordGrantContext, IHTTPGrant } from './types';
@@ -37,7 +37,8 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
         return this.runWith(
             data,
             {
-                remote_address: getRequestIP(req, { trustProxy: true }),
+                ipAddress: getRequestIP(req, { trustProxy: true }),
+                userAgent: getRequestHeader(req, 'user-agent'),
             },
         );
     }

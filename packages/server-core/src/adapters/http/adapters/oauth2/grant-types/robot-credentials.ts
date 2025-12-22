@@ -8,7 +8,7 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
+import { getRequestHeader, getRequestIP } from 'routup';
 import type { Robot } from '@authup/core-kit';
 import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
@@ -36,7 +36,8 @@ export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements 
         return this.runWith(
             entity,
             {
-                remote_address: getRequestIP(req, { trustProxy: true }),
+                ipAddress: getRequestIP(req, { trustProxy: true }),
+                userAgent: getRequestHeader(req, 'user-agent'),
             },
         );
     }

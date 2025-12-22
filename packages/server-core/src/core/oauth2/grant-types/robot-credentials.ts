@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import type { Robot } from '@authup/core-kit';
 import {
@@ -13,11 +13,12 @@ import {
 } from '@authup/core-kit';
 import { BaseGrant } from './base';
 import { buildOAuth2BearerTokenResponse } from '../response';
+import type { OAuth2GrantRunWIthOptions } from './types';
 
 export class RobotCredentialsGrant extends BaseGrant<Robot> {
-    async runWith(input: Robot, base: OAuth2TokenPayload = {}) : Promise<OAuth2TokenGrantResponse> {
+    async runWith(input: Robot, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            ...base,
+            ...options,
             scope: ScopeName.GLOBAL,
             sub: input.id,
             sub_kind: OAuth2SubKind.ROBOT,

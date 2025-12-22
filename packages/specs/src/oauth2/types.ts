@@ -30,6 +30,11 @@ export type OAuth2TokenGrantResponse = {
 
 export type OAuth2TokenPayload = JWTClaims & {
     /**
+     * Associated session.
+     */
+    session_id?: string,
+
+    /**
      * Token type
      */
     kind?: `${OAuth2TokenKind}`,

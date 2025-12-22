@@ -7,7 +7,6 @@
 
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
-import { randomUUID } from 'node:crypto';
 import type { IOAuth2TokenSigner } from '../../signer';
 import type { IOAuth2TokenRepository } from '../../repository';
 import { OAuth2BaseTokenIssuer } from '../base';
@@ -30,10 +29,9 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
     }
 
     async issue(input: OAuth2TokenPayload = {}, options: OAuth2TokenIssuerOptions = {}) : Promise<OAuth2TokenIssuerResponse> {
-        const data = await this.repository.save({
+        const data = await this.repository.insert({
             ...input,
             kind: OAuth2TokenKind.ACCESS,
-            jti: randomUUID(),
             exp: this.buildExp(input, options),
         });
 

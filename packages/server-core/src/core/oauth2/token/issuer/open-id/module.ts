@@ -5,10 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { omitObjectProperties } from '@authup/kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
-import { randomUUID } from 'node:crypto';
 import type { Identity } from '@authup/core-kit';
 import { OAuth2OpenIDClaimsBuilder } from '../../../openid';
 import type { IOAuth2TokenSigner } from '../../signer';
@@ -70,13 +68,9 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
 
         const utc = Math.floor(new Date().getTime() / 1000);
 
-        const data = await this.repository.save({
-            ...omitObjectProperties(input, [
-                'jti',
-                'exp',
-            ]),
+        const data = await this.repository.insert({
+            ...input,
             ...claims,
-            jti: randomUUID(),
             kind: OAuth2TokenKind.ID_TOKEN,
             auth_time: utc,
             exp: this.buildExp(input, options),

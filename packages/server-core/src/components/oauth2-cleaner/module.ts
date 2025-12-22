@@ -8,18 +8,18 @@
 import cron from 'node-cron';
 import type { DataSource } from 'typeorm';
 import { LessThan } from 'typeorm';
-import { OAuth2RefreshTokenEntity } from '../../adapters/database/domains';
+import { SessionEntity } from '../../adapters/database/domains';
 import type { Component } from '../types';
 
 export function createOAuth2CleanerComponent(dataSource: DataSource) : Component {
     return {
         async start() {
-            const refreshTokenRepository = dataSource.getRepository(OAuth2RefreshTokenEntity);
+            const sessionRepository = dataSource.getRepository(SessionEntity);
 
             const execute = async () => {
                 const isoDate = new Date().toISOString();
 
-                await refreshTokenRepository
+                await sessionRepository
                     .delete({
                         expires: LessThan(isoDate),
                     });

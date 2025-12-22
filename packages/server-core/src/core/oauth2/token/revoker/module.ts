@@ -23,6 +23,5 @@ export class OAuth2TokenRevoker implements IOAuth2TokenRevoker {
         }
 
         await this.repository.removeById(input.jti);
-        await this.repository.setInactive(input.jti, input.exp);
     }
 }

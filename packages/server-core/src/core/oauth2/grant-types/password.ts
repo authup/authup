@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import type { User } from '@authup/core-kit';
 import {
@@ -14,7 +14,7 @@ import {
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { IOAuth2TokenIssuer } from '../token';
 import { BaseGrant } from './base';
-import type { OAuth2PasswordGrantContext } from './types';
+import type { OAuth2GrantRunWIthOptions, OAuth2PasswordGrantContext } from './types';
 
 export class PasswordGrantType extends BaseGrant<User> {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
@@ -27,9 +27,9 @@ export class PasswordGrantType extends BaseGrant<User> {
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
     }
 
-    async runWith(input: User, base: OAuth2TokenPayload = {}) : Promise<OAuth2TokenGrantResponse> {
+    async runWith(input: User, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            ...base,
+            ...options,
             scope: ScopeName.GLOBAL,
             sub: input.id,
             sub_kind: OAuth2SubKind.USER,

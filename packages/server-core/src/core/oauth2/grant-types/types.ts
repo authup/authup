@@ -7,7 +7,7 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import type {
-    OAuth2TokenGrantResponse, OAuth2TokenPayload,
+    OAuth2TokenGrantResponse,
 } from '@authup/specs';
 import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../token';
 
@@ -33,6 +33,11 @@ export type OAuth2RefreshTokenGrantContext = BaseGrantContext & {
     tokenRevoker: IOAuth2TokenRevoker
 };
 
+export type OAuth2GrantRunWIthOptions = {
+    userAgent?: string,
+    ipAddress?: string,
+};
+
 export interface IOAuth2Grant<T = ObjectLiteral> {
-    runWith(data: T, base?: OAuth2TokenPayload) : Promise<OAuth2TokenGrantResponse>;
+    runWith(data: T, base?: OAuth2GrantRunWIthOptions) : Promise<OAuth2TokenGrantResponse>;
 }
