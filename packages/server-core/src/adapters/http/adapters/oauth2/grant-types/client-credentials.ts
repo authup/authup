@@ -12,7 +12,7 @@ import type { Client } from '@authup/core-kit';
 import { ClientError } from '@authup/core-kit';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
-import { getRequestHeader, getRequestIP, useRequestNegotiator } from 'routup';
+import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
     ClientCredentialsGrant,

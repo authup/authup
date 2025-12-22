@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2SubKind,
     hasOAuth2Scopes,
@@ -14,21 +14,19 @@ import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
-import type { ISessionRepository } from '../../authentication';
 import type { IOAuth2TokenIssuer } from '../token';
-import { BaseGrant } from './base';
+import { OAuth2BaseGrant } from './base';
 import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types';
 import type { OAuth2BearerResponseBuildContext } from '../response';
 import { buildOAuth2BearerTokenResponse } from '../response';
 
-export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> implements IOAuth2Grant {
+export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCode> implements IOAuth2Grant {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
-
-    protected sessionRepository : ISessionRepository;
 
     constructor(ctx: OAuth2AuthorizeGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
+            sessionManager: ctx.sessionManager,
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
@@ -38,7 +36,10 @@ export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> imp
         authorizationCode: OAuth2AuthorizationCode,
         options: OAuth2GrantRunWIthOptions = {},
     ) : Promise<OAuth2TokenGrantResponse> {
-        const session = await this.sessionRepository.save({
+        const session = await this.sessionManager.save({
+            expires: new Date(
+                Math.floor((this.refreshTokenIssuer.buildExp() + (3_600 * 24)) * 1_000),
+            ).toISOString(),
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
             realm_id: authorizationCode.realm_id,
@@ -47,7 +48,8 @@ export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> imp
             ...(authorizationCode.sub_kind === OAuth2SubKind.ROBOT ? { robot_id: authorizationCode.sub } : {}),
         });
 
-        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
+        const issuePayload : Partial<OAuth2TokenPayload> = {
+            user_agent: options.userAgent,
             remote_address: options.ipAddress,
             session_id: session.id,
             sub: authorizationCode.sub || undefined,
@@ -56,9 +58,10 @@ export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> imp
             realm_name: authorizationCode.realm_name,
             scope: authorizationCode.scope || undefined,
             client_id: authorizationCode.client_id || undefined,
-        });
+        };
 
-        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(accessTokenPayload);
+        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);
+        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(issuePayload);
 
         const buildContext : OAuth2BearerResponseBuildContext = {
             accessToken,

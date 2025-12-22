@@ -6,12 +6,13 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import { JWTError } from '@authup/specs';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../token';
-import { BaseGrant } from './base';
+import { OAuth2BaseGrant } from './base';
 import type { IOAuth2Grant, OAuth2GrantRunWIthOptions, OAuth2RefreshTokenGrantContext } from './types';
 
-export class OAuth2RefreshTokenGrant extends BaseGrant<string | OAuth2TokenPayload> implements IOAuth2Grant {
+export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2TokenPayload> implements IOAuth2Grant {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
     protected tokenVerifier : IOAuth2TokenVerifier;
@@ -21,6 +22,7 @@ export class OAuth2RefreshTokenGrant extends BaseGrant<string | OAuth2TokenPaylo
     constructor(ctx: OAuth2RefreshTokenGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
+            sessionManager: ctx.sessionManager,
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
@@ -42,12 +44,34 @@ export class OAuth2RefreshTokenGrant extends BaseGrant<string | OAuth2TokenPaylo
 
         await this.tokenRevoker.revoke(payload);
 
+        if (!payload.session_id) {
+            throw JWTError.payloadPropertyInvalid('session_id');
+        }
+
+        const session = await this.sessionManager.verify(payload.session_id);
+        session.expires = new Date(
+            Math.floor((this.refreshTokenIssuer.buildExp() + (3_600 * 24)) * 1_000),
+        ).toISOString();
+        if (options.userAgent) {
+            session.user_agent = options.userAgent;
+        }
+        if (options.ipAddress) {
+            session.ip_address = options.ipAddress;
+        }
+
+        await this.sessionManager.save(session);
+
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             ...payload,
-            remote_address: options.ipAddress || payload.remote_address,
+            remote_address: session.ip_address,
+            exp: this.accessTokenIssuer.buildExp(),
         });
 
-        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(accessTokenPayload);
+        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue({
+            ...payload,
+            remote_address: session.ip_address,
+            exp: this.refreshTokenIssuer.buildExp(),
+        });
 
         return buildOAuth2BearerTokenResponse({
             accessToken,

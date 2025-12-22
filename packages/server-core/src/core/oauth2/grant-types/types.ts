@@ -9,10 +9,12 @@ import type { ObjectLiteral } from '@authup/kit';
 import type {
     OAuth2TokenGrantResponse,
 } from '@authup/specs';
+import type { ISessionManager } from '../../authentication';
 import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../token';
 
 export type BaseGrantContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,
+    sessionManager: ISessionManager
 };
 
 export type OAuth2AuthorizeGrantContext = BaseGrantContext & {

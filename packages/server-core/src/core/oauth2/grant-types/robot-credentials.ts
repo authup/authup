@@ -11,14 +11,25 @@ import type { Robot } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
-import { BaseGrant } from './base';
+import { OAuth2BaseGrant } from './base';
 import { buildOAuth2BearerTokenResponse } from '../response';
 import type { OAuth2GrantRunWIthOptions } from './types';
 
-export class RobotCredentialsGrant extends BaseGrant<Robot> {
+export class RobotCredentialsGrant extends OAuth2BaseGrant<Robot> {
     async runWith(input: Robot, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
+        const session = await this.sessionManager.save({
+            expires: new Date(
+                Math.floor((this.accessTokenIssuer.buildExp() + (3_600 * 24)) * 1_000),
+            ).toISOString(),
+            user_agent: options.userAgent,
+            ip_address: options.ipAddress,
+            realm_id: input.realm_id,
+            robot_id: input.id,
+        });
+
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            ...options,
+            session_id: session.id,
+            remote_address: session.ip_address,
             scope: ScopeName.GLOBAL,
             sub: input.id,
             sub_kind: OAuth2SubKind.ROBOT,

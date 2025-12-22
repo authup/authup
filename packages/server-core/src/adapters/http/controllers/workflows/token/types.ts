@@ -12,7 +12,7 @@ import type {
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
-    IOAuth2TokenVerifier,
+    IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../../core';
 
 export type TokenControllerOptions = {
@@ -29,6 +29,8 @@ export type TokenControllerContext = {
     refreshTokenIssuer: IOAuth2TokenIssuer,
     tokenVerifier: IOAuth2TokenVerifier,
     tokenRevoker: IOAuth2TokenRevoker,
+
+    sessionManager: ISessionManager,
 
     identityResolver: IIdentityResolver,
 

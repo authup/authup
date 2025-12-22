@@ -19,10 +19,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
     protected codeVerifier : IOAuth2AuthorizationCodeVerifier;
 
     constructor(ctx: HTTPOAuth2AuthorizeGrantContext) {
-        super({
-            accessTokenIssuer: ctx.accessTokenIssuer,
-            refreshTokenIssuer: ctx.refreshTokenIssuer,
-        });
+        super(ctx);
 
         this.codeVerifier = ctx.codeVerifier;
     }

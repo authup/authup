@@ -13,7 +13,6 @@ import type { IOAuth2TokenSigner } from '../../signer';
 import type { IOAuth2TokenRepository } from '../../repository';
 import { OAuth2BaseTokenIssuer } from '../base';
 import type {
-    OAuth2TokenIssuerOptions,
     OAuth2TokenIssuerResponse,
 } from '../types';
 import type { IOAuth2OpenIDTokenIssuer, OAuth2OpenIDTokenIssuerContext } from './types';
@@ -38,7 +37,7 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
         this.claimsBuilder = new OAuth2OpenIDClaimsBuilder();
     }
 
-    async issue(input: OAuth2TokenPayload = {}, options: OAuth2TokenIssuerOptions = {}) : Promise<OAuth2TokenIssuerResponse> {
+    async issue(input: OAuth2TokenPayload = {}) : Promise<OAuth2TokenIssuerResponse> {
         if (!input.sub_kind) {
             throw JWTError.payloadPropertyInvalid('sub_kind');
         }
@@ -56,13 +55,12 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             throw JWTError.payloadInvalid();
         }
 
-        return this.issueWithIdentity(input, identity, options);
+        return this.issueWithIdentity(input, identity);
     }
 
     async issueWithIdentity(
         input: OAuth2TokenPayload,
         identity: Identity,
-        options: OAuth2TokenIssuerOptions = {},
     ): Promise<OAuth2TokenIssuerResponse> {
         const claims = this.claimsBuilder.fromIdentity(identity);
 
@@ -73,7 +71,7 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             ...claims,
             kind: OAuth2TokenKind.ID_TOKEN,
             auth_time: utc,
-            exp: this.buildExp(input, options),
+            exp: this.buildExp(input),
             updated_at: utc,
         });
 

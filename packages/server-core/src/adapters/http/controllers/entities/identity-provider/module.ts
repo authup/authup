@@ -75,6 +75,7 @@ export class IdentityProviderController {
         this.identityGrant = new IdentityGrantType({
             accessTokenIssuer: ctx.accessTokenIssuer,
             refreshTokenIssuer: ctx.refreshTokenIssuer,
+            sessionManager: ctx.sessionManager,
         });
     }
 

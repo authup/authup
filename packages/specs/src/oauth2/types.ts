@@ -73,6 +73,11 @@ export type OAuth2TokenPayload = JWTClaims & {
      * Self: remote address
      */
     remote_address?: string
+
+    /**
+     * Self: user agent
+     */
+    user_agent?: string
 };
 
 // todo: this should be removed.

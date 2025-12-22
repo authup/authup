@@ -57,7 +57,7 @@ import type {
     IOAuth2OpenIDTokenIssuer,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
-    IOAuth2TokenVerifier,
+    IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../core';
 import {
     ClientAuthenticator,
@@ -65,6 +65,7 @@ import {
     RobotAuthenticator,
     UserAuthenticator,
 } from '../../../../core';
+import { AuthenticationInjectionKey } from '../../authentication';
 import { OAuth2InjectionToken } from '../../oauth2';
 import { IdentityInjectionKey } from '../../identity';
 import type { Config } from '../../config';
@@ -175,6 +176,10 @@ export class HTTPControllerModule {
             cookieDomains.push(config.cookieDomain);
         }
 
+        const sessionManager = container.resolve<ISessionManager>(
+            AuthenticationInjectionKey.SessionManager,
+        );
+
         const codeVerifier = container.resolve<IOAuth2AuthorizationCodeVerifier>(
             OAuth2InjectionToken.AuthorizationCodeVerifier,
         );
@@ -226,6 +231,8 @@ export class HTTPControllerModule {
             clientAuthenticator,
             robotAuthenticator,
             userAuthenticator,
+
+            sessionManager,
         });
     }
 
@@ -294,6 +301,10 @@ export class HTTPControllerModule {
             cookieDomains.push(config.cookieDomain);
         }
 
+        const sessionManager = container.resolve<ISessionManager>(
+            AuthenticationInjectionKey.SessionManager,
+        );
+
         const accountManager = container.resolve<IIdentityProviderAccountManager>(
             IdentityInjectionKey.ProviderAccountManager,
         );
@@ -328,6 +339,7 @@ export class HTTPControllerModule {
 
             accessTokenIssuer,
             refreshTokenIssuer,
+            sessionManager,
         });
     }
 

@@ -7,6 +7,7 @@
 
 import { Application } from './module';
 import {
+    AuthenticationModule,
     CacheModule,
     ComponentsModule,
     ConfigModule,
@@ -41,6 +42,7 @@ export function createApplication() {
         new DatabaseModule(),
         new LdapModule(),
 
+        new AuthenticationModule(),
         new IdentityModule(),
         new OAuth2Module(),
 

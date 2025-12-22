@@ -9,7 +9,7 @@ import type {
     IIdentityProviderAccountManager,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
-    IOAuth2TokenIssuer,
+    IOAuth2TokenIssuer, ISessionManager,
 } from '../../../../../core';
 
 export type IdentityProviderControllerOptions = {
@@ -29,4 +29,6 @@ export type IdentityProviderControllerContext = {
 
     accessTokenIssuer: IOAuth2TokenIssuer,
     refreshTokenIssuer: IOAuth2TokenIssuer,
+
+    sessionManager: ISessionManager,
 };

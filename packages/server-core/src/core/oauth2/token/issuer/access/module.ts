@@ -28,11 +28,11 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
         this.signer = signer;
     }
 
-    async issue(input: OAuth2TokenPayload = {}, options: OAuth2TokenIssuerOptions = {}) : Promise<OAuth2TokenIssuerResponse> {
+    async issue(input: OAuth2TokenPayload = {}) : Promise<OAuth2TokenIssuerResponse> {
         const data = await this.repository.insert({
             ...input,
             kind: OAuth2TokenKind.ACCESS,
-            exp: this.buildExp(input, options),
+            exp: this.buildExp(input),
         });
 
         const token = await this.signer.sign(data);
