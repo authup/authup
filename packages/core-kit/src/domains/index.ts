@@ -21,7 +21,6 @@ export * from './identity-provider-account';
 export * from './identity-provider-attribute-mapping';
 export * from './identity-provider-permission-mapping';
 export * from './identity-provider-role-mapping';
-export * from './refresh-token';
 export * from './permission';
 export * from './policy';
 export * from './policy-attribute';
