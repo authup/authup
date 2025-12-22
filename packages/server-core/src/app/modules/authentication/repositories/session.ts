@@ -20,7 +20,7 @@ export class SessionRepository implements ISessionRepository {
 
     // -----------------------------------------------------
 
-    findOneById(id: string): Promise<Session | null> | null {
+    findOneById(id: string): Promise<Session | null> {
         return this.repository.findOneBy({
             id,
         });
