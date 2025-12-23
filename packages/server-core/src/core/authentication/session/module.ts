@@ -38,31 +38,32 @@ export class SessionManager implements ISessionManager {
             Date.now() + (this.options.maxAge * 1_000),
         ).toISOString();
 
-        if (!input.id) {
-            switch (input.sub_kind) {
-                case IdentityType.CLIENT: {
-                    input.client_id = input.sub;
-                    break;
-                }
-                case IdentityType.ROBOT: {
-                    input.robot_id = input.sub;
-                    break;
-                }
-                case IdentityType.USER: {
-                    input.user_id = input.sub;
-                    break;
-                }
+        switch (input.sub_kind) {
+            case IdentityType.CLIENT: {
+                input.client_id = input.sub;
+                break;
+            }
+            case IdentityType.ROBOT: {
+                input.robot_id = input.sub;
+                break;
+            }
+            case IdentityType.USER: {
+                input.user_id = input.sub;
+                break;
             }
         }
+
         return this.repository.save(input);
     }
 
     async ping(session: Session): Promise<Session> {
-        const seenAt = new Date(session.seen_at).getTime();
-        const threshold = seenAt + (5 * 1_000);
+        if (session.seen_at) {
+            const seenAt = new Date(session.seen_at).getTime();
+            const threshold = seenAt + (5 * 1_000);
 
-        if (threshold < Date.now()) {
-            return session;
+            if (threshold < Date.now()) {
+                return session;
+            }
         }
 
         session.seen_at = new Date().toISOString();
@@ -73,7 +74,10 @@ export class SessionManager implements ISessionManager {
     // -----------------------------------------------------
 
     async refresh(session: Session): Promise<Session> {
-        session.refreshed_at = new Date().toISOString();
+        const now = new Date().toISOString();
+        session.refreshed_at = now;
+        session.seen_at = now;
+
         session.expires_at = new Date(
             Date.now() + (this.options.maxAge * 1_000),
         ).toISOString();
