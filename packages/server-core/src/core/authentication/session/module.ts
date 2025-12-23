@@ -8,15 +8,20 @@
 import type { Session } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import { AuthupError } from '@authup/errors';
-import type { ISessionManager, ISessionRepository } from './types';
+import type {
+    ISessionManager, ISessionRepository, SessionManagerContext, SessionManagerOptions,
+} from './types';
 
 export class SessionManager implements ISessionManager {
+    protected options: SessionManagerOptions;
+
     protected repository: ISessionRepository;
 
     // -----------------------------------------------------
 
-    constructor(repository: ISessionRepository) {
-        this.repository = repository;
+    constructor(ctx: SessionManagerContext) {
+        this.options = ctx.options;
+        this.repository = ctx.repository;
     }
 
     // -----------------------------------------------------
@@ -26,11 +31,11 @@ export class SessionManager implements ISessionManager {
      *
      * @param input
      */
-    async save(input: Partial<Session>): Promise<Session> {
+    async create(input: Partial<Session>): Promise<Session> {
         input.ip_address = input.ip_address || '127.0.0.1';
         input.user_agent = input.user_agent || 'system';
-        input.expires = input.expires || new Date(
-            Date.now() + (3_600 * 24 * 1_000),
+        input.expires_at = input.expires_at || new Date(
+            Date.now() + (this.options.maxAge * 1_000),
         ).toISOString();
 
         if (!input.id) {
@@ -52,6 +57,30 @@ export class SessionManager implements ISessionManager {
         return this.repository.save(input);
     }
 
+    async ping(session: Session): Promise<Session> {
+        const seenAt = new Date(session.seen_at).getTime();
+        const threshold = seenAt + (5 * 1_000);
+
+        if (threshold < Date.now()) {
+            return session;
+        }
+
+        session.seen_at = new Date().toISOString();
+
+        return this.repository.save(session);
+    }
+
+    // -----------------------------------------------------
+
+    async refresh(session: Session): Promise<Session> {
+        session.refreshed_at = new Date().toISOString();
+        session.expires_at = new Date(
+            Date.now() + (this.options.maxAge * 1_000),
+        ).toISOString();
+
+        return this.repository.save(session);
+    }
+
     // -----------------------------------------------------
 
     /**
@@ -66,7 +95,7 @@ export class SessionManager implements ISessionManager {
             throw new AuthupError('Session does not exist');
         }
 
-        const ms = new Date(entity.expires).getTime();
+        const ms = new Date(entity.expires_at).getTime();
         if (Date.now() > ms) {
             await this.repository.remove(entity);
 

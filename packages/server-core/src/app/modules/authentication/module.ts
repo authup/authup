@@ -14,6 +14,8 @@ import type {
 import {
     SessionManager,
 } from '../../../core';
+import type { Config } from '../config';
+import { ConfigInjectionKey } from '../config';
 
 import type { Module } from '../types';
 import { AuthenticationInjectionKey } from './constants';
@@ -30,8 +32,14 @@ export class AuthenticationModule implements Module {
 
         container.register(AuthenticationInjectionKey.SessionManager, {
             useFactory: (c) => {
+                const config = c.resolve<Config>(ConfigInjectionKey);
                 const repository = c.resolve<ISessionRepository>(AuthenticationInjectionKey.SessionRepository);
-                return new SessionManager(repository);
+                return new SessionManager({
+                    repository,
+                    options: {
+                        maxAge: config.tokenRefreshMaxAge + 3_600,
+                    },
+                });
             },
         });
     }

@@ -49,17 +49,13 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
         }
 
         const session = await this.sessionManager.verify(payload.session_id);
-        session.expires = new Date(
-            Math.floor((this.refreshTokenIssuer.buildExp() + (3_600 * 24)) * 1_000),
-        ).toISOString();
         if (options.userAgent) {
             session.user_agent = options.userAgent;
         }
         if (options.ipAddress) {
             session.ip_address = options.ipAddress;
         }
-
-        await this.sessionManager.save(session);
+        await this.sessionManager.refresh(session);
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
             ...payload,

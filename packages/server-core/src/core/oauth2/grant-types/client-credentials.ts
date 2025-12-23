@@ -20,10 +20,7 @@ import type { OAuth2GrantRunWIthOptions } from './types';
 
 export class ClientCredentialsGrant extends OAuth2BaseGrant<Client> {
     async runWith(input: Client, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
-        const session = await this.sessionManager.save({
-            expires: new Date(
-                Math.floor((this.accessTokenIssuer.buildExp() + (3_600 * 24)) * 1_000),
-            ).toISOString(),
+        const session = await this.sessionManager.create({
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
             realm_id: input.realm_id,

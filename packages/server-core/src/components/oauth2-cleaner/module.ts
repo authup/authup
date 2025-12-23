@@ -21,7 +21,7 @@ export function createOAuth2CleanerComponent(dataSource: DataSource) : Component
 
                 await sessionRepository
                     .delete({
-                        expires: LessThan(isoDate),
+                        expires_at: LessThan(isoDate),
                     });
             };
 

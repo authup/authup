@@ -30,9 +30,6 @@ export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
         options: OAuth2GrantRunWIthOptions = {},
     ): Promise<OAuth2TokenGrantResponse> {
         const session : Partial<Session> = {
-            expires: new Date(
-                Math.floor((this.refreshTokenIssuer.buildExp() + (3_600 * 24)) * 1_000),
-            ).toISOString(),
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
             realm_id: identity.data.realm_id,
@@ -40,7 +37,7 @@ export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
             sub_kind: identity.type,
         };
 
-        const { id: sessionId } = await this.sessionManager.save(session);
+        const { id: sessionId } = await this.sessionManager.create(session);
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
             session_id: sessionId,

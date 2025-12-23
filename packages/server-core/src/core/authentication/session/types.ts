@@ -17,11 +17,39 @@ export interface ISessionRepository {
     remove(session: Session) : Promise<void>;
 }
 
+export type SessionManagerOptions = {
+    /**
+     * Max age in seconds (sec).
+     */
+    maxAge: number
+};
+
+export type SessionManagerContext = {
+    options: SessionManagerOptions,
+    repository: ISessionRepository,
+};
+
 export interface ISessionManager {
     /**
+     * Create new session.
+     *
      * @param session
      */
-    save(session: Partial<Session>): Promise<Session>;
+    create(session: Partial<Session>): Promise<Session>;
+
+    /**
+     * Updates seen_at with current time.
+     *
+     * @param session
+     */
+    ping(session: Session) : Promise<Session>;
+
+    /**
+     * Updates refreshed_at, seen_at with current time.
+     *
+     * @param session
+     */
+    refresh(session: Session) : Promise<Session>;
 
     /**
      * Check if session exists and is valid.

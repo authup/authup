@@ -21,12 +21,6 @@ export class SessionEntity implements Session {
     @PrimaryGeneratedColumn('uuid')
         id: string;
 
-    @Column({
-        type: 'varchar',
-        length: 28,
-    })
-        expires: string;
-
     @Index()
     @Column({ type: 'varchar', length: 64 })
         sub: string;
@@ -45,11 +39,29 @@ export class SessionEntity implements Session {
 
     // ------------------------------------------------------------------
 
-    @CreateDateColumn()
-        created_at: string;
+    @Column({
+        type: 'varchar',
+        length: 28,
+    })
+        expires_at: string;
+
+    @Column({
+        type: 'varchar',
+        length: 28,
+    })
+        refreshed_at: string;
+
+    @Column({
+        type: 'varchar',
+        length: 28,
+    })
+        seen_at: string;
 
     @UpdateDateColumn()
         updated_at: string;
+
+    @CreateDateColumn()
+        created_at: string;
 
     // ------------------------------------------------------------------
 

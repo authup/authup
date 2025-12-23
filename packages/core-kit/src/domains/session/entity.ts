@@ -17,11 +17,6 @@ export interface Session {
     id: string;
 
     /**
-     * Expiration date (iso)
-     */
-    expires: string,
-
-    /**
      * Subject ID
      */
     sub: string,
@@ -44,14 +39,29 @@ export interface Session {
     // ------------------------------------------------------------------
 
     /**
-     * Creation date of session
+     * Expiration date (iso)
      */
-    created_at: string,
+    expires_at: string,
+
+    /**
+     * Time session was renewed.
+     */
+    refreshed_at: string,
+
+    /**
+     * Last time subject was seen.
+     */
+    seen_at: string,
 
     /**
      * Last time new access-token, refresh-token created for session.
      */
     updated_at: string,
+
+    /**
+     * Creation date of session
+     */
+    created_at: string,
 
     // ------------------------------------------------------------------
 
