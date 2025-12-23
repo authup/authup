@@ -48,14 +48,16 @@ export class SessionEntity implements Session {
     @Column({
         type: 'varchar',
         length: 28,
+        nullable: true,
     })
-        refreshed_at: string;
+        refreshed_at: string | null;
 
     @Column({
         type: 'varchar',
         length: 28,
+        nullable: true,
     })
-        seen_at: string;
+        seen_at: string | null;
 
     @UpdateDateColumn()
         updated_at: string;

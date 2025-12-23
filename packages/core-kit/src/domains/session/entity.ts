@@ -46,12 +46,12 @@ export interface Session {
     /**
      * Time session was renewed.
      */
-    refreshed_at: string,
+    refreshed_at: string | null,
 
     /**
      * Last time subject was seen.
      */
-    seen_at: string,
+    seen_at: string | null,
 
     /**
      * Last time new access-token, refresh-token created for session.
