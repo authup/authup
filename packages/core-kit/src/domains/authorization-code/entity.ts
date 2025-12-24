@@ -24,9 +24,9 @@ export interface OAuth2AuthorizationCode {
 
     client_id?: Client['id'] | null,
 
-    sub?: string | null,
+    sub: string,
 
-    sub_kind?: `${OAuth2SubKind}`,
+    sub_kind: `${OAuth2SubKind}`,
 
     realm_id: Realm['id'],
 

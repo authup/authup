@@ -12,14 +12,14 @@ import type { Client } from '@authup/core-kit';
 import { ClientError } from '@authup/core-kit';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
+import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
     ClientCredentialsGrant,
 } from '../../../../../core';
-import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPGrant } from './types';
+import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPOAuth2Grant } from './types';
 
-export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPGrant {
+export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<Client>;
 
     constructor(ctx: HTTPOAuth2ClientCredentialsGrantContext) {
@@ -53,7 +53,8 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
         const client = await this.authenticator.authenticate(clientId, clientSecret, realmId);
 
         return this.runWith(client, {
-            remote_address: getRequestIP(req, { trustProxy: true }),
+            ipAddress: getRequestIP(req, { trustProxy: true }),
+            userAgent: getRequestHeader(req, 'user-agent'),
         });
     }
 }

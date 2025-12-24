@@ -6,7 +6,7 @@
  */
 
 import type { IPermissionProvider } from '@authup/access';
-import type { IIdentityResolver, IOAuth2TokenVerifier } from '../../../../../core';
+import type { IIdentityResolver, IOAuth2TokenVerifier, ISessionManager } from '../../../../../core';
 
 export type HTTPAuthorizationMiddlewareOptions = {
     cookieDomain?: string;
@@ -17,6 +17,7 @@ export type HTTPAuthorizationMiddlewareOptions = {
 
 export type HTTPAuthorizationMiddlewareContext = {
     identityResolver: IIdentityResolver,
+    sessionManager: ISessionManager,
     oauth2TokenVerifier: IOAuth2TokenVerifier,
     permissionProvider: IPermissionProvider,
 

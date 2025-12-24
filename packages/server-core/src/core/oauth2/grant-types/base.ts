@@ -6,22 +6,26 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
+import type { ISessionManager } from '../../authentication';
 import type { IOAuth2TokenIssuer } from '../token';
-import type { BaseGrantContext, IOAuth2Grant } from './types';
+import type { BaseGrantContext, IOAuth2Grant, OAuth2GrantRunWIthOptions } from './types';
 
-export abstract class BaseGrant<
+export abstract class OAuth2BaseGrant<
     T = ObjectLiteral,
 > implements IOAuth2Grant<T> {
     protected accessTokenIssuer : IOAuth2TokenIssuer;
+
+    protected sessionManager : ISessionManager;
 
     // -----------------------------------------------------
 
     constructor(ctx: BaseGrantContext) {
         this.accessTokenIssuer = ctx.accessTokenIssuer;
+        this.sessionManager = ctx.sessionManager;
     }
 
     // -----------------------------------------------------
 
-    abstract runWith(input: T, base?: OAuth2TokenPayload): Promise<OAuth2TokenGrantResponse>;
+    abstract runWith(input: T, options?: OAuth2GrantRunWIthOptions): Promise<OAuth2TokenGrantResponse>;
 }

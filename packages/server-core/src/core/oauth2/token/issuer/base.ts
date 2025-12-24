@@ -11,26 +11,33 @@ import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerRes
 export abstract class OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
     protected options: OAuth2TokenIssuerOptions;
 
+    // ------------------------------------------------------------------
+
     protected constructor(options?: OAuth2TokenIssuerOptions) {
         this.options = options || {};
     }
 
+    // ------------------------------------------------------------------
+
     abstract issue(input: OAuth2TokenPayload, options?: OAuth2TokenIssuerOptions): Promise<OAuth2TokenIssuerResponse>;
 
-    protected buildExp(input: OAuth2TokenPayload, options: OAuth2TokenIssuerOptions = {}) {
-        const utc = Math.floor(new Date().getTime() / 1000);
+    // ------------------------------------------------------------------
 
-        let exp: number;
-        if (options.maxAge) {
-            exp = utc + options.maxAge;
-        } else if (this.options.maxAge) {
-            exp = utc + this.options.maxAge;
-        } else if (input.exp) {
-            exp = input.exp;
-        } else {
-            exp = utc + 3_600;
+    /**
+     * Build utc expire time (in seconds).
+     *
+     * @param input
+     */
+    buildExp(input: OAuth2TokenPayload = {}) : number {
+        if (input.exp) {
+            return input.exp;
         }
 
-        return exp;
+        const utc = Math.floor(new Date().getTime() / 1000);
+        if (this.options.maxAge) {
+            return utc + this.options.maxAge;
+        }
+
+        return utc + 3_600;
     }
 }

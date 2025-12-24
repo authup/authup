@@ -21,5 +21,17 @@ export type OAuth2TokenIssuerOptions = {
 };
 
 export interface IOAuth2TokenIssuer {
-    issue(input: OAuth2TokenPayload, options?: OAuth2TokenIssuerOptions) : Promise<OAuth2TokenIssuerResponse>;
+    /**
+     * Issue new token.
+     *
+     * @param input
+     */
+    issue(input: OAuth2TokenPayload) : Promise<OAuth2TokenIssuerResponse>;
+
+    /**
+     * Build expiration time in seconds (utc).
+     *
+     * @param input
+     */
+    buildExp(input?: OAuth2TokenPayload) : number;
 }

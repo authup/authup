@@ -8,15 +8,15 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
-import { getRequestIP } from 'routup';
+import { getRequestHeader, getRequestIP } from 'routup';
 import type { Robot } from '@authup/core-kit';
 import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
     RobotCredentialsGrant,
 } from '../../../../../core';
-import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPGrant } from './types';
+import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPOAuth2Grant } from './types';
 
-export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPGrant {
+export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<Robot>;
 
     constructor(ctx: HTTPOAuth2RobotCredentialsGrantContext) {
@@ -36,7 +36,8 @@ export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements 
         return this.runWith(
             entity,
             {
-                remote_address: getRequestIP(req, { trustProxy: true }),
+                ipAddress: getRequestIP(req, { trustProxy: true }),
+                userAgent: getRequestHeader(req, 'user-agent'),
             },
         );
     }

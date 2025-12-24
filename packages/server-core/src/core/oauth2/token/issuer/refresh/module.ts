@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { omitObjectProperties } from '@authup/kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
 import type { IOAuth2TokenSigner } from '../../signer';
@@ -29,14 +28,11 @@ export class OAuth2RefreshTokenIssuer extends OAuth2BaseTokenIssuer implements I
         this.signer = signer;
     }
 
-    async issue(input: OAuth2TokenPayload = {}, options: OAuth2TokenIssuerOptions = {}) : Promise<OAuth2TokenIssuerResponse> {
-        const data = await this.repository.save({
-            ...omitObjectProperties(input, [
-                'jti',
-                'exp',
-            ]),
+    async issue(input: OAuth2TokenPayload = {}) : Promise<OAuth2TokenIssuerResponse> {
+        const data = await this.repository.insert({
+            ...input,
             kind: OAuth2TokenKind.REFRESH,
-            exp: this.buildExp(input, options),
+            exp: this.buildExp(input),
         });
 
         const token = await this.signer.sign(data);

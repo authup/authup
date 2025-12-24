@@ -8,7 +8,7 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { Request } from 'routup';
+import type { Request, Response } from 'routup';
 import {
     getRequestHeader, getRequestHostName, getRequestIP, sendRedirect,
 } from 'routup';
@@ -75,6 +75,7 @@ export class IdentityProviderController {
         this.identityGrant = new IdentityGrantType({
             accessTokenIssuer: ctx.accessTokenIssuer,
             refreshTokenIssuer: ctx.refreshTokenIssuer,
+            sessionManager: ctx.sessionManager,
         });
     }
 
@@ -196,8 +197,8 @@ export class IdentityProviderController {
     @DGet('/:id/authorize-in', [])
     async authorizeIn(
     @DPath('id') _id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ) {
         const id = useRequestParamID(req);
         const dataSource = await useDataSource();
@@ -231,13 +232,19 @@ export class IdentityProviderController {
 
         const user = await authenticator.authenticate(code);
 
-        const token = await this.identityGrant.runWith({
-            type: IdentityType.USER,
-            data: {
-                ...user,
-                realm: entity.realm,
+        const token = await this.identityGrant.runWith(
+            {
+                type: IdentityType.USER,
+                data: {
+                    ...user,
+                    realm: entity.realm,
+                },
             },
-        });
+            {
+                ipAddress: getRequestIP(req, { trustProxy: true }),
+                userAgent: getRequestHeader(req, 'user-agent'),
+            },
+        );
 
         const domainsRaw : string[] = [
             ...this.options.cookieDomains,

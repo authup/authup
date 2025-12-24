@@ -8,6 +8,7 @@
 export enum CacheOAuth2Prefix {
     AUTHORIZATION_STATE = 'oauth2_authorization_state',
     AUTHORIZATION_CODE = 'oauth2_authorization_code',
+    TOKEN = 'oauth2_token',
     TOKEN_CLAIMS = 'oauth2_token_claims',
     TOKEN_INACTIVE = 'oauth2_token_blocked',
 }

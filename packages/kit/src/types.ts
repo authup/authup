@@ -7,3 +7,13 @@
 
 export type ObjectLiteral = Record<string | number, any>;
 export type Result<T> = { success: true; data: T } | { success: false; error: Error };
+
+export type ObjectRequired<
+    T extends ObjectLiteral,
+    Key extends keyof T,
+> = Pick<T, Key> & Partial<Omit<T, Key>>;
+
+export type ObjectOptional<
+    T extends ObjectLiteral,
+    Key extends keyof T,
+> = ObjectRequired<T, Exclude<keyof T, Key>>;

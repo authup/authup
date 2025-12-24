@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './authentication';
 export * from './components';
 export * from './config';
 export * from './database';

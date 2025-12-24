@@ -6,36 +6,64 @@
  */
 
 import {
-    Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn,
+    Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
 import type {
-    Client, OAuth2RefreshToken, Realm, Robot, User,
+    Client, Realm, Robot, Session, User,
 } from '@authup/core-kit';
 import { ClientEntity } from '../client';
 import { RobotEntity } from '../robot';
 import { RealmEntity } from '../realm';
 import { UserEntity } from '../user';
 
-@Entity({ name: 'auth_refresh_tokens' })
-export class OAuth2RefreshTokenEntity implements OAuth2RefreshToken {
+@Entity({ name: 'auth_sessions' })
+export class SessionEntity implements Session {
     @PrimaryGeneratedColumn('uuid')
         id: string;
+
+    @Index()
+    @Column({ type: 'varchar', length: 64 })
+        sub: string;
+
+    @Index()
+    @Column({ type: 'varchar', length: 64 })
+        sub_kind: string;
+
+    @Index()
+    @Column({ type: 'varchar', length: 15 })
+        ip_address: string;
+
+    @Index()
+    @Column({ type: 'varchar', length: 512 })
+        user_agent: string;
+
+    // ------------------------------------------------------------------
 
     @Column({
         type: 'varchar',
         length: 28,
     })
-        expires: string;
+        expires_at: string;
 
     @Column({
-        type: 'varchar', length: 512, nullable: true, default: null,
+        type: 'varchar',
+        length: 28,
+        nullable: true,
     })
-        scope: string | null;
+        refreshed_at: string | null;
 
     @Column({
-        nullable: true, default: null, type: 'uuid',
+        type: 'varchar',
+        length: 28,
+        nullable: true,
     })
-        access_token: string | null;
+        seen_at: string | null;
+
+    @UpdateDateColumn()
+        updated_at: string;
+
+    @CreateDateColumn()
+        created_at: string;
 
     // ------------------------------------------------------------------
 

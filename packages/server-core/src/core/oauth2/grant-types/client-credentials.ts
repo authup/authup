@@ -5,21 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import {
     OAuth2SubKind,
 } from '@authup/specs';
 import type { Client } from '@authup/core-kit';
 import {
+    IdentityType,
     ScopeName,
 } from '@authup/core-kit';
-import { BaseGrant } from './base';
+import { OAuth2BaseGrant } from './base';
 import { buildOAuth2BearerTokenResponse } from '../response';
+import type { OAuth2GrantRunWIthOptions } from './types';
 
-export class ClientCredentialsGrant extends BaseGrant<Client> {
-    async runWith(input: Client, base: OAuth2TokenPayload = {}) : Promise<OAuth2TokenGrantResponse> {
+export class ClientCredentialsGrant extends OAuth2BaseGrant<Client> {
+    async runWith(input: Client, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
+        const session = await this.sessionManager.create({
+            user_agent: options.userAgent,
+            ip_address: options.ipAddress,
+            realm_id: input.realm_id,
+            sub: input.id,
+            sub_kind: IdentityType.CLIENT,
+        });
+
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            ...base,
+            user_agent: session.user_agent,
+            remote_address: session.ip_address,
+            session_id: session.id,
             scope: ScopeName.GLOBAL,
             sub: input.id,
             sub_kind: OAuth2SubKind.CLIENT,

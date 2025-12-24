@@ -35,7 +35,7 @@ import {
     HTTPOAuth2RefreshTokenGrant,
     HTTPPasswordGrant,
     HTTPRobotCredentialsGrant,
-    IHTTPGrant,
+    IHTTPOAuth2Grant,
     guessOauth2GrantTypeByRequest,
 } from '../../../adapters';
 import { extractTokenFromRequest } from './utils';
@@ -56,7 +56,7 @@ export class TokenController {
 
     protected identityResolver : IIdentityResolver;
 
-    protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPGrant>;
+    protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
     // -------------------------------------------
 
@@ -73,25 +73,30 @@ export class TokenController {
                 codeVerifier: ctx.codeVerifier,
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
+                sessionManager: ctx.sessionManager,
             }),
             [OAuth2TokenGrant.CLIENT_CREDENTIALS]: new HTTPClientCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 authenticator: ctx.clientAuthenticator,
+                sessionManager: ctx.sessionManager,
             }),
             [OAuth2TokenGrant.ROBOT_CREDENTIALS]: new HTTPRobotCredentialsGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 authenticator: ctx.robotAuthenticator,
+                sessionManager: ctx.sessionManager,
             }),
             [OAuth2TokenGrant.PASSWORD]: new HTTPPasswordGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 authenticator: ctx.userAuthenticator,
+                sessionManager: ctx.sessionManager,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 tokenVerifier: ctx.tokenVerifier,
                 tokenRevoker: ctx.tokenRevoker,
+                sessionManager: ctx.sessionManager,
             }),
         };
     }

@@ -17,7 +17,6 @@ import {
     IdentityProviderPermissionMappingEntity,
     IdentityProviderRoleMappingEntity,
     KeyEntity,
-    OAuth2RefreshTokenEntity,
     PermissionEntity,
     PolicyAttributeEntity,
     PolicyEntity,
@@ -25,9 +24,10 @@ import {
     RobotEntity,
     RobotPermissionEntity,
     RobotRoleEntity,
-    RoleAttributeEntity, RoleEntity,
-    RolePermissionEntity,
+    RoleAttributeEntity,
+    RoleEntity, RolePermissionEntity,
     ScopeEntity,
+    SessionEntity,
     UserAttributeEntity,
     UserEntity,
     UserPermissionEntity,
@@ -39,7 +39,7 @@ export function extendDataSourceOptionsWithEntities<T extends DataSourceOptions>
         entities: [
             KeyEntity,
 
-            OAuth2RefreshTokenEntity,
+            SessionEntity,
 
             ClientEntity,
             ClientPermissionEntity,

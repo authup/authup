@@ -6,19 +6,20 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import type { Identity } from '@authup/core-kit';
+import type { Identity, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import type { IOAuth2TokenIssuer } from '../token';
-import { BaseGrant } from './base';
+import { OAuth2BaseGrant } from './base';
 import { buildOAuth2BearerTokenResponse } from '../response';
-import type { OAuth2IdentityGrantContext } from './types';
+import type { OAuth2GrantRunWIthOptions, OAuth2IdentityGrantContext } from './types';
 
-export class IdentityGrantType extends BaseGrant<Identity> {
+export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
     constructor(ctx: OAuth2IdentityGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
+            sessionManager: ctx.sessionManager,
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
@@ -26,18 +27,31 @@ export class IdentityGrantType extends BaseGrant<Identity> {
 
     async runWith(
         identity: Identity,
-        base: OAuth2TokenPayload = {},
+        options: OAuth2GrantRunWIthOptions = {},
     ): Promise<OAuth2TokenGrantResponse> {
-        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            ...base,
+        const session : Partial<Session> = {
+            user_agent: options.userAgent,
+            ip_address: options.ipAddress,
+            realm_id: identity.data.realm_id,
+            sub: identity.data.id,
+            sub_kind: identity.type,
+        };
+
+        const { id: sessionId } = await this.sessionManager.create(session);
+
+        const issuePayload : Partial<OAuth2TokenPayload> = {
+            session_id: sessionId,
+            user_agent: session.user_agent,
+            remote_address: session.ip_address,
             scope: ScopeName.GLOBAL,
             realm_id: identity.data.realm_id,
             realm_name: identity.data.realm?.name,
             sub: identity.data.id,
             sub_kind: identity.type,
-        });
+        };
 
-        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(accessTokenPayload);
+        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);
+        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(issuePayload);
 
         return buildOAuth2BearerTokenResponse({
             accessToken,

@@ -6,6 +6,7 @@
  */
 
 import {
+    AuthenticationModule,
     CacheModule,
     ConfigModule,
     HTTPModule,
@@ -49,6 +50,7 @@ export function createTestApplication() : TestApplication {
         new MailModule(),
 
         new TestDatabaseModule(),
+        new AuthenticationModule(),
         new IdentityModule(),
         new OAuth2Module(),
 

@@ -14,17 +14,18 @@ import {
     ScopeName,
 } from '@authup/core-kit';
 import type { IOAuth2TokenIssuer } from '../token';
-import { BaseGrant } from './base';
-import type { IOAuth2Grant, OAuth2AuthorizeGrantContext } from './types';
+import { OAuth2BaseGrant } from './base';
+import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types';
 import type { OAuth2BearerResponseBuildContext } from '../response';
 import { buildOAuth2BearerTokenResponse } from '../response';
 
-export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> implements IOAuth2Grant {
+export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCode> implements IOAuth2Grant {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
     constructor(ctx: OAuth2AuthorizeGrantContext) {
         super({
             accessTokenIssuer: ctx.accessTokenIssuer,
+            sessionManager: ctx.sessionManager,
         });
 
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
@@ -32,19 +33,31 @@ export class OAuth2AuthorizeGrant extends BaseGrant<OAuth2AuthorizationCode> imp
 
     async runWith(
         authorizationCode: OAuth2AuthorizationCode,
-        base: OAuth2TokenPayload = {},
+        options: OAuth2GrantRunWIthOptions = {},
     ) : Promise<OAuth2TokenGrantResponse> {
-        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue({
-            ...base,
+        const session = await this.sessionManager.create({
+            user_agent: options.userAgent,
+            ip_address: options.ipAddress,
+            realm_id: authorizationCode.realm_id,
+            client_id: authorizationCode.client_id,
+            sub_kind: authorizationCode.sub_kind,
+            sub: authorizationCode.sub,
+        });
+
+        const issuePayload : Partial<OAuth2TokenPayload> = {
+            user_agent: options.userAgent,
+            remote_address: options.ipAddress,
+            session_id: session.id,
             sub: authorizationCode.sub || undefined,
             sub_kind: authorizationCode.sub_kind,
             realm_id: authorizationCode.realm_id,
             realm_name: authorizationCode.realm_name,
             scope: authorizationCode.scope || undefined,
             client_id: authorizationCode.client_id || undefined,
-        });
+        };
 
-        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(accessTokenPayload);
+        const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);
+        const [refreshToken, refreshTokenPayload] = await this.refreshTokenIssuer.issue(issuePayload);
 
         const buildContext : OAuth2BearerResponseBuildContext = {
             accessToken,
