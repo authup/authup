@@ -74,6 +74,7 @@ export class AuthorizationMiddleware {
         this.options = ctx.options || {};
 
         this.identityResolver = ctx.identityResolver;
+        this.sessionManager = ctx.sessionManager;
 
         this.clientAuthenticator = new ClientAuthenticator(ctx.identityResolver);
         this.robotAuthenticator = new RobotAuthenticator(ctx.identityResolver);
