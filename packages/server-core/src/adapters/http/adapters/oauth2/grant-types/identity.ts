@@ -10,9 +10,9 @@ import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { IdentityGrantType } from '../../../../../core';
 import { useRequestIdentityOrFail } from '../../../request';
-import type { IHTTPGrant } from './types';
+import type { IHTTPOAuth2Grant } from './types';
 
-export class HTTPOAuth2IdentityGrantType extends IdentityGrantType implements IHTTPGrant {
+export class HTTPOAuth2IdentityGrantType extends IdentityGrantType implements IHTTPOAuth2Grant {
     runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
         const identity = useRequestIdentityOrFail(req);
 

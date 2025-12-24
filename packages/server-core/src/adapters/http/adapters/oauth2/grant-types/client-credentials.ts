@@ -17,9 +17,9 @@ import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
     ClientCredentialsGrant,
 } from '../../../../../core';
-import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPGrant } from './types';
+import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPOAuth2Grant } from './types';
 
-export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPGrant {
+export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<Client>;
 
     constructor(ctx: HTTPOAuth2ClientCredentialsGrantContext) {

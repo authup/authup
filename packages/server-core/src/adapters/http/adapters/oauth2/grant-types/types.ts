@@ -20,7 +20,7 @@ export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeVerifier: IOAuth2AuthorizationCodeVerifier
 };
 
-export interface IHTTPGrant {
+export interface IHTTPOAuth2Grant {
     runWithRequest(req: Request) : Promise<OAuth2TokenGrantResponse>
 }
 

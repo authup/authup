@@ -14,9 +14,9 @@ import type { ICredentialsAuthenticator } from '../../../../../core';
 import {
     RobotCredentialsGrant,
 } from '../../../../../core';
-import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPGrant } from './types';
+import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPOAuth2Grant } from './types';
 
-export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPGrant {
+export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<Robot>;
 
     constructor(ctx: HTTPOAuth2RobotCredentialsGrantContext) {

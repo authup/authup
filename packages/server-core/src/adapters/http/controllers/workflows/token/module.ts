@@ -35,7 +35,7 @@ import {
     HTTPOAuth2RefreshTokenGrant,
     HTTPPasswordGrant,
     HTTPRobotCredentialsGrant,
-    IHTTPGrant,
+    IHTTPOAuth2Grant,
     guessOauth2GrantTypeByRequest,
 } from '../../../adapters';
 import { extractTokenFromRequest } from './utils';
@@ -56,7 +56,7 @@ export class TokenController {
 
     protected identityResolver : IIdentityResolver;
 
-    protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPGrant>;
+    protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
     // -------------------------------------------
 

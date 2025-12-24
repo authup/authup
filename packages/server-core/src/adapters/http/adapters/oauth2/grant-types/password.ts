@@ -12,9 +12,9 @@ import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator } from '../../../../../core';
 import { PasswordGrantType } from '../../../../../core';
-import type { HTTPOAuth2PasswordGrantContext, IHTTPGrant } from './types';
+import type { HTTPOAuth2PasswordGrantContext, IHTTPOAuth2Grant } from './types';
 
-export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPGrant {
+export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2Grant {
     // todo: alt lookup ldap service, grab and save account/user, set provider: LdapProvider
     // todo: use composite authenticator (UserAuthenticator + IdentityProviderLdapAuthenticator)
     protected authenticator : ICredentialsAuthenticator<User>;

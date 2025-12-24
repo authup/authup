@@ -13,9 +13,9 @@ import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2AuthorizeGrant } from '../../../../../core';
 import type { IOAuth2AuthorizationCodeVerifier } from '../../../../../core';
-import type { HTTPOAuth2AuthorizeGrantContext, IHTTPGrant } from './types';
+import type { HTTPOAuth2AuthorizeGrantContext, IHTTPOAuth2Grant } from './types';
 
-export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPGrant {
+export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPOAuth2Grant {
     protected codeVerifier : IOAuth2AuthorizationCodeVerifier;
 
     constructor(ctx: HTTPOAuth2AuthorizeGrantContext) {
