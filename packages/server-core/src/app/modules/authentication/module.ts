@@ -6,6 +6,7 @@
  */
 
 import type { Session } from '@authup/core-kit';
+import type { ICache } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import { SessionEntity } from '../../../adapters/database/domains';
 import type {
@@ -14,6 +15,7 @@ import type {
 import {
     SessionManager,
 } from '../../../core';
+import { CacheInjectionKey } from '../cache';
 import type { Config } from '../config';
 import { ConfigInjectionKey } from '../config';
 
@@ -25,8 +27,12 @@ export class AuthenticationModule implements Module {
     async start(container: IDIContainer): Promise<void> {
         container.register(AuthenticationInjectionKey.SessionRepository, {
             useFactory: (c) => {
+                const cache = c.resolve<ICache>(CacheInjectionKey);
                 const repository = c.resolve<Repository<Session>>(SessionEntity);
-                return new SessionRepository(repository);
+                return new SessionRepository({
+                    cache,
+                    repository,
+                });
             },
         });
 

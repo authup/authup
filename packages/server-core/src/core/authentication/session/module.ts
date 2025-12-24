@@ -7,7 +7,7 @@
 
 import type { Session } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
-import { AuthupError } from '@authup/errors';
+import { JWTError } from '@authup/specs';
 import type {
     ISessionManager, ISessionRepository, SessionManagerContext, SessionManagerOptions,
 } from './types';
@@ -56,12 +56,14 @@ export class SessionManager implements ISessionManager {
         return this.repository.save(input);
     }
 
+    // -----------------------------------------------------
+
     async ping(session: Session): Promise<Session> {
         if (session.seen_at) {
             const seenAt = new Date(session.seen_at).getTime();
             const threshold = seenAt + (5 * 1_000);
 
-            if (threshold < Date.now()) {
+            if (threshold > Date.now()) {
                 return session;
             }
         }
@@ -91,22 +93,21 @@ export class SessionManager implements ISessionManager {
      * Verify session on token inspection/verification.
      *
      * @param id
+     * @throws JWTError
      */
-    async verify(id: string): Promise<Session> {
-        const entity = await this.repository.findOneById(id);
-        if (!entity) {
-            // todo: better error
-            throw new AuthupError('Session does not exist');
-        }
+    async findOneById(id: string): Promise<Session | null> {
+        return this.repository.findOneById(id);
+    }
 
-        const ms = new Date(entity.expires_at).getTime();
+    // -----------------------------------------------------
+
+    async verify(session: Session): Promise<void> {
+        const ms = new Date(session.expires_at).getTime();
         if (Date.now() > ms) {
-            await this.repository.remove(entity);
+            await this.repository.remove(session);
 
             // todo: better error
-            throw new AuthupError('The session has expired');
+            throw JWTError.expired();
         }
-
-        return entity;
     }
 }

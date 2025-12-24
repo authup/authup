@@ -11,7 +11,7 @@ import type { DataSource } from 'typeorm';
 import type {
     IDIContainer,
     IIdentityResolver,
-    IOAuth2TokenVerifier,
+    IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../core';
 import {
     createAuthorizationMiddleware,
@@ -25,6 +25,7 @@ import {
     registerRateLimitMiddleware,
 } from '../../../../adapters/http';
 import { resolvePackagePath } from '../../../../path';
+import { AuthenticationInjectionKey } from '../../authentication';
 import type { Config } from '../../config';
 import { ConfigInjectionKey } from '../../config';
 import { IdentityInjectionKey } from '../../identity';
@@ -125,6 +126,10 @@ export class HTTPMiddlewareModule {
             IdentityInjectionKey.Resolver,
         );
 
+        const sessionManager = container.resolve<ISessionManager>(
+            AuthenticationInjectionKey.SessionManager,
+        );
+
         const oauth2TokenVerifier = container.resolve<IOAuth2TokenVerifier>(
             OAuth2InjectionToken.TokenVerifier,
         );
@@ -135,6 +140,7 @@ export class HTTPMiddlewareModule {
             identityResolver,
             permissionProvider,
             oauth2TokenVerifier,
+            sessionManager,
             options: {
                 cookieDomain: config.cookieDomain,
                 clientAuthBasic: config.clientAuthBasic,

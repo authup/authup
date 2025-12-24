@@ -28,7 +28,7 @@ import {
 import { PolicyEngine } from '../../../../../security';
 import type {
     ICredentialsAuthenticator, IIdentityResolver,
-    IOAuth2TokenVerifier,
+    IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../../core';
 import {
     ClientAuthenticator,
@@ -57,6 +57,8 @@ export class AuthorizationMiddleware {
     // --------------------------------------
 
     protected identityResolver: IIdentityResolver;
+
+    protected sessionManager : ISessionManager;
 
     // --------------------------------------
 
@@ -168,6 +170,27 @@ export class AuthorizationMiddleware {
         if (payload.scope) {
             setRequestScopes(request, deserializeOAuth2Scope(payload.scope));
         }
+
+        // -------------------------------------------------------
+
+        if (!payload.session_id) {
+            throw JWTError.payloadPropertyInvalid('session_id');
+        }
+
+        const session = await this.sessionManager.findOneById(payload.session_id);
+        if (!session) {
+            throw JWTError.expired();
+        }
+
+        try {
+            await this.sessionManager.verify(session);
+        } catch (e) {
+            throw JWTError.expired();
+        }
+
+        await this.sessionManager.ping(session);
+
+        // -------------------------------------------------------
 
         if (!payload.sub_kind) {
             throw JWTError.payloadPropertyInvalid('sub_kind');

@@ -48,7 +48,13 @@ export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2Toke
             throw JWTError.payloadPropertyInvalid('session_id');
         }
 
-        const session = await this.sessionManager.verify(payload.session_id);
+        const session = await this.sessionManager.findOneById(payload.session_id);
+        if (!session) {
+            throw JWTError.payloadPropertyInvalid('session_id');
+        }
+
+        await this.sessionManager.verify(session);
+
         if (options.userAgent) {
             session.user_agent = options.userAgent;
         }

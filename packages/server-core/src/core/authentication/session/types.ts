@@ -54,7 +54,15 @@ export interface ISessionManager {
     /**
      * Check if session exists and is valid.
      *
+     * @throws JWTError
+     * @param session
+     */
+    verify(session: Session): Promise<void>;
+
+    /**
+     * Find session by id.
+     *
      * @param id
      */
-    verify(id: string): Promise<Session>;
+    findOneById(id: string): Promise<Session | null>;
 }
