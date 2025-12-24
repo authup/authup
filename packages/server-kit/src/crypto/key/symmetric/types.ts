@@ -47,3 +47,11 @@ export type HMACKeyImportOptionsInput = Partial<HmacImportParams> & {
 
 export type SymmetricKeyImportOptions = AESKeyImportOptions | HMACKeyImportOptions;
 export type SymmetricKeyImportOptionsInput = AESKeyImportOptions | HMACKeyImportOptionsInput;
+
+// -----------------------------------------------
+
+export type SymmetricKeyImportContext<T> = {
+    format: 'raw',
+    key: T,
+    options: SymmetricKeyImportOptionsInput
+};

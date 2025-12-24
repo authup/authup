@@ -6,11 +6,13 @@
  */
 
 import type { Key } from '@authup/core-kit';
-import { CryptoAsymmetricAlgorithm, CryptoKeyContainer, createAsymmetricKeyPair } from '@authup/server-kit';
+import {
+    AsymmetricKey, CryptoAsymmetricAlgorithm, createAsymmetricKeyPair,
+} from '@authup/server-kit';
 import { JWKType, JWTAlgorithm } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '../../../../../adapters/database/domains';
-import type { IOAuth2KeyRepository } from '../../../../../core/oauth2/key';
+import { KeyEntity } from '../../../../../adapters/database';
+import type { IOAuth2KeyRepository } from '../../../../../core';
 
 export class OAuth2KeyRepository implements IOAuth2KeyRepository {
     async findByRealmId(realmId: string): Promise<Key | null> {
@@ -52,8 +54,8 @@ export class OAuth2KeyRepository implements IOAuth2KeyRepository {
             name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
         });
 
-        const privateKeyContainer = new CryptoKeyContainer(keyPair.privateKey);
-        const publicKeyContainer = new CryptoKeyContainer(keyPair.publicKey);
+        const privateKeyContainer = new AsymmetricKey(keyPair.privateKey);
+        const publicKeyContainer = new AsymmetricKey(keyPair.publicKey);
 
         entity = repository.create({
             type: JWKType.RSA,

@@ -7,6 +7,4 @@
 
 export * from './hash';
 export * from './key';
-export * from './key-symmetric';
-export * from './key-asymmetric';
 export * from './json-web-token';

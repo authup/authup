@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, OAuth2Error } from '@authup/specs';
+import { JWKType, JWTError } from '@authup/specs';
 import type { JWTClaims } from '@authup/specs';
 import { Algorithm, sign } from '@node-rs/jsonwebtoken';
-import { encodePKCS8ToPEM } from '../../key-asymmetric';
-import { CryptoKeyContainer } from '../../key';
+import { AsymmetricKey, SymmetricKey, encodePKCS8ToPEM } from '../../key';
 import { transformJWTAlgorithmToInternal } from '../utils';
 import type { TokenSignOptions } from './types';
 
@@ -32,7 +31,7 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
             if (typeof context.key === 'string') {
                 key = encodePKCS8ToPEM(context.key);
             } else {
-                const keyContainer = new CryptoKeyContainer(context.key);
+                const keyContainer = new AsymmetricKey(context.key);
                 key = await keyContainer.toPem();
             }
 
@@ -60,7 +59,7 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
             if (typeof context.key === 'string') {
                 key = context.key;
             } else {
-                const keyContainer = new CryptoKeyContainer(context.key);
+                const keyContainer = new SymmetricKey(context.key);
                 key = await keyContainer.toUint8Array();
             }
 
@@ -71,5 +70,5 @@ export async function signToken(claims: JWTClaims, context: TokenSignOptions): P
         }
     }
 
-    throw new OAuth2Error();
+    throw new JWTError();
 }

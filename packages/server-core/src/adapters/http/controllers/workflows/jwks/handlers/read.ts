@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { AsymmetricKey } from '@authup/server-kit';
 import { JWKType } from '@authup/specs';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
@@ -12,7 +13,6 @@ import { In } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../database/domains';
-import { transformBase64KeyToJsonWebKey } from '../../../../../../domains';
 import { getRequestStringParam, getRequestStringParamOrFail } from '../../../../request';
 
 export async function getJwksRouteHandler(
@@ -38,14 +38,17 @@ export async function getJwksRouteHandler(
     const promises = entities
         .filter((entity) => !!entity.encryption_key)
         .map(
-            (entity) => transformBase64KeyToJsonWebKey(
-                'spki',
-                entity.encryption_key!,
-                entity.signature_algorithm,
-            )
+            (entity) => AsymmetricKey
+                .fromBase64({
+                    format: 'spki',
+                    key: entity.encryption_key!,
+                    options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
+                })
+                .then((container) => container.toJWK())
                 .then((key) => ({
                     ...key,
                     kid: entity.id,
+                    alg: entity.signature_algorithm,
                 })),
         );
 
@@ -81,11 +84,15 @@ export async function getJwkRouteHandler(
         throw new BadRequestError('The encryption key does not exist');
     }
 
-    const jsonWebKey = await transformBase64KeyToJsonWebKey(
-        'spki',
-        entity.encryption_key,
-        entity.signature_algorithm,
-    );
+    const container = await AsymmetricKey
+        .fromBase64({
+            format: 'spki',
+            key: entity.encryption_key!,
+            options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
+        });
+
+    const jsonWebKey = await container.toJWK();
+    jsonWebKey.alg = entity.signature_algorithm;
 
     return send(res, {
         ...jsonWebKey,

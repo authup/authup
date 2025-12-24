@@ -7,6 +7,7 @@
 
 export * from './cache';
 export * from './data-source';
+export * from './domains';
 export * from './errors';
 export * from './seeder';
 export * from './helpers';

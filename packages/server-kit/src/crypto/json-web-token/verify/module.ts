@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWKType, OAuth2Error } from '@authup/specs';
+import { JWKType, JWTError } from '@authup/specs';
 import type { JWTClaims, OAuth2TokenPayload } from '@authup/specs';
 import { Algorithm, verify } from '@node-rs/jsonwebtoken';
-import { encodeSPKIToPem } from '../../key-asymmetric';
-import { CryptoKeyContainer } from '../../key';
+import { AsymmetricKey, SymmetricKey, encodeSPKIToPem } from '../../key';
 import { createErrorForJWTError, transformJWTAlgorithmToInternal } from '../utils';
 import type { TokenVerifyOptions } from './types';
 
@@ -59,7 +58,7 @@ export async function verifyToken(
                 if (typeof context.key === 'string') {
                     key = encodeSPKIToPem(context.key);
                 } else {
-                    const keyContainer = new CryptoKeyContainer(context.key);
+                    const keyContainer = new AsymmetricKey(context.key);
                     key = await keyContainer.toPem();
                 }
 
@@ -82,7 +81,7 @@ export async function verifyToken(
                 if (typeof context.key === 'string') {
                     key = context.key;
                 } else {
-                    const keyContainer = new CryptoKeyContainer(context.key);
+                    const keyContainer = new SymmetricKey(context.key);
                     key = await keyContainer.toUint8Array();
                 }
 
@@ -101,7 +100,7 @@ export async function verifyToken(
     }
 
     if (!output) {
-        throw new OAuth2Error({ message: 'Invalid type.' });
+        throw new JWTError();
     }
 
     return output as OAuth2TokenPayload;

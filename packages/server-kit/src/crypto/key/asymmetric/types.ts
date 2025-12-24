@@ -60,3 +60,9 @@ export type AsymmetricKeyPairImportOptions = RSAKeyPairImportOptions |
 ECKeyPairImportOptions;
 
 export type AsymmetricKeyImportOptionsInput = RSAKeyPairImportOptionsInput | ECKeyPairImportOptionsInput;
+
+export type AsymmetricKeyImportContext<T> = {
+    format: 'spki' | 'pkcs8',
+    key: T,
+    options: AsymmetricKeyImportOptionsInput
+};

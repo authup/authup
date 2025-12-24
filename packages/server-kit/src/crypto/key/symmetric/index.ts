@@ -5,4 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './key';
+export * from './check';
+export * from './constants';
+export * from './module';
+export * from './create';
+export * from './key-usages';
+export * from './types';
