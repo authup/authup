@@ -13,10 +13,10 @@ import type {
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
-import { CachePrefix } from '../constants';
-import { RobotEntity } from './entity';
-import { RobotRoleEntity } from '../robot-role';
-import { RobotPermissionEntity } from '../robot-permission';
+import { CachePrefix } from '../constants.ts';
+import { RobotEntity } from './entity.ts';
+import { RobotRoleEntity } from '../robot-role/index.ts';
+import { RobotPermissionEntity } from '../robot-permission/index.ts';
 
 export class RobotRepository extends Repository<RobotEntity> {
     constructor(instance: DataSource | EntityManager) {

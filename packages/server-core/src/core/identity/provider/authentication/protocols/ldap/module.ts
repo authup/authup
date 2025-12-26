@@ -11,11 +11,11 @@ import type { Result } from '@authup/kit';
 import { template } from '@authup/kit';
 import ldap from 'ldapjs';
 import type { Filter } from 'ldapjs';
-import { BaseCredentialsAuthenticator } from '../../../../../authentication';
-import type { ILdapClient } from '../../../../../ldap';
-import type { IIdentityProviderAccountManager } from '../../../account';
-import type { IdentityProviderIdentity } from '../../../types';
-import type { IdentityProviderLdapAuthenticatorContext } from './types';
+import { BaseCredentialsAuthenticator } from '../../../../../authentication/index.ts';
+import type { ILdapClient } from '../../../../../ldap/index.ts';
+import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
+import type { IdentityProviderIdentity } from '../../../types.ts';
+import type { IdentityProviderLdapAuthenticatorContext } from './types.ts';
 
 export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthenticator<User> {
     protected provider : LdapIdentityProvider;

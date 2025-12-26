@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderIdentity } from '../types';
-import type { IdentityProviderMapperOperation } from './constants';
+import type { IdentityProviderIdentity } from '../types.ts';
+import type { IdentityProviderMapperOperation } from './constants.ts';
 
 export type IdentityProviderMapperElement = {
     key?: string,

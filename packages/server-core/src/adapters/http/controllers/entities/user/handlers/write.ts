@@ -13,14 +13,14 @@ import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { UserEntity, UserRepository } from '../../../../../database/domains';
+import { UserEntity, UserRepository } from '../../../../../database/domains/index.ts';
 import {
     getRequestBodyRealmID,
     getRequestParamID,
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
-} from '../../../../request';
-import { UserCredentialsService } from '../../../../../../core';
+} from '../../../../request/index.ts';
+import { UserCredentialsService } from '../../../../../../core/index.ts';
 
 export async function writeUserRouteHandler(
     req: Request,

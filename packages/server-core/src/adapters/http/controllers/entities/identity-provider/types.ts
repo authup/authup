@@ -9,8 +9,9 @@ import type {
     IIdentityProviderAccountManager,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
-    IOAuth2TokenIssuer, ISessionManager,
-} from '../../../../../core';
+    IOAuth2TokenIssuer,
+    ISessionManager,
+} from '../../../../../core/index.ts';
 
 export type IdentityProviderControllerOptions = {
     baseURL: string,

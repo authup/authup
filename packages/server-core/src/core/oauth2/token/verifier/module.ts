@@ -10,9 +10,9 @@ import {
 } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWKError, JWKType, JWTError } from '@authup/specs';
-import type { IOAuth2KeyRepository } from '../../key';
-import type { IOAuth2TokenRepository } from '../repository/types';
-import type { IOAuth2TokenVerifier, OAuth2TokenVerifyOptions } from './types';
+import type { IOAuth2KeyRepository } from '../../key/index.ts';
+import type { IOAuth2TokenRepository } from '../repository/types.ts';
+import type { IOAuth2TokenVerifier, OAuth2TokenVerifyOptions } from './types.ts';
 
 export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
     protected keyRepository : IOAuth2KeyRepository;

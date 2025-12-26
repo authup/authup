@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './protocols';
-export * from './presets';
+export * from './protocols/index.ts';
+export * from './presets/index.ts';
 
-export * from './constants';
-export * from './factory';
+export * from './constants.ts';
+export * from './factory.ts';

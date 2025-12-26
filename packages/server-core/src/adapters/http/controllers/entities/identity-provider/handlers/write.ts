@@ -15,11 +15,11 @@ import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../../database/domains';
+import { IdentityProviderEntity, IdentityProviderRepository } from '../../../../../database/domains/index.ts';
 import {
     getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
-} from '../../../../request';
-import { DatabaseConflictError } from '../../../../../database';
+} from '../../../../request/index.ts';
+import { DatabaseConflictError } from '../../../../../database/index.ts';
 
 export async function writeIdentityProviderRouteHandler(
     req: Request,

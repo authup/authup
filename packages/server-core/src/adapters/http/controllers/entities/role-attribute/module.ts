@@ -15,8 +15,8 @@ import {
     getManyRoleAttributeRouteHandler,
     getOneRoleAttributeRouteHandler,
     updateRoleAttributeRouteHandler,
-} from './handlers';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+} from './handlers/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 
 @DTags('role')
 @DController('/role-attributes')

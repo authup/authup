@@ -7,8 +7,8 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { RoleAttributeEntity } from '../../../../../database/domains';
-import { RequestHandlerOperation } from '../../../../request';
+import type { RoleAttributeEntity } from '../../../../../database/domains/index.ts';
+import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class RoleAttributeRequestValidator extends Container<
 RoleAttributeEntity

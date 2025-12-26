@@ -11,7 +11,7 @@ import type {
     PermissionCheckerCheckContext,
 } from '@authup/access';
 import type { Request } from 'routup';
-import { useRequestIdentity, useRequestScopes } from '../helpers';
+import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
 export class RequestPermissionChecker {
     protected req: Request;

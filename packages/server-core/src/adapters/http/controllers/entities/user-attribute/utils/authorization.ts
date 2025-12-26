@@ -7,8 +7,8 @@
 
 import { PermissionName } from '@authup/core-kit';
 import type { Request } from 'routup';
-import type { UserAttributeEntity } from '../../../../../database/domains';
-import { useRequestIdentity, useRequestPermissionChecker } from '../../../../request';
+import type { UserAttributeEntity } from '../../../../../database/domains/index.ts';
+import { useRequestIdentity, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 export async function canRequestManageUserAttribute(
     req: Request,

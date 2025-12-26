@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token';
-import type { IOAuth2AuthorizationCodeIssuer } from './code';
-import type { IIdentityResolver } from '../../identity';
+import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
+import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
+import type { IIdentityResolver } from '../../identity/index.ts';
 
 export type OAuth2AuthorizationManagerContext = {
     accessTokenIssuer: IOAuth2TokenIssuer,

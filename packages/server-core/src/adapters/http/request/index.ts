@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
-export * from './helpers';
-export * from './permission';
+export * from './constants.ts';
+export * from './helpers/index.ts';
+export * from './permission/index.ts';

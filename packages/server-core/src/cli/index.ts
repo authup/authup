@@ -10,7 +10,7 @@
 import 'reflect-metadata';
 import { runMain } from 'citty';
 import dotenv from 'dotenv';
-import { createCLIEntryPointCommand } from './module';
+import { createCLIEntryPointCommand } from './module.ts';
 
 dotenv.config({
     debug: false,

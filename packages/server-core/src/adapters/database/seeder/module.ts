@@ -28,8 +28,8 @@ import {
     ScopeEntity,
     UserRepository,
     UserRoleEntity,
-} from '../domains';
-import type { DatabaseRootSeederResult, DatabaseSeederOptions } from './types';
+} from '../domains/index.ts';
+import type { DatabaseRootSeederResult, DatabaseSeederOptions } from './types.ts';
 
 function getPermissions(permissions?: string[]) {
     return Array.from(new Set([

@@ -9,9 +9,9 @@ import { read } from 'envix';
 import path from 'node:path';
 import process from 'node:process';
 import { EnvironmentName } from '@authup/kit';
-import { toPublicHost } from '../../../utils/host';
-import { parseConfig } from './parse';
-import type { Config, ConfigInput } from './types';
+import { toPublicHost } from '../../../utils/host.ts';
+import { parseConfig } from './parse.ts';
+import type { Config, ConfigInput } from './types.ts';
 
 export function normalizeConfig(input: ConfigInput = {}): Config {
     const parsed = parseConfig(input);

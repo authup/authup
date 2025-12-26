@@ -6,7 +6,7 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import { BaseCredentialsAuthenticator } from './base';
+import { BaseCredentialsAuthenticator } from './base.ts';
 
 export class CredentialsAuthenticator<T extends ObjectLiteral = ObjectLiteral> extends BaseCredentialsAuthenticator<T> {
     protected strategies: BaseCredentialsAuthenticator<T>[];
@@ -24,7 +24,7 @@ export class CredentialsAuthenticator<T extends ObjectLiteral = ObjectLiteral> e
             const strategy = this.strategies[i];
 
             const output = await strategy.safeAuthenticate(key, value, realmId);
-            if (output.success === true) {
+            if (output.success) {
                 return output.data;
             }
 

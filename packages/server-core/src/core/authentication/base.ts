@@ -7,7 +7,7 @@
 
 import type { Result } from '@authup/kit';
 import type { ObjectLiteral } from 'validup';
-import type { ICredentialsAuthenticator } from './types';
+import type { ICredentialsAuthenticator } from './types.ts';
 
 export abstract class BaseCredentialsAuthenticator<
     OUTPUT extends ObjectLiteral = ObjectLiteral,

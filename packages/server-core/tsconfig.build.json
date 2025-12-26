@@ -4,7 +4,8 @@
     "compilerOptions": {
         "outDir": "./dist",
         "resolveJsonModule": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "rewriteRelativeImportExtensions": true
     },
 
     "include": [

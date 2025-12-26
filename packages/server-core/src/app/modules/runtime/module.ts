@@ -6,11 +6,11 @@
  */
 
 import type { Logger } from '@authup/server-kit';
-import type { Module } from '../types';
-import type { IDIContainer } from '../../../core';
-import { LoggerInjectionKey } from '../logger';
-import type { Config } from '../config';
-import { ConfigInjectionKey } from '../config';
+import type { Module } from '../types.ts';
+import type { IDIContainer } from '../../../core/index.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
 
 export class RuntimeModule implements Module {
     async start(container: IDIContainer): Promise<void> {

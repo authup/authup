@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './attributes';
-export * from './role';
-export * from './permission';
+export * from './attributes/index.ts';
+export * from './role/index.ts';
+export * from './permission/index.ts';
 
-export * from './base';
-export * from './constants';
-export * from './types';
+export * from './base.ts';
+export * from './constants.ts';
+export * from './types.ts';

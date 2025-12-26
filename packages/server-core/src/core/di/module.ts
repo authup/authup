@@ -7,8 +7,8 @@
 
 import { AuthupError } from '@authup/errors';
 import type { Result } from '@authup/kit';
-import { isFactoryProvider, isValueProvider } from './provider';
-import type { DIKey, DIProvider, IDIContainer } from './types';
+import { isFactoryProvider, isValueProvider } from './provider/index.ts';
+import type { DIKey, DIProvider, IDIContainer } from './types.ts';
 
 export class DependencyContainer implements IDIContainer {
     protected factories: Map<DIKey, DIProvider<any>>;

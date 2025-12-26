@@ -15,11 +15,11 @@ import {
     TreeRepository, TreeRepositoryUtils,
 } from 'typeorm';
 import type { ObjectLiteral } from '@authup/kit';
-import type { ExtraAttributesRepositoryAdapter } from '../adapter';
+import type { ExtraAttributesRepositoryAdapter } from '../adapter.ts';
 import type {
     EARepositoryEntityBase, EARepositoryFindOptions, EARepositoryOptions, EARepositorySaveOptions, IEARepository,
-} from '../types';
-import { ExtraAttributesTreeRepositoryAdapter } from './adapter';
+} from '../types.ts';
+import { ExtraAttributesTreeRepositoryAdapter } from './adapter.ts';
 
 /**
  * @see https://github.com/typeorm/typeorm/blob/master/src/repository/TreeRepository.ts

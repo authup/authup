@@ -8,7 +8,7 @@
 import { OAuth2Error, OAuth2ErrorCode } from '@authup/specs';
 import { AuthupError } from '@authup/errors';
 import { isObject } from '@authup/kit';
-import { sanitizeError } from '../../../utils';
+import { sanitizeError } from '../../../utils/index.ts';
 
 /**
  * Transforms an unknown error to an OAuth2Error.

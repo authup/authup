@@ -17,9 +17,9 @@ import {
 } from 'typeorm';
 import type { IdentityProvider, IdentityProviderAccount, Realm } from '@authup/core-kit';
 import { User } from '@authup/core-kit';
-import { RealmEntity } from '../realm';
-import { UserEntity } from '../user';
-import { IdentityProviderEntity } from '../identity-provider';
+import { RealmEntity } from '../realm/index.ts';
+import { UserEntity } from '../user/index.ts';
+import { IdentityProviderEntity } from '../identity-provider/index.ts';
 
 @Entity({ name: 'auth_identity_provider_accounts' })
 @Index(['provider_id', 'user_id'], { unique: true })

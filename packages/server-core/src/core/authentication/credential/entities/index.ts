@@ -5,6 +5,6 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-export * from './client';
-export * from './robot';
-export * from './user';
+export * from './client/index.ts';
+export * from './robot/index.ts';
+export * from './user/index.ts';

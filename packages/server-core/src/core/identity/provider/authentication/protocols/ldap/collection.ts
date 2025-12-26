@@ -7,12 +7,12 @@
 
 import type { User } from '@authup/core-kit';
 import { IdentityProviderProtocol, UserError, isLdapIdentityProvider } from '@authup/core-kit';
-import type { IIdentityProviderRepository } from '../../../../../entities';
-import type { IIdentityProviderAccountManager } from '../../../account';
-import { IdentityProviderLdapAuthenticator } from './module';
-import type { ILdapClientFactory } from '../../../../../ldap';
-import { BaseCredentialsAuthenticator } from '../../../../../authentication';
-import type { IdentityProviderLdapCollectionAuthenticatorContext } from './types';
+import type { IIdentityProviderRepository } from '../../../../../entities/index.ts';
+import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
+import { IdentityProviderLdapAuthenticator } from './module.ts';
+import type { ILdapClientFactory } from '../../../../../ldap/index.ts';
+import { BaseCredentialsAuthenticator } from '../../../../../authentication/index.ts';
+import type { IdentityProviderLdapCollectionAuthenticatorContext } from './types.ts';
 
 export class IdentityProviderLdapCollectionAuthenticator extends BaseCredentialsAuthenticator<User> {
     protected repository: IIdentityProviderRepository;

@@ -15,8 +15,8 @@ import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import {
     RoleAttributeEntity,
-} from '../../../../../database/domains';
-import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
+} from '../../../../../database/domains/index.ts';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 export async function getManyRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

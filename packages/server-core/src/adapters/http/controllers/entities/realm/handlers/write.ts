@@ -15,11 +15,11 @@ import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RealmEntity } from '../../../../../database/domains';
-import { RealmRequestValidator } from '../utils';
+import { RealmEntity } from '../../../../../database/domains/index.ts';
+import { RealmRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation, getRequestParamID, useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function writeRealmRouteHandler(req: Request, res: Response, options: {
     updateOnly?: boolean

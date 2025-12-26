@@ -6,7 +6,7 @@
  */
 
 import type { DataSource } from 'typeorm';
-import { DatabaseUniqueEntriesComponent } from './module';
+import { DatabaseUniqueEntriesComponent } from './module.ts';
 
 export function createDatabaseUniqueEntriesComponent(dataSource: DataSource) {
     return new DatabaseUniqueEntriesComponent(dataSource);

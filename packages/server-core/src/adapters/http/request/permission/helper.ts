@@ -7,7 +7,7 @@
 
 import type { Request } from 'routup';
 import { setRequestEnv, useRequestEnv } from 'routup';
-import type { RequestPermissionChecker } from './module';
+import type { RequestPermissionChecker } from './module.ts';
 
 const sym = Symbol('RequestPermissionChecker');
 

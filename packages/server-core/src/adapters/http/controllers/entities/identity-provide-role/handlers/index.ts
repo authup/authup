@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './create';
-export * from './delete';
-export * from './read';
-export * from './update';
+export * from './create.ts';
+export * from './delete.ts';
+export * from './read.ts';
+export * from './update.ts';

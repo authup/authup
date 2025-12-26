@@ -8,8 +8,8 @@
 import type { Request } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { ValidupNestedError, ValidupValidatorError } from 'validup';
-import { useRequestToken } from '../../../../request';
-import { TokenRequestValidator } from './validator';
+import { useRequestToken } from '../../../../request/index.ts';
+import { TokenRequestValidator } from './validator.ts';
 
 export async function extractTokenFromRequest(req: Request) : Promise<string> {
     let token : string | undefined;

@@ -14,8 +14,8 @@ import {
     getManyUserAttributeRouteHandler,
     getOneUserAttributeRouteHandler,
     updateUserAttributeRouteHandler,
-} from './handlers';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+} from './handlers/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 
 @DTags('user')
 @DController('/user-attributes')

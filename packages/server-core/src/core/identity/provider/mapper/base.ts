@@ -8,10 +8,10 @@
 import type { IdentityProviderBaseMapping } from '@authup/core-kit';
 import { IdentityProviderMappingSyncMode } from '@authup/core-kit';
 import { getJWTClaimByPattern } from '@authup/specs';
-import { IdentityProviderIdentityOperation } from '../constants';
-import type { IdentityProviderIdentity } from '../types';
-import { IdentityProviderMapperOperation } from './constants';
-import type { IIdentityProviderMapper, IdentityProviderMapperElement } from './types';
+import { IdentityProviderIdentityOperation } from '../constants.ts';
+import type { IdentityProviderIdentity } from '../types.ts';
+import { IdentityProviderMapperOperation } from './constants.ts';
+import type { IIdentityProviderMapper, IdentityProviderMapperElement } from './types.ts';
 
 export abstract class IdentityProviderAccountBaseMapper implements IIdentityProviderMapper {
     protected resolve(

@@ -13,7 +13,7 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier, ISessionManager,
-} from '../../../../../core';
+} from '../../../../../core/index.ts';
 
 export type TokenControllerOptions = {
     cookieDomains: string[]

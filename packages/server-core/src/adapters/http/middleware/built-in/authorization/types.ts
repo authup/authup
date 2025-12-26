@@ -6,7 +6,7 @@
  */
 
 import type { IPermissionProvider } from '@authup/access';
-import type { IIdentityResolver, IOAuth2TokenVerifier, ISessionManager } from '../../../../../core';
+import type { IIdentityResolver, IOAuth2TokenVerifier, ISessionManager } from '../../../../../core/index.ts';
 
 export type HTTPAuthorizationMiddlewareOptions = {
     cookieDomain?: string;

@@ -7,9 +7,9 @@
 
 import { extractTokenPayload } from '@authup/server-kit';
 import type { TokenGrantResponse } from '@hapic/oauth2';
-import type { IdentityProviderIdentity } from '../../types';
-import type { IdentityProviderOAuth2AuthenticatorContext } from '../protocols';
-import { IdentityProviderOAuth2Authenticator } from '../protocols';
+import type { IdentityProviderIdentity } from '../../types.ts';
+import type { IdentityProviderOAuth2AuthenticatorContext } from '../protocols/index.ts';
+import { IdentityProviderOAuth2Authenticator } from '../protocols/index.ts';
 
 export class IdentityProviderPaypalAuthenticator extends IdentityProviderOAuth2Authenticator {
     constructor(ctx: IdentityProviderOAuth2AuthenticatorContext) {

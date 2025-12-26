@@ -6,7 +6,7 @@
  */
 
 import type { Robot } from '@authup/core-kit';
-import type { IEntityRepository } from '../../../entities';
+import type { IEntityRepository } from '../../../entities/index.ts';
 
 export interface IRobotIdentityRepository extends IEntityRepository<Robot> {
 

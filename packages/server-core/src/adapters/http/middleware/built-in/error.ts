@@ -16,7 +16,7 @@ import {
 } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import type { AuthupError } from '@authup/errors';
-import { sanitizeError } from '../../../../utils';
+import { sanitizeError } from '../../../../utils/index.ts';
 
 type ErrorResponsePayload = {
     statusCode: number,

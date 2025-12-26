@@ -14,9 +14,9 @@ import {
     IdentityType,
     ScopeName,
 } from '@authup/core-kit';
-import { OAuth2BaseGrant } from './base';
-import { buildOAuth2BearerTokenResponse } from '../response';
-import type { OAuth2GrantRunWIthOptions } from './types';
+import { OAuth2BaseGrant } from './base.ts';
+import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
+import type { OAuth2GrantRunWIthOptions } from './types.ts';
 
 export class ClientCredentialsGrant extends OAuth2BaseGrant<Client> {
     async runWith(input: Client, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {

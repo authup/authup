@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Module } from '../types';
-import { SMTPMailClientAdapter, VoidMailClientAdapter } from './adapter';
-import { MailInjectionKey } from './constants';
-import type { Config } from '../config';
-import { ConfigInjectionKey } from '../config';
-import type { IDIContainer } from '../../../core';
+import type { Module } from '../types.ts';
+import { SMTPMailClientAdapter, VoidMailClientAdapter } from './adapter/index.ts';
+import { MailInjectionKey } from './constants.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import type { IDIContainer } from '../../../core/index.ts';
 
 export class MailModule implements Module {
     async start(container: IDIContainer): Promise<void> {

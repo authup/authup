@@ -17,8 +17,8 @@ import {
     deserialize,
     serialize,
 } from '@authup/kit';
-import { RealmEntity } from '../realm';
-import { RoleEntity } from '../role/entity';
+import { RealmEntity } from '../realm/index.ts';
+import { RoleEntity } from '../role/entity.ts';
 
 @Unique(['name', 'role_id'])
 @Entity({ name: 'auth_role_attributes' })

@@ -12,8 +12,8 @@ import { send } from 'routup';
 import { In } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '../../../../../database/domains';
-import { getRequestStringParam, getRequestStringParamOrFail } from '../../../../request';
+import { KeyEntity } from '../../../../../database/domains/index.ts';
+import { getRequestStringParam, getRequestStringParamOrFail } from '../../../../request/index.ts';
 
 export async function getJwksRouteHandler(
     req: Request,

@@ -12,7 +12,7 @@ import type {
     IDIContainer,
     IIdentityResolver,
     IOAuth2TokenVerifier, ISessionManager,
-} from '../../../../core';
+} from '../../../../core/index.ts';
 import {
     createAuthorizationMiddleware,
     createLoggerMiddleware,
@@ -23,15 +23,15 @@ import {
     registerErrorMiddleware,
     registerPrometheusMiddleware,
     registerRateLimitMiddleware,
-} from '../../../../adapters/http';
-import { resolvePackagePath } from '../../../../path';
-import { AuthenticationInjectionKey } from '../../authentication';
-import type { Config } from '../../config';
-import { ConfigInjectionKey } from '../../config';
-import { IdentityInjectionKey } from '../../identity';
-import { OAuth2InjectionToken } from '../../oauth2';
-import { PermissionDBProvider } from '../../../../security';
-import { DatabaseInjectionKey } from '../../database';
+} from '../../../../adapters/http/index.ts';
+import { resolvePackagePath } from '../../../../path.ts';
+import { AuthenticationInjectionKey } from '../../authentication/index.ts';
+import type { Config } from '../../config/index.ts';
+import { ConfigInjectionKey } from '../../config/index.ts';
+import { IdentityInjectionKey } from '../../identity/index.ts';
+import { OAuth2InjectionToken } from '../../oauth2/index.ts';
+import { PermissionDBProvider } from '../../../../security/index.ts';
+import { DatabaseInjectionKey } from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
     async mountBefore(router: Router, container: IDIContainer): Promise<void> {

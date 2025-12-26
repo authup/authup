@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenPayload } from '@authup/specs';
-import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from './types';
+import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from './types.ts';
 
 export abstract class OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
     protected options: OAuth2TokenIssuerOptions;

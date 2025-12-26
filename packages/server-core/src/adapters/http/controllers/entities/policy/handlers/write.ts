@@ -16,11 +16,11 @@ import {
     isEntityUnique, useDataSource, validateEntityJoinColumns,
 } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { DatabaseConflictError } from '../../../../../database';
+import { DatabaseConflictError } from '../../../../../database/index.ts';
 import {
     PolicyEntity, PolicyRepository,
-} from '../../../../../database/domains';
-import { PolicyValidator } from '../utils';
+} from '../../../../../database/domains/index.ts';
+import { PolicyValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation,
     getRequestBodyRealmID,
@@ -28,7 +28,7 @@ import {
     isRequestIdentityMasterRealmMember,
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function writePolicyRouteHandler(
     req: Request,

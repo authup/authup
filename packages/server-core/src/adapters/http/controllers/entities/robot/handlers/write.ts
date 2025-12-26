@@ -15,16 +15,16 @@ import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RobotCredentialsService } from '../../../../../../core';
-import { DatabaseConflictError } from '../../../../../database';
+import { RobotCredentialsService } from '../../../../../../core/index.ts';
+import { DatabaseConflictError } from '../../../../../database/index.ts';
 import {
     RobotEntity, RobotRepository,
-} from '../../../../../database/domains';
-import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services';
-import { RobotRequestValidator } from '../utils';
+} from '../../../../../database/domains/index.ts';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services/index.ts';
+import { RobotRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function writeRobotRouteHandler(
     req: Request,

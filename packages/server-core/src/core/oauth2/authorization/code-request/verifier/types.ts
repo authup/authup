@@ -8,8 +8,8 @@
 import type {
     Client, OAuth2AuthorizationCodeRequest, Scope,
 } from '@authup/core-kit';
-import type { IOAuth2ClientRepository } from '../../../client';
-import type { IOAuth2ScopeRepository } from '../../../scope';
+import type { IOAuth2ClientRepository } from '../../../client/index.ts';
+import type { IOAuth2ScopeRepository } from '../../../scope/index.ts';
 
 export type OAuth2AuthorizationCodeRequestVerifierContext = {
     clientRepository: IOAuth2ClientRepository,

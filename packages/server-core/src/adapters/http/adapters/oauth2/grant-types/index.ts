@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './utils';
+export * from './utils/index.ts';
 
-export * from './authorize';
-export * from './client-credentials';
-export * from './identity';
-export * from './password';
-export * from './refresh_token';
-export * from './robot-credentials';
+export * from './authorize.ts';
+export * from './client-credentials.ts';
+export * from './identity.ts';
+export * from './password.ts';
+export * from './refresh_token.ts';
+export * from './robot-credentials.ts';
 
-export * from './types';
+export * from './types.ts';

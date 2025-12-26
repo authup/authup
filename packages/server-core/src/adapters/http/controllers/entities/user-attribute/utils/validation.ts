@@ -7,8 +7,8 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { UserAttributeEntity } from '../../../../../database/domains';
-import { RequestHandlerOperation } from '../../../../request';
+import type { UserAttributeEntity } from '../../../../../database/domains/index.ts';
+import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class UserAttributeRequestValidator extends Container<
 UserAttributeEntity

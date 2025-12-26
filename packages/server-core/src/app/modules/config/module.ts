@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Module } from '../types';
-import { ConfigInjectionKey } from './constants';
-import type { IDIContainer } from '../../../core';
-import { normalizeConfig } from './normalize';
-import type { ConfigRawReadOptions } from './read';
-import { readConfigRaw } from './read';
-import type { Config } from './types';
+import type { Module } from '../types.ts';
+import { ConfigInjectionKey } from './constants.ts';
+import type { IDIContainer } from '../../../core/index.ts';
+import { normalizeConfig } from './normalize.ts';
+import type { ConfigRawReadOptions } from './read/index.ts';
+import { readConfigRaw } from './read/index.ts';
+import type { Config } from './types.ts';
 
 export class ConfigModule implements Module {
     protected instance : Config | undefined;

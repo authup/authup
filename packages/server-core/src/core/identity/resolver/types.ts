@@ -10,7 +10,7 @@ import type {
     IClientIdentityRepository,
     IRobotIdentityRepository,
     IUserIdentityRepository,
-} from '../entities';
+} from '../entities/index.ts';
 
 export type IdentityResolverContext = {
     clientRepository: IClientIdentityRepository,

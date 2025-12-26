@@ -8,10 +8,10 @@
 import { definePolicyWithType } from '@authup/access';
 import type { BuiltInPolicyTypeMap, PolicyWithType } from '@authup/access';
 import type { DataSource, EntityManager } from 'typeorm';
-import { CachePrefix } from '../constants';
-import { EATreeRepository } from '../../extra-attribute-repository';
-import { PolicyAttributeEntity } from '../policy-attribute';
-import { PolicyEntity } from './entity';
+import { CachePrefix } from '../constants.ts';
+import { EATreeRepository } from '../../extra-attribute-repository/index.ts';
+import { PolicyAttributeEntity } from '../policy-attribute/index.ts';
+import { PolicyEntity } from './entity.ts';
 
 export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {

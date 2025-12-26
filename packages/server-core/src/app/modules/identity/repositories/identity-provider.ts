@@ -9,9 +9,9 @@ import type { IdentityProvider, IdentityProviderProtocol } from '@authup/core-ki
 import { isUUID } from '@authup/kit';
 import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import type { IIdentityProviderRepository } from '../../../../core';
-import type { IdentityProviderEntity } from '../../../../adapters/database/domains';
-import { IdentityProviderRepository } from '../../../../adapters/database/domains';
+import type { IIdentityProviderRepository } from '../../../../core/index.ts';
+import type { IdentityProviderEntity } from '../../../../adapters/database/domains/index.ts';
+import { IdentityProviderRepository } from '../../../../adapters/database/domains/index.ts';
 
 export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepository {
     async findByProtocol(protocol: IdentityProviderProtocol, realmKey?: string): Promise<IdentityProvider[]> {

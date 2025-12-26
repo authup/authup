@@ -7,10 +7,10 @@
 
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import { OAuth2AuthorizationCodeChallengeMethod, OAuth2Error } from '@authup/specs';
-import { buildOAuth2CodeChallenge } from '../../helpers';
+import { buildOAuth2CodeChallenge } from '../../helpers.ts';
 
-import type { IOAuth2AuthorizationCodeRepository } from '../repository';
-import type { IOAuth2AuthorizationCodeVerifier, IOAuth2AuthorizationCodeVerifyOptions } from './types';
+import type { IOAuth2AuthorizationCodeRepository } from '../repository/index.ts';
+import type { IOAuth2AuthorizationCodeVerifier, IOAuth2AuthorizationCodeVerifyOptions } from './types.ts';
 
 export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCodeVerifier {
     protected repository : IOAuth2AuthorizationCodeRepository;

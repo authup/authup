@@ -21,10 +21,10 @@ import {
     RobotRepository,
     resolveRealm,
 
-} from '../../../../../database/domains';
-import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services';
-import { useRequestParamID } from '../../../../request';
-import { RobotCredentialsService } from '../../../../../../core/authentication/credential/entities';
+} from '../../../../../database/domains/index.ts';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services/index.ts';
+import { useRequestParamID } from '../../../../request/index.ts';
+import { RobotCredentialsService } from '../../../../../../core/authentication/credential/entities/index.ts';
 
 export async function handleRobotIntegrityRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req, {

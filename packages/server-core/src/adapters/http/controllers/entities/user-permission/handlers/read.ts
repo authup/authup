@@ -13,8 +13,8 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { UserPermissionEntity } from '../../../../../database/domains';
-import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
+import { UserPermissionEntity } from '../../../../../database/domains/index.ts';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 /**
  * Receive user permissions of a specific user.

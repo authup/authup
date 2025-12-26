@@ -9,15 +9,15 @@ import { defineCommand } from 'citty';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { normalizeConfig } from '../app/modules/config/normalize';
-import { readConfigRaw } from '../app/modules/config/read';
+import { normalizeConfig } from '../app/modules/config/normalize.ts';
+import { readConfigRaw } from '../app/modules/config/read/index.ts';
 import {
     defineCLIHealthCheckCommand,
     defineCLIMigrationCommand,
     defineCLIResetCommand,
     defineCLIStartCommand,
     defineCLISwaggerCommand,
-} from './commands';
+} from './commands/index.ts';
 
 export async function createCLIEntryPointCommand() {
     const pkgRaw = await fs.promises.readFile(

@@ -21,10 +21,10 @@ import type {
     Policy,
     Realm,
 } from '@authup/core-kit';
-import { PermissionEntity } from '../permission';
-import { PolicyEntity } from '../policy';
-import { ClientEntity } from '../client/entity';
-import { RealmEntity } from '../realm';
+import { PermissionEntity } from '../permission/index.ts';
+import { PolicyEntity } from '../policy/index.ts';
+import { ClientEntity } from '../client/entity.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_client_permissions' })
 @Index(['client_id', 'permission_id'], { unique: true })

@@ -11,11 +11,11 @@ import type {
     Permission,
     Role,
 } from '@authup/core-kit';
-import { CachePrefix } from '../constants';
-import { EARepository } from '../../extra-attribute-repository';
-import { RoleAttributeEntity } from '../role-attribute/entity';
-import { RoleEntity } from './entity';
-import { RolePermissionEntity } from '../role-permission';
+import { CachePrefix } from '../constants.ts';
+import { EARepository } from '../../extra-attribute-repository/index.ts';
+import { RoleAttributeEntity } from '../role-attribute/entity.ts';
+import { RoleEntity } from './entity.ts';
+import { RolePermissionEntity } from '../role-permission/index.ts';
 
 export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {

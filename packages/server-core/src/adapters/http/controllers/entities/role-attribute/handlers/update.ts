@@ -11,11 +11,11 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RoleAttributeEntity } from '../../../../../database/domains';
-import { RoleAttributeRequestValidator } from '../utils';
+import { RoleAttributeEntity } from '../../../../../database/domains/index.ts';
+import { RoleAttributeRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation, useRequestParamID, useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function updateRoleAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

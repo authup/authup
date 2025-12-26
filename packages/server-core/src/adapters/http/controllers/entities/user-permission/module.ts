@@ -9,13 +9,13 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { UserPermission } from '@authup/core-kit';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     createUserPermissionRouteHandler,
     deleteUserPermissionRouteHandler,
     getManyUserPermissionRouteHandler,
     getOneUserPermissionRouteHandler,
-} from './handlers';
+} from './handlers/index.ts';
 
 @DTags('user')
 @DController('/user-permissions')

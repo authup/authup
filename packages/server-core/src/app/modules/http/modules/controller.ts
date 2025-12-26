@@ -12,7 +12,7 @@ import { useRequestCookie, useRequestCookies } from '@routup/basic/cookie';
 import { useRequestQuery } from '@routup/basic/query';
 import type { User } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import { UserEntity } from '../../../../adapters/database/domains';
+import { UserEntity } from '../../../../adapters/database/domains/index.ts';
 import {
     ClientController,
     ClientPermissionController,
@@ -33,7 +33,7 @@ import {
     UserController,
     UserPermissionController,
     UserRoleController,
-} from '../../../../adapters/http';
+} from '../../../../adapters/http/index.ts';
 import {
     ActivateController,
     AuthorizeController,
@@ -44,7 +44,7 @@ import {
     RegisterController,
     StatusController,
     TokenController,
-} from '../../../../adapters/http/controllers';
+} from '../../../../adapters/http/controllers/index.ts';
 import type {
     ICredentialsAuthenticator,
     IDIContainer,
@@ -58,19 +58,19 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier, ISessionManager,
-} from '../../../../core';
+} from '../../../../core/index.ts';
 import {
     ClientAuthenticator,
     CredentialsAuthenticator,
     RobotAuthenticator,
     UserAuthenticator,
-} from '../../../../core';
-import { AuthenticationInjectionKey } from '../../authentication';
-import { OAuth2InjectionToken } from '../../oauth2';
-import { IdentityInjectionKey } from '../../identity';
-import type { Config } from '../../config';
-import { ConfigInjectionKey } from '../../config';
-import { MailInjectionKey } from '../../mail';
+} from '../../../../core/index.ts';
+import { AuthenticationInjectionKey } from '../../authentication/index.ts';
+import { OAuth2InjectionToken } from '../../oauth2/index.ts';
+import { IdentityInjectionKey } from '../../identity/index.ts';
+import type { Config } from '../../config/index.ts';
+import { ConfigInjectionKey } from '../../config/index.ts';
+import { MailInjectionKey } from '../../mail/index.ts';
 
 export class HTTPControllerModule {
     async mount(router: Router, container: IDIContainer): Promise<void> {

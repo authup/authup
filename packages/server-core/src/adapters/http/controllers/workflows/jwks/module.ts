@@ -9,7 +9,7 @@ import type { OAuth2JsonWebKey } from '@authup/specs';
 import {
     DController, DGet, DPath, DRequest, DResponse,
 } from '@routup/decorators';
-import { getJwkRouteHandler, getJwksRouteHandler } from './handlers';
+import { getJwkRouteHandler, getJwksRouteHandler } from './handlers/index.ts';
 
 @DController('')
 export class JwkController {

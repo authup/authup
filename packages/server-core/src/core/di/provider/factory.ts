@@ -6,7 +6,7 @@
  */
 
 import { isObject } from '@authup/kit';
-import type { DependencyContainer } from '../module';
+import type { DependencyContainer } from '../module.ts';
 
 export interface DIFactoryProvider<T> {
     useFactory: (dependencyContainer: DependencyContainer) => T

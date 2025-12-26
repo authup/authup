@@ -8,7 +8,7 @@
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
-import { RealmEntity } from './entity';
+import { RealmEntity } from './entity.ts';
 
 export class RealmRepository extends Repository<RealmEntity> {
     constructor(instance: DataSource | EntityManager) {

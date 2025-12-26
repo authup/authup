@@ -7,9 +7,9 @@
 
 import type { Client } from '@authup/core-kit';
 import { ClientError, IdentityType, UserError } from '@authup/core-kit';
-import type { IIdentityResolver } from '../../../identity';
-import { ClientCredentialsService } from '../../credential';
-import { BaseCredentialsAuthenticator } from '../../base';
+import type { IIdentityResolver } from '../../../identity/index.ts';
+import { ClientCredentialsService } from '../../credential/index.ts';
+import { BaseCredentialsAuthenticator } from '../../base.ts';
 
 export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
     protected identityResolver : IIdentityResolver;

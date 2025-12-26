@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, User } from '@authup/core-kit';
-import type { IdentityProviderIdentityOperation } from './constants';
+import type { IdentityProviderIdentityOperation } from './constants.ts';
 
 export type IdentityProviderIdentity = {
     id: string,

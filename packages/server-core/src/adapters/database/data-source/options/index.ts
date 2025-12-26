@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
-export * from './entities';
-export * from './subscribers';
+export * from './module.ts';
+export * from './entities.ts';
+export * from './subscribers.ts';

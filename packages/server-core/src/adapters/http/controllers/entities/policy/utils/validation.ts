@@ -13,9 +13,9 @@ import { Container } from 'validup';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import type {
     PolicyEntity,
-} from '../../../../../database/domains';
-import { RequestHandlerOperation } from '../../../../request';
-import { PolicyAttributesValidator } from './attributes-validator';
+} from '../../../../../database/domains/index.ts';
+import { RequestHandlerOperation } from '../../../../request/index.ts';
+import { PolicyAttributesValidator } from './attributes-validator.ts';
 
 export class PolicyValidator extends Container<PolicyEntity & { parent_id?: string | null }> {
     protected initialize() {

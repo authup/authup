@@ -16,15 +16,15 @@ import { send, useRequestParam } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { type Client, OAuth2AuthorizationCodeRequest, type Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
-import { resolveClientWebSlimPackagePath } from '../../../../../path';
-import { ForceUserLoggedInMiddleware } from '../../../middleware';
-import { HTTPOAuth2Authorizer } from '../../../adapters';
+import { resolveClientWebSlimPackagePath } from '../../../../../path.ts';
+import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
+import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
 import {
     IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestValidator,
-} from '../../../../../core';
-import { sanitizeError } from '../../../../../utils';
-import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types';
+} from '../../../../../core/index.ts';
+import { sanitizeError } from '../../../../../utils/index.ts';
+import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types.ts';
 
 @DController('/authorize')
 export class AuthorizeController {

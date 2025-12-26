@@ -6,11 +6,11 @@
  */
 
 import { createLogger, setLoggerFactory } from '@authup/server-kit';
-import type { Module } from '../types';
-import type { Config } from '../config';
-import { ConfigInjectionKey } from '../config';
-import { LoggerInjectionKey } from './constants';
-import type { IDIContainer } from '../../../core';
+import type { Module } from '../types.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import { LoggerInjectionKey } from './constants.ts';
+import type { IDIContainer } from '../../../core/index.ts';
 
 export class LoggerModule implements Module {
     async start(container: IDIContainer): Promise<void> {

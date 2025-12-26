@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Application } from './module';
+import { Application } from './module.ts';
 import {
     AuthenticationModule,
     CacheModule,
@@ -21,7 +21,7 @@ import {
     RuntimeModule,
     SwaggerModule,
     VaultModule,
-} from './modules';
+} from './modules/index.ts';
 
 export function createApplication() {
     return new Application([

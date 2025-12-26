@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { LdapClientFactory } from '../../../adapters/shared/ldap';
-import type { Module } from '../types';
-import { LDAPInjectionKey } from './constants';
-import type { IDIContainer } from '../../../core';
+import { LdapClientFactory } from '../../../adapters/shared/ldap/index.ts';
+import type { Module } from '../types.ts';
+import { LDAPInjectionKey } from './constants.ts';
+import type { IDIContainer } from '../../../core/index.ts';
 
 export class LdapModule implements Module {
     async start(container: IDIContainer): Promise<void> {

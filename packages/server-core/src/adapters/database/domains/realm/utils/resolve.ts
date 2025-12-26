@@ -8,7 +8,7 @@
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import { useDataSource } from 'typeorm-extension';
-import { RealmEntity } from '../entity';
+import { RealmEntity } from '../entity.ts';
 
 export async function resolveRealm(id: string | undefined) : Promise<RealmEntity | null>;
 export async function resolveRealm(id: string | undefined, withFallback: true) : Promise<RealmEntity>;

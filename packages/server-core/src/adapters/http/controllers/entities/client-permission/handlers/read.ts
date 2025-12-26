@@ -13,8 +13,8 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { ClientPermissionEntity } from '../../../../../database/domains';
-import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
+import { ClientPermissionEntity } from '../../../../../database/domains/index.ts';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 export async function getManyClientPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

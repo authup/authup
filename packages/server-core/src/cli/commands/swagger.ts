@@ -7,9 +7,9 @@
 
 import { defineCommand } from 'citty';
 import process from 'node:process';
-import type { Config } from '../../app';
-import { Swagger } from '../../adapters/http';
-import { Application, ConfigInjectionKey, ConfigModule } from '../../app';
+import type { Config } from '../../app/index.ts';
+import { Swagger } from '../../adapters/http/index.ts';
+import { Application, ConfigInjectionKey, ConfigModule } from '../../app/index.ts';
 
 export function defineCLISwaggerCommand() {
     return defineCommand({

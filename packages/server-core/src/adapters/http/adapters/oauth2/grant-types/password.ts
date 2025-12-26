@@ -10,9 +10,9 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
-import type { ICredentialsAuthenticator } from '../../../../../core';
-import { PasswordGrantType } from '../../../../../core';
-import type { HTTPOAuth2PasswordGrantContext, IHTTPOAuth2Grant } from './types';
+import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
+import { PasswordGrantType } from '../../../../../core/index.ts';
+import type { HTTPOAuth2PasswordGrantContext, IHTTPOAuth2Grant } from './types.ts';
 
 export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<User>;

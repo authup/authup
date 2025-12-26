@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authorize';
-export * from './client';
-export * from './scope';
-export * from './key';
-export * from './token';
+export * from './authorize/index.ts';
+export * from './client/index.ts';
+export * from './scope/index.ts';
+export * from './key/index.ts';
+export * from './token/index.ts';

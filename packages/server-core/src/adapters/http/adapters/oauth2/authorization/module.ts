@@ -8,10 +8,10 @@
 import type { Request } from 'routup';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import type { IOAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationResult } from '../../../../../core';
-import { OAuth2Authorization, OAuth2AuthorizationCodeRequestValidator } from '../../../../../core';
-import { useRequestIdentityOrFail } from '../../../request';
-import type { HTTPOAuth2AuthorizationManagerContext } from './types';
+import type { IOAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationResult } from '../../../../../core/index.ts';
+import { OAuth2Authorization, OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
+import { useRequestIdentityOrFail } from '../../../request/index.ts';
+import type { HTTPOAuth2AuthorizationManagerContext } from './types.ts';
 
 export class HTTPOAuth2Authorizer extends OAuth2Authorization {
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;

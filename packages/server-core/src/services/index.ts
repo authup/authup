@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './identity-permission';
-export * from './robot-synchronization';
+export * from './identity-permission/index.ts';
+export * from './robot-synchronization/index.ts';

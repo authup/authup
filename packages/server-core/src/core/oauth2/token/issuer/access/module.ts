@@ -7,10 +7,10 @@
 
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2TokenKind } from '@authup/specs';
-import type { IOAuth2TokenSigner } from '../../signer';
-import type { IOAuth2TokenRepository } from '../../repository';
-import { OAuth2BaseTokenIssuer } from '../base';
-import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types';
+import type { IOAuth2TokenSigner } from '../../signer/index.ts';
+import type { IOAuth2TokenRepository } from '../../repository/index.ts';
+import { OAuth2BaseTokenIssuer } from '../base.ts';
+import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types.ts';
 
 export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
     protected repository: IOAuth2TokenRepository;

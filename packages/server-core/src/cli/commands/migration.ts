@@ -14,12 +14,12 @@ import {
     createDatabase, dropDatabase, generateMigration,
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
-import { extendDataSourceOptions } from '../../adapters/database';
+import { extendDataSourceOptions } from '../../adapters/database/index.ts';
 import {
     Application, ConfigInjectionKey, ConfigModule, LoggerInjectionKey, LoggerModule,
-} from '../../app';
-import type { IDIContainer } from '../../core';
-import type { Config } from '../../app';
+} from '../../app/index.ts';
+import type { IDIContainer } from '../../core/index.ts';
+import type { Config } from '../../app/index.ts';
 
 enum MigrationOperation {
     GENERATE = 'generate',

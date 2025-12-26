@@ -7,17 +7,17 @@
 
 import type { Logger } from '@authup/server-kit';
 import { Router } from 'routup';
-import type { IServer } from '../../../adapters/http';
+import type { IServer } from '../../../adapters/http/index.ts';
 import {
     createHttpServer,
-} from '../../../adapters/http';
-import type { Config } from '../config';
-import { ConfigInjectionKey } from '../config';
-import type { Module } from '../types';
-import { HTTPInjectionKey } from './constants';
-import type { IDIContainer } from '../../../core';
-import { HTTPControllerModule, HTTPMiddlewareModule } from './modules';
-import { LoggerInjectionKey } from '../logger';
+} from '../../../adapters/http/index.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import type { Module } from '../types.ts';
+import { HTTPInjectionKey } from './constants.ts';
+import type { IDIContainer } from '../../../core/index.ts';
+import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
 
 export class HTTPModule implements Module {
     protected instance : IServer | undefined;

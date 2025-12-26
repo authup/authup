@@ -11,8 +11,8 @@ import {
 } from '@authup/server-kit';
 import { JWKType, JWTAlgorithm } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '../../../../../adapters/database';
-import type { IOAuth2KeyRepository } from '../../../../../core';
+import { KeyEntity } from '../../../../../adapters/database/index.ts';
+import type { IOAuth2KeyRepository } from '../../../../../core/index.ts';
 
 export class OAuth2KeyRepository implements IOAuth2KeyRepository {
     async findByRealmId(realmId: string): Promise<Key | null> {

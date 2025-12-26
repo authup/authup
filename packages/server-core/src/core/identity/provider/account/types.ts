@@ -7,9 +7,9 @@
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import type { DeepPartial } from 'typeorm';
-import type { IUserIdentityRepository } from '../../entities';
-import type { IIdentityProviderMapper } from '../mapper';
-import type { IdentityProviderIdentity } from '../types';
+import type { IUserIdentityRepository } from '../../entities/index.ts';
+import type { IIdentityProviderMapper } from '../mapper/index.ts';
+import type { IdentityProviderIdentity } from '../types.ts';
 
 export interface IIdentityProviderAccountRepository {
     /**

@@ -13,7 +13,7 @@ import type {
 import { coreHandler, getRequestIP, useRequestPath } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import { EnvironmentName } from '@authup/kit';
-import { useRequestIdentity } from '../../request';
+import { useRequestIdentity } from '../../request/index.ts';
 
 type LoggerMiddlewareOptions = {
     env: string

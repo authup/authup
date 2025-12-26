@@ -6,7 +6,7 @@
  */
 
 import { PolicyEngine as BasePolicyEngine, BuiltInPolicyType } from '@authup/access';
-import { PermissionBindingPolicyEvaluator } from '../variants';
+import { PermissionBindingPolicyEvaluator } from '../variants/index.ts';
 
 export class PolicyEngine extends BasePolicyEngine {
     constructor() {

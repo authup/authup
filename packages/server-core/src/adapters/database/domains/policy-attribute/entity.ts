@@ -17,8 +17,8 @@ import {
     deserialize,
     serialize,
 } from '@authup/kit';
-import { PolicyEntity } from '../policy/entity';
-import { RealmEntity } from '../realm';
+import { PolicyEntity } from '../policy/entity.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'policy_id'])
 @Entity({ name: 'auth_policy_attributes' })

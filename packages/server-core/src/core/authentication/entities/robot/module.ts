@@ -7,9 +7,9 @@
 
 import type { Robot } from '@authup/core-kit';
 import { IdentityType, RobotError, UserError } from '@authup/core-kit';
-import type { IIdentityResolver } from '../../../identity';
-import { RobotCredentialsService } from '../../credential';
-import { BaseCredentialsAuthenticator } from '../../base';
+import type { IIdentityResolver } from '../../../identity/index.ts';
+import { RobotCredentialsService } from '../../credential/index.ts';
+import { BaseCredentialsAuthenticator } from '../../base.ts';
 
 export class RobotAuthenticator extends BaseCredentialsAuthenticator<Robot> {
     protected identityResolver : IIdentityResolver;

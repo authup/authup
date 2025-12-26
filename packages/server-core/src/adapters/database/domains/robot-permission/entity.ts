@@ -18,10 +18,10 @@ import type {
     Permission, Policy, Realm,
     Robot, RobotPermission,
 } from '@authup/core-kit';
-import { PermissionEntity } from '../permission';
-import { PolicyEntity } from '../policy';
-import { RobotEntity } from '../robot/entity';
-import { RealmEntity } from '../realm';
+import { PermissionEntity } from '../permission/index.ts';
+import { PolicyEntity } from '../policy/index.ts';
+import { RobotEntity } from '../robot/entity.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_robot_permissions' })
 @Index(['permission_id', 'robot_id'], { unique: true })

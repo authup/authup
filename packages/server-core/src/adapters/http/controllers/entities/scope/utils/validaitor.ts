@@ -8,8 +8,8 @@
 import { isScopeNameValid } from '@authup/core-kit';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { ScopeEntity } from '../../../../../database/domains';
-import { RequestHandlerOperation } from '../../../../request';
+import type { ScopeEntity } from '../../../../../database/domains/index.ts';
+import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class ScopeRequestValidator extends Container<
 ScopeEntity

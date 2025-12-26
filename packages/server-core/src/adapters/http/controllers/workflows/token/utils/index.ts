@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './extract';
-export * from './validator';
+export * from './extract.ts';
+export * from './validator.ts';

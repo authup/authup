@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './adapters';
-export * from './controllers/entities';
-export * from './middleware';
-export * from './request';
-export * from './server';
-export * from './swagger';
+export * from './adapters/index.ts';
+export * from './controllers/index.ts';
+export * from './middleware/index.ts';
+export * from './request/index.ts';
+export * from './server/index.ts';
+export * from './swagger/index.ts';

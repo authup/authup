@@ -9,8 +9,8 @@ import type { ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { randomUUID } from 'node:crypto';
-import type { IOAuth2TokenRepository } from '../../../../../core';
-import { CacheOAuth2Prefix } from '../constants';
+import type { IOAuth2TokenRepository } from '../../../../../core/index.ts';
+import { CacheOAuth2Prefix } from '../constants.ts';
 
 export class OAuth2TokenRepository implements IOAuth2TokenRepository {
     protected cache : ICache;

@@ -8,10 +8,10 @@
 import { defineCommand } from 'citty';
 import http from 'node:http';
 import process from 'node:process';
-import type { Config } from '../../app';
+import type { Config } from '../../app/index.ts';
 import {
     Application, ConfigInjectionKey, ConfigModule,
-} from '../../app';
+} from '../../app/index.ts';
 
 export function defineCLIHealthCheckCommand() {
     return defineCommand({

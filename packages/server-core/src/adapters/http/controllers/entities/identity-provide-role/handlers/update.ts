@@ -13,11 +13,11 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { IdentityProviderRoleMappingEntity } from '../../../../../database/domains';
-import { IdentityProviderRoleMappingRequestValidator } from '../utils';
+import { IdentityProviderRoleMappingEntity } from '../../../../../database/domains/index.ts';
+import { IdentityProviderRoleMappingRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation, useRequestParamID, useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function updateOauth2ProviderRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);

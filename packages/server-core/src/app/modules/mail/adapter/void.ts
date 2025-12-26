@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IMailClient, MailSendOptions } from '../../../../core';
+import type { IMailClient, MailSendOptions } from '../../../../core/index.ts';
 
 export class VoidMailClientAdapter implements IMailClient {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

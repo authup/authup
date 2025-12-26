@@ -13,8 +13,8 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { UserRoleEntity } from '../../../../../database/domains';
-import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
+import { UserRoleEntity } from '../../../../../database/domains/index.ts';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 export async function getManyUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

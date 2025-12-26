@@ -6,7 +6,7 @@
  */
 
 import type { Result } from '@authup/kit';
-import type { DIFactoryProvider, DIValueProvider } from './provider';
+import type { DIFactoryProvider, DIValueProvider } from './provider/index.ts';
 
 type ClassConstructor<T> = {
     new (...args: any[]): T;

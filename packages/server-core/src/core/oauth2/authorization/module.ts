@@ -15,13 +15,13 @@ import {
     OAuth2Error,
     hasOAuth2Scopes,
 } from '@authup/specs';
-import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token';
-import type { IOAuth2AuthorizationCodeIssuer } from './code';
+import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
+import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
 import type {
     OAuth2AuthorizationManagerContext,
     OAuth2AuthorizationResult,
-} from './types';
-import type { IIdentityResolver } from '../../identity';
+} from './types.ts';
+import type { IIdentityResolver } from '../../identity/index.ts';
 
 export class OAuth2Authorization {
     protected accessTokenIssuer : IOAuth2TokenIssuer;

@@ -10,10 +10,10 @@ import type {
 } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import type { ObjectLiteral } from '@authup/kit';
-import { ExtraAttributesRepositoryAdapter } from './adapter';
+import { ExtraAttributesRepositoryAdapter } from './adapter.ts';
 import type {
     EARepositoryEntityBase, EARepositoryFindOptions, EARepositoryOptions, EARepositorySaveOptions, IEARepository,
-} from './types';
+} from './types.ts';
 
 export class EARepository<
     T extends ObjectLiteral = ObjectLiteral,

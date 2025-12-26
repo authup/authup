@@ -10,8 +10,8 @@ import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotPermissionEntity } from '../../../../../database/domains';
-import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
+import { RobotPermissionEntity } from '../../../../../database/domains/index.ts';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 /**
  * Drop a permission by id of a specific user.

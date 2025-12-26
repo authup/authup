@@ -13,11 +13,11 @@ import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
-import type { IOAuth2TokenIssuer } from '../token';
-import { OAuth2BaseGrant } from './base';
-import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types';
-import type { OAuth2BearerResponseBuildContext } from '../response';
-import { buildOAuth2BearerTokenResponse } from '../response';
+import type { IOAuth2TokenIssuer } from '../token/index.ts';
+import { OAuth2BaseGrant } from './base.ts';
+import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types.ts';
+import type { OAuth2BearerResponseBuildContext } from '../response/index.ts';
+import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
 
 export class OAuth2AuthorizeGrant extends OAuth2BaseGrant<OAuth2AuthorizationCode> implements IOAuth2Grant {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;

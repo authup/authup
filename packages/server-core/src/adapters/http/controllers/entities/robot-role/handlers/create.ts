@@ -12,12 +12,12 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RobotRoleEntity } from '../../../../../database/domains';
-import { IdentityPermissionService } from '../../../../../../services';
-import { RobotRoleRequestValidator } from '../utils';
+import { RobotRoleEntity } from '../../../../../database/domains/index.ts';
+import { IdentityPermissionService } from '../../../../../../services/index.ts';
+import { RobotRoleRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation, useRequestIdentityOrFail, useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function createRobotRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

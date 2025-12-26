@@ -10,10 +10,10 @@ import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { UserRepository } from '../../../../../database/domains';
+import { UserRepository } from '../../../../../database/domains/index.ts';
 import {
     useRequestIdentityOrFail, useRequestParamID, useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function deleteUserRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);

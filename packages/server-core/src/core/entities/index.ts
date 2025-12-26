@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './identity-provider';
+export * from './identity-provider/index.ts';
 
-export * from './types';
+export * from './types.ts';

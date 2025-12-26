@@ -8,15 +8,15 @@
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWTError, OAuth2TokenKind } from '@authup/specs';
 import type { Identity } from '@authup/core-kit';
-import { OAuth2OpenIDClaimsBuilder } from '../../../openid';
-import type { IOAuth2TokenSigner } from '../../signer';
-import type { IOAuth2TokenRepository } from '../../repository';
-import { OAuth2BaseTokenIssuer } from '../base';
+import { OAuth2OpenIDClaimsBuilder } from '../../../openid/index.ts';
+import type { IOAuth2TokenSigner } from '../../signer/index.ts';
+import type { IOAuth2TokenRepository } from '../../repository/index.ts';
+import { OAuth2BaseTokenIssuer } from '../base.ts';
 import type {
     OAuth2TokenIssuerResponse,
-} from '../types';
-import type { IOAuth2OpenIDTokenIssuer, OAuth2OpenIDTokenIssuerContext } from './types';
-import type { IIdentityResolver } from '../../../../identity';
+} from '../types.ts';
+import type { IOAuth2OpenIDTokenIssuer, OAuth2OpenIDTokenIssuerContext } from './types.ts';
+import type { IIdentityResolver } from '../../../../identity/index.ts';
 
 export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IOAuth2OpenIDTokenIssuer {
     protected repository: IOAuth2TokenRepository;

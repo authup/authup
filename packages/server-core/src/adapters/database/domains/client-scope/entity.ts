@@ -21,9 +21,9 @@ import type {
     Realm,
     Scope,
 } from '@authup/core-kit';
-import { ClientEntity } from '../client';
-import { RealmEntity } from '../realm';
-import { ScopeEntity } from '../scope';
+import { ClientEntity } from '../client/index.ts';
+import { RealmEntity } from '../realm/index.ts';
+import { ScopeEntity } from '../scope/index.ts';
 
 @Entity({ name: 'auth_client_scopes' })
 @Unique(['client_id', 'scope_id'])

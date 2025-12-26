@@ -16,8 +16,8 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import { IdentityProviderAttributeMapping, IdentityProviderMappingSyncMode, Realm } from '@authup/core-kit';
-import { IdentityProviderEntity } from '../identity-provider';
-import { RealmEntity } from '../realm';
+import { IdentityProviderEntity } from '../identity-provider/index.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_identity_provider_attribute_mappings' })
 @Index(['provider_id', 'target_name'], { unique: true })

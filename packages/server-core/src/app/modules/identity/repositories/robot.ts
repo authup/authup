@@ -9,8 +9,8 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
-import type { IRobotIdentityRepository } from '../../../../core';
-import { CachePrefix, RobotRepository } from '../../../../adapters/database/domains';
+import type { IRobotIdentityRepository } from '../../../../core/index.ts';
+import { CachePrefix, RobotRepository } from '../../../../adapters/database/domains/index.ts';
 
 export class RobotIdentityRepository implements IRobotIdentityRepository {
     async findOneById(id: string): Promise<Robot | null> {

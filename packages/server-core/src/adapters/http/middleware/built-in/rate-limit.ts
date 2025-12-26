@@ -9,7 +9,7 @@ import type { OptionsInput } from '@routup/rate-limit';
 import { rateLimit } from '@routup/rate-limit';
 import type { Request, Router } from 'routup';
 import { merge } from 'smob';
-import { useRequestIdentity } from '../../request';
+import { useRequestIdentity } from '../../request/index.ts';
 
 export function registerRateLimitMiddleware(router: Router, input?: OptionsInput) {
     let options : OptionsInput = {

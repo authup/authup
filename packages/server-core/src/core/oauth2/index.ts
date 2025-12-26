@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authorization';
-export * from './client';
-export * from './grant-types';
-export * from './key';
-export * from './openid';
-export * from './response';
-export * from './scope';
-export * from './token';
+export * from './authorization/index.ts';
+export * from './client/index.ts';
+export * from './grant-types/index.ts';
+export * from './key/index.ts';
+export * from './openid/index.ts';
+export * from './response/index.ts';
+export * from './scope/index.ts';
+export * from './token/index.ts';

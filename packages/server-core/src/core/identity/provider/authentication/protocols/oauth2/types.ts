@@ -7,7 +7,7 @@
 import type { OAuth2IdentityProvider, OpenIDIdentityProvider } from '@authup/core-kit';
 import type { ObjectLiteral, Result } from '@authup/kit';
 import type { AuthorizeParameters } from '@hapic/oauth2';
-import type { IIdentityProviderAccountManager } from '../../../account';
+import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
 
 export type OAuth2AuthorizationCodeGrantPayload = {
     code: string

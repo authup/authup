@@ -7,8 +7,8 @@
 
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWTError } from '@authup/specs';
-import type { IOAuth2TokenRepository } from '../repository';
-import type { IOAuth2TokenRevoker } from './types';
+import type { IOAuth2TokenRepository } from '../repository/index.ts';
+import type { IOAuth2TokenRevoker } from './types.ts';
 
 export class OAuth2TokenRevoker implements IOAuth2TokenRevoker {
     protected repository : IOAuth2TokenRepository;

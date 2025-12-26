@@ -23,7 +23,7 @@ import {
     mergePermissionItems,
 } from '@authup/access';
 import { useDataSource } from 'typeorm-extension';
-import { IdentityPermissionService } from '../../../../services';
+import { IdentityPermissionService } from '../../../../services/index.ts';
 
 export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<PermissionBindingPolicy> {
     protected validator : PermissionBindingPolicyValidator;

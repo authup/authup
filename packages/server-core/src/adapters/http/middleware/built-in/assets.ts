@@ -11,7 +11,7 @@ import { createHandler } from '@routup/assets';
 import path from 'node:path';
 import type { Router } from 'routup';
 import { coreHandler, setRequestParam } from 'routup';
-import { resolveClientWebSlimPackagePath, resolvePackagePath } from '../../../../path';
+import { resolveClientWebSlimPackagePath, resolvePackagePath } from '../../../../path.ts';
 
 export async function registerAssetsMiddleware(router: Router) {
     if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {

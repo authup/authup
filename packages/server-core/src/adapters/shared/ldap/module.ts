@@ -7,8 +7,8 @@
 
 import type { Change, Client, SearchOptions } from 'ldapjs';
 import ldap from 'ldapjs';
-import type { ILdapClient } from '../../../core';
-import type { LdapClientOptions } from './types';
+import type { ILdapClient } from '../../../core/index.ts';
+import type { LdapClientOptions } from './types.ts';
 
 export class LdapClient implements ILdapClient {
     protected options : LdapClientOptions;

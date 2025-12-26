@@ -19,9 +19,9 @@ import type { IdentityProviderRoleMapping, Realm, Role } from '@authup/core-kit'
 import {
     IdentityProviderMappingSyncMode,
 } from '@authup/core-kit';
-import { IdentityProviderEntity } from '../identity-provider';
-import { RoleEntity } from '../role';
-import { RealmEntity } from '../realm';
+import { IdentityProviderEntity } from '../identity-provider/index.ts';
+import { RoleEntity } from '../role/index.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_identity_provider_role_mappings' })
 @Index(['provider_id', 'role_id'], { unique: true })

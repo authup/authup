@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import type { OAuth2BearerResponseBuildContext } from './type';
+import type { OAuth2BearerResponseBuildContext } from './type.ts';
 
 function resolveExpiresIn(payload?: OAuth2TokenPayload, fallbackValue?: number) : number {
     if (payload && payload.exp) {

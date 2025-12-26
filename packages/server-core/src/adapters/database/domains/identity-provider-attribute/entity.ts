@@ -17,8 +17,8 @@ import {
     deserialize,
     serialize,
 } from '@authup/kit';
-import { IdentityProviderEntity } from '../identity-provider/entity';
-import { RealmEntity } from '../realm';
+import { IdentityProviderEntity } from '../identity-provider/entity.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'provider_id'])
 @Entity({ name: 'auth_identity_provider_attributes' })

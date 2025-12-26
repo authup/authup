@@ -16,9 +16,9 @@ import {
     getManyPolicyRouteHandler,
     getOnePolicyRouteHandler,
     writePolicyRouteHandler,
-} from './handlers';
-import { ForceLoggedInMiddleware } from '../../../middleware';
-import { checkPolicyRouteHandler } from './handlers/check';
+} from './handlers/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import { checkPolicyRouteHandler } from './handlers/check.ts';
 
 @DTags('policy')
 @DController('/policies')

@@ -10,7 +10,7 @@ import {
 } from '@routup/decorators';
 import { load } from 'locter';
 import path from 'node:path';
-import { resolvePackagePath } from '../../../../../path';
+import { resolvePackagePath } from '../../../../../path.ts';
 
 export type EndpointInfo = {
     version: string,

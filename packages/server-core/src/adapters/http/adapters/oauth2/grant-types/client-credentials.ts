@@ -13,11 +13,11 @@ import { ClientError } from '@authup/core-kit';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
-import type { ICredentialsAuthenticator } from '../../../../../core';
+import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
 import {
     ClientCredentialsGrant,
-} from '../../../../../core';
-import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPOAuth2Grant } from './types';
+} from '../../../../../core/index.ts';
+import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPOAuth2Grant } from './types.ts';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<Client>;

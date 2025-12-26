@@ -8,8 +8,8 @@
 import cron from 'node-cron';
 import type { DataSource } from 'typeorm';
 import { LessThan } from 'typeorm';
-import { SessionEntity } from '../../adapters/database/domains';
-import type { Component } from '../types';
+import { SessionEntity } from '../../adapters/database/domains/index.ts';
+import type { Component } from '../types.ts';
 
 export function createOAuth2CleanerComponent(dataSource: DataSource) : Component {
     return {

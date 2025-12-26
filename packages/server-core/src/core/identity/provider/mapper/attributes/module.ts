@@ -4,10 +4,10 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { IdentityProviderIdentity } from '../../types';
-import { IdentityProviderAccountBaseMapper } from '../base';
-import type { IdentityProviderMapperElement } from '../types';
-import type { IIdentityProviderAttributeMappingRepository } from './types';
+import type { IdentityProviderIdentity } from '../../types.ts';
+import { IdentityProviderAccountBaseMapper } from '../base.ts';
+import type { IdentityProviderMapperElement } from '../types.ts';
+import type { IIdentityProviderAttributeMappingRepository } from './types.ts';
 
 export class IdentityProviderAttributeMapper extends IdentityProviderAccountBaseMapper {
     protected repository: IIdentityProviderAttributeMappingRepository;

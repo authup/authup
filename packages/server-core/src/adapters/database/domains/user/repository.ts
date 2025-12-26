@@ -10,12 +10,12 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     DataSource, EntityManager,
 } from 'typeorm';
-import { CachePrefix } from '../constants';
-import { EARepository } from '../../extra-attribute-repository';
-import { UserAttributeEntity } from '../user-attribute';
-import { UserPermissionEntity } from '../user-permission';
-import { UserRoleEntity } from '../user-role';
-import { UserEntity } from './entity';
+import { CachePrefix } from '../constants.ts';
+import { EARepository } from '../../extra-attribute-repository/index.ts';
+import { UserAttributeEntity } from '../user-attribute/index.ts';
+import { UserPermissionEntity } from '../user-permission/index.ts';
+import { UserRoleEntity } from '../user-role/index.ts';
+import { UserEntity } from './entity.ts';
 
 export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {

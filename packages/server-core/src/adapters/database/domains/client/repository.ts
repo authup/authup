@@ -9,10 +9,10 @@ import type { Client, Permission, Role } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
-import { CachePrefix } from '../constants';
-import { ClientPermissionEntity } from '../client-permission';
-import { ClientRoleEntity } from '../client-role';
-import { ClientEntity } from './entity';
+import { CachePrefix } from '../constants.ts';
+import { ClientPermissionEntity } from '../client-permission/index.ts';
+import { ClientRoleEntity } from '../client-role/index.ts';
+import { ClientEntity } from './entity.ts';
 
 export class ClientRepository extends Repository<ClientEntity> {
     constructor(instance: DataSource | EntityManager) {

@@ -10,14 +10,14 @@ import { isUUID } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { In } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core';
-import { IdentityProviderMapperOperation } from '../../../../core';
+import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
+import { IdentityProviderMapperOperation } from '../../../../core/index.ts';
 import {
     CachePrefix,
     UserPermissionEntity,
     UserRepository,
     UserRoleEntity,
-} from '../../../../adapters/database/domains';
+} from '../../../../adapters/database/domains/index.ts';
 
 export class UserIdentityRepository implements IUserIdentityRepository {
     async findOneById(id: string): Promise<User | null> {

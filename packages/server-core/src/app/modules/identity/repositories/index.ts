@@ -5,9 +5,9 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-export * from './provider';
+export * from './provider/index.ts';
 
-export * from './client';
-export * from './identity-provider';
-export * from './robot';
-export * from './user';
+export * from './client.ts';
+export * from './identity-provider.ts';
+export * from './robot.ts';
+export * from './user.ts';

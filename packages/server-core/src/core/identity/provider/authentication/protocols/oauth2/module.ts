@@ -11,14 +11,14 @@ import type { Result } from '@authup/kit';
 import { extractTokenPayload } from '@authup/server-kit';
 import type { AuthorizeParameters, TokenGrantResponse } from '@hapic/oauth2';
 import { OAuth2Client } from '@hapic/oauth2';
-import type { IIdentityProviderAccountManager } from '../../../account';
-import type { IdentityProviderIdentity } from '../../../types';
+import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
+import type { IdentityProviderIdentity } from '../../../types.ts';
 import type {
     IOAuth2Authenticator,
     IdentityProviderOAuth2AuthenticatorContext,
     IdentityProviderOAuth2AuthenticatorOptions,
     OAuth2AuthorizationCodeGrantPayload,
-} from './types';
+} from './types.ts';
 
 export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator<User> {
     protected client : OAuth2Client;

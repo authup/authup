@@ -9,13 +9,13 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { User } from '@authup/core-kit';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     deleteUserRouteHandler,
     getManyUserRouteHandler,
     getOneUserRouteHandler,
     writeUserRouteHandler,
-} from './handlers';
+} from './handlers/index.ts';
 
 @DTags('user')
 @DController('/users')
