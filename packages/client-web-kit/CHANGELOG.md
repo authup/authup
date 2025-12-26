@@ -1,5 +1,54 @@
 # Change Log
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2025-12-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* email non null column
+* ESM only
+
+### Features
+
+* make email address mandatory ([#2782](https://github.com/authup/authup/issues/2782)) ([c8e5e08](https://github.com/authup/authup/commit/c8e5e08b6abdb1af8bdc9771bd4a7ae822e71360))
+
+
+### Bug Fixes
+
+* **deps:** bump the majorprod group with 4 updates ([#2749](https://github.com/authup/authup/issues/2749)) ([d1322cf](https://github.com/authup/authup/commit/d1322cf8efd2cdec823e389b22a6dc7c80f872d0))
+* **deps:** bump the minorandpatch group across 1 directory with 13 updates ([#2780](https://github.com/authup/authup/issues/2780)) ([41eba21](https://github.com/authup/authup/commit/41eba214494520ad418d4a3ac3ccee3cd96dc19e))
+* **deps:** bump the minorandpatch group across 1 directory with 8 updates ([#2764](https://github.com/authup/authup/issues/2764)) ([04ee74b](https://github.com/authup/authup/commit/04ee74b8abdb275c3de3c97170a33c3ca8e1069f))
+* **deps:** bump the minorandpatch group across 1 directory with 8 updates ([#2786](https://github.com/authup/authup/issues/2786)) ([784234d](https://github.com/authup/authup/commit/784234da3a83a576c4e6932069de843187f6d733))
+* **deps:** bump the minorandpatch group with 34 updates ([#2756](https://github.com/authup/authup/issues/2756)) ([9240ce1](https://github.com/authup/authup/commit/9240ce18515ea9501a6790a53efe375a4c2b28ac))
+* **deps:** bump the minorandpatch group with 5 updates ([#2770](https://github.com/authup/authup/issues/2770)) ([141c50d](https://github.com/authup/authup/commit/141c50d4a76e5d5aa27b336365ca02e9f12ddf7b))
+* **deps:** bump the minorandpatch group with 8 updates ([#2769](https://github.com/authup/authup/issues/2769)) ([d86fa30](https://github.com/authup/authup/commit/d86fa30bed013f4245cecc0d03758b1f8b219da1))
+
+
+### Code Refactoring
+
+* migrated to esm only packages ([f988074](https://github.com/authup/authup/commit/f9880742e8fa6487afaf5878aedc520b37622a37))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-http-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-http-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/errors bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/specs bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 
