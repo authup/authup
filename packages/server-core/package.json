@@ -9,7 +9,7 @@
     "scripts": {
         "debug": "node --inspect dist/cli/index.js start",
         "cli": "node dist/cli/index.js",
-        "cli-dev": "ts-node-esm --swc src/cli/index.ts",
+        "cli-dev": "ts-node-esm src/cli/index.ts",
         "cli-dev-src": "nodemon --watch src --exec \"npm run build:server && node dist/cli/index.js\"",
         "cli-dev-dist": "nodemon --watch dist --exec \"node dist/cli/index.js\"",
         "build:client": "npm run build --workspace=../client-web-slim",
@@ -25,7 +25,7 @@
         "dist"
     ],
     "bin": {
-        "authup-server": "dist/index/cli.js"
+        "authup-server": "dist/cli/index.js"
     },
     "keywords": [
         "auth",
