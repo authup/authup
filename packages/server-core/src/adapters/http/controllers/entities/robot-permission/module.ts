@@ -9,13 +9,13 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { RobotPermission } from '@authup/core-kit';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     createRobotPermissionRouteHandler,
     deleteRobotPermissionRouteHandler,
     getManyRobotPermissionRouteHandler,
     getOneRobotPermissionRouteHandler,
-} from './handlers';
+} from './handlers/index.ts';
 
 @DTags('robot')
 @DController('/robot-permissions')

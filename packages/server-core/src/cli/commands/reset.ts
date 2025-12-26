@@ -7,7 +7,7 @@
 
 import { defineCommand } from 'citty';
 import process from 'node:process';
-import { createApplication } from '../../app';
+import { createApplication } from '../../app/index.ts';
 
 export function defineCLIResetCommand() {
     return defineCommand({

@@ -7,8 +7,8 @@
 
 import { coreHandler } from 'routup';
 import type { Handler } from 'routup';
-import { AuthorizationMiddleware } from './module';
-import type { HTTPAuthorizationMiddlewareContext } from './types';
+import { AuthorizationMiddleware } from './module.ts';
+import type { HTTPAuthorizationMiddlewareContext } from './types.ts';
 
 export function createAuthorizationMiddleware(ctx: HTTPAuthorizationMiddlewareContext) : Handler {
     const middleware = new AuthorizationMiddleware(ctx);

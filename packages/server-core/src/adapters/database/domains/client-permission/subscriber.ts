@@ -22,9 +22,9 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher';
-import { CachePrefix } from '../constants';
-import { ClientPermissionEntity } from './entity';
+import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { CachePrefix } from '../constants.ts';
+import { ClientPermissionEntity } from './entity.ts';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,

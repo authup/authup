@@ -6,8 +6,8 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import { ExtraAttributesRepositoryAdapter } from '../adapter';
-import type { EARepositoryEntityBase, EARepositoryFindOptions, EARepositorySaveOptions } from '../types';
+import { ExtraAttributesRepositoryAdapter } from '../adapter.ts';
+import type { EARepositoryEntityBase, EARepositoryFindOptions, EARepositorySaveOptions } from '../types.ts';
 
 export class ExtraAttributesTreeRepositoryAdapter<
     T extends ObjectLiteral = ObjectLiteral,

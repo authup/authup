@@ -7,10 +7,10 @@
 
 import type { OAuth2TokenPayload } from '@authup/specs';
 import type { Identity } from '@authup/core-kit';
-import type { IOAuth2TokenRepository } from '../../repository';
-import type { IOAuth2TokenSigner } from '../../signer';
-import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types';
-import type { IIdentityResolver } from '../../../../identity';
+import type { IOAuth2TokenRepository } from '../../repository/index.ts';
+import type { IOAuth2TokenSigner } from '../../signer/index.ts';
+import type { IOAuth2TokenIssuer, OAuth2TokenIssuerOptions, OAuth2TokenIssuerResponse } from '../types.ts';
+import type { IIdentityResolver } from '../../../../identity/index.ts';
 
 export type OAuth2OpenIDTokenIssuerContext = {
     options?: OAuth2TokenIssuerOptions,

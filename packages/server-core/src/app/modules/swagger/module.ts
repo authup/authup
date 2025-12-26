@@ -6,12 +6,12 @@
  */
 
 import type { Logger } from '@authup/server-kit';
-import { Swagger } from '../../../adapters/http';
-import type { Module } from '../types';
-import type { IDIContainer } from '../../../core';
-import type { Config } from '../config';
-import { ConfigInjectionKey } from '../config';
-import { LoggerInjectionKey } from '../logger';
+import { Swagger } from '../../../adapters/http/index.ts';
+import type { Module } from '../types.ts';
+import type { IDIContainer } from '../../../core/index.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
 
 export class SwaggerModule implements Module {
     async start(container: IDIContainer): Promise<void> {

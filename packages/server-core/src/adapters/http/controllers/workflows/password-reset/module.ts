@@ -16,8 +16,8 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere, Repository } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
-import { UserEntity, resolveRealm } from '../../../../database/domains';
-import { PasswordResetRequestValidator } from './validator';
+import { UserEntity, resolveRealm } from '../../../../database/domains/index.ts';
+import { PasswordResetRequestValidator } from './validator.ts';
 
 export type PasswordResetControllerContext = {
     repository: Repository<User>

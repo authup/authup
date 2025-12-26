@@ -6,11 +6,11 @@
  */
 
 import type { DataSource } from 'typeorm';
-import type { Component } from '../../../components';
-import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components';
-import { DatabaseInjectionKey } from '../database';
-import type { Module } from '../types';
-import type { IDIContainer } from '../../../core';
+import type { Component } from '../../../components/index.ts';
+import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components/index.ts';
+import { DatabaseInjectionKey } from '../database/index.ts';
+import type { Module } from '../types.ts';
+import type { IDIContainer } from '../../../core/index.ts';
 
 export class ComponentsModule implements Module {
     async start(container: IDIContainer): Promise<void> {

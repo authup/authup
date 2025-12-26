@@ -9,9 +9,9 @@ import { createValidationChain, createValidator } from '@validup/adapter-validat
 import { Container } from 'validup';
 import type {
     UserRoleEntity,
-} from '../../../../../database/domains';
+} from '../../../../../database/domains/index.ts';
 
-import { RequestHandlerOperation } from '../../../../request';
+import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class UserRoleRequestValidator extends Container<
 UserRoleEntity

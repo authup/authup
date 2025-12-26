@@ -8,7 +8,7 @@
 import { UnauthorizedError } from '@ebec/http';
 import type { HandlerInterface } from '@routup/decorators';
 import type { Next, Request, Response } from 'routup';
-import { useRequestIdentity } from '../../../request';
+import { useRequestIdentity } from '../../../request/index.ts';
 
 export class ForceUserLoggedInMiddleware implements HandlerInterface {
     // eslint-disable-next-line class-methods-use-this

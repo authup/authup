@@ -9,8 +9,8 @@ import { isRealmNameValid } from '@authup/core-kit';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import type { RealmEntity } from '../../../../../database/domains';
-import { RequestHandlerOperation } from '../../../../request';
+import type { RealmEntity } from '../../../../../database/domains/index.ts';
+import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class RealmRequestValidator extends Container<
 RealmEntity

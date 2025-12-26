@@ -6,8 +6,8 @@
  */
 
 import type { User } from '@authup/core-kit';
-import type { IdentityProviderMapperElement } from '../../provider';
-import type { IEntityRepository } from '../../../entities';
+import type { IdentityProviderMapperElement } from '../../provider/index.ts';
+import type { IEntityRepository } from '../../../entities/index.ts';
 
 export interface IUserIdentityRepository extends IEntityRepository<User> {
     savePermissions(user: User, items: IdentityProviderMapperElement[]) : Promise<void>;

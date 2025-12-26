@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IDIContainer } from '../../core/di/types';
+import type { IDIContainer } from '../../core/di/types.ts';
 
 export interface Module {
     start(container: IDIContainer) : Promise<void>;

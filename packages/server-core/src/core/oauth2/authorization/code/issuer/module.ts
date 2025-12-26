@@ -6,8 +6,8 @@
  */
 
 import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import type { IOAuth2AuthorizationCodeRepository, OAuth2AuthorizationCodeInput } from '../repository';
-import type { IOAuth2AuthorizationCodeIssuer, OAuth2AuthorizationCodeIssuerOptions } from './types';
+import type { IOAuth2AuthorizationCodeRepository, OAuth2AuthorizationCodeInput } from '../repository/index.ts';
+import type { IOAuth2AuthorizationCodeIssuer, OAuth2AuthorizationCodeIssuerOptions } from './types.ts';
 
 export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIssuer {
     protected repository: IOAuth2AuthorizationCodeRepository;

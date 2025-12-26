@@ -12,10 +12,10 @@ import {
     IdentityType,
     ScopeName,
 } from '@authup/core-kit';
-import { buildOAuth2BearerTokenResponse } from '../response';
-import type { IOAuth2TokenIssuer } from '../token';
-import { OAuth2BaseGrant } from './base';
-import type { OAuth2GrantRunWIthOptions, OAuth2PasswordGrantContext } from './types';
+import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
+import type { IOAuth2TokenIssuer } from '../token/index.ts';
+import { OAuth2BaseGrant } from './base.ts';
+import type { OAuth2GrantRunWIthOptions, OAuth2PasswordGrantContext } from './types.ts';
 
 export class PasswordGrantType extends OAuth2BaseGrant<User> {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;

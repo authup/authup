@@ -5,19 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authentication';
-export * from './components';
-export * from './config';
-export * from './database';
-export * from './http';
-export * from './identity';
-export * from './ldap';
-export * from './logger';
-export * from './oauth2';
-export * from './cache';
-export * from './runtime';
-export * from './swagger';
-export * from './mail';
-export * from './vault';
+export * from './authentication/index.ts';
+export * from './components/index.ts';
+export * from './config/index.ts';
+export * from './database/index.ts';
+export * from './http/index.ts';
+export * from './identity/index.ts';
+export * from './ldap/index.ts';
+export * from './logger/index.ts';
+export * from './oauth2/index.ts';
+export * from './cache/index.ts';
+export * from './runtime/index.ts';
+export * from './swagger/index.ts';
+export * from './mail/index.ts';
+export * from './vault/index.ts';
 
-export * from './types';
+export * from './types.ts';

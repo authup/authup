@@ -13,8 +13,8 @@ import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlit
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
 
-import { ConfigEnvironmentVariableName } from '../constants';
-import type { ConfigInput } from '../types';
+import { ConfigEnvironmentVariableName } from '../constants.ts';
+import type { ConfigInput } from '../types.ts';
 
 export function readConfigRawFromEnv() : ConfigInput {
     const options : ConfigInput = {};

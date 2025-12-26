@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './attribute';
-export * from './permission';
-export * from './role';
+export * from './attribute.ts';
+export * from './permission.ts';
+export * from './role.ts';

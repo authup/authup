@@ -13,8 +13,8 @@ import {
     applyQuery, useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { RealmEntity } from '../../../../../database/domains';
-import { useRequestParamID } from '../../../../request';
+import { RealmEntity } from '../../../../../database/domains/index.ts';
+import { useRequestParamID } from '../../../../request/index.ts';
 
 export async function getManyRealmRouteHandler(
     req: Request,

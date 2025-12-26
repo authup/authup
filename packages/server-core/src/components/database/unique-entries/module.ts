@@ -6,8 +6,8 @@
  */
 
 import type { DataSource } from 'typeorm';
-import { PermissionEntity, RoleEntity } from '../../../adapters/database/domains';
-import type { Component } from '../../types';
+import { PermissionEntity, RoleEntity } from '../../../adapters/database/domains/index.ts';
+import type { Component } from '../../types.ts';
 
 export class DatabaseUniqueEntriesComponent implements Component {
     protected dataSource: DataSource;

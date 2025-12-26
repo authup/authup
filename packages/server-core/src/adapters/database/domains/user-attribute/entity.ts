@@ -14,8 +14,8 @@ import {
 } from 'typeorm';
 import type { Realm, User, UserAttribute } from '@authup/core-kit';
 import { deserialize, serialize } from '@authup/kit';
-import { RealmEntity } from '../realm';
-import { UserEntity } from '../user/entity';
+import { RealmEntity } from '../realm/index.ts';
+import { UserEntity } from '../user/entity.ts';
 
 @Unique(['name', 'user_id'])
 @Entity({ name: 'auth_user_attributes' })

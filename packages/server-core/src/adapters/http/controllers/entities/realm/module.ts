@@ -12,15 +12,15 @@ import { OAuth2AuthorizationResponseType, OAuth2JsonWebKey, OpenIDProviderMetada
 import type { Realm } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows';
+import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import {
     deleteRealmRouteHandler,
     getManyRealmRouteHandler,
     getOneRealmRouteHandler,
     writeRealmRouteHandler,
-} from './handlers';
-import { ForceLoggedInMiddleware } from '../../../middleware';
-import { RealmEntity } from '../../../../database/domains';
+} from './handlers/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import { RealmEntity } from '../../../../database/domains/index.ts';
 
 export type RealmControllerOptions = {
     baseURL: string

@@ -15,7 +15,7 @@ import type {
     Key,
     Realm,
 } from '@authup/core-kit';
-import { RealmEntity } from '../realm';
+import { RealmEntity } from '../realm/index.ts';
 
 @Index([
     'priority',

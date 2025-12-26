@@ -9,12 +9,12 @@ import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 import type { ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import { randomBytes } from 'node:crypto';
-import { CacheOAuth2Prefix } from '../../constants';
+import { CacheOAuth2Prefix } from '../../constants.ts';
 import type {
     IOAuth2AuthorizationCodeRepository,
     OAuth2AuthorizationCodeInput,
     OAuth2AuthorizationCodeRepositorySaveOptions,
-} from '../../../../../../core';
+} from '../../../../../../core/index.ts';
 
 export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCodeRepository {
     protected cache : ICache;

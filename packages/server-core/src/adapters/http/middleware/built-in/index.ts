@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authorization';
-export * from './assets';
-export * from './basic';
-export * from './cors';
-export * from './error';
-export * from './logger';
-export * from './loggedin';
-export * from './prometheus';
-export * from './rate-limit';
-export * from './swagger';
+export * from './authorization/index.ts';
+export * from './loggedin/index.ts';
+
+export * from './assets.ts';
+export * from './basic.ts';
+export * from './cors.ts';
+export * from './error.ts';
+export * from './logger.ts';
+export * from './prometheus.ts';
+export * from './rate-limit.ts';
+export * from './swagger.ts';

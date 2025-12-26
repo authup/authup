@@ -11,12 +11,12 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { UserRoleEntity } from '../../../../../database/domains';
-import { IdentityPermissionService } from '../../../../../../services';
-import { UserRoleRequestValidator } from '../utils';
+import { UserRoleEntity } from '../../../../../database/domains/index.ts';
+import { IdentityPermissionService } from '../../../../../../services/index.ts';
+import { UserRoleRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation, useRequestIdentityOrFail, useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function createUserRoleRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

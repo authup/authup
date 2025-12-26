@@ -16,8 +16,8 @@ import {
     getManyClientRouteHandler,
     getOneClientRouteHandler,
     writeClientRouteHandler,
-} from './handlers';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+} from './handlers/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 
 @DTags('oauth2')
 @DController('/clients')

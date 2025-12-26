@@ -8,8 +8,8 @@
 import { createNanoID } from '@authup/kit';
 import type { ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
-import type { IOAuth2AuthorizeStateRepository, OAuth2AuthorizationState } from '../../../../../../core';
-import { CacheOAuth2Prefix } from '../../constants';
+import type { IOAuth2AuthorizeStateRepository, OAuth2AuthorizationState } from '../../../../../../core/index.ts';
+import { CacheOAuth2Prefix } from '../../constants.ts';
 
 export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeStateRepository {
     protected cache : ICache;

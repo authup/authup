@@ -8,9 +8,9 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
-import { IdentityGrantType } from '../../../../../core';
-import { useRequestIdentityOrFail } from '../../../request';
-import type { IHTTPOAuth2Grant } from './types';
+import { IdentityGrantType } from '../../../../../core/index.ts';
+import { useRequestIdentityOrFail } from '../../../request/index.ts';
+import type { IHTTPOAuth2Grant } from './types.ts';
 
 export class HTTPOAuth2IdentityGrantType extends IdentityGrantType implements IHTTPOAuth2Grant {
     runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {

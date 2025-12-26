@@ -23,9 +23,9 @@ import type {
 import {
     EventSubscriber,
 } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher';
-import { UserAttributeEntity } from './entity';
-import { CachePrefix } from '../constants';
+import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { UserAttributeEntity } from './entity.ts';
+import { CachePrefix } from '../constants.ts';
 
 async function publishEvent(
     event: `${EntityDefaultEventName}`,

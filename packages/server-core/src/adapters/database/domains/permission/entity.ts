@@ -18,9 +18,9 @@ import {
 import type {
     Client, Permission, Policy, Realm,
 } from '@authup/core-kit';
-import { PolicyEntity } from '../policy';
-import { RealmEntity } from '../realm';
-import { ClientEntity } from '../client/entity';
+import { PolicyEntity } from '../policy/index.ts';
+import { RealmEntity } from '../realm/index.ts';
+import { ClientEntity } from '../client/entity.ts';
 
 @Unique(['name', 'client_id', 'realm_id'])
 @Entity({ name: 'auth_permissions' })

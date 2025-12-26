@@ -7,15 +7,15 @@
 
 import type { User } from '@authup/core-kit';
 import { IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core-kit';
-import type { IOAuth2Authenticator, IdentityProviderOAuth2AuthenticatorContext } from './protocols';
-import { IdentityProviderOAuth2Authenticator, IdentityProviderOpenIDAuthenticator } from './protocols';
+import type { IOAuth2Authenticator, IdentityProviderOAuth2AuthenticatorContext } from './protocols/index.ts';
+import { IdentityProviderOAuth2Authenticator, IdentityProviderOpenIDAuthenticator } from './protocols/index.ts';
 import {
     IdentityProviderFacebookAuthenticator,
     IdentityProviderGithubAuthenticator,
     IdentityProviderGoogleAuthenticator,
     IdentityProviderInstagramAuthenticator,
     IdentityProviderPaypalAuthenticator,
-} from './presets';
+} from './presets/index.ts';
 
 export function createIdentityProviderOAuth2Authenticator(ctx: IdentityProviderOAuth2AuthenticatorContext) : IOAuth2Authenticator<User> {
     if (ctx.provider.preset === IdentityProviderPreset.FACEBOOK) {

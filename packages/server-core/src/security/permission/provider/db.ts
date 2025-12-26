@@ -19,7 +19,7 @@ import { BuiltInPolicyType, DecisionStrategy, buildPermissionItemKey } from '@au
 import type { Permission } from '@authup/core-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { CachePrefix, PermissionEntity, PolicyRepository } from '../../../adapters/database/domains';
+import { CachePrefix, PermissionEntity, PolicyRepository } from '../../../adapters/database/domains/index.ts';
 
 export class PermissionDBProvider implements IPermissionProvider {
     protected dataSource: DataSource;

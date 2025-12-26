@@ -7,8 +7,8 @@
 
 import { extractTokenPayload } from '@authup/server-kit';
 import type { TokenGrantResponse } from '@hapic/oauth2';
-import type { IdentityProviderIdentity } from '../../../types';
-import { IdentityProviderOAuth2Authenticator } from '../oauth2';
+import type { IdentityProviderIdentity } from '../../../types.ts';
+import { IdentityProviderOAuth2Authenticator } from '../oauth2/index.ts';
 
 export class IdentityProviderOpenIDAuthenticator extends IdentityProviderOAuth2Authenticator {
     protected async buildIdentityWithTokenGrantResponse(input: TokenGrantResponse): Promise<IdentityProviderIdentity> {

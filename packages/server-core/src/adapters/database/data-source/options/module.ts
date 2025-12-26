@@ -10,8 +10,8 @@ import {
     CodeTransformation, isCodeTransformation, transformFilePath,
 } from 'typeorm-extension';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
-import { extendDataSourceOptionsWithEntities } from './entities';
-import { extendDataSourceOptionsWithSubscribers } from './subscribers';
+import { extendDataSourceOptionsWithEntities } from './entities.ts';
+import { extendDataSourceOptionsWithSubscribers } from './subscribers.ts';
 
 export function extendDataSourceOptions(
     options: DataSourceOptions,

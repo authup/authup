@@ -20,7 +20,7 @@ import type {
     Policy,
 } from '@authup/core-kit';
 import { Realm } from '@authup/core-kit';
-import { RealmEntity } from '../realm';
+import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'realm_id'])
 @Entity({ name: 'auth_policies' })

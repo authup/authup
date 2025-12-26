@@ -9,8 +9,8 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Client } from '@authup/core-kit';
-import type { IClientIdentityRepository } from '../../../../core';
-import { CachePrefix, ClientRepository } from '../../../../adapters/database/domains';
+import type { IClientIdentityRepository } from '../../../../core/index.ts';
+import { CachePrefix, ClientRepository } from '../../../../adapters/database/domains/index.ts';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
     async findOneById(id: string): Promise<Client | null> {

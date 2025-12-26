@@ -10,7 +10,7 @@ import type {
     IOAuth2AuthorizationStateManager,
     IOAuth2AuthorizeStateRepository,
     OAuth2AuthorizationState,
-} from './types';
+} from './types.ts';
 
 export class OAuth2AuthorizationStateManager implements IOAuth2AuthorizationStateManager {
     protected repository: IOAuth2AuthorizeStateRepository;

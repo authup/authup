@@ -8,11 +8,11 @@
 import {
     MemoryCache, RedisCache,
 } from '@authup/server-kit';
-import type { Module } from '../types';
-import { CacheInjectionKey } from './constants';
-import type { Config } from '../config';
-import { ConfigInjectionKey } from '../config';
-import type { IDIContainer } from '../../../core';
+import type { Module } from '../types.ts';
+import { CacheInjectionKey } from './constants.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import type { IDIContainer } from '../../../core/index.ts';
 
 export class CacheModule implements Module {
     async start(container: IDIContainer): Promise<void> {

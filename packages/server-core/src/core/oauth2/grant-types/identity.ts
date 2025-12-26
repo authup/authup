@@ -8,10 +8,10 @@
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import type { Identity, Session } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import type { IOAuth2TokenIssuer } from '../token';
-import { OAuth2BaseGrant } from './base';
-import { buildOAuth2BearerTokenResponse } from '../response';
-import type { OAuth2GrantRunWIthOptions, OAuth2IdentityGrantContext } from './types';
+import type { IOAuth2TokenIssuer } from '../token/index.ts';
+import { OAuth2BaseGrant } from './base.ts';
+import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
+import type { OAuth2GrantRunWIthOptions, OAuth2IdentityGrantContext } from './types.ts';
 
 export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;

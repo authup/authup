@@ -6,7 +6,7 @@
  */
 
 import { defineCommand } from 'citty';
-import { createApplication } from '../../app';
+import { createApplication } from '../../app/index.ts';
 
 export function defineCLIStartCommand() {
     return defineCommand({

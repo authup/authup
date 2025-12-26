@@ -16,8 +16,8 @@ import {
     getManyIdentityProviderRoleRouteHandler,
     getOneIdentityProviderRoleRouteHandler,
     updateOauth2ProviderRoleRouteHandler,
-} from './handlers';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+} from './handlers/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 
 @DTags('identity-provider')
 @DController('/identity-provider-role-mappings')

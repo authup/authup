@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './module';
-export * from './env';
-export * from './fs';
-export * from './types';
+export * from './module.ts';
+export * from './env.ts';
+export * from './fs.ts';
+export * from './types.ts';

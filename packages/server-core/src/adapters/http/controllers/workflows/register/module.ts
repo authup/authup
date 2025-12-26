@@ -18,10 +18,10 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { Repository } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
-import { IMailClient, UserCredentialsService } from '../../../../../core';
-import { UserEntity, resolveRealm } from '../../../../database/domains';
-import { RequestHandlerOperation } from '../../../request';
-import { RegisterRequestValidator } from './validator';
+import { IMailClient, UserCredentialsService } from '../../../../../core/index.ts';
+import { UserEntity, resolveRealm } from '../../../../database/domains/index.ts';
+import { RequestHandlerOperation } from '../../../request/index.ts';
+import { RegisterRequestValidator } from './validator.ts';
 
 export type RegisterControllerOptions = {
     registration?: boolean,

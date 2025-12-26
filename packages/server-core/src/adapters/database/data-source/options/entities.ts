@@ -32,7 +32,7 @@ import {
     UserEntity,
     UserPermissionEntity,
     UserRoleEntity,
-} from '../../domains';
+} from '../../domains/index.ts';
 
 export function extendDataSourceOptionsWithEntities<T extends DataSourceOptions>(options: T) : T {
     return Object.assign(options, {

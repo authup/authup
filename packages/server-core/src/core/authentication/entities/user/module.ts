@@ -7,9 +7,9 @@
 
 import type { User } from '@authup/core-kit';
 import { IdentityType, UserError } from '@authup/core-kit';
-import type { IIdentityResolver } from '../../../identity';
-import { UserCredentialsService } from '../../credential';
-import { BaseCredentialsAuthenticator } from '../../base';
+import type { IIdentityResolver } from '../../../identity/index.ts';
+import { UserCredentialsService } from '../../credential/index.ts';
+import { BaseCredentialsAuthenticator } from '../../base.ts';
 
 export class UserAuthenticator extends BaseCredentialsAuthenticator<User> {
     protected identityResolver : IIdentityResolver;

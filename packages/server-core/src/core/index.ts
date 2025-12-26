@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './authentication';
-export * from './di';
-export * from './entities';
-export * from './mail';
-export * from './oauth2';
-export * from './identity';
-export * from './ldap';
+export * from './authentication/index.ts';
+export * from './di/index.ts';
+export * from './entities/index.ts';
+export * from './mail/index.ts';
+export * from './oauth2/index.ts';
+export * from './identity/index.ts';
+export * from './ldap/index.ts';

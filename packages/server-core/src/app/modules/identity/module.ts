@@ -14,8 +14,8 @@ import {
     IdentityProviderRoleMappingRepository,
     RobotIdentityRepository,
     UserIdentityRepository,
-} from './repositories';
-import type { IDIContainer, IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core';
+} from './repositories/index.ts';
+import type { IDIContainer, IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core/index.ts';
 import {
     IdentityProviderAccountManager,
     IdentityProviderAttributeMapper,
@@ -23,11 +23,11 @@ import {
     IdentityProviderPermissionMapper,
     IdentityProviderRoleMapper,
     IdentityResolver,
-} from '../../../core';
-import { LDAPInjectionKey } from '../ldap';
+} from '../../../core/index.ts';
+import { LDAPInjectionKey } from '../ldap/index.ts';
 
-import type { Module } from '../types';
-import { IdentityInjectionKey } from './constants';
+import type { Module } from '../types.ts';
+import { IdentityInjectionKey } from './constants.ts';
 
 export class IdentityModule implements Module {
     async start(container: IDIContainer): Promise<void> {

@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './policy';
-export * from './permission';
+export * from './policy/index.ts';
+export * from './permission/index.ts';

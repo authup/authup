@@ -21,7 +21,7 @@ import type {
     IdentityProviderProtocol,
     Realm,
 } from '@authup/core-kit';
-import { RealmEntity } from '../realm';
+import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'realm_id'])
 @Entity({ name: 'auth_identity_providers' })

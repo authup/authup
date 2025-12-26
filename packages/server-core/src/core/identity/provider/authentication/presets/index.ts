@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './facebook';
-export * from './github';
-export * from './google';
-export * from './instagram';
-export * from './paypal';
+export * from './facebook.ts';
+export * from './github.ts';
+export * from './google.ts';
+export * from './instagram.ts';
+export * from './paypal.ts';

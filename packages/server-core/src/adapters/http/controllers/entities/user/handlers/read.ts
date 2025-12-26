@@ -14,13 +14,13 @@ import type { Request, Response } from 'routup';
 import { send, useRequestParam } from 'routup';
 import type { QueryFieldsApplyOptions } from 'typeorm-extension';
 import { applyQuery, useDataSource } from 'typeorm-extension';
-import type { UserEntity } from '../../../../../database/domains';
-import { UserRepository, resolveRealm } from '../../../../../database/domains';
-import { isSelfToken } from '../../../../../../utils';
-import { OAuth2ScopeAttributesResolver } from '../../../../../../core/oauth2';
+import type { UserEntity } from '../../../../../database/domains/index.ts';
+import { UserRepository, resolveRealm } from '../../../../../database/domains/index.ts';
+import { isSelfToken } from '../../../../../../utils/index.ts';
+import { OAuth2ScopeAttributesResolver } from '../../../../../../core/oauth2/index.ts';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker, useRequestScopes,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 function buildFieldsOption() : QueryFieldsApplyOptions<UserEntity> {
     return {

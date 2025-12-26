@@ -9,14 +9,14 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { Robot } from '@authup/core-kit';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     deleteRobotRouteHandler,
     getManyRobotRouteHandler,
     getOneRobotRouteHandler,
     handleRobotIntegrityRouteHandler,
     writeRobotRouteHandler,
-} from './handlers';
+} from './handlers/index.ts';
 
 @DTags('robot')
 @DController('/robots')

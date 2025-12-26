@@ -6,7 +6,7 @@
  */
 
 import type { DN, SearchOptions } from 'ldapjs';
-import type { LdapClientOptions } from '../../adapters/shared/ldap';
+import type { LdapClientOptions } from '../../adapters/shared/ldap/index.ts';
 
 export interface ILdapClient {
     connected : boolean;

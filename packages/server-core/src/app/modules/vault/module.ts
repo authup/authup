@@ -9,11 +9,11 @@ import type { VaultClient } from '@authup/server-kit';
 import {
     createVaultClient, setVaultFactory,
 } from '@authup/server-kit';
-import type { Module } from '../types';
-import { VaultInjectionKey } from './constants';
-import type { Config } from '../config';
-import { ConfigInjectionKey } from '../config';
-import type { IDIContainer } from '../../../core';
+import type { Module } from '../types.ts';
+import { VaultInjectionKey } from './constants.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import type { IDIContainer } from '../../../core/index.ts';
 
 export class VaultModule implements Module {
     async start(container: IDIContainer): Promise<void> {

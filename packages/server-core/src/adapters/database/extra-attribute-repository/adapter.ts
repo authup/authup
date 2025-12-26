@@ -21,7 +21,7 @@ import type {
     EARepositoryFindOptions,
     EARepositoryPropertiesModifyFn,
     EARepositorySaveOptions,
-} from './types';
+} from './types.ts';
 
 export class ExtraAttributesRepositoryAdapter<
     T extends ObjectLiteral = ObjectLiteral,

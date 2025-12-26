@@ -14,7 +14,7 @@ import type {
     IOAuth2AuthorizationCodeVerifier,
     OAuth2AuthorizeGrantContext,
     OAuth2PasswordGrantContext,
-} from '../../../../../core';
+} from '../../../../../core/index.ts';
 
 export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
     codeVerifier: IOAuth2AuthorizationCodeVerifier

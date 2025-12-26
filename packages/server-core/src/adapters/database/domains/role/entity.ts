@@ -18,7 +18,7 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import type { Realm, Role } from '@authup/core-kit';
-import { RealmEntity } from '../realm';
+import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_roles' })
 @Unique(['name', 'client_id', 'realm_id'])

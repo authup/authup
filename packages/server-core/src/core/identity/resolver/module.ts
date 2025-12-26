@@ -10,8 +10,8 @@ import type {
 } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { IIdentityResolver, IdentityResolverContext } from './types';
-import type { IClientIdentityRepository, IRobotIdentityRepository, IUserIdentityRepository } from '../entities';
+import type { IIdentityResolver, IdentityResolverContext } from './types.ts';
+import type { IClientIdentityRepository, IRobotIdentityRepository, IUserIdentityRepository } from '../entities/index.ts';
 
 export class IdentityResolver implements IIdentityResolver {
     protected clientRepository: IClientIdentityRepository;

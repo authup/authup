@@ -6,7 +6,7 @@
  */
 
 import { createTransport } from 'nodemailer';
-import type { SMTPClient, SMTPOptions } from './types';
+import type { SMTPClient, SMTPOptions } from './types.ts';
 
 export function createSMTPClient(options?: SMTPOptions | string) : SMTPClient {
     let transport : SMTPClient;

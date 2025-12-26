@@ -18,15 +18,15 @@ import { isUUID } from '@authup/kit';
 import {
     PermissionName,
 } from '@authup/core-kit';
-import { RobotEntity, resolveRealm } from '../../../../../database/domains';
-import { isSelfToken } from '../../../../../../utils';
-import { OAuth2ScopeAttributesResolver } from '../../../../../../core';
+import { RobotEntity, resolveRealm } from '../../../../../database/domains/index.ts';
+import { isSelfToken } from '../../../../../../utils/index.ts';
+import { OAuth2ScopeAttributesResolver } from '../../../../../../core/index.ts';
 import {
     useRequestIdentity,
     useRequestParamID,
     useRequestPermissionChecker,
     useRequestScopes,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function getManyRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

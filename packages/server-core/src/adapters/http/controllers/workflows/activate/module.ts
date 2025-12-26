@@ -14,7 +14,7 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { Repository } from 'typeorm';
-import { ActivateRequestValidator } from './validator';
+import { ActivateRequestValidator } from './validator.ts';
 
 export type ActivateControllerContext = {
     repository: Repository<User>

@@ -16,9 +16,9 @@ import { randomBytes } from 'node:crypto';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere, Repository } from 'typeorm';
-import { IMailClient } from '../../../../../core';
-import { resolveRealm } from '../../../../database/domains';
-import { PasswordForgotRequestValidator } from './validator';
+import { IMailClient } from '../../../../../core/index.ts';
+import { resolveRealm } from '../../../../database/domains/index.ts';
+import { PasswordForgotRequestValidator } from './validator.ts';
 
 export type PasswordForgotControllerOptions = {
     registration?: boolean,

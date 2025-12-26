@@ -7,7 +7,7 @@
 
 import { isVaultClientUsable, useVaultClient } from '@authup/server-kit';
 import { singa } from 'singa';
-import { RobotSynchronizationService } from './module';
+import { RobotSynchronizationService } from './module.ts';
 
 const instance = singa<RobotSynchronizationService>({
     name: 'robotSynchronization',

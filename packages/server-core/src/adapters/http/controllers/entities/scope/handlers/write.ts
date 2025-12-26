@@ -13,9 +13,9 @@ import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { DatabaseConflictError } from '../../../../../database';
-import { ScopeEntity } from '../../../../../database/domains';
-import { ScopeRequestValidator } from '../utils';
+import { DatabaseConflictError } from '../../../../../database/index.ts';
+import { ScopeEntity } from '../../../../../database/domains/index.ts';
+import { ScopeRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation,
     getRequestBodyRealmID,
@@ -23,7 +23,7 @@ import {
     isRequestIdentityMasterRealmMember,
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function writeScopeRouteHandler(
     req: Request,

@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './options';
-export * from './singleton';
+export * from './options/index.ts';
+export * from './singleton.ts';

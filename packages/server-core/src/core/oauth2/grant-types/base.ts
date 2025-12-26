@@ -7,9 +7,9 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import type { ISessionManager } from '../../authentication';
-import type { IOAuth2TokenIssuer } from '../token';
-import type { BaseGrantContext, IOAuth2Grant, OAuth2GrantRunWIthOptions } from './types';
+import type { ISessionManager } from '../../authentication/index.ts';
+import type { IOAuth2TokenIssuer } from '../token/index.ts';
+import type { BaseGrantContext, IOAuth2Grant, OAuth2GrantRunWIthOptions } from './types.ts';
 
 export abstract class OAuth2BaseGrant<
     T = ObjectLiteral,

@@ -8,8 +8,8 @@
 import { type TokenECAlgorithm, type TokenRSAAlgorithm, signToken } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWKError, JWKType } from '@authup/specs';
-import type { IOAuth2KeyRepository } from '../../key';
-import type { IOAuth2TokenSigner } from './types';
+import type { IOAuth2KeyRepository } from '../../key/index.ts';
+import type { IOAuth2TokenSigner } from './types.ts';
 
 export class OAuth2TokenSigner implements IOAuth2TokenSigner {
     protected keyRepository : IOAuth2KeyRepository;

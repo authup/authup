@@ -7,10 +7,10 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import { JWTError } from '@authup/specs';
-import { buildOAuth2BearerTokenResponse } from '../response';
-import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../token';
-import { OAuth2BaseGrant } from './base';
-import type { IOAuth2Grant, OAuth2GrantRunWIthOptions, OAuth2RefreshTokenGrantContext } from './types';
+import { buildOAuth2BearerTokenResponse } from '../response/index.ts';
+import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../token/index.ts';
+import { OAuth2BaseGrant } from './base.ts';
+import type { IOAuth2Grant, OAuth2GrantRunWIthOptions, OAuth2RefreshTokenGrantContext } from './types.ts';
 
 export class OAuth2RefreshTokenGrant extends OAuth2BaseGrant<string | OAuth2TokenPayload> implements IOAuth2Grant {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;

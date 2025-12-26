@@ -9,13 +9,13 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { isSimpleMatch } from '@authup/kit';
 import { OAuth2Error, hasOAuth2Scopes } from '@authup/specs';
-import type { IOAuth2ClientRepository } from '../../../client';
-import type { IOAuth2ScopeRepository } from '../../../scope';
+import type { IOAuth2ClientRepository } from '../../../client/index.ts';
+import type { IOAuth2ScopeRepository } from '../../../scope/index.ts';
 import type {
     IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestVerificationResult,
     OAuth2AuthorizationCodeRequestVerifierContext,
-} from './types';
+} from './types.ts';
 
 export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2AuthorizationCodeRequestVerifier {
     protected clientRepository: IOAuth2ClientRepository;

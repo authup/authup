@@ -10,7 +10,7 @@ import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlit
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
 import zod from 'zod';
-import type { Config, ConfigInput } from './types';
+import type { Config, ConfigInput } from './types.ts';
 
 export function parseConfig(input: unknown = {}): ConfigInput {
     const schema = zod.object({

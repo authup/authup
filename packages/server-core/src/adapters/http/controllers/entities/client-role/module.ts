@@ -9,13 +9,13 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { ClientRole } from '@authup/core-kit';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     createClientRoleRouteHandler,
     deleteClientRoleRouteHandler,
     getManyClientRoleRouteHandler,
     getOneClientRoleRouteHandler,
-} from './handlers';
+} from './handlers/index.ts';
 
 @DTags('client')
 @DController('/client-roles')

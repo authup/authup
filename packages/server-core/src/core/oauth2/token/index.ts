@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './issuer';
-export * from './revoker';
-export * from './signer';
-export * from './verifier';
-export * from './repository';
+export * from './issuer/index.ts';
+export * from './revoker/index.ts';
+export * from './signer/index.ts';
+export * from './verifier/index.ts';
+export * from './repository/index.ts';

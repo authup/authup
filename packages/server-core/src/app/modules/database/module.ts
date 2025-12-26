@@ -21,7 +21,7 @@ import {
     unsetDataSource,
     useDataSourceOptions,
 } from 'typeorm-extension';
-import type { DatabaseSeederOptions } from '../../../adapters/database';
+import type { DatabaseSeederOptions } from '../../../adapters/database/index.ts';
 import {
     DatabaseQueryResultCache,
     DatabaseSeeder,
@@ -29,15 +29,15 @@ import {
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
     setDataSourceSync,
-} from '../../../adapters/database';
-import { setDomainEventPublisher } from '../../../adapters/database/event-publisher';
-import { CacheInjectionKey } from '../cache';
-import type { Config } from '../config';
-import type { Module } from '../types';
-import { DatabaseInjectionKey } from './constants';
-import { ConfigInjectionKey } from '../config';
-import type { IDIContainer } from '../../../core';
-import { LoggerInjectionKey } from '../logger';
+} from '../../../adapters/database/index.ts';
+import { setDomainEventPublisher } from '../../../adapters/database/event-publisher/index.ts';
+import { CacheInjectionKey } from '../cache/index.ts';
+import type { Config } from '../config/index.ts';
+import type { Module } from '../types.ts';
+import { DatabaseInjectionKey } from './constants.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import type { IDIContainer } from '../../../core/index.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
 
 export class DatabaseModule implements Module {
     async start(container: IDIContainer): Promise<void> {

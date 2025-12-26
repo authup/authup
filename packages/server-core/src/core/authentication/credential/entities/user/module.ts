@@ -7,7 +7,7 @@
 
 import { compare, hash } from '@authup/server-kit';
 import type { User } from '@authup/core-kit';
-import type { ICredentialService } from '../../types';
+import type { ICredentialService } from '../../types.ts';
 
 export class UserCredentialsService implements ICredentialService<User> {
     async verify(input: string, entity: User): Promise<boolean> {

@@ -5,9 +5,9 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { DependencyContainer } from '../core';
-import type { Module } from './modules';
-import type { IDIContainer } from '../core/di/types';
+import { DependencyContainer } from '../core/index.ts';
+import type { Module } from './modules/index.ts';
+import type { IDIContainer } from '../core/di/types.ts';
 
 export class Application {
     public readonly container: IDIContainer;

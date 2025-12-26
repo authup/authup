@@ -12,9 +12,9 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { UserPermissionEntity } from '../../../../../database/domains';
-import { UserPermissionRequestValidator } from '../utils';
-import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../../request';
+import { UserPermissionEntity } from '../../../../../database/domains/index.ts';
+import { UserPermissionRequestValidator } from '../utils/index.ts';
+import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 /**
  * Add a permission by id to a specific user.

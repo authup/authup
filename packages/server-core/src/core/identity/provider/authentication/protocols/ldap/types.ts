@@ -6,9 +6,9 @@
  */
 
 import type { LdapIdentityProvider } from '@authup/core-kit';
-import type { IIdentityProviderRepository } from '../../../../../entities';
-import type { ILdapClientFactory } from '../../../../../ldap';
-import type { IIdentityProviderAccountManager } from '../../../account';
+import type { IIdentityProviderRepository } from '../../../../../entities/index.ts';
+import type { ILdapClientFactory } from '../../../../../ldap/index.ts';
+import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
 
 type IdentityProviderAuthenticatorBaseContext = {
     clientFactory: ILdapClientFactory,

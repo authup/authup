@@ -11,10 +11,10 @@ import {
 import type {
     Client, Realm, Robot, Session, User,
 } from '@authup/core-kit';
-import { ClientEntity } from '../client';
-import { RobotEntity } from '../robot';
-import { RealmEntity } from '../realm';
-import { UserEntity } from '../user';
+import { ClientEntity } from '../client/index.ts';
+import { RobotEntity } from '../robot/index.ts';
+import { RealmEntity } from '../realm/index.ts';
+import { UserEntity } from '../user/index.ts';
 
 @Entity({ name: 'auth_sessions' })
 export class SessionEntity implements Session {

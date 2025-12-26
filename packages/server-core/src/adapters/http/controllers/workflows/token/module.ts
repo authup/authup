@@ -20,15 +20,15 @@ import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { useDataSource } from 'typeorm-extension';
 import { pickRecord } from '@authup/kit';
-import { toOAuth2Error } from '../../../../../core/oauth2/helpers';
-import type { TokenControllerContext, TokenControllerOptions } from './types';
+import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
+import type { TokenControllerContext, TokenControllerOptions } from './types.ts';
 import {
     IIdentityResolver,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier,
     OAuth2OpenIDClaimsBuilder,
-} from '../../../../../core';
+} from '../../../../../core/index.ts';
 import {
     HTTPClientCredentialsGrant,
     HTTPOAuth2AuthorizeGrant,
@@ -37,9 +37,9 @@ import {
     HTTPRobotCredentialsGrant,
     IHTTPOAuth2Grant,
     guessOauth2GrantTypeByRequest,
-} from '../../../adapters';
-import { extractTokenFromRequest } from './utils';
-import { IdentityPermissionService } from '../../../../../services';
+} from '../../../adapters/index.ts';
+import { extractTokenFromRequest } from './utils/index.ts';
+import { IdentityPermissionService } from '../../../../../services/index.ts';
 
 @DTags('auth')
 @DController('/token')

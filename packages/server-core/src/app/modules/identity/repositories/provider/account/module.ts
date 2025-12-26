@@ -8,8 +8,8 @@
 import type { IdentityProviderAccount } from '@authup/core-kit';
 import type { DeepPartial } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import type { IIdentityProviderAccountRepository, IdentityProviderIdentity } from '../../../../../../core';
-import { IdentityProviderAccountEntity } from '../../../../../../adapters/database/domains';
+import type { IIdentityProviderAccountRepository, IdentityProviderIdentity } from '../../../../../../core/index.ts';
+import { IdentityProviderAccountEntity } from '../../../../../../adapters/database/domains/index.ts';
 
 export class IdentityProviderAccountRepository implements IIdentityProviderAccountRepository {
     async findOneByProviderIdentity(identity: IdentityProviderIdentity): Promise<IdentityProviderAccount | null> {

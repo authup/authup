@@ -24,8 +24,8 @@ import type {
     Robot,
     User,
 } from '@authup/core-kit';
-import { RealmEntity } from '../realm';
-import { UserEntity } from '../user';
+import { RealmEntity } from '../realm/index.ts';
+import { UserEntity } from '../user/index.ts';
 
 @Entity({ name: 'auth_robots' })
 @Unique(['name', 'realm_id'])

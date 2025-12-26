@@ -13,9 +13,9 @@ import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     ClientPermissionEntity,
-} from '../../../../../database/domains';
-import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../../request';
-import { ClientPermissionRequestValidator } from '../utils';
+} from '../../../../../database/domains/index.ts';
+import { RequestHandlerOperation, useRequestPermissionChecker } from '../../../../request/index.ts';
+import { ClientPermissionRequestValidator } from '../utils/index.ts';
 
 /**
  * Add a permission by id to a specific user.

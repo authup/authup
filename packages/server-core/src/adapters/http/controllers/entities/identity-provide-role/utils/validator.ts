@@ -9,8 +9,8 @@ import { createValidationChain, createValidator } from '@validup/adapter-validat
 import { Container } from 'validup';
 import type {
     IdentityProviderRoleMappingEntity,
-} from '../../../../../database/domains';
-import { RequestHandlerOperation } from '../../../../request';
+} from '../../../../../database/domains/index.ts';
+import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class IdentityProviderRoleMappingRequestValidator extends Container<
 IdentityProviderRoleMappingEntity

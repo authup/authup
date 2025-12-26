@@ -8,20 +8,20 @@
 import type { Session } from '@authup/core-kit';
 import type { ICache } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
-import { SessionEntity } from '../../../adapters/database/domains';
+import { SessionEntity } from '../../../adapters/database/domains/index.ts';
 import type {
     IDIContainer, ISessionRepository,
-} from '../../../core';
+} from '../../../core/index.ts';
 import {
     SessionManager,
-} from '../../../core';
-import { CacheInjectionKey } from '../cache';
-import type { Config } from '../config';
-import { ConfigInjectionKey } from '../config';
+} from '../../../core/index.ts';
+import { CacheInjectionKey } from '../cache/index.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
 
-import type { Module } from '../types';
-import { AuthenticationInjectionKey } from './constants';
-import { SessionRepository } from './repositories';
+import type { Module } from '../types.ts';
+import { AuthenticationInjectionKey } from './constants.ts';
+import { SessionRepository } from './repositories/index.ts';
 
 export class AuthenticationModule implements Module {
     async start(container: IDIContainer): Promise<void> {

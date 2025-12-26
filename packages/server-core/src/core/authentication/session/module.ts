@@ -10,7 +10,7 @@ import { IdentityType } from '@authup/core-kit';
 import { JWTError } from '@authup/specs';
 import type {
     ISessionManager, ISessionRepository, SessionManagerContext, SessionManagerOptions,
-} from './types';
+} from './types.ts';
 
 export class SessionManager implements ISessionManager {
     protected options: SessionManagerOptions;

@@ -18,9 +18,9 @@ import {
 import type {
     Realm, Robot, RobotRole, Role,
 } from '@authup/core-kit';
-import { RoleEntity } from '../role';
-import { RobotEntity } from '../robot/entity';
-import { RealmEntity } from '../realm';
+import { RoleEntity } from '../role/index.ts';
+import { RobotEntity } from '../robot/entity.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_robot_roles' })
 @Index(['role_id', 'robot_id'], { unique: true })

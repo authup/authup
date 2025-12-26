@@ -11,9 +11,9 @@ import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
-import { OAuth2AuthorizeGrant } from '../../../../../core';
-import type { IOAuth2AuthorizationCodeVerifier } from '../../../../../core';
-import type { HTTPOAuth2AuthorizeGrantContext, IHTTPOAuth2Grant } from './types';
+import { OAuth2AuthorizeGrant } from '../../../../../core/index.ts';
+import type { IOAuth2AuthorizationCodeVerifier } from '../../../../../core/index.ts';
+import type { HTTPOAuth2AuthorizeGrantContext, IHTTPOAuth2Grant } from './types.ts';
 
 export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IHTTPOAuth2Grant {
     protected codeVerifier : IOAuth2AuthorizationCodeVerifier;

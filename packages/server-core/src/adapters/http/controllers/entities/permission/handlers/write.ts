@@ -14,9 +14,9 @@ import type { FindOptionsWhere } from 'typeorm';
 import { IsNull } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { DatabaseConflictError } from '../../../../../database';
-import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../../database/domains';
-import { PermissionRequestValidator } from '../utils';
+import { DatabaseConflictError } from '../../../../../database/index.ts';
+import { PermissionEntity, RolePermissionEntity, RoleRepository } from '../../../../../database/domains/index.ts';
+import { PermissionRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation,
     getRequestBodyRealmID,
@@ -24,7 +24,7 @@ import {
     isRequestIdentityMasterRealmMember,
     useRequestIdentityOrFail,
     useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function writePermissionRouteHandler(
     req: Request,

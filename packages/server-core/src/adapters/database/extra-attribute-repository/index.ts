@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './adapter';
-export * from './repository';
-export * from './tree/repository';
-export * from './types';
+export * from './adapter.ts';
+export * from './repository.ts';
+export * from './tree/repository.ts';
+export * from './types.ts';

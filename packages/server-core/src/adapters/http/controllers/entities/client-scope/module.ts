@@ -9,13 +9,13 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { ClientScope } from '@authup/core-kit';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     createClientScopeRouteHandler,
     deleteClientScopeRouteHandler,
     getManyClientScopeRouteHandler,
     getOneClientScopeRouteHandler,
-} from './handlers';
+} from './handlers/index.ts';
 
 @DTags('client', 'scope')
 @DController('/client-scopes')

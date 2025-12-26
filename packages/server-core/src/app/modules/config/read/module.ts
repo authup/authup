@@ -6,10 +6,10 @@
  */
 
 import { merge } from 'smob';
-import type { ConfigInput } from '../types';
-import { readConfigRawFromEnv } from './env';
-import { readConfigRawFromFS } from './fs';
-import type { ConfigRawReadOptions } from './types';
+import type { ConfigInput } from '../types.ts';
+import { readConfigRawFromEnv } from './env.ts';
+import { readConfigRawFromFS } from './fs.ts';
+import type { ConfigRawReadOptions } from './types.ts';
 
 export async function readConfigRaw(options: ConfigRawReadOptions = {}) : Promise<ConfigInput> {
     if (options.fs && options.env) {

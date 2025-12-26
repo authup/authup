@@ -18,7 +18,9 @@
 
         "moduleResolution": "bundler",
         // compiled code format (esm/cjs)
-        "module": "ESNext"
+        "module": "ESNext",
+
+        "allowImportingTsExtensions": true
     },
     "exclude": [
         "node_modules",

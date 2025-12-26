@@ -7,7 +7,7 @@
 
 import type { ClientScope, Scope } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import type { IOAuth2ScopeRepository } from '../../../../../core';
+import type { IOAuth2ScopeRepository } from '../../../../../core/index.ts';
 
 export class OAuth2ScopeRepository implements IOAuth2ScopeRepository {
     private readonly repository: Repository<ClientScope>;

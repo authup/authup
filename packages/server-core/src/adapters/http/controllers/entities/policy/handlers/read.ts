@@ -15,8 +15,8 @@ import {
     useDataSource,
 } from 'typeorm-extension';
 import { NotFoundError } from '@ebec/http';
-import { PolicyRepository, resolveRealm } from '../../../../../database/domains';
-import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
+import { PolicyRepository, resolveRealm } from '../../../../../database/domains/index.ts';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 export async function getManyPolicyRouteHandler(req: Request, res: Response): Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

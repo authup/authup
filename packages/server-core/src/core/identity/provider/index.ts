@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './account';
-export * from './authentication';
-export * from './mapper';
-export * from './types';
+export * from './account/index.ts';
+export * from './authentication/index.ts';
+export * from './mapper/index.ts';
+export * from './types.ts';

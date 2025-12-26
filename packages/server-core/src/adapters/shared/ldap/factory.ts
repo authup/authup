@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ILdapClient, ILdapClientFactory } from '../../../core';
-import { LdapClient } from './module';
-import type { LdapClientOptions } from './types';
+import type { ILdapClient, ILdapClientFactory } from '../../../core/index.ts';
+import { LdapClient } from './module.ts';
+import type { LdapClientOptions } from './types.ts';
 
 export class LdapClientFactory implements ILdapClientFactory {
     create(options: LdapClientOptions): ILdapClient {

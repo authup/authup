@@ -12,11 +12,11 @@ import {
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import { useDataSource } from 'typeorm-extension';
-import { RobotEntity } from '../../../../../database/domains';
-import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services';
+import { RobotEntity } from '../../../../../database/domains/index.ts';
+import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services/index.ts';
 import {
     useRequestIdentity, useRequestParamID, useRequestPermissionChecker,
-} from '../../../../request';
+} from '../../../../request/index.ts';
 
 export async function deleteRobotRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParamID(req);

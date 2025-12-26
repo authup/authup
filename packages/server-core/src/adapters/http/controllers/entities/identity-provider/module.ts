@@ -36,17 +36,17 @@ import {
     IdentityGrantType,
     OAuth2AuthorizationCodeRequestValidator,
     OAuth2AuthorizationState, createIdentityProviderOAuth2Authenticator,
-} from '../../../../../core';
-import { useRequestParamID } from '../../../request';
-import { ForceLoggedInMiddleware } from '../../../middleware';
+} from '../../../../../core/index.ts';
+import { useRequestParamID } from '../../../request/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     deleteIdentityProviderRouteHandler,
     getManyIdentityProviderRouteHandler,
     getOneIdentityProviderRouteHandler,
     writeIdentityProviderRouteHandler,
-} from './handlers';
-import { IdentityProviderRepository } from '../../../../database/domains';
-import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types';
+} from './handlers/index.ts';
+import { IdentityProviderRepository } from '../../../../database/domains/index.ts';
+import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
 @DController('/identity-providers')

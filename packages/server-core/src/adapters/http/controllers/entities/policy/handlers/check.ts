@@ -15,10 +15,10 @@ import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import type { FindOptionsWhere } from 'typeorm';
-import type { PolicyEntity } from '../../../../../database/domains';
-import { PolicyRepository, resolveRealm } from '../../../../../database/domains';
-import { PolicyEngine } from '../../../../../../security';
-import { useRequestIdentity } from '../../../../request';
+import type { PolicyEntity } from '../../../../../database/domains/index.ts';
+import { PolicyRepository, resolveRealm } from '../../../../../database/domains/index.ts';
+import { PolicyEngine } from '../../../../../../security/index.ts';
+import { useRequestIdentity } from '../../../../request/index.ts';
 
 export async function checkPolicyRouteHandler(req: Request, res: Response) : Promise<any> {
     const id = useRequestParam(req, 'id');

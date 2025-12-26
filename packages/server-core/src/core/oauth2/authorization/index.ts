@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './code';
-export * from './code-request';
-export * from './state';
+export * from './code/index.ts';
+export * from './code-request/index.ts';
+export * from './state/index.ts';
 
-export * from './module';
-export * from './helpers';
-export * from './types';
+export * from './module.ts';
+export * from './helpers.ts';
+export * from './types.ts';

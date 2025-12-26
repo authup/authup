@@ -15,9 +15,9 @@ import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import {
     UserAttributeEntity,
-} from '../../../../../database/domains';
-import { useRequestParamID, useRequestPermissionChecker } from '../../../../request';
-import { canRequestManageUserAttribute } from '../utils/authorization';
+} from '../../../../../database/domains/index.ts';
+import { useRequestParamID, useRequestPermissionChecker } from '../../../../request/index.ts';
+import { canRequestManageUserAttribute } from '../utils/index.ts';
 
 export async function getManyUserAttributeRouteHandler(req: Request, res: Response) : Promise<any> {
     const permissionChecker = useRequestPermissionChecker(req);

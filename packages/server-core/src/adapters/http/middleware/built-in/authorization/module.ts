@@ -25,25 +25,25 @@ import {
     parseAuthorizationHeader,
     stringifyAuthorizationHeader,
 } from 'hapic';
-import { PolicyEngine } from '../../../../../security';
+import { PolicyEngine } from '../../../../../security/index.ts';
 import type {
     ICredentialsAuthenticator, IIdentityResolver,
     IOAuth2TokenVerifier, ISessionManager,
-} from '../../../../../core';
+} from '../../../../../core/index.ts';
 import {
     ClientAuthenticator,
     RobotAuthenticator,
 
     UserAuthenticator,
-} from '../../../../../core';
+} from '../../../../../core/index.ts';
 import {
     RequestPermissionChecker,
     setRequestIdentity,
     setRequestPermissionChecker,
     setRequestScopes,
     setRequestToken,
-} from '../../../request';
-import type { HTTPAuthorizationMiddlewareContext, HTTPAuthorizationMiddlewareOptions } from './types';
+} from '../../../request/index.ts';
+import type { HTTPAuthorizationMiddlewareContext, HTTPAuthorizationMiddlewareOptions } from './types.ts';
 
 export class AuthorizationMiddleware {
     protected options: HTTPAuthorizationMiddlewareOptions;

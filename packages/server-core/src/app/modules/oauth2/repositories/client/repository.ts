@@ -8,7 +8,7 @@
 import type { Client } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import type { IOAuth2ClientRepository } from '../../../../../core';
+import type { IOAuth2ClientRepository } from '../../../../../core/index.ts';
 
 export class OAuth2ClientRepository implements IOAuth2ClientRepository {
     private readonly repository: Repository<Client>;

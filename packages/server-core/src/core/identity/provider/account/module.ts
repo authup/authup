@@ -12,12 +12,12 @@ import {
 } from '@authup/core-kit';
 import { createNanoID, extendObject } from '@authup/kit';
 import { ValidupNestedError } from 'validup';
-import type { IUserIdentityRepository } from '../../entities';
-import { IdentityProviderIdentityOperation } from '../constants';
-import type { IIdentityProviderMapper } from '../mapper';
-import { IdentityProviderMapperOperation } from '../mapper';
-import type { IdentityProviderIdentity } from '../types';
-import type { IIdentityProviderAccountManager, IIdentityProviderAccountRepository, IdentityProviderAccountManagerContext } from './types';
+import type { IUserIdentityRepository } from '../../entities/index.ts';
+import { IdentityProviderIdentityOperation } from '../constants.ts';
+import type { IIdentityProviderMapper } from '../mapper/index.ts';
+import { IdentityProviderMapperOperation } from '../mapper/index.ts';
+import type { IdentityProviderIdentity } from '../types.ts';
+import type { IIdentityProviderAccountManager, IIdentityProviderAccountRepository, IdentityProviderAccountManagerContext } from './types.ts';
 
 export class IdentityProviderAccountManager implements IIdentityProviderAccountManager {
     protected attributesMapper : IIdentityProviderMapper;

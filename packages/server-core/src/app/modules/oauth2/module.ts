@@ -7,8 +7,8 @@
 
 import type { ICache } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
-import { CacheInjectionKey } from '../cache';
-import type { Config } from '../config';
+import { CacheInjectionKey } from '../cache/index.ts';
+import type { Config } from '../config/index.ts';
 import type {
     IDIContainer,
     IIdentityResolver,
@@ -17,8 +17,8 @@ import type {
     IOAuth2KeyRepository,
     IOAuth2ScopeRepository, IOAuth2TokenRepository,
     IOAuth2TokenSigner,
-} from '../../../core';
-import type { Module } from '../types';
+} from '../../../core/index.ts';
+import type { Module } from '../types.ts';
 
 import {
     OAuth2AuthorizationCodeRepository,
@@ -26,7 +26,7 @@ import {
     OAuth2ClientRepository,
     OAuth2KeyRepository,
     OAuth2ScopeRepository, OAuth2TokenRepository,
-} from './repositories';
+} from './repositories/index.ts';
 import {
     OAuth2AccessTokenIssuer,
     OAuth2AuthorizationCodeIssuer,
@@ -38,11 +38,11 @@ import {
     OAuth2TokenRevoker,
     OAuth2TokenSigner,
     OAuth2TokenVerifier,
-} from '../../../core';
-import { OAuth2InjectionToken } from './constants';
-import { IdentityInjectionKey } from '../identity';
-import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/domains';
-import { ConfigInjectionKey } from '../config';
+} from '../../../core/index.ts';
+import { OAuth2InjectionToken } from './constants.ts';
+import { IdentityInjectionKey } from '../identity/index.ts';
+import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/domains/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
 
 export class OAuth2Module implements Module {
     async start(container: IDIContainer) : Promise<void> {

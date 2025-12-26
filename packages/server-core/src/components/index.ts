@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './database';
-export * from './oauth2-cleaner';
-export * from './types';
+export * from './database/index.ts';
+export * from './oauth2-cleaner/index.ts';
+export * from './types.ts';

@@ -6,7 +6,7 @@
  */
 
 import type { Client } from '@authup/core-kit';
-import type { IEntityRepository } from '../../../entities/types';
+import type { IEntityRepository } from '../../../entities/types.ts';
 
 export interface IClientIdentityRepository extends IEntityRepository<Client> {
 

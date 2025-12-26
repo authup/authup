@@ -6,9 +6,9 @@
  */
 
 import type { Transporter } from 'nodemailer';
-import type { IMailClient, MailSendOptions } from '../../../../../core';
-import { createSMTPClient } from './module';
-import type { SMTPOptions } from './types';
+import type { IMailClient, MailSendOptions } from '../../../../../core/index.ts';
+import { createSMTPClient } from './module.ts';
+import type { SMTPOptions } from './types.ts';
 
 export class SMTPMailClientAdapter implements IMailClient {
     protected transporter : Transporter;

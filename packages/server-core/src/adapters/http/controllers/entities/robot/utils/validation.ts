@@ -8,8 +8,8 @@
 import { isRobotNameValid } from '@authup/core-kit';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { RobotEntity } from '../../../../../database/domains';
-import { RequestHandlerOperation } from '../../../../request';
+import type { RobotEntity } from '../../../../../database/domains/index.ts';
+import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class RobotRequestValidator extends Container<
 RobotEntity

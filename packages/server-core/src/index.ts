@@ -7,9 +7,9 @@
 
 import 'reflect-metadata';
 
-export * from './app';
-export * from './cli/commands';
-export * from './adapters/database';
-export * from './adapters/http';
-export * from './security';
-export * from './services';
+export * from './app/index.ts';
+export * from './cli/commands/index.ts';
+export * from './adapters/database/index.ts';
+export * from './adapters/http/index.ts';
+export * from './security/index.ts';
+export * from './services/index.ts';

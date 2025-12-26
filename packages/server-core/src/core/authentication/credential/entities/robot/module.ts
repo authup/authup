@@ -8,7 +8,7 @@
 import { compare, hash } from '@authup/server-kit';
 import { createNanoID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
-import type { ICredentialService } from '../../types';
+import type { ICredentialService } from '../../types.ts';
 
 export class RobotCredentialsService implements ICredentialService<Robot> {
     async verify(input: string, entity: Robot): Promise<boolean> {

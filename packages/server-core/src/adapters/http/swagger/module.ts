@@ -10,8 +10,8 @@ import {
 } from '@routup/swagger';
 import fs from 'node:fs';
 import path from 'node:path';
-import { getDistPath, getSrcPath } from '../../../path';
-import type { SwaggerOptions } from './type';
+import { getDistPath, getSrcPath } from '../../../path.ts';
+import type { SwaggerOptions } from './type.ts';
 
 export class Swagger {
     protected distPath : string;

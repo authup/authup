@@ -5,12 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './activate';
-export * from './authorize';
-export * from './jwks';
-export * from './openid';
-export * from './password-forgot';
-export * from './password-reset';
-export * from './register';
-export * from './status';
-export * from './token';
+export * from './activate/index.ts';
+export * from './authorize/index.ts';
+export * from './jwks/index.ts';
+export * from './openid/index.ts';
+export * from './password-forgot/index.ts';
+export * from './password-reset/index.ts';
+export * from './register/index.ts';
+export * from './status/index.ts';
+export * from './token/index.ts';

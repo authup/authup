@@ -7,16 +7,15 @@
     "main": "dist/index.js",
     "module": "dist/index.js",
     "scripts": {
-        "debug": "node --inspect dist/cli.mjs start",
-        "cli": "node dist/cli.mjs",
-        "cli-dev": "npm run build:server && node dist/cli.mjs",
-        "cli-dev-src": "nodemon --watch src --exec \"npm run build:server && node dist/cli.mjs\"",
-        "cli-dev-dist": "nodemon --watch dist --exec \"node dist/cli.mjs\"",
+        "debug": "node --inspect dist/cli/index.js start",
+        "cli": "node dist/cli/index.js",
+        "cli-dev": "ts-node-esm --swc src/cli/index.ts",
+        "cli-dev-src": "nodemon --watch src --exec \"npm run build:server && node dist/cli/index.js\"",
+        "cli-dev-dist": "nodemon --watch dist --exec \"node dist/cli/index.js\"",
         "build:client": "npm run build --workspace=../client-web-slim",
-        "build:server:watch": "rollup -c --watch",
         "build:server:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:server:js": "rollup -c",
-        "build:server": "rimraf ./dist && cross-env NODE_ENV=production npm run build:server:js && npm run build:server:types",
+        "build:server": "rimraf ./dist && cross-env NODE_ENV=production tsc -p tsconfig.build.json",
         "build:swagger": "npm run cli -- swagger generate",
         "build": "npm run build:client && npm run build:server && npm run build:swagger",
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
@@ -26,7 +25,7 @@
         "dist"
     ],
     "bin": {
-        "authup-server": "dist/cli.mjs"
+        "authup-server": "dist/index/cli.js"
     },
     "keywords": [
         "auth",

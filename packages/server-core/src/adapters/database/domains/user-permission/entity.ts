@@ -20,10 +20,10 @@ import type {
     Realm,
     User, UserPermission,
 } from '@authup/core-kit';
-import { PolicyEntity } from '../policy';
-import { UserEntity } from '../user/entity';
-import { PermissionEntity } from '../permission/entity';
-import { RealmEntity } from '../realm';
+import { PolicyEntity } from '../policy/index.ts';
+import { UserEntity } from '../user/entity.ts';
+import { PermissionEntity } from '../permission/entity.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_user_permissions' })
 @Index(['permission_id', 'user_id'], { unique: true })

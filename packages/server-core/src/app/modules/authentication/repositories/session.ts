@@ -9,8 +9,8 @@ import type { Session } from '@authup/core-kit';
 import type { ICache } from '@authup/server-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
-import type { ISessionRepository } from '../../../../core';
-import { AuthenticationCachePrefix } from './constants';
+import type { ISessionRepository } from '../../../../core/index.ts';
+import { AuthenticationCachePrefix } from './constants.ts';
 
 type SessionRepositoryContext = {
     repository: Repository<Session>,

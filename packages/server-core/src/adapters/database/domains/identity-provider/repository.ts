@@ -9,10 +9,10 @@ import type {
     DataSource, EntityManager,
 } from 'typeorm';
 import { InstanceChecker } from 'typeorm';
-import { CachePrefix } from '../constants';
-import { EARepository } from '../../extra-attribute-repository';
-import { IdentityProviderEntity } from './entity';
-import { IdentityProviderAttributeEntity } from '../identity-provider-attribute';
+import { CachePrefix } from '../constants.ts';
+import { EARepository } from '../../extra-attribute-repository/index.ts';
+import { IdentityProviderEntity } from './entity.ts';
+import { IdentityProviderAttributeEntity } from '../identity-provider-attribute/index.ts';
 
 export class IdentityProviderRepository extends EARepository<
 IdentityProviderEntity,

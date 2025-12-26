@@ -19,9 +19,9 @@ import type { Realm, Role } from '@authup/core-kit';
 import {
     IdentityProviderMappingSyncMode, IdentityProviderPermissionMapping,
 } from '@authup/core-kit';
-import { IdentityProviderEntity } from '../identity-provider';
-import { PermissionEntity } from '../permission';
-import { RealmEntity } from '../realm';
+import { IdentityProviderEntity } from '../identity-provider/index.ts';
+import { PermissionEntity } from '../permission/index.ts';
+import { RealmEntity } from '../realm/index.ts';
 
 @Entity({ name: 'auth_identity_provider_permission_mappings' })
 @Index(['provider_id', 'permission_id'], { unique: true })

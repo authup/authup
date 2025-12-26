@@ -6,8 +6,8 @@
  */
 
 import { Container } from 'confinity';
-import type { ConfigInput } from '../types';
-import type { ConfigReadFsOptions } from './types';
+import type { ConfigInput } from '../types.ts';
+import type { ConfigReadFsOptions } from './types.ts';
 
 export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) {
     const container = new Container({
