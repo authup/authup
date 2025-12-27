@@ -69,11 +69,16 @@ export class Default1766830857009 implements MigrationInterface {
             ADD \`secret_encrypted\` tinyint NOT NULL DEFAULT 0
         `);
 
+        // client realm_id not null
         await queryRunner.query(`
             ALTER TABLE \`auth_clients\` DROP FOREIGN KEY \`FK_b628ffa1b2f5415598cfb1a72af\`
         `);
         await queryRunner.query(`
             DROP INDEX \`IDX_6018b722f28f1cc6fdac450e61\` ON \`auth_clients\`
+        `);
+        await queryRunner.query(`
+            DELETE FROM \`auth_clients\`
+            WHERE \`realm_id\` IS NULL
         `);
         await queryRunner.query(`
             ALTER TABLE \`auth_clients\` CHANGE \`realm_id\` \`realm_id\` varchar(255) NOT NULL

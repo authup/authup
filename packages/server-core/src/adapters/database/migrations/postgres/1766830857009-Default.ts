@@ -85,11 +85,17 @@ export class Default1766830857009 implements MigrationInterface {
             ALTER TABLE "auth_identity_provider_attribute_mappings"
             ADD "value_is_regex" boolean NOT NULL DEFAULT false
         `);
+
+        // client realm_id not null
         await queryRunner.query(`
             ALTER TABLE "auth_clients" DROP CONSTRAINT "FK_b628ffa1b2f5415598cfb1a72af"
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_clients" DROP CONSTRAINT "UQ_6018b722f28f1cc6fdac450e611"
+        `);
+        await queryRunner.query(`
+            DELETE FROM "auth_clients"
+            WHERE "realm_id" IS NULL
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_clients"
