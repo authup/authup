@@ -94,6 +94,12 @@ export class Default1766830857009 implements MigrationInterface {
             SET NOT NULL
         `);
 
+        // user client_id referenced wrong table
+        await queryRunner.query(`
+            DELETE FROM "auth_users"
+            WHERE "client_id" IS NOT NULL
+        `);
+
         // user email not null
         await queryRunner.query(`
             UPDATE "auth_users"
@@ -113,6 +119,12 @@ export class Default1766830857009 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE "auth_clients"
             ADD CONSTRAINT "FK_b628ffa1b2f5415598cfb1a72af" FOREIGN KEY ("realm_id") REFERENCES "auth_realms"("id") ON DELETE CASCADE ON UPDATE NO ACTION
+        `);
+
+        // permission client_id referenced wrong table
+        await queryRunner.query(`
+            DELETE FROM "auth_permissions"
+            WHERE "client_id" IS NOT NULL
         `);
         await queryRunner.query(`
             ALTER TABLE "auth_permissions"
