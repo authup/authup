@@ -77,15 +77,6 @@ export class Default1766830857009 implements MigrationInterface {
             ADD "secret_encrypted" boolean NOT NULL DEFAULT false
         `);
 
-        await queryRunner.query(`
-            ALTER TABLE "auth_identity_provider_attribute_mappings"
-            ADD "value" character varying(128)
-        `);
-        await queryRunner.query(`
-            ALTER TABLE "auth_identity_provider_attribute_mappings"
-            ADD "value_is_regex" boolean NOT NULL DEFAULT false
-        `);
-
         // client realm_id not null
         await queryRunner.query(`
             ALTER TABLE "auth_clients" DROP CONSTRAINT "FK_b628ffa1b2f5415598cfb1a72af"
