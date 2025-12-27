@@ -11,7 +11,7 @@ import path from 'node:path';
 import process from 'node:process';
 import {
     checkDatabase,
-    createDatabase, dropDatabase, generateMigration,
+    createDatabase, dropDatabase, generateMigration, transformFilePath,
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { extendDataSourceOptions } from '../../adapters/database/index.ts';
@@ -20,6 +20,7 @@ import {
 } from '../../app/index.ts';
 import type { IDIContainer } from '../../core/index.ts';
 import type { Config } from '../../app/index.ts';
+import { resolveCodePath } from '../../path.ts';
 
 enum MigrationOperation {
     GENERATE = 'generate',
@@ -117,7 +118,8 @@ export function defineCLIMigrationCommand() {
                             },
                         ];
 
-                        const baseDirectory = path.join(__dirname, '..', '..', 'database', 'migrations');
+                        const baseDirectory = transformFilePath(path.join(resolveCodePath(), 'adapters', 'database', 'migrations'), './src', './dist');
+
                         const timestamp = Date.now();
 
                         for (let i = 0; i < connections.length; i++) {

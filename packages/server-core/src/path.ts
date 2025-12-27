@@ -8,16 +8,16 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export function resolveRootPath() {
+export function resolveCodePath() {
     return path.dirname(fileURLToPath(import.meta.url));
 }
 
 export function resolvePackagePath() {
-    return path.resolve(resolveRootPath(), '..');
+    return path.resolve(resolveCodePath(), '..');
 }
 
 export function resolveClientWebSlimPackagePath() {
-    return path.resolve(resolveRootPath(), '..', '..', 'client-web-slim');
+    return path.resolve(resolveCodePath(), '..', '..', 'client-web-slim');
 }
 
 export function getSrcPath() {
