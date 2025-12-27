@@ -96,11 +96,19 @@ export class Default1766830857009 implements MigrationInterface {
             ALTER COLUMN "realm_id"
             SET NOT NULL
         `);
+
+        // user email not null
+        await queryRunner.query(`
+            UPDATE "auth_users"
+            SET "email" = CONCAT("name", '@example.com')
+            WHERE "email" IS NULL;
+        `);
         await queryRunner.query(`
             ALTER TABLE "auth_users"
             ALTER COLUMN "email"
             SET NOT NULL
         `);
+
         await queryRunner.query(`
             ALTER TABLE "auth_clients"
             ADD CONSTRAINT "UQ_6018b722f28f1cc6fdac450e611" UNIQUE ("name", "realm_id")

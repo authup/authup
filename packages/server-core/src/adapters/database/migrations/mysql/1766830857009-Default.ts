@@ -42,15 +42,20 @@ export class Default1766830857009 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE \`auth_permissions\` DROP COLUMN \`target\`
         `);
+
         await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\` DROP COLUMN \`source_name\`
+            ALTER TABLE \`auth_identity_provider_attribute_mappings\`
+                RENAME COLUMN \`source_value_is_regex\` TO \`value_is_regex\`
         `);
         await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\` DROP COLUMN \`source_value\`
+            ALTER TABLE \`auth_identity_provider_attribute_mappings\`
+                RENAME COLUMN \`source_name\` TO \`name\`
         `);
         await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\` DROP COLUMN \`source_value_is_regex\`
+            ALTER TABLE \`auth_identity_provider_attribute_mappings\`
+                RENAME COLUMN \`source_value\` TO \`value\`
         `);
+
         await queryRunner.query(`
             ALTER TABLE \`auth_clients\`
             ADD \`active\` tinyint NOT NULL DEFAULT 1
@@ -63,18 +68,7 @@ export class Default1766830857009 implements MigrationInterface {
             ALTER TABLE \`auth_clients\`
             ADD \`secret_encrypted\` tinyint NOT NULL DEFAULT 0
         `);
-        await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\`
-            ADD \`name\` varchar(64) NULL
-        `);
-        await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\`
-            ADD \`value\` varchar(128) NULL
-        `);
-        await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\`
-            ADD \`value_is_regex\` tinyint NOT NULL DEFAULT 0
-        `);
+
         await queryRunner.query(`
             ALTER TABLE \`auth_clients\` DROP FOREIGN KEY \`FK_b628ffa1b2f5415598cfb1a72af\`
         `);
@@ -84,9 +78,17 @@ export class Default1766830857009 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE \`auth_clients\` CHANGE \`realm_id\` \`realm_id\` varchar(255) NOT NULL
         `);
+
+        // user email not null
+        await queryRunner.query(`
+            UPDATE \`auth_users\`
+            SET \`email\` = CONCAT(\`name\`, '@example.com')
+            WHERE \`email\` IS NULL;
+        `);
         await queryRunner.query(`
             ALTER TABLE \`auth_users\` CHANGE \`email\` \`email\` varchar(256) NOT NULL
         `);
+
         await queryRunner.query(`
             CREATE UNIQUE INDEX \`IDX_6018b722f28f1cc6fdac450e61\` ON \`auth_clients\` (\`name\`, \`realm_id\`)
         `);
@@ -159,15 +161,7 @@ export class Default1766830857009 implements MigrationInterface {
             ALTER TABLE \`auth_clients\`
             ADD CONSTRAINT \`FK_b628ffa1b2f5415598cfb1a72af\` FOREIGN KEY (\`realm_id\`) REFERENCES \`auth_realms\`(\`id\`) ON DELETE CASCADE ON UPDATE NO ACTION
         `);
-        await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\` DROP COLUMN \`value_is_regex\`
-        `);
-        await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\` DROP COLUMN \`value\`
-        `);
-        await queryRunner.query(`
-            ALTER TABLE \`auth_identity_provider_attribute_mappings\` DROP COLUMN \`name\`
-        `);
+
         await queryRunner.query(`
             ALTER TABLE \`auth_clients\` DROP COLUMN \`secret_encrypted\`
         `);
@@ -177,18 +171,20 @@ export class Default1766830857009 implements MigrationInterface {
         await queryRunner.query(`
             ALTER TABLE \`auth_clients\` DROP COLUMN \`active\`
         `);
+
         await queryRunner.query(`
             ALTER TABLE \`auth_identity_provider_attribute_mappings\`
-            ADD \`source_value_is_regex\` tinyint NOT NULL DEFAULT '0'
+                RENAME COLUMN \`value_is_regex\` TO \`source_value_is_regex\`
         `);
         await queryRunner.query(`
             ALTER TABLE \`auth_identity_provider_attribute_mappings\`
-            ADD \`source_value\` varchar(128) NULL
+                RENAME COLUMN \`name\` TO \`source_name\`
         `);
         await queryRunner.query(`
             ALTER TABLE \`auth_identity_provider_attribute_mappings\`
-            ADD \`source_name\` varchar(64) NULL
+                RENAME COLUMN \`value\` TO \`source_value\`
         `);
+
         await queryRunner.query(`
             ALTER TABLE \`auth_permissions\`
             ADD \`target\` varchar(16) NULL
