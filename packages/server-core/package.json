@@ -9,7 +9,7 @@
     "scripts": {
         "debug": "node --inspect dist/cli/index.js start",
         "cli": "node dist/cli/index.js",
-        "cli-dev": "ts-node-esm src/cli/index.ts",
+        "cli-dev": "npm run build:server && npm run cli",
         "cli-dev-src": "nodemon --watch src --exec \"npm run build:server && node dist/cli/index.js\"",
         "cli-dev-dist": "nodemon --watch dist --exec \"node dist/cli/index.js\"",
         "build:client": "npm run build --workspace=../client-web-slim",
