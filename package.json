@@ -29,9 +29,6 @@
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
-    "engines": {
-        "node": ">=22.0.0"
-    },
     "devDependencies": {
         "@rollup/plugin-esm-shim": "^0.1.8",
         "@rollup/plugin-node-resolve": "^16.0.3",
@@ -62,6 +59,9 @@
         "lint": "eslint --ext .ts ./packages",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky"
+    },
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "lint-staged": {
         "*.ts": "eslint --fix"

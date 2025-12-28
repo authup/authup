@@ -26,6 +26,9 @@
         "dev:prepare": "nuxt-module-build build --stub && nuxt-module-build prepare && nuxi prepare playground",
         "lint": "eslint ."
     },
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
     "dependencies": {
         "@authup/kit": "^1.0.0-beta.27",
         "@authup/client-web-kit": "^1.0.0-beta.27",

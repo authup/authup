@@ -24,6 +24,9 @@
         "test": "cross-env NODE_ENV=test vitest run test/unit",
         "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
     "keywords": [
         "realtime",
         "socket-io"

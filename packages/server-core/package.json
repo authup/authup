@@ -6,6 +6,9 @@
     "license": "Apache-2.0",
     "main": "dist/index.js",
     "module": "dist/index.js",
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "debug": "node --inspect dist/cli/index.js start",
         "cli": "node dist/cli/index.js",
@@ -21,9 +24,9 @@
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
         "test:coverage": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts --coverage"
     },
-    "files": [
-        "dist"
-    ],
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
     "bin": {
         "authup-server": "dist/cli/index.js"
     },

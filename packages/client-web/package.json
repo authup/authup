@@ -21,6 +21,9 @@
         "typecheck": "nuxi typecheck",
         "prepublishOnly": "npm run build"
     },
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
     "bin": {
         "authup-ui": ".output/server/index.mjs"
     },

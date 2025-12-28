@@ -23,6 +23,9 @@
         "build:server": "vite build --ssr src/server.ts --outDir dist/server",
         "build": "npm run build:server && npm run build:client"
     },
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
     "keywords": [],
     "author": {
         "name": "Peter Placzek",
