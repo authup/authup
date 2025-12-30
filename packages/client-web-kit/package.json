@@ -78,7 +78,7 @@
         "pinia": "^3.0.0",
         "rapiq": "^0.9.0",
         "smob": "^1.5.0",
-        "socket.io-client": "^4.8.2",
+        "socket.io-client": "^4.8.3",
         "universal-cookie": "^8.0.1",
         "vue": "^3.5.17",
         "vue-tsc": "^3.2.1"
@@ -100,7 +100,7 @@
         "pinia": "^2.x || ^3.x",
         "rapiq": ">=0.8.0 <1.0.0",
         "smob": "^1.5.0",
-        "socket.io-client": "^4.8.2",
+        "socket.io-client": "^4.8.3",
         "universal-cookie": "^8.0.1",
         "vue": "^3.3.x"
     },
