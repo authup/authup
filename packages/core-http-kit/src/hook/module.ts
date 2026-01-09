@@ -234,7 +234,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
      *
      * @throws ClientError
      */
-    protected async refresh() : Promise<TokenGrantResponse> {
+    async refresh() : Promise<TokenGrantResponse> {
         if (this.refreshPromise) {
             return this.refreshPromise;
         }
