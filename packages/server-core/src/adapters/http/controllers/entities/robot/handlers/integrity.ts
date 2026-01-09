@@ -93,7 +93,7 @@ export async function handleRobotIntegrityRouteHandler(req: Request, res: Respon
     }
 
     if (refreshCredentials) {
-        const secret = credentialsService.generateRawSecret();
+        const secret = credentialsService.generateSecret();
         entity.secret = await credentialsService.protect(secret);
         await repository.save(entity);
 

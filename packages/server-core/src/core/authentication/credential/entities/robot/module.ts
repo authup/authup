@@ -23,7 +23,7 @@ export class RobotCredentialsService implements ICredentialService<Robot> {
         return hash(input);
     }
 
-    generateRawSecret() {
+    generateSecret() {
         return createNanoID(64);
     }
 }

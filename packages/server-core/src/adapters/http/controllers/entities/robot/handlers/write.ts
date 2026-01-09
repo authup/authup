@@ -143,7 +143,7 @@ export async function writeRobotRouteHandler(
     });
 
     if (!data.secret) {
-        data.secret = credentialsService.generateRawSecret();
+        data.secret = credentialsService.generateSecret();
     }
 
     entity = repository.create(data);
