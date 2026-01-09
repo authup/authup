@@ -13,7 +13,7 @@ import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { ClientCredentialsService } from '../../../../../../core';
+import { ClientCredentialsService } from '../../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../database/index.ts';
 import { ClientEntity } from '../../../../../database/domains/index.ts';
 import {
