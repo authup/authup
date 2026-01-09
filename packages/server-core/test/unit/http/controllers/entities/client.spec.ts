@@ -76,7 +76,7 @@ describe('http/controllers/client', () => {
             name,
             display_name: displayName,
             redirect_uri: redirectUri,
-            is_confidential: false,
+            is_confidential: true,
             secret: 'foo',
             secret_hashed: true,
             secret_encrypted: false,

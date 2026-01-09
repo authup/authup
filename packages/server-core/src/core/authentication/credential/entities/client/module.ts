@@ -12,7 +12,7 @@ import type { ICredentialService } from '../../types.ts';
 
 export class ClientCredentialsService implements ICredentialService<Client> {
     async verify(input: string, entity: Client): Promise<boolean> {
-        if (!entity.secret) {
+        if (!entity.secret || !entity.is_confidential) {
             return false;
         }
 

@@ -6,7 +6,7 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { NotFoundError } from '@ebec/http';
 import { ClientValidator, PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
@@ -115,11 +115,15 @@ export async function writeClientRouteHandler(
             },
         });
 
-        if (data.secret) {
-            entity.secret = await credentialsService.protect(data.secret, entity);
-        }
-
         if (entity.is_confidential) {
+            if (!data.secret && !entity.secret) {
+                data.secret = credentialsService.generateSecret();
+            }
+
+            if (data.secret) {
+                entity.secret = await credentialsService.protect(data.secret, entity);
+            }
+        } else {
             entity.secret = null;
         }
 
@@ -146,18 +150,14 @@ export async function writeClientRouteHandler(
 
     entity = repository.create(data);
 
-    if (data.is_confidential) {
-        data.secret = null;
-    } else {
+    if (entity.is_confidential) {
         if (!data.secret) {
             data.secret = credentialsService.generateSecret();
         }
 
-        if (data.secret_hashed && data.secret_encrypted) {
-            throw new BadRequestError('The secret can either be encrypted or hashed.');
-        }
-
         entity.secret = await credentialsService.protect(data.secret, data);
+    } else {
+        entity.secret = null;
     }
 
     await repository.save(entity);
