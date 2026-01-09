@@ -21,7 +21,13 @@ describe('refresh-token', () => {
     beforeAll(async () => {
         await suite.start();
 
-        entity = await suite.client.client.create(createFakeClient());
+        const input = createFakeClient();
+        input.active = true;
+        input.is_confidential = true;
+        input.secret_hashed = false;
+        input.secret_encrypted = false;
+
+        entity = await suite.client.client.create(input);
     });
 
     afterAll(async () => {
@@ -33,7 +39,7 @@ describe('refresh-token', () => {
             .token
             .createWithClientCredentials({
                 client_id: entity.id,
-                client_secret: entity.secret,
+                client_secret: entity.secret!,
             });
 
         expect(response.access_token).toBeDefined();
@@ -53,12 +59,12 @@ describe('refresh-token', () => {
                 .token
                 .createWithClientCredentials({
                     client_id: entity.id,
-                    client_secret: entity.secret,
+                    client_secret: entity.secret!,
                 });
         } catch (e) {
             if (isClientError(e)) {
                 expect(e.status).toEqual(400);
-                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_INACTIVE);
+                expect(e?.response?.data?.code).toEqual(ErrorCode.ENTITY_INACTIVE);
             }
         } finally {
             await suite.client.client.update(entity.id, {
@@ -80,7 +86,7 @@ describe('refresh-token', () => {
         } catch (e) {
             if (isClientError(e)) {
                 expect(e.status).toEqual(400);
-                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
+                expect(e?.response?.data?.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
             }
         }
     });

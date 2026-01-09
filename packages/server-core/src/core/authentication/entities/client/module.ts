@@ -6,7 +6,7 @@
  */
 
 import type { Client } from '@authup/core-kit';
-import { ClientError, IdentityType, UserError } from '@authup/core-kit';
+import { ClientError, IdentityType } from '@authup/core-kit';
 import type { IIdentityResolver } from '../../../identity/index.ts';
 import { ClientCredentialsService } from '../../credential/index.ts';
 import { BaseCredentialsAuthenticator } from '../../base.ts';
@@ -26,7 +26,11 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
     async authenticate(key: string, secret: string, realmId?: string): Promise<Client> {
         const identity = await this.identityResolver.resolve(IdentityType.CLIENT, key, realmId);
         if (!identity || identity.type !== IdentityType.CLIENT) {
-            throw UserError.credentialsInvalid();
+            throw ClientError.credentialsInvalid();
+        }
+
+        if (!identity.data.active) {
+            throw ClientError.inactive();
         }
 
         if (identity.data.is_confidential) {
@@ -36,10 +40,6 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
             }
         } else {
             throw ClientError.invalid();
-        }
-
-        if (!identity.data.active) {
-            throw ClientError.inactive();
         }
 
         return identity.data;

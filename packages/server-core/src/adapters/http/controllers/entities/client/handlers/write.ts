@@ -13,6 +13,7 @@ import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { ClientCredentialsService } from '../../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../database/index.ts';
 import { ClientEntity } from '../../../../../database/domains/index.ts';
 import {
@@ -74,41 +75,12 @@ export async function writeClientRouteHandler(
         group,
     });
 
+    // ----------------------------------------------
+
     await validateEntityJoinColumns(data, {
         dataSource,
         entityTarget: ClientEntity,
     });
-
-    if (entity) {
-        if (!data.realm_id && !entity.realm_id) {
-            const identity = useRequestIdentityOrFail(req);
-            data.realm_id = identity.realmId;
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.CLIENT_UPDATE,
-            input: {
-                attributes: {
-                    ...entity,
-                    ...data,
-                },
-            },
-        });
-    } else {
-        if (!data.realm_id) {
-            const identity = useRequestIdentityOrFail(req);
-            data.realm_id = identity.realmId;
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.CLIENT_CREATE,
-            input: {
-                attributes: data,
-            },
-        });
-    }
-
-    // ----------------------------------------------
 
     const isUnique = await isEntityUnique({
         dataSource,
@@ -123,15 +95,76 @@ export async function writeClientRouteHandler(
 
     // ----------------------------------------------
 
+    const credentialsService = new ClientCredentialsService();
+
     if (entity) {
+        if (
+            !data.realm_id &&
+            !entity.realm_id
+        ) {
+            const identity = useRequestIdentityOrFail(req);
+            data.realm_id = identity.realmId;
+        }
+
         entity = repository.merge(entity, data);
+
+        await permissionChecker.check({
+            name: PermissionName.CLIENT_UPDATE,
+            input: {
+                attributes: entity,
+            },
+        });
+
+        if (entity.is_confidential) {
+            if (!data.secret && !entity.secret) {
+                data.secret = credentialsService.generateSecret();
+            }
+
+            if (data.secret) {
+                entity.secret = await credentialsService.protect(data.secret, entity);
+            }
+        } else {
+            entity.secret = null;
+        }
+
         await repository.save(entity);
+
+        if (data.secret) {
+            entity.secret = data.secret;
+        }
 
         return sendAccepted(res, entity);
     }
 
+    if (!data.realm_id) {
+        const identity = useRequestIdentityOrFail(req);
+        data.realm_id = identity.realmId;
+    }
+
+    await permissionChecker.check({
+        name: PermissionName.CLIENT_CREATE,
+        input: {
+            attributes: data,
+        },
+    });
+
     entity = repository.create(data);
+
+    if (entity.is_confidential) {
+        if (!data.secret) {
+            data.secret = credentialsService.generateSecret();
+        }
+
+        entity.secret = await credentialsService.protect(data.secret, data);
+    } else {
+        entity.secret = null;
+    }
+
     await repository.save(entity);
+
+    if (data.secret) {
+        entity.secret = data.secret;
+    }
 
     return sendCreated(res, entity);
 }
