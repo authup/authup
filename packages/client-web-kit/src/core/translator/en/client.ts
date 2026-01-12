@@ -13,4 +13,5 @@ export const TranslatorTranslationClientEnglish : LinesRecord = {
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Displayed to all users of this application',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI pattern a browser can redirect to after a successful login',
     [TranslatorTranslationClientKey.IS_CONFIDENTIAL]: 'Is confidential?',
+    [TranslatorTranslationClientKey.HASH_SECRET]: 'Hash secret?',
 };
