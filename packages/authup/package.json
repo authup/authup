@@ -57,7 +57,7 @@
         "envix": "^1.5.0",
         "resolve-package-path": "^4.0.3",
         "smob": "^1.5.0",
-        "zod": "^4.2.1"
+        "zod": "^4.3.5"
     },
     "publishConfig": {
         "access": "public"
