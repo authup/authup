@@ -5,13 +5,14 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import { createNanoID, isBCryptHash } from '@authup/kit';
 import { compare, hash } from '@authup/server-kit';
 import type { Client } from '@authup/core-kit';
 import type { ICredentialService } from '../../types.ts';
 
 export class ClientCredentialsService implements ICredentialService<Client> {
     async verify(input: string, entity: Client): Promise<boolean> {
-        if (!entity.secret) {
+        if (!entity.secret || !entity.is_confidential) {
             return false;
         }
 
@@ -19,10 +20,24 @@ export class ClientCredentialsService implements ICredentialService<Client> {
             return compare(input, entity.secret);
         }
 
+        // todo: secret encrypted missing (decrypt)
+
         return input === entity.secret;
     }
 
-    async protect(input: string): Promise<string> {
-        return hash(input);
+    async protect(input: string, entity: Client): Promise<string> {
+        if (entity.secret_hashed) {
+            return isBCryptHash(input) ?
+                input :
+                hash(input);
+        }
+
+        // todo: secret encrypted missing (encrypt)
+
+        return input;
+    }
+
+    generateSecret() {
+        return createNanoID(64);
     }
 }

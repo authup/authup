@@ -45,6 +45,8 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         defaultAlias: 'client',
         default: [
             'id',
+            'active',
+            'built_in',
             'name',
             'display_name',
             'description',
@@ -168,6 +170,8 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         defaultAlias: 'client',
         default: [
             'id',
+            'active',
+            'built_in',
             'name',
             'display_name',
             'description',

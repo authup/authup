@@ -10,9 +10,9 @@ import { NotFoundError } from '@ebec/http';
 import { ClientValidator, PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
-import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { ClientCredentialsService } from '../../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../database/index.ts';
 import { ClientEntity } from '../../../../../database/domains/index.ts';
 import {
@@ -38,18 +38,20 @@ export async function writeClientRouteHandler(
     const repository = dataSource.getRepository(ClientEntity);
     let entity : ClientEntity | null | undefined;
     if (id) {
-        const where: FindOptionsWhere<ClientEntity> = {};
+        const query = repository.createQueryBuilder('client');
         if (isUUID(id)) {
-            where.id = id;
+            query.where('client.id = :id', { id });
         } else {
-            where.name = id;
+            query.where('client.name = :name', { name: id });
+
+            if (realmId) {
+                query.andWhere('client.realm_id = :realmId', { realmId });
+            }
         }
 
-        if (realmId) {
-            where.realm_id = realmId;
-        }
+        query.addSelect('client.secret');
 
-        entity = await repository.findOneBy(where);
+        entity = await query.getOne();
         if (!entity && options.updateOnly) {
             throw new NotFoundError();
         }
@@ -74,41 +76,12 @@ export async function writeClientRouteHandler(
         group,
     });
 
+    // ----------------------------------------------
+
     await validateEntityJoinColumns(data, {
         dataSource,
         entityTarget: ClientEntity,
     });
-
-    if (entity) {
-        if (!data.realm_id && !entity.realm_id) {
-            const identity = useRequestIdentityOrFail(req);
-            data.realm_id = identity.realmId;
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.CLIENT_UPDATE,
-            input: {
-                attributes: {
-                    ...entity,
-                    ...data,
-                },
-            },
-        });
-    } else {
-        if (!data.realm_id) {
-            const identity = useRequestIdentityOrFail(req);
-            data.realm_id = identity.realmId;
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.CLIENT_CREATE,
-            input: {
-                attributes: data,
-            },
-        });
-    }
-
-    // ----------------------------------------------
 
     const isUnique = await isEntityUnique({
         dataSource,
@@ -123,14 +96,67 @@ export async function writeClientRouteHandler(
 
     // ----------------------------------------------
 
+    const credentialsService = new ClientCredentialsService();
+
     if (entity) {
+        if (
+            !data.realm_id &&
+            !entity.realm_id
+        ) {
+            const identity = useRequestIdentityOrFail(req);
+            data.realm_id = identity.realmId;
+        }
+
         entity = repository.merge(entity, data);
+
+        await permissionChecker.check({
+            name: PermissionName.CLIENT_UPDATE,
+            input: {
+                attributes: entity,
+            },
+        });
+
+        if (entity.is_confidential) {
+            if (!data.secret && !entity.secret) {
+                data.secret = credentialsService.generateSecret();
+            }
+
+            if (data.secret) {
+                entity.secret = await credentialsService.protect(data.secret, entity);
+            }
+        } else {
+            entity.secret = null;
+        }
+
         await repository.save(entity);
 
         return sendAccepted(res, entity);
     }
 
+    if (!data.realm_id) {
+        const identity = useRequestIdentityOrFail(req);
+        data.realm_id = identity.realmId;
+    }
+
+    await permissionChecker.check({
+        name: PermissionName.CLIENT_CREATE,
+        input: {
+            attributes: data,
+        },
+    });
+
     entity = repository.create(data);
+
+    if (entity.is_confidential) {
+        if (!data.secret) {
+            data.secret = credentialsService.generateSecret();
+        }
+
+        entity.secret = await credentialsService.protect(data.secret, data);
+    } else {
+        entity.secret = null;
+    }
+
     await repository.save(entity);
 
     return sendCreated(res, entity);

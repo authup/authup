@@ -6,6 +6,6 @@
  */
 
 export { AClient } from './AClient';
-export { AClientForm } from './AClientForm';
+export { default as AClientForm } from './AClientForm.vue';
 export { AClientPicker } from './AClientPicker';
 export { AClients } from './AClients';

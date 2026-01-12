@@ -13,7 +13,7 @@ export class OAuth2Error extends AuthupError {
     constructor(...input: AuthupErrorOptionsInput[]) {
         super({
             code: ErrorCode.JWT_INVALID,
-            message: 'The Token is invalid.',
+            message: 'The Token is invalid',
             statusCode: 400,
             data: {
                 error: OAuth2ErrorCode.INVALID_REQUEST,
@@ -25,7 +25,17 @@ export class OAuth2Error extends AuthupError {
 
     static clientInvalid() {
         return new OAuth2Error({
-            message: 'Client authentication failed.',
+            message: 'Client authentication failed',
+            code: ErrorCode.OAUTH_CLIENT_INVALID,
+            data: {
+                error: OAuth2ErrorCode.INVALID_CLIENT,
+            },
+        });
+    }
+
+    static clientInactive() {
+        return new OAuth2Error({
+            message: 'Client is inactive',
             code: ErrorCode.OAUTH_CLIENT_INVALID,
             data: {
                 error: OAuth2ErrorCode.INVALID_CLIENT,
@@ -37,7 +47,7 @@ export class OAuth2Error extends AuthupError {
         return new OAuth2Error({
             message: message || 'The provided authorization grant (e.g., authorization code, resource owner credentials) or refresh token ' +
                 'is invalid, expired, revoked, does not match the redirection URI used in the authorization request, ' +
-                'or was issued to another client.',
+                'or was issued to another client',
             code: ErrorCode.OAUTH_GRANT_INVALID,
             data: {
                 error: OAuth2ErrorCode.INVALID_GRANT,
@@ -47,7 +57,7 @@ export class OAuth2Error extends AuthupError {
 
     static grantTypeUnsupported() {
         return new OAuth2Error({
-            message: 'The authorization grant type is not supported by the authorization server.',
+            message: 'The authorization grant type is not supported by the authorization server',
             code: ErrorCode.OAUTH_GRANT_TYPE_UNSUPPORTED,
             data: {
                 hint: 'Check that all required parameters have been provided',

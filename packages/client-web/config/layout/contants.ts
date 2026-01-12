@@ -53,7 +53,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Clients',
         type: 'link',
         url: '/clients',
-        icon: 'fa-solid fa-ghost',
+        icon: 'fa-solid fa-cube',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [

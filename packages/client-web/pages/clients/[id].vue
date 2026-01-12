@@ -81,7 +81,7 @@ export default defineComponent({
 <template>
     <div>
         <h1 class="title no-border mb-3">
-            <i class="fa-solid fa-ghost me-1" /> {{ entity.name }}
+            <i class="fa-solid fa-cube me-1" /> {{ entity.name }}
             <span class="sub-title ms-1">Details</span>
         </h1>
         <div class="mb-2">
