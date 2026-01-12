@@ -10,7 +10,6 @@ import { NotFoundError } from '@ebec/http';
 import { ClientValidator, PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
-import type { FindOptionsWhere } from 'typeorm';
 import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { ClientCredentialsService } from '../../../../../../core/index.ts';
@@ -39,18 +38,20 @@ export async function writeClientRouteHandler(
     const repository = dataSource.getRepository(ClientEntity);
     let entity : ClientEntity | null | undefined;
     if (id) {
-        const where: FindOptionsWhere<ClientEntity> = {};
+        const query = repository.createQueryBuilder('client');
         if (isUUID(id)) {
-            where.id = id;
+            query.where('client.id = :id', { id });
         } else {
-            where.name = id;
+            query.where('client.name = :name', { name: id });
+
+            if (realmId) {
+                query.andWhere('client.realm_id = :realmId', { realmId });
+            }
         }
 
-        if (realmId) {
-            where.realm_id = realmId;
-        }
+        query.addSelect('client.secret');
 
-        entity = await repository.findOneBy(where);
+        entity = await query.getOne();
         if (!entity && options.updateOnly) {
             throw new NotFoundError();
         }

@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { createNanoID } from '@authup/kit';
+import { createNanoID, isBCryptHash } from '@authup/kit';
 import { compare, hash } from '@authup/server-kit';
 import type { Client } from '@authup/core-kit';
 import type { ICredentialService } from '../../types.ts';
@@ -27,7 +27,9 @@ export class ClientCredentialsService implements ICredentialService<Client> {
 
     async protect(input: string, entity: Client): Promise<string> {
         if (entity.secret_hashed) {
-            return hash(input);
+            return isBCryptHash(input) ?
+                input :
+                hash(input);
         }
 
         // todo: secret encrypted missing (encrypt)

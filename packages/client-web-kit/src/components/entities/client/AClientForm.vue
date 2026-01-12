@@ -14,7 +14,7 @@ import {
     maxLength, minLength, required,
 } from '@vuelidate/validators';
 import { type Client, EntityType } from '@authup/core-kit';
-import { createNanoID } from '@authup/kit';
+import { createNanoID, isBCryptHash } from '@authup/kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import { ARealmPicker } from '../realm';
 import {
@@ -121,7 +121,13 @@ export default defineComponent({
 
         const generateSecret = () => createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 32);
         const isSecretHashed = computed(
-            () => manager.data.value && manager.data.value.secret === form.secret && form.secret.startsWith('$'),
+            () => {
+                if (!manager.data.value || manager.data.value.secret !== form.secret) {
+                    return false;
+                }
+
+                return isBCryptHash(form.secret);
+            },
         );
 
         function initForm() {
@@ -167,10 +173,7 @@ export default defineComponent({
                 return;
             }
 
-            await manager.createOrUpdate({
-                ...form,
-                secret: isSecretHashed.value ? '' : form.secret,
-            });
+            await manager.createOrUpdate(form);
 
             assignFormProperties(form, manager.data.value);
         };
