@@ -25,15 +25,16 @@ export default defineNuxtComponent({
         const config = useRuntimeConfig();
 
         const generatedUrl = computed(() => {
-            const link = new URL('authorize', config.public.publicUrl);
+            const link = new URL('authorize', config.public.apiUrl);
             link.searchParams.set('client_id', props.entity.id);
+            link.searchParams.set('response_type', 'token');
 
             if (scopes.value.length > 0) {
-                link.searchParams.set('scope', encodeURIComponent(scopes.value.join(' ')));
+                link.searchParams.set('scope', scopes.value.join(' '));
             }
 
             if (redirectUri.value) {
-                link.searchParams.set('redirect_uri', encodeURIComponent(redirectUri.value));
+                link.searchParams.set('redirect_uri', redirectUri.value);
             }
 
             return link.href;
@@ -75,10 +76,13 @@ export default defineNuxtComponent({
         <hr>
 
         <AClientScopes
-            :header="false"
+            :header="true"
             :query="query"
             :item="{class: ''}"
         >
+            <template #header>
+                <span>Scopes</span>
+            </template>
             <template #item="props">
                 <VCFormInputCheckbox
                     :label="true"

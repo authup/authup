@@ -23,6 +23,7 @@ export enum TranslatorTranslationClientKey {
     DESCRIPTION_HINT = 'descriptionHint',
     REDIRECT_URI_HINT = 'redirectURIHint',
     IS_CONFIDENTIAL = 'isConfidential',
+    IS_ACTIVE = 'isActive',
     HASH_SECRET = 'hashSecret',
 }
 

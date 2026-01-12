@@ -39,6 +39,10 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             throw OAuth2Error.clientInvalid();
         }
 
+        if (!client.active) {
+            throw OAuth2Error.clientInactive();
+        }
+
         data.client_id = client.id;
         data.realm_id = client.realm_id;
 

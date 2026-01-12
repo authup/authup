@@ -50,6 +50,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<Client>(),
     setup(props, ctx) {
         const form = reactive({
+            active: true,
             name: '',
             display_name: '',
             description: '',
@@ -63,6 +64,9 @@ export default defineComponent({
         });
 
         const vuelidate = useVuelidate({
+            active: {
+                required,
+            },
             name: {
                 required,
                 [
@@ -176,6 +180,7 @@ export default defineComponent({
                 { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
                 { key: TranslatorTranslationClientKey.REDIRECT_URI_HINT },
                 { key: TranslatorTranslationClientKey.IS_CONFIDENTIAL },
+                { key: TranslatorTranslationClientKey.IS_ACTIVE },
                 { key: TranslatorTranslationClientKey.HASH_SECRET },
             ],
         );
@@ -333,6 +338,23 @@ export default defineComponent({
                                     :group-class="'form-switch'"
                                     :label="true"
                                     :label-content="translationsClient.hashSecret.value"
+                                />
+                            </VCFormGroup>
+                        </template>
+                    </IVuelidate>
+                </div>
+                <div class="col">
+                    <IVuelidate :validation="vuelidate.active">
+                        <template #default="props">
+                            <VCFormGroup
+                                :validation-messages="props.data"
+                                :validation-severity="props.severity"
+                            >
+                                <VCFormInputCheckbox
+                                    v-model="vuelidate.active.$model"
+                                    :group-class="'form-switch'"
+                                    :label="true"
+                                    :label-content="translationsClient.isActive.value"
                                 />
                             </VCFormGroup>
                         </template>

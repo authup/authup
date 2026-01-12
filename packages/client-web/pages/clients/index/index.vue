@@ -43,13 +43,19 @@ export default defineComponent({
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
             },
             {
-                key: 'user_id', label: 'User', thClass: 'text-center', tdClass: 'text-center',
+                key: 'active', label: 'Active?', thClass: 'text-center', tdClass: 'text-center',
+            },
+            {
+                key: 'is_confidential', label: 'Confidential?', thClass: 'text-center', tdClass: 'text-center',
+            },
+            {
+                key: 'built_in', label: 'Built in?', thClass: 'text-center', tdClass: 'text-center',
             },
             {
                 key: 'created_at', label: 'Created at', thClass: 'text-center', tdClass: 'text-center',
             },
             {
-                key: 'updated_at', label: 'Updated at', thClass: 'text-left', tdClass: 'text-left',
+                key: 'updated_at', label: 'Updated at', thClass: 'text-center', tdClass: 'text-center',
             },
             { key: 'options', label: '', tdClass: 'text-left' },
         ];
@@ -91,26 +97,35 @@ export default defineComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(active)="data">
+                    <i
+                        :class="{
+                            'fa fa-times text-danger': !data.item.active,
+                            'fa fa-check text-success': data.item.active,
+                        }"
+                    />
+                </template>
+                <template #cell(is_confidential)="data">
+                    <i
+                        :class="{
+                            'fa fa-times text-danger': !data.item.is_confidential,
+                            'fa fa-check text-success': data.item.is_confidential,
+                        }"
+                    />
+                </template>
+                <template #cell(built_in)="data">
+                    <i
+                        :class="{
+                            'fa fa-times text-danger': !data.item.built_in,
+                            'fa fa-check text-success': data.item.built_in,
+                        }"
+                    />
+                </template>
                 <template #cell(created_at)="data">
                     <VCTimeago :datetime="data.item.created_at" />
                 </template>
                 <template #cell(updated_at)="data">
                     <VCTimeago :datetime="data.item.created_at" />
-                </template>
-                <template #cell(user_id)="data">
-                    <template v-if="data.item.user_id">
-                        <AUser :entity-id="data.item.user_id">
-                            <template #default="user">
-                                {{ user.data.name }}
-                            </template>
-                            <template #error>
-                                -
-                            </template>
-                        </AUser>
-                    </template>
-                    <template v-else>
-                        -
-                    </template>
                 </template>
                 <template #cell(options)="data">
                     <NuxtLink
