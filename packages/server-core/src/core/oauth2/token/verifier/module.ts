@@ -119,8 +119,8 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
         await this.tokenRepository.saveWithSignature(payload, token);
 
         if (!options.skipActiveCheck) {
-            const isActive = await this.isInactive(payload.jti);
-            if (!isActive) {
+            const isInactive = await this.isInactive(payload.jti);
+            if (isInactive) {
                 throw JWTError.notActive();
             }
         }
