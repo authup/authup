@@ -55,7 +55,7 @@ export default defineNuxtComponent({
 <template>
     <div>
         <h1 class="title no-border mb-3">
-            <i class="fa-solid fa-ghost me-1" /> Client
+            <i class="fa-solid fa-cube me-1" /> Client
             <span class="sub-title ms-1">Management</span>
         </h1>
         <div class="content-wrapper">
