@@ -82,22 +82,17 @@ describe('http/controllers/client', () => {
             secret_encrypted: false,
         };
 
-        let response = await suite.client
+        const response = await suite.client
             .client
             .create(input);
 
         expect(response).toBeDefined();
 
         expectPropertiesEqualToSrc(input, response, [
+            'secret',
             'created_at',
             'updated_at',
         ]);
-
-        response = await suite.client
-            .client
-            .getOne(response.id, {
-                fields: ['+secret'],
-            });
 
         const credentialsService = new ClientCredentialsService();
         const verified = await credentialsService.verify(input.secret!, response);

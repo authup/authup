@@ -171,6 +171,8 @@ export default defineComponent({
                 ...form,
                 secret: isSecretHashed.value ? '' : form.secret,
             });
+
+            assignFormProperties(form, manager.data.value);
         };
 
         const translationsClient = useTranslationsForGroup(

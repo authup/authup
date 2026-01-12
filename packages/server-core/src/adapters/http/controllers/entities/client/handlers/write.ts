@@ -129,10 +129,6 @@ export async function writeClientRouteHandler(
 
         await repository.save(entity);
 
-        if (data.secret) {
-            entity.secret = data.secret;
-        }
-
         return sendAccepted(res, entity);
     }
 
@@ -161,10 +157,6 @@ export async function writeClientRouteHandler(
     }
 
     await repository.save(entity);
-
-    if (data.secret) {
-        entity.secret = data.secret;
-    }
 
     return sendCreated(res, entity);
 }
