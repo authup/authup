@@ -67,7 +67,7 @@
         "@authup/specs": "^1.0.0-beta.27",
         "@ilingo/vuelidate": "^5.0.4",
         "@posva/event-emitter": "^1.0.3",
-        "@types/node": "^25.0.3",
+        "@types/node": "^25.0.7",
         "@vitejs/plugin-vue": "^6.0.3",
         "@vuecs/form-controls": "^2.4.2",
         "@vuecs/list-controls": "^2.0.0",
