@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web",
-    "version": "1.0.0-beta.27",
+    "version": "1.0.0-beta.28",
     "license": "Apache-2.0",
     "description": "This is a standalone web application.",
     "main": ".output/server/index.mjs",
@@ -28,11 +28,11 @@
         "authup-ui": ".output/server/index.mjs"
     },
     "devDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.27",
-        "@authup/kit": "^1.0.0-beta.27",
-        "@authup/core-kit": "^1.0.0-beta.27",
-        "@authup/core-http-kit": "^1.0.0-beta.27",
-        "@authup/client-web-nuxt": "^1.0.0-beta.27",
+        "@authup/client-web-kit": "^1.0.0-beta.28",
+        "@authup/kit": "^1.0.0-beta.28",
+        "@authup/core-kit": "^1.0.0-beta.28",
+        "@authup/core-http-kit": "^1.0.0-beta.28",
+        "@authup/client-web-nuxt": "^1.0.0-beta.28",
         "@ilingo/vuelidate": "^5.0.4",
         "@fortawesome/fontawesome-free": "^7.1.0",
         "@nuxtjs/google-fonts": "^3.2.0",

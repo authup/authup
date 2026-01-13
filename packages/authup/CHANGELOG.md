@@ -1,5 +1,35 @@
 # Change Log
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* require esm import capabilities
+
+### Bug Fixes
+
+* **deps:** bump the majorprod group with 4 updates ([#2749](https://github.com/authup/authup/issues/2749)) ([d1322cf](https://github.com/authup/authup/commit/d1322cf8efd2cdec823e389b22a6dc7c80f872d0))
+* **deps:** bump the minorandpatch group across 1 directory with 13 updates ([#2780](https://github.com/authup/authup/issues/2780)) ([41eba21](https://github.com/authup/authup/commit/41eba214494520ad418d4a3ac3ccee3cd96dc19e))
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#2797](https://github.com/authup/authup/issues/2797)) ([56489db](https://github.com/authup/authup/commit/56489db9f7e35a9467ff5c91b6833d243ab9c738))
+* **deps:** bump the minorandpatch group with 34 updates ([#2756](https://github.com/authup/authup/issues/2756)) ([9240ce1](https://github.com/authup/authup/commit/9240ce18515ea9501a6790a53efe375a4c2b28ac))
+* null check in exec schell command ([55b2e42](https://github.com/authup/authup/commit/55b2e42790aa2e5f298d59b16a863ff59534dd27))
+
+
+### Miscellaneous Chores
+
+* set min node engine version ([2d6e8a7](https://github.com/authup/authup/commit/2d6e8a794b731ccaa73f3da8c4e0e81fd1178a58))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/core-kit bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+    * @authup/server-core bumped from ^1.0.0-beta.27 to ^1.0.0-beta.28
+
 ## [1.0.0-beta.27](https://github.com/authup/authup/compare/v1.0.0-beta.26...v1.0.0-beta.27) (2025-07-17)
 
 
