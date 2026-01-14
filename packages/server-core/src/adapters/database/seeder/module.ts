@@ -5,7 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot, RobotRole, UserRole } from '@authup/core-kit';
+import type {
+    Client, ClientRole, Robot, RobotRole, UserRole,
+} from '@authup/core-kit';
 import {
     PermissionName,
     REALM_MASTER_NAME,
@@ -19,6 +21,7 @@ import type { DataSource, FindOptionsWhere } from 'typeorm';
 import { IsNull } from 'typeorm';
 import type { Seeder } from 'typeorm-extension';
 import {
+    ClientEntity,
     PermissionEntity,
     RealmEntity,
     RobotEntity,
@@ -30,6 +33,7 @@ import {
     UserRoleEntity,
 } from '../domains/index.ts';
 import type { DatabaseRootSeederResult, DatabaseSeederOptions } from './types.ts';
+import { ClientCredentialsService } from '../../../core';
 
 function getPermissions(permissions?: string[]) {
     return Array.from(new Set([
@@ -47,8 +51,14 @@ export class DatabaseSeeder implements Seeder {
             userAdminEnabled: options.userAdminEnabled ?? true,
             userAdminName: options.userAdminName ?? 'admin',
             userAdminPassword: options.userAdminPassword || 'start123',
+
+            clientSystemEnabled: options.clientSystemEnabled ?? true,
+            clientSystemName: options.clientSystemName ?? 'system',
+            clientSystemSecretHashed: options.clientSystemSecretHashed ?? false,
+
             robotAdminEnabled: options.robotAdminEnabled ?? false,
             robotAdminName: options.robotAdminName ?? 'system',
+
             permissions: options.permissions || [],
         };
     }
@@ -179,6 +189,59 @@ export class DatabaseSeeder implements Seeder {
         }
 
         await userRoleRepository.save(userRole);
+
+        // -------------------------------------------------
+
+        const clientCredentialsService = new ClientCredentialsService();
+
+        /**
+         * Create default client
+         */
+        const clientRepository = dataSource.getRepository<Client>(ClientEntity);
+        let client = await clientRepository.findOneBy({
+            name: this.options.clientSystemName,
+            realm_id: realm.id,
+        });
+
+        const clientSecret = this.options.clientSystemSecret || createNanoID(64);
+        if (!client) {
+            client = clientRepository.create({
+                name: this.options.clientSystemName,
+                realm_id: realm.id,
+                secret_hashed: this.options.clientSystemSecretHashed,
+                active: this.options.clientSystemEnabled,
+            });
+
+            client.secret = await clientCredentialsService.protect(clientSecret, client);
+
+            await clientRepository.save(client);
+        } else {
+            if (this.options.clientSystemSecretReset) {
+                client.secret = await clientCredentialsService.protect(clientSecret, client);
+            }
+            client.active = this.options.clientSystemEnabled;
+
+            await clientRepository.save(client);
+        }
+
+        // -------------------------------------------------
+
+        /**
+         * Create default client - role association
+         */
+        const clientRoleData : Partial<ClientRole> = {
+            role_id: role.id,
+            client_id: client.id,
+        };
+
+        const clientRoleRepository = dataSource.getRepository(RobotRoleEntity);
+        let clientRole = await clientRoleRepository.findOneBy(clientRoleData as FindOptionsWhere<ClientRole>);
+
+        if (!clientRole) {
+            clientRole = clientRoleRepository.create(clientRoleData);
+        }
+
+        await clientRoleRepository.save(clientRole);
 
         // -------------------------------------------------
 

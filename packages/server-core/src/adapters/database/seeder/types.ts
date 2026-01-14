@@ -34,6 +34,33 @@ export type DatabaseSeederOptions = {
     /**
      * default: false
      */
+    clientSystemEnabled: boolean,
+
+    /**
+     * default: system
+     */
+    clientSystemName: string,
+
+    /**
+     * default: undefined
+     */
+    clientSystemSecret?: string,
+
+    /**
+     * default: false
+     */
+    clientSystemSecretHashed: boolean,
+
+    /**
+     * default: undefined
+     */
+    clientSystemSecretReset?: boolean,
+
+    // ----------------------------------------------------
+
+    /**
+     * default: false
+     */
     robotAdminEnabled: boolean,
     /**
      * default: system
