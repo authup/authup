@@ -49,7 +49,7 @@
         "@authup/kit": "^1.0.0-beta.28",
         "@authup/core-kit": "^1.0.0-beta.28",
         "@authup/server-core": "^1.0.0-beta.28",
-        "citty": "^0.1.6",
+        "citty": "^0.2.0",
         "chalk": "^5.6.2",
         "confinity": "^1.0.0-beta.1",
         "consola": "^3.4.0",
@@ -57,7 +57,7 @@
         "envix": "^1.5.0",
         "resolve-package-path": "^4.0.3",
         "smob": "^1.5.0",
-        "zod": "^4.3.5"
+        "zod": "^4.3.6"
     },
     "publishConfig": {
         "access": "public"

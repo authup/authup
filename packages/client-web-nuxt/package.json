@@ -40,7 +40,7 @@
         "@authup/access": "^1.0.0-beta.28",
         "@nuxt/module-builder": "^1.0.2",
         "@pinia/nuxt": "^0.11.3",
-        "nuxt": "^4.2.2",
+        "nuxt": "^4.3.0",
         "pinia": "^3.0.0",
         "vue-router": "^4.6.4"
     },
