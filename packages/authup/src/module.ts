@@ -29,7 +29,7 @@ export async function createCLIEntryPointCommand() {
             command: {
                 type: 'positional',
                 description: 'The command which should be forwarded to the package.',
-                required: true
+                required: true,
             },
             package: {
                 type: 'positional',
