@@ -47,7 +47,7 @@
         "@authup/core-kit": "^1.0.0-beta.28",
         "@authup/core-http-kit": "^1.0.0-beta.28",
         "@fortawesome/fontawesome-free": "^7.1.0",
-        "@vitejs/plugin-vue": "^6.0.3",
+        "@vitejs/plugin-vue": "^6.0.4",
         "@vuecs/countdown": "^1.0.0",
         "@vuecs/form-controls": "^2.4.2",
         "@vuecs/list-controls": "^2.0.0",
