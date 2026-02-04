@@ -42,7 +42,7 @@
         "@pinia/nuxt": "^0.11.3",
         "nuxt": "^4.3.0",
         "pinia": "^3.0.0",
-        "vue-router": "^4.6.4"
+        "vue-router": "^5.0.2"
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
