@@ -43,9 +43,9 @@
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
         "@authup/client-web-kit": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
         "@authup/core-kit": "^1.0.0-beta.28",
-        "@authup/core-http-kit": "^1.0.0-beta.28",
+        "@authup/core-http-kit": "^1.0.1-beta.28",
         "@fortawesome/fontawesome-free": "^7.1.0",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vuecs/countdown": "^1.0.0",
@@ -66,9 +66,9 @@
     },
     "peerDependencies": {
         "@authup/client-web-kit": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
         "@authup/core-kit": "^1.0.0-beta.28",
-        "@authup/core-http-kit": "^1.0.0-beta.28",
+        "@authup/core-http-kit": "^1.0.1-beta.28",
         "@fortawesome/fontawesome-free": "^7.1.0",
         "@vuecs/countdown": "^1.0.0",
         "@vuecs/form-controls": "^2.4.2",

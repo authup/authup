@@ -50,13 +50,13 @@
         "zod": "^4.3.6"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
+        "@authup/errors": "^1.0.1-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
         "vitest": "^4.0.14"
     },
     "peerDependencies": {
-        "@authup/errors": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28"
+        "@authup/errors": "^1.0.1-beta.28",
+        "@authup/kit": "^1.0.1-beta.28"
     },
     "publishConfig": {
         "access": "public"
