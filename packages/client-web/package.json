@@ -29,9 +29,9 @@
     },
     "devDependencies": {
         "@authup/client-web-kit": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
         "@authup/core-kit": "^1.0.0-beta.28",
-        "@authup/core-http-kit": "^1.0.0-beta.28",
+        "@authup/core-http-kit": "^1.0.1-beta.28",
         "@authup/client-web-nuxt": "^1.0.0-beta.28",
         "@ilingo/vuelidate": "^5.0.4",
         "@fortawesome/fontawesome-free": "^7.1.0",
