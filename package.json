@@ -44,7 +44,7 @@
         "eslint-plugin-vue": "10.6.2",
         "husky": "^9.1.7",
         "lint-staged": "^16.2.7",
-        "nx": "^22.4.4",
+        "nx": "^22.4.5",
         "rimraf": "^6.1.2",
         "rollup": "^4.57.1",
         "rollup-plugin-postcss": "^4.0.2",
