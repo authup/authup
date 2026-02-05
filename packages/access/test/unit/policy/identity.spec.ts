@@ -9,8 +9,9 @@ import { describe, expect, it } from 'vitest';
 import type { IdentityPolicy } from '../../../src';
 import {
     IdentityPolicyEvaluator,
+    PolicyData,
+    definePolicyEvaluationContext,
 } from '../../../src';
-import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/identity', () => {
     it('should permit due defined identity', async () => {
@@ -20,17 +21,16 @@ describe('src/policy/identity', () => {
 
         const evaluator = new IdentityPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
                 identity: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
-            },
+            }),
         }));
-        expect(outcome).toBeTruthy();
+        expect(outcome.success).toBeDefined();
     });
 
     it('should permit due matching type', async () => {
@@ -40,17 +40,16 @@ describe('src/policy/identity', () => {
 
         const evaluator = new IdentityPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
                 identity: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
                 },
-            },
+            }),
         }));
-        expect(outcome).toBeTruthy();
+        expect(outcome.success).toBeTruthy();
     });
 
     it('should not permit due non matching type', async () => {
@@ -60,17 +59,16 @@ describe('src/policy/identity', () => {
 
         const evaluator = new IdentityPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
                 identity: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
-            },
+            }),
         }));
-        expect(outcome).toBeFalsy();
+        expect(outcome.success).toBeFalsy();
     });
 
     it('should not permit due non defined identity', async () => {
@@ -80,10 +78,7 @@ describe('src/policy/identity', () => {
 
         const evaluator = new IdentityPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {},
-        }));
-        expect(outcome).toBeFalsy();
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext());
+        expect(outcome.success).toBeFalsy();
     });
 });

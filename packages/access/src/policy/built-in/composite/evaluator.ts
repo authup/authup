@@ -9,13 +9,12 @@ import { DecisionStrategy } from '../../../constants';
 import { PolicyEngine } from '../../engine';
 import type {
     IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult,
-} from '../../evaluator';
+} from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import type { PolicyIssue } from '../../issue';
-import type { CompositePolicy } from './types';
 import { CompositePolicyValidator } from './validator';
 
-export class CompositePolicyEvaluator implements IPolicyEvaluator<CompositePolicy> {
+export class CompositePolicyEvaluator implements IPolicyEvaluator {
     protected validator : CompositePolicyValidator;
 
     constructor() {
@@ -31,7 +30,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator<CompositePolic
         const decisionStrategy = policy.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
 
-        const engine = new PolicyEngine(context.evaluators);
+        const engine = new PolicyEngine(ctx.evaluators);
         const issues : PolicyIssue[] = [];
 
         for (let i = 0; i < policy.children.length; i++) {
@@ -39,7 +38,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator<CompositePolic
 
             const outcome = await engine.evaluate(childPolicy, {
                 ...ctx,
-                path: [...(context.path || []), childPolicy.type],
+                path: [...(ctx.path || []), childPolicy.type],
             });
 
             if (outcome.success) {
@@ -54,7 +53,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator<CompositePolic
             } else {
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     return {
-                        success: maybeInvertPolicyOutcome(true, policy.invert),
+                        success: maybeInvertPolicyOutcome(false, policy.invert),
                         issues: outcome.issues,
                     };
                 }

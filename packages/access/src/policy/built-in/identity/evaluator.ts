@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { PolicyIssueCode, definePolicyIssue } from '../../issue';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIdentityDataValidator } from './data';
-import type { IdentityPolicy, IdentityPolicyData } from './types';
+import type { IdentityPolicyData } from './types';
 import { IdentityPolicyValidator } from './validator';
 
-export class IdentityPolicyEvaluator implements IPolicyEvaluator<IdentityPolicy> {
+export class IdentityPolicyEvaluator implements IPolicyEvaluator {
     protected validator : IdentityPolicyValidator;
 
     protected dataValidator : PolicyIdentityDataValidator;
@@ -59,14 +59,7 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator<IdentityPolicy>
 
         if (!policy.types || policy.types.length === 0) {
             return {
-                success: maybeInvertPolicyOutcome(false, policy.invert),
-                issues: [
-                    definePolicyIssue({
-                        code: PolicyIssueCode.FIELD_INVALID,
-                        message: 'The policy property "types" must be a non-empty array.',
-                        path: [...ctx.path, 'types'],
-                    }),
-                ],
+                success: maybeInvertPolicyOutcome(true, policy.invert),
             };
         }
 

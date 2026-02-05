@@ -19,7 +19,7 @@ export class PolicyData implements IPolicyData {
 
     protected validated : Set<string>;
 
-    constructor(data: Record<string, any>) {
+    constructor(data: Record<string, any> = {}) {
         this.data = data || {};
         this.validated = new Set<string>();
     }

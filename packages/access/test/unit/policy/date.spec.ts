@@ -8,10 +8,12 @@
 import { describe, expect, it } from 'vitest';
 import type { DatePolicy } from '../../../src';
 import {
+    BuiltInPolicyType,
     DatePolicyEvaluator,
     DatePolicyValidator,
+    PolicyData,
+    definePolicyEvaluationContext,
 } from '../../../src';
-import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/date', () => {
     it('should restrict', async () => {
@@ -22,33 +24,30 @@ describe('src/policy/date', () => {
 
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
-        let outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
-                dateTime,
-            },
+        let outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
+                [BuiltInPolicyType.DATE]: dateTime,
+            }),
         }));
-        expect(outcome).toBeTruthy();
+        expect(outcome.success).toBeTruthy();
 
         // march
         dateTime.setMonth(2, 1);
-        outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
-                dateTime,
-            },
+        outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
+                [BuiltInPolicyType.DATE]: dateTime,
+            }),
         }));
-        expect(outcome).toBeFalsy();
+        expect(outcome.success).toBeFalsy();
 
         // june
         dateTime.setMonth(5, 1);
-        outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
-                dateTime,
-            },
+        outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
+                [BuiltInPolicyType.DATE]: dateTime,
+            }),
         }));
-        expect(outcome).toBeFalsy();
+        expect(outcome.success).toBeFalsy();
     });
 
     it('should parse options', async () => {

@@ -21,7 +21,7 @@
         "build:js": "rollup -c",
         "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types",
         "build:watch": "npm run build -- --watch",
-        "test": "cross-env NODE_ENV=test vitest run test/unit",
+        "test": "cross-env NODE_ENV=test vitest run",
         "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
     "engines": {
@@ -52,7 +52,8 @@
     "devDependencies": {
         "@authup/errors": "^1.0.0-beta.28",
         "@authup/kit": "^1.0.0-beta.28",
-        "vitest": "^4.0.14"
+        "vitest": "^4.0.14",
+        "unplugin-swc": "^1.5.9"
     },
     "peerDependencies": {
         "@authup/errors": "^1.0.0-beta.28",

@@ -14,6 +14,7 @@ import {
     PermissionChecker,
     PermissionError,
     PermissionMemoryProvider,
+    PolicyData,
 } from '../../../src';
 
 const abilities : PermissionItem[] = [
@@ -37,14 +38,20 @@ const checker = new PermissionChecker({ provider });
 
 describe('src/ability/manager.ts', () => {
     it('should work with policy', async () => {
-        await checker.check({ name: 'user_edit', input: { attributes: { name: 'admin' } } });
+        await checker.check({
+            name: 'user_edit',
+            input: new PolicyData({ attributes: { name: 'admin' } }),
+        });
     });
 
     it('should throw with failing evaluation', async () => {
         expect.assertions(3);
 
         try {
-            await checker.check({ name: 'user_edit', input: { attributes: { id: '123' } } });
+            await checker.check({
+                name: 'user_edit',
+                input: new PolicyData({ attributes: { id: '123' } }),
+            });
         } catch (e) {
             expect(e).toBeInstanceOf(PermissionError);
 

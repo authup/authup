@@ -6,13 +6,13 @@
  */
 
 import { ErrorCode } from '@authup/errors';
-import { PolicyIssueSeverity } from '../error';
+import { PolicyIssueSeverity } from '../issue';
 import type {
     IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult, PolicyEvaluators,
-} from '../evaluator';
+} from '../evaluation';
 import { maybeInvertPolicyOutcome } from '../helpers';
 import type { PolicyIssue } from '../issue';
-import type { IPolicy, PolicyData } from '../types.ts';
+import type { IPolicy } from '../types.ts';
 import type { IPolicyEngine } from './types.ts';
 
 /**
@@ -42,14 +42,13 @@ export class PolicyEngine implements IPolicyEngine {
 
     /**
      * @param policy
-     * @param data
-     * @param context
+     * @param ctx
      */
-    async evaluate(policy: IPolicy, data: PolicyData, context: PolicyEvaluationContext = {}) : Promise<PolicyEvaluationResult> {
+    async evaluate(policy: IPolicy, ctx: PolicyEvaluationContext) : Promise<PolicyEvaluationResult> {
         if (
-            context.exclude &&
-            context.exclude.length > 0 &&
-            context.exclude.indexOf(policy.type) !== -1
+            ctx.exclude &&
+            ctx.exclude.length > 0 &&
+            ctx.exclude.indexOf(policy.type) !== -1
         ) {
             return {
                 success: maybeInvertPolicyOutcome(true, policy.invert),
@@ -57,9 +56,9 @@ export class PolicyEngine implements IPolicyEngine {
         }
 
         if (
-            context.include &&
-            context.include.length > 0 &&
-            context.include.indexOf(policy.type) === -1
+            ctx.include &&
+            ctx.include.length > 0 &&
+            ctx.include.indexOf(policy.type) === -1
         ) {
             return {
                 success: maybeInvertPolicyOutcome(true, policy.invert),
@@ -85,11 +84,11 @@ export class PolicyEngine implements IPolicyEngine {
         }
 
         try {
-            return await evaluator.evaluate(policy, data, {
-                ...context,
+            return await evaluator.evaluate(policy, {
+                ...ctx,
                 evaluators: {
                     ...this.evaluators,
-                    ...(context.evaluators || {}),
+                    ...(ctx.evaluators || {}),
                 },
             });
         } catch (e) {

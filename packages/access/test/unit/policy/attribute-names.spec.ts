@@ -8,30 +8,29 @@
 import { describe, expect, it } from 'vitest';
 import type { AttributeNamesPolicy } from '../../../src';
 import {
-    AttributeNamesPolicyEvaluator,
-    AttributeNamesPolicyValidator,
+    AttributeNamesPolicyEvaluator, AttributeNamesPolicyValidator,
+    PolicyData,
+    definePolicyEvaluationContext,
 } from '../../../src';
-import { buildTestPolicyEvaluateContext } from '../../utils';
 
 const evaluator = new AttributeNamesPolicyEvaluator();
 
 describe('src/policy/attribute-names', () => {
     it('should succeed with known attributes', async () => {
-        const config : AttributeNamesPolicy = {
+        const policy : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
+        const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
+            data: new PolicyData({
                 attributes: {
                     foo: 'bar',
                     bar: 'baz',
                 },
-            },
+            }),
         }));
-        expect(outcome)
+        expect(outcome.success)
             .toBeTruthy();
     });
 
@@ -61,7 +60,8 @@ describe('src/policy/attribute-names', () => {
             names: ['foo', 'bar'],
         };
 
-        await expect(evaluator.evaluate(buildTestPolicyEvaluateContext({ config, input: {} }))).rejects.toThrow();
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext());
+        expect(outcome.success).toBeFalsy();
     });
 
     it('should fail with unknown attributes', async () => {
@@ -70,17 +70,16 @@ describe('src/policy/attribute-names', () => {
             names: ['foo', 'bar'],
         };
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
                 attributes: {
                     foo: 'bar',
                     bar: 'baz',
                     baz: 'boz',
                 },
-            },
+            }),
         }));
-        expect(outcome).toBeFalsy();
+        expect(outcome.success).toBeFalsy();
     });
 
     it('should succeed with known nested attributes', async () => {
@@ -91,17 +90,16 @@ describe('src/policy/attribute-names', () => {
             ],
         };
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
                 attributes: {
                     user: {
                         name: 'admin',
                     },
                 },
-            },
+            }),
         }));
-        expect(outcome)
+        expect(outcome.success)
             .toBeTruthy();
     });
 
@@ -113,17 +111,16 @@ describe('src/policy/attribute-names', () => {
             ],
         };
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
                 attributes: {
                     user: {
                         display_name: 'admin',
                     },
                 },
-            },
+            }),
         }));
-        expect(outcome)
+        expect(outcome.success)
             .toBeFalsy();
     });
 
@@ -135,17 +132,16 @@ describe('src/policy/attribute-names', () => {
             ],
         };
 
-        const outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
+        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
                 attributes: {
                     user: {
                         name: 'admin',
                         id: 'xxx',
                     },
                 },
-            },
+            }),
         }));
-        expect(outcome).toBeFalsy();
+        expect(outcome.success).toBeFalsy();
     });
 });

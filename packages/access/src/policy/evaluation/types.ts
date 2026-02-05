@@ -5,22 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyData } from '../data.ts';
 import type { PolicyIssue } from '../issue';
+import type { PolicyEvaluationContext } from './context';
 
 export type PolicyEvaluators = Record<string, IPolicyEvaluator>;
 
 export type PolicyEvaluationResult = {
     success: boolean,
     issues?: PolicyIssue[]
-};
-
-export type PolicyEvaluationContext = {
-    readonly evaluators: Record<string, IPolicyEvaluator>,
-    readonly path: (string | number)[],
-    readonly exclude: string[],
-    readonly include: string[],
-    readonly data: PolicyData
 };
 
 export interface IPolicyEvaluator {

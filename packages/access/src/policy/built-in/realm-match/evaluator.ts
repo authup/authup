@@ -7,7 +7,7 @@
 
 import { hasOwnProperty } from '@authup/kit';
 import { DecisionStrategy } from '../../../constants';
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIssueCode, definePolicyIssue } from '../../issue';
 import { AttributesPolicyEvaluator } from '../attributes';

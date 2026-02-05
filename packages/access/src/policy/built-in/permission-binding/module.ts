@@ -5,20 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PermissionBindingPolicy } from './types';
 import { PermissionBindingPolicyValidator } from './validator';
 
-export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator<PermissionBindingPolicy> {
+export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     protected validator: PermissionBindingPolicyValidator;
 
     constructor() {
         this.validator = new PermissionBindingPolicyValidator();
     }
 
-    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+    async evaluate(value: Record<string, any>): Promise<PolicyEvaluationResult> {
+        const policy = await this.validator.run(value);
+
         // todo: this must be changed when the permission-checker not only checks owned permissions.
-        return maybeInvertPolicyOutcome(true, ctx.config.invert);
+        return {
+            success: maybeInvertPolicyOutcome(true, policy.invert),
+        };
     }
 }

@@ -6,8 +6,13 @@
  */
 
 import { DecisionStrategy } from '../constants';
-import type { IPolicyEngine } from '../policy';
-import { BuiltInPolicyType, PolicyEngine, PolicyError } from '../policy';
+import type { IPolicyEngine, PolicyEvaluationResult } from '../policy';
+import {
+    BuiltInPolicyType,
+    PolicyEngine,
+    PolicyError,
+    definePolicyEvaluationContext,
+} from '../policy';
 import { PermissionError } from './error';
 import type { IPermissionProvider, PermissionGetOptions } from './provider';
 import { PermissionMemoryProvider } from './provider';
@@ -15,6 +20,7 @@ import { PermissionMemoryProvider } from './provider';
 import type {
     PermissionCheckerCheckContext, PermissionCheckerOptions, PermissionItem,
 } from './types';
+import { PolicyDefaultEvaluators } from '../policy/constants.ts';
 
 export class PermissionChecker {
     protected provider : IPermissionProvider;
@@ -45,7 +51,7 @@ export class PermissionChecker {
         if (options.policyEngine) {
             this.policyEngine = options.policyEngine;
         } else {
-            this.policyEngine = new PolicyEngine();
+            this.policyEngine = new PolicyEngine(PolicyDefaultEvaluators);
         }
     }
 
@@ -121,20 +127,16 @@ export class PermissionChecker {
                 continue;
             }
 
-            let outcome : boolean;
+            const policyCtx = definePolicyEvaluationContext({
+                include: options.policiesIncluded,
+                exclude: options.policiesExcluded,
+                data: ctx.input,
+            });
+
+            let evaluationResult : PolicyEvaluationResult | undefined;
 
             try {
-                outcome = await this.policyEngine.evaluate({
-                    input: {
-                        ...ctx.input || {},
-                        permission: entity,
-                    },
-                    config: entity.policy,
-                    options: {
-                        include: options.policiesIncluded,
-                        exclude: options.policiesExcluded,
-                    },
-                });
+                evaluationResult = await this.policyEngine.evaluate(entity.policy, policyCtx);
             } catch (e) {
                 if (e instanceof PolicyError) {
                     lastError = PermissionError.evaluationFailed({
@@ -148,11 +150,9 @@ export class PermissionChecker {
                         policy: entity.policy,
                     });
                 }
-
-                outcome = false;
             }
 
-            if (outcome) {
+            if (evaluationResult && evaluationResult.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }

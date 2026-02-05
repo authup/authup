@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { BuiltInPolicyType } from '../constants.ts';
-import type { DatePolicy } from './types';
 import { DatePolicyValidator } from './validator';
 
 function normalizeDate(input: Date) {
@@ -27,7 +26,7 @@ function toDate(input: Date | string | number) : Date {
     return input;
 }
 
-export class DatePolicyEvaluator implements IPolicyEvaluator<DatePolicy> {
+export class DatePolicyEvaluator implements IPolicyEvaluator {
     protected validator : DatePolicyValidator;
 
     constructor() {
@@ -57,17 +56,23 @@ export class DatePolicyEvaluator implements IPolicyEvaluator<DatePolicy> {
         if (policy.start) {
             const start = normalizeDate(toDate(policy.start));
             if (now < start) {
-                return maybeInvertPolicyOutcome(false, policy.invert);
+                return {
+                    success: maybeInvertPolicyOutcome(false, policy.invert),
+                };
             }
         }
 
         if (policy.end) {
             const end = normalizeDate(toDate(policy.end));
             if (now > end) {
-                return maybeInvertPolicyOutcome(false, policy.invert);
+                return {
+                    success: maybeInvertPolicyOutcome(false, policy.invert),
+                };
             }
         }
 
-        return maybeInvertPolicyOutcome(true, policy.invert);
+        return {
+            success: maybeInvertPolicyOutcome(true, policy.invert),
+        };
     }
 }

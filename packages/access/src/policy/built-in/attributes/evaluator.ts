@@ -7,7 +7,7 @@
 
 import { guard } from '@ucast/mongo2js';
 import { isObject } from '@authup/kit';
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIssueCode, definePolicyIssue } from '../../issue';
 import { BuiltInPolicyType } from '../constants.ts';

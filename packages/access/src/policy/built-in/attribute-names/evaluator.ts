@@ -6,24 +6,29 @@
  */
 
 import { flattenObject } from '@authup/kit';
-import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import type { PolicyIssue } from '../../issue';
 import { PolicyIssueCode, definePolicyIssue } from '../../issue';
 import { AttributeNamesPolicyValidator } from './validator';
+import { AttributesPolicyEvaluator } from '../attributes';
 
 export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
     protected validator : AttributeNamesPolicyValidator;
 
+    protected attributesEvaluator : AttributesPolicyEvaluator;
+
     constructor() {
         this.validator = new AttributeNamesPolicyValidator();
+        this.attributesEvaluator = new AttributesPolicyEvaluator();
     }
 
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
         // todo: catch errors + transform to issue(s)
         const policy = await this.validator.run(value);
 
-        if (!ctx.data.has('attributes')) {
+        const data = await this.attributesEvaluator.accessData(ctx);
+        if (!data) {
             return {
                 success: false,
                 issues: [
@@ -34,16 +39,6 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
                     }),
                 ],
             };
-        }
-
-        let data : Record<string, any>;
-        if (ctx.data.isValidated('attributes')) {
-            data = ctx.data.get<Record<string, any>>('attributes');
-        } else {
-            data = await this.dataValidator.run(ctx.data.get('attributes'));
-
-            ctx.data.set('attributes', data);
-            ctx.data.setValidated('attributes');
         }
 
         const attributes = flattenObject(data);
@@ -61,6 +56,9 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
             }
         }
 
-        return { success: maybeInvertPolicyOutcome(issues.length === 0, policy.invert), issues };
+        return {
+            success: maybeInvertPolicyOutcome(issues.length === 0, policy.invert),
+            issues,
+        };
     }
 }
