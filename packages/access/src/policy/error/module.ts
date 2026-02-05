@@ -21,6 +21,10 @@ export class PolicyError extends AuthupError {
         this.issues.push(data);
     }
 
+    addIssues(data: PolicyIssue[]) {
+        this.issues.push(...data);
+    }
+
     static evaluatorNotFound(type: string) {
         return new PolicyError(
             `No evaluator is registered to handle the policy: ${type}`,

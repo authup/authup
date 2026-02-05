@@ -17,14 +17,14 @@ import {
 
 describe('src/policy/date', () => {
     it('should restrict', async () => {
-        const config : DatePolicy = {
+        const policy : DatePolicy = {
             start: '2024-04-01',
             end: '2024-05-01',
         };
 
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
-        let outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+        let outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
                 [BuiltInPolicyType.DATE]: dateTime,
             }),
@@ -33,7 +33,7 @@ describe('src/policy/date', () => {
 
         // march
         dateTime.setMonth(2, 1);
-        outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+        outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
                 [BuiltInPolicyType.DATE]: dateTime,
             }),
@@ -42,7 +42,7 @@ describe('src/policy/date', () => {
 
         // june
         dateTime.setMonth(5, 1);
-        outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+        outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
                 [BuiltInPolicyType.DATE]: dateTime,
             }),

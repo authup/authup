@@ -17,7 +17,7 @@ type User = {
     age: number
 };
 
-const config : AttributesPolicy<User> = {
+const policy : AttributesPolicy<User> = {
     invert: false,
     query: {
         name: {
@@ -34,7 +34,7 @@ const evaluator = new AttributesPolicyEvaluator<User>();
 
 describe('src/policy/attributes', () => {
     it('should succeed with successful predicates', async () => {
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+        const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
                 attributes: {
                     name: 'Peter',
@@ -74,19 +74,22 @@ describe('src/policy/attributes', () => {
     });
 
     it('should fail with missing context', async () => {
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext());
+        const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext());
         expect(outcome.success).toBeFalsy();
     });
 
     it('should fail with invalid predicate value', async () => {
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
-            data: new PolicyData({
-                attributes: {
-                    name: 'Peter',
-                    age: 28,
-                },
+        const outcome = await evaluator.evaluate(
+            policy,
+            definePolicyEvaluationContext({
+                data: new PolicyData({
+                    attributes: {
+                        name: 'Peter',
+                        age: 28,
+                    },
+                }),
             }),
-        }));
+        );
 
         expect(outcome.success).toBeFalsy();
     });

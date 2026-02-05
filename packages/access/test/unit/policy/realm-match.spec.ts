@@ -102,13 +102,13 @@ describe('src/policy/attribute-realm', () => {
     });
 
     it('should restrict due non matching realm and master full scope disabled', async () => {
-        const config : RealmMatchPolicy = {
+        const policy : RealmMatchPolicy = {
             identityMasterMatchAll: false,
         };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+        const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
                 identity: {
                     type: 'user',

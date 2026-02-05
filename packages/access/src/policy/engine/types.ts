@@ -11,4 +11,5 @@ import type { IPolicy } from '../types';
 export interface IPolicyEngine {
     evaluate(policy: IPolicy, options: PolicyEvaluationContext) : Promise<PolicyEvaluationResult>;
 
+    evaluateOrFail(policy: IPolicy, options: PolicyEvaluationContext) : Promise<void>;
 }

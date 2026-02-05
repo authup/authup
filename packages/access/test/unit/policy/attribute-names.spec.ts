@@ -55,22 +55,22 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should fail with missing context', async () => {
-        const config : AttributeNamesPolicy = {
+        const policy : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext());
+        const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext());
         expect(outcome.success).toBeFalsy();
     });
 
     it('should fail with unknown attributes', async () => {
-        const config : AttributeNamesPolicy = {
+        const policy : AttributeNamesPolicy = {
             invert: false,
             names: ['foo', 'bar'],
         };
 
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+        const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
                 attributes: {
                     foo: 'bar',
@@ -83,65 +83,74 @@ describe('src/policy/attribute-names', () => {
     });
 
     it('should succeed with known nested attributes', async () => {
-        const config: AttributeNamesPolicy = {
+        const policy: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
             ],
         };
 
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
-            data: new PolicyData({
-                attributes: {
-                    user: {
-                        name: 'admin',
+        const outcome = await evaluator.evaluate(
+            policy,
+            definePolicyEvaluationContext({
+                data: new PolicyData({
+                    attributes: {
+                        user: {
+                            name: 'admin',
+                        },
                     },
-                },
+                }),
             }),
-        }));
+        );
         expect(outcome.success)
             .toBeTruthy();
     });
 
     it('should fail with unknown nested attributes', async () => {
-        const config: AttributeNamesPolicy = {
+        const policy: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
             ],
         };
 
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
-            data: new PolicyData({
-                attributes: {
-                    user: {
-                        display_name: 'admin',
+        const outcome = await evaluator.evaluate(
+            policy,
+            definePolicyEvaluationContext({
+                data: new PolicyData({
+                    attributes: {
+                        user: {
+                            display_name: 'admin',
+                        },
                     },
-                },
+                }),
             }),
-        }));
+        );
         expect(outcome.success)
             .toBeFalsy();
     });
 
     it('should fail with partially known nested attributes', async () => {
-        const config: AttributeNamesPolicy = {
+        const policy: AttributeNamesPolicy = {
             names: [
                 'user.name',
                 'age',
             ],
         };
 
-        const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
-            data: new PolicyData({
-                attributes: {
-                    user: {
-                        name: 'admin',
-                        id: 'xxx',
+        const outcome = await evaluator.evaluate(
+            policy,
+            definePolicyEvaluationContext({
+                data: new PolicyData({
+                    attributes: {
+                        user: {
+                            name: 'admin',
+                            id: 'xxx',
+                        },
                     },
-                },
+                }),
             }),
-        }));
+        );
         expect(outcome.success).toBeFalsy();
     });
 });

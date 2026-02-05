@@ -14,6 +14,7 @@ import { maybeInvertPolicyOutcome } from '../helpers';
 import type { PolicyIssue } from '../issue';
 import type { IPolicy } from '../types.ts';
 import type { IPolicyEngine } from './types.ts';
+import { PolicyError } from '../error';
 
 /**
  * The policy engine is a component that interprets defined policies and makes decisions
@@ -104,5 +105,29 @@ export class PolicyEngine implements IPolicyEngine {
                 issues,
             };
         }
+    }
+
+    async evaluateOrFail(policy: IPolicy, ctx: PolicyEvaluationContext) : Promise<void> {
+        const issues : PolicyIssue[] = [];
+
+        try {
+            const outcome = await this.evaluate(policy, ctx);
+            if (outcome.success) {
+                return;
+            }
+
+            if (outcome.issues) {
+                issues.push(...outcome.issues);
+            }
+        } catch (e) {
+            if (e instanceof PolicyError) {
+                throw e;
+            }
+        }
+
+        const error = new PolicyError(`The policy ${policy.type} evaluation failed.`);
+        error.addIssues(issues);
+
+        throw error;
     }
 }
