@@ -6,72 +6,70 @@
  */
 
 import { DecisionStrategy } from '../../../constants';
-import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
-import { evaluatePolicy } from '../../evaluator';
+import { PolicyEngine } from '../../engine';
+import type {
+    IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult,
+} from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyInput, PolicyWithType } from '../../types';
-import { isCompositePolicy } from './helper';
+import type { PolicyIssue } from '../../issue';
 import type { CompositePolicy } from './types';
 import { CompositePolicyValidator } from './validator';
 
-export class CompositePolicyEvaluator implements PolicyEvaluator<CompositePolicy> {
+export class CompositePolicyEvaluator implements IPolicyEvaluator<CompositePolicy> {
     protected validator : CompositePolicyValidator;
 
     constructor() {
         this.validator = new CompositePolicyValidator();
     }
 
-    async can(
-        ctx: PolicyEvaluateContext<PolicyWithType>,
-    ) : Promise<boolean> {
-        return isCompositePolicy(ctx.config);
-    }
+    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+        // todo: catch errors + transform to issue(s)
+        const policy = await this.validator.run(value);
 
-    async validateConfig(ctx: PolicyEvaluateContext) : Promise<CompositePolicy> {
-        return this.validator.run(ctx.config);
-    }
-
-    async validateInput(ctx: PolicyEvaluateContext<CompositePolicy>) : Promise<PolicyInput> {
-        return ctx.input;
-    }
-
-    async evaluate(ctx: PolicyEvaluateContext<CompositePolicy>): Promise<boolean> {
         let count = 0;
 
-        const decisionStrategy = ctx.config.decisionStrategy ??
+        const decisionStrategy = policy.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
 
-        for (let i = 0; i < ctx.config.children.length; i++) {
-            const childPolicy = ctx.config.children[i];
-            let outcome : boolean;
+        const engine = new PolicyEngine(context.evaluators);
+        const issues : PolicyIssue[] = [];
 
-            if (isCompositePolicy(childPolicy)) {
-                outcome = await this.evaluate({
-                    ...ctx,
-                    config: childPolicy,
-                });
-            } else {
-                outcome = await evaluatePolicy({
-                    ...ctx,
-                    config: childPolicy,
-                });
-            }
+        for (let i = 0; i < policy.children.length; i++) {
+            const childPolicy = policy.children[i];
 
-            if (outcome) {
+            const outcome = await engine.evaluate(childPolicy, {
+                ...ctx,
+                path: [...(context.path || []), childPolicy.type],
+            });
+
+            if (outcome.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
-                    return maybeInvertPolicyOutcome(true, ctx.config.invert);
+                    return {
+                        success: maybeInvertPolicyOutcome(true, policy.invert),
+                        issues: outcome.issues,
+                    };
                 }
 
                 count++;
             } else {
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                    return {
+                        success: maybeInvertPolicyOutcome(true, policy.invert),
+                        issues: outcome.issues,
+                    };
                 }
 
                 count--;
             }
+
+            if (outcome.issues) {
+                issues.push(...outcome.issues);
+            }
         }
 
-        return maybeInvertPolicyOutcome(count > 0, ctx.config.invert);
+        return {
+            success: maybeInvertPolicyOutcome(count > 0, policy.invert),
+            issues,
+        };
     }
 }

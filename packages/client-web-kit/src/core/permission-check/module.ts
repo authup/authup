@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionCheckerCheckContext, PolicyIdentity } from '@authup/access';
+import type { PermissionCheckerCheckContext, IdentityPolicyData } from '@authup/access';
 import type { Ref } from 'vue';
 import {
     onMounted, onUnmounted, ref, watch,
@@ -35,7 +35,7 @@ export function createPermissionCheckerReactiveFn(
                 return computePromise;
             }
 
-            let identity: PolicyIdentity | undefined;
+            let identity: IdentityPolicyData | undefined;
             if (storeRefs.userId.value) {
                 identity = {
                     type: 'user',

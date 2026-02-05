@@ -8,6 +8,10 @@
 export * from './engine';
 export * from './evaluator';
 export * from './error';
+export * from './issue';
 export * from './helpers';
 export * from './built-in';
 export * from './types';
+
+export * from './data';
+export { PolicyIssue } from './issue';

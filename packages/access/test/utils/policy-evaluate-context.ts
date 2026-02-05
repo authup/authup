@@ -5,20 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluateContext, PolicyInput } from '../../src';
+import type { PolicyData, PolicyEvaluationContext } from '../../src';
 
 type Input<
     S extends Record<string, any>,
-    D extends PolicyInput = PolicyInput,
-> = Omit<PolicyEvaluateContext<S, D>, 'evaluators' | 'options'> &
-Partial<Pick<PolicyEvaluateContext<S, D>, 'evaluators' | 'options'>>;
+    D extends PolicyData = PolicyData,
+> = Omit<PolicyEvaluationContext<S, D>, 'evaluators' | 'options'> &
+Partial<Pick<PolicyEvaluationContext<S, D>, 'evaluators' | 'options'>>;
 
 export function buildTestPolicyEvaluateContext<
     S extends Record<string, any>,
-    D extends PolicyInput = PolicyInput,
+    D extends PolicyData = PolicyData,
 >(
     input: Input<S, D>,
-) : PolicyEvaluateContext<S, D> {
+) : PolicyEvaluationContext<S, D> {
     return {
         evaluators: {},
         options: {},

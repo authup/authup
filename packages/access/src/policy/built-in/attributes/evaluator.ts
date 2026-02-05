@@ -7,50 +7,64 @@
 
 import { guard } from '@ucast/mongo2js';
 import { isObject } from '@authup/kit';
-import { PolicyError } from '../../error';
-import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyInput, PolicyWithType } from '../../types';
-import { BuiltInPolicyType } from '../constants';
-import type { AttributesPolicy } from './types';
+import { PolicyIssueCode, definePolicyIssue } from '../../issue';
+import { BuiltInPolicyType } from '../constants.ts';
 import { AttributesPolicyValidator } from './validator';
 
 export class AttributesPolicyEvaluator<
     T extends Record<string, any> = Record<string, any>,
-> implements PolicyEvaluator<AttributesPolicy<T>> {
+> implements IPolicyEvaluator {
     protected validator : AttributesPolicyValidator<T>;
 
     constructor() {
         this.validator = new AttributesPolicyValidator<T>();
     }
 
-    async can(
-        ctx: PolicyEvaluateContext<PolicyWithType>,
-    ) : Promise<boolean> {
-        return ctx.config.type === BuiltInPolicyType.ATTRIBUTES;
-    }
-
-    async validateConfig(ctx: PolicyEvaluateContext) : Promise<AttributesPolicy<T>> {
-        return this.validator.run(ctx.config);
-    }
-
-    async validateInput(ctx: PolicyEvaluateContext<AttributesPolicy<T>>) : Promise<PolicyInput> {
-        if (!isObject(ctx.input.attributes)) {
-            throw PolicyError.evaluatorContextInvalid();
+    async accessData(ctx: PolicyEvaluationContext) : Promise<T | null> {
+        if (!ctx.data.has(BuiltInPolicyType.ATTRIBUTES)) {
+            return null;
         }
 
-        return ctx.input;
-    }
-
-    async evaluate(ctx: PolicyEvaluateContext<AttributesPolicy<T>>): Promise<boolean> {
-        if (!ctx.input.attributes) {
-            throw PolicyError.evaluatorContextInvalid();
+        if (ctx.data.isValidated(BuiltInPolicyType.ATTRIBUTES)) {
+            return ctx.data.get<T>(BuiltInPolicyType.ATTRIBUTES);
         }
 
-        this.fixQuery(ctx.config.query);
+        // todo: run validator on attributes (isObject ...)
+        const data = ctx.data.get<T>(BuiltInPolicyType.ATTRIBUTES);
 
-        const testIt = guard<T>(ctx.config.query);
-        return maybeInvertPolicyOutcome(testIt(ctx.input.attributes as T), ctx.config.invert);
+        ctx.data.set(BuiltInPolicyType.ATTRIBUTES, data);
+        ctx.data.setValidated(BuiltInPolicyType.ATTRIBUTES);
+
+        return data;
+    }
+
+    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+        // todo: catch errors + transform to issue(s)
+        const policy = await this.validator.run(value);
+
+        const data = await this.accessData(ctx);
+        if (!data) {
+            return {
+                success: false,
+                issues: [
+                    definePolicyIssue({
+                        code: PolicyIssueCode.DATA_MISSING,
+                        message: 'The data property attributes is missing',
+                        path: ctx.path,
+                    }),
+                ],
+            };
+        }
+
+        this.fixQuery(policy.query);
+
+        const testIt = guard<T>(policy.query);
+
+        return {
+            success: maybeInvertPolicyOutcome(testIt(data as T), policy.invert),
+        };
     }
 
     protected fixQuery(

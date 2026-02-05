@@ -5,52 +5,62 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { flattenObject, isObject } from '@authup/kit';
-import { PolicyError } from '../../error';
-import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
+import { flattenObject } from '@authup/kit';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyInput, PolicyWithType } from '../../types';
-import { BuiltInPolicyType } from '../constants';
-import type { AttributeNamesPolicy } from './types';
+import type { PolicyIssue } from '../../issue';
+import { PolicyIssueCode, definePolicyIssue } from '../../issue';
 import { AttributeNamesPolicyValidator } from './validator';
 
-export class AttributeNamesPolicyEvaluator implements PolicyEvaluator<AttributeNamesPolicy> {
+export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
     protected validator : AttributeNamesPolicyValidator;
 
     constructor() {
         this.validator = new AttributeNamesPolicyValidator();
     }
 
-    async can(ctx: PolicyEvaluateContext<PolicyWithType>) : Promise<boolean> {
-        return ctx.config.type === BuiltInPolicyType.ATTRIBUTE_NAMES;
-    }
+    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+        // todo: catch errors + transform to issue(s)
+        const policy = await this.validator.run(value);
 
-    async validateConfig(ctx: PolicyEvaluateContext<PolicyWithType>) : Promise<AttributeNamesPolicy> {
-        return this.validator.run(ctx.config);
-    }
-
-    async validateInput(ctx: PolicyEvaluateContext<AttributeNamesPolicy>) : Promise<PolicyInput> {
-        if (!isObject(ctx.input.attributes)) {
-            throw PolicyError.evaluatorContextInvalid();
+        if (!ctx.data.has('attributes')) {
+            return {
+                success: false,
+                issues: [
+                    definePolicyIssue({
+                        code: PolicyIssueCode.DATA_MISSING,
+                        message: 'The data property attributes is missing',
+                        path: ctx.path,
+                    }),
+                ],
+            };
         }
 
-        return ctx.input;
-    }
+        let data : Record<string, any>;
+        if (ctx.data.isValidated('attributes')) {
+            data = ctx.data.get<Record<string, any>>('attributes');
+        } else {
+            data = await this.dataValidator.run(ctx.data.get('attributes'));
 
-    async evaluate(ctx: PolicyEvaluateContext<AttributeNamesPolicy, PolicyInput>): Promise<boolean> {
-        if (!ctx.input.attributes) {
-            throw PolicyError.evaluatorContextInvalid();
+            ctx.data.set('attributes', data);
+            ctx.data.setValidated('attributes');
         }
 
-        const attributes = flattenObject(ctx.input.attributes);
+        const attributes = flattenObject(data);
         const keys = Object.keys(attributes);
+
+        const issues : PolicyIssue[] = [];
         for (let i = 0; i < keys.length; i++) {
-            const index = ctx.config.names.indexOf(keys[i]);
+            const index = policy.names.indexOf(keys[i]);
             if (index === -1) {
-                return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                issues.push(definePolicyIssue({
+                    code: PolicyIssueCode.EVALUATION_DENIED,
+                    message: `The attribute ${keys[i]} is not included`,
+                    path: [...ctx.path, i],
+                }));
             }
         }
 
-        return maybeInvertPolicyOutcome(true, ctx.config.invert);
+        return { success: maybeInvertPolicyOutcome(issues.length === 0, policy.invert), issues };
     }
 }

@@ -5,12 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyInput, PolicyWithType } from '../../types';
 import { BuiltInPolicyType } from '../constants';
 import { isIntervalForDayOfMonth, isIntervalForDayOfWeek, isIntervalForDayOfYear } from './helpers';
-import type { TimePolicy } from './types';
 import { TimePolicyValidator } from './validator';
 
 const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
@@ -44,71 +42,77 @@ function toDate(
     return input;
 }
 
-export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicy> {
+export class TimePolicyEvaluator implements IPolicyEvaluator {
     protected validator : TimePolicyValidator;
 
     constructor() {
         this.validator = new TimePolicyValidator();
     }
 
-    async can(
-        ctx: PolicyEvaluateContext<PolicyWithType>,
-    ) : Promise<boolean> {
-        return ctx.config.type === BuiltInPolicyType.TIME;
-    }
+    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+        // todo: catch errors + transform to issue(s)
+        const policy = await this.validator.run(value);
 
-    async validateConfig(ctx: PolicyEvaluateContext) : Promise<TimePolicy> {
-        return this.validator.run(ctx.config);
-    }
-
-    async validateInput(ctx: PolicyEvaluateContext<TimePolicy>) : Promise<PolicyInput> {
-        return ctx.input;
-    }
-
-    async evaluate(ctx: PolicyEvaluateContext<TimePolicy>): Promise<boolean> {
         let now : Date;
-        if (ctx.input.dateTime) {
-            now = toDate(ctx.input.dateTime);
+
+        if (ctx.data.has(BuiltInPolicyType.TIME)) {
+            if (ctx.data.isValidated(BuiltInPolicyType.TIME)) {
+                now = ctx.data.get<Date>(BuiltInPolicyType.TIME);
+            } else {
+                // todo: run validator on attributes (isObject ...)
+                now = toDate(ctx.data.get(BuiltInPolicyType.TIME));
+
+                ctx.data.set(BuiltInPolicyType.TIME, now);
+                ctx.data.setValidated(BuiltInPolicyType.TIME);
+            }
         } else {
             now = new Date();
         }
 
-        if (ctx.config.start) {
-            const start = normalizeDate(toDate(ctx.config.start, now), now);
+        if (policy.start) {
+            const start = normalizeDate(toDate(policy.start, now), now);
             if (now < start) {
-                return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                return {
+                    success: maybeInvertPolicyOutcome(false, policy.invert),
+                };
             }
         }
 
-        if (ctx.config.end) {
-            const end = normalizeDate(toDate(ctx.config.end, now), now);
+        if (policy.end) {
+            const end = normalizeDate(toDate(policy.end, now), now);
             if (now > end) {
-                return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                return {
+                    success: maybeInvertPolicyOutcome(false, policy.invert),
+                };
             }
         }
 
-        if (ctx.config.interval) {
+        if (policy.interval) {
             if (
-                isIntervalForDayOfWeek(ctx.config.interval) &&
-                ctx.config.dayOfWeek
+                isIntervalForDayOfWeek(policy.interval) &&
+                policy.dayOfWeek
             ) {
-                if (now.getDay() !== ctx.config.dayOfWeek) {
-                    return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                if (now.getDay() !== policy.dayOfWeek) {
+                    return {
+                        success: maybeInvertPolicyOutcome(false, policy.invert),
+                    };
                 }
             }
 
             if (
-                isIntervalForDayOfMonth(ctx.config.interval) &&
-                ctx.config.dayOfMonth
+                isIntervalForDayOfMonth(policy.interval) &&
+                policy.dayOfMonth
             ) {
-                if (now.getDate() !== ctx.config.dayOfMonth) {
-                    return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                if (now.getDate() !== policy.dayOfMonth) {
+                    return {
+                        success: maybeInvertPolicyOutcome(false, policy.invert),
+                    };
                 }
             }
 
             if (
-                isIntervalForDayOfYear(ctx.config.interval) &&
-                ctx.config.dayOfYear
+                isIntervalForDayOfYear(policy.interval) &&
+                policy.dayOfYear
             ) {
                 const start = new Date(now.getFullYear(), 0, 0);
                 const diff = (now.getTime() - start.getTime()) +
@@ -117,12 +121,16 @@ export class TimePolicyEvaluator implements PolicyEvaluator<TimePolicy> {
                 const oneDay = 1000 * 60 * 60 * 24;
                 const dayOfYear = Math.floor(diff / oneDay);
 
-                if (dayOfYear !== ctx.config.dayOfYear) {
-                    return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                if (dayOfYear !== policy.dayOfYear) {
+                    return {
+                        success: maybeInvertPolicyOutcome(false, policy.invert),
+                    };
                 }
             }
         }
 
-        return maybeInvertPolicyOutcome(true, ctx.config.invert);
+        return {
+            success: maybeInvertPolicyOutcome(true, policy.invert),
+        };
     }
 }

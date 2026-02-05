@@ -5,10 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluator';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import type { PolicyInput, PolicyWithType } from '../../types';
-import { BuiltInPolicyType } from '../constants';
+import { BuiltInPolicyType } from '../constants.ts';
 import type { DatePolicy } from './types';
 import { DatePolicyValidator } from './validator';
 
@@ -28,49 +27,47 @@ function toDate(input: Date | string | number) : Date {
     return input;
 }
 
-export class DatePolicyEvaluator implements PolicyEvaluator<DatePolicy> {
+export class DatePolicyEvaluator implements IPolicyEvaluator<DatePolicy> {
     protected validator : DatePolicyValidator;
 
     constructor() {
         this.validator = new DatePolicyValidator();
     }
 
-    async can(
-        ctx: PolicyEvaluateContext<PolicyWithType>,
-    ) : Promise<boolean> {
-        return ctx.config.type === BuiltInPolicyType.DATE;
-    }
+    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+        // todo: catch errors + transform to issue(s)
+        const policy = await this.validator.run(value);
 
-    async validateConfig(ctx: PolicyEvaluateContext) : Promise<DatePolicy> {
-        return this.validator.run(ctx.config);
-    }
-
-    async validateInput(ctx: PolicyEvaluateContext<DatePolicy>) : Promise<PolicyInput> {
-        return ctx.input;
-    }
-
-    async evaluate(ctx: PolicyEvaluateContext<DatePolicy>) : Promise<boolean> {
         let now : Date;
-        if (ctx.input.dateTime) {
-            now = normalizeDate(toDate(ctx.input.dateTime));
+
+        if (ctx.data.has(BuiltInPolicyType.DATE)) {
+            if (ctx.data.isValidated(BuiltInPolicyType.DATE)) {
+                now = ctx.data.get<Date>(BuiltInPolicyType.DATE);
+            } else {
+                // todo: run validator on attributes (isObject ...)
+                now = normalizeDate(toDate(ctx.data.get(BuiltInPolicyType.DATE)));
+
+                ctx.data.set(BuiltInPolicyType.DATE, now);
+                ctx.data.setValidated(BuiltInPolicyType.DATE);
+            }
         } else {
             now = normalizeDate(new Date());
         }
 
-        if (ctx.config.start) {
-            const start = normalizeDate(toDate(ctx.config.start));
+        if (policy.start) {
+            const start = normalizeDate(toDate(policy.start));
             if (now < start) {
-                return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                return maybeInvertPolicyOutcome(false, policy.invert);
             }
         }
 
-        if (ctx.config.end) {
-            const end = normalizeDate(toDate(ctx.config.end));
+        if (policy.end) {
+            const end = normalizeDate(toDate(policy.end));
             if (now > end) {
-                return maybeInvertPolicyOutcome(false, ctx.config.invert);
+                return maybeInvertPolicyOutcome(false, policy.invert);
             }
         }
 
-        return maybeInvertPolicyOutcome(true, ctx.config.invert);
+        return maybeInvertPolicyOutcome(true, policy.invert);
     }
 }

@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyInput } from '@authup/access';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { ForbiddenError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RobotRoleEntity } from '../../../../../database/domains/index.ts';
+import { RobotEntity, RobotRoleEntity } from '../../../../../database/domains/index.ts';
 import { IdentityPermissionService } from '../../../../../../services/index.ts';
 import { RobotRoleRequestValidator } from '../utils/index.ts';
 import {
@@ -37,9 +37,8 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
     // ----------------------------------------------
 
-    const policyInput : PolicyInput = {
-        attributes: data satisfies Partial<RobotRoleEntity>,
-    };
+    const policyData = new PolicyData();
+    policyData.set<Partial<RobotRoleEntity>>(BuiltInPolicyType.ATTRIBUTES, data);
 
     // ----------------------------------------------
 
@@ -68,7 +67,7 @@ export async function createRobotRoleRouteHandler(req: Request, res: Response) :
 
     await permissionChecker.check({
         name: PermissionName.ROBOT_ROLE_CREATE,
-        input: policyInput,
+        input: policyData,
     });
 
     // ----------------------------------------------

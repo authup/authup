@@ -6,6 +6,7 @@
  */
 
 import { DecisionStrategy } from '../constants';
+import type { IPolicyEngine } from '../policy';
 import { BuiltInPolicyType, PolicyEngine, PolicyError } from '../policy';
 import { PermissionError } from './error';
 import type { IPermissionProvider, PermissionGetOptions } from './provider';
@@ -18,7 +19,7 @@ import type {
 export class PermissionChecker {
     protected provider : IPermissionProvider;
 
-    protected policyEngine : PolicyEngine;
+    protected policyEngine : IPolicyEngine;
 
     protected clientId?: string | null;
 

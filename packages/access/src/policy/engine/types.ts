@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyEvaluateContextInput } from '../evaluator';
-import type { PolicyWithType } from '../types';
+import type { PolicyEvaluationContext, PolicyEvaluationResult } from '../evaluator';
+import type { IPolicy, PolicyData } from '../types';
 
-export type PolicyEngineEvaluateContext = Omit<PolicyEvaluateContextInput<PolicyWithType>, 'evaluators'>;
+export interface IPolicyEngine {
+    evaluate(policy: IPolicy, data: PolicyData, options?: PolicyEvaluationContext) : Promise<PolicyEvaluationResult>;
+
+}

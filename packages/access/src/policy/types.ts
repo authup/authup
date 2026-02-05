@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '../permission';
-
 export interface PolicyBase {
     /**
      * Invert evaluation result of policy (true->false and false->true)
@@ -21,48 +19,8 @@ export type PolicyWithType<
     type: T
 };
 
-export type PolicyIdentity = {
-    /**
-     * user, client, robot
-     */
+export interface IPolicy {
     type: string,
-    /**
-     * UUID
-     */
-    id: string,
-    /**
-     * Client associated with identity.
-     */
-    clientId?: string | null,
-    /**
-     * Realm id associated with identity.
-     */
-    realmId?: string | null,
-    /**
-     * Realm name associated with identity.
-     */
-    realmName?: string | null
-};
 
-export type PolicyInput = {
-    /**
-     * Permission for which the policy is evaluated.
-     */
-    permission?: PermissionItem,
-
-    /**
-     * Identity of the executing party.
-     */
-    identity?: PolicyIdentity,
-
-    /**
-     * Attributes
-     */
-    attributes?: Record<string, any>,
-
-    /**
-     * The dateTime to use for time & date policy.
-     */
-    dateTime?: Date | number | string,
-    [key: string]: any
-};
+    invert?: boolean
+}
