@@ -43,7 +43,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "pathtrace": "^1.1.0",
+        "pathtrace": "^2.1.0",
         "smob": "^1.5.0"
     },
     "devDependencies": {

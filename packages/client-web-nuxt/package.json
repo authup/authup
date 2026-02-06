@@ -33,7 +33,7 @@
         "@authup/kit": "^1.0.0-beta.28",
         "@authup/client-web-kit": "^1.0.0-beta.28",
         "@nuxt/kit": "^4.0.0",
-        "pathtrace": "^1.1.0",
+        "pathtrace": "^2.1.0",
         "smob": "^1.5.0"
     },
     "devDependencies": {
