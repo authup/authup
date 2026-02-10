@@ -35,12 +35,11 @@ export class PolicyData implements IPolicyData {
     }
 
     get<T = unknown>(key: string) : T {
-        const item = this.data[key];
-        if (typeof item === 'undefined') {
-            throw new Error(`Policy data item ${key} does not exist.`);
+        if (key in this.data) {
+            return this.data[key];
         }
 
-        return item;
+        throw new Error(`Policy data item ${key} does not exist.`);
     }
 
     has(key: string): boolean {
