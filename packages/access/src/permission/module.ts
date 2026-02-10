@@ -118,15 +118,14 @@ export class PermissionChecker {
             if (!entity) {
                 issues.push(defineIssueItem({
                     code: ErrorCode.PERMISSION_NOT_FOUND,
-                    message: `The permission ${ctx.name[i]} could not be resolved`,
-                    path: [],
+                    message: `The ${ctx.name[i]} permission could not be resolved`,
+                    path: [ctx.name[i]],
                 }));
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    throw PermissionError.evaluationFailed({
-                        name: ctx.name[i],
-                        issues,
-                    });
+                    const error = PermissionError.evaluationFailed(ctx.name);
+                    error.addIssues(issues);
+                    throw error;
                 }
 
                 continue;
@@ -164,15 +163,14 @@ export class PermissionChecker {
                 issues.push(definePolicyIssueGroup({
                     code: ErrorCode.PERMISSION_EVALUATION_FAILED,
                     issues: evaluationResult.issues || [],
-                    message: `The evaluation of policy ${entity.policy.type} failed`,
-                    path: [entity.policy.type],
+                    message: `The ${entity.name} permissions policy evaluation failed`,
+                    path: [entity.name],
                 }));
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    throw PermissionError.evaluationFailed({
-                        name: entity.name,
-                        issues,
-                    });
+                    const error = PermissionError.evaluationFailed(entity.name);
+                    error.addIssues(issues);
+                    throw error;
                 }
 
                 count--;
@@ -186,10 +184,9 @@ export class PermissionChecker {
         if (issues.length === 0) {
             throw PermissionError.deniedAll(ctx.name);
         } else {
-            throw PermissionError.evaluationFailed({
-                name: ctx.name,
-                issues,
-            });
+            const error = PermissionError.evaluationFailed(ctx.name);
+            error.addIssues(issues);
+            throw error;
         }
     }
 

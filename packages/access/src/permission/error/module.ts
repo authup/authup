@@ -8,10 +8,10 @@
 import type { AuthupErrorOptions } from '@authup/errors';
 import { AuthupError, ErrorCode } from '@authup/errors';
 import type { Issue } from 'validup';
-import type { PermissionEvaluationErrorOptions } from './types';
+import type { PolicyIssue } from '../../policy';
 
 export class PermissionError extends AuthupError {
-    public issues : Issue[];
+    readonly issues : Issue[];
 
     constructor(options: AuthupErrorOptions = {}) {
         super({
@@ -21,6 +21,14 @@ export class PermissionError extends AuthupError {
         });
 
         this.issues = [];
+    }
+
+    addIssue(data: PolicyIssue) {
+        this.issues.push(data);
+    }
+
+    addIssues(data: PolicyIssue[]) {
+        this.issues.push(...data);
     }
 
     static notFound(name: string) {
@@ -44,22 +52,17 @@ export class PermissionError extends AuthupError {
         });
     }
 
-    static evaluationFailed(options: PermissionEvaluationErrorOptions) {
-        let error : PermissionError;
-        if (Array.isArray(options.name)) {
-            error = new PermissionError({
-                message: `The evaluation of permissions ${options.name.join(', ')} failed`,
-                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
-            });
-        } else {
-            error = new PermissionError({
-                message: `The evaluation of permission ${options.name} failed`,
+    static evaluationFailed(name: string | string[]) {
+        if (Array.isArray(name)) {
+            return new PermissionError({
+                message: `The evaluation of permissions ${name.join(', ')} failed`,
                 code: ErrorCode.PERMISSION_EVALUATION_FAILED,
             });
         }
 
-        error.issues = options.issues;
-
-        return error;
+        return new PermissionError({
+            message: `The evaluation of permission ${name} failed`,
+            code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+        });
     }
 }
