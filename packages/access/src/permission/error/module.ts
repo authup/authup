@@ -45,10 +45,18 @@ export class PermissionError extends AuthupError {
     }
 
     static evaluationFailed(options: PermissionEvaluationErrorOptions) {
-        const error = new PermissionError({
-            message: `The evaluation of permission ${Array.isArray(options.name) ? options.name.join(', ') : options.name} failed`,
-            code: ErrorCode.PERMISSION_EVALUATION_FAILED,
-        });
+        let error : PermissionError;
+        if (Array.isArray(options.name)) {
+            error = new PermissionError({
+                message: `The evaluation of permissions ${options.name.join(', ')} failed`,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            });
+        } else {
+            error = new PermissionError({
+                message: `The evaluation of permission ${options.name} failed`,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            });
+        }
 
         error.issues = options.issues;
 
