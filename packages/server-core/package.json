@@ -88,7 +88,7 @@
         "morgan": "^1.10.1",
         "mysql2": "^3.16.3",
         "node-cron": "^4.2.1",
-        "nodemailer": "^7.0.13",
+        "nodemailer": "^8.0.0",
         "pg": "^8.18.0",
         "reflect-metadata": "^0.2.2",
         "routup": "^4.1.0",
