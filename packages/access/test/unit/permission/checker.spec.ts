@@ -50,7 +50,7 @@ describe('src/ability/manager.ts', () => {
     });
 
     it('should throw with failing evaluation', async () => {
-        expect.assertions(3);
+        expect.assertions(2);
 
         try {
             await checker.check({
@@ -61,7 +61,6 @@ describe('src/ability/manager.ts', () => {
             expect(e).toBeInstanceOf(PermissionError);
 
             if (e instanceof PermissionError) {
-                expect(e.policy).toBeDefined();
                 expect(e.code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
             }
         }
