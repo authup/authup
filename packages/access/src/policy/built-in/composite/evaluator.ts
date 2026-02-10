@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { defineIssueGroup } from 'validup';
 import { DecisionStrategy } from '../../../constants';
 import { PolicyEngine } from '../../engine';
 import type {
@@ -35,17 +36,26 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
 
         for (let i = 0; i < policy.children.length; i++) {
             const childPolicy = policy.children[i];
+            const path = [...(ctx.path || []), childPolicy.type];
 
             const outcome = await engine.evaluate(childPolicy, {
                 ...ctx,
-                path: [...(ctx.path || []), childPolicy.type],
+                path,
             });
+
+            if (outcome.issues) {
+                issues.push(defineIssueGroup({
+                    message: `The evaluation of child policy ${childPolicy.type} failed`,
+                    issues: outcome.issues || [],
+                    path,
+                }));
+            }
 
             if (outcome.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return {
                         success: maybeInvertPolicyOutcome(true, policy.invert),
-                        issues: outcome.issues,
+                        issues: [],
                     };
                 }
 
@@ -54,21 +64,35 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     return {
                         success: maybeInvertPolicyOutcome(false, policy.invert),
-                        issues: outcome.issues,
+                        issues: [
+                            defineIssueGroup({
+                                message: `The evaluation of composite policy failed (${DecisionStrategy.CONSENSUS})`,
+                                issues,
+                                path: ctx.path,
+                            }),
+                        ],
                     };
                 }
 
                 count--;
             }
+        }
 
-            if (outcome.issues) {
-                issues.push(...outcome.issues);
-            }
+        if (count > 0) {
+            return {
+                success: maybeInvertPolicyOutcome(true, policy.invert),
+            };
         }
 
         return {
-            success: maybeInvertPolicyOutcome(count > 0, policy.invert),
-            issues,
+            success: maybeInvertPolicyOutcome(false, policy.invert),
+            issues: [
+                defineIssueGroup({
+                    message: `The evaluation of composite policy failed (${DecisionStrategy.CONSENSUS})`,
+                    issues: issues || [],
+                    path: ctx.path,
+                }),
+            ],
         };
     }
 }
