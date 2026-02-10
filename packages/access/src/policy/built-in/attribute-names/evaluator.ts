@@ -51,7 +51,7 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
                 issues.push(definePolicyIssueItem({
                     code: PolicyIssueCode.EVALUATION_DENIED,
                     message: `The attribute ${keys[i]} is not included`,
-                    path: [...ctx.path, i],
+                    path: [...ctx.path, keys[i]],
                 }));
             }
         }
