@@ -142,9 +142,14 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         };
 
         const engine = new PolicyEngine(ctx.evaluators);
-        return engine.evaluate(compositePolicy, {
+        const outcome = await engine.evaluate(compositePolicy, {
             ...ctx,
             path: [...(ctx.path || []), compositePolicy.type],
         });
+
+        return {
+            ...outcome,
+            success: maybeInvertPolicyOutcome(outcome.success, policy.invert),
+        };
     }
 }
