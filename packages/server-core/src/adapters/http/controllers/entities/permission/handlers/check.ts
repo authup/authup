@@ -47,10 +47,7 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
     }
 
     const data = useRequestBody(req);
-    if (
-        !data[BuiltInPolicyType.IDENTITY] &&
-        data[BuiltInPolicyType.IDENTITY] !== null
-    ) {
+    if (typeof data[BuiltInPolicyType.IDENTITY] === 'undefined') {
         data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
     }
 
