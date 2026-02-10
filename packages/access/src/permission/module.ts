@@ -118,7 +118,7 @@ export class PermissionChecker {
             if (!entity) {
                 issues.push(defineIssueItem({
                     code: ErrorCode.PERMISSION_NOT_FOUND,
-                    message: `The permission ${ctx.name[i]} could not resolved`,
+                    message: `The permission ${ctx.name[i]} could not be resolved`,
                     path: [],
                 }));
 
