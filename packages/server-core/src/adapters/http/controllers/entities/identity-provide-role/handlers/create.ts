@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { BadRequestError, ForbiddenError } from '@ebec/http';
 import {
     PermissionName,
@@ -59,9 +60,9 @@ export async function createOauth2ProviderRoleRouteHandler(req: Request, res: Re
 
     await permissionChecker.check({
         name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
-        input: {
-            attributes: data,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: data,
+        }),
     });
 
     const identity = useRequestIdentityOrFail(req);

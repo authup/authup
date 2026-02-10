@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { OAuth2SubKind } from '@authup/specs';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
@@ -98,7 +99,9 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
                     PermissionName.ROBOT_UPDATE,
                     PermissionName.ROBOT_DELETE,
                 ],
-                input: { attributes: queryOutput[0][i] },
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: queryOutput[0][i],
+                }),
             });
 
             data.push(queryOutput[0][i]);
@@ -224,7 +227,9 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
                 PermissionName.ROBOT_UPDATE,
                 PermissionName.ROBOT_DELETE,
             ],
-            input: { attributes: entity },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
         });
     }
 

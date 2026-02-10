@@ -12,7 +12,7 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { RobotEntity, RobotRoleEntity } from '../../../../../database/domains/index.ts';
+import { RobotRoleEntity } from '../../../../../database/domains/index.ts';
 import { IdentityPermissionService } from '../../../../../../services/index.ts';
 import { RobotRoleRequestValidator } from '../utils/index.ts';
 import {

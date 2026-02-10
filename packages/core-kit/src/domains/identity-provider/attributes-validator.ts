@@ -11,7 +11,7 @@ import { Container } from 'validup';
 import { IdentityProviderLDAPAttributesValidator } from './ldap';
 import { IdentityProviderOAuth2AttributesValidator, IdentityProviderOAuth2PresetAttributesValidator } from './oauth2';
 
-export class IdentityProviderAttributesValidator extends Container {
+export class IdentityProviderAttributesValidator extends Container<ObjectLiteral> {
     constructor(options: ContainerOptions<ObjectLiteral> = {}) {
         super({
             ...options,

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import {
@@ -88,12 +89,12 @@ export async function writeIdentityProviderRouteHandler(
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.IDENTITY_PROVIDER_UPDATE,
-            input: {
-                attributes: {
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: {
                     ...entity,
                     ...data,
                 },
-            },
+            }),
         });
     } else {
         if (!data.realm_id) {
@@ -103,9 +104,9 @@ export async function writeIdentityProviderRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.IDENTITY_PROVIDER_CREATE,
-            input: {
-                attributes: data,
-            },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: data,
+            }),
         });
     }
 

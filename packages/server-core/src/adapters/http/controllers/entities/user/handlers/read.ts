@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { PermissionName, ScopeName } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import { OAuth2SubKind } from '@authup/specs';
@@ -91,9 +92,9 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
                     PermissionName.USER_UPDATE,
                     PermissionName.USER_DELETE,
                 ],
-                input: {
-                    attributes: entities[i],
-                },
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: entities[i],
+                }),
             });
 
             data.push(entities[i]);
@@ -204,7 +205,9 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_DELETE,
             ],
-            input: { attributes: entity },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
         });
 
         await repository.extendOneWithEA(entity);

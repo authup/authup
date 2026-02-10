@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import {
     PermissionName,
 } from '@authup/core-kit';
@@ -39,9 +40,9 @@ export async function createRoleAttributeRouteHandler(req: Request, res: Respons
 
     await permissionChecker.check({
         name: PermissionName.ROLE_UPDATE,
-        input: {
-            attributes: entity,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: entity,
+        }),
     });
 
     await repository.save(entity);

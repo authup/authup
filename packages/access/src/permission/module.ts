@@ -9,6 +9,7 @@ import { DecisionStrategy } from '../constants';
 import type { IPolicyEngine, PolicyEvaluationResult } from '../policy';
 import {
     BuiltInPolicyType,
+    PolicyData,
     PolicyEngine,
     PolicyError,
     definePolicyEvaluationContext,
@@ -127,10 +128,13 @@ export class PermissionChecker {
                 continue;
             }
 
+            const data = ctx.input || new PolicyData();
+            data.set(BuiltInPolicyType.PERMISSION_BINDING, entity);
+
             const policyCtx = definePolicyEvaluationContext({
                 include: options.policiesIncluded,
                 exclude: options.policiesExcluded,
-                data: ctx.input,
+                data,
             });
 
             let evaluationResult : PolicyEvaluationResult | undefined;

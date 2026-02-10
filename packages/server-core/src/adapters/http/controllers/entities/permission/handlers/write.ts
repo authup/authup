@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { isPropertySet, isUUID } from '@authup/kit';
 import { PermissionName, ROLE_ADMIN_NAME } from '@authup/core-kit';
@@ -93,12 +94,12 @@ export async function writePermissionRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.PERMISSION_UPDATE,
-            input: {
-                attributes: {
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: {
                     ...entity,
                     ...data,
                 },
-            },
+            }),
         });
     } else {
         if (!data.realm_id) {
@@ -110,9 +111,9 @@ export async function writePermissionRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.PERMISSION_CREATE,
-            input: {
-                attributes: data,
-            },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: data,
+            }),
         });
     }
 

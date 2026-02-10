@@ -12,10 +12,11 @@ import {
     InsufficientStorageErrorOptions,
     InternalServerErrorOptions,
 } from '@ebec/http';
+import { arrayToPath } from 'pathtrace';
 import { distinctArray } from 'smob';
 import { AuthupError } from '@authup/errors';
 import { EntityRelationLookupError } from 'typeorm-extension';
-import { ValidupNestedError } from 'validup';
+import { ValidupError } from 'validup';
 import { hasOwnProperty, isObject } from '@authup/kit';
 
 export function buildErrorMessageForAttribute(name: string) {
@@ -55,20 +56,17 @@ export function sanitizeError(error: unknown) : AuthupError {
         });
     }
 
-    if (error instanceof ValidupNestedError) {
-        const attributes = error.children.map(
-            (child) => child.pathAbsolute,
-        );
+    if (error instanceof ValidupError) {
+        const paths = error.issues.map((issue) => arrayToPath(issue.path));
         return new AuthupError({
             statusCode: BadRequestErrorOptions.statusCode,
             code: BadRequestErrorOptions.code,
             data: {
-                children: error.children,
-                attributes,
+                issues: error.issues,
+                paths,
             },
             stack: error.stack,
-            message: error.message ||
-                `The attributes ${attributes.join(', ')} are invalid.`,
+            message: error.message || buildErrorMessageForAttributes(paths),
         });
     }
 
