@@ -8,15 +8,10 @@
 import type { AuthupErrorOptions } from '@authup/errors';
 import { AuthupError, ErrorCode } from '@authup/errors';
 import type { Issue } from 'validup';
-import type { PolicyError, PolicyWithType } from '../../policy';
 import type { PermissionEvaluationErrorOptions } from './types';
 
 export class PermissionError extends AuthupError {
     public issues : Issue[];
-
-    public policy : PolicyWithType | undefined;
-
-    public policyError : PolicyError | undefined;
 
     constructor(options: AuthupErrorOptions = {}) {
         super({

@@ -11,8 +11,3 @@ export type PermissionEvaluationErrorOptions = {
     name: string | string[],
     issues: Issue[]
 };
-
-export type PermissionErrorOptions = {
-    message?: string,
-    code?: string | null,
-};
