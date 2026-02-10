@@ -43,14 +43,6 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
                 path,
             });
 
-            if (outcome.issues) {
-                issues.push(defineIssueGroup({
-                    message: `The evaluation of child policy ${childPolicy.type} failed`,
-                    issues: outcome.issues || [],
-                    path,
-                }));
-            }
-
             if (outcome.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return {
@@ -61,6 +53,14 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
 
                 count++;
             } else {
+                if (outcome.issues) {
+                    issues.push(defineIssueGroup({
+                        message: `The evaluation of child policy ${childPolicy.type} failed`,
+                        issues: outcome.issues || [],
+                        path,
+                    }));
+                }
+
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     return {
                         success: maybeInvertPolicyOutcome(false, policy.invert),
