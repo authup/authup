@@ -12,10 +12,9 @@ import {
     InsufficientStorageErrorOptions,
     InternalServerErrorOptions,
 } from '@ebec/http';
-import { arrayToPath } from 'pathtrace';
 import { AuthupError } from '@authup/errors';
 import { EntityRelationLookupError } from 'typeorm-extension';
-import { ValidupError, buildErrorMessageForAttributes } from 'validup';
+import { buildErrorMessageForAttributes, isValidupError, stringifyPath } from 'validup';
 import { hasOwnProperty, isObject } from '@authup/kit';
 
 export function sanitizeError(error: unknown) : AuthupError {
@@ -32,8 +31,8 @@ export function sanitizeError(error: unknown) : AuthupError {
         });
     }
 
-    if (error instanceof ValidupError) {
-        const paths = error.issues.map((issue) => arrayToPath(issue.path));
+    if (isValidupError(error)) {
+        const paths = error.issues.map((issue) => stringifyPath(issue.path));
         return new AuthupError({
             statusCode: BadRequestErrorOptions.statusCode,
             code: BadRequestErrorOptions.code,

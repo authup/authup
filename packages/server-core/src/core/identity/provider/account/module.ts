@@ -11,8 +11,7 @@ import {
     buildUserFakeEmail, isUserFakeEmail,
 } from '@authup/core-kit';
 import { createNanoID, extendObject } from '@authup/kit';
-import { arrayToPath } from 'pathtrace';
-import { ValidupError } from 'validup';
+import { isValidupError, stringifyPath } from 'validup';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import { IdentityProviderIdentityOperation } from '../constants.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
@@ -185,7 +184,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     ValidatorGroup.UPDATE,
             });
         } catch (e: any) {
-            if (!(e instanceof ValidupError)) {
+            if (!isValidupError(e)) {
                 return null;
             }
 
@@ -193,7 +192,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             for (let i = 0; i < e.issues.length; i++) {
                 const child = e.issues[i];
 
-                const pathNormalized = arrayToPath(child.path);
+                const pathNormalized = stringifyPath(child.path);
 
                 if (
                     Array.isArray(entity[pathNormalized]) &&
