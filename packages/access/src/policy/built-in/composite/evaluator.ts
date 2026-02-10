@@ -66,7 +66,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
                         success: maybeInvertPolicyOutcome(false, policy.invert),
                         issues: [
                             defineIssueGroup({
-                                message: `The evaluation of composite policy failed (${DecisionStrategy.CONSENSUS})`,
+                                message: `The evaluation of composite policy failed (${DecisionStrategy.UNANIMOUS})`,
                                 issues,
                                 path: ctx.path,
                             }),
