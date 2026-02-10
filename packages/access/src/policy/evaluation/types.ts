@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyIssue } from '../issue';
+import type { Issue } from 'validup';
 import type { PolicyEvaluationContext } from './context';
 
 export type PolicyEvaluators = Record<string, IPolicyEvaluator>;
 
 export type PolicyEvaluationResult = {
     success: boolean,
-    issues?: PolicyIssue[]
+    issues?: Issue[]
 };
 
 export interface IPolicyEvaluator {

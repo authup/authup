@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PolicyIssueSeverity } from './constants.ts';
-import type { PolicyIssue, PolicyIssueInput } from './types.ts';
+import { defineIssueGroup, defineIssueItem } from 'validup';
+import type { PolicyIssueGroup, PolicyIssueItem } from './types.ts';
 
-export function definePolicyIssue(input: PolicyIssueInput) : PolicyIssue {
-    return {
-        ...input,
-        severity: input.severity || PolicyIssueSeverity.ERROR,
-        path: input.path || [],
-    };
+export function definePolicyIssueItem(input: Omit<PolicyIssueItem, 'type'>) : PolicyIssueItem {
+    return defineIssueItem(input);
+}
+
+export function definePolicyIssueGroup(input: Omit<PolicyIssueGroup, 'type'>) : PolicyIssueGroup {
+    return defineIssueGroup(input);
 }

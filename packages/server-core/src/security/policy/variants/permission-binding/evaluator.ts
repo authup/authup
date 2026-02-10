@@ -16,7 +16,7 @@ import {
     PermissionBindingPolicyValidator,
     PolicyEngine,
     PolicyIssueCode,
-    definePolicyIssue,
+    definePolicyIssueItem,
     maybeInvertPolicyOutcome,
     mergePermissionItems,
 } from '@authup/access';
@@ -63,7 +63,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return {
                 success: false,
                 issues: [
-                    definePolicyIssue({
+                    definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
                         message: 'The data property identity is missing',
                         path: ctx.path,
@@ -76,7 +76,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return {
                 success: false,
                 issues: [
-                    definePolicyIssue({
+                    definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
                         message: 'The data property permission is missing',
                         path: ctx.path,

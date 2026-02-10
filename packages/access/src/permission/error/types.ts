@@ -5,12 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyError, PolicyWithType } from '../../policy';
+import type { Issue } from 'validup';
 
 export type PermissionEvaluationErrorOptions = {
-    name: string,
-    policy?: PolicyWithType,
-    policyError?: PolicyError
+    name: string | string[],
+    issues: Issue[]
 };
 
 export type PermissionErrorOptions = {

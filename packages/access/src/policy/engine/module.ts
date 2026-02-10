@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode } from '@authup/errors';
-import { PolicyIssueSeverity } from '../issue';
+import { defineIssueItem } from 'validup';
 import type {
     IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult, PolicyEvaluators,
 } from '../evaluation';
@@ -71,12 +71,11 @@ export class PolicyEngine implements IPolicyEngine {
         const evaluator = this.evaluators[policy.type];
         if (!evaluator) {
             // todo: add issue here instead + return false ?
-            issues.push({
+            issues.push(defineIssueItem({
                 path: [policy.type],
                 message: `The policy ${policy.type} can not be handled by any evaluator.`,
                 code: ErrorCode.POLICY_EVALUATOR_NOT_FOUND,
-                severity: PolicyIssueSeverity.ERROR,
-            });
+            }));
 
             return {
                 success: maybeInvertPolicyOutcome(false, policy.invert),
@@ -93,12 +92,11 @@ export class PolicyEngine implements IPolicyEngine {
                 },
             });
         } catch (e) {
-            issues.push({
+            issues.push(defineIssueItem({
                 path: [policy.type],
                 message: `The ${policy.type} evaluator can not process the policy specification.`,
                 code: ErrorCode.POLICY_EVALUATOR_NOT_PROCESSABLE,
-                severity: PolicyIssueSeverity.ERROR,
-            });
+            }));
 
             return {
                 success: maybeInvertPolicyOutcome(false, policy.invert),

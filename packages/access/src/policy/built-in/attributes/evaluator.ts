@@ -9,7 +9,7 @@ import { guard } from '@ucast/mongo2js';
 import { isObject } from '@authup/kit';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import { PolicyIssueCode, definePolicyIssue } from '../../issue';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { BuiltInPolicyType } from '../constants.ts';
 import { AttributesPolicyValidator } from './validator';
 
@@ -49,7 +49,7 @@ export class AttributesPolicyEvaluator<
             return {
                 success: false,
                 issues: [
-                    definePolicyIssue({
+                    definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
                         message: 'The data property attributes is missing',
                         path: ctx.path,

@@ -4,12 +4,10 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-export type PolicyIssue = {
-    code: string,
-    path: (string | number)[],
-    message: string,
-    severity: 'warning' | 'error',
-};
 
-export type PolicyIssueInput = Pick<PolicyIssue, 'code' | 'message'> &
-Partial<Omit<PolicyIssue, 'code' | 'message'>>;
+import type { IssueGroup, IssueItem } from 'validup';
+
+export type PolicyIssueItem = IssueItem;
+export type PolicyIssueGroup = IssueGroup;
+
+export type PolicyIssue = PolicyIssueItem | PolicyIssueGroup;

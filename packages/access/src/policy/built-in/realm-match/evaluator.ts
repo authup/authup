@@ -9,7 +9,7 @@ import { hasOwnProperty } from '@authup/kit';
 import { DecisionStrategy } from '../../../constants';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import { PolicyIssueCode, definePolicyIssue } from '../../issue';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { AttributesPolicyEvaluator } from '../attributes';
 import { IdentityPolicyEvaluator } from '../identity';
 import { RealmMatchPolicyValidator } from './validator';
@@ -36,7 +36,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             return {
                 success: false,
                 issues: [
-                    definePolicyIssue({
+                    definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
                         message: 'The data property identity is missing',
                         path: ctx.path,
@@ -50,7 +50,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             return {
                 success: false,
                 issues: [
-                    definePolicyIssue({
+                    definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
                         message: 'The data property attributes is missing',
                         path: ctx.path,

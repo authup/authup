@@ -5,14 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ErrorCode } from '@authup/errors';
+import type { Issue } from 'validup';
+import { defineIssueItem } from 'validup';
 import { DecisionStrategy } from '../constants';
-import type { IPolicyEngine, PolicyEvaluationResult } from '../policy';
+import type { IPolicyEngine } from '../policy';
 import {
     BuiltInPolicyType,
     PolicyData,
     PolicyEngine,
-    PolicyError,
     definePolicyEvaluationContext,
+    definePolicyIssueGroup,
 } from '../policy';
 import { PermissionError } from './error';
 import type { IPermissionProvider, PermissionGetOptions } from './provider';
@@ -104,15 +107,24 @@ export class PermissionChecker {
         const decisionStrategy = options.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
 
-        let lastError : PermissionError | undefined;
+        const issues : Issue[] = [];
+
         let count = 0;
 
         for (let i = 0; i < ctx.name.length; i++) {
             const entity = await this.get(ctx.name[i]);
             if (!entity) {
-                lastError = PermissionError.notFound(ctx.name[i]);
+                issues.push(defineIssueItem({
+                    code: ErrorCode.PERMISSION_NOT_FOUND,
+                    message: `The permission ${ctx.name[i]} could not resolved`,
+                    path: [],
+                }));
+
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    throw lastError;
+                    throw PermissionError.evaluationFailed({
+                        name: ctx.name[i],
+                        issues,
+                    });
                 }
 
                 continue;
@@ -137,41 +149,27 @@ export class PermissionChecker {
                 data,
             });
 
-            let evaluationResult : PolicyEvaluationResult | undefined;
+            const evaluationResult = await this.policyEngine.evaluate(entity.policy, policyCtx);
 
-            try {
-                evaluationResult = await this.policyEngine.evaluate(entity.policy, policyCtx);
-            } catch (e) {
-                if (e instanceof PolicyError) {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                        policyError: e,
-                    });
-                } else {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                    });
-                }
-            }
-
-            if (evaluationResult && evaluationResult.success) {
+            if (evaluationResult.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
                 count++;
             } else {
-                if (!lastError) {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                    });
-                }
+                issues.push(definePolicyIssueGroup({
+                    code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+                    issues: evaluationResult.issues || [],
+                    message: `The evaluation of policy ${entity.policy.type} failed`,
+                    path: [entity.policy.type],
+                }));
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    throw lastError;
+                    throw PermissionError.evaluationFailed({
+                        name: entity.name,
+                        issues,
+                    });
                 }
 
                 count--;
@@ -182,10 +180,13 @@ export class PermissionChecker {
             return;
         }
 
-        if (count > 1 || !lastError) {
+        if (issues.length === 0) {
             throw PermissionError.deniedAll(ctx.name);
         } else {
-            throw lastError;
+            throw PermissionError.evaluationFailed({
+                name: ctx.name,
+                issues,
+            });
         }
     }
 

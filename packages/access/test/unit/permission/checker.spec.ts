@@ -10,11 +10,13 @@ import { describe, expect, it } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import type { AttributeNamesPolicy, PermissionItem, PolicyWithType } from '../../../src';
 import {
-    BuiltInPolicyType,
-    PermissionChecker,
+    BuiltInPolicyType, PermissionChecker,
+
     PermissionError,
     PermissionMemoryProvider,
     PolicyData,
+    PolicyDefaultEvaluators,
+    PolicyEngine,
 } from '../../../src';
 
 const abilities : PermissionItem[] = [
@@ -34,7 +36,10 @@ const abilities : PermissionItem[] = [
 ];
 
 const provider = new PermissionMemoryProvider(abilities);
-const checker = new PermissionChecker({ provider });
+const checker = new PermissionChecker({
+    provider,
+    policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
+});
 
 describe('src/ability/manager.ts', () => {
     it('should work with policy', async () => {

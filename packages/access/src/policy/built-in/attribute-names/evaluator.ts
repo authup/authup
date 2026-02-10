@@ -9,7 +9,7 @@ import { flattenObject } from '@authup/kit';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import type { PolicyIssue } from '../../issue';
-import { PolicyIssueCode, definePolicyIssue } from '../../issue';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { AttributeNamesPolicyValidator } from './validator';
 import { AttributesPolicyEvaluator } from '../attributes';
 
@@ -32,7 +32,7 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
             return {
                 success: false,
                 issues: [
-                    definePolicyIssue({
+                    definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
                         message: 'The data property attributes is missing',
                         path: ctx.path,
@@ -48,7 +48,7 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
         for (let i = 0; i < keys.length; i++) {
             const index = policy.names.indexOf(keys[i]);
             if (index === -1) {
-                issues.push(definePolicyIssue({
+                issues.push(definePolicyIssueItem({
                     code: PolicyIssueCode.EVALUATION_DENIED,
                     message: `The attribute ${keys[i]} is not included`,
                     path: [...ctx.path, i],

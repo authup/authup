@@ -6,7 +6,7 @@
  */
 
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
-import { PolicyIssueCode, definePolicyIssue } from '../../issue';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import { PolicyIdentityDataValidator } from './data';
 import type { IdentityPolicyData } from './types';
@@ -48,7 +48,7 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator {
             return {
                 success: false,
                 issues: [
-                    definePolicyIssue({
+                    definePolicyIssueItem({
                         code: PolicyIssueCode.DATA_MISSING,
                         message: 'The data property identity is missing',
                         path: ctx.path,
@@ -73,7 +73,7 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator {
         return {
             success: maybeInvertPolicyOutcome(typeAllowed, policy.invert),
             issues: [
-                definePolicyIssue({
+                definePolicyIssueItem({
                     code: PolicyIssueCode.EVALUATION_DENIED,
                     message: `The type ${data.type} is not covered by the policy configuration`,
                     path: ctx.path,

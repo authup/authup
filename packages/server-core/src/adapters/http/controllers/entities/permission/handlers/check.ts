@@ -8,7 +8,8 @@
 import type { PermissionAPICheckResponse } from '@authup/core-http-kit';
 import type { PermissionCheckerCheckContext } from '@authup/access';
 import {
-    BuiltInPolicyType, PermissionChecker, PolicyData,
+    BuiltInPolicyType,
+    PermissionChecker, PolicyData,
 } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
