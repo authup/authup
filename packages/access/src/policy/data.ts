@@ -12,6 +12,8 @@ export interface IPolicyData {
 
     isValidated(key: string): boolean;
     setValidated(key: string) : void;
+
+    clone() : IPolicyData
 }
 
 export class PolicyData implements IPolicyData {
@@ -19,9 +21,12 @@ export class PolicyData implements IPolicyData {
 
     protected validated : Set<string>;
 
-    constructor(data: Record<string, any> = {}) {
-        this.data = data || {};
-        this.validated = new Set<string>();
+    constructor(
+        data: Record<string, any> = {},
+        validated: Set<string> = new Set(),
+    ) {
+        this.data = data;
+        this.validated = validated;
     }
 
     set<T = unknown>(key: string, value: T) : void {
@@ -48,5 +53,11 @@ export class PolicyData implements IPolicyData {
 
     isValidated(key: string) : boolean {
         return this.validated.has(key);
+    }
+
+    clone() {
+        return new PolicyData({
+            ...this.data,
+        }, this.validated);
     }
 }

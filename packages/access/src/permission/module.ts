@@ -111,6 +111,8 @@ export class PermissionChecker {
 
         let count = 0;
 
+        const dataBase = ctx.input || new PolicyData();
+
         for (let i = 0; i < ctx.name.length; i++) {
             const entity = await this.get(ctx.name[i]);
             if (!entity) {
@@ -140,16 +142,17 @@ export class PermissionChecker {
                 continue;
             }
 
-            const data = ctx.input || new PolicyData();
+            const data = dataBase.clone();
             data.set(BuiltInPolicyType.PERMISSION_BINDING, entity);
 
-            const policyCtx = definePolicyEvaluationContext({
-                include: options.policiesIncluded,
-                exclude: options.policiesExcluded,
-                data,
-            });
-
-            const evaluationResult = await this.policyEngine.evaluate(entity.policy, policyCtx);
+            const evaluationResult = await this.policyEngine.evaluate(
+                entity.policy,
+                definePolicyEvaluationContext({
+                    include: options.policiesIncluded,
+                    exclude: options.policiesExcluded,
+                    data,
+                }),
+            );
 
             if (evaluationResult.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
