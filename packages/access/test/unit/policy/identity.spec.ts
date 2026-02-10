@@ -30,7 +30,7 @@ describe('src/policy/identity', () => {
                 },
             }),
         }));
-        expect(outcome.success).toBeDefined();
+        expect(outcome.success).toBeTruthy();
     });
 
     it('should permit due matching type', async () => {
