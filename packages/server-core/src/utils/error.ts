@@ -13,34 +13,10 @@ import {
     InternalServerErrorOptions,
 } from '@ebec/http';
 import { arrayToPath } from 'pathtrace';
-import { distinctArray } from 'smob';
 import { AuthupError } from '@authup/errors';
 import { EntityRelationLookupError } from 'typeorm-extension';
-import { ValidupError } from 'validup';
+import { ValidupError, buildErrorMessageForAttributes } from 'validup';
 import { hasOwnProperty, isObject } from '@authup/kit';
-
-export function buildErrorMessageForAttribute(name: string) {
-    return buildErrorMessageForAttributes([name]);
-}
-
-export function buildErrorMessageForAttributes(input: string[] | Record<string, any>) {
-    let names: string[];
-    if (Array.isArray(input)) {
-        names = distinctArray(input);
-    } else {
-        names = Object.keys(input);
-    }
-
-    if (names.length === 0) {
-        return 'An unexpected error occurred.';
-    }
-
-    if (names.length > 1) {
-        return `The attributes ${names.join(', ')} are invalid.`;
-    }
-
-    return `The attribute ${String(names[0])} is invalid.`;
-}
 
 export function sanitizeError(error: unknown) : AuthupError {
     if (error instanceof AuthupError) {
