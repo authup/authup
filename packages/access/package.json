@@ -43,7 +43,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@ucast/mongo2js": "^1.3.4",
+        "@ucast/mongo2js": "^1.4.1",
         "@validup/adapter-zod": "^0.2.1",
         "pathtrace": "^2.1.0",
         "validup": "^0.2.1",
