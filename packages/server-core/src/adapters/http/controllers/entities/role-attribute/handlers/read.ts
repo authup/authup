@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
@@ -61,9 +62,9 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
                     PermissionName.ROLE_UPDATE,
                     PermissionName.ROLE_DELETE,
                 ],
-                input: {
-                    attributes: queryOutput[0][i],
-                },
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: queryOutput[0][i],
+                }),
             });
             data.push(entities[i]);
         } catch (e) {
@@ -110,9 +111,9 @@ export async function getOneRoleAttributeRouteHandler(
             PermissionName.ROLE_UPDATE,
             PermissionName.ROLE_DELETE,
         ],
-        input: {
-            attributes: entity,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: entity,
+        }),
     });
 
     return send(res, entity);

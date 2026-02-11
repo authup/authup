@@ -5,8 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { ErrorCode } from '@authup/errors';
+import type { Issue } from 'validup';
+import { defineIssueItem } from 'validup';
 import { DecisionStrategy } from '../constants';
-import { BuiltInPolicyType, PolicyEngine, PolicyError } from '../policy';
+import type { IPolicyEngine } from '../policy';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    PolicyEngine,
+    definePolicyEvaluationContext,
+    definePolicyIssueGroup,
+} from '../policy';
 import { PermissionError } from './error';
 import type { IPermissionProvider, PermissionGetOptions } from './provider';
 import { PermissionMemoryProvider } from './provider';
@@ -14,11 +24,12 @@ import { PermissionMemoryProvider } from './provider';
 import type {
     PermissionCheckerCheckContext, PermissionCheckerOptions, PermissionItem,
 } from './types';
+import { PolicyDefaultEvaluators } from '../policy/constants.ts';
 
 export class PermissionChecker {
     protected provider : IPermissionProvider;
 
-    protected policyEngine : PolicyEngine;
+    protected policyEngine : IPolicyEngine;
 
     protected clientId?: string | null;
 
@@ -44,7 +55,7 @@ export class PermissionChecker {
         if (options.policyEngine) {
             this.policyEngine = options.policyEngine;
         } else {
-            this.policyEngine = new PolicyEngine();
+            this.policyEngine = new PolicyEngine(PolicyDefaultEvaluators);
         }
     }
 
@@ -96,15 +107,25 @@ export class PermissionChecker {
         const decisionStrategy = options.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
 
-        let lastError : PermissionError | undefined;
+        const issues : Issue[] = [];
+
         let count = 0;
+
+        const dataBase = ctx.input || new PolicyData();
 
         for (let i = 0; i < ctx.name.length; i++) {
             const entity = await this.get(ctx.name[i]);
             if (!entity) {
-                lastError = PermissionError.notFound(ctx.name[i]);
+                issues.push(defineIssueItem({
+                    code: ErrorCode.PERMISSION_NOT_FOUND,
+                    message: `The ${ctx.name[i]} permission could not be resolved`,
+                    path: [ctx.name[i]],
+                }));
+
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    throw lastError;
+                    const error = PermissionError.evaluationFailed(ctx.name);
+                    error.addIssues(issues);
+                    throw error;
                 }
 
                 continue;
@@ -120,53 +141,36 @@ export class PermissionChecker {
                 continue;
             }
 
-            let outcome : boolean;
+            const data = dataBase.clone();
+            data.set(BuiltInPolicyType.PERMISSION_BINDING, entity);
 
-            try {
-                outcome = await this.policyEngine.evaluate({
-                    input: {
-                        ...ctx.input || {},
-                        permission: entity,
-                    },
-                    config: entity.policy,
-                    options: {
-                        include: options.policiesIncluded,
-                        exclude: options.policiesExcluded,
-                    },
-                });
-            } catch (e) {
-                if (e instanceof PolicyError) {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                        policyError: e,
-                    });
-                } else {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                    });
-                }
+            const evaluationResult = await this.policyEngine.evaluate(
+                entity.policy,
+                definePolicyEvaluationContext({
+                    include: options.policiesIncluded,
+                    exclude: options.policiesExcluded,
+                    data,
+                }),
+            );
 
-                outcome = false;
-            }
-
-            if (outcome) {
+            if (evaluationResult.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
                 count++;
             } else {
-                if (!lastError) {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                    });
-                }
+                issues.push(definePolicyIssueGroup({
+                    code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+                    issues: evaluationResult.issues || [],
+                    message: `The ${entity.name} permissions policy evaluation failed`,
+                    path: [entity.name],
+                }));
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    throw lastError;
+                    const error = PermissionError.evaluationFailed(entity.name);
+                    error.addIssues(issues);
+                    throw error;
                 }
 
                 count--;
@@ -177,10 +181,12 @@ export class PermissionChecker {
             return;
         }
 
-        if (count > 1 || !lastError) {
+        if (issues.length === 0) {
             throw PermissionError.deniedAll(ctx.name);
         } else {
-            throw lastError;
+            const error = PermissionError.evaluationFailed(ctx.name);
+            error.addIssues(issues);
+            throw error;
         }
     }
 

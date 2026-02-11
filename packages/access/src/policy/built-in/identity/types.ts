@@ -13,3 +13,26 @@ export interface IdentityPolicy extends PolicyBase {
      */
     types?: string[],
 }
+
+export type IdentityPolicyData = {
+    /**
+     * user, client, robot
+     */
+    type: string,
+    /**
+     * UUID
+     */
+    id: string,
+    /**
+     * Client associated with identity.
+     */
+    clientId?: string | null,
+    /**
+     * Realm id associated with identity.
+     */
+    realmId?: string | null,
+    /**
+     * Realm name associated with identity.
+     */
+    realmName?: string | null
+};

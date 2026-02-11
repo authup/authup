@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import {
@@ -102,12 +103,12 @@ export async function writeRobotRouteHandler(
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.ROBOT_UPDATE,
-            input: {
-                attributes: {
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: {
                     ...entity,
                     ...data,
                 },
-            },
+            }),
         });
 
         entity = repository.merge(entity, data);
@@ -137,9 +138,9 @@ export async function writeRobotRouteHandler(
 
     await permissionChecker.check({
         name: PermissionName.ROBOT_CREATE,
-        input: {
-            attributes: data,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: data,
+        }),
     });
 
     if (!data.secret) {

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
@@ -69,9 +70,12 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.REALM_UPDATE,
-            input: {
-                attributes: data,
-            },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: {
+                    ...entity,
+                    ...data,
+                },
+            }),
         });
 
         if (entity.name === REALM_MASTER_NAME && isPropertySet(data, 'name') && entity.name !== data.name) {
@@ -80,9 +84,9 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
     } else {
         await permissionChecker.check({
             name: PermissionName.REALM_CREATE,
-            input: {
-                attributes: data,
-            },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: data,
+            }),
         });
     }
 

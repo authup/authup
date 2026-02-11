@@ -5,49 +5,80 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
-import type { PolicyEvaluateContext, PolicyEvaluator } from '../../evaluator';
-import type { PolicyInput, PolicyWithType } from '../../types';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
+import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
 import { maybeInvertPolicyOutcome } from '../../helpers';
-import { BuiltInPolicyType } from '../constants';
-import type { IdentityPolicy } from './types';
+import { PolicyIdentityDataValidator } from './data';
+import type { IdentityPolicyData } from './types';
 import { IdentityPolicyValidator } from './validator';
 
-export class IdentityPolicyEvaluator implements PolicyEvaluator<IdentityPolicy> {
+export class IdentityPolicyEvaluator implements IPolicyEvaluator {
     protected validator : IdentityPolicyValidator;
+
+    protected dataValidator : PolicyIdentityDataValidator;
 
     constructor() {
         this.validator = new IdentityPolicyValidator();
+        this.dataValidator = new PolicyIdentityDataValidator();
     }
 
-    async can(
-        ctx: PolicyEvaluateContext<PolicyWithType>,
-    ) : Promise<boolean> {
-        return ctx.config.type === BuiltInPolicyType.IDENTITY;
-    }
-
-    async validateConfig(ctx: PolicyEvaluateContext) : Promise<IdentityPolicy> {
-        return this.validator.run(ctx.config);
-    }
-
-    async validateInput(ctx: PolicyEvaluateContext<IdentityPolicy>) : Promise<PolicyInput> {
-        return ctx.input;
-    }
-
-    async evaluate(ctx: PolicyEvaluateContext<
-    IdentityPolicy
-    >): Promise<boolean> {
-        if (!isObject(ctx.input.identity)) {
-            return maybeInvertPolicyOutcome(false, ctx.config.invert);
+    async accessData(ctx: PolicyEvaluationContext) : Promise<IdentityPolicyData | null> {
+        if (!ctx.data.has('identity')) {
+            return null;
         }
 
-        const types = ctx.config.types || [];
-        if (types.length === 0) {
-            return maybeInvertPolicyOutcome(true, ctx.config.invert);
+        if (ctx.data.isValidated('identity')) {
+            return ctx.data.get<IdentityPolicyData>('identity');
         }
 
-        const typeAllowed = types.indexOf(ctx.input.identity.type) !== -1;
+        const data = await this.dataValidator.run(ctx.data.get('identity'));
 
-        return maybeInvertPolicyOutcome(typeAllowed, ctx.config.invert);
+        ctx.data.set('identity', data);
+        ctx.data.setValidated('identity');
+
+        return data;
+    }
+
+    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+        // todo: catch errors + transform to issue(s)
+        const policy = await this.validator.run(value);
+
+        const data = await this.accessData(ctx);
+        if (!data) {
+            return {
+                success: false,
+                issues: [
+                    definePolicyIssueItem({
+                        code: PolicyIssueCode.DATA_MISSING,
+                        message: 'The data property identity is missing',
+                        path: ctx.path,
+                    }),
+                ],
+            };
+        }
+
+        if (!policy.types || policy.types.length === 0) {
+            return {
+                success: maybeInvertPolicyOutcome(true, policy.invert),
+            };
+        }
+
+        const typeAllowed = policy.types.indexOf(data.type) !== -1;
+        if (typeAllowed) {
+            return {
+                success: maybeInvertPolicyOutcome(typeAllowed, policy.invert),
+            };
+        }
+
+        return {
+            success: maybeInvertPolicyOutcome(typeAllowed, policy.invert),
+            issues: [
+                definePolicyIssueItem({
+                    code: PolicyIssueCode.EVALUATION_DENIED,
+                    message: `The type ${data.type} is not covered by the policy configuration`,
+                    path: ctx.path,
+                }),
+            ],
+        };
     }
 }

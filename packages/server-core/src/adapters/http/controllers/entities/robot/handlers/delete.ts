@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { NotFoundError } from '@ebec/http';
 import {
     PermissionName,
@@ -39,9 +40,9 @@ export async function deleteRobotRouteHandler(req: Request, res: Response) : Pro
     ) {
         await permissionChecker.check({
             name: PermissionName.ROBOT_DELETE,
-            input: {
-                attributes: entity,
-            },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
         });
     }
 

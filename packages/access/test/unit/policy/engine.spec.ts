@@ -5,15 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { describe, expect, it } from 'vitest';
+import {
+    beforeAll, describe, expect, it,
+} from 'vitest';
+import type { IPolicy } from '../../../src';
 import {
     BuiltInPolicyType,
     DecisionStrategy,
+    PolicyData,
     PolicyEngine,
     defineAttributesPolicy,
+    definePolicyEvaluationContext,
     definePolicyWithType,
 } from '../../../src';
-import { buildTestPolicyEvaluateContext } from '../../utils';
+import { PolicyDefaultEvaluators } from '../../../src/policy/constants.ts';
 
 type User = {
     id: string,
@@ -21,8 +26,12 @@ type User = {
 };
 
 describe('src/policy', () => {
-    it('should work with default evaluators', async () => {
-        const enforcer = new PolicyEngine();
+    let enforcer : PolicyEngine;
+
+    let compositePolicy : IPolicy;
+
+    beforeAll(() => {
+        enforcer = new PolicyEngine(PolicyDefaultEvaluators);
 
         const attributePolicy = definePolicyWithType(
             BuiltInPolicyType.ATTRIBUTES,
@@ -42,7 +51,7 @@ describe('src/policy', () => {
             },
         );
 
-        const compositePolicy = definePolicyWithType(
+        compositePolicy = definePolicyWithType(
             BuiltInPolicyType.COMPOSITE,
             {
                 decisionStrategy: DecisionStrategy.UNANIMOUS,
@@ -52,36 +61,38 @@ describe('src/policy', () => {
                 ],
             },
         );
+    });
 
-        let outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
-            config: compositePolicy,
-            input: {
+    it('should evaluate with valid data', async () => {
+        const outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({
+            data: new PolicyData({
                 attributes: {
                     name: 'admin',
                 },
-            },
+            }),
         }));
-        expect(outcome).toBeTruthy();
+        expect(outcome.success).toBeTruthy();
+    });
 
-        outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
-            config: compositePolicy,
-            input: {
+    it('should evaluate with invalid data', async () => {
+        let outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({
+            data: new PolicyData({
                 attributes: {
                     id: 'foo',
                     name: 'admin',
                 },
-            },
+            }),
         }));
-        expect(outcome).toBeFalsy();
 
-        outcome = await enforcer.evaluate(buildTestPolicyEvaluateContext({
-            config: compositePolicy,
-            input: {
+        expect(outcome.success).toBeFalsy();
+
+        outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({
+            data: new PolicyData({
                 attributes: {
                     name: 'foo',
                 },
-            },
+            }),
         }));
-        expect(outcome).toBeFalsy();
+        expect(outcome.success).toBeFalsy();
     });
 });

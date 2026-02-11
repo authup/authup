@@ -8,7 +8,7 @@
 import { isUUID } from '@authup/kit';
 import type { Request } from 'routup';
 import { useRequestParam } from 'routup';
-import { ValidupNestedError } from 'validup';
+import { ValidupError, buildErrorMessageForAttribute, defineIssueItem } from 'validup';
 
 type RequestIDParamOptions = {
     /**
@@ -20,7 +20,12 @@ type RequestIDParamOptions = {
 export function useRequestParamID(req: Request, options: RequestIDParamOptions = {}) : string {
     const id = getRequestParamID(req, options);
     if (typeof id === 'undefined') {
-        throw new ValidupNestedError({ message: 'The request id param is not valid.' });
+        throw new ValidupError([
+            defineIssueItem({
+                path: ['id'],
+                message: buildErrorMessageForAttribute('id'),
+            }),
+        ]);
     }
 
     return id;
@@ -52,7 +57,12 @@ export function getRequestStringParam(req: Request, key: string) : string | unde
 export function getRequestStringParamOrFail(req: Request, key: string) : string | undefined {
     const value = getRequestStringParam(req, key);
     if (typeof value === 'undefined') {
-        throw new ValidupNestedError({ message: 'The request id param is not valid.' });
+        throw new ValidupError([
+            defineIssueItem({
+                path: [key],
+                message: buildErrorMessageForAttribute(key),
+            }),
+        ]);
     }
 
     return value;

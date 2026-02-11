@@ -12,34 +12,10 @@ import {
     InsufficientStorageErrorOptions,
     InternalServerErrorOptions,
 } from '@ebec/http';
-import { distinctArray } from 'smob';
 import { AuthupError } from '@authup/errors';
 import { EntityRelationLookupError } from 'typeorm-extension';
-import { ValidupNestedError } from 'validup';
+import { buildErrorMessageForAttributes, isValidupError, stringifyPath } from 'validup';
 import { hasOwnProperty, isObject } from '@authup/kit';
-
-export function buildErrorMessageForAttribute(name: string) {
-    return buildErrorMessageForAttributes([name]);
-}
-
-export function buildErrorMessageForAttributes(input: string[] | Record<string, any>) {
-    let names: string[];
-    if (Array.isArray(input)) {
-        names = distinctArray(input);
-    } else {
-        names = Object.keys(input);
-    }
-
-    if (names.length === 0) {
-        return 'An unexpected error occurred.';
-    }
-
-    if (names.length > 1) {
-        return `The attributes ${names.join(', ')} are invalid.`;
-    }
-
-    return `The attribute ${String(names[0])} is invalid.`;
-}
 
 export function sanitizeError(error: unknown) : AuthupError {
     if (error instanceof AuthupError) {
@@ -55,20 +31,17 @@ export function sanitizeError(error: unknown) : AuthupError {
         });
     }
 
-    if (error instanceof ValidupNestedError) {
-        const attributes = error.children.map(
-            (child) => child.pathAbsolute,
-        );
+    if (isValidupError(error)) {
+        const paths = error.issues.map((issue) => stringifyPath(issue.path));
         return new AuthupError({
             statusCode: BadRequestErrorOptions.statusCode,
             code: BadRequestErrorOptions.code,
             data: {
-                children: error.children,
-                attributes,
+                issues: error.issues,
+                paths,
             },
             stack: error.stack,
-            message: error.message ||
-                `The attributes ${attributes.join(', ')} are invalid.`,
+            message: error.message || buildErrorMessageForAttributes(paths),
         });
     }
 

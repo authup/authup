@@ -7,10 +7,13 @@
 
 import type { PermissionAPICheckResponse } from '@authup/core-http-kit';
 import type { PermissionCheckerCheckContext } from '@authup/access';
-import { PermissionChecker, PolicyDataValidator } from '@authup/access';
+import {
+    BuiltInPolicyType,
+    PermissionChecker, PolicyData,
+} from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { useRequestBody } from '@routup/basic/body';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -43,19 +46,14 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
         throw new NotFoundError();
     }
 
-    const validator = new PolicyDataValidator();
-    const validatorAdapter = new RoutupContainerAdapter(validator);
-    const data = await validatorAdapter.run(req);
-    if (
-        !data.identity &&
-        data.identity !== null
-    ) {
-        data.identity = useRequestIdentity(req);
+    const data = useRequestBody(req);
+    if (typeof data[BuiltInPolicyType.IDENTITY] === 'undefined') {
+        data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
     }
 
     const ctx : PermissionCheckerCheckContext = {
         name: entity.name,
-        input: data,
+        input: new PolicyData(data),
     };
 
     const permissionChecker = new PermissionChecker({
@@ -65,7 +63,10 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
 
     let output : PermissionAPICheckResponse;
     try {
-        if (ctx.input && ctx.input.attributes) {
+        if (
+            ctx.input &&
+            ctx.input.has(BuiltInPolicyType.ATTRIBUTES)
+        ) {
             await permissionChecker.check(ctx);
         } else {
             await permissionChecker.preCheck(ctx);

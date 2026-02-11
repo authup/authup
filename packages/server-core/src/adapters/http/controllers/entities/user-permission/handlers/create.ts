@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import {
     PermissionName,
 } from '@authup/core-kit';
@@ -60,9 +61,9 @@ export async function createUserPermissionRouteHandler(req: Request, res: Respon
 
     await permissionChecker.check({
         name: PermissionName.USER_PERMISSION_CREATE,
-        input: {
-            attributes: data,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: data,
+        }),
     });
 
     // ----------------------------------------------

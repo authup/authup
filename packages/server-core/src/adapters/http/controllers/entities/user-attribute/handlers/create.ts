@@ -13,8 +13,8 @@ import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { buildErrorMessageForAttribute } from 'validup';
 import { UserAttributeEntity } from '../../../../../database/domains/index.ts';
-import { buildErrorMessageForAttribute } from '../../../../../../utils/index.ts';
 import { UserAttributeRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation, useRequestIdentity, useRequestPermissionChecker,
