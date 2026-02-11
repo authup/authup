@@ -30,7 +30,7 @@ import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
-import { PermissionDBProvider } from '../../../../security/index.ts';
+import { PermissionDatabaseRepository } from '../../../../security/index.ts';
 import { DatabaseInjectionKey } from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
@@ -134,7 +134,7 @@ export class HTTPMiddlewareModule {
             OAuth2InjectionToken.TokenVerifier,
         );
 
-        const permissionProvider = new PermissionDBProvider(dataSource);
+        const permissionProvider = new PermissionDatabaseRepository(dataSource);
 
         const middleware = createAuthorizationMiddleware({
             identityResolver,

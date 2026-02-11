@@ -7,7 +7,7 @@
 
 import { ScopeName } from '@authup/core-kit';
 import type {
-    PermissionChecker,
+    IPermissionChecker,
     PermissionCheckerCheckContext,
 } from '@authup/access';
 import {
@@ -19,9 +19,9 @@ import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 export class RequestPermissionChecker {
     protected req: Request;
 
-    protected checker: PermissionChecker;
+    protected checker: IPermissionChecker;
 
-    constructor(req: Request, checker: PermissionChecker) {
+    constructor(req: Request, checker: IPermissionChecker) {
         this.req = req;
         this.checker = checker;
     }

@@ -7,6 +7,6 @@
 
 export * from './error';
 export * from './helpers';
-export * from './provider';
-export * from './module';
+export * from './repository';
+export * from './checker';
 export * from './types';

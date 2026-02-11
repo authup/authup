@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IPermissionChecker } from '@authup/access';
 import { PermissionChecker } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
 import type { Client, Robot, User } from '@authup/core-kit';
@@ -52,7 +53,7 @@ export class AuthorizationMiddleware {
 
     protected oauth2TokenVerifier: IOAuth2TokenVerifier;
 
-    protected permissionChecker: PermissionChecker;
+    protected permissionChecker: IPermissionChecker;
 
     // --------------------------------------
 
@@ -83,7 +84,7 @@ export class AuthorizationMiddleware {
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
         this.permissionChecker = new PermissionChecker({
-            provider: ctx.permissionProvider,
+            repository: ctx.permissionProvider,
             policyEngine: new PolicyEngine(),
         });
     }
@@ -91,7 +92,10 @@ export class AuthorizationMiddleware {
     // --------------------------------------
 
     async run(request: Request, response: Response, next: Next) {
-        const requestPermissionChecker = new RequestPermissionChecker(request, this.permissionChecker);
+        const requestPermissionChecker = new RequestPermissionChecker(
+            request,
+            this.permissionChecker,
+        );
         setRequestPermissionChecker(request, requestPermissionChecker);
 
         let { authorization: headerValue } = request.headers;

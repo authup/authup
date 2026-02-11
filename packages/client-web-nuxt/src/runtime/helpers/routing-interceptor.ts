@@ -10,7 +10,7 @@ import {
 } from '@authup/client-web-kit';
 import { hasOwnProperty } from '@authup/kit';
 import type { RouteLocationAsPathGeneric, RouteLocationNormalized } from 'vue-router';
-import type { PolicyIdentity } from '@authup/access';
+import { BuiltInPolicyType, type IdentityPolicyData, PolicyData } from '@authup/access';
 import type { NuxtApp } from '#app';
 import { RouteMetaKey } from '../constants';
 import type { RuntimeOptions } from '../types';
@@ -146,7 +146,7 @@ export class RoutingInterceptor {
             return true;
         }
 
-        let identity : PolicyIdentity | undefined;
+        let identity : IdentityPolicyData | undefined;
         if (this.storeRefs.userId.value) {
             identity = {
                 type: 'user',
@@ -157,7 +157,7 @@ export class RoutingInterceptor {
         for (let i = 0; i < route.matched.length; i++) {
             const match = route.matched[i];
 
-            if (!match.meta || !hasOwnProperty(match.meta, RouteMetaKey.REQUIRE_PERMISSIONS)) {
+            if (!match || !match.meta || !hasOwnProperty(match.meta, RouteMetaKey.REQUIRE_PERMISSIONS)) {
                 continue;
             }
 
@@ -177,9 +177,9 @@ export class RoutingInterceptor {
             try {
                 await this.store.permissionChecker.preCheckOneOf({
                     name: permissions,
-                    input: {
-                        identity,
-                    },
+                    input: new PolicyData({
+                        [BuiltInPolicyType.IDENTITY]: identity,
+                    }),
                 });
             } catch (e) {
                 return false;

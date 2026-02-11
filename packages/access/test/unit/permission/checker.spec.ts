@@ -13,7 +13,7 @@ import {
     BuiltInPolicyType, PermissionChecker,
 
     PermissionError,
-    PermissionMemoryProvider,
+    PermissionMemoryRepository,
     PolicyData,
     PolicyDefaultEvaluators,
     PolicyEngine,
@@ -35,9 +35,9 @@ const abilities : PermissionItem[] = [
     },
 ];
 
-const provider = new PermissionMemoryProvider(abilities);
+const provider = new PermissionMemoryRepository(abilities);
 const checker = new PermissionChecker({
-    provider,
+    repository: provider,
     policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
 });
 

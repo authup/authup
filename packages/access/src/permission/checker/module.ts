@@ -1,33 +1,34 @@
 /*
- * Copyright (c) 2021-2024.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
+ * Copyright (c) 2021-2026.
+ *  Author Peter Placzek (tada5hi)
+ *  For the full copyright and license information,
+ *  view the LICENSE file that was distributed with this source code.
  */
 
 import { ErrorCode } from '@authup/errors';
 import type { Issue } from 'validup';
 import { defineIssueItem } from 'validup';
-import { DecisionStrategy } from '../constants';
-import type { IPolicyEngine } from '../policy';
+import { DecisionStrategy } from '../../constants.ts';
+import type { IPolicyEngine } from '../../policy';
 import {
     BuiltInPolicyType,
     PolicyData,
+    PolicyDefaultEvaluators,
     PolicyEngine,
     definePolicyEvaluationContext,
     definePolicyIssueGroup,
-} from '../policy';
-import { PermissionError } from './error';
-import type { IPermissionProvider, PermissionGetOptions } from './provider';
-import { PermissionMemoryProvider } from './provider';
+} from '../../policy';
+import { PermissionError } from '../error';
+import type { IPermissionRepository, PermissionGetOptions } from '../repository';
+import { PermissionMemoryRepository } from '../repository';
 
 import type {
-    PermissionCheckerCheckContext, PermissionCheckerOptions, PermissionItem,
-} from './types';
-import { PolicyDefaultEvaluators } from '../policy/constants.ts';
+    PermissionItem,
+} from '../types.ts';
+import type { IPermissionChecker, PermissionCheckerCheckContext, PermissionCheckerOptions } from './types.ts';
 
-export class PermissionChecker {
-    protected provider : IPermissionProvider;
+export class PermissionChecker implements IPermissionChecker {
+    protected provider : IPermissionRepository;
 
     protected policyEngine : IPolicyEngine;
 
@@ -38,10 +39,10 @@ export class PermissionChecker {
     // ----------------------------------------------
 
     constructor(options: PermissionCheckerOptions = {}) {
-        if (options.provider) {
-            this.provider = options.provider;
+        if (options.repository) {
+            this.provider = options.repository;
         } else {
-            this.provider = new PermissionMemoryProvider();
+            this.provider = new PermissionMemoryRepository();
         }
 
         if (options.clientId) {
@@ -66,7 +67,7 @@ export class PermissionChecker {
      *
      * @param input
      */
-    protected async get(input: string) : Promise<PermissionItem | undefined> {
+    protected async findOne(input: string) : Promise<PermissionItem | null> {
         const options : PermissionGetOptions = {
             name: input,
         };
@@ -79,7 +80,7 @@ export class PermissionChecker {
             options.realmId = this.realmId;
         }
 
-        return this.provider.get(options);
+        return this.provider.findOne(options);
     }
 
     // ----------------------------------------------
@@ -114,7 +115,7 @@ export class PermissionChecker {
         const dataBase = ctx.input || new PolicyData();
 
         for (let i = 0; i < ctx.name.length; i++) {
-            const entity = await this.get(ctx.name[i]);
+            const entity = await this.findOne(ctx.name[i]);
             if (!entity) {
                 issues.push(defineIssueItem({
                     code: ErrorCode.PERMISSION_NOT_FOUND,

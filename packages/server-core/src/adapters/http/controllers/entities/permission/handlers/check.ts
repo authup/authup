@@ -19,7 +19,7 @@ import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
 import type { FindOptionsWhere } from 'typeorm';
 import { PermissionEntity, resolveRealm } from '../../../../../database/domains/index.ts';
-import { PermissionDBProvider, PolicyEngine } from '../../../../../../security/index.ts';
+import { PermissionDatabaseRepository, PolicyEngine } from '../../../../../../security/index.ts';
 import { useRequestIdentity } from '../../../../request/index.ts';
 
 export async function checkPermissionRouteHandler(req: Request, res: Response) : Promise<any> {
@@ -57,7 +57,7 @@ export async function checkPermissionRouteHandler(req: Request, res: Response) :
     };
 
     const permissionChecker = new PermissionChecker({
-        provider: new PermissionDBProvider(dataSource),
+        repository: new PermissionDatabaseRepository(dataSource),
         policyEngine: new PolicyEngine(),
     });
 

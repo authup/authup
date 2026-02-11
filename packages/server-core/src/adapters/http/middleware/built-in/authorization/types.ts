@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionProvider } from '@authup/access';
+import type { IPermissionRepository } from '@authup/access';
 import type { IIdentityResolver, IOAuth2TokenVerifier, ISessionManager } from '../../../../../core/index.ts';
 
 export type HTTPAuthorizationMiddlewareOptions = {
@@ -19,7 +19,7 @@ export type HTTPAuthorizationMiddlewareContext = {
     identityResolver: IIdentityResolver,
     sessionManager: ISessionManager,
     oauth2TokenVerifier: IOAuth2TokenVerifier,
-    permissionProvider: IPermissionProvider,
+    permissionProvider: IPermissionRepository,
 
     options?: HTTPAuthorizationMiddlewareOptions
 };

@@ -5,36 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DecisionStrategy } from '../constants';
-import type {
-    IPolicyEngine,
-    PolicyData,
-    PolicyWithType,
-} from '../policy';
-import type { IPermissionProvider } from './provider';
+import type { PolicyWithType } from '../policy';
 
 export type PermissionItem = {
     name: string,
     clientId?: string | null,
     realmId?: string | null,
     policy?: PolicyWithType,
-};
-
-export type PermissionCheckerOptions = {
-    provider?: IPermissionProvider,
-    policyEngine?: IPolicyEngine,
-    realmId?: string | null,
-    clientId?: string | null
-};
-
-export type PermissionCheckerCheckOptions = {
-    decisionStrategy?: `${DecisionStrategy}`,
-    policiesIncluded?: string[],
-    policiesExcluded?: string[],
-};
-
-export type PermissionCheckerCheckContext = {
-    name: string | string[],
-    input?: PolicyData,
-    options?: PermissionCheckerCheckOptions
 };

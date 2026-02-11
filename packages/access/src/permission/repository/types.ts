@@ -13,6 +13,6 @@ export type PermissionGetOptions = {
     realmId?: string | null
 };
 
-export interface IPermissionProvider {
-    get(criteria: PermissionGetOptions) : Promise<PermissionItem | undefined>;
+export interface IPermissionRepository {
+    findOne(criteria: PermissionGetOptions) : Promise<PermissionItem | null>;
 }
