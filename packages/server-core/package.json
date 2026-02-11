@@ -92,7 +92,7 @@
         "pg": "^8.18.0",
         "reflect-metadata": "^0.2.2",
         "routup": "^4.1.0",
-        "smob": "^1.5.0",
+        "smob": "^1.6.1",
         "singa": "^1.1.0",
         "tsyringe": "^4.10.0",
         "typeorm": "^0.3.28",
