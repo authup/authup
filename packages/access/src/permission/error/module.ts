@@ -7,20 +7,15 @@
 
 import type { AuthupErrorOptions } from '@authup/errors';
 import { AuthupError, ErrorCode } from '@authup/errors';
-import type { Issue } from 'validup';
 import type { PolicyIssue } from '../../policy';
 
 export class PermissionError extends AuthupError {
-    readonly issues : Issue[];
-
     constructor(options: AuthupErrorOptions = {}) {
         super({
             ...options,
             message: options.message || 'A permission error occurred.',
             statusCode: options.statusCode || 403,
         });
-
-        this.issues = [];
     }
 
     addIssue(data: PolicyIssue) {

@@ -9,12 +9,8 @@ import { AuthupError, ErrorCode } from '@authup/errors';
 import type { PolicyIssue } from '../issue';
 
 export class PolicyError extends AuthupError {
-    public readonly issues: PolicyIssue[];
-
     constructor(message?: string, code?: string | null) {
         super({ message, code });
-
-        this.issues = [];
     }
 
     addIssue(data: PolicyIssue) {
