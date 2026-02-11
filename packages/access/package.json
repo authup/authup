@@ -51,13 +51,13 @@
     },
     "devDependencies": {
         "@authup/errors": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
         "vitest": "^4.0.14",
         "unplugin-swc": "^1.5.9"
     },
     "peerDependencies": {
         "@authup/errors": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28"
+        "@authup/kit": "^1.0.1-beta.28"
     },
     "publishConfig": {
         "access": "public"

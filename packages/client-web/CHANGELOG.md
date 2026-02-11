@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.28) (2026-02-11)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 13 updates ([#2833](https://github.com/authup/authup/issues/2833)) ([ab22d62](https://github.com/authup/authup/commit/ab22d62ff8f98bd04e8e960c37be25479a6c77b8))
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#2815](https://github.com/authup/authup/issues/2815)) ([e301e20](https://github.com/authup/authup/commit/e301e205d283ee51196495faf6523763a5a632c5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.1-beta.28
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 

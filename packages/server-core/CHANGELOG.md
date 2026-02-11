@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.28) (2026-02-11)
+
+
+### Features
+
+* **access:** abstractions for permission checker ([c26a1ce](https://github.com/authup/authup/commit/c26a1ce187296f60dee446bddd0adb70535e9882))
+* refactor policy issue/error handling ([#2831](https://github.com/authup/authup/issues/2831)) ([5bf81f5](https://github.com/authup/authup/commit/5bf81f5de8feb1d5e349e9c570618b1321d6ff3b))
+
+
+### Bug Fixes
+
+* **deps:** bump the majorprod group across 1 directory with 2 updates ([#2827](https://github.com/authup/authup/issues/2827)) ([2683f17](https://github.com/authup/authup/commit/2683f17f567333a46fe64616e40053a71b6e10b1))
+* **deps:** bump the minorandpatch group across 1 directory with 13 updates ([#2833](https://github.com/authup/authup/issues/2833)) ([ab22d62](https://github.com/authup/authup/commit/ab22d62ff8f98bd04e8e960c37be25479a6c77b8))
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#2815](https://github.com/authup/authup/issues/2815)) ([e301e20](https://github.com/authup/authup/commit/e301e205d283ee51196495faf6523763a5a632c5))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2822](https://github.com/authup/authup/issues/2822)) ([f432070](https://github.com/authup/authup/commit/f4320708d9d54348c6f92da4ab23b6abc87f480e))
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#2819](https://github.com/authup/authup/issues/2819)) ([7b42a9f](https://github.com/authup/authup/commit/7b42a9f2d6d2bd0d9b4caa5109b3ad3dc0178ff9))
+* set client_id in robot_credentials flow ([da59254](https://github.com/authup/authup/commit/da592543f85a2018cc6976b7b10c97f0e10ecc88))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.1-beta.28
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 

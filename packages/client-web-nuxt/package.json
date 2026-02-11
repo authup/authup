@@ -31,7 +31,7 @@
     },
     "dependencies": {
         "@authup/access": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
         "@authup/client-web-kit": "^1.0.0-beta.28",
         "@nuxt/kit": "^4.0.0",
         "pathtrace": "^2.1.0",
