@@ -10,10 +10,13 @@ import { describe, expect, it } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import type { AttributeNamesPolicy, PermissionItem, PolicyWithType } from '../../../src';
 import {
-    BuiltInPolicyType,
-    PermissionChecker,
+    BuiltInPolicyType, PermissionChecker,
+
     PermissionError,
-    PermissionMemoryProvider,
+    PermissionMemoryRepository,
+    PolicyData,
+    PolicyDefaultEvaluators,
+    PolicyEngine,
 } from '../../../src';
 
 const abilities : PermissionItem[] = [
@@ -32,24 +35,32 @@ const abilities : PermissionItem[] = [
     },
 ];
 
-const provider = new PermissionMemoryProvider(abilities);
-const checker = new PermissionChecker({ provider });
+const provider = new PermissionMemoryRepository(abilities);
+const checker = new PermissionChecker({
+    repository: provider,
+    policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
+});
 
 describe('src/ability/manager.ts', () => {
     it('should work with policy', async () => {
-        await checker.check({ name: 'user_edit', input: { attributes: { name: 'admin' } } });
+        await checker.check({
+            name: 'user_edit',
+            input: new PolicyData({ attributes: { name: 'admin' } }),
+        });
     });
 
     it('should throw with failing evaluation', async () => {
-        expect.assertions(3);
+        expect.assertions(2);
 
         try {
-            await checker.check({ name: 'user_edit', input: { attributes: { id: '123' } } });
+            await checker.check({
+                name: 'user_edit',
+                input: new PolicyData({ attributes: { id: '123' } }),
+            });
         } catch (e) {
             expect(e).toBeInstanceOf(PermissionError);
 
             if (e instanceof PermissionError) {
-                expect(e.policy).toBeDefined();
                 expect(e.code).toEqual(ErrorCode.PERMISSION_EVALUATION_FAILED);
             }
         }

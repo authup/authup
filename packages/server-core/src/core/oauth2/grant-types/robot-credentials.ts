@@ -35,7 +35,7 @@ export class RobotCredentialsGrant extends OAuth2BaseGrant<Robot> {
             sub_kind: OAuth2SubKind.ROBOT,
             realm_id: input.realm.id,
             realm_name: input.realm?.id,
-            client_id: input.id,
+            client_id: input.client_id || undefined,
         });
 
         return buildOAuth2BearerTokenResponse({

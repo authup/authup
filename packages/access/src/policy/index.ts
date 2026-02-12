@@ -6,8 +6,12 @@
  */
 
 export * from './engine';
-export * from './evaluator';
+export * from './evaluation';
 export * from './error';
+export * from './issue';
 export * from './helpers';
 export * from './built-in';
 export * from './types';
+
+export * from './constants.ts';
+export * from './data.ts';

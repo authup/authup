@@ -46,8 +46,8 @@
         "@authup/kit": "^1.0.0-beta.28",
         "@authup/core-kit": "^1.0.0-beta.28",
         "@authup/core-http-kit": "^1.0.0-beta.28",
-        "@fortawesome/fontawesome-free": "^7.1.0",
-        "@vitejs/plugin-vue": "^6.0.3",
+        "@fortawesome/fontawesome-free": "^7.2.0",
+        "@vitejs/plugin-vue": "^6.0.4",
         "@vuecs/countdown": "^1.0.0",
         "@vuecs/form-controls": "^2.4.2",
         "@vuecs/list-controls": "^2.0.0",
@@ -61,15 +61,15 @@
         "bootstrap": "^5.3.8",
         "pinia": "^3.0.0",
         "vite": "^7.3.1",
-        "vue": "^3.5.17",
-        "vue-router": "^4.6.4"
+        "vue": "^3.5.28",
+        "vue-router": "^5.0.2"
     },
     "peerDependencies": {
         "@authup/client-web-kit": "^1.0.0-beta.28",
         "@authup/kit": "^1.0.0-beta.28",
         "@authup/core-kit": "^1.0.0-beta.28",
         "@authup/core-http-kit": "^1.0.0-beta.28",
-        "@fortawesome/fontawesome-free": "^7.1.0",
+        "@fortawesome/fontawesome-free": "^7.2.0",
         "@vuecs/countdown": "^1.0.0",
         "@vuecs/form-controls": "^2.4.2",
         "@vuecs/list-controls": "^2.0.0",
@@ -83,8 +83,8 @@
         "bootstrap": "^5.3.8",
         "pinia": "^3.0.0",
         "vite": "^7.3.1",
-        "vue": "^3.5.17",
-        "vue-router": "^4.6.4"
+        "vue": "^3.5.28",
+        "vue-router": "^5.0.2"
     },
     "publishConfig": {
         "access": "public"

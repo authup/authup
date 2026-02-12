@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionCheckerCheckContext, PolicyIdentity } from '@authup/access';
+import type { IdentityPolicyData, PermissionCheckerCheckContext } from '@authup/access';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import type { Ref } from 'vue';
 import {
     onMounted, onUnmounted, ref, watch,
@@ -35,7 +36,7 @@ export function createPermissionCheckerReactiveFn(
                 return computePromise;
             }
 
-            let identity: PolicyIdentity | undefined;
+            let identity: IdentityPolicyData | undefined;
             if (storeRefs.userId.value) {
                 identity = {
                     type: 'user',
@@ -53,14 +54,14 @@ export function createPermissionCheckerReactiveFn(
 
             let outcome: boolean;
 
+            const input = ctx.input || new PolicyData();
+            input.set(BuiltInPolicyType.IDENTITY, identity);
+
             try {
                 computePromise = store.permissionChecker
                     .preCheckOneOf({
                         ...ctx,
-                        input: {
-                            ...(ctx.input || {}),
-                            identity,
-                        },
+                        input,
                     })
                     .then(() => true)
                     .catch(() => false);

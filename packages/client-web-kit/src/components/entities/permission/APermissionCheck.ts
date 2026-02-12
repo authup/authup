@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionCheckerCheckOptions, PolicyInput } from '@authup/access';
+import type { PermissionCheckerCheckOptions } from '@authup/access';
+import { PolicyData } from '@authup/access';
 import { SlotName } from '@vuecs/list-controls';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
@@ -18,7 +19,7 @@ export const APermissionCheck = defineComponent({
             required: true,
         },
         input: {
-            type: Object as PropType<PolicyInput>,
+            type: Object as PropType<Record<string, any>>,
         },
         options: {
             type: Object as PropType<PermissionCheckerCheckOptions>,
@@ -29,7 +30,7 @@ export const APermissionCheck = defineComponent({
 
         const isPermitted = computed(() => fn({
             name: props.name,
-            input: props.input,
+            input: new PolicyData(props.input),
             options: props.options,
         }));
 

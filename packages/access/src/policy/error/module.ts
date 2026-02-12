@@ -6,10 +6,19 @@
  */
 
 import { AuthupError, ErrorCode } from '@authup/errors';
+import type { PolicyIssue } from '../issue';
 
 export class PolicyError extends AuthupError {
     constructor(message?: string, code?: string | null) {
         super({ message, code });
+    }
+
+    addIssue(data: PolicyIssue) {
+        this.issues.push(data);
+    }
+
+    addIssues(data: PolicyIssue[]) {
+        this.issues.push(...data);
     }
 
     static evaluatorNotFound(type: string) {

@@ -11,7 +11,8 @@ import type { TokenGrantResponse } from '@hapic/oauth2';
 import { EventEmitter } from '@posva/event-emitter';
 import type { AuthorizationHeader, Client as BaseClient } from 'hapic';
 import {
-    HeaderName, HookName, isClientError, setHeader, stringifyAuthorizationHeader, unsetHeader,
+    HeaderName,
+    HookName, getHeader, isClientError, setHeader, stringifyAuthorizationHeader, unsetHeader,
 } from 'hapic';
 import { getClientErrorCode } from '../helpers';
 import type { TokenCreator } from '../token-creator';
@@ -148,35 +149,48 @@ export class ClientAuthenticationHook extends EventEmitter<{
                             return Promise.reject(err);
                         }
 
-                        if (
-                            isJWTErrorCode(code) ||
-                            (isObject(err.response) && err.response.status === 401)
-                        ) {
-                            return this.refresh()
-                                .then((response) => {
-                                    if (request.headers) {
-                                        setHeader(
-                                            request.headers,
-                                            HeaderName.AUTHORIZATION,
-                                            stringifyAuthorizationHeader({
-                                                type: 'Bearer',
-                                                token: response.access_token,
-                                            }),
-                                        );
-                                    }
+                        const refresh = () => this.refresh()
+                            .then((response) => {
+                                if (request.headers) {
+                                    setHeader(
+                                        request.headers,
+                                        HeaderName.AUTHORIZATION,
+                                        stringifyAuthorizationHeader({
+                                            type: 'Bearer',
+                                            token: response.access_token,
+                                        }),
+                                    );
+                                }
 
-                                    return client.request(request);
-                                })
-                                .catch((err) => {
-                                    if (request.headers) {
-                                        unsetHeader(
-                                            request.headers,
-                                            HeaderName.AUTHORIZATION,
-                                        );
-                                    }
+                                return client.request(request);
+                            })
+                            .catch((err) => {
+                                if (request.headers) {
+                                    unsetHeader(
+                                        request.headers,
+                                        HeaderName.AUTHORIZATION,
+                                    );
+                                }
 
-                                    return Promise.reject(err);
-                                });
+                                return Promise.reject(err);
+                            });
+
+                        if (isJWTErrorCode(code)) {
+                            return refresh();
+                        }
+
+                        if (isObject(err.response)) {
+                            if (err.response.status === 401) {
+                                return refresh();
+                            }
+
+                            if (
+                                err.response.status === 403 &&
+                                request.headers &&
+                                !getHeader(request.headers, HeaderName.AUTHORIZATION)
+                            ) {
+                                return refresh();
+                            }
                         }
 
                         return Promise.reject(err);

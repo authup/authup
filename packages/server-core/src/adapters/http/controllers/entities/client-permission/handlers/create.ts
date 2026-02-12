@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyInput } from '@authup/access';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -41,9 +41,8 @@ export async function createClientPermissionRouteHandler(req: Request, res: Resp
         entityTarget: ClientPermissionEntity,
     });
 
-    const policyData : PolicyInput = {
-        attributes: data satisfies Partial<ClientPermissionEntity>,
-    };
+    const policyData = new PolicyData();
+    policyData.set(BuiltInPolicyType.ATTRIBUTES, data);
 
     // ----------------------------------------------
 

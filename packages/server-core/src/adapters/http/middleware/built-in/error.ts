@@ -16,12 +16,14 @@ import {
 } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import type { AuthupError } from '@authup/errors';
+import type { Issue } from 'validup';
 import { sanitizeError } from '../../../../utils/index.ts';
 
 type ErrorResponsePayload = {
     statusCode: number,
     code: string,
     message: string,
+    issues: Issue[],
     [key: string]: any
 };
 
@@ -42,6 +44,7 @@ export function registerErrorMiddleware(router: Router) {
             statusCode: next.statusCode,
             code: `${next.code}`,
             message: next.message,
+            issues: next.issues,
         };
 
         const isServerError = next.statusCode >= 500 && next.statusCode < 600;

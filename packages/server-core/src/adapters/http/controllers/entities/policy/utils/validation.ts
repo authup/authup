@@ -116,7 +116,7 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
                 const promises = ctx.value.map((child) => this.run(child, {
                     group: ctx.group,
                     flat: false,
-                    path: ctx.pathAbsolute,
+                    path: ctx.path,
                 }));
 
                 return Promise.all(promises);

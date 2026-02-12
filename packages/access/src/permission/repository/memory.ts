@@ -7,19 +7,24 @@
 
 import { buildPermissionItemKey, mergePermissionItems } from '../helpers';
 import type { PermissionItem } from '../types';
-import type { IPermissionProvider, PermissionGetOptions } from './types';
+import type { IPermissionRepository, PermissionGetOptions } from './types';
 
-export class PermissionMemoryProvider implements IPermissionProvider {
+export class PermissionMemoryRepository implements IPermissionRepository {
     protected items : Record<string, PermissionItem> = {};
 
     constructor(items: PermissionItem[] = []) {
         this.setMany(items);
     }
 
-    async get(
+    async findOne(
         options: PermissionGetOptions,
-    ): Promise<PermissionItem | undefined> {
-        return this.items[buildPermissionItemKey(options)];
+    ): Promise<PermissionItem | null> {
+        const entry = this.items[buildPermissionItemKey(options)];
+        if (entry) {
+            return entry;
+        }
+
+        return null;
     }
 
     setMany(input: PermissionItem[]) {

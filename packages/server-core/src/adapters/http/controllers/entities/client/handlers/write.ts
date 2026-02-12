@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import { ClientValidator, PermissionName } from '@authup/core-kit';
@@ -111,9 +112,9 @@ export async function writeClientRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.CLIENT_UPDATE,
-            input: {
-                attributes: entity,
-            },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
         });
 
         if (entity.is_confidential) {
@@ -140,9 +141,9 @@ export async function writeClientRouteHandler(
 
     await permissionChecker.check({
         name: PermissionName.CLIENT_CREATE,
-        input: {
-            attributes: data,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: data,
+        }),
     });
 
     entity = repository.create(data);

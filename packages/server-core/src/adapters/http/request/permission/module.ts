@@ -7,8 +7,11 @@
 
 import { ScopeName } from '@authup/core-kit';
 import type {
-    PermissionChecker,
+    IPermissionChecker,
     PermissionCheckerCheckContext,
+} from '@authup/access';
+import {
+    BuiltInPolicyType, PolicyData,
 } from '@authup/access';
 import type { Request } from 'routup';
 import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
@@ -16,9 +19,9 @@ import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 export class RequestPermissionChecker {
     protected req: Request;
 
-    protected checker: PermissionChecker;
+    protected checker: IPermissionChecker;
 
-    constructor(req: Request, checker: PermissionChecker) {
+    constructor(req: Request, checker: IPermissionChecker) {
         this.req = req;
         this.checker = checker;
     }
@@ -48,10 +51,8 @@ export class RequestPermissionChecker {
     protected extendCheckContext(ctx: PermissionCheckerCheckContext) {
         const scopes = useRequestScopes(this.req);
         if (scopes.indexOf(ScopeName.GLOBAL) !== -1) {
-            ctx.input = {
-                ...ctx.input || {},
-                identity: useRequestIdentity(this.req),
-            };
+            ctx.input = ctx.input || new PolicyData();
+            ctx.input.set(BuiltInPolicyType.IDENTITY, useRequestIdentity(this.req));
         }
 
         return ctx;

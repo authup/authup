@@ -7,7 +7,7 @@
 
 import type {
     CompositePolicy,
-    IPermissionProvider,
+    IPermissionRepository,
     IdentityPolicy,
     PermissionBindingPolicy,
     PermissionGetOptions,
@@ -21,7 +21,7 @@ import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { CachePrefix, PermissionEntity, PolicyRepository } from '../../../adapters/database/domains/index.ts';
 
-export class PermissionDBProvider implements IPermissionProvider {
+export class PermissionDatabaseRepository implements IPermissionRepository {
     protected dataSource: DataSource;
 
     protected repository : Repository<PermissionEntity>;
@@ -34,7 +34,7 @@ export class PermissionDBProvider implements IPermissionProvider {
         this.policyRepository = new PolicyRepository(this.dataSource);
     }
 
-    async get(options: PermissionGetOptions) : Promise<PermissionItem | undefined> {
+    async findOne(options: PermissionGetOptions) : Promise<PermissionItem | null> {
         const where : FindOptionsWhere<Permission> = {
             name: options.name,
         };
@@ -81,7 +81,7 @@ export class PermissionDBProvider implements IPermissionProvider {
             };
         }
 
-        return undefined;
+        return null;
     }
 
     getDefaultPolicy() {

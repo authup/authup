@@ -1,24 +1,36 @@
 /*
- * Copyright (c) 2021-2024.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
+ * Copyright (c) 2021-2026.
+ *  Author Peter Placzek (tada5hi)
+ *  For the full copyright and license information,
+ *  view the LICENSE file that was distributed with this source code.
  */
 
-import { DecisionStrategy } from '../constants';
-import { BuiltInPolicyType, PolicyEngine, PolicyError } from '../policy';
-import { PermissionError } from './error';
-import type { IPermissionProvider, PermissionGetOptions } from './provider';
-import { PermissionMemoryProvider } from './provider';
+import { ErrorCode } from '@authup/errors';
+import type { Issue } from 'validup';
+import { defineIssueItem } from 'validup';
+import { DecisionStrategy } from '../../constants.ts';
+import type { IPolicyEngine } from '../../policy';
+import {
+    BuiltInPolicyType,
+    PolicyData,
+    PolicyDefaultEvaluators,
+    PolicyEngine,
+    definePolicyEvaluationContext,
+    definePolicyIssueGroup,
+} from '../../policy';
+import { PermissionError } from '../error';
+import type { IPermissionRepository, PermissionGetOptions } from '../repository';
+import { PermissionMemoryRepository } from '../repository';
 
 import type {
-    PermissionCheckerCheckContext, PermissionCheckerOptions, PermissionItem,
-} from './types';
+    PermissionItem,
+} from '../types.ts';
+import type { IPermissionChecker, PermissionCheckerCheckContext, PermissionCheckerOptions } from './types.ts';
 
-export class PermissionChecker {
-    protected provider : IPermissionProvider;
+export class PermissionChecker implements IPermissionChecker {
+    protected provider : IPermissionRepository;
 
-    protected policyEngine : PolicyEngine;
+    protected policyEngine : IPolicyEngine;
 
     protected clientId?: string | null;
 
@@ -27,10 +39,10 @@ export class PermissionChecker {
     // ----------------------------------------------
 
     constructor(options: PermissionCheckerOptions = {}) {
-        if (options.provider) {
-            this.provider = options.provider;
+        if (options.repository) {
+            this.provider = options.repository;
         } else {
-            this.provider = new PermissionMemoryProvider();
+            this.provider = new PermissionMemoryRepository();
         }
 
         if (options.clientId) {
@@ -44,7 +56,7 @@ export class PermissionChecker {
         if (options.policyEngine) {
             this.policyEngine = options.policyEngine;
         } else {
-            this.policyEngine = new PolicyEngine();
+            this.policyEngine = new PolicyEngine(PolicyDefaultEvaluators);
         }
     }
 
@@ -55,7 +67,7 @@ export class PermissionChecker {
      *
      * @param input
      */
-    protected async get(input: string) : Promise<PermissionItem | undefined> {
+    protected async findOne(input: string) : Promise<PermissionItem | null> {
         const options : PermissionGetOptions = {
             name: input,
         };
@@ -68,7 +80,7 @@ export class PermissionChecker {
             options.realmId = this.realmId;
         }
 
-        return this.provider.get(options);
+        return this.provider.findOne(options);
     }
 
     // ----------------------------------------------
@@ -96,15 +108,25 @@ export class PermissionChecker {
         const decisionStrategy = options.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
 
-        let lastError : PermissionError | undefined;
+        const issues : Issue[] = [];
+
         let count = 0;
 
+        const dataBase = ctx.input || new PolicyData();
+
         for (let i = 0; i < ctx.name.length; i++) {
-            const entity = await this.get(ctx.name[i]);
+            const entity = await this.findOne(ctx.name[i]);
             if (!entity) {
-                lastError = PermissionError.notFound(ctx.name[i]);
+                issues.push(defineIssueItem({
+                    code: ErrorCode.PERMISSION_NOT_FOUND,
+                    message: `The ${ctx.name[i]} permission could not be resolved`,
+                    path: [ctx.name[i]],
+                }));
+
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    throw lastError;
+                    const error = PermissionError.evaluationFailed(ctx.name);
+                    error.addIssues(issues);
+                    throw error;
                 }
 
                 continue;
@@ -120,53 +142,36 @@ export class PermissionChecker {
                 continue;
             }
 
-            let outcome : boolean;
+            const data = dataBase.clone();
+            data.set(BuiltInPolicyType.PERMISSION_BINDING, entity);
 
-            try {
-                outcome = await this.policyEngine.evaluate({
-                    input: {
-                        ...ctx.input || {},
-                        permission: entity,
-                    },
-                    config: entity.policy,
-                    options: {
-                        include: options.policiesIncluded,
-                        exclude: options.policiesExcluded,
-                    },
-                });
-            } catch (e) {
-                if (e instanceof PolicyError) {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                        policyError: e,
-                    });
-                } else {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                    });
-                }
+            const evaluationResult = await this.policyEngine.evaluate(
+                entity.policy,
+                definePolicyEvaluationContext({
+                    include: options.policiesIncluded,
+                    exclude: options.policiesExcluded,
+                    data,
+                }),
+            );
 
-                outcome = false;
-            }
-
-            if (outcome) {
+            if (evaluationResult.success) {
                 if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
                 count++;
             } else {
-                if (!lastError) {
-                    lastError = PermissionError.evaluationFailed({
-                        name: entity.name,
-                        policy: entity.policy,
-                    });
-                }
+                issues.push(definePolicyIssueGroup({
+                    code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+                    issues: evaluationResult.issues || [],
+                    message: `The ${entity.name} permissions policy evaluation failed`,
+                    path: [entity.name],
+                }));
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
-                    throw lastError;
+                    const error = PermissionError.evaluationFailed(entity.name);
+                    error.addIssues(issues);
+                    throw error;
                 }
 
                 count--;
@@ -177,10 +182,12 @@ export class PermissionChecker {
             return;
         }
 
-        if (count > 1 || !lastError) {
+        if (issues.length === 0) {
             throw PermissionError.deniedAll(ctx.name);
         } else {
-            throw lastError;
+            const error = PermissionError.evaluationFailed(ctx.name);
+            error.addIssues(issues);
+            throw error;
         }
     }
 

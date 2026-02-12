@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
@@ -86,12 +87,12 @@ export async function writeScopeRouteHandler(
     if (entity) {
         await permissionChecker.check({
             name: PermissionName.SCOPE_UPDATE,
-            input: {
-                attributes: {
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: {
                     ...entity,
                     ...data,
                 },
-            },
+            }),
         });
     } else {
         if (!data.realm_id) {
@@ -103,9 +104,9 @@ export async function writeScopeRouteHandler(
 
         await permissionChecker.check({
             name: PermissionName.SCOPE_CREATE,
-            input: {
-                attributes: data,
-            },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: data,
+            }),
         });
     }
 

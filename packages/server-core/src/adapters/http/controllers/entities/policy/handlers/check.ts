@@ -6,11 +6,12 @@
  */
 
 import type { PolicyAPICheckResponse } from '@authup/core-http-kit';
-import type { PolicyEngineEvaluateContext } from '@authup/access';
+import {
+    BuiltInPolicyType, PolicyData, definePolicyEvaluationContext,
+} from '@authup/access';
 import { isUUID } from '@authup/kit';
-import { PolicyDataValidator } from '@authup/access';
 import { NotFoundError } from '@ebec/http';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { useRequestBody } from '@routup/basic/body';
 import type { Request, Response } from 'routup';
 import { sendAccepted, useRequestParam } from 'routup';
 import { useDataSource } from 'typeorm-extension';
@@ -43,27 +44,21 @@ export async function checkPolicyRouteHandler(req: Request, res: Response) : Pro
     if (!entity) {
         throw new NotFoundError();
     }
-
-    const validator = new PolicyDataValidator();
-    const validatorAdapter = new RoutupContainerAdapter(validator);
-    const data = await validatorAdapter.run(req);
+    const data = useRequestBody(req);
     if (
-        !data.identity &&
-        data.identity !== null
+        !data[BuiltInPolicyType.IDENTITY] &&
+        data[BuiltInPolicyType.IDENTITY] !== null
     ) {
-        data.identity = useRequestIdentity(req);
+        data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
     }
-
-    const ctx : PolicyEngineEvaluateContext = {
-        config: entity,
-        input: data,
-    };
 
     const policyEngine = new PolicyEngine();
 
     let output : PolicyAPICheckResponse;
     try {
-        await policyEngine.evaluate(ctx);
+        await policyEngine.evaluate(entity, definePolicyEvaluationContext({
+            data: new PolicyData(data),
+        }));
 
         output = {
             status: 'success',

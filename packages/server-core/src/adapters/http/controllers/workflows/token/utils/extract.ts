@@ -7,7 +7,9 @@
 
 import type { Request } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { ValidupNestedError, ValidupValidatorError } from 'validup';
+import {
+    ValidupError, buildErrorMessageForAttribute, defineIssueItem,
+} from 'validup';
 import { useRequestToken } from '../../../../request/index.ts';
 import { TokenRequestValidator } from './validator.ts';
 
@@ -27,14 +29,12 @@ export async function extractTokenFromRequest(req: Request) : Promise<string> {
     }
 
     if (!token) {
-        const validatorError = new ValidupValidatorError({
-            path: 'token',
-            pathAbsolute: 'token',
-        });
-
-        throw new ValidupNestedError({
-            children: [validatorError],
-        });
+        throw new ValidupError([
+            defineIssueItem({
+                path: ['token'],
+                message: buildErrorMessageForAttribute('token'),
+            }),
+        ]);
     }
 
     return token;

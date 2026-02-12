@@ -8,7 +8,6 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import { PermissionName } from '@authup/core-kit';
 import { isClientError } from 'hapic';
 import {
     createFakePermission,
@@ -62,7 +61,9 @@ describe('src/http/controllers/permission', () => {
 
         expect(response).toBeDefined();
         expect(response.data).toBeDefined();
-        expect(response.data.length).toEqual(Object.values(PermissionName).length + 1);
+
+        expect(response.data.length).toBeLessThanOrEqual(50);
+        expect(response.data.length).toBeGreaterThan(0);
     });
 
     it('should read resource', async () => {

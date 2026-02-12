@@ -6,7 +6,7 @@
  */
 
 import type { Robot } from '@authup/core-kit';
-import { IdentityType, RobotError, UserError } from '@authup/core-kit';
+import { IdentityType, RobotError } from '@authup/core-kit';
 import type { IIdentityResolver } from '../../../identity/index.ts';
 import { RobotCredentialsService } from '../../credential/index.ts';
 import { BaseCredentialsAuthenticator } from '../../base.ts';
@@ -26,7 +26,7 @@ export class RobotAuthenticator extends BaseCredentialsAuthenticator<Robot> {
     async authenticate(key: string, secret: string, realmId?: string): Promise<Robot> {
         const identity = await this.identityResolver.resolve(IdentityType.ROBOT, key, realmId);
         if (!identity || identity.type !== IdentityType.ROBOT) {
-            throw UserError.credentialsInvalid();
+            throw RobotError.credentialsInvalid();
         }
 
         const verified = await this.credentialsService.verify(secret, identity.data);

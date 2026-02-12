@@ -5,76 +5,105 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from 'smob';
 import type {
-    CompositePolicy,
-    PermissionBindingPolicy,
-    PolicyEvaluateContext,
-    PolicyEvaluator,
-    PolicyInput,
+    CompositePolicy, IPolicyEvaluator, PermissionItem, PolicyEvaluationContext, PolicyEvaluationResult,
     PolicyWithType,
 } from '@authup/access';
 import {
+    AttributesPolicyEvaluator,
     BuiltInPolicyType,
-    CompositePolicyEvaluator,
+    IdentityPolicyEvaluator,
     PermissionBindingPolicyValidator,
-    PolicyError,
+    PolicyEngine,
+    PolicyIssueCode,
+    definePolicyIssueItem,
     maybeInvertPolicyOutcome,
     mergePermissionItems,
 } from '@authup/access';
 import { useDataSource } from 'typeorm-extension';
 import { IdentityPermissionService } from '../../../../services/index.ts';
 
-export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<PermissionBindingPolicy> {
+export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     protected validator : PermissionBindingPolicyValidator;
+
+    protected identityEvaluator: IdentityPolicyEvaluator;
+
+    protected attributesEvaluator : AttributesPolicyEvaluator;
 
     constructor() {
         this.validator = new PermissionBindingPolicyValidator();
+        this.identityEvaluator = new IdentityPolicyEvaluator();
+        this.attributesEvaluator = new AttributesPolicyEvaluator();
     }
 
-    async can(
-        ctx: PolicyEvaluateContext<PolicyWithType>,
-    ) : Promise<boolean> {
-        return ctx.config.type === BuiltInPolicyType.PERMISSION_BINDING;
-    }
-
-    async validateConfig(ctx: PolicyEvaluateContext) : Promise<PermissionBindingPolicy> {
-        return this.validator.run(ctx.config);
-    }
-
-    async validateInput(ctx: PolicyEvaluateContext) : Promise<PolicyInput> {
-        if (!isObject(ctx.input.identity) && !isObject(ctx.input.permission)) {
-            throw PolicyError.evaluatorContextInvalid();
+    async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionItem | null> {
+        if (!ctx.data.has(BuiltInPolicyType.PERMISSION_BINDING)) {
+            return null;
         }
 
-        return ctx.input;
+        if (ctx.data.isValidated(BuiltInPolicyType.PERMISSION_BINDING)) {
+            return ctx.data.get(BuiltInPolicyType.PERMISSION_BINDING);
+        }
+
+        // todo: run validator on attributes (isObject ...)
+        const data = ctx.data.get<PermissionItem>(BuiltInPolicyType.PERMISSION_BINDING);
+
+        ctx.data.set(BuiltInPolicyType.PERMISSION_BINDING, data);
+        ctx.data.setValidated(BuiltInPolicyType.PERMISSION_BINDING);
+
+        return data;
     }
 
-    async evaluate(ctx: PolicyEvaluateContext<
-    PermissionBindingPolicy,
-    PolicyInput
-    >): Promise<boolean> {
-        if (!ctx.input.identity) {
-            return maybeInvertPolicyOutcome(false, ctx.config.invert);
+    async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
+        // todo: catch errors + transform to issue(s)
+        const policy = await this.validator.run(value);
+
+        const identity = await this.identityEvaluator.accessData(ctx);
+        if (!identity) {
+            return {
+                success: false,
+                issues: [
+                    definePolicyIssueItem({
+                        code: PolicyIssueCode.DATA_MISSING,
+                        message: 'The data property identity is missing',
+                        path: ctx.path,
+                    }),
+                ],
+            };
+        }
+        const permission = await this.accessData(ctx);
+        if (!permission) {
+            return {
+                success: false,
+                issues: [
+                    definePolicyIssueItem({
+                        code: PolicyIssueCode.DATA_MISSING,
+                        message: 'The data property permission is missing',
+                        path: ctx.path,
+                    }),
+                ],
+            };
         }
 
         const dataSource = await useDataSource();
         const identityPermissionService = new IdentityPermissionService(dataSource);
 
         // get all identity permissions with applicable client(_id) restriction
-        const identityPermissions = await identityPermissionService.getFor(ctx.input.identity)
+        const identityPermissions = await identityPermissionService.getFor(identity)
             .then((permissions) => permissions.filter((item) => {
-                if (item.name !== ctx.input?.permission?.name) {
+                if (item.name !== permission?.name) {
                     return false;
                 }
 
                 // we are comparing only string with null (db resources always null or string)
-                return (ctx.input?.permission?.realmId ?? null) === item.realm_id &&
-                    (ctx.input?.permission?.clientId ?? null) === item.client_id;
+                return (permission?.realmId ?? null) === item.realm_id &&
+                    (permission?.clientId ?? null) === item.client_id;
             }));
 
         if (identityPermissions.length === 0) {
-            return maybeInvertPolicyOutcome(false, ctx.config.invert);
+            return {
+                success: maybeInvertPolicyOutcome(false, policy.invert),
+            };
         }
 
         const permissionsMerged = mergePermissionItems(
@@ -86,7 +115,9 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
             })),
         );
         if (permissionsMerged.length === 0) {
-            return maybeInvertPolicyOutcome(false, ctx.config.invert);
+            return {
+                success: maybeInvertPolicyOutcome(false, policy.invert),
+            };
         }
 
         const policies : PolicyWithType[] = permissionsMerged
@@ -94,22 +125,31 @@ export class PermissionBindingPolicyEvaluator implements PolicyEvaluator<Permiss
             .filter((policy) => !!policy);
 
         if (policies.length === 0) {
-            return maybeInvertPolicyOutcome(true, ctx.config.invert);
+            return {
+                success: maybeInvertPolicyOutcome(true, policy.invert),
+            };
         }
 
         if (!ctx.evaluators) {
-            return maybeInvertPolicyOutcome(false, ctx.config.invert);
+            return {
+                success: maybeInvertPolicyOutcome(false, policy.invert),
+            };
         }
 
-        const compositePolicy : CompositePolicy = {
+        const compositePolicy : PolicyWithType<CompositePolicy> = {
             children: policies,
+            type: BuiltInPolicyType.COMPOSITE,
         };
 
-        const compositePolicyEvaluator = new CompositePolicyEvaluator();
-
-        return compositePolicyEvaluator.evaluate({
+        const engine = new PolicyEngine(ctx.evaluators);
+        const outcome = await engine.evaluate(compositePolicy, {
             ...ctx,
-            config: compositePolicy,
+            path: [...(ctx.path || []), compositePolicy.type],
         });
+
+        return {
+            ...outcome,
+            success: maybeInvertPolicyOutcome(outcome.success, policy.invert),
+        };
     }
 }

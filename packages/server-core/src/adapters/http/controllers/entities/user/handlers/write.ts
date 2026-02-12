@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID, removeObjectProperty } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import { PermissionName, UserValidator, ValidatorGroup } from '@authup/core-kit';
@@ -120,12 +121,12 @@ export async function writeUserRouteHandler(
         if (hasAbility) {
             await permissionChecker.check({
                 name: PermissionName.USER_UPDATE,
-                input: {
-                    attributes: {
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: {
                         ...entity,
                         ...data,
                     },
-                },
+                }),
             });
         }
 
@@ -152,12 +153,9 @@ export async function writeUserRouteHandler(
     if (hasAbility) {
         await permissionChecker.check({
             name: PermissionName.USER_CREATE,
-            input: {
-                attributes: {
-                    ...entity,
-                    ...data,
-                },
-            },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
         });
     }
 

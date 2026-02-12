@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -47,9 +48,9 @@ export async function deleteClientPermissionRouteHandler(req: Request, res: Resp
 
     await permissionChecker.check({
         name: PermissionName.CLIENT_PERMISSION_DELETE,
-        input: {
-            attributes: entity,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: entity,
+        }),
     });
 
     // ----------------------------------------------

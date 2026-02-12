@@ -6,7 +6,6 @@
  */
 
 import { PermissionAPICheckResponse } from '@authup/core-http-kit';
-import { PolicyInput } from '@authup/access';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
@@ -42,7 +41,7 @@ export class PermissionController {
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
     async check(
-        @DBody() data: NonNullable<PolicyInput>,
+        @DBody() data: NonNullable<Record<string, any>>,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<PermissionAPICheckResponse> {

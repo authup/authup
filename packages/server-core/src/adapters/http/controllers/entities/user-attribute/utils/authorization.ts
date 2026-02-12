@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { UserAttributeEntity } from '../../../../../database/domains/index.ts';
@@ -25,9 +26,9 @@ export async function canRequestManageUserAttribute(
         if (isMe) {
             await permissionChecker.check({
                 name: PermissionName.USER_SELF_MANAGE,
-                input: {
-                    attributes: entity,
-                },
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                }),
             });
 
             return true;
@@ -42,9 +43,9 @@ export async function canRequestManageUserAttribute(
         try {
             await permissionChecker.check({
                 name: PermissionName.USER_UPDATE,
-                input: {
-                    attributes: entity,
-                },
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                }),
             });
         } catch (e) {
             return false;

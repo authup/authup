@@ -11,7 +11,7 @@ import {
     buildUserFakeEmail, isUserFakeEmail,
 } from '@authup/core-kit';
 import { createNanoID, extendObject } from '@authup/kit';
-import { ValidupNestedError } from 'validup';
+import { isValidupError, stringifyPath } from 'validup';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import { IdentityProviderIdentityOperation } from '../constants.ts';
 import type { IIdentityProviderMapper } from '../mapper/index.ts';
@@ -184,31 +184,33 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                     ValidatorGroup.UPDATE,
             });
         } catch (e: any) {
-            if (!(e instanceof ValidupNestedError)) {
+            if (!isValidupError(e)) {
                 return null;
             }
 
             let retry = false;
-            for (let i = 0; i < e.children.length; i++) {
-                const child = e.children[i];
+            for (let i = 0; i < e.issues.length; i++) {
+                const child = e.issues[i];
+
+                const pathNormalized = stringifyPath(child.path);
 
                 if (
-                    Array.isArray(entity[child.path]) &&
-                    entity[child.path].length > 0
+                    Array.isArray(entity[pathNormalized]) &&
+                    entity[pathNormalized].length > 0
                 ) {
-                    const [first, ...rest] = entity[child.path];
-                    entity[child.path] = first;
+                    const [first, ...rest] = entity[pathNormalized];
+                    entity[pathNormalized] = first;
 
                     if (rest.length > 0) {
                         if (!identity.attributeCandidates) {
                             identity.attributeCandidates = {};
                         }
 
-                        if (!identity.attributeCandidates[child.path]) {
-                            identity.attributeCandidates[child.path] = [];
+                        if (!identity.attributeCandidates[pathNormalized]) {
+                            identity.attributeCandidates[pathNormalized] = [];
                         }
 
-                        identity.attributeCandidates[child.path]!.push(...rest);
+                        identity.attributeCandidates[pathNormalized]!.push(...rest);
                     }
 
                     retry = true;
@@ -217,25 +219,25 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
 
                 if (
                     identity.attributeCandidates &&
-                    identity.attributeCandidates[child.path] &&
-                    identity.attributeCandidates[child.path]!.length > 0
+                    identity.attributeCandidates[pathNormalized] &&
+                    identity.attributeCandidates[pathNormalized]!.length > 0
                 ) {
-                    entity[child.path] = identity.attributeCandidates[child.path]!.shift();
+                    entity[pathNormalized] = identity.attributeCandidates[pathNormalized]!.shift();
                     retry = true;
                     break;
                 }
 
                 if (
                     entity.name &&
-                    child.path === 'email'
+                    pathNormalized === 'email'
                 ) {
-                    entity[child.path] = buildUserFakeEmail(entity.name);
+                    entity[pathNormalized] = buildUserFakeEmail(entity.name);
                     retry = true;
                     break;
                 }
 
-                if (entity[child.path]) {
-                    entity[child.path] = null;
+                if (entity[pathNormalized]) {
+                    entity[pathNormalized] = null;
                     break;
                 }
             }

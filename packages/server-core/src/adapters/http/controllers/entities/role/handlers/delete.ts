@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName, ROLE_ADMIN_NAME } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
@@ -37,9 +38,9 @@ export async function deleteRoleRouteHandler(req: Request, res: Response) : Prom
 
     await permissionChecker.check({
         name: PermissionName.ROLE_DELETE,
-        input: {
-            attributes: entity,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: entity,
+        }),
     });
 
     // ----------------------------------------------

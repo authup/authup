@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Request, Response } from 'routup';
@@ -63,7 +64,9 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
             try {
                 await permissionChecker.check({
                     name: PermissionName.IDENTITY_PROVIDER_READ,
-                    input: { attributes: entities[i] },
+                    input: new PolicyData({
+                        [BuiltInPolicyType.ATTRIBUTES]: entities[i],
+                    }),
                 });
 
                 await repository.extendOneWithEA(entities[i]);
@@ -133,7 +136,9 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         const permissionChecker = useRequestPermissionChecker(req);
         await permissionChecker.check({
             name: PermissionName.IDENTITY_PROVIDER_READ,
-            input: { attributes: entity },
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
         });
         await repository.extendOneWithEA(entity);
     } catch (e) {

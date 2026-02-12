@@ -6,7 +6,7 @@
  */
 
 import type { Permission } from '@authup/core-kit';
-import type { PermissionItem, PolicyIdentity } from '@authup/access';
+import type { IdentityPolicyData, PermissionItem } from '@authup/access';
 import { isPermissionItemEqual } from '@authup/access';
 import type { DataSource } from 'typeorm';
 import {
@@ -36,7 +36,7 @@ export class IdentityPermissionService {
         this.robotRepository = new RobotRepository(dataSource);
     }
 
-    async isSuperset(parent: PolicyIdentity, child: PolicyIdentity) : Promise<boolean> {
+    async isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData) : Promise<boolean> {
         const parentPermissions = await this.getFor(parent);
         const childPermissions = await this.getFor(child);
 
@@ -55,7 +55,7 @@ export class IdentityPermissionService {
         return true;
     }
 
-    async getFor(identity: PolicyIdentity) : Promise<Permission[]> {
+    async getFor(identity: IdentityPolicyData) : Promise<Permission[]> {
         switch (identity.type) {
             case 'client': {
                 return this.getForClient(identity);
@@ -74,7 +74,7 @@ export class IdentityPermissionService {
         return [];
     }
 
-    async getForClient(identity: PolicyIdentity) : Promise<Permission[]> {
+    async getForClient(identity: IdentityPolicyData) : Promise<Permission[]> {
         const permissions = await this.clientRepository.getBoundPermissions(identity.id);
         const roles = await this.clientRepository.getBoundRoles(identity.id);
         const rolePermissions = await this.roleRepository.getBoundPermissionsForMany(roles);
@@ -88,7 +88,7 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForUser(identity: PolicyIdentity) : Promise<Permission[]> {
+    async getForUser(identity: IdentityPolicyData) : Promise<Permission[]> {
         const permissions = await this.userRepository.getBoundPermissions(identity.id)
             .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
 
@@ -106,7 +106,7 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForRobot(identity: PolicyIdentity) : Promise<Permission[]> {
+    async getForRobot(identity: IdentityPolicyData) : Promise<Permission[]> {
         const permissions = await this.robotRepository.getBoundPermissions(identity.id)
             .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
 
@@ -124,14 +124,14 @@ export class IdentityPermissionService {
         ];
     }
 
-    async getForRole(identity: PolicyIdentity) : Promise<Permission[]> {
+    async getForRole(identity: IdentityPolicyData) : Promise<Permission[]> {
         return this.roleRepository.getBoundPermissions(identity.id)
             .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
     }
 
     private reduceEntitiesByIdentityClient<T extends { client_id?: string | null }>(
         entities: T[],
-        identity: PolicyIdentity,
+        identity: IdentityPolicyData,
     ): T[] {
         if (!identity.clientId) {
             return entities;

@@ -7,21 +7,23 @@
 
 import type { AuthupErrorOptions } from '@authup/errors';
 import { AuthupError, ErrorCode } from '@authup/errors';
-import type { PolicyError, PolicyWithType } from '../../policy';
-import { BuiltInPolicyType } from '../../policy';
-import type { PermissionEvaluationErrorOptions } from './types';
+import type { PolicyIssue } from '../../policy';
 
 export class PermissionError extends AuthupError {
-    public policy : PolicyWithType | undefined;
-
-    public policyError : PolicyError | undefined;
-
     constructor(options: AuthupErrorOptions = {}) {
         super({
             ...options,
             message: options.message || 'A permission error occurred.',
             statusCode: options.statusCode || 403,
         });
+    }
+
+    addIssue(data: PolicyIssue) {
+        this.issues.push(data);
+    }
+
+    addIssues(data: PolicyIssue[]) {
+        this.issues.push(...data);
     }
 
     static notFound(name: string) {
@@ -45,24 +47,17 @@ export class PermissionError extends AuthupError {
         });
     }
 
-    static evaluationFailed(options: PermissionEvaluationErrorOptions) {
-        const error = new PermissionError({
-            message: `The evaluation of permission ${options.name} failed.`,
+    static evaluationFailed(name: string | string[]) {
+        if (Array.isArray(name)) {
+            return new PermissionError({
+                message: `The evaluation of permissions ${name.join(', ')} failed`,
+                code: ErrorCode.PERMISSION_EVALUATION_FAILED,
+            });
+        }
+
+        return new PermissionError({
+            message: `The evaluation of permission ${name} failed`,
             code: ErrorCode.PERMISSION_EVALUATION_FAILED,
         });
-
-        if (options.policy) {
-            error.policy = options.policy;
-
-            if (options.policy.type === BuiltInPolicyType.IDENTITY) {
-                error.statusCode = 401;
-            }
-        }
-
-        if (options.policyError) {
-            error.policyError = options.policyError;
-        }
-
-        return error;
     }
 }

@@ -1,7 +1,6 @@
 {
     "include-component-in-tag": false,
     "release-type": "node",
-    "release-as": "1.0.0-beta.28",
     "packages": {
         ".": {"component": "root"},
         "packages/access": {"component": "access"},
@@ -23,8 +22,7 @@
         {
             "updateAllPackages": true,
             "type": "node-workspace",
-            "updatePeerDependencies": true,
-            "merge": true
+            "updatePeerDependencies": true
         },
         {
             "type": "linked-versions",

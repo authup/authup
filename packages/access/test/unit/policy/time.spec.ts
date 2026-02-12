@@ -8,10 +8,12 @@
 import { describe, expect, it } from 'vitest';
 import type { TimePolicy } from '../../../src';
 import {
+    BuiltInPolicyType,
+    PolicyData,
     TimePolicyEvaluator,
     TimePolicyValidator,
+    definePolicyEvaluationContext,
 } from '../../../src';
-import { buildTestPolicyEvaluateContext } from '../../utils';
 
 describe('src/policy/time', () => {
     it('should restrict', async () => {
@@ -21,26 +23,24 @@ describe('src/policy/time', () => {
         };
 
         const evaluator = new TimePolicyEvaluator();
-        const dateTime = new Date();
-        dateTime.setHours(12, 0);
+        const time = new Date();
+        time.setHours(12, 0);
 
-        let outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
-                dateTime,
-            },
+        let outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
+                [BuiltInPolicyType.TIME]: time,
+            }),
         }));
-        expect(outcome)
+        expect(outcome.success)
             .toBeTruthy();
 
-        dateTime.setHours(6, 0);
-        outcome = await evaluator.evaluate(buildTestPolicyEvaluateContext({
-            config,
-            input: {
-                dateTime,
-            },
+        time.setHours(6, 0);
+        outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
+            data: new PolicyData({
+                [BuiltInPolicyType.TIME]: time,
+            }),
         }));
-        expect(outcome)
+        expect(outcome.success)
             .toBeFalsy();
     });
 

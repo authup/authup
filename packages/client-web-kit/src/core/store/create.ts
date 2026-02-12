@@ -7,7 +7,7 @@
 
 import {
     PermissionChecker,
-    PermissionMemoryProvider,
+    PermissionMemoryRepository,
     PolicyEngine,
 } from '@authup/access';
 import {
@@ -154,9 +154,9 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    const permissionRepository = new PermissionMemoryProvider();
+    const permissionRepository = new PermissionMemoryRepository();
     const permissionChecker = new PermissionChecker({
-        provider: permissionRepository,
+        repository: permissionRepository,
         policyEngine: new PolicyEngine(),
     });
 

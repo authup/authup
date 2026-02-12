@@ -45,7 +45,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@ebec/http": "^2.3.0"
+        "@ebec/http": "^2.3.0",
+        "validup": "^0.2.1"
     },
     "publishConfig": {
         "access": "public"

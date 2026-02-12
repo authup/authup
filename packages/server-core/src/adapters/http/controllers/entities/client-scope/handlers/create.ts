@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendCreated } from 'routup';
@@ -43,9 +44,9 @@ export async function createClientScopeRouteHandler(req: Request, res: Response)
 
     await permissionChecker.check({
         name: PermissionName.CLIENT_SCOPE_CREATE,
-        input: {
-            attributes: data,
-        },
+        input: new PolicyData({
+            [BuiltInPolicyType.ATTRIBUTES]: data,
+        }),
     });
 
     const repository = dataSource.getRepository(ClientScopeEntity);
