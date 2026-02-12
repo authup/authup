@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.1-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.1-beta.28) (2026-02-12)
+
+
+### Bug Fixes
+
+* **deps:** bump the majorprod group across 1 directory with 2 updates ([#2827](https://github.com/authup/authup/issues/2827)) ([2683f17](https://github.com/authup/authup/commit/2683f17f567333a46fe64616e40053a71b6e10b1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.28 to ^1.1.0-beta.28
+  * peerDependencies
+    * @authup/errors bumped from ^1.0.0-beta.28 to ^1.1.0-beta.28
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 
