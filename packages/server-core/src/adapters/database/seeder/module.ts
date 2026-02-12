@@ -21,7 +21,7 @@ import type { DataSource, FindOptionsWhere } from 'typeorm';
 import { IsNull } from 'typeorm';
 import type { Seeder } from 'typeorm-extension';
 import {
-    ClientEntity,
+    ClientEntity, ClientRoleEntity,
     PermissionEntity,
     RealmEntity,
     RobotEntity,
@@ -234,7 +234,7 @@ export class DatabaseSeeder implements Seeder {
             client_id: client.id,
         };
 
-        const clientRoleRepository = dataSource.getRepository(RobotRoleEntity);
+        const clientRoleRepository = dataSource.getRepository(ClientRoleEntity);
         let clientRole = await clientRoleRepository.findOneBy(clientRoleData as FindOptionsWhere<ClientRole>);
 
         if (!clientRole) {
