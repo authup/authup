@@ -134,7 +134,5 @@ export class ProvisionerModule implements Module {
         });
 
         await rootSynchronizer.synchronize(data);
-
-        // todo: pass loaded data to synchronizer.
     }
 }
