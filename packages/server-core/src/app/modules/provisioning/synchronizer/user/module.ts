@@ -118,14 +118,14 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         if (permissions.length > 0) {
             for (let i = 0; i < permissions.length; i++) {
                 const permission = permissions[i];
-                const rolePermission = this.userPermissionRepository.create({
+                const userPermission = this.userPermissionRepository.create({
                     user_id: data.id,
                     user_realm_id: data.realm_id,
                     permission_id: permission.id,
                     permission_realm_id: permission.realm_id,
                 });
 
-                await this.userPermissionRepository.save(rolePermission);
+                await this.userPermissionRepository.save(userPermission);
             }
         }
 
@@ -204,14 +204,14 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         if (roles.length > 0) {
             for (let i = 0; i < roles.length; i++) {
                 const role = roles[i];
-                const clientRole = this.userRoleRepository.create({
+                const userRole = this.userRoleRepository.create({
                     user_id: data.id,
                     user_realm_id: data.realm_id,
                     role_id: role.id,
                     role_realm_id: role.realm_id,
                 });
 
-                await this.userRoleRepository.save(clientRole);
+                await this.userRoleRepository.save(userRole);
             }
         }
 
