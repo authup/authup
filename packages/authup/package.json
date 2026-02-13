@@ -49,14 +49,14 @@
         "@authup/kit": "^1.0.0-beta.28",
         "@authup/core-kit": "^1.0.0-beta.28",
         "@authup/server-core": "^1.0.0-beta.28",
-        "citty": "^0.2.0",
+        "citty": "^0.2.1",
         "chalk": "^5.6.2",
         "confinity": "^1.0.0-beta.1",
         "consola": "^3.4.0",
         "dycraft": "^1.1.0",
         "envix": "^1.5.0",
         "resolve-package-path": "^4.0.3",
-        "smob": "^1.5.0",
+        "smob": "^1.6.1",
         "zod": "^4.3.6"
     },
     "publishConfig": {

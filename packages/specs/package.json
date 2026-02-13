@@ -44,7 +44,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "pathtrace": "^2.1.0",
-        "smob": "^1.5.0"
+        "smob": "^1.6.1"
     },
     "devDependencies": {
         "@authup/errors": "^1.0.0-beta.28",
