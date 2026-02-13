@@ -88,14 +88,14 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         if (permissions.length > 0) {
             for (let i = 0; i < permissions.length; i++) {
                 const permission = permissions[i];
-                const rolePermission = this.robotPermissionRepository.create({
+                const robotPermission = this.robotPermissionRepository.create({
                     robot_id: data.id,
                     robot_realm_id: data.realm_id,
                     permission_id: permission.id,
                     permission_realm_id: permission.realm_id,
                 });
 
-                await this.robotPermissionRepository.save(rolePermission);
+                await this.robotPermissionRepository.save(robotPermission);
             }
         }
 
@@ -144,14 +144,14 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         if (roles.length > 0) {
             for (let i = 0; i < roles.length; i++) {
                 const role = roles[i];
-                const clientRole = this.robotRoleRepository.create({
+                const robotRole = this.robotRoleRepository.create({
                     robot_id: data.id,
                     robot_realm_id: data.realm_id,
                     role_id: role.id,
                     role_realm_id: role.realm_id,
                 });
 
-                await this.robotRoleRepository.save(clientRole);
+                await this.robotRoleRepository.save(robotRole);
             }
         }
 
