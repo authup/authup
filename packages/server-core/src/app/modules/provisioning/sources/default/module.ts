@@ -26,7 +26,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 name: REALM_MASTER_NAME,
                 built_in: true,
             },
-            meta: {
+            relations: {
 
             },
         };
@@ -42,7 +42,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     email: buildUserFakeEmail(this.config.userAdminName),
                     active: this.config.userAdminEnabled,
                 },
-                meta: {
+                relations: {
                     globalRoles: [ROLE_ADMIN_NAME],
                 },
             },
@@ -59,7 +59,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     secret_hashed: false,
                     active: this.config.clientAdminEnabled,
                 },
-                meta: {
+                relations: {
                     globalRoles: [ROLE_ADMIN_NAME],
                 },
             },
@@ -75,7 +75,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     secret: await robotCredentialsService.protect(this.config.robotAdminSecret),
                     active: this.config.robotAdminEnabled,
                 },
-                meta: {
+                relations: {
                     globalRoles: [ROLE_ADMIN_NAME],
                 },
             },
@@ -100,7 +100,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     data: {
                         name: ROLE_ADMIN_NAME,
                     },
-                    meta: {
+                    relations: {
                         globalPermissions: ['*'],
                     },
                 },
