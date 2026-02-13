@@ -43,6 +43,12 @@ export class CompositeProvisioningSource implements IProvisioningSource {
                 output.permissions = output.permissions || [];
                 output.permissions.push(...sourceData.permissions);
             }
+
+            if (sourceData.scopes) {
+                // todo: unique check and merge
+                output.scopes = output.scopes || [];
+                output.scopes.push(...sourceData.scopes);
+            }
         }
 
         return output;
