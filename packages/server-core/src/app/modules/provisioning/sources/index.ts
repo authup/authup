@@ -5,5 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './default/index.ts';
 export * from './composite/index.ts';
 export * from './file/index.ts';

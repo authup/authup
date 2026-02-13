@@ -82,6 +82,7 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         robotAuthBasic: false,
         robotAdminName: 'system',
         robotAdminEnabled: false,
+        robotAdminSecret: 'start123',
         robotAdminSecretReset: false,
 
         permissions: [],

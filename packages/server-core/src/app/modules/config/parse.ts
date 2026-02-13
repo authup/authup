@@ -67,6 +67,14 @@ export function parseConfig(input: unknown = {}): ConfigInput {
         forgotPassword: zod.boolean().optional(),
 
         clientAuthBasic: zod.boolean().optional(),
+        clientAdminEnabled: zod.boolean().optional(),
+        clientAdminName: zod.string()
+            .min(3)
+            .max(128)
+            .optional(),
+        clientAdminSecret: zod.string()
+            .min(3)
+            .max(256).optional(),
 
         userAuthBasic: zod.boolean().optional(),
         userAdminEnabled: zod.boolean().optional(),

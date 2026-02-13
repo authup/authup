@@ -5,29 +5,53 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type {
-    Client, ClientPermission, ClientRole,
-    Permission, Realm, Robot, RobotPermission, RobotRole, Role, RolePermission, Scope, User, UserPermission, UserRole,
+    Client,
+    ClientPermission,
+    ClientRole,
+    Permission,
+    Realm,
+    Robot,
+    RobotPermission,
+    RobotRole,
+    Role,
+    RolePermission,
+    Scope,
+    User,
+    UserPermission,
+    UserRole,
 } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import {
-    ClientEntity, ClientPermissionEntity, ClientRoleEntity,
-    PermissionEntity, RealmEntity, RobotEntity, RobotPermissionEntity,
-    RobotRoleEntity, RoleEntity, RolePermissionEntity, ScopeEntity, UserEntity, UserPermissionEntity, UserRoleEntity,
-} from '../../../adapters/database';
+    ClientEntity,
+    ClientPermissionEntity,
+    ClientRoleEntity,
+    PermissionEntity,
+    RealmEntity,
+    RobotEntity,
+    RobotPermissionEntity,
+    RobotRoleEntity,
+    RoleEntity,
+    RolePermissionEntity,
+    ScopeEntity,
+    UserEntity,
+    UserPermissionEntity,
+    UserRoleEntity,
+} from '../../../adapters/database/index.ts';
 import type { IDIContainer } from '../../../core';
 import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';
-import { CompositeProvisioningSource } from './sources';
-import { DefaultProvisioningSource } from './sources/default';
+import { CompositeProvisioningSource, DefaultProvisioningSource } from './sources/index.ts';
 import {
     ClientProvisioningSynchronizer,
     GraphProvisioningSynchronizer,
     PermissionProvisioningSynchronizer,
-    RealmProvisioningSynchronizer, RobotProvisioningSynchronizer,
-    RoleProvisioningSynchronizer, ScopeProvisioningSynchronizer,
+    RealmProvisioningSynchronizer,
+    RobotProvisioningSynchronizer,
+    RoleProvisioningSynchronizer,
+    ScopeProvisioningSynchronizer,
     UserProvisioningSynchronizer,
-} from './synchronizer';
+} from './synchronizer/index.ts';
 import type {
     IProvisioningSource,
 } from './types.ts';
