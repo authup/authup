@@ -21,10 +21,8 @@ import {
     unsetDataSource,
     useDataSourceOptions,
 } from 'typeorm-extension';
-import type { DatabaseSeederOptions } from '../../../adapters/database/index.ts';
 import {
     DatabaseQueryResultCache,
-    DatabaseSeeder,
     extendDataSourceOptions,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
@@ -42,7 +40,6 @@ import { LoggerInjectionKey } from '../logger/index.ts';
 export class DatabaseModule implements Module {
     async start(container: IDIContainer): Promise<void> {
         const logger = container.resolve<Logger>(LoggerInjectionKey);
-        const config = container.resolve<Config>(ConfigInjectionKey);
 
         const options = await this.createDataSourceOptions(container);
 
@@ -73,8 +70,6 @@ export class DatabaseModule implements Module {
             logger.debug('Applied database schema.');
         }
 
-        await this.runSeeder(dataSource, config);
-
         container.register(DatabaseInjectionKey.DataSource, {
             useValue: dataSource,
         });
@@ -93,15 +88,6 @@ export class DatabaseModule implements Module {
 
     protected async synchronize(dataSource: DataSource): Promise<void> {
         await synchronizeDatabaseSchema(dataSource);
-    }
-
-    // ----------------------------------------------------
-
-    // todo: this should be a component/module
-    protected async runSeeder(dataSource: DataSource, options: Partial<DatabaseSeederOptions>): Promise<void> {
-        const seeder = new DatabaseSeeder(options);
-
-        await seeder.run(dataSource);
     }
 
     // ----------------------------------------------------

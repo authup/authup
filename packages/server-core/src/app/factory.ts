@@ -22,6 +22,7 @@ import {
     SwaggerModule,
     VaultModule,
 } from './modules/index.ts';
+import { ProvisionerModule } from './modules/provisioning/module.ts';
 
 export function createApplication() {
     return new Application([
@@ -40,6 +41,7 @@ export function createApplication() {
 
         new SwaggerModule(),
         new DatabaseModule(),
+        new ProvisionerModule(),
         new LdapModule(),
 
         new AuthenticationModule(),

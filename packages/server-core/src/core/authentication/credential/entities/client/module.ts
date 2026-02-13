@@ -25,7 +25,7 @@ export class ClientCredentialsService implements ICredentialService<Client> {
         return input === entity.secret;
     }
 
-    async protect(input: string, entity: Client): Promise<string> {
+    async protect(input: string, entity: Pick<Client, 'secret_hashed'>): Promise<string> {
         if (entity.secret_hashed) {
             return isBCryptHash(input) ?
                 input :

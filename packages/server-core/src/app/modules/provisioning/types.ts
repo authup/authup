@@ -1,0 +1,176 @@
+/*
+ * Copyright (c) 2026-2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import type {
+    Client, Permission, Realm, Robot, Role, Scope, User,
+} from '@authup/core-kit';
+import type { ObjectLiteral } from '@authup/kit';
+
+export type ProvisioningContainer<A, R> = {
+    data: A,
+    meta?: R
+};
+
+// todo: add top level scopes
+
+export type ScopeProvisioningContainer = ProvisioningContainer<Partial<Scope>, ObjectLiteral>;
+
+export type PermissionProvisioningContainer = ProvisioningContainer<
+Partial<Permission>,
+ObjectLiteral
+>;
+
+export type RobotProvisioningContainer = ProvisioningContainer<Partial<Robot>, {
+    /**
+     * Assign client to realm permissions.
+     */
+    realmPermissions?: string[],
+
+    /**
+     * Assign client to global permissions.
+     */
+    globalPermissions?: string[],
+
+    // ------------------------------------------
+
+    /**
+     * Assign user to roles of the same realm.
+     */
+    realmRoles?: string[]
+
+    /**
+     * Assign user to global roles
+     */
+    globalRoles?: string[],
+}>;
+
+export type UserProvisioningContainer = ProvisioningContainer<Partial<User>, {
+    /**
+     * Assign user to specific client permissions of the same realm.
+     */
+    clientPermissions?: Record<string, string[]>,
+
+    /**
+     * Assign client to realm permissions.
+     */
+    realmPermissions?: string[],
+
+    /**
+     * Assign client to global permissions.
+     */
+    globalPermissions?: string[],
+
+    // ------------------------------------------
+
+    /**
+     * Assign user to specific client roles of the same realm.
+     */
+    clientRoles?: Record<string, string[]>,
+
+    /**
+     * Assign user to roles of the same realm.
+     */
+    realmRoles?: string[]
+
+    /**
+     * Assign user to global roles
+     */
+    globalRoles?: string[],
+}>;
+
+export type RoleProvisioningContainer = ProvisioningContainer<
+Partial<Role>,
+{
+    /**
+     * Assign role to global permissions
+     */
+    globalPermissions?: string[],
+}>;
+
+export type ClientProvisioningContainer = ProvisioningContainer<
+Partial<Client>,
+{
+    /**
+     * Create or update permissions for client.
+     */
+    permissions?: PermissionProvisioningContainer[],
+
+    /**
+     * Assign client to realm permissions.
+     */
+    realmPermissions?: string[],
+
+    /**
+     * Assign client to global permisisons.
+     */
+    globalPermissions?: string[],
+
+    // ------------------------------------------
+
+    /**
+     * Create or update roles for client.
+     */
+    roles?: RoleProvisioningContainer[],
+
+    /**
+     * Assign client to roles of same realm.
+     */
+    realmRoles?: string[],
+
+    /**
+     * Assign client to global roles.
+     */
+    globalRoles?: string[],
+
+}>;
+
+export type RealmProvisioningContainer = ProvisioningContainer<
+Partial<Realm>,
+{
+    users?: UserProvisioningContainer[],
+
+    robots?: RobotProvisioningContainer[]
+
+    clients?: ClientProvisioningContainer[]
+
+    // Create Roles for Realm
+    roles?: RoleProvisioningContainer[],
+
+    // Create Permissions for Realm
+    permissions?: PermissionProvisioningContainer[],
+}>;
+
+export type ProvisioningData = {
+    /**
+     * Create or update realms
+     */
+    realms?: RealmProvisioningContainer[],
+
+    /**
+     * Create or update global roles
+     */
+    roles?: RoleProvisioningContainer[],
+
+    /**
+     * Create or update global permissions
+     */
+    permissions?: PermissionProvisioningContainer[],
+
+    /**
+     * Create or update global scopes
+     */
+    scopes?: ScopeProvisioningContainer[],
+};
+
+export interface IProvisioningSource {
+    load() : Promise<ProvisioningData>;
+}
+
+export interface IProvisioningSynchronizer<T> {
+    synchronize(input: T) : Promise<T>;
+    synchronizeMany(input: T[]) : Promise<T[]>;
+}

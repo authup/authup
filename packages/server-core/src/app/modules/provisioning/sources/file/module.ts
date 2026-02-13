@@ -5,13 +5,13 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { Container } from 'confinity';
-import { isObject } from '@authup/kit';
 import { UserValidator } from '@authup/core-kit';
-import type { EntitySchema, IEntitySchemaImporter } from '../../types.ts';
+import { isObject } from '@authup/kit';
+import { Container } from 'confinity';
+import type { IProvisioningSource, ProvisioningData } from '../../types.ts';
 import type { FileEntitySchemaImporterOptions } from './types.ts';
 
-export class FileEntitySchemaImporter implements IEntitySchemaImporter {
+export class FileProvisioningSource implements IProvisioningSource {
     protected options: FileEntitySchemaImporterOptions;
 
     // todo: extended version of e.g. RealmValidator (with users for UserValidator)
@@ -23,7 +23,7 @@ export class FileEntitySchemaImporter implements IEntitySchemaImporter {
         this.userValidator = new UserValidator();
     }
 
-    async import(): Promise<EntitySchema> {
+    async load(): Promise<ProvisioningData> {
         const container = new Container({
             prefix: 'authup',
             cwd: this.options.cwd,
@@ -36,15 +36,11 @@ export class FileEntitySchemaImporter implements IEntitySchemaImporter {
             throw new Error('Config property "schema" must be an object');
         }
 
-        const schema : EntitySchema = {
-            clients: [],
-            realms: [],
-            users: [],
-            roles: [],
-            permissions: [],
+        return {
+            realms: this.readPropertyAsArray(config, 'realms'),
+            roles: this.readPropertyAsArray(config, 'roles'),
+            permissions: this.readPropertyAsArray(config, 'permissions'),
         };
-
-        return schema;
     }
 
     private readPropertyAsArray(input: Record<string, any>, propertyKey: string): any[] {

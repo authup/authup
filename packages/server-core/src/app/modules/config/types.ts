@@ -180,6 +180,22 @@ export type Config = {
      */
     clientAuthBasic: boolean,
 
+    /**
+     * Enable a global robot account.
+     * default: false
+     */
+    clientAdminEnabled: boolean,
+
+    /**
+     * The name of the default robot.
+     */
+    clientAdminName: string,
+
+    /**
+     * The secret of the default admin user.
+     */
+    clientAdminSecret: string,
+
     // ----------------------------------------------------
 
     /**
@@ -209,7 +225,7 @@ export type Config = {
      * Reset admin password on application startup.
      * default: undefined
      */
-    userAdminPasswordReset?: boolean,
+    userAdminPasswordReset: boolean,
 
     // ----------------------------------------------------
 
@@ -228,19 +244,19 @@ export type Config = {
      * The name of the default robot.
      * default: system
      */
-    robotAdminName?: string,
+    robotAdminName: string,
 
     /**
      * The secret of the default admin user.
      * default: (**generated**)
      */
-    robotAdminSecret?: string,
+    robotAdminSecret: string,
 
     /**
      * Reset the robot secret on application startup.
      * default: false
      */
-    robotAdminSecretReset?: boolean,
+    robotAdminSecretReset: boolean,
 
     // ----------------------------------------------------
 
