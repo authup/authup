@@ -181,18 +181,18 @@ export type Config = {
     clientAuthBasic: boolean,
 
     /**
-     * Enable a global robot account.
+     * Enable a client account for the default realm.
      * default: false
      */
     clientAdminEnabled: boolean,
 
     /**
-     * The name of the default robot.
+     * The name of the default client.
      */
     clientAdminName: string,
 
     /**
-     * The secret of the default admin user.
+     * The secret of the default client.
      */
     clientAdminSecret: string,
 
