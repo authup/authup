@@ -7,4 +7,3 @@
 
 export * from './handlers/index.ts';
 export * from './module.ts';
-export * from './utils/index.ts';

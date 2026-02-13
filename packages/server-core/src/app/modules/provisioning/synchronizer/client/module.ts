@@ -53,10 +53,10 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         // Permissions (Global + Realm)
 
         const permissions : Permission[] = [];
-        if (input.meta && input.meta.globalPermissions) {
+        if (input.relations && input.relations.globalPermissions) {
             let entities : Permission[];
 
-            const hasWildcard = input.meta.globalPermissions.some((el) => el === '*');
+            const hasWildcard = input.relations.globalPermissions.some((el) => el === '*');
             if (hasWildcard) {
                 entities = await this.permissionRepository.findBy({
                     realm_id: IsNull(),
@@ -64,7 +64,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 });
             } else {
                 entities = await this.permissionRepository.findBy({
-                    name: In(input.meta.globalPermissions),
+                    name: In(input.relations.globalPermissions),
                     realm_id: IsNull(),
                     client_id: IsNull(),
                 });
@@ -73,10 +73,10 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             permissions.push(...entities);
         }
 
-        if (input.meta && input.meta.realmPermissions) {
+        if (input.relations && input.relations.realmPermissions) {
             let entities : Permission[];
 
-            const hasWildcard = input.meta.realmPermissions.some((el) => el === '*');
+            const hasWildcard = input.relations.realmPermissions.some((el) => el === '*');
             if (hasWildcard) {
                 entities = await this.permissionRepository.findBy({
                     realm_id: data.realm_id,
@@ -84,7 +84,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 });
             } else {
                 entities = await this.permissionRepository.findBy({
-                    name: In(input.meta.realmPermissions),
+                    name: In(input.relations.realmPermissions),
                     realm_id: data.realm_id,
                     client_id: IsNull(),
                 });
@@ -109,10 +109,10 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         // Role (Global + Realm)
         const roles : Role[] = [];
-        if (input.meta && input.meta.globalRoles) {
+        if (input.relations && input.relations.globalRoles) {
             let entities : Role[];
 
-            const hasWildcard = input.meta.globalRoles.some((el) => el === '*');
+            const hasWildcard = input.relations.globalRoles.some((el) => el === '*');
             if (hasWildcard) {
                 entities = await this.roleRepository.findBy({
                     realm_id: IsNull(),
@@ -120,7 +120,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 });
             } else {
                 entities = await this.roleRepository.findBy({
-                    name: In(input.meta.globalRoles),
+                    name: In(input.relations.globalRoles),
                     realm_id: IsNull(),
                     client_id: IsNull(),
                 });
@@ -129,10 +129,10 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             roles.push(...entities);
         }
 
-        if (input.meta && input.meta.realmRoles) {
+        if (input.relations && input.relations.realmRoles) {
             let entities : Role[];
 
-            const hasWildcard = input.meta.realmRoles.some((el) => el === '*');
+            const hasWildcard = input.relations.realmRoles.some((el) => el === '*');
             if (hasWildcard) {
                 entities = await this.roleRepository.findBy({
                     realm_id: data.realm_id,
@@ -140,7 +140,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 });
             } else {
                 entities = await this.roleRepository.findBy({
-                    name: In(input.meta.realmRoles),
+                    name: In(input.relations.realmRoles),
                     realm_id: data.realm_id,
                     client_id: IsNull(),
                 });
@@ -165,8 +165,8 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         // Containers
 
-        if (input.meta && input.meta.permissions) {
-            const children = input.meta.permissions.map((child) => {
+        if (input.relations && input.relations.permissions) {
+            const children = input.relations.permissions.map((child) => {
                 child.data.client_id = data.id;
                 child.data.client = data;
                 return child;
@@ -175,8 +175,8 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             await this.permissionSynchronizer.synchronizeMany(children);
         }
 
-        if (input.meta && input.meta.roles) {
-            const children = input.meta.roles.map((child) => {
+        if (input.relations && input.relations.roles) {
+            const children = input.relations.roles.map((child) => {
                 child.data.client_id = data.id;
                 child.data.client = data;
                 return child;

@@ -9,7 +9,7 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import {
-    PermissionName,
+    PermissionName, RoleValidator, ValidatorGroup,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
@@ -18,9 +18,7 @@ import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeor
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../../database/index.ts';
 import { RoleEntity } from '../../../../../database/domains/index.ts';
-import { RoleRequestValidator } from '../utils/index.ts';
 import {
-    RequestHandlerOperation,
     getRequestBodyRealmID,
     getRequestParamID,
     isRequestIdentityMasterRealmMember,
@@ -66,14 +64,14 @@ export async function writeRoleRouteHandler(
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
 
-        group = RequestHandlerOperation.UPDATE;
+        group = ValidatorGroup.UPDATE;
     } else {
         await permissionChecker.preCheck({ name: PermissionName.ROLE_CREATE });
 
-        group = RequestHandlerOperation.CREATE;
+        group = ValidatorGroup.CREATE;
     }
 
-    const validator = new RoleRequestValidator();
+    const validator = new RoleValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
     const data = await validatorAdapter.run(req, {
         group,

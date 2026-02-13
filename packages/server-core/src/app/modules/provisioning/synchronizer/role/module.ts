@@ -34,10 +34,10 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
     async synchronize(input: RoleProvisioningContainer): Promise<RoleProvisioningContainer> {
         const data = await this.repository.save(input.data);
 
-        if (input.meta && input.meta.globalPermissions) {
+        if (input.relations && input.relations.globalPermissions) {
             let permissions : Permission[];
 
-            const hasWildcard = input.meta.globalPermissions.some((el) => el === '*');
+            const hasWildcard = input.relations.globalPermissions.some((el) => el === '*');
             if (hasWildcard) {
                 permissions = await this.permissionRepository.findBy({
                     realm_id: IsNull(),
@@ -45,7 +45,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                 });
             } else {
                 permissions = await this.permissionRepository.findBy({
-                    name: In(input.meta.globalPermissions),
+                    name: In(input.relations.globalPermissions),
                     realm_id: IsNull(),
                     client_id: IsNull(),
                 });

@@ -33,8 +33,8 @@ export class DefaultProvisioningSource implements IProvisioningSource {
 
         const userCredentialsService = new UserCredentialsService();
 
-        masterRealm.meta = masterRealm.meta || {};
-        masterRealm.meta.users = [
+        masterRealm.relations = masterRealm.relations || {};
+        masterRealm.relations.users = [
             {
                 data: {
                     name: this.config.userAdminName,
@@ -50,8 +50,8 @@ export class DefaultProvisioningSource implements IProvisioningSource {
 
         const clientCredentialsService = new ClientCredentialsService();
 
-        masterRealm.meta = masterRealm.meta || {};
-        masterRealm.meta.clients = [
+        masterRealm.relations = masterRealm.relations || {};
+        masterRealm.relations.clients = [
             {
                 data: {
                     name: this.config.clientAdminName,
@@ -67,8 +67,8 @@ export class DefaultProvisioningSource implements IProvisioningSource {
 
         const robotCredentialsService = new RobotCredentialsService();
 
-        masterRealm.meta = masterRealm.meta || {};
-        masterRealm.meta.robots = [
+        masterRealm.relations = masterRealm.relations || {};
+        masterRealm.relations.robots = [
             {
                 data: {
                     name: this.config.robotAdminName,

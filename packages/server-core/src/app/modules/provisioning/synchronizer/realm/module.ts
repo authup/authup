@@ -45,8 +45,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     async synchronize(input: RealmProvisioningContainer): Promise<RealmProvisioningContainer> {
         const data = await this.repository.save(input.data);
 
-        if (input.meta && input.meta.clients) {
-            const clients = input.meta.clients.map(
+        if (input.relations && input.relations.clients) {
+            const clients = input.relations.clients.map(
                 (child) => {
                     child.data.realm_id = data.id;
                     child.data.realm = data;
@@ -57,8 +57,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.clientSynchronizer.synchronizeMany(clients);
         }
 
-        if (input.meta && input.meta.permissions) {
-            const permissions = input.meta.permissions.map((child) => {
+        if (input.relations && input.relations.permissions) {
+            const permissions = input.relations.permissions.map((child) => {
                 child.data.realm_id = data.id;
                 child.data.realm = data;
                 return child;
@@ -67,8 +67,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.permissionSynchronizer.synchronizeMany(permissions);
         }
 
-        if (input.meta && input.meta.roles) {
-            const roles = input.meta.roles.map((child) => {
+        if (input.relations && input.relations.roles) {
+            const roles = input.relations.roles.map((child) => {
                 child.data.realm_id = data.id;
                 child.data.realm = data;
                 return child;
@@ -77,8 +77,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.roleSynchronizer.synchronizeMany(roles);
         }
 
-        if (input.meta && input.meta.users) {
-            const users = input.meta.users.map((child) => {
+        if (input.relations && input.relations.users) {
+            const users = input.relations.users.map((child) => {
                 child.data.realm_id = data.id;
                 child.data.realm = data;
                 return child;
@@ -87,8 +87,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             await this.userSynchronizer.synchronizeMany(users);
         }
 
-        if (input.meta && input.meta.robots) {
-            const robots = input.meta.robots.map((child) => {
+        if (input.relations && input.relations.robots) {
+            const robots = input.relations.robots.map((child) => {
                 child.data.realm_id = data.id;
                 child.data.realm = data;
                 return child;

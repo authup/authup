@@ -12,7 +12,7 @@ import type { ObjectLiteral } from '@authup/kit';
 
 export type ProvisioningContainer<A, R> = {
     data: A,
-    meta?: R
+    relations?: R
 };
 
 // todo: add top level scopes
@@ -24,7 +24,7 @@ Partial<Permission>,
 ObjectLiteral
 >;
 
-export type RobotProvisioningContainer = ProvisioningContainer<Partial<Robot>, {
+export type RobotProvisioningRelations = {
     /**
      * Assign client to realm permissions.
      */
@@ -46,9 +46,10 @@ export type RobotProvisioningContainer = ProvisioningContainer<Partial<Robot>, {
      * Assign user to global roles
      */
     globalRoles?: string[],
-}>;
+};
+export type RobotProvisioningContainer = ProvisioningContainer<Partial<Robot>, RobotProvisioningRelations>;
 
-export type UserProvisioningContainer = ProvisioningContainer<Partial<User>, {
+export type UserProvisioningRelations = {
     /**
      * Assign user to specific client permissions of the same realm.
      */
@@ -80,20 +81,21 @@ export type UserProvisioningContainer = ProvisioningContainer<Partial<User>, {
      * Assign user to global roles
      */
     globalRoles?: string[],
-}>;
+};
+export type UserProvisioningContainer = ProvisioningContainer<Partial<User>, UserProvisioningRelations>;
 
-export type RoleProvisioningContainer = ProvisioningContainer<
-Partial<Role>,
-{
+export type RoleProvisioningRelations = {
     /**
      * Assign role to global permissions
      */
     globalPermissions?: string[],
-}>;
+};
+export type RoleProvisioningContainer = ProvisioningContainer<
+Partial<Role>,
+RoleProvisioningRelations
+>;
 
-export type ClientProvisioningContainer = ProvisioningContainer<
-Partial<Client>,
-{
+export type ClientProvisioningRelations = {
     /**
      * Create or update permissions for client.
      */
@@ -126,11 +128,13 @@ Partial<Client>,
      */
     globalRoles?: string[],
 
-}>;
+};
+export type ClientProvisioningContainer = ProvisioningContainer<
+Partial<Client>,
+ClientProvisioningRelations
+>;
 
-export type RealmProvisioningContainer = ProvisioningContainer<
-Partial<Realm>,
-{
+export type RealmProvisioningRelations = {
     users?: UserProvisioningContainer[],
 
     robots?: RobotProvisioningContainer[]
@@ -142,7 +146,11 @@ Partial<Realm>,
 
     // Create Permissions for Realm
     permissions?: PermissionProvisioningContainer[],
-}>;
+};
+export type RealmProvisioningContainer = ProvisioningContainer<
+Partial<Realm>,
+RealmProvisioningRelations
+>;
 
 export type ProvisioningData = {
     /**

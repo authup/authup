@@ -9,7 +9,7 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import {
-    PermissionName,
+    PermissionName, RobotValidator, ValidatorGroup,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
@@ -22,9 +22,8 @@ import {
     RobotEntity, RobotRepository,
 } from '../../../../../database/domains/index.ts';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../../services/index.ts';
-import { RobotRequestValidator } from '../utils/index.ts';
 import {
-    RequestHandlerOperation, getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
+    getRequestBodyRealmID, getRequestParamID, useRequestIdentityOrFail, useRequestPermissionChecker,
 } from '../../../../request/index.ts';
 
 export async function writeRobotRouteHandler(
@@ -65,14 +64,14 @@ export async function writeRobotRouteHandler(
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.ROBOT_UPDATE });
 
-        group = RequestHandlerOperation.UPDATE;
+        group = ValidatorGroup.UPDATE;
     } else {
         await permissionChecker.preCheck({ name: PermissionName.ROBOT_CREATE });
 
-        group = RequestHandlerOperation.CREATE;
+        group = ValidatorGroup.CREATE;
     }
 
-    const validator = new RobotRequestValidator();
+    const validator = new RobotValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
     const data = await validatorAdapter.run(req, {
         group,
