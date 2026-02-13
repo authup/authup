@@ -26,24 +26,24 @@ ObjectLiteral
 
 export type RobotProvisioningRelations = {
     /**
-     * Assign client to realm permissions.
+     * Assign robot to realm permissions.
      */
     realmPermissions?: string[],
 
     /**
-     * Assign client to global permissions.
+     * Assign robot to global permissions.
      */
     globalPermissions?: string[],
 
     // ------------------------------------------
 
     /**
-     * Assign user to roles of the same realm.
+     * Assign robot to roles of the same realm.
      */
     realmRoles?: string[]
 
     /**
-     * Assign user to global roles
+     * Assign robot to global roles
      */
     globalRoles?: string[],
 };
@@ -56,12 +56,12 @@ export type UserProvisioningRelations = {
     clientPermissions?: Record<string, string[]>,
 
     /**
-     * Assign client to realm permissions.
+     * Assign user to realm permissions.
      */
     realmPermissions?: string[],
 
     /**
-     * Assign client to global permissions.
+     * Assign user to global permissions.
      */
     globalPermissions?: string[],
 
@@ -107,7 +107,7 @@ export type ClientProvisioningRelations = {
     realmPermissions?: string[],
 
     /**
-     * Assign client to global permisisons.
+     * Assign client to global permissions.
      */
     globalPermissions?: string[],
 
