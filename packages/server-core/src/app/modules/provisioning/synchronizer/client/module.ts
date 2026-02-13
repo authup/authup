@@ -96,14 +96,14 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         if (permissions.length > 0) {
             for (let i = 0; i < permissions.length; i++) {
                 const permission = permissions[i];
-                const rolePermission = this.clientPermissionRepository.create({
+                const clientPermission = this.clientPermissionRepository.create({
                     client_id: data.id,
                     client_realm_id: data.realm_id,
                     permission_id: permission.id,
                     permission_realm_id: permission.realm_id,
                 });
 
-                await this.clientPermissionRepository.save(rolePermission);
+                await this.clientPermissionRepository.save(clientPermission);
             }
         }
 
