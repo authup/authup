@@ -12,6 +12,8 @@ import type { UserProvisioningRelations } from './types.ts';
 
 export class UserProvisioningRelationsValidator extends Container<UserProvisioningRelations> {
     protected initialize() {
+        super.initialize();
+
         this.mount('clientPermissions', { optional: true }, createValidator(
             zod.record(zod.string(), zod.array(zod.string())),
         ));

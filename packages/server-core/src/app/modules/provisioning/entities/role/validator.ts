@@ -12,6 +12,8 @@ import type { RoleProvisioningContainer } from './types.ts';
 
 export class RoleProvisioningValidator extends Container<RoleProvisioningContainer> {
     protected initialize() {
+        super.initialize();
+
         const validator = new RoleValidator();
         this.mount('data', validator);
     }

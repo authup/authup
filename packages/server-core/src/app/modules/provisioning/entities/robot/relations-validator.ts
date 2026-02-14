@@ -12,6 +12,8 @@ import type { RobotProvisioningRelations } from './types.ts';
 
 export class RobotProvisioningRelationsValidator extends Container<RobotProvisioningRelations> {
     protected initialize() {
+        super.initialize();
+
         this.mount('realmPermissions', { optional: true }, createValidator(
             zod.array(zod.string()),
         ));

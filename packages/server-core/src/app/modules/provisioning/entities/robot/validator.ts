@@ -12,6 +12,8 @@ import type { RobotProvisioningContainer } from './types.ts';
 
 export class RobotProvisioningValidator extends Container<RobotProvisioningContainer> {
     protected initialize() {
+        super.initialize();
+
         const attributesValidator = new RobotValidator();
         const relationsValidator = new RobotProvisioningRelationsValidator();
 

@@ -12,6 +12,8 @@ import type { PermissionProvisioningContainer } from './types.ts';
 
 export class PermissionProvisioningValidator extends Container<PermissionProvisioningContainer> {
     protected initialize() {
+        super.initialize();
+
         const attributesValidator = new PermissionValidator();
         this.mount('data', attributesValidator);
     }

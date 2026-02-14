@@ -17,6 +17,8 @@ import type { RealmProvisioningRelations } from './types.ts';
 
 export class RealmProvisioningRelationsValidator extends Container<RealmProvisioningRelations> {
     protected initialize() {
+        super.initialize();
+
         const clientValidator = new ClientProvisioningValidator();
         const roleValidator = new RoleProvisioningValidator();
         const permissionValidator = new PermissionProvisioningValidator();

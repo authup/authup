@@ -6,17 +6,14 @@
  */
 
 import { createValidator } from '@validup/adapter-zod';
-import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
 import zod from 'zod';
 import type { RoleProvisioningRelations } from './types.ts';
 
 export class RoleProvisioningRelationsValidator extends Container<RoleProvisioningRelations> {
-    constructor(options: ContainerOptions<RoleProvisioningRelations> = {}) {
-        super(options);
-    }
-
     protected initialize() {
+        super.initialize();
+
         this.mount('realmPermissions', { optional: true }, createValidator(
             zod.array(zod.string()),
         ));

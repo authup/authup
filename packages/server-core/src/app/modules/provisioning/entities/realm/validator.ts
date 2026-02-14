@@ -13,6 +13,8 @@ import type { RealmProvisioningContainer } from './types.ts';
 
 export class RealmProvisioningValidator extends Container<RealmProvisioningContainer> {
     protected initialize() {
+        super.initialize();
+
         const attributesValidator = new RealmValidator();
         const relationsValidator = new RealmProvisioningRelationsValidator();
 

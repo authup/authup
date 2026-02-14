@@ -14,6 +14,8 @@ import type { ClientProvisioningRelations } from './types.ts';
 
 export class ClientProvisioningRelationsValidator extends Container<ClientProvisioningRelations> {
     protected initialize() {
+        super.initialize();
+
         const permissionValidator = new PermissionProvisioningValidator();
         const roleValidator = new RoleProvisioningValidator();
 

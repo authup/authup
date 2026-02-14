@@ -17,6 +17,8 @@ import type { RootProvisioningData } from './types.ts';
 
 export class RootProvisioningValidator extends Container<RootProvisioningData> {
     protected initialize() {
+        super.initialize();
+
         const realmValidator = new RealmProvisioningValidator();
         const roleValidator = new RoleProvisioningValidator();
         const scopeValidator = new ScopeProvisioningValidator();

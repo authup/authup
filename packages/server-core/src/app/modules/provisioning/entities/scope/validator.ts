@@ -12,6 +12,8 @@ import type { ScopeProvisioningContainer } from './types.ts';
 
 export class ScopeProvisioningValidator extends Container<ScopeProvisioningContainer> {
     protected initialize() {
+        super.initialize();
+
         const attributesValidator = new ScopeValidator();
         this.mount('data', attributesValidator);
     }
