@@ -7,6 +7,7 @@
 
 import { RoleValidator } from '@authup/core-kit';
 import { Container } from 'validup';
+import { RoleProvisioningRelationsValidator } from './relations-validator.ts';
 
 import type { RoleProvisioningContainer } from './types.ts';
 
@@ -14,7 +15,10 @@ export class RoleProvisioningValidator extends Container<RoleProvisioningContain
     protected initialize() {
         super.initialize();
 
-        const validator = new RoleValidator();
-        this.mount('data', validator);
+        const dataValidator = new RoleValidator();
+        this.mount('data', dataValidator);
+
+        const relationsValidator = new RoleProvisioningRelationsValidator();
+        this.mount('relations', relationsValidator);
     }
 }
