@@ -8,10 +8,10 @@
 import {
     PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ScopeName, buildUserFakeEmail,
 } from '@authup/core-kit';
-import { ClientCredentialsService, RobotCredentialsService, UserCredentialsService } from '../../../../../core';
-import type { Config } from '../../../config';
-import type { RealmProvisioningContainer } from '../../entities/realm';
-import type { RootProvisioningData } from '../../entities/root';
+import { ClientCredentialsService, RobotCredentialsService, UserCredentialsService } from '../../../../../core/index.ts';
+import type { Config } from '../../../config/index.ts';
+import type { RealmProvisioningContainer } from '../../entities/realm/index.ts';
+import type { RootProvisioningData } from '../../entities/root/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
 import type { ConfigProvisioningSourceContext } from './types.ts';
 
