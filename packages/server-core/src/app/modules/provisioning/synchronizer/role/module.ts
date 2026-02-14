@@ -10,9 +10,7 @@ import type {
 } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type {
-    RoleProvisioningContainer,
-} from '../../types.ts';
+import type { RoleProvisioningContainer } from '../../entities/role';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RoleProvisioningSynchronizerContext } from './types.ts';
 
@@ -32,7 +30,14 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
     }
 
     async synchronize(input: RoleProvisioningContainer): Promise<RoleProvisioningContainer> {
-        const data = await this.repository.save(input.data);
+        let data = await this.repository.findOneBy({
+            name: input.data.name,
+            ...(input.data.realm_id ? { realm_id: input.data.realm_id } : { realm_id: IsNull() }),
+            ...(input.data.client_id ? { client_id: input.data.client_id } : { client_id: IsNull() }),
+        });
+        if (!data) {
+            data = await this.repository.save(input.data);
+        }
 
         if (input.relations && input.relations.globalPermissions) {
             let permissions : Permission[];
@@ -53,14 +58,22 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
 
             for (let i = 0; i < permissions.length; i++) {
                 const permission = permissions[i];
-                const rolePermission = this.rolePermissionRepository.create({
+
+                let rolePermission = await this.rolePermissionRepository.findOneBy({
                     role_id: data.id,
-                    role_realm_id: data.realm_id,
                     permission_id: permission.id,
-                    permission_realm_id: permission.realm_id,
                 });
 
-                await this.rolePermissionRepository.save(rolePermission);
+                if (!rolePermission) {
+                    rolePermission = this.rolePermissionRepository.create({
+                        role_id: data.id,
+                        role_realm_id: data.realm_id,
+                        permission_id: permission.id,
+                        permission_realm_id: permission.realm_id,
+                    });
+
+                    await this.rolePermissionRepository.save(rolePermission);
+                }
             }
         }
 

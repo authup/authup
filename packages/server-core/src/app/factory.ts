@@ -18,21 +18,19 @@ import {
     LoggerModule,
     MailModule,
     OAuth2Module,
+    ProvisionerModule,
     RuntimeModule,
     SwaggerModule,
     VaultModule,
 } from './modules/index.ts';
-import { ProvisionerModule } from './modules/provisioning/module.ts';
 
 export function createApplication() {
     return new Application([
         new ConfigModule(),
         new LoggerModule(),
 
-        // todo: rename to CacheModule
         new CacheModule(),
 
-        // todo: rename to mail module
         new MailModule(),
 
         new VaultModule(),

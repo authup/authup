@@ -7,7 +7,8 @@
 
 import type { Permission } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import type { PermissionProvisioningContainer } from '../../types.ts';
+import { IsNull } from 'typeorm';
+import type { PermissionProvisioningContainer } from '../../entities/permission';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { PermissionProvisioningSynchronizerContext } from './types.ts';
 
@@ -21,7 +22,14 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
     }
 
     async synchronize(input: PermissionProvisioningContainer): Promise<PermissionProvisioningContainer> {
-        const data = await this.repository.save(input.data);
+        let data = await this.repository.findOneBy({
+            name: input.data.name,
+            realm_id: input.data.realm_id || IsNull(),
+            client_id: input.data.client_id || IsNull(),
+        });
+        if (!data) {
+            data = await this.repository.save(input.data);
+        }
 
         return {
             ...input,

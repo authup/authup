@@ -7,13 +7,14 @@
 
 import type { Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
+import type { ClientProvisioningContainer } from '../../entities/client';
+import type { PermissionProvisioningContainer } from '../../entities/permission';
+import type { RobotProvisioningContainer } from '../../entities/robot';
+import type { RoleProvisioningContainer } from '../../entities/role';
+import type { UserProvisioningContainer } from '../../entities/user';
 import type {
-    ClientProvisioningContainer,
     IProvisioningSynchronizer,
-    PermissionProvisioningContainer,
-    RobotProvisioningContainer,
-    RoleProvisioningContainer,
-    UserProvisioningContainer,
+
 } from '../../types.ts';
 
 export type RealmProvisioningSynchronizerContext = {

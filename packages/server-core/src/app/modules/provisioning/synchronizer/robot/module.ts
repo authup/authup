@@ -10,9 +10,7 @@ import type {
 } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type {
-    RobotProvisioningContainer,
-} from '../../types.ts';
+import type { RobotProvisioningContainer } from '../../entities/robot';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RobotProvisioningSynchronizerContext } from './types.ts';
 
@@ -41,7 +39,13 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     }
 
     async synchronize(input: RobotProvisioningContainer): Promise<RobotProvisioningContainer> {
-        const data = await this.robotRepository.save(input.data);
+        let data = await this.robotRepository.findOneBy({
+            name: input.data.name,
+            ...(input.data.realm_id ? { realm_id: input.data.realm_id } : { realm_id: IsNull() }),
+        });
+        if (!data) {
+            data = await this.robotRepository.save(input.data);
+        }
 
         // Permissions (Global, Realm & Client)
         const permissions : Permission[] = [];
@@ -88,14 +92,22 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         if (permissions.length > 0) {
             for (let i = 0; i < permissions.length; i++) {
                 const permission = permissions[i];
-                const robotPermission = this.robotPermissionRepository.create({
+
+                let robotPermission = await this.robotPermissionRepository.findOneBy({
                     robot_id: data.id,
-                    robot_realm_id: data.realm_id,
                     permission_id: permission.id,
-                    permission_realm_id: permission.realm_id,
                 });
 
-                await this.robotPermissionRepository.save(robotPermission);
+                if (!robotPermission) {
+                    robotPermission = this.robotPermissionRepository.create({
+                        robot_id: data.id,
+                        robot_realm_id: data.realm_id,
+                        permission_id: permission.id,
+                        permission_realm_id: permission.realm_id,
+                    });
+
+                    await this.robotPermissionRepository.save(robotPermission);
+                }
             }
         }
 
@@ -144,14 +156,22 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         if (roles.length > 0) {
             for (let i = 0; i < roles.length; i++) {
                 const role = roles[i];
-                const robotRole = this.robotRoleRepository.create({
+
+                let robotRole = await this.robotRoleRepository.findOneBy({
                     robot_id: data.id,
-                    robot_realm_id: data.realm_id,
                     role_id: role.id,
-                    role_realm_id: role.realm_id,
                 });
 
-                await this.robotRoleRepository.save(robotRole);
+                if (!robotRole) {
+                    robotRole = this.robotRoleRepository.create({
+                        robot_id: data.id,
+                        robot_realm_id: data.realm_id,
+                        role_id: role.id,
+                        role_realm_id: role.realm_id,
+                    });
+
+                    await this.robotRoleRepository.save(robotRole);
+                }
             }
         }
 

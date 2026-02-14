@@ -7,7 +7,8 @@
 
 import type { Scope } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import type { ScopeProvisioningContainer } from '../../types.ts';
+import { IsNull } from 'typeorm';
+import type { ScopeProvisioningContainer } from '../../entities';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { ScopeProvisioningSynchronizerContext } from './types.ts';
 
@@ -21,7 +22,13 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     }
 
     async synchronize(input: ScopeProvisioningContainer): Promise<ScopeProvisioningContainer> {
-        const data = await this.repository.save(input.data);
+        let data = await this.repository.findOneBy({
+            name: input.data.name,
+            ...(input.data.realm_id ? { realm_id: input.data.realm_id } : { realm_id: IsNull() }),
+        });
+        if (!data) {
+            data = await this.repository.save(input.data);
+        }
 
         return {
             ...input,

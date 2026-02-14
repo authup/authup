@@ -57,6 +57,12 @@ import type {
 } from './types.ts';
 
 export class ProvisionerModule implements Module {
+    protected sources: IProvisioningSource[];
+
+    constructor(sources: IProvisioningSource[] = []) {
+        this.sources = sources;
+    }
+
     async start(container: IDIContainer): Promise<void> {
         const config = container.resolve<Config>(ConfigInjectionKey);
 
@@ -64,7 +70,7 @@ export class ProvisionerModule implements Module {
             new DefaultProvisioningSource({
                 config,
             }),
-            // new FileProvisioningSource({ cwd: config.writableDirectoryPath, }),
+            ...this.sources,
         ];
 
         const composite = new CompositeProvisioningSource(sources);

@@ -5,16 +5,19 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ScopeProvisioningContainer } from '../../entities';
+import type { PermissionProvisioningContainer } from '../../entities/permission';
+import type { RealmProvisioningContainer } from '../../entities/realm';
+import type { RoleProvisioningContainer } from '../../entities/role';
+import type { RootProvisioningData } from '../../entities/root';
 import type {
-    IProvisioningSynchronizer, PermissionProvisioningContainer,
-    ProvisioningData,
-    RealmProvisioningContainer,
-    RoleProvisioningContainer, ScopeProvisioningContainer,
+    IProvisioningSynchronizer,
+
 } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RootProvisioningSynchronizerContext } from './types.ts';
 
-export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<ProvisioningData> {
+export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<RootProvisioningData> {
     protected realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningContainer>;
 
     protected permissionSynchronizer : IProvisioningSynchronizer<PermissionProvisioningContainer>;
@@ -32,7 +35,7 @@ export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.scopeSynchronizer = ctx.scopeSynchronizer;
     }
 
-    async synchronize(input: ProvisioningData): Promise<ProvisioningData> {
+    async synchronize(input: RootProvisioningData): Promise<RootProvisioningData> {
         if (input.permissions) {
             await this.permissionSynchronizer.synchronizeMany(input.permissions);
         }

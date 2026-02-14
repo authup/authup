@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IProvisioningSource, ProvisioningData } from '../../types.ts';
+import type { RootProvisioningData } from '../../entities/root';
+import type { IProvisioningSource } from '../../types.ts';
 
 export class CompositeProvisioningSource implements IProvisioningSource {
     protected sources : IProvisioningSource[];
@@ -14,8 +15,8 @@ export class CompositeProvisioningSource implements IProvisioningSource {
         this.sources = sources;
     }
 
-    async load(): Promise<ProvisioningData> {
-        const output : ProvisioningData = {
+    async load(): Promise<RootProvisioningData> {
+        const output : RootProvisioningData = {
             roles: [],
             realms: [],
             permissions: [],
@@ -26,31 +27,35 @@ export class CompositeProvisioningSource implements IProvisioningSource {
 
             const sourceData = await source.load();
 
-            if (sourceData.roles) {
-                // todo: unique check and merge
-                output.roles = output.roles || [];
-                output.roles.push(...sourceData.roles);
-            }
-
-            if (sourceData.realms) {
-                // todo: unique check and merge
-                output.realms = output.realms || [];
-                output.realms.push(...sourceData.realms);
-            }
-
-            if (sourceData.permissions) {
-                // todo: unique check and merge
-                output.permissions = output.permissions || [];
-                output.permissions.push(...sourceData.permissions);
-            }
-
-            if (sourceData.scopes) {
-                // todo: unique check and merge
-                output.scopes = output.scopes || [];
-                output.scopes.push(...sourceData.scopes);
-            }
+            this.merge(output, sourceData);
         }
 
         return output;
+    }
+
+    merge(target: RootProvisioningData, source: RootProvisioningData) {
+        if (source.roles) {
+            // todo: unique check and merge
+            target.roles = target.roles || [];
+            target.roles.push(...source.roles);
+        }
+
+        if (source.realms) {
+            // todo: unique check and merge
+            target.realms = target.realms || [];
+            target.realms.push(...source.realms);
+        }
+
+        if (source.permissions) {
+            // todo: unique check and merge
+            target.permissions = target.permissions || [];
+            target.permissions.push(...source.permissions);
+        }
+
+        if (source.scopes) {
+            // todo: unique check and merge
+            target.scopes = target.scopes || [];
+            target.scopes.push(...source.scopes);
+        }
     }
 }

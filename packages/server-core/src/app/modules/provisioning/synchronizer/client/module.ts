@@ -10,11 +10,12 @@ import type {
 } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
+import type { ClientProvisioningContainer } from '../../entities/client';
+import type { PermissionProvisioningContainer } from '../../entities/permission';
+import type { RoleProvisioningContainer } from '../../entities/role';
 import type {
-    ClientProvisioningContainer,
     IProvisioningSynchronizer,
-    PermissionProvisioningContainer,
-    RoleProvisioningContainer,
+
 } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { ClientProvisioningSynchronizerContext } from './types.ts';
@@ -48,7 +49,13 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
     }
 
     async synchronize(input: ClientProvisioningContainer): Promise<ClientProvisioningContainer> {
-        const data = await this.clientRepository.save(input.data);
+        let data = await this.clientRepository.findOneBy({
+            name: input.data.name,
+            ...(input.data.realm_id ? { realm_id: input.data.realm_id } : { realm_id: IsNull() }),
+        });
+        if (!data) {
+            data = await this.clientRepository.save(input.data);
+        }
 
         // Permissions (Global + Realm)
 
@@ -96,14 +103,22 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         if (permissions.length > 0) {
             for (let i = 0; i < permissions.length; i++) {
                 const permission = permissions[i];
-                const clientPermission = this.clientPermissionRepository.create({
+
+                let clientPermission = await this.clientPermissionRepository.findOneBy({
                     client_id: data.id,
-                    client_realm_id: data.realm_id,
                     permission_id: permission.id,
-                    permission_realm_id: permission.realm_id,
                 });
 
-                await this.clientPermissionRepository.save(clientPermission);
+                if (!clientPermission) {
+                    clientPermission = this.clientPermissionRepository.create({
+                        client_id: data.id,
+                        client_realm_id: data.realm_id,
+                        permission_id: permission.id,
+                        permission_realm_id: permission.realm_id,
+                    });
+
+                    await this.clientPermissionRepository.save(clientPermission);
+                }
             }
         }
 
@@ -152,14 +167,21 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         if (roles.length > 0) {
             for (let i = 0; i < roles.length; i++) {
                 const role = roles[i];
-                const clientRole = this.clientRoleRepository.create({
+                let clientRole = await this.clientRoleRepository.findOneBy({
                     client_id: data.id,
-                    client_realm_id: data.realm_id,
                     role_id: role.id,
-                    role_realm_id: role.realm_id,
                 });
 
-                await this.clientRoleRepository.save(clientRole);
+                if (!clientRole) {
+                    clientRole = this.clientRoleRepository.create({
+                        client_id: data.id,
+                        client_realm_id: data.realm_id,
+                        role_id: role.id,
+                        role_realm_id: role.realm_id,
+                    });
+
+                    await this.clientRoleRepository.save(clientRole);
+                }
             }
         }
 

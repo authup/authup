@@ -10,7 +10,9 @@ import {
 } from '@authup/core-kit';
 import { ClientCredentialsService, RobotCredentialsService, UserCredentialsService } from '../../../../../core';
 import type { Config } from '../../../config';
-import type { IProvisioningSource, ProvisioningData, RealmProvisioningContainer } from '../../types.ts';
+import type { RealmProvisioningContainer } from '../../entities/realm';
+import type { RootProvisioningData } from '../../entities/root';
+import type { IProvisioningSource } from '../../types.ts';
 import type { ConfigProvisioningSourceContext } from './types.ts';
 
 export class DefaultProvisioningSource implements IProvisioningSource {
@@ -20,7 +22,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         this.config = ctx.config;
     }
 
-    async load(): Promise<ProvisioningData> {
+    async load(): Promise<RootProvisioningData> {
         const masterRealm : RealmProvisioningContainer = {
             data: {
                 name: REALM_MASTER_NAME,

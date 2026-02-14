@@ -8,11 +8,12 @@
 import type {
     Client, Permission, Role, User, UserPermission, UserRole,
 } from '@authup/core-kit';
+import {
+    buildUserFakeEmail,
+} from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type {
-    UserProvisioningContainer,
-} from '../../types.ts';
+import type { UserProvisioningContainer } from '../../entities/user';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { UserProvisioningSynchronizerContext } from './types.ts';
 
@@ -41,7 +42,18 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
     }
 
     async synchronize(input: UserProvisioningContainer): Promise<UserProvisioningContainer> {
-        const data = await this.userRepository.save(input.data);
+        let data = await this.userRepository.findOneBy({
+            name: input.data.name,
+            realm_id: input.data.realm_id || IsNull(),
+            client_id: input.data.client_id || IsNull(),
+        });
+        if (!data) {
+            if (input.data.name) {
+                input.data.email = buildUserFakeEmail(input.data.name);
+            }
+
+            data = await this.userRepository.save(input.data);
+        }
 
         // Permissions (Global, Realm & Client)
         const permissions : Permission[] = [];
@@ -118,14 +130,22 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         if (permissions.length > 0) {
             for (let i = 0; i < permissions.length; i++) {
                 const permission = permissions[i];
-                const userPermission = this.userPermissionRepository.create({
+
+                let userPermission = await this.userPermissionRepository.findOneBy({
                     user_id: data.id,
-                    user_realm_id: data.realm_id,
                     permission_id: permission.id,
-                    permission_realm_id: permission.realm_id,
                 });
 
-                await this.userPermissionRepository.save(userPermission);
+                if (!userPermission) {
+                    userPermission = this.userPermissionRepository.create({
+                        user_id: data.id,
+                        user_realm_id: data.realm_id,
+                        permission_id: permission.id,
+                        permission_realm_id: permission.realm_id,
+                    });
+
+                    await this.userPermissionRepository.save(userPermission);
+                }
             }
         }
 
@@ -204,14 +224,22 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         if (roles.length > 0) {
             for (let i = 0; i < roles.length; i++) {
                 const role = roles[i];
-                const userRole = this.userRoleRepository.create({
+
+                let userRole = await this.userRoleRepository.findOneBy({
                     user_id: data.id,
-                    user_realm_id: data.realm_id,
                     role_id: role.id,
-                    role_realm_id: role.realm_id,
                 });
 
-                await this.userRoleRepository.save(userRole);
+                if (!userRole) {
+                    userRole = this.userRoleRepository.create({
+                        user_id: data.id,
+                        user_realm_id: data.realm_id,
+                        role_id: role.id,
+                        role_realm_id: role.realm_id,
+                    });
+
+                    await this.userRoleRepository.save(userRole);
+                }
             }
         }
 

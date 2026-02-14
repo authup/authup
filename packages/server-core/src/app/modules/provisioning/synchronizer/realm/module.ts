@@ -7,13 +7,15 @@
 
 import type { Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
+import type { ClientProvisioningContainer } from '../../entities/client';
+import type { PermissionProvisioningContainer } from '../../entities/permission';
+import type { RealmProvisioningContainer } from '../../entities/realm';
+import type { RobotProvisioningContainer } from '../../entities/robot';
+import type { RoleProvisioningContainer } from '../../entities/role';
+import type { UserProvisioningContainer } from '../../entities/user';
 import type {
-    ClientProvisioningContainer,
     IProvisioningSynchronizer,
-    PermissionProvisioningContainer,
-    RealmProvisioningContainer, RobotProvisioningContainer,
-    RoleProvisioningContainer,
-    UserProvisioningContainer,
+
 } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RealmProvisioningSynchronizerContext } from './types.ts';
@@ -43,7 +45,12 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     }
 
     async synchronize(input: RealmProvisioningContainer): Promise<RealmProvisioningContainer> {
-        const data = await this.repository.save(input.data);
+        let data = await this.repository.findOneBy({
+            name: input.data.name,
+        });
+        if (!data) {
+            data = await this.repository.save(input.data);
+        }
 
         if (input.relations && input.relations.clients) {
             const clients = input.relations.clients.map(

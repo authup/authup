@@ -5,11 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ScopeProvisioningContainer } from '../../entities';
+import type { PermissionProvisioningContainer } from '../../entities/permission';
+import type { RealmProvisioningContainer } from '../../entities/realm';
+import type { RoleProvisioningContainer } from '../../entities/role';
 import type {
     IProvisioningSynchronizer,
-    PermissionProvisioningContainer,
-    RealmProvisioningContainer,
-    RoleProvisioningContainer, ScopeProvisioningContainer,
+
 } from '../../types.ts';
 
 export type RootProvisioningSynchronizerContext = {

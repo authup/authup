@@ -9,10 +9,11 @@ import type {
     Client, ClientPermission, ClientRole, Permission, Role,
 } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
+import type { PermissionProvisioningContainer } from '../../entities/permission';
+import type { RoleProvisioningContainer } from '../../entities/role';
 import type {
     IProvisioningSynchronizer,
-    PermissionProvisioningContainer,
-    RoleProvisioningContainer,
+
 } from '../../types.ts';
 
 export type ClientProvisioningSynchronizerContext = {
