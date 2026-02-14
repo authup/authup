@@ -14,7 +14,7 @@ export type RoleProvisioningRelations = {
     globalPermissions?: string[],
 
     /**
-     * Assign robot to realm permissions.
+     * Assign role to realm permissions.
      */
     realmPermissions?: string[],
 };

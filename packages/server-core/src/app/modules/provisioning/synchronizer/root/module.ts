@@ -36,22 +36,24 @@ export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     }
 
     async synchronize(input: RootProvisioningData): Promise<RootProvisioningData> {
+        const output : RootProvisioningData = {};
+
         if (input.permissions) {
-            await this.permissionSynchronizer.synchronizeMany(input.permissions);
+            output.permissions = await this.permissionSynchronizer.synchronizeMany(input.permissions);
         }
 
         if (input.roles) {
-            await this.roleSynchronizer.synchronizeMany(input.roles);
+            output.roles = await this.roleSynchronizer.synchronizeMany(input.roles);
         }
 
         if (input.scopes) {
-            await this.scopeSynchronizer.synchronizeMany(input.scopes);
+            output.scopes = await this.scopeSynchronizer.synchronizeMany(input.scopes);
         }
 
         if (input.realms) {
-            await this.realmSynchronizer.synchronizeMany(input.realms);
+            output.realms = await this.realmSynchronizer.synchronizeMany(input.realms);
         }
 
-        return input;
+        return output;
     }
 }

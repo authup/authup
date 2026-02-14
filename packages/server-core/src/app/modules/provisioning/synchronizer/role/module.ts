@@ -32,8 +32,8 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
     async synchronize(input: RoleProvisioningContainer): Promise<RoleProvisioningContainer> {
         let data = await this.repository.findOneBy({
             name: input.data.name,
-            ...(input.data.realm_id ? { realm_id: input.data.realm_id } : { realm_id: IsNull() }),
-            ...(input.data.client_id ? { client_id: input.data.client_id } : { client_id: IsNull() }),
+            realm_id: input.data.realm_id || IsNull(),
+            client_id: input.data.client_id || IsNull(),
         });
         if (!data) {
             data = await this.repository.save(input.data);
