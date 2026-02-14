@@ -16,6 +16,8 @@ export class RealmValidator extends Container<
 Realm
 > {
     protected initialize() {
+        super.initialize();
+
         const nameValidator = createValidator(
             zod
                 .string()
@@ -44,7 +46,7 @@ Realm
         );
 
         this.mount(
-            'display_name',
+            'description',
             { optional: true },
             createValidator(zod.string().min(5).max(4096).nullable()),
         );
