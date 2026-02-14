@@ -5,14 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RootProvisioningData } from './entities/root';
-
-export type ProvisioningContainer<A, R> = {
-    data: A,
-    relations?: R
-};
-
-// todo: add top level scopes
+import type { RootProvisioningData } from './entities/index.ts';
 
 export interface IProvisioningSource {
     load() : Promise<RootProvisioningData>;

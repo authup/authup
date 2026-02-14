@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { User } from '@authup/core-kit';
-import type { ProvisioningContainer } from '../../types.ts';
 
 export type UserProvisioningRelations = {
     /**
@@ -41,4 +40,7 @@ export type UserProvisioningRelations = {
     globalRoles?: string[],
 };
 
-export type UserProvisioningContainer = ProvisioningContainer<Partial<User>, UserProvisioningRelations>;
+export type UserProvisioningContainer = {
+    data: Partial<User>,
+    relations?: UserProvisioningRelations
+};

@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Client } from '@authup/core-kit';
-import type { ProvisioningContainer } from '../../types.ts';
 import type { PermissionProvisioningContainer } from '../permission';
 import type { RoleProvisioningContainer } from '../role';
 
@@ -44,7 +43,8 @@ export type ClientProvisioningRelations = {
 
 };
 
-export type ClientProvisioningContainer = ProvisioningContainer<
-Partial<Client>,
-ClientProvisioningRelations
->;
+export type ClientProvisioningContainer = {
+    data: Partial<Client>,
+
+    relations?: ClientProvisioningRelations
+};

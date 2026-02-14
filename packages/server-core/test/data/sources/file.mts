@@ -13,7 +13,7 @@ const DATA : RootProvisioningData = {
             data: {
                 name: 'foo',
             },
-            meta: {
+            relations: {
                 globalPermissions: ['foo'],
             },
         },
@@ -65,7 +65,7 @@ const DATA : RootProvisioningData = {
                         data: {
                             name: 'foo',
                         },
-                        meta: {
+                        relations: {
                             globalPermissions: ['foo'],
                         },
                     },

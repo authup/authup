@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Robot } from '@authup/core-kit';
-import type { ProvisioningContainer } from '../../types.ts';
 
 export type RobotProvisioningRelations = {
     /**
@@ -30,4 +29,9 @@ export type RobotProvisioningRelations = {
      */
     globalRoles?: string[],
 };
-export type RobotProvisioningContainer = ProvisioningContainer<Partial<Robot>, RobotProvisioningRelations>;
+
+export type RobotProvisioningContainer = {
+    data: Partial<Robot>,
+
+    relations?: RobotProvisioningRelations
+};

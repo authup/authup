@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Realm } from '@authup/core-kit';
-import type { ProvisioningContainer } from '../../types.ts';
 import type { ClientProvisioningContainer } from '../client';
 import type { PermissionProvisioningContainer } from '../permission';
 import type { RobotProvisioningContainer } from '../robot';
@@ -26,7 +25,8 @@ export type RealmProvisioningRelations = {
     permissions?: PermissionProvisioningContainer[],
 };
 
-export type RealmProvisioningContainer = ProvisioningContainer<
-Partial<Realm>,
-RealmProvisioningRelations
->;
+export type RealmProvisioningContainer = {
+    data: Partial<Realm>
+
+    relations?: RealmProvisioningRelations
+};

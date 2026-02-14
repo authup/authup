@@ -5,10 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Permission } from '@authup/core-kit';
-import type { ObjectLiteral } from '@authup/kit';
-import type { ProvisioningContainer } from '../../types.ts';
 
-export type PermissionProvisioningContainer = ProvisioningContainer<
-Partial<Permission>,
-ObjectLiteral
->;
+export type PermissionProvisioningContainer = {
+    data: Partial<Permission>
+};
