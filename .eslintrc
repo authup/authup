@@ -13,7 +13,8 @@
     "rules": {
         "class-methods-use-this": "off",
         "dot-notation": "off",
-        "import/extensions": ["error", "ignorePackages"],
+        "import/extensions": "off",
+        // "import/extensions": ["error", "ignorePackages"],
         "import/no-extraneous-dependencies": [
             "error", {
                 "devDependencies": [

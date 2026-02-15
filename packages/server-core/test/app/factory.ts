@@ -16,11 +16,11 @@ import {
     MailModule,
     OAuth2Module, ProvisionerModule,
 } from '../../src/index.ts';
-import { normalizeConfig } from '../../src/app/modules/config/normalize/index.ts';
+import { normalizeConfig } from '../../src/app/modules/config/normalize.ts';
 import { readConfigRawFromEnv } from '../../src/app/modules/config/read/index.ts';
 
-import { TestApplication } from './module/index.ts';
-import { TestDatabaseModule } from './database/index.ts';
+import { TestApplication } from './module.ts';
+import { TestDatabaseModule } from './database.ts';
 
 export function createTestApplication() : TestApplication {
     const raw = readConfigRawFromEnv();
