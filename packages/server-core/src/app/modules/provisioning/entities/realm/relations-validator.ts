@@ -12,6 +12,7 @@ import { ClientProvisioningValidator } from '../client';
 import { PermissionProvisioningValidator } from '../permission';
 import { RobotProvisioningValidator } from '../robot';
 import { RoleProvisioningValidator } from '../role';
+import { ScopeProvisioningValidator } from '../scope';
 import { UserProvisioningValidator } from '../user';
 import type { RealmProvisioningRelations } from './types.ts';
 
@@ -23,6 +24,7 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
         const roleValidator = new RoleProvisioningValidator();
         const permissionValidator = new PermissionProvisioningValidator();
         const robotValidator = new RobotProvisioningValidator();
+        const scopeValidator = new ScopeProvisioningValidator();
         const userValidator = new UserProvisioningValidator();
 
         this.mount('clients', { optional: true }, createValidator(
@@ -61,6 +63,16 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await robotValidator.run(ctx.value[i]);
+                    }
+                }),
+        ));
+
+        this.mount('scopes', { optional: true }, createValidator(
+            zod
+                .array(zod.any())
+                .check(async (ctx) => {
+                    for (let i = 0; i < ctx.value.length; i++) {
+                        await scopeValidator.run(ctx.value[i]);
                     }
                 }),
         ));

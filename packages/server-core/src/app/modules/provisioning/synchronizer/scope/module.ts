@@ -24,7 +24,7 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     async synchronize(input: ScopeProvisioningContainer): Promise<ScopeProvisioningContainer> {
         let data = await this.repository.findOneBy({
             name: input.data.name,
-            ...(input.data.realm_id ? { realm_id: input.data.realm_id } : { realm_id: IsNull() }),
+            realm_id: input.data.realm_id || IsNull(),
         });
         if (!data) {
             data = await this.repository.save(input.data);

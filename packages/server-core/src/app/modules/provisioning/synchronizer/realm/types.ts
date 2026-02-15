@@ -7,6 +7,7 @@
 
 import type { Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
+import type { ScopeProvisioningContainer } from '../../entities';
 import type { ClientProvisioningContainer } from '../../entities/client';
 import type { PermissionProvisioningContainer } from '../../entities/permission';
 import type { RobotProvisioningContainer } from '../../entities/robot';
@@ -25,4 +26,5 @@ export type RealmProvisioningSynchronizerContext = {
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningContainer>,
     userSynchronizer: IProvisioningSynchronizer<UserProvisioningContainer>,
     robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningContainer>,
+    scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningContainer>,
 };

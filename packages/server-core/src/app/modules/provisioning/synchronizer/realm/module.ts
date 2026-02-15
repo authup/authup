@@ -7,6 +7,7 @@
 
 import type { Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
+import type { ScopeProvisioningContainer } from '../../entities';
 import type { ClientProvisioningContainer } from '../../entities/client';
 import type { PermissionProvisioningContainer } from '../../entities/permission';
 import type { RealmProvisioningContainer } from '../../entities/realm';
@@ -33,6 +34,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
     protected robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningContainer>;
 
+    protected scopeSynchronizer : IProvisioningSynchronizer<ScopeProvisioningContainer>;
+
     constructor(ctx: RealmProvisioningSynchronizerContext) {
         super();
 
@@ -42,6 +45,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.roleSynchronizer = ctx.roleSynchronizer;
         this.userSynchronizer = ctx.userSynchronizer;
         this.robotSynchronizer = ctx.robotSynchronizer;
+        this.scopeSynchronizer = ctx.scopeSynchronizer;
     }
 
     async synchronize(input: RealmProvisioningContainer): Promise<RealmProvisioningContainer> {
@@ -102,6 +106,16 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             });
 
             await this.robotSynchronizer.synchronizeMany(robots);
+        }
+
+        if (input.relations && input.relations.scopes) {
+            const scopes = input.relations.scopes.map((child) => {
+                child.data.realm_id = data.id;
+                child.data.realm = data;
+                return child;
+            });
+
+            await this.scopeSynchronizer.synchronizeMany(scopes);
         }
 
         return {

@@ -9,6 +9,7 @@ import type { ClientProvisioningContainer } from '../client';
 import type { PermissionProvisioningContainer } from '../permission';
 import type { RobotProvisioningContainer } from '../robot';
 import type { RoleProvisioningContainer } from '../role';
+import type { ScopeProvisioningContainer } from '../scope';
 import type { UserProvisioningContainer } from '../user';
 
 export type RealmProvisioningRelations = {
@@ -20,6 +21,8 @@ export type RealmProvisioningRelations = {
 
     // Create Roles for Realm
     roles?: RoleProvisioningContainer[],
+
+    scopes?: ScopeProvisioningContainer[],
 
     // Create Permissions for Realm
     permissions?: PermissionProvisioningContainer[],

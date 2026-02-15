@@ -118,6 +118,10 @@ export class ProvisionerModule implements Module {
             permissionRepository: container.resolve<Repository<Permission>>(PermissionEntity),
         });
 
+        const scopeSynchronizer = new ScopeProvisioningSynchronizer({
+            repository: container.resolve<Repository<Scope>>(ScopeEntity),
+        });
+
         const realmSynchronizer = new RealmProvisioningSynchronizer({
             repository: container.resolve<Repository<Realm>>(RealmEntity),
 
@@ -126,10 +130,7 @@ export class ProvisionerModule implements Module {
             permissionSynchronizer,
             userSynchronizer,
             robotSynchronizer,
-        });
-
-        const scopeSynchronizer = new ScopeProvisioningSynchronizer({
-            repository: container.resolve<Repository<Scope>>(ScopeEntity),
+            scopeSynchronizer,
         });
 
         const rootSynchronizer = new GraphProvisioningSynchronizer({
