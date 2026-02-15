@@ -5,11 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ScopeProvisioningContainer } from '../../entities';
+import type {
+    RealmProvisioningData,
+    RoleProvisioningData,
+    RootProvisioningData,
+    ScopeProvisioningData,
+} from '../../entities/index.ts';
 import type { PermissionProvisioningContainer } from '../../entities/permission';
-import type { RealmProvisioningContainer } from '../../entities/realm';
-import type { RoleProvisioningContainer } from '../../entities/role';
-import type { RootProvisioningData } from '../../entities/root';
 import type {
     IProvisioningSynchronizer,
 
@@ -18,13 +20,13 @@ import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RootProvisioningSynchronizerContext } from './types.ts';
 
 export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<RootProvisioningData> {
-    protected realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningContainer>;
+    protected realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningData>;
 
     protected permissionSynchronizer : IProvisioningSynchronizer<PermissionProvisioningContainer>;
 
-    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningContainer>;
+    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningData>;
 
-    protected scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningContainer>;
+    protected scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningData>;
 
     constructor(ctx: RootProvisioningSynchronizerContext) {
         super();

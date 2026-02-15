@@ -8,16 +8,16 @@
 import { UserValidator } from '@authup/core-kit';
 import { Container } from 'validup';
 import { UserProvisioningRelationsValidator } from './relations-validator.ts';
-import type { UserProvisioningContainer } from './types.ts';
+import type { UserProvisioningData } from './types.ts';
 
-export class UserProvisioningValidator extends Container<UserProvisioningContainer> {
+export class UserProvisioningValidator extends Container<UserProvisioningData> {
     protected initialize() {
         super.initialize();
 
         const attributesValidator = new UserValidator();
         const relationsValidator = new UserProvisioningRelationsValidator();
 
-        this.mount('data', attributesValidator);
+        this.mount('attributes', attributesValidator);
         this.mount('relations', relationsValidator);
     }
 }

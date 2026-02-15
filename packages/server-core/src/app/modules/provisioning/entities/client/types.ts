@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Client } from '@authup/core-kit';
-import type { PermissionProvisioningContainer } from '../permission';
-import type { RoleProvisioningContainer } from '../role';
+import type { PermissionProvisioningContainer } from '../permission/index.ts';
+import type { RoleProvisioningData } from '../role/index.ts';
 
 export type ClientProvisioningRelations = {
     /**
@@ -29,7 +29,7 @@ export type ClientProvisioningRelations = {
     /**
      * Create or update roles for client.
      */
-    roles?: RoleProvisioningContainer[],
+    roles?: RoleProvisioningData[],
 
     /**
      * Assign client to roles of same realm.
@@ -43,8 +43,8 @@ export type ClientProvisioningRelations = {
 
 };
 
-export type ClientProvisioningContainer = {
-    data: Partial<Client>,
+export type ClientProvisioningData = {
+    attributes: Partial<Client>,
 
     relations?: ClientProvisioningRelations
 };

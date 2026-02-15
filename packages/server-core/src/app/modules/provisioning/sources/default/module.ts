@@ -10,7 +10,7 @@ import {
 } from '@authup/core-kit';
 import { ClientCredentialsService, RobotCredentialsService, UserCredentialsService } from '../../../../../core/index.ts';
 import type { Config } from '../../../config/index.ts';
-import type { RealmProvisioningContainer } from '../../entities/realm/index.ts';
+import type { RealmProvisioningData } from '../../entities/realm/index.ts';
 import type { RootProvisioningData } from '../../entities/root/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
 import type { ConfigProvisioningSourceContext } from './types.ts';
@@ -23,8 +23,8 @@ export class DefaultProvisioningSource implements IProvisioningSource {
     }
 
     async load(): Promise<RootProvisioningData> {
-        const masterRealm : RealmProvisioningContainer = {
-            data: {
+        const masterRealm : RealmProvisioningData = {
+            attributes: {
                 name: REALM_MASTER_NAME,
                 built_in: true,
             },
@@ -38,7 +38,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         masterRealm.relations = masterRealm.relations || {};
         masterRealm.relations.users = [
             {
-                data: {
+                attributes: {
                     name: this.config.userAdminName,
                     password: await userCredentialsService.protect(this.config.userAdminPassword),
                     email: buildUserFakeEmail(this.config.userAdminName),
@@ -55,7 +55,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         masterRealm.relations = masterRealm.relations || {};
         masterRealm.relations.clients = [
             {
-                data: {
+                attributes: {
                     name: this.config.clientAdminName,
                     secret: await clientCredentialsService.protect(this.config.clientAdminSecret, { secret_hashed: false }),
                     secret_hashed: false,
@@ -72,7 +72,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         masterRealm.relations = masterRealm.relations || {};
         masterRealm.relations.robots = [
             {
-                data: {
+                attributes: {
                     name: this.config.robotAdminName,
                     secret: await robotCredentialsService.protect(this.config.robotAdminSecret),
                     active: this.config.robotAdminEnabled,
@@ -86,20 +86,20 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         return {
             permissions: Object.values(PermissionName)
                 .map((name) => ({
-                    data: {
+                    attributes: {
                         name,
                     },
                 })),
             scopes: Object.values(ScopeName)
                 .map((name) => ({
-                    data: {
+                    attributes: {
                         name,
                         built_in: true,
                     },
                 })),
             roles: [
                 {
-                    data: {
+                    attributes: {
                         name: ROLE_ADMIN_NAME,
                     },
                     relations: {

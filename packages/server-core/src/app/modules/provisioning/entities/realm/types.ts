@@ -5,31 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Realm } from '@authup/core-kit';
-import type { ClientProvisioningContainer } from '../client';
+import type { ClientProvisioningData } from '../client/index.ts';
 import type { PermissionProvisioningContainer } from '../permission';
-import type { RobotProvisioningContainer } from '../robot';
-import type { RoleProvisioningContainer } from '../role';
-import type { ScopeProvisioningContainer } from '../scope';
-import type { UserProvisioningContainer } from '../user';
+import type { RobotProvisioningData } from '../robot';
+import type { RoleProvisioningData } from '../role';
+import type { ScopeProvisioningData } from '../scope';
+import type { UserProvisioningData } from '../user';
 
 export type RealmProvisioningRelations = {
-    users?: UserProvisioningContainer[],
+    users?: UserProvisioningData[],
 
-    robots?: RobotProvisioningContainer[]
+    robots?: RobotProvisioningData[]
 
-    clients?: ClientProvisioningContainer[]
+    clients?: ClientProvisioningData[]
 
     // Create Roles for Realm
-    roles?: RoleProvisioningContainer[],
+    roles?: RoleProvisioningData[],
 
-    scopes?: ScopeProvisioningContainer[],
+    scopes?: ScopeProvisioningData[],
 
     // Create Permissions for Realm
     permissions?: PermissionProvisioningContainer[],
 };
 
-export type RealmProvisioningContainer = {
-    data: Partial<Realm>
+export type RealmProvisioningData = {
+    attributes: Partial<Realm>
 
     relations?: RealmProvisioningRelations
 };

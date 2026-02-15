@@ -30,8 +30,8 @@ export type RobotProvisioningRelations = {
     globalRoles?: string[],
 };
 
-export type RobotProvisioningContainer = {
-    data: Partial<Robot>,
+export type RobotProvisioningData = {
+    attributes: Partial<Robot>,
 
     relations?: RobotProvisioningRelations
 };

@@ -22,18 +22,18 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
     }
 
     async synchronize(input: PermissionProvisioningContainer): Promise<PermissionProvisioningContainer> {
-        let data = await this.repository.findOneBy({
-            name: input.data.name,
-            realm_id: input.data.realm_id || IsNull(),
-            client_id: input.data.client_id || IsNull(),
+        let attributes = await this.repository.findOneBy({
+            name: input.attributes.name,
+            realm_id: input.attributes.realm_id || IsNull(),
+            client_id: input.attributes.client_id || IsNull(),
         });
-        if (!data) {
-            data = await this.repository.save(input.data);
+        if (!attributes) {
+            attributes = await this.repository.save(input.attributes);
         }
 
         return {
             ...input,
-            data,
+            attributes,
         };
     }
 }

@@ -18,7 +18,7 @@ export type RoleProvisioningRelations = {
     realmPermissions?: string[],
 };
 
-export type RoleProvisioningContainer = {
-    data: Partial<Role>,
+export type RoleProvisioningData = {
+    attributes: Partial<Role>,
     relations?: RoleProvisioningRelations
 };

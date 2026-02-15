@@ -8,10 +8,10 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import zod from 'zod';
-import { PermissionProvisioningValidator } from '../permission';
-import { RealmProvisioningValidator } from '../realm';
-import { RoleProvisioningValidator } from '../role';
-import { ScopeProvisioningValidator } from '../scope';
+import { PermissionProvisioningValidator } from '../permission/index.ts';
+import { RealmProvisioningValidator } from '../realm/index.ts';
+import { RoleProvisioningValidator } from '../role/index.ts';
+import { ScopeProvisioningValidator } from '../scope/index.ts';
 
 import type { RootProvisioningData } from './types.ts';
 

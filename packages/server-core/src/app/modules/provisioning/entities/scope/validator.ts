@@ -8,13 +8,13 @@
 import { ScopeValidator } from '@authup/core-kit';
 import { Container } from 'validup';
 
-import type { ScopeProvisioningContainer } from './types.ts';
+import type { ScopeProvisioningData } from './types.ts';
 
-export class ScopeProvisioningValidator extends Container<ScopeProvisioningContainer> {
+export class ScopeProvisioningValidator extends Container<ScopeProvisioningData> {
     protected initialize() {
         super.initialize();
 
         const attributesValidator = new ScopeValidator();
-        this.mount('data', attributesValidator);
+        this.mount('attributes', attributesValidator);
     }
 }

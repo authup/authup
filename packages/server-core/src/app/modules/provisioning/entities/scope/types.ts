@@ -6,6 +6,6 @@
  */
 import type { Scope } from '@authup/core-kit';
 
-export type ScopeProvisioningContainer = {
-    data: Partial<Scope>
+export type ScopeProvisioningData = {
+    attributes: Partial<Scope>
 };

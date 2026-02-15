@@ -40,7 +40,7 @@ export type UserProvisioningRelations = {
     globalRoles?: string[],
 };
 
-export type UserProvisioningContainer = {
-    data: Partial<User>,
+export type UserProvisioningData = {
+    attributes: Partial<User>,
     relations?: UserProvisioningRelations
 };

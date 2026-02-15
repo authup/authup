@@ -37,7 +37,7 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
 } from '../../../adapters/database/index.ts';
-import type { IDIContainer } from '../../../core';
+import type { IDIContainer } from '../../../core/index.ts';
 import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';

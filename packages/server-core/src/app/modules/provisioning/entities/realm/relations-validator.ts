@@ -8,12 +8,12 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import zod from 'zod';
-import { ClientProvisioningValidator } from '../client';
-import { PermissionProvisioningValidator } from '../permission';
-import { RobotProvisioningValidator } from '../robot';
-import { RoleProvisioningValidator } from '../role';
-import { ScopeProvisioningValidator } from '../scope';
-import { UserProvisioningValidator } from '../user';
+import { ClientProvisioningValidator } from '../client/index.ts';
+import { PermissionProvisioningValidator } from '../permission/index.ts';
+import { RobotProvisioningValidator } from '../robot/index.ts';
+import { RoleProvisioningValidator } from '../role/index.ts';
+import { ScopeProvisioningValidator } from '../scope/index.ts';
+import { UserProvisioningValidator } from '../user/index.ts';
 import type { RealmProvisioningRelations } from './types.ts';
 
 export class RealmProvisioningRelationsValidator extends Container<RealmProvisioningRelations> {

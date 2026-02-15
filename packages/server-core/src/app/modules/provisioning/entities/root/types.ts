@@ -5,21 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionProvisioningContainer } from '../permission';
-import type { RealmProvisioningContainer } from '../realm';
-import type { RoleProvisioningContainer } from '../role';
-import type { ScopeProvisioningContainer } from '../scope';
+import type { PermissionProvisioningContainer } from '../permission/index.ts';
+import type { RealmProvisioningData } from '../realm/index.ts';
+import type { RoleProvisioningData } from '../role';
+import type { ScopeProvisioningData } from '../scope';
 
 export type RootProvisioningData = {
     /**
      * Create or update realms
      */
-    realms?: RealmProvisioningContainer[],
+    realms?: RealmProvisioningData[],
 
     /**
      * Create or update global roles
      */
-    roles?: RoleProvisioningContainer[],
+    roles?: RoleProvisioningData[],
 
     /**
      * Create or update global permissions
@@ -29,5 +29,5 @@ export type RootProvisioningData = {
     /**
      * Create or update global scopes
      */
-    scopes?: ScopeProvisioningContainer[],
+    scopes?: ScopeProvisioningData[],
 };

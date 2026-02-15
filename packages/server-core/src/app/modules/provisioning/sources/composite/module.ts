@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RootProvisioningData } from '../../entities/root';
+import type { RootProvisioningData } from '../../entities/root/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
 
 export class CompositeProvisioningSource implements IProvisioningSource {

@@ -8,8 +8,8 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import zod from 'zod';
-import { PermissionProvisioningValidator } from '../permission';
-import { RoleProvisioningValidator } from '../role';
+import { PermissionProvisioningValidator } from '../permission/index.ts';
+import { RoleProvisioningValidator } from '../role/index.ts';
 import type { ClientProvisioningRelations } from './types.ts';
 
 export class ClientProvisioningRelationsValidator extends Container<ClientProvisioningRelations> {

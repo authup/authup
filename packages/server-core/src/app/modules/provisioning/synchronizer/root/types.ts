@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ScopeProvisioningContainer } from '../../entities';
+import type { ScopeProvisioningData } from '../../entities';
 import type { PermissionProvisioningContainer } from '../../entities/permission';
-import type { RealmProvisioningContainer } from '../../entities/realm';
-import type { RoleProvisioningContainer } from '../../entities/role';
+import type { RealmProvisioningData } from '../../entities/realm';
+import type { RoleProvisioningData } from '../../entities/role';
 import type {
     IProvisioningSynchronizer,
 
@@ -16,7 +16,7 @@ import type {
 
 export type RootProvisioningSynchronizerContext = {
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningContainer>,
-    realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningContainer>,
-    roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningContainer>,
-    scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningContainer>,
+    realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningData>,
+    roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningData>,
+    scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningData>,
 };

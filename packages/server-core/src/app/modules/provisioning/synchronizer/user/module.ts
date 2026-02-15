@@ -13,11 +13,11 @@ import {
 } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type { UserProvisioningContainer } from '../../entities/user';
+import type { UserProvisioningData } from '../../entities/user/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { UserProvisioningSynchronizerContext } from './types.ts';
 
-export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<UserProvisioningContainer> {
+export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<UserProvisioningData> {
     protected userRepository: Repository<User>;
 
     protected userRoleRepository: Repository<UserRole>;
@@ -41,18 +41,18 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         this.clientRepository = ctx.clientRepository;
     }
 
-    async synchronize(input: UserProvisioningContainer): Promise<UserProvisioningContainer> {
-        let data = await this.userRepository.findOneBy({
-            name: input.data.name,
-            realm_id: input.data.realm_id || IsNull(),
-            client_id: input.data.client_id || IsNull(),
+    async synchronize(input: UserProvisioningData): Promise<UserProvisioningData> {
+        let attributes = await this.userRepository.findOneBy({
+            name: input.attributes.name,
+            realm_id: input.attributes.realm_id || IsNull(),
+            client_id: input.attributes.client_id || IsNull(),
         });
-        if (!data) {
-            if (input.data.name) {
-                input.data.email = buildUserFakeEmail(input.data.name);
+        if (!attributes) {
+            if (input.attributes.name) {
+                input.attributes.email = buildUserFakeEmail(input.attributes.name);
             }
 
-            data = await this.userRepository.save(input.data);
+            attributes = await this.userRepository.save(input.attributes);
         }
 
         // Permissions (Global, Realm & Client)
@@ -83,13 +83,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             const hasWildcard = input.relations.realmPermissions.some((el) => el === '*');
             if (hasWildcard) {
                 entities = await this.permissionRepository.findBy({
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                     client_id: IsNull(),
                 });
             } else {
                 entities = await this.permissionRepository.findBy({
                     name: In(input.relations.realmPermissions),
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                     client_id: IsNull(),
                 });
             }
@@ -102,7 +102,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             for (let i = 0; i < clientKeys.length; i++) {
                 const client = await this.clientRepository.findOneBy({
                     name: clientKeys[i],
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                 });
 
                 if (client) {
@@ -111,13 +111,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                     const hasWildcard = input.relations.clientPermissions[clientKeys[i]].some((el) => el === '*');
                     if (hasWildcard) {
                         entities = await this.permissionRepository.findBy({
-                            realm_id: data.realm_id,
+                            realm_id: attributes.realm_id,
                             client_id: client.id,
                         });
                     } else {
                         entities = await this.permissionRepository.findBy({
                             name: In(input.relations.clientPermissions[clientKeys[i]]),
-                            realm_id: data.realm_id,
+                            realm_id: attributes.realm_id,
                             client_id: client.id,
                         });
                     }
@@ -132,14 +132,14 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                 const permission = permissions[i];
 
                 let userPermission = await this.userPermissionRepository.findOneBy({
-                    user_id: data.id,
+                    user_id: attributes.id,
                     permission_id: permission.id,
                 });
 
                 if (!userPermission) {
                     userPermission = this.userPermissionRepository.create({
-                        user_id: data.id,
-                        user_realm_id: data.realm_id,
+                        user_id: attributes.id,
+                        user_realm_id: attributes.realm_id,
                         permission_id: permission.id,
                         permission_realm_id: permission.realm_id,
                     });
@@ -177,13 +177,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             const hasWildcard = input.relations.realmRoles.some((el) => el === '*');
             if (hasWildcard) {
                 entities = await this.roleRepository.findBy({
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                     client_id: IsNull(),
                 });
             } else {
                 entities = await this.roleRepository.findBy({
                     name: In(input.relations.realmRoles),
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                     client_id: IsNull(),
                 });
             }
@@ -196,7 +196,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             for (let i = 0; i < clientKeys.length; i++) {
                 const client = await this.clientRepository.findOneBy({
                     name: clientKeys[i],
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                 });
 
                 if (client) {
@@ -205,13 +205,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                     const hasWildcard = input.relations.clientRoles[clientKeys[i]].some((el) => el === '*');
                     if (hasWildcard) {
                         entities = await this.roleRepository.findBy({
-                            realm_id: data.realm_id,
+                            realm_id: attributes.realm_id,
                             client_id: client.id,
                         });
                     } else {
                         entities = await this.roleRepository.findBy({
                             name: In(input.relations.clientRoles[clientKeys[i]]),
-                            realm_id: data.realm_id,
+                            realm_id: attributes.realm_id,
                             client_id: client.id,
                         });
                     }
@@ -226,14 +226,14 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                 const role = roles[i];
 
                 let userRole = await this.userRoleRepository.findOneBy({
-                    user_id: data.id,
+                    user_id: attributes.id,
                     role_id: role.id,
                 });
 
                 if (!userRole) {
                     userRole = this.userRoleRepository.create({
-                        user_id: data.id,
-                        user_realm_id: data.realm_id,
+                        user_id: attributes.id,
+                        user_realm_id: attributes.realm_id,
                         role_id: role.id,
                         role_realm_id: role.realm_id,
                     });
@@ -245,7 +245,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
         return {
             ...input,
-            data,
+            attributes,
         };
     }
 }

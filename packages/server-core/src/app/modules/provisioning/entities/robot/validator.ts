@@ -8,9 +8,9 @@
 import { RobotValidator } from '@authup/core-kit';
 import { Container } from 'validup';
 import { RobotProvisioningRelationsValidator } from './relations-validator.ts';
-import type { RobotProvisioningContainer } from './types.ts';
+import type { RobotProvisioningData } from './types.ts';
 
-export class RobotProvisioningValidator extends Container<RobotProvisioningContainer> {
+export class RobotProvisioningValidator extends Container<RobotProvisioningData> {
     protected initialize() {
         super.initialize();
 

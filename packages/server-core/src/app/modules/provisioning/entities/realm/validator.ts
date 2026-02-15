@@ -9,16 +9,16 @@ import { RealmValidator } from '@authup/core-kit';
 import { Container } from 'validup';
 import { RealmProvisioningRelationsValidator } from './relations-validator.ts';
 
-import type { RealmProvisioningContainer } from './types.ts';
+import type { RealmProvisioningData } from './types.ts';
 
-export class RealmProvisioningValidator extends Container<RealmProvisioningContainer> {
+export class RealmProvisioningValidator extends Container<RealmProvisioningData> {
     protected initialize() {
         super.initialize();
 
         const attributesValidator = new RealmValidator();
         const relationsValidator = new RealmProvisioningRelationsValidator();
 
-        this.mount('data', attributesValidator);
+        this.mount('attributes', attributesValidator);
         this.mount('relations', relationsValidator);
     }
 }

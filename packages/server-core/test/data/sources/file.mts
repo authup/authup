@@ -10,7 +10,7 @@ import type { RootProvisioningData } from '../../../src';
 const DATA : RootProvisioningData = {
     roles: [
         {
-            data: {
+            attributes: {
                 name: 'foo',
             },
             relations: {
@@ -18,7 +18,7 @@ const DATA : RootProvisioningData = {
             },
         },
         {
-            data: {
+            attributes: {
                 name: 'bar',
             },
             relations: {
@@ -28,41 +28,41 @@ const DATA : RootProvisioningData = {
     ],
     permissions: [
         {
-            data: {
+            attributes: {
                 name: 'foo',
             },
         },
     ],
     scopes: [
         {
-            data: {
+            attributes: {
                 name: 'foo',
             },
         },
     ],
     realms: [
         {
-            data: {
+            attributes: {
                 name: 'foo',
             },
             relations: {
                 users: [
                     {
-                        data: {
+                        attributes: {
                             name: 'foo',
                         },
                     },
                 ],
                 clients: [
                     {
-                        data: {
+                        attributes: {
                             name: 'foo',
                         },
                     },
                 ],
                 roles: [
                     {
-                        data: {
+                        attributes: {
                             name: 'foo',
                         },
                         relations: {
@@ -70,7 +70,7 @@ const DATA : RootProvisioningData = {
                         },
                     },
                     {
-                        data: {
+                        attributes: {
                             name: 'bar',
                         },
                         relations: {
@@ -80,7 +80,7 @@ const DATA : RootProvisioningData = {
                 ],
                 permissions: [
                     {
-                        data: {
+                        attributes: {
                             name: 'foo',
                         },
                     },

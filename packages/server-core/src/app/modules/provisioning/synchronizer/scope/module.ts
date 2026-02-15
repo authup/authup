@@ -8,11 +8,11 @@
 import type { Scope } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
-import type { ScopeProvisioningContainer } from '../../entities';
+import type { ScopeProvisioningData } from '../../entities/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { ScopeProvisioningSynchronizerContext } from './types.ts';
 
-export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<ScopeProvisioningContainer> {
+export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<ScopeProvisioningData> {
     protected repository : Repository<Scope>;
 
     constructor(ctx: ScopeProvisioningSynchronizerContext) {
@@ -21,18 +21,18 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.repository = ctx.repository;
     }
 
-    async synchronize(input: ScopeProvisioningContainer): Promise<ScopeProvisioningContainer> {
-        let data = await this.repository.findOneBy({
-            name: input.data.name,
-            realm_id: input.data.realm_id || IsNull(),
+    async synchronize(input: ScopeProvisioningData): Promise<ScopeProvisioningData> {
+        let attributes = await this.repository.findOneBy({
+            name: input.attributes.name,
+            realm_id: input.attributes.realm_id || IsNull(),
         });
-        if (!data) {
-            data = await this.repository.save(input.data);
+        if (!attributes) {
+            attributes = await this.repository.save(input.attributes);
         }
 
         return {
             ...input,
-            data,
+            attributes,
         };
     }
 }

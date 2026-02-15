@@ -10,11 +10,11 @@ import type {
 } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type { RobotProvisioningContainer } from '../../entities/robot';
+import type { RobotProvisioningData } from '../../entities/robot/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RobotProvisioningSynchronizerContext } from './types.ts';
 
-export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<RobotProvisioningContainer> {
+export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<RobotProvisioningData> {
     protected robotRepository: Repository<Robot>;
 
     protected robotRoleRepository: Repository<RobotRole>;
@@ -38,13 +38,13 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.clientRepository = ctx.clientRepository;
     }
 
-    async synchronize(input: RobotProvisioningContainer): Promise<RobotProvisioningContainer> {
-        let data = await this.robotRepository.findOneBy({
-            name: input.data.name,
-            ...(input.data.realm_id ? { realm_id: input.data.realm_id } : { realm_id: IsNull() }),
+    async synchronize(input: RobotProvisioningData): Promise<RobotProvisioningData> {
+        let attributes = await this.robotRepository.findOneBy({
+            name: input.attributes.name,
+            ...(input.attributes.realm_id ? { realm_id: input.attributes.realm_id } : { realm_id: IsNull() }),
         });
-        if (!data) {
-            data = await this.robotRepository.save(input.data);
+        if (!attributes) {
+            attributes = await this.robotRepository.save(input.attributes);
         }
 
         // Permissions (Global, Realm & Client)
@@ -75,13 +75,13 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             const hasWildcard = input.relations.realmPermissions.some((el) => el === '*');
             if (hasWildcard) {
                 entities = await this.permissionRepository.findBy({
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                     client_id: IsNull(),
                 });
             } else {
                 entities = await this.permissionRepository.findBy({
                     name: In(input.relations.realmPermissions),
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                     client_id: IsNull(),
                 });
             }
@@ -94,14 +94,14 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                 const permission = permissions[i];
 
                 let robotPermission = await this.robotPermissionRepository.findOneBy({
-                    robot_id: data.id,
+                    robot_id: attributes.id,
                     permission_id: permission.id,
                 });
 
                 if (!robotPermission) {
                     robotPermission = this.robotPermissionRepository.create({
-                        robot_id: data.id,
-                        robot_realm_id: data.realm_id,
+                        robot_id: attributes.id,
+                        robot_realm_id: attributes.realm_id,
                         permission_id: permission.id,
                         permission_realm_id: permission.realm_id,
                     });
@@ -139,13 +139,13 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             const hasWildcard = input.relations.realmRoles.some((el) => el === '*');
             if (hasWildcard) {
                 entities = await this.roleRepository.findBy({
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                     client_id: IsNull(),
                 });
             } else {
                 entities = await this.roleRepository.findBy({
                     name: In(input.relations.realmRoles),
-                    realm_id: data.realm_id,
+                    realm_id: attributes.realm_id,
                     client_id: IsNull(),
                 });
             }
@@ -158,14 +158,14 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                 const role = roles[i];
 
                 let robotRole = await this.robotRoleRepository.findOneBy({
-                    robot_id: data.id,
+                    robot_id: attributes.id,
                     role_id: role.id,
                 });
 
                 if (!robotRole) {
                     robotRole = this.robotRoleRepository.create({
-                        robot_id: data.id,
-                        robot_realm_id: data.realm_id,
+                        robot_id: attributes.id,
+                        robot_realm_id: attributes.realm_id,
                         role_id: role.id,
                         role_realm_id: role.realm_id,
                     });
@@ -177,7 +177,7 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         return {
             ...input,
-            data,
+            attributes,
         };
     }
 }

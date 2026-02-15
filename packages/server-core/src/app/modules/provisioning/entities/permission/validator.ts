@@ -15,6 +15,6 @@ export class PermissionProvisioningValidator extends Container<PermissionProvisi
         super.initialize();
 
         const attributesValidator = new PermissionValidator();
-        this.mount('data', attributesValidator);
+        this.mount('attributes', attributesValidator);
     }
 }

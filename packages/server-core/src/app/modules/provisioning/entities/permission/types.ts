@@ -7,5 +7,5 @@
 import type { Permission } from '@authup/core-kit';
 
 export type PermissionProvisioningContainer = {
-    data: Partial<Permission>
+    attributes: Partial<Permission>
 };

@@ -7,13 +7,12 @@
 
 import type { Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import type { ScopeProvisioningContainer } from '../../entities';
-import type { ClientProvisioningContainer } from '../../entities/client';
-import type { PermissionProvisioningContainer } from '../../entities/permission';
-import type { RealmProvisioningContainer } from '../../entities/realm';
-import type { RobotProvisioningContainer } from '../../entities/robot';
-import type { RoleProvisioningContainer } from '../../entities/role';
-import type { UserProvisioningContainer } from '../../entities/user';
+import type { ClientProvisioningData, ScopeProvisioningData } from '../../entities/index.ts';
+import type { PermissionProvisioningContainer } from '../../entities/permission/index.ts';
+import type { RealmProvisioningData } from '../../entities/realm/index.ts';
+import type { RobotProvisioningData } from '../../entities/robot/index.ts';
+import type { RoleProvisioningData } from '../../entities/role/index.ts';
+import type { UserProvisioningData } from '../../entities/user/index.ts';
 import type {
     IProvisioningSynchronizer,
 
@@ -21,20 +20,20 @@ import type {
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RealmProvisioningSynchronizerContext } from './types.ts';
 
-export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<RealmProvisioningContainer> {
+export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<RealmProvisioningData> {
     protected repository : Repository<Realm>;
 
-    protected clientSynchronizer: IProvisioningSynchronizer<ClientProvisioningContainer>;
+    protected clientSynchronizer: IProvisioningSynchronizer<ClientProvisioningData>;
 
     protected permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningContainer>;
 
-    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningContainer>;
+    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningData>;
 
-    protected userSynchronizer: IProvisioningSynchronizer<UserProvisioningContainer>;
+    protected userSynchronizer: IProvisioningSynchronizer<UserProvisioningData>;
 
-    protected robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningContainer>;
+    protected robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningData>;
 
-    protected scopeSynchronizer : IProvisioningSynchronizer<ScopeProvisioningContainer>;
+    protected scopeSynchronizer : IProvisioningSynchronizer<ScopeProvisioningData>;
 
     constructor(ctx: RealmProvisioningSynchronizerContext) {
         super();
@@ -48,19 +47,19 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.scopeSynchronizer = ctx.scopeSynchronizer;
     }
 
-    async synchronize(input: RealmProvisioningContainer): Promise<RealmProvisioningContainer> {
-        let data = await this.repository.findOneBy({
-            name: input.data.name,
+    async synchronize(input: RealmProvisioningData): Promise<RealmProvisioningData> {
+        let attributes = await this.repository.findOneBy({
+            name: input.attributes.name,
         });
-        if (!data) {
-            data = await this.repository.save(input.data);
+        if (!attributes) {
+            attributes = await this.repository.save(input.attributes);
         }
 
         if (input.relations && input.relations.clients) {
             const clients = input.relations.clients.map(
                 (child) => {
-                    child.data.realm_id = data.id;
-                    child.data.realm = data;
+                    child.attributes.realm_id = attributes.id;
+                    child.attributes.realm = attributes;
                     return child;
                 },
             );
@@ -70,8 +69,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.permissions) {
             const permissions = input.relations.permissions.map((child) => {
-                child.data.realm_id = data.id;
-                child.data.realm = data;
+                child.attributes.realm_id = attributes.id;
+                child.attributes.realm = attributes;
                 return child;
             });
 
@@ -80,8 +79,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.roles) {
             const roles = input.relations.roles.map((child) => {
-                child.data.realm_id = data.id;
-                child.data.realm = data;
+                child.attributes.realm_id = attributes.id;
+                child.attributes.realm = attributes;
                 return child;
             });
 
@@ -90,8 +89,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.users) {
             const users = input.relations.users.map((child) => {
-                child.data.realm_id = data.id;
-                child.data.realm = data;
+                child.attributes.realm_id = attributes.id;
+                child.attributes.realm = attributes;
                 return child;
             });
 
@@ -100,8 +99,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.robots) {
             const robots = input.relations.robots.map((child) => {
-                child.data.realm_id = data.id;
-                child.data.realm = data;
+                child.attributes.realm_id = attributes.id;
+                child.attributes.realm = attributes;
                 return child;
             });
 
@@ -110,8 +109,8 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         if (input.relations && input.relations.scopes) {
             const scopes = input.relations.scopes.map((child) => {
-                child.data.realm_id = data.id;
-                child.data.realm = data;
+                child.attributes.realm_id = attributes.id;
+                child.attributes.realm = attributes;
                 return child;
             });
 
@@ -120,7 +119,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         return {
             ...input,
-            data,
+            attributes,
         };
     }
 }
