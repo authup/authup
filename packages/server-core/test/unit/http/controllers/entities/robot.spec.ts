@@ -8,8 +8,8 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import { createFakeRobot, expectPropertiesEqualToSrc } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeRobot, expectPropertiesEqualToSrc } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/robot', () => {
     const suite = createTestApplication();
@@ -80,7 +80,7 @@ describe('src/http/controllers/robot', () => {
 
     it('should update resource', async () => {
         details.name = 'baz';
-        details.description = 'bar';
+        details.description = 'barboz';
 
         const response = await suite.client
             .robot

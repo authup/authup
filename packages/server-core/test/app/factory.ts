@@ -14,13 +14,13 @@ import {
     LdapModule,
     LoggerModule,
     MailModule,
-    OAuth2Module,
-} from '../../src';
-import { normalizeConfig } from '../../src/app/modules/config/normalize';
-import { readConfigRawFromEnv } from '../../src/app/modules/config/read';
+    OAuth2Module, ProvisionerModule,
+} from '../../src/index.ts';
+import { normalizeConfig } from '../../src/app/modules/config/normalize/index.ts';
+import { readConfigRawFromEnv } from '../../src/app/modules/config/read/index.ts';
 
-import { TestApplication } from './module';
-import { TestDatabaseModule } from './database';
+import { TestApplication } from './module/index.ts';
+import { TestDatabaseModule } from './database/index.ts';
 
 export function createTestApplication() : TestApplication {
     const raw = readConfigRawFromEnv();
@@ -50,6 +50,7 @@ export function createTestApplication() : TestApplication {
         new MailModule(),
 
         new TestDatabaseModule(),
+        new ProvisionerModule(),
         new AuthenticationModule(),
         new IdentityModule(),
         new OAuth2Module(),
