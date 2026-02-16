@@ -69,8 +69,9 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         forgotPassword: false,
 
         clientAuthBasic: false,
-        clientAdminEnabled: false,
-        clientAdminSecret: 'start123',
+        clientSystemEnabled: false,
+        clientSystemSecret: 'start123',
+        clientSystemSecretReset: false,
 
         userAuthBasic: false,
         userAdminEnabled: true,

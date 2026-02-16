@@ -184,12 +184,18 @@ export type Config = {
      * Enable a client account for the default realm.
      * default: false
      */
-    clientAdminEnabled: boolean,
+    clientSystemEnabled: boolean,
 
     /**
      * The secret of the default client.
      */
-    clientAdminSecret: string,
+    clientSystemSecret: string,
+
+    /**
+     * Reset client secret on application startup.
+     * default: undefined
+     */
+    clientSystemSecretReset: boolean,
 
     // ----------------------------------------------------
 

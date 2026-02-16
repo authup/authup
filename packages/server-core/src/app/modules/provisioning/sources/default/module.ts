@@ -5,6 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client, Robot, User } from '@authup/core-kit';
 import {
     PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ScopeName, buildUserFakeEmail,
 } from '@authup/core-kit';
@@ -12,6 +13,8 @@ import { ClientCredentialsService, RobotCredentialsService, UserCredentialsServi
 import type { Config } from '../../../config/index.ts';
 import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
 import type { RootProvisioningEntity } from '../../entities/root/index.ts';
+import type { ProvisioningEntityStrategy } from '../../strategy/index.ts';
+import { ProvisioningEntityStrategyType } from '../../strategy/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
 import type { ConfigProvisioningSourceContext } from './types.ts';
 
@@ -35,9 +38,18 @@ export class DefaultProvisioningSource implements IProvisioningSource {
 
         const userCredentialsService = new UserCredentialsService();
 
+        let userStrategy : ProvisioningEntityStrategy<User> | undefined;
+        if (this.config.userAdminPasswordReset) {
+            userStrategy = {
+                type: ProvisioningEntityStrategyType.MERGE,
+                attributes: ['password'],
+            };
+        }
+
         masterRealm.relations = masterRealm.relations || {};
         masterRealm.relations.users = [
             {
+                strategy: userStrategy,
                 attributes: {
                     name: 'admin',
                     password: await userCredentialsService.protect(this.config.userAdminPassword),
@@ -52,14 +64,23 @@ export class DefaultProvisioningSource implements IProvisioningSource {
 
         const clientCredentialsService = new ClientCredentialsService();
 
+        let clientStrategy : ProvisioningEntityStrategy<Client> | undefined;
+        if (this.config.clientSystemSecretReset) {
+            clientStrategy = {
+                type: ProvisioningEntityStrategyType.MERGE,
+                attributes: ['secret', 'secret_hashed', 'secret_encrypted'],
+            };
+        }
+
         masterRealm.relations = masterRealm.relations || {};
         masterRealm.relations.clients = [
             {
+                strategy: clientStrategy,
                 attributes: {
                     name: 'system',
-                    secret: await clientCredentialsService.protect(this.config.clientAdminSecret, { secret_hashed: false }),
+                    secret: await clientCredentialsService.protect(this.config.clientSystemSecret, { secret_hashed: false }),
                     secret_hashed: false,
-                    active: this.config.clientAdminEnabled,
+                    active: this.config.clientSystemEnabled,
                 },
                 relations: {
                     globalRoles: [ROLE_ADMIN_NAME],
@@ -69,9 +90,18 @@ export class DefaultProvisioningSource implements IProvisioningSource {
 
         const robotCredentialsService = new RobotCredentialsService();
 
+        let robotStrategy : ProvisioningEntityStrategy<Robot> | undefined;
+        if (this.config.robotAdminSecretReset) {
+            robotStrategy = {
+                type: ProvisioningEntityStrategyType.MERGE,
+                attributes: ['secret'],
+            };
+        }
+
         masterRealm.relations = masterRealm.relations || {};
         masterRealm.relations.robots = [
             {
+                strategy: robotStrategy,
                 attributes: {
                     name: 'system',
                     secret: await robotCredentialsService.protect(this.config.robotAdminSecret),
