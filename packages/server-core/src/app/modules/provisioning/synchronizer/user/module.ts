@@ -51,9 +51,6 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             realm_id: input.attributes.realm_id || IsNull(),
             client_id: input.attributes.client_id || IsNull(),
         });
-        if (!attributes) {
-            attributes = await this.userRepository.save(input.attributes);
-        }
 
         if (attributes) {
             switch (strategy.type) {
