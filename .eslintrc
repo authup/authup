@@ -13,6 +13,8 @@
     "rules": {
         "class-methods-use-this": "off",
         "dot-notation": "off",
+        "import/extensions": "off",
+        // "import/extensions": ["error", "ignorePackages"],
         "import/no-extraneous-dependencies": [
             "error", {
                 "devDependencies": [
@@ -33,7 +35,6 @@
         "no-underscore-dangle": "off",
         "no-shadow": "off",
         "no-constant-condition": "off",
-        "import/extensions": "off",
 
         "@typescript-eslint/no-throw-literal": "off",
         "@typescript-eslint/no-use-before-define": "off",

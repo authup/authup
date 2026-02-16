@@ -67,13 +67,14 @@ export function parseConfig(input: unknown = {}): ConfigInput {
         forgotPassword: zod.boolean().optional(),
 
         clientAuthBasic: zod.boolean().optional(),
+        clientSystemEnabled: zod.boolean().optional(),
+        clientSystemSecret: zod.string()
+            .min(3)
+            .max(256).optional(),
+        clientSystemSecretReset: zod.boolean().optional(),
 
         userAuthBasic: zod.boolean().optional(),
         userAdminEnabled: zod.boolean().optional(),
-        userAdminName: zod.string()
-            .min(3)
-            .max(128)
-            .optional(),
         userAdminPassword: zod.string()
             .min(3)
             .max(256).optional(),
@@ -81,10 +82,6 @@ export function parseConfig(input: unknown = {}): ConfigInput {
 
         robotAuthBasic: zod.boolean().optional(),
         robotAdminEnabled: zod.boolean().optional(),
-        robotAdminName: zod.string()
-            .min(3)
-            .max(128)
-            .optional(),
         robotAdminSecret: zod.string()
             .min(3)
             .max(256).optional(),

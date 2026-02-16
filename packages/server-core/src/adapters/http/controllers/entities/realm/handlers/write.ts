@@ -9,7 +9,7 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
-    PermissionName, REALM_MASTER_NAME,
+    PermissionName, REALM_MASTER_NAME, RealmValidator,
 } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
@@ -17,7 +17,6 @@ import type { FindOptionsWhere } from 'typeorm';
 import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { RealmEntity } from '../../../../../database/domains/index.ts';
-import { RealmRequestValidator } from '../utils/index.ts';
 import {
     RequestHandlerOperation, getRequestParamID, useRequestPermissionChecker,
 } from '../../../../request/index.ts';
@@ -56,7 +55,7 @@ export async function writeRealmRouteHandler(req: Request, res: Response, option
         group = RequestHandlerOperation.CREATE;
     }
 
-    const validator = new RealmRequestValidator();
+    const validator = new RealmValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
     const data = await validatorAdapter.run(req, {
         group,

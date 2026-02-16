@@ -18,6 +18,7 @@ import {
     LoggerModule,
     MailModule,
     OAuth2Module,
+    ProvisionerModule,
     RuntimeModule,
     SwaggerModule,
     VaultModule,
@@ -28,10 +29,8 @@ export function createApplication() {
         new ConfigModule(),
         new LoggerModule(),
 
-        // todo: rename to CacheModule
         new CacheModule(),
 
-        // todo: rename to mail module
         new MailModule(),
 
         new VaultModule(),
@@ -40,6 +39,7 @@ export function createApplication() {
 
         new SwaggerModule(),
         new DatabaseModule(),
+        new ProvisionerModule(),
         new LdapModule(),
 
         new AuthenticationModule(),

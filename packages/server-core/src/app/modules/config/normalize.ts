@@ -69,16 +69,18 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         forgotPassword: false,
 
         clientAuthBasic: false,
+        clientSystemEnabled: false,
+        clientSystemSecret: 'start123',
+        clientSystemSecretReset: false,
 
         userAuthBasic: false,
         userAdminEnabled: true,
-        userAdminName: 'admin',
         userAdminPassword: 'start123',
         userAdminPasswordReset: false,
 
         robotAuthBasic: false,
-        robotAdminName: 'system',
         robotAdminEnabled: false,
+        robotAdminSecret: 'start123',
         robotAdminSecretReset: false,
 
         permissions: [],

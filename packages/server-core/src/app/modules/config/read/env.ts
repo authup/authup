@@ -116,6 +116,21 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.clientAuthBasic = clientBasicAuth;
     }
 
+    const clientSystemEnabled = readBool(ConfigEnvironmentVariableName.CLIENT_SYSTEM_ENABLED);
+    if (typeof clientSystemEnabled !== 'undefined') {
+        options.clientSystemEnabled = clientSystemEnabled;
+    }
+
+    const clientAdminSecret = read(ConfigEnvironmentVariableName.CLIENT_SYSTEM_SECRET);
+    if (clientAdminSecret) {
+        options.clientSystemSecret = clientAdminSecret;
+    }
+
+    const clientAdminSecretReset = readBool(ConfigEnvironmentVariableName.CLIENT_SYSTEM_SECRET_RESET);
+    if (typeof clientAdminSecretReset !== 'undefined') {
+        options.clientSystemSecretReset = clientAdminSecretReset;
+    }
+
     // ---------------------------------------------------------------
 
     const userBasicAuth = readBool(ConfigEnvironmentVariableName.USER_AUTH_BASIC);
@@ -126,11 +141,6 @@ export function readConfigRawFromEnv() : ConfigInput {
     const userAdminEnabled = readBool(ConfigEnvironmentVariableName.USER_ADMIN_ENABLED);
     if (typeof userAdminEnabled !== 'undefined') {
         options.userAdminEnabled = userAdminEnabled;
-    }
-
-    const userAdminName = read(ConfigEnvironmentVariableName.USER_ADMIN_NAME);
-    if (userAdminName) {
-        options.userAdminName = userAdminName;
     }
 
     const userAdminPassword = read(ConfigEnvironmentVariableName.USER_ADMIN_PASSWORD);
@@ -148,11 +158,6 @@ export function readConfigRawFromEnv() : ConfigInput {
     const robotBasicAuth = readBool(ConfigEnvironmentVariableName.ROBOT_AUTH_BASIC);
     if (typeof robotBasicAuth !== 'undefined') {
         options.robotAuthBasic = robotBasicAuth;
-    }
-
-    const robotAdminName = read(ConfigEnvironmentVariableName.ROBOT_ADMIN_NAME);
-    if (robotAdminName) {
-        options.robotAdminName = robotAdminName;
     }
 
     const robotAdminEnabled = readBool(ConfigEnvironmentVariableName.ROBOT_ADMIN_ENABLED);

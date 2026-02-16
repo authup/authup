@@ -8,3 +8,4 @@
 export * from './entity';
 export * from './helpers';
 export * from './error';
+export * from './validator.ts';

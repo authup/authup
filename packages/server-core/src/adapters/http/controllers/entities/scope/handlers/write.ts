@@ -8,7 +8,7 @@
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, ScopeValidator, ValidatorGroup } from '@authup/core-kit';
 import type { Request, Response } from 'routup';
 import { sendAccepted, sendCreated } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
@@ -16,9 +16,7 @@ import { isEntityUnique, useDataSource, validateEntityJoinColumns } from 'typeor
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { DatabaseConflictError } from '../../../../../database/index.ts';
 import { ScopeEntity } from '../../../../../database/domains/index.ts';
-import { ScopeRequestValidator } from '../utils/index.ts';
 import {
-    RequestHandlerOperation,
     getRequestBodyRealmID,
     getRequestParamID,
     isRequestIdentityMasterRealmMember,
@@ -64,14 +62,14 @@ export async function writeScopeRouteHandler(
     if (entity) {
         await permissionChecker.preCheck({ name: PermissionName.SCOPE_UPDATE });
 
-        group = RequestHandlerOperation.UPDATE;
+        group = ValidatorGroup.UPDATE;
     } else {
         await permissionChecker.preCheck({ name: PermissionName.SCOPE_CREATE });
 
-        group = RequestHandlerOperation.CREATE;
+        group = ValidatorGroup.CREATE;
     }
 
-    const validator = new ScopeRequestValidator();
+    const validator = new ScopeValidator();
     const validatorAdapter = new RoutupContainerAdapter(validator);
     const data = await validatorAdapter.run(req, {
         group,

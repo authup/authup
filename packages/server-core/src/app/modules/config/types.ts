@@ -180,6 +180,23 @@ export type Config = {
      */
     clientAuthBasic: boolean,
 
+    /**
+     * Enable a client account for the default realm.
+     * default: false
+     */
+    clientSystemEnabled: boolean,
+
+    /**
+     * The secret of the default client.
+     */
+    clientSystemSecret: string,
+
+    /**
+     * Reset client secret on application startup.
+     * default: undefined
+     */
+    clientSystemSecretReset: boolean,
+
     // ----------------------------------------------------
 
     /**
@@ -194,12 +211,6 @@ export type Config = {
     userAdminEnabled: boolean,
 
     /**
-     * The name of the default admin user.
-     * default: 'admin'
-     */
-    userAdminName: string,
-
-    /**
      * The password of the default admin user.
      * default: 'start123'
      */
@@ -209,7 +220,7 @@ export type Config = {
      * Reset admin password on application startup.
      * default: undefined
      */
-    userAdminPasswordReset?: boolean,
+    userAdminPasswordReset: boolean,
 
     // ----------------------------------------------------
 
@@ -225,22 +236,16 @@ export type Config = {
     robotAdminEnabled: boolean,
 
     /**
-     * The name of the default robot.
-     * default: system
-     */
-    robotAdminName?: string,
-
-    /**
      * The secret of the default admin user.
      * default: (**generated**)
      */
-    robotAdminSecret?: string,
+    robotAdminSecret: string,
 
     /**
      * Reset the robot secret on application startup.
      * default: false
      */
-    robotAdminSecretReset?: boolean,
+    robotAdminSecretReset: boolean,
 
     // ----------------------------------------------------
 

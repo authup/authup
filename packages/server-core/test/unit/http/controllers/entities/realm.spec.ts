@@ -8,8 +8,8 @@
 import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
-import { createFakeRealm, expectPropertiesEqualToSrc } from '../../../../utils';
-import { createTestApplication } from '../../../../app';
+import { createFakeRealm, expectPropertiesEqualToSrc } from '../../../../utils/index.ts';
+import { createTestApplication } from '../../../../app/index.ts';
 
 describe('src/http/controllers/realm', () => {
     const suite = createTestApplication();
