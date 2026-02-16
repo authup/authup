@@ -7,7 +7,7 @@
 
 import { load, locateMany } from 'locter';
 import path from 'node:path';
-import type { RootProvisioningData } from '../../entities/index.ts';
+import type { RootProvisioningEntity } from '../../entities/index.ts';
 import { RootProvisioningValidator } from '../../entities/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
 import { CompositeProvisioningSource } from '../composite/index.ts';
@@ -24,7 +24,7 @@ export class FileProvisioningSource implements IProvisioningSource {
         this.rootValidator = new RootProvisioningValidator();
     }
 
-    async load(): Promise<RootProvisioningData> {
+    async load(): Promise<RootProvisioningEntity> {
         const cwd = path.isAbsolute(this.options.cwd) ?
             this.options.cwd :
             path.join(process.cwd(), this.options.cwd);
@@ -35,7 +35,7 @@ export class FileProvisioningSource implements IProvisioningSource {
 
         const compositeSource = new CompositeProvisioningSource([]);
 
-        const output : RootProvisioningData = {};
+        const output : RootProvisioningEntity = {};
         for (let i = 0; i < locations.length; i++) {
             const location = locations[i];
 

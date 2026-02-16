@@ -14,6 +14,9 @@ export class ScopeProvisioningValidator extends Container<ScopeProvisioningData>
     protected initialize() {
         super.initialize();
 
+        const modeValidator = new ProvisioningStrategyValidator();
+        this.mount('mode', modeValidator);
+
         const attributesValidator = new ScopeValidator();
         this.mount('attributes', attributesValidator);
     }

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Role } from '@authup/core-kit';
+import type { BaseProvisioningEntity } from '../types.ts';
 
 export type RoleProvisioningRelations = {
     /**
@@ -18,7 +19,7 @@ export type RoleProvisioningRelations = {
     realmPermissions?: string[],
 };
 
-export type RoleProvisioningData = {
+export type RoleProvisioningEntity = BaseProvisioningEntity<Role> & {
     attributes: Partial<Role>,
     relations?: RoleProvisioningRelations
 };

@@ -11,9 +11,11 @@ import type {
 import {
     buildUserFakeEmail,
 } from '@authup/core-kit';
+import { pickRecord } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
 import type { UserProvisioningData } from '../../entities/user/index.ts';
+import { ProvisioningEntityStrategyType } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { UserProvisioningSynchronizerContext } from './types.ts';
 
@@ -48,7 +50,42 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             client_id: input.attributes.client_id || IsNull(),
         });
         if (!attributes) {
-            if (input.attributes.name) {
+            attributes = await this.userRepository.save(input.attributes);
+        }
+
+        if (attributes) {
+            switch (strategy.type) {
+                case ProvisioningEntityStrategyType.MERGE:
+                    if (
+                        strategy.attributes &&
+                        strategy.attributes.indexOf('email') !== -1
+                    ) {
+                        input.attributes.email = input.attributes.email ||
+                            attributes.email ||
+                            buildUserFakeEmail(input.attributes.name || attributes.name);
+                    }
+
+                    attributes = this.userRepository.merge(
+                        attributes,
+                        strategy.attributes ?
+                            pickRecord(input.attributes, strategy.attributes) :
+                            input.attributes,
+                    );
+
+                    attributes = await this.userRepository.save(attributes);
+                    break;
+                case ProvisioningEntityStrategyType.REPLACE:
+                    await this.userRepository.remove(attributes);
+
+                    if (!input.attributes.email) {
+                        input.attributes.email = buildUserFakeEmail(input.attributes.name);
+                    }
+
+                    attributes = await this.userRepository.save(input.attributes);
+                    break;
+            }
+        } else {
+            if (!input.attributes.email && input.attributes.name) {
                 input.attributes.email = buildUserFakeEmail(input.attributes.name);
             }
 

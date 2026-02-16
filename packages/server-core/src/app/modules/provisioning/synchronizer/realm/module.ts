@@ -6,13 +6,15 @@
  */
 
 import type { Realm } from '@authup/core-kit';
+import { pickRecord } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import type { ClientProvisioningData, ScopeProvisioningData } from '../../entities/index.ts';
-import type { PermissionProvisioningContainer } from '../../entities/permission/index.ts';
-import type { RealmProvisioningData } from '../../entities/realm/index.ts';
-import type { RobotProvisioningData } from '../../entities/robot/index.ts';
-import type { RoleProvisioningData } from '../../entities/role/index.ts';
+import type { ClientProvisioningEntity, ScopeProvisioningData } from '../../entities/index.ts';
+import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
+import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
+import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
+import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type { UserProvisioningData } from '../../entities/user/index.ts';
+import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import type {
     IProvisioningSynchronizer,
 
@@ -20,18 +22,18 @@ import type {
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RealmProvisioningSynchronizerContext } from './types.ts';
 
-export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<RealmProvisioningData> {
+export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<RealmProvisioningEntity> {
     protected repository : Repository<Realm>;
 
-    protected clientSynchronizer: IProvisioningSynchronizer<ClientProvisioningData>;
+    protected clientSynchronizer: IProvisioningSynchronizer<ClientProvisioningEntity>;
 
-    protected permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningContainer>;
+    protected permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>;
 
-    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningData>;
+    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>;
 
     protected userSynchronizer: IProvisioningSynchronizer<UserProvisioningData>;
 
-    protected robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningData>;
+    protected robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningEntity>;
 
     protected scopeSynchronizer : IProvisioningSynchronizer<ScopeProvisioningData>;
 
@@ -47,11 +49,29 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.scopeSynchronizer = ctx.scopeSynchronizer;
     }
 
-    async synchronize(input: RealmProvisioningData): Promise<RealmProvisioningData> {
+    async synchronize(input: RealmProvisioningEntity): Promise<RealmProvisioningEntity> {
+        const strategy = normalizeEntityProvisioningStrategy(input.strategy);
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
         });
-        if (!attributes) {
+        if (attributes) {
+            switch (strategy.type) {
+                case ProvisioningEntityStrategyType.MERGE:
+                    attributes = this.repository.merge(
+                        attributes,
+                        strategy.attributes ?
+                            pickRecord(input.attributes, strategy.attributes) :
+                            input.attributes,
+                    );
+
+                    attributes = await this.repository.save(attributes);
+                    break;
+                case ProvisioningEntityStrategyType.REPLACE:
+                    await this.repository.remove(attributes);
+                    attributes = await this.clientRepository.save(input.attributes);
+                    break;
+            }
+        } else {
             attributes = await this.repository.save(input.attributes);
         }
 

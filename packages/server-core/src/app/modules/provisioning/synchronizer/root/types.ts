@@ -6,17 +6,17 @@
  */
 
 import type { ScopeProvisioningData } from '../../entities';
-import type { PermissionProvisioningContainer } from '../../entities/permission';
-import type { RealmProvisioningData } from '../../entities/realm';
-import type { RoleProvisioningData } from '../../entities/role';
+import type { PermissionProvisioningEntity } from '../../entities/permission';
+import type { RealmProvisioningEntity } from '../../entities/realm';
+import type { RoleProvisioningEntity } from '../../entities/role';
 import type {
     IProvisioningSynchronizer,
 
 } from '../../types.ts';
 
 export type RootProvisioningSynchronizerContext = {
-    permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningContainer>,
-    realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningData>,
-    roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningData>,
+    permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,
+    realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningEntity>,
+    roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,
     scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningData>,
 };

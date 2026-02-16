@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RootProvisioningData } from '../../entities/root/index.ts';
+import type { RootProvisioningEntity } from '../../entities/root/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
 
 export class CompositeProvisioningSource implements IProvisioningSource {
@@ -15,8 +15,8 @@ export class CompositeProvisioningSource implements IProvisioningSource {
         this.sources = sources;
     }
 
-    async load(): Promise<RootProvisioningData> {
-        const output : RootProvisioningData = {
+    async load(): Promise<RootProvisioningEntity> {
+        const output : RootProvisioningEntity = {
             roles: [],
             realms: [],
             permissions: [],
@@ -33,7 +33,7 @@ export class CompositeProvisioningSource implements IProvisioningSource {
         return output;
     }
 
-    merge(target: RootProvisioningData, source: RootProvisioningData) {
+    merge(target: RootProvisioningEntity, source: RootProvisioningEntity) {
         if (source.roles) {
             // todo: unique check and merge
             target.roles = target.roles || [];

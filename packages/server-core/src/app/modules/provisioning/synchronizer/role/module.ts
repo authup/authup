@@ -8,13 +8,15 @@
 import type {
     Permission, Role, RolePermission,
 } from '@authup/core-kit';
+import { pickRecord } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type { RoleProvisioningData } from '../../entities/role/index.ts';
+import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
+import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RoleProvisioningSynchronizerContext } from './types.ts';
 
-export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<RoleProvisioningData> {
+export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<RoleProvisioningEntity> {
     protected repository : Repository<Role>;
 
     protected permissionRepository : Repository<Permission>;
@@ -29,13 +31,31 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         this.rolePermissionRepository = ctx.rolePermissionRepository;
     }
 
-    async synchronize(input: RoleProvisioningData): Promise<RoleProvisioningData> {
+    async synchronize(input: RoleProvisioningEntity): Promise<RoleProvisioningEntity> {
+        const strategy = normalizeEntityProvisioningStrategy(input.strategy);
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
             realm_id: input.attributes.realm_id || IsNull(),
             client_id: input.attributes.client_id || IsNull(),
         });
-        if (!attributes) {
+        if (attributes) {
+            switch (strategy.type) {
+                case ProvisioningEntityStrategyType.MERGE:
+                    attributes = this.repository.merge(
+                        attributes,
+                        strategy.attributes ?
+                            pickRecord(input.attributes, strategy.attributes) :
+                            input.attributes,
+                    );
+
+                    attributes = await this.repository.save(attributes);
+                    break;
+                case ProvisioningEntityStrategyType.REPLACE:
+                    await this.repository.remove(attributes);
+                    attributes = await this.repository.save(input.attributes);
+                    break;
+            }
+        } else {
             attributes = await this.repository.save(input.attributes);
         }
 

@@ -7,18 +7,22 @@
 
 import { RealmValidator } from '@authup/core-kit';
 import { Container } from 'validup';
+import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 import { RealmProvisioningRelationsValidator } from './relations-validator.ts';
 
-import type { RealmProvisioningData } from './types.ts';
+import type { RealmProvisioningEntity } from './types.ts';
 
-export class RealmProvisioningValidator extends Container<RealmProvisioningData> {
+export class RealmProvisioningValidator extends Container<RealmProvisioningEntity> {
     protected initialize() {
         super.initialize();
 
-        const attributesValidator = new RealmValidator();
-        const relationsValidator = new RealmProvisioningRelationsValidator();
+        const modeValidator = new ProvisioningStrategyValidator();
+        this.mount('mode', modeValidator);
 
+        const attributesValidator = new RealmValidator();
         this.mount('attributes', attributesValidator);
+
+        const relationsValidator = new RealmProvisioningRelationsValidator();
         this.mount('relations', relationsValidator);
     }
 }

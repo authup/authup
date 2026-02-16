@@ -7,13 +7,17 @@
 
 import { RoleValidator } from '@authup/core-kit';
 import { Container } from 'validup';
+import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 import { RoleProvisioningRelationsValidator } from './relations-validator.ts';
 
-import type { RoleProvisioningData } from './types.ts';
+import type { RoleProvisioningEntity } from './types.ts';
 
-export class RoleProvisioningValidator extends Container<RoleProvisioningData> {
+export class RoleProvisioningValidator extends Container<RoleProvisioningEntity> {
     protected initialize() {
         super.initialize();
+
+        const modeValidator = new ProvisioningStrategyValidator();
+        this.mount('mode', modeValidator);
 
         const dataValidator = new RoleValidator();
         this.mount('attributes', dataValidator);

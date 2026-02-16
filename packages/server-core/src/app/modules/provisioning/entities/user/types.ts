@@ -42,5 +42,10 @@ export type UserProvisioningRelations = {
 
 export type UserProvisioningData = {
     attributes: Partial<User>,
-    relations?: UserProvisioningRelations
+    relations?: UserProvisioningRelations,
+    mode: 'merge' | 'replace',
+    /**
+     * Fields to exclude on merge.
+     */
+    exclude: string[],
 };

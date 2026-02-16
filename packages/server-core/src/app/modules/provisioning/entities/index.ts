@@ -13,3 +13,5 @@ export * from './role/index.ts';
 export * from './root/index.ts';
 export * from './scope/index.ts';
 export * from './user/index.ts';
+
+export * from './types.ts';

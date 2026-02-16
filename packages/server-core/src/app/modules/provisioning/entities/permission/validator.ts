@@ -7,14 +7,18 @@
 
 import { PermissionValidator } from '@authup/core-kit';
 import { Container } from 'validup';
+import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 
-import type { PermissionProvisioningContainer } from './types.ts';
+import type { PermissionProvisioningEntity } from './types.ts';
 
-export class PermissionProvisioningValidator extends Container<PermissionProvisioningContainer> {
+export class PermissionProvisioningValidator extends Container<PermissionProvisioningEntity> {
     protected initialize() {
         super.initialize();
 
         const attributesValidator = new PermissionValidator();
         this.mount('attributes', attributesValidator);
+
+        const modeValidator = new ProvisioningStrategyValidator();
+        this.mount('mode', modeValidator);
     }
 }

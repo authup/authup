@@ -6,12 +6,12 @@
  */
 
 import type {
-    RealmProvisioningData,
-    RoleProvisioningData,
-    RootProvisioningData,
+    RealmProvisioningEntity,
+    RoleProvisioningEntity,
+    RootProvisioningEntity,
     ScopeProvisioningData,
 } from '../../entities/index.ts';
-import type { PermissionProvisioningContainer } from '../../entities/permission';
+import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type {
     IProvisioningSynchronizer,
 
@@ -19,12 +19,12 @@ import type {
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RootProvisioningSynchronizerContext } from './types.ts';
 
-export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<RootProvisioningData> {
-    protected realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningData>;
+export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<RootProvisioningEntity> {
+    protected realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningEntity>;
 
-    protected permissionSynchronizer : IProvisioningSynchronizer<PermissionProvisioningContainer>;
+    protected permissionSynchronizer : IProvisioningSynchronizer<PermissionProvisioningEntity>;
 
-    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningData>;
+    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>;
 
     protected scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningData>;
 
@@ -37,8 +37,8 @@ export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.scopeSynchronizer = ctx.scopeSynchronizer;
     }
 
-    async synchronize(input: RootProvisioningData): Promise<RootProvisioningData> {
-        const output : RootProvisioningData = {};
+    async synchronize(input: RootProvisioningEntity): Promise<RootProvisioningEntity> {
+        const output : RootProvisioningEntity = {};
 
         if (input.permissions) {
             output.permissions = await this.permissionSynchronizer.synchronizeMany(input.permissions);

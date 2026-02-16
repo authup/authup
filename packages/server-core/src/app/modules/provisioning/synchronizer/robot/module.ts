@@ -8,13 +8,15 @@
 import type {
     Client, Permission, Robot, RobotPermission, RobotRole, Role,
 } from '@authup/core-kit';
+import { pickRecord } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type { RobotProvisioningData } from '../../entities/robot/index.ts';
+import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
+import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RobotProvisioningSynchronizerContext } from './types.ts';
 
-export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<RobotProvisioningData> {
+export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<RobotProvisioningEntity> {
     protected robotRepository: Repository<Robot>;
 
     protected robotRoleRepository: Repository<RobotRole>;
@@ -38,12 +40,31 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         this.clientRepository = ctx.clientRepository;
     }
 
-    async synchronize(input: RobotProvisioningData): Promise<RobotProvisioningData> {
+    async synchronize(input: RobotProvisioningEntity): Promise<RobotProvisioningEntity> {
+        const strategy = normalizeEntityProvisioningStrategy(input.strategy);
+
         let attributes = await this.robotRepository.findOneBy({
             name: input.attributes.name,
             ...(input.attributes.realm_id ? { realm_id: input.attributes.realm_id } : { realm_id: IsNull() }),
         });
-        if (!attributes) {
+        if (attributes) {
+            switch (strategy.type) {
+                case ProvisioningEntityStrategyType.MERGE:
+                    attributes = this.robotRepository.merge(
+                        attributes,
+                        strategy.attributes ?
+                            pickRecord(input.attributes, strategy.attributes) :
+                            input.attributes,
+                    );
+
+                    attributes = await this.robotRepository.save(attributes);
+                    break;
+                case ProvisioningEntityStrategyType.REPLACE:
+                    await this.clientRepository.remove(attributes);
+                    attributes = await this.clientRepository.save(input.attributes);
+                    break;
+            }
+        } else {
             attributes = await this.robotRepository.save(input.attributes);
         }
 

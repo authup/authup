@@ -8,11 +8,13 @@
 import type {
     Client, ClientPermission, ClientRole, Permission, Role,
 } from '@authup/core-kit';
+import { pickRecord } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type { ClientProvisioningData } from '../../entities/client';
-import type { PermissionProvisioningContainer } from '../../entities/permission';
-import type { RoleProvisioningData } from '../../entities/role';
+import type { ClientProvisioningEntity } from '../../entities/client';
+import type { PermissionProvisioningEntity } from '../../entities/permission';
+import type { RoleProvisioningEntity } from '../../entities/role';
+import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import type {
     IProvisioningSynchronizer,
 
@@ -20,7 +22,7 @@ import type {
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { ClientProvisioningSynchronizerContext } from './types.ts';
 
-export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer<ClientProvisioningData> {
+export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer<ClientProvisioningEntity> {
     protected clientRepository: Repository<Client>;
 
     protected clientRoleRepository: Repository<ClientRole>;
@@ -31,9 +33,9 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
     protected permissionRepository: Repository<Permission>;
 
-    protected permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningContainer>;
+    protected permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>;
 
-    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningData>;
+    protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>;
 
     constructor(ctx: ClientProvisioningSynchronizerContext) {
         super();
@@ -48,12 +50,30 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
         this.roleSynchronizer = ctx.roleSynchronizer;
     }
 
-    async synchronize(input: ClientProvisioningData): Promise<ClientProvisioningData> {
+    async synchronize(input: ClientProvisioningEntity): Promise<ClientProvisioningEntity> {
+        const strategy = normalizeEntityProvisioningStrategy(input.strategy);
+
         let attributes = await this.clientRepository.findOneBy({
             name: input.attributes.name,
-            ...(input.attributes.realm_id ? { realm_id: input.attributes.realm_id } : { realm_id: IsNull() }),
+            realm_id: input.attributes.realm_id || IsNull(),
         });
-        if (!attributes) {
+        if (attributes) {
+            switch (strategy.type) {
+                case ProvisioningEntityStrategyType.MERGE:
+                    attributes = this.clientRepository.merge(
+                        attributes,
+                        strategy.attributes ?
+                            pickRecord(input.attributes, strategy.attributes) :
+                            input.attributes,
+                    );
+                    attributes = await this.clientRepository.save(attributes);
+                    break;
+                case ProvisioningEntityStrategyType.REPLACE:
+                    await this.clientRepository.remove(attributes);
+                    attributes = await this.clientRepository.save(input.attributes);
+                    break;
+            }
+        } else {
             attributes = await this.clientRepository.save(input.attributes);
         }
 

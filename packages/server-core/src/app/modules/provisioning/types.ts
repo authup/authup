@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RootProvisioningData } from './entities/index.ts';
+import type { RootProvisioningEntity } from './entities/index.ts';
 
 export interface IProvisioningSource {
-    load() : Promise<RootProvisioningData>;
+    load() : Promise<RootProvisioningEntity>;
 }
 
 export interface IProvisioningSynchronizer<T> {

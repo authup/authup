@@ -8,14 +8,15 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import zod from 'zod';
+import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 import { PermissionProvisioningValidator } from '../permission/index.ts';
 import { RealmProvisioningValidator } from '../realm/index.ts';
 import { RoleProvisioningValidator } from '../role/index.ts';
 import { ScopeProvisioningValidator } from '../scope/index.ts';
 
-import type { RootProvisioningData } from './types.ts';
+import type { RootProvisioningEntity } from './types.ts';
 
-export class RootProvisioningValidator extends Container<RootProvisioningData> {
+export class RootProvisioningValidator extends Container<RootProvisioningEntity> {
     protected initialize() {
         super.initialize();
 
@@ -23,6 +24,9 @@ export class RootProvisioningValidator extends Container<RootProvisioningData> {
         const roleValidator = new RoleProvisioningValidator();
         const scopeValidator = new ScopeProvisioningValidator();
         const permissionValidator = new PermissionProvisioningValidator();
+
+        const modeValidator = new ProvisioningStrategyValidator();
+        this.mount('mode', modeValidator);
 
         this.mount('realms', { optional: true }, createValidator(
             zod

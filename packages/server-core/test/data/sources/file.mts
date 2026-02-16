@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RootProvisioningData } from '../../../src';
+import type { RootProvisioningEntity } from '../../../src';
 
-const DATA : RootProvisioningData = {
+const DATA : RootProvisioningEntity = {
     roles: [
         {
             attributes: {
