@@ -16,7 +16,7 @@ export class PermissionProvisioningValidator extends Container<PermissionProvisi
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
-        this.mount('strategy', strategyValidator);
+        this.mount('strategy', { optional: true }, strategyValidator);
 
         const attributesValidator = new PermissionValidator();
         this.mount('attributes', attributesValidator);

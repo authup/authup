@@ -78,6 +78,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                         input.attributes.email = buildUserFakeEmail(input.attributes.name);
                     }
 
+                    input.attributes.id = attributes.id;
                     attributes = await this.userRepository.save(input.attributes);
                     break;
             }

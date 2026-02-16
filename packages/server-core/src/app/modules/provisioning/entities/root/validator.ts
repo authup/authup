@@ -20,14 +20,10 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
     protected initialize() {
         super.initialize();
 
-        const realmValidator = new RealmProvisioningValidator();
-        const roleValidator = new RoleProvisioningValidator();
-        const scopeValidator = new ScopeProvisioningValidator();
-        const permissionValidator = new PermissionProvisioningValidator();
-
         const strategyValidator = new ProvisioningStrategyValidator();
-        this.mount('strategy', strategyValidator);
+        this.mount('strategy', { optional: true }, strategyValidator);
 
+        const realmValidator = new RealmProvisioningValidator();
         this.mount('realms', { optional: true }, createValidator(
             zod
                 .array(zod.any())
@@ -38,6 +34,7 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
                 }),
         ));
 
+        const roleValidator = new RoleProvisioningValidator();
         this.mount('roles', { optional: true }, createValidator(
             zod
                 .array(zod.any())
@@ -48,6 +45,7 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
                 }),
         ));
 
+        const scopeValidator = new ScopeProvisioningValidator();
         this.mount('scopes', { optional: true }, createValidator(
             zod
                 .array(zod.any())
@@ -58,6 +56,7 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
                 }),
         ));
 
+        const permissionValidator = new PermissionProvisioningValidator();
         this.mount('permissions', { optional: true }, createValidator(
             zod
                 .array(zod.any())

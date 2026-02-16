@@ -69,7 +69,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                     attributes = await this.clientRepository.save(attributes);
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
-                    await this.clientRepository.remove(attributes);
+                    input.attributes.id = attributes.id;
                     attributes = await this.clientRepository.save(input.attributes);
                     break;
             }

@@ -17,7 +17,7 @@ export class RealmProvisioningValidator extends Container<RealmProvisioningEntit
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
-        this.mount('strategy', strategyValidator);
+        this.mount('strategy', { optional: true }, strategyValidator);
 
         const attributesValidator = new RealmValidator();
         this.mount('attributes', attributesValidator);

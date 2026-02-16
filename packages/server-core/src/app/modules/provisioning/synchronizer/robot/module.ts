@@ -60,6 +60,7 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                     attributes = await this.robotRepository.save(attributes);
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
+                    input.attributes.id = attributes.id;
                     attributes = await this.robotRepository.save(input.attributes);
                     break;
             }

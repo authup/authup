@@ -43,6 +43,7 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                     attributes = await this.repository.save(attributes);
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
+                    input.attributes.id = attributes.id;
                     attributes = await this.repository.save(input.attributes);
                     break;
             }
