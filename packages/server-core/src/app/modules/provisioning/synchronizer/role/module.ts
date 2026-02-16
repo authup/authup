@@ -51,7 +51,6 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                     attributes = await this.repository.save(attributes);
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
-                    await this.repository.remove(attributes);
                     attributes = await this.repository.save(input.attributes);
                     break;
             }

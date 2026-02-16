@@ -74,8 +74,6 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                     attributes = await this.userRepository.save(attributes);
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
-                    await this.userRepository.remove(attributes);
-
                     if (!input.attributes.email && input.attributes.name) {
                         input.attributes.email = buildUserFakeEmail(input.attributes.name);
                     }
