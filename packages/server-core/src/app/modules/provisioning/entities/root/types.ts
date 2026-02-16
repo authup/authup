@@ -8,7 +8,7 @@
 import type { PermissionProvisioningEntity } from '../permission/index.ts';
 import type { RealmProvisioningEntity } from '../realm/index.ts';
 import type { RoleProvisioningEntity } from '../role';
-import type { ScopeProvisioningData } from '../scope';
+import type { ScopeProvisioningEntity } from '../scope';
 import type { BaseProvisioningEntity } from '../types.ts';
 
 export type RootProvisioningEntity = BaseProvisioningEntity & {
@@ -30,5 +30,5 @@ export type RootProvisioningEntity = BaseProvisioningEntity & {
     /**
      * Create or update global scopes
      */
-    scopes?: ScopeProvisioningData[],
+    scopes?: ScopeProvisioningEntity[],
 };

@@ -9,7 +9,7 @@ import type {
     RealmProvisioningEntity,
     RoleProvisioningEntity,
     RootProvisioningEntity,
-    ScopeProvisioningData,
+    ScopeProvisioningEntity,
 } from '../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type {
@@ -26,7 +26,7 @@ export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
     protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>;
 
-    protected scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningData>;
+    protected scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningEntity>;
 
     constructor(ctx: RootProvisioningSynchronizerContext) {
         super();

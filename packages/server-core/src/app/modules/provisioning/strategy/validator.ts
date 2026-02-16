@@ -29,7 +29,7 @@ export class ProvisioningStrategyValidator extends Container<ProvisioningEntityS
         ));
         mergeContainer.mount('attributes', createValidator(
             zod
-                .array(z.string())
+                .array(zod.string())
                 .optional(),
         ));
         this.mount(mergeContainer);

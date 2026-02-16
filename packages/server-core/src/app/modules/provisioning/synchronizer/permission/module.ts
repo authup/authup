@@ -45,7 +45,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     await this.repository.remove(attributes);
-                    attributes = await this.clientRepository.save(input.attributes);
+                    attributes = await this.repository.save(input.attributes);
                     break;
             }
         } else {

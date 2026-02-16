@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { Scope } from '@authup/core-kit';
+import type { BaseProvisioningEntity } from '../types.ts';
 
-export type ScopeProvisioningData = {
+export type ScopeProvisioningEntity = BaseProvisioningEntity<Scope> & {
     attributes: Partial<Scope>
 };

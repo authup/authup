@@ -15,8 +15,8 @@ export class ClientProvisioningValidator extends Container<ClientProvisioningEnt
     protected initialize() {
         super.initialize();
 
-        const modeValidator = new ProvisioningStrategyValidator();
-        this.mount('mode', modeValidator);
+        const strategyValidator = new ProvisioningStrategyValidator();
+        this.mount('strategy', strategyValidator);
 
         const attributesValidator = new ClientValidator();
         this.mount('attributes', attributesValidator);

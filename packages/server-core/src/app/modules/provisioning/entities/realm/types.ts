@@ -9,12 +9,12 @@ import type { ClientProvisioningEntity } from '../client/index.ts';
 import type { PermissionProvisioningEntity } from '../permission';
 import type { RobotProvisioningEntity } from '../robot';
 import type { RoleProvisioningEntity } from '../role';
-import type { ScopeProvisioningData } from '../scope';
+import type { ScopeProvisioningEntity } from '../scope';
 import type { BaseProvisioningEntity } from '../types.ts';
-import type { UserProvisioningData } from '../user';
+import type { UserProvisioningEntity } from '../user';
 
 export type RealmProvisioningRelations = {
-    users?: UserProvisioningData[],
+    users?: UserProvisioningEntity[],
 
     robots?: RobotProvisioningEntity[]
 
@@ -23,7 +23,7 @@ export type RealmProvisioningRelations = {
     // Create Roles for Realm
     roles?: RoleProvisioningEntity[],
 
-    scopes?: ScopeProvisioningData[],
+    scopes?: ScopeProvisioningEntity[],
 
     // Create Permissions for Realm
     permissions?: PermissionProvisioningEntity[],

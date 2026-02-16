@@ -16,8 +16,8 @@ export class RoleProvisioningValidator extends Container<RoleProvisioningEntity>
     protected initialize() {
         super.initialize();
 
-        const modeValidator = new ProvisioningStrategyValidator();
-        this.mount('mode', modeValidator);
+        const strategyValidator = new ProvisioningStrategyValidator();
+        this.mount('strategy', strategyValidator);
 
         const dataValidator = new RoleValidator();
         this.mount('attributes', dataValidator);

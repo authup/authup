@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { User } from '@authup/core-kit';
+import type { BaseProvisioningEntity } from '../types.ts';
 
 export type UserProvisioningRelations = {
     /**
@@ -40,12 +41,7 @@ export type UserProvisioningRelations = {
     globalRoles?: string[],
 };
 
-export type UserProvisioningData = {
+export type UserProvisioningEntity = BaseProvisioningEntity<User> & {
     attributes: Partial<User>,
     relations?: UserProvisioningRelations,
-    mode: 'merge' | 'replace',
-    /**
-     * Fields to exclude on merge.
-     */
-    exclude: string[],
 };

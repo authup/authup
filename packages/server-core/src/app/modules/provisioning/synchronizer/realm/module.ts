@@ -8,12 +8,12 @@
 import type { Realm } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import type { ClientProvisioningEntity, ScopeProvisioningData } from '../../entities/index.ts';
+import type { ClientProvisioningEntity, ScopeProvisioningEntity } from '../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
 import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
-import type { UserProvisioningData } from '../../entities/user/index.ts';
+import type { UserProvisioningEntity } from '../../entities/user/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import type {
     IProvisioningSynchronizer,
@@ -31,11 +31,11 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
     protected roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>;
 
-    protected userSynchronizer: IProvisioningSynchronizer<UserProvisioningData>;
+    protected userSynchronizer: IProvisioningSynchronizer<UserProvisioningEntity>;
 
     protected robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningEntity>;
 
-    protected scopeSynchronizer : IProvisioningSynchronizer<ScopeProvisioningData>;
+    protected scopeSynchronizer : IProvisioningSynchronizer<ScopeProvisioningEntity>;
 
     constructor(ctx: RealmProvisioningSynchronizerContext) {
         super();
@@ -68,7 +68,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     await this.repository.remove(attributes);
-                    attributes = await this.clientRepository.save(input.attributes);
+                    attributes = await this.repository.save(input.attributes);
                     break;
             }
         } else {

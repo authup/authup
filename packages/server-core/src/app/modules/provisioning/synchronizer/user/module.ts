@@ -14,12 +14,12 @@ import {
 import { pickRecord } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { In, IsNull } from 'typeorm';
-import type { UserProvisioningData } from '../../entities/user/index.ts';
-import { ProvisioningEntityStrategyType } from '../../strategy/index.ts';
+import type { UserProvisioningEntity } from '../../entities/user/index.ts';
+import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { UserProvisioningSynchronizerContext } from './types.ts';
 
-export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<UserProvisioningData> {
+export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<UserProvisioningEntity> {
     protected userRepository: Repository<User>;
 
     protected userRoleRepository: Repository<UserRole>;
@@ -43,7 +43,9 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         this.clientRepository = ctx.clientRepository;
     }
 
-    async synchronize(input: UserProvisioningData): Promise<UserProvisioningData> {
+    async synchronize(input: UserProvisioningEntity): Promise<UserProvisioningEntity> {
+        const strategy = normalizeEntityProvisioningStrategy(input.strategy);
+
         let attributes = await this.userRepository.findOneBy({
             name: input.attributes.name,
             realm_id: input.attributes.realm_id || IsNull(),
@@ -77,7 +79,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                 case ProvisioningEntityStrategyType.REPLACE:
                     await this.userRepository.remove(attributes);
 
-                    if (!input.attributes.email) {
+                    if (!input.attributes.email && input.attributes.name) {
                         input.attributes.email = buildUserFakeEmail(input.attributes.name);
                     }
 

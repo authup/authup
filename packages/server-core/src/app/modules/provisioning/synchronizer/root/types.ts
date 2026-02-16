@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ScopeProvisioningData } from '../../entities';
+import type { ScopeProvisioningEntity } from '../../entities';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RealmProvisioningEntity } from '../../entities/realm';
 import type { RoleProvisioningEntity } from '../../entities/role';
@@ -18,5 +18,5 @@ export type RootProvisioningSynchronizerContext = {
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,
     realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningEntity>,
     roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,
-    scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningData>,
+    scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningEntity>,
 };

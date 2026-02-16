@@ -7,17 +7,21 @@
 
 import { UserValidator } from '@authup/core-kit';
 import { Container } from 'validup';
+import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 import { UserProvisioningRelationsValidator } from './relations-validator.ts';
-import type { UserProvisioningData } from './types.ts';
+import type { UserProvisioningEntity } from './types.ts';
 
-export class UserProvisioningValidator extends Container<UserProvisioningData> {
+export class UserProvisioningValidator extends Container<UserProvisioningEntity> {
     protected initialize() {
         super.initialize();
 
-        const attributesValidator = new UserValidator();
-        const relationsValidator = new UserProvisioningRelationsValidator();
+        const strategyValidator = new ProvisioningStrategyValidator();
+        this.mount('strategy', strategyValidator);
 
+        const attributesValidator = new UserValidator();
         this.mount('attributes', attributesValidator);
+
+        const relationsValidator = new UserProvisioningRelationsValidator();
         this.mount('relations', relationsValidator);
     }
 }

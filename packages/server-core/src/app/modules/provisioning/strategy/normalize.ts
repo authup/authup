@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { ObjectLiteral } from '@authup/kit';
 import { ProvisioningEntityStrategyType } from './constants.ts';
 import type { ProvisioningEntityStrategy } from './types.ts';
 
-export function normalizeEntityProvisioningStrategy(
-    input?: ProvisioningEntityStrategy,
-) : ProvisioningEntityStrategy {
+export function normalizeEntityProvisioningStrategy<A extends ObjectLiteral = ObjectLiteral>(
+    input?: ProvisioningEntityStrategy<A>,
+) : ProvisioningEntityStrategy<A> {
     if (!input) {
         return {
             type: ProvisioningEntityStrategyType.CREATE_ONLY,

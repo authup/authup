@@ -25,8 +25,8 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
         const scopeValidator = new ScopeProvisioningValidator();
         const permissionValidator = new PermissionProvisioningValidator();
 
-        const modeValidator = new ProvisioningStrategyValidator();
-        this.mount('mode', modeValidator);
+        const strategyValidator = new ProvisioningStrategyValidator();
+        this.mount('strategy', strategyValidator);
 
         this.mount('realms', { optional: true }, createValidator(
             zod

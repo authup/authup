@@ -15,10 +15,10 @@ export class PermissionProvisioningValidator extends Container<PermissionProvisi
     protected initialize() {
         super.initialize();
 
+        const strategyValidator = new ProvisioningStrategyValidator();
+        this.mount('strategy', strategyValidator);
+
         const attributesValidator = new PermissionValidator();
         this.mount('attributes', attributesValidator);
-
-        const modeValidator = new ProvisioningStrategyValidator();
-        this.mount('mode', modeValidator);
     }
 }

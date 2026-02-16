@@ -7,6 +7,7 @@
 
 import { RobotValidator } from '@authup/core-kit';
 import { Container } from 'validup';
+import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 import { RobotProvisioningRelationsValidator } from './relations-validator.ts';
 import type { RobotProvisioningEntity } from './types.ts';
 
@@ -14,8 +15,8 @@ export class RobotProvisioningValidator extends Container<RobotProvisioningEntit
     protected initialize() {
         super.initialize();
 
-        const modeValidator = new ProvisioningStrategyValidator();
-        this.mount('mode', modeValidator);
+        const strategyValidator = new ProvisioningStrategyValidator();
+        this.mount('strategy', strategyValidator);
 
         const attributesValidator = new RobotValidator();
         this.mount('data', attributesValidator);

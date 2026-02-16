@@ -7,15 +7,16 @@
 
 import { ScopeValidator } from '@authup/core-kit';
 import { Container } from 'validup';
+import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 
-import type { ScopeProvisioningData } from './types.ts';
+import type { ScopeProvisioningEntity } from './types.ts';
 
-export class ScopeProvisioningValidator extends Container<ScopeProvisioningData> {
+export class ScopeProvisioningValidator extends Container<ScopeProvisioningEntity> {
     protected initialize() {
         super.initialize();
 
-        const modeValidator = new ProvisioningStrategyValidator();
-        this.mount('mode', modeValidator);
+        const strategyValidator = new ProvisioningStrategyValidator();
+        this.mount('strategy', strategyValidator);
 
         const attributesValidator = new ScopeValidator();
         this.mount('attributes', attributesValidator);

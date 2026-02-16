@@ -7,12 +7,12 @@
 
 import type { Realm } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
-import type { ScopeProvisioningData } from '../../entities/index.ts';
+import type { ScopeProvisioningEntity } from '../../entities/index.ts';
 import type { ClientProvisioningEntity } from '../../entities/client/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
-import type { UserProvisioningData } from '../../entities/user/index.ts';
+import type { UserProvisioningEntity } from '../../entities/user/index.ts';
 import type {
     IProvisioningSynchronizer,
 
@@ -24,7 +24,7 @@ export type RealmProvisioningSynchronizerContext = {
     clientSynchronizer: IProvisioningSynchronizer<ClientProvisioningEntity>,
     roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,
-    userSynchronizer: IProvisioningSynchronizer<UserProvisioningData>,
+    userSynchronizer: IProvisioningSynchronizer<UserProvisioningEntity>,
     robotSynchronizer: IProvisioningSynchronizer<RobotProvisioningEntity>,
-    scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningData>,
+    scopeSynchronizer: IProvisioningSynchronizer<ScopeProvisioningEntity>,
 };
