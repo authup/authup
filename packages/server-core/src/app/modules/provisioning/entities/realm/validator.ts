@@ -23,6 +23,6 @@ export class RealmProvisioningValidator extends Container<RealmProvisioningEntit
         this.mount('attributes', attributesValidator);
 
         const relationsValidator = new RealmProvisioningRelationsValidator();
-        this.mount('relations', relationsValidator);
+        this.mount('relations', { optional: true }, relationsValidator);
     }
 }

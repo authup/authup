@@ -22,6 +22,6 @@ export class ClientProvisioningValidator extends Container<ClientProvisioningEnt
         this.mount('attributes', attributesValidator);
 
         const relationsValidator = new ClientProvisioningRelationsValidator();
-        this.mount('relations', relationsValidator);
+        this.mount('relations', { optional: true }, relationsValidator);
     }
 }

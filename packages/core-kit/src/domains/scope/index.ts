@@ -8,4 +8,4 @@
 export * from './constants';
 export * from './entity';
 export * from './utils';
-export * from './validaitor.ts';
+export * from './validator.ts';

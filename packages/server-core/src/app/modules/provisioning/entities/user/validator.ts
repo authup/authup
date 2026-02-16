@@ -22,6 +22,6 @@ export class UserProvisioningValidator extends Container<UserProvisioningEntity>
         this.mount('attributes', attributesValidator);
 
         const relationsValidator = new UserProvisioningRelationsValidator();
-        this.mount('relations', relationsValidator);
+        this.mount('relations', { optional: true }, relationsValidator);
     }
 }
