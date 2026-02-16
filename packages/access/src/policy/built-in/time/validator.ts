@@ -41,8 +41,8 @@ export class TimePolicyValidator extends Container<TimePolicy> {
 
         this.mount('start', createValidator(
             z.date()
-                .or(z.string().datetime())
-                .or(z.string().time())
+                .or(z.iso.datetime())
+                .or(z.iso.time())
                 .or(z.number())
                 .or(z.null())
                 .or(z.undefined())
@@ -50,8 +50,8 @@ export class TimePolicyValidator extends Container<TimePolicy> {
         ));
         this.mount('end', createValidator(
             z.date()
-                .or(z.string().datetime())
-                .or(z.string().time())
+                .or(z.iso.datetime())
+                .or(z.iso.time())
                 .or(z.number())
                 .or(z.null())
                 .or(z.undefined())
@@ -61,7 +61,7 @@ export class TimePolicyValidator extends Container<TimePolicy> {
         this.mount(
             'interval',
             createValidator(
-                z.nativeEnum(TimePolicyInterval)
+                z.enum(TimePolicyInterval)
                     .or(z.null())
                     .or(z.undefined())
                     .optional(),

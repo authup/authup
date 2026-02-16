@@ -19,8 +19,7 @@ export class AttributesPolicyValidator<
         this.mount(
             'query',
             createValidator(
-                z.object({})
-                    .passthrough(),
+                z.looseObject({}),
             ),
         );
 

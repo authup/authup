@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { ProvisioningStrategyValidator } from '../../strategy/index.ts';
 import { PermissionProvisioningValidator } from '../permission/index.ts';
 import { RealmProvisioningValidator } from '../realm/index.ts';
@@ -25,8 +25,8 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
 
         const realmValidator = new RealmProvisioningValidator();
         this.mount('realms', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await realmValidator.run(ctx.value[i]);
@@ -36,8 +36,8 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
 
         const roleValidator = new RoleProvisioningValidator();
         this.mount('roles', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await roleValidator.run(ctx.value[i]);
@@ -47,8 +47,8 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
 
         const scopeValidator = new ScopeProvisioningValidator();
         this.mount('scopes', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await scopeValidator.run(ctx.value[i]);
@@ -58,8 +58,8 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
 
         const permissionValidator = new PermissionProvisioningValidator();
         this.mount('permissions', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await permissionValidator.run(ctx.value[i]);

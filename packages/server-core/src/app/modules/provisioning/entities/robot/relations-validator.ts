@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import type { RobotProvisioningRelations } from './types.ts';
 
 export class RobotProvisioningRelationsValidator extends Container<RobotProvisioningRelations> {
@@ -15,19 +15,19 @@ export class RobotProvisioningRelationsValidator extends Container<RobotProvisio
         super.initialize();
 
         this.mount('realmPermissions', { optional: true }, createValidator(
-            zod.array(zod.string()),
+            z.array(z.string()),
         ));
 
         this.mount('globalPermissions', { optional: true }, createValidator(
-            zod.array(zod.string()),
+            z.array(z.string()),
         ));
 
         this.mount('realmRoles', { optional: true }, createValidator(
-            zod.array(zod.string()),
+            z.array(z.string()),
         ));
 
         this.mount('globalRoles', { optional: true }, createValidator(
-            zod.array(zod.string()),
+            z.array(z.string()),
         ));
     }
 }

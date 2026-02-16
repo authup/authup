@@ -14,7 +14,7 @@ import {
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 
 export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2AuthorizationCodeRequest> {
     protected initialize() {
@@ -23,7 +23,7 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
         this.mount(
             'response_type',
             createValidator(
-                zod
+                z
                     .string()
                     .nonempty()
                     .check((ctx) => {
@@ -41,48 +41,48 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
                             }
                         }
 
-                        return zod.NEVER;
+                        return z.NEVER;
                     }),
             ),
         );
 
         this.mount(
             'redirect_uri',
-            createValidator(zod.string().url()),
+            createValidator(z.string().url()),
         );
 
         this.mount(
             'scope',
-            createValidator(zod.string().min(3).max(512)),
+            createValidator(z.string().min(3).max(512)),
         );
 
         this.mount(
             'state',
             { optional: true },
-            createValidator(zod.string().min(5).max(2048).nullable()),
+            createValidator(z.string().min(5).max(2048).nullable()),
         );
 
         this.mount(
             'code_challenge',
             { optional: true },
-            createValidator(zod.string().min(1).max(256).nullable()),
+            createValidator(z.string().min(1).max(256).nullable()),
         );
 
         this.mount(
             'code_challenge_method',
             { optional: true },
-            createValidator(zod.enum(OAuth2AuthorizationCodeChallengeMethod).nullable()),
+            createValidator(z.enum(OAuth2AuthorizationCodeChallengeMethod).nullable()),
         );
 
         this.mount(
             'realm_id',
             { optional: true },
-            createValidator(zod.string().nonempty()),
+            createValidator(z.string().nonempty()),
         );
 
         this.mount(
             'client_id',
-            createValidator(zod.string().nonempty()),
+            createValidator(z.string().nonempty()),
         );
     }
 }

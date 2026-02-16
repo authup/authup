@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import type { UserProvisioningRelations } from './types.ts';
 
 export class UserProvisioningRelationsValidator extends Container<UserProvisioningRelations> {
@@ -15,27 +15,27 @@ export class UserProvisioningRelationsValidator extends Container<UserProvisioni
         super.initialize();
 
         this.mount('clientPermissions', { optional: true }, createValidator(
-            zod.record(zod.string(), zod.array(zod.string())),
+            z.record(z.string(), z.array(z.string())),
         ));
 
         this.mount('realmPermissions', { optional: true }, createValidator(
-            zod.array(zod.string()),
+            z.array(z.string()),
         ));
 
         this.mount('globalPermissions', { optional: true }, createValidator(
-            zod.array(zod.string()),
+            z.array(z.string()),
         ));
 
         this.mount('clientRoles', { optional: true }, createValidator(
-            zod.record(zod.string(), zod.array(zod.string())),
+            z.record(z.string(), z.array(z.string())),
         ));
 
         this.mount('realmRoles', { optional: true }, createValidator(
-            zod.array(zod.string()),
+            z.array(z.string()),
         ));
 
         this.mount('globalRoles', { optional: true }, createValidator(
-            zod.array(zod.string()),
+            z.array(z.string()),
         ));
     }
 }

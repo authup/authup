@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { ClientProvisioningValidator } from '../client/index.ts';
 import { PermissionProvisioningValidator } from '../permission/index.ts';
 import { RobotProvisioningValidator } from '../robot/index.ts';
@@ -28,8 +28,8 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
         const userValidator = new UserProvisioningValidator();
 
         this.mount('clients', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await clientValidator.run(ctx.value[i]);
@@ -38,8 +38,8 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
         ));
 
         this.mount('roles', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await roleValidator.run(ctx.value[i]);
@@ -48,8 +48,8 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
         ));
 
         this.mount('permissions', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await permissionValidator.run(ctx.value[i]);
@@ -58,8 +58,8 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
         ));
 
         this.mount('robots', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await robotValidator.run(ctx.value[i]);
@@ -68,8 +68,8 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
         ));
 
         this.mount('scopes', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await scopeValidator.run(ctx.value[i]);
@@ -78,8 +78,8 @@ export class RealmProvisioningRelationsValidator extends Container<RealmProvisio
         ));
 
         this.mount('users', { optional: true }, createValidator(
-            zod
-                .array(zod.any())
+            z
+                .array(z.any())
                 .check(async (ctx) => {
                     for (let i = 0; i < ctx.value.length; i++) {
                         await userValidator.run(ctx.value[i]);

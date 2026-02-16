@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { ValidatorGroup } from '../../constants';
 import type { User } from './entity';
 import { isUserNameValid } from './utils';
@@ -17,7 +17,7 @@ export class UserValidator extends Container<User> {
         super.initialize();
 
         const nameValidator = createValidator(
-            zod
+            z
                 .string()
                 .min(3)
                 .max(128)
@@ -48,7 +48,7 @@ export class UserValidator extends Container<User> {
         this.mount(
             'name_locked',
             { optional: true },
-            createValidator(zod.boolean()),
+            createValidator(z.boolean()),
         );
 
         // ----------------------------------------------
@@ -56,13 +56,13 @@ export class UserValidator extends Container<User> {
         this.mount(
             'first_name',
             { optional: true },
-            createValidator(zod.string().min(3).max(128).nullable()),
+            createValidator(z.string().min(3).max(128).nullable()),
         );
 
         this.mount(
             'last_name',
             { optional: true },
-            createValidator(zod.string().min(3).max(128).nullable()),
+            createValidator(z.string().min(3).max(128).nullable()),
         );
 
         // ----------------------------------------------
@@ -70,12 +70,12 @@ export class UserValidator extends Container<User> {
         this.mount(
             'display_name',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         // ----------------------------------------------
 
-        const emailValidator = createValidator(zod.email());
+        const emailValidator = createValidator(z.email());
 
         this.mount(
             'email',
@@ -93,7 +93,7 @@ export class UserValidator extends Container<User> {
         this.mount(
             'password',
             { optional: true },
-            createValidator(zod.string().min(3).max(512)),
+            createValidator(z.string().min(3).max(512)),
         );
 
         // ----------------------------------------------
@@ -101,31 +101,31 @@ export class UserValidator extends Container<User> {
         this.mount(
             'active',
             { optional: true },
-            createValidator(zod.boolean()),
+            createValidator(z.boolean()),
         );
 
         this.mount(
             'name_locked',
             { optional: true },
-            createValidator(zod.boolean()),
+            createValidator(z.boolean()),
         );
 
         this.mount(
             'realm_id',
             { group: ValidatorGroup.CREATE, optional: true },
-            createValidator(zod.uuid()),
+            createValidator(z.uuid()),
         );
 
         this.mount(
             'status',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'status_message',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
     }
 }

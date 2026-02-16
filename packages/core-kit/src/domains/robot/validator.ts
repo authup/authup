@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { ValidatorGroup } from '../../constants.ts';
 import type { Robot } from './entity.ts';
 import { isRobotNameValid } from './helpers.ts';
@@ -21,17 +21,17 @@ Robot
         this.mount(
             'secret',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'active',
             { optional: true },
-            createValidator(zod.boolean()),
+            createValidator(z.boolean()),
         );
 
         const nameValidator = createValidator(
-            zod
+            z
                 .string()
                 .min(3)
                 .max(128)
@@ -62,25 +62,25 @@ Robot
         this.mount(
             'display_name',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
             { optional: true },
-            createValidator(zod.string().min(5).max(4096).nullable()),
+            createValidator(z.string().min(5).max(4096).nullable()),
         );
 
         this.mount(
             'user_id',
             { optional: true },
-            createValidator(zod.uuid()),
+            createValidator(z.uuid()),
         );
 
         this.mount(
             'realm_id',
             { group: ValidatorGroup.CREATE, optional: true },
-            createValidator(zod.uuid()),
+            createValidator(z.uuid()),
         );
     }
 }

@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-zod';
 import type { ContainerOptions } from 'validup';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import type { ProvisioningEntityMergeStrategy, ProvisioningEntityReplaceStrategy, ProvisioningEntityStrategy } from './types.ts';
 
 export class ProvisioningStrategyValidator extends Container<ProvisioningEntityStrategy> {
@@ -24,19 +24,19 @@ export class ProvisioningStrategyValidator extends Container<ProvisioningEntityS
 
         const mergeContainer = new Container<ProvisioningEntityMergeStrategy>();
         mergeContainer.mount('type', createValidator(
-            zod
+            z
                 .enum(['merge']),
         ));
         mergeContainer.mount('attributes', createValidator(
-            zod
-                .array(zod.string())
+            z
+                .array(z.string())
                 .optional(),
         ));
         this.mount(mergeContainer);
 
         const altContainer = new Container<ProvisioningEntityReplaceStrategy>();
         altContainer.mount('type', createValidator(
-            zod
+            z
                 .enum(['replace', 'createOnly']),
         ));
         this.mount(altContainer);

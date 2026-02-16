@@ -16,7 +16,7 @@ export class DatePolicyValidator extends Container<DatePolicy> {
 
         this.mount('start', createValidator(
             z.date()
-                .or(z.string().date())
+                .or(z.iso.date())
                 .or(z.number())
                 .or(z.null())
                 .or(z.undefined())
@@ -24,7 +24,7 @@ export class DatePolicyValidator extends Container<DatePolicy> {
         ));
         this.mount('end', createValidator(
             z.date()
-                .or(z.string().date())
+                .or(z.iso.date())
                 .or(z.number())
                 .or(z.null())
                 .or(z.undefined())
