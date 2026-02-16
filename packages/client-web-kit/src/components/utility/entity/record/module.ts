@@ -7,6 +7,7 @@
 
 import type { EntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
+import type { ObjectLiteral } from '@authup/kit';
 import { extendObject, hasOwnProperty } from '@authup/kit';
 import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
@@ -29,7 +30,7 @@ import { buildEntityVSlotProps } from './helpers';
 
 function create<
     TYPE extends keyof EntityTypeMap,
-    RECORD extends EntityTypeMap[TYPE],
+    RECORD extends EntityTypeMap[TYPE] & ObjectLiteral,
 >(
     ctx: EntityManagerCreateContext<TYPE, RECORD>,
 ) : EntityManager<RECORD> {
@@ -292,7 +293,7 @@ function create<
             return;
         }
 
-        let query : (RECORD extends Record<string, any> ? BuildInput<RECORD> : never) | undefined;
+        let query : BuildInput<RECORD> | undefined;
         if (rctx.query) {
             query = rctx.query;
         }
@@ -317,16 +318,13 @@ function create<
             }
 
             if (ctx.props.queryFilters) {
-                query = {
-                    filters: ctx.props.queryFilters,
-                } as any;
+                query = query || {} as BuildInput<RECORD>;
+                query.filters = ctx.props.queryFilters;
+            }
 
-                if (
-                    query &&
-                    ctx.props.queryFields
-                ) {
-                    query.fields = ctx.props.queryFields;
-                }
+            if (ctx.props.queryFields) {
+                query = query || {} as BuildInput<RECORD>;
+                query.fields = ctx.props.queryFields;
             }
 
             if (ctx.props.entityId) {
