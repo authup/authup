@@ -116,9 +116,9 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.clientAuthBasic = clientBasicAuth;
     }
 
-    const clientAdminEnabled = readBool(ConfigEnvironmentVariableName.CLIENT_SYSTEM_ENABLED);
-    if (typeof clientAdminEnabled !== 'undefined') {
-        options.clientSystemEnabled = clientAdminEnabled;
+    const clientSystemEnabled = readBool(ConfigEnvironmentVariableName.CLIENT_SYSTEM_ENABLED);
+    if (typeof clientSystemEnabled !== 'undefined') {
+        options.clientSystemEnabled = clientSystemEnabled;
     }
 
     const clientAdminSecret = read(ConfigEnvironmentVariableName.CLIENT_SYSTEM_SECRET);
