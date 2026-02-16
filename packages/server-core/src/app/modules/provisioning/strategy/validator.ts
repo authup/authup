@@ -35,7 +35,7 @@ export class ProvisioningStrategyValidator extends Container<ProvisioningEntityS
         this.mount(mergeContainer);
 
         const altContainer = new Container<ProvisioningEntityReplaceStrategy>();
-        mergeContainer.mount('type', createValidator(
+        altContainer.mount('type', createValidator(
             zod
                 .enum(['replace', 'createOnly']),
         ));
