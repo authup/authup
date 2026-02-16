@@ -59,23 +59,59 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             attributes = await this.repository.save(input.attributes);
         }
 
-        if (input.relations && input.relations.globalPermissions) {
-            let permissions : Permission[];
+        if (!input.relations) {
+            return {
+                ...input,
+                attributes,
+            };
+        }
+
+        const permissions : Permission[] = [];
+
+        if (input.relations.globalPermissions) {
+            let entities: Permission[];
 
             const hasWildcard = input.relations.globalPermissions.some((el) => el === '*');
             if (hasWildcard) {
-                permissions = await this.permissionRepository.findBy({
+                entities = await this.permissionRepository.findBy({
                     realm_id: IsNull(),
                     client_id: IsNull(),
                 });
             } else {
-                permissions = await this.permissionRepository.findBy({
+                entities = await this.permissionRepository.findBy({
                     name: In(input.relations.globalPermissions),
                     realm_id: IsNull(),
                     client_id: IsNull(),
                 });
             }
 
+            permissions.push(...entities);
+        }
+
+        if (
+            attributes.realm_id &&
+            input.relations.realmPermissions
+        ) {
+            let entities: Permission[];
+
+            const hasWildcard = input.relations.realmPermissions.some((el) => el === '*');
+            if (hasWildcard) {
+                entities = await this.permissionRepository.findBy({
+                    realm_id: attributes.realm_id,
+                    client_id: IsNull(),
+                });
+            } else {
+                entities = await this.permissionRepository.findBy({
+                    name: In(input.relations.realmPermissions),
+                    realm_id: attributes.realm_id,
+                    client_id: IsNull(),
+                });
+            }
+
+            permissions.push(...entities);
+        }
+
+        if (permissions.length > 0) {
             for (let i = 0; i < permissions.length; i++) {
                 const permission = permissions[i];
 
