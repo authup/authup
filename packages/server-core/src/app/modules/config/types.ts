@@ -187,11 +187,6 @@ export type Config = {
     clientAdminEnabled: boolean,
 
     /**
-     * The name of the default client.
-     */
-    clientAdminName: string,
-
-    /**
      * The secret of the default client.
      */
     clientAdminSecret: string,
@@ -208,12 +203,6 @@ export type Config = {
      * default: true
      */
     userAdminEnabled: boolean,
-
-    /**
-     * The name of the default admin user.
-     * default: 'admin'
-     */
-    userAdminName: string,
 
     /**
      * The password of the default admin user.
@@ -239,12 +228,6 @@ export type Config = {
      * default: false
      */
     robotAdminEnabled: boolean,
-
-    /**
-     * The name of the default robot.
-     * default: system
-     */
-    robotAdminName: string,
 
     /**
      * The secret of the default admin user.

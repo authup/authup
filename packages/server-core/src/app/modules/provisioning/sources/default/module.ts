@@ -39,9 +39,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         masterRealm.relations.users = [
             {
                 attributes: {
-                    name: this.config.userAdminName,
+                    name: 'admin',
                     password: await userCredentialsService.protect(this.config.userAdminPassword),
-                    email: buildUserFakeEmail(this.config.userAdminName),
+                    email: buildUserFakeEmail('admin'),
                     active: this.config.userAdminEnabled,
                 },
                 relations: {
@@ -56,7 +56,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         masterRealm.relations.clients = [
             {
                 attributes: {
-                    name: this.config.clientAdminName,
+                    name: 'system',
                     secret: await clientCredentialsService.protect(this.config.clientAdminSecret, { secret_hashed: false }),
                     secret_hashed: false,
                     active: this.config.clientAdminEnabled,
@@ -73,7 +73,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         masterRealm.relations.robots = [
             {
                 attributes: {
-                    name: this.config.robotAdminName,
+                    name: 'system',
                     secret: await robotCredentialsService.protect(this.config.robotAdminSecret),
                     active: this.config.robotAdminEnabled,
                 },

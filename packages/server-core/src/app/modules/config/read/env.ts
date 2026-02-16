@@ -128,11 +128,6 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.userAdminEnabled = userAdminEnabled;
     }
 
-    const userAdminName = read(ConfigEnvironmentVariableName.USER_ADMIN_NAME);
-    if (userAdminName) {
-        options.userAdminName = userAdminName;
-    }
-
     const userAdminPassword = read(ConfigEnvironmentVariableName.USER_ADMIN_PASSWORD);
     if (userAdminPassword) {
         options.userAdminPassword = userAdminPassword;
@@ -148,11 +143,6 @@ export function readConfigRawFromEnv() : ConfigInput {
     const robotBasicAuth = readBool(ConfigEnvironmentVariableName.ROBOT_AUTH_BASIC);
     if (typeof robotBasicAuth !== 'undefined') {
         options.robotAuthBasic = robotBasicAuth;
-    }
-
-    const robotAdminName = read(ConfigEnvironmentVariableName.ROBOT_ADMIN_NAME);
-    if (robotAdminName) {
-        options.robotAdminName = robotAdminName;
     }
 
     const robotAdminEnabled = readBool(ConfigEnvironmentVariableName.ROBOT_ADMIN_ENABLED);
