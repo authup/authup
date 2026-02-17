@@ -35,7 +35,7 @@
         "@authup/client-web-kit": "^1.0.0-beta.29",
         "@nuxt/kit": "^4.0.0",
         "pathtrace": "^2.1.0",
-        "smob": "^1.5.0"
+        "smob": "^1.6.1"
     },
     "devDependencies": {
         "@nuxt/module-builder": "^1.0.2",
