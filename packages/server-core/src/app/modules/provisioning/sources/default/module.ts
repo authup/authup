@@ -27,6 +27,10 @@ export class DefaultProvisioningSource implements IProvisioningSource {
 
     async load(): Promise<RootProvisioningEntity> {
         const masterRealm : RealmProvisioningEntity = {
+            strategy: {
+                type: ProvisioningEntityStrategyType.MERGE,
+                attributes: ['built_in'],
+            },
             attributes: {
                 name: REALM_MASTER_NAME,
                 built_in: true,
@@ -68,7 +72,12 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         if (this.config.clientSystemSecretReset) {
             clientStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['secret', 'secret_hashed', 'secret_encrypted'],
+                attributes: ['built_in', 'secret', 'secret_hashed', 'secret_encrypted'],
+            };
+        } else {
+            clientStrategy = {
+                type: ProvisioningEntityStrategyType.MERGE,
+                attributes: ['built_in'],
             };
         }
 
@@ -117,6 +126,10 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         return {
             permissions: Object.values(PermissionName)
                 .map((name) => ({
+                    strategy: {
+                        type: ProvisioningEntityStrategyType.MERGE,
+                        attributes: ['built_in'],
+                    },
                     attributes: {
                         name,
                         built_in: true,
@@ -124,6 +137,10 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 })),
             scopes: Object.values(ScopeName)
                 .map((name) => ({
+                    strategy: {
+                        type: ProvisioningEntityStrategyType.MERGE,
+                        attributes: ['built_in'],
+                    },
                     attributes: {
                         name,
                         built_in: true,
@@ -131,6 +148,10 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 })),
             roles: [
                 {
+                    strategy: {
+                        type: ProvisioningEntityStrategyType.MERGE,
+                        attributes: ['built_in'],
+                    },
                     attributes: {
                         name: ROLE_ADMIN_NAME,
                         built_in: true,
