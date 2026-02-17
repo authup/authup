@@ -72,12 +72,12 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         if (this.config.clientSystemSecretReset) {
             clientStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['built_in', 'secret', 'secret_hashed', 'secret_encrypted'],
+                attributes: ['built_in', 'is_confidential', 'secret', 'secret_hashed', 'secret_encrypted'],
             };
         } else {
             clientStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
-                attributes: ['built_in'],
+                attributes: ['built_in', 'is_confidential'],
             };
         }
 
