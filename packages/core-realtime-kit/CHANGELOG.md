@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
+
+
+### Bug Fixes
+
+* rename util to helpers ([d916d48](https://github.com/authup/authup/commit/d916d48555faa50ea720910bb1a312a9b68773fb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 

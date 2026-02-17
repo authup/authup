@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#2815](https://github.com/authup/authup/issues/2815)) ([e301e20](https://github.com/authup/authup/commit/e301e205d283ee51196495faf6523763a5a632c5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/errors bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/specs bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+  * peerDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/errors bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/specs bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 
