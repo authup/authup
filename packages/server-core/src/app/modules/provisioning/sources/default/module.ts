@@ -77,6 +77,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             {
                 strategy: clientStrategy,
                 attributes: {
+                    built_in: true,
                     name: 'system',
                     secret: await clientCredentialsService.protect(this.config.clientSystemSecret, { secret_hashed: false }),
                     secret_hashed: false,
@@ -118,6 +119,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 .map((name) => ({
                     attributes: {
                         name,
+                        built_in: true,
                     },
                 })),
             scopes: Object.values(ScopeName)
@@ -131,6 +133,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 {
                     attributes: {
                         name: ROLE_ADMIN_NAME,
+                        built_in: true,
                     },
                     relations: {
                         globalPermissions: ['*'],
