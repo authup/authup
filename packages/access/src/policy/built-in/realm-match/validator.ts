@@ -18,7 +18,7 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
         this.mount(
             'decisionStrategy',
             createValidator(
-                z.nativeEnum(DecisionStrategy)
+                z.enum(DecisionStrategy)
                     .or(z.null())
                     .or(z.undefined())
                     .optional(),

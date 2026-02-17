@@ -18,8 +18,7 @@ export class CompositePolicyValidator extends Container<CompositePolicy> {
         this.mount(
             'decisionStrategy',
             createValidator(
-                z.nativeEnum(DecisionStrategy)
-
+                z.enum(DecisionStrategy)
                     .or(z.null())
                     .or(z.undefined())
                     .optional(),
@@ -29,9 +28,9 @@ export class CompositePolicyValidator extends Container<CompositePolicy> {
         this.mount(
             'children',
             createValidator(
-                z.array(z.object({
+                z.array(z.looseObject({
                     type: z.string().min(3),
-                }).passthrough()),
+                })),
             ),
         );
 

@@ -6,7 +6,7 @@
  */
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { IdentityProviderProtocol } from '../constants';
 import { getIdentityProviderProtocolForPreset } from '../preset';
 import type { OAuth2IdentityProvider } from './types';
@@ -17,7 +17,7 @@ export class IdentityProviderOAuth2PresetAttributesValidator extends Container<O
 
         this.mount(
             'preset',
-            createValidator(zod.string().check((ctx) => {
+            createValidator(z.string().check((ctx) => {
                 const protocol = getIdentityProviderProtocolForPreset(ctx.value);
 
                 if (
@@ -35,13 +35,13 @@ export class IdentityProviderOAuth2PresetAttributesValidator extends Container<O
 
         this.mount(
             'client_id',
-            createValidator(zod.string().min(3).max(128)),
+            createValidator(z.string().min(3).max(128)),
         );
 
         this.mount(
             'client_secret',
             { optional: true },
-            createValidator(zod.string().min(3).max(128).optional()
+            createValidator(z.string().min(3).max(128).optional()
                 .nullable()),
         );
     }

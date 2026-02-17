@@ -25,14 +25,14 @@ export class PolicyIdentityDataValidator extends Container<IdentityPolicyData> {
         this.mount(
             'id',
             createValidator(
-                z.string().uuid(),
+                z.uuid(),
             ),
         );
 
         this.mount(
             'clientId',
             createValidator(
-                z.string().uuid()
+                z.uuid()
                     .or(z.null())
                     .or(z.undefined())
                     .optional(),
@@ -42,7 +42,7 @@ export class PolicyIdentityDataValidator extends Container<IdentityPolicyData> {
         this.mount(
             'realmId',
             createValidator(
-                z.string().uuid()
+                z.uuid()
                     .or(z.null())
                     .or(z.undefined())
                     .optional(),

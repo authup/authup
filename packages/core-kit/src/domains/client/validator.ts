@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { ValidatorGroup } from '../../constants';
 import type { Client } from './entity';
 import { isClientNameValid } from './helpers';
@@ -21,19 +21,19 @@ export class ClientValidator extends Container<Client> {
         this.mount(
             'active',
             { optional: true },
-            createValidator(zod.boolean()),
+            createValidator(z.boolean()),
         );
 
         this.mount(
             'is_confidential',
             { optional: true },
-            createValidator(zod.boolean()),
+            createValidator(z.boolean()),
         );
 
         // ----------------------------------------------
 
         const nameValidator = createValidator(
-            zod
+            z
                 .string()
                 .min(3)
                 .max(128)
@@ -64,13 +64,13 @@ export class ClientValidator extends Container<Client> {
         this.mount(
             'display_name',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
             { optional: true },
-            createValidator(zod.string().min(3).max(4096).nullable()),
+            createValidator(z.string().min(3).max(4096).nullable()),
         );
 
         // ----------------------------------------------
@@ -78,19 +78,19 @@ export class ClientValidator extends Container<Client> {
         this.mount(
             'secret',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'secret_encrypted',
             { optional: true },
-            createValidator(zod.boolean()),
+            createValidator(z.boolean()),
         );
 
         this.mount(
             'secret_hashed',
             { optional: true },
-            createValidator(zod.boolean()),
+            createValidator(z.boolean()),
         );
 
         // ----------------------------------------------
@@ -99,10 +99,10 @@ export class ClientValidator extends Container<Client> {
             'redirect_uri',
             { optional: true },
             createValidator(
-                zod
+                z
                     .string()
                     .check((ctx) => {
-                        const validator = zod.url();
+                        const validator = z.url();
                         const urls = ctx.value.split(',');
                         for (let i = 0; i < urls.length; i++) {
                             try {
@@ -124,7 +124,7 @@ export class ClientValidator extends Container<Client> {
             'base_url',
             { optional: true },
             createValidator(
-                zod.url().nullable(),
+                z.url().nullable(),
             ),
         );
 
@@ -132,20 +132,20 @@ export class ClientValidator extends Container<Client> {
             'root_url',
             { optional: true },
             createValidator(
-                zod.url().nullable(),
+                z.url().nullable(),
             ),
         );
 
         this.mount(
             'grant_types',
             { optional: true },
-            createValidator(zod.string().min(3).max(512).nullable()),
+            createValidator(z.string().min(3).max(512).nullable()),
         );
 
         this.mount(
             'scope',
             { optional: true },
-            createValidator(zod.string().min(3).max(512).nullable()),
+            createValidator(z.string().min(3).max(512).nullable()),
         );
 
         // ----------------------------------------------
@@ -153,7 +153,7 @@ export class ClientValidator extends Container<Client> {
         this.mount(
             'realm_id',
             { group: ValidatorGroup.CREATE, optional: true },
-            createValidator(zod.uuid()),
+            createValidator(z.uuid()),
         );
     }
 }

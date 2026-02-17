@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { ValidatorGroup } from '../../constants.ts';
 import type { Permission } from './entity.ts';
 import { isPermissionNameValid } from './helpers.ts';
@@ -19,7 +19,7 @@ Permission
         super.initialize();
 
         const nameValidator = createValidator(
-            zod
+            z
                 .string()
                 .min(3)
                 .max(128)
@@ -41,31 +41,31 @@ Permission
         this.mount(
             'display_name',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
             { optional: true },
-            createValidator(zod.string().min(5).max(4096).nullable()),
+            createValidator(z.string().min(5).max(4096).nullable()),
         );
 
         this.mount(
             'client_id',
             { optional: true },
-            createValidator(zod.uuid()),
+            createValidator(z.uuid()),
         );
 
         this.mount(
             'realm_id',
             { group: ValidatorGroup.CREATE, optional: true },
-            createValidator(zod.uuid()),
+            createValidator(z.uuid()),
         );
 
         this.mount(
             'policy_id',
             { optional: true },
-            createValidator(zod.uuid()),
+            createValidator(z.uuid()),
         );
     }
 }

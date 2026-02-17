@@ -6,7 +6,7 @@
  */
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { getIdentityProviderProtocolForPreset } from '../preset';
 import type { OAuth2IdentityProvider } from './types';
 
@@ -16,7 +16,7 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
 
         this.mount(
             'preset',
-            createValidator(zod
+            createValidator(z
                 .string()
                 .optional()
                 .nullable()
@@ -38,41 +38,41 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
 
         this.mount(
             'client_id',
-            createValidator(zod.string().min(3).max(128)),
+            createValidator(z.string().min(3).max(128)),
         );
 
         this.mount(
             'client_secret',
             { optional: true },
-            createValidator(zod.string().min(3).max(128).optional()
+            createValidator(z.string().min(3).max(128).optional()
                 .nullable()),
         );
 
         this.mount(
             'token_url',
-            createValidator(zod.url()),
+            createValidator(z.url()),
         );
 
         this.mount(
             'token_revoke_url',
             { optional: true },
-            createValidator(zod.url().optional().nullable()),
+            createValidator(z.url().optional().nullable()),
         );
 
         this.mount(
             'authorize_url',
-            createValidator(zod.url()),
+            createValidator(z.url()),
         );
 
         this.mount(
             'user_info_url',
             { optional: true },
-            createValidator(zod.url().optional().nullable()),
+            createValidator(z.url().optional().nullable()),
         );
 
         this.mount(
             'scope',
-            createValidator(zod.string().min(3).max(2000).optional()
+            createValidator(z.string().min(3).max(2000).optional()
                 .nullable()),
         );
     }

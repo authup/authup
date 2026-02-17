@@ -7,7 +7,7 @@
 
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
-import zod from 'zod';
+import { z } from 'zod';
 import { ValidatorGroup } from '../../constants.ts';
 import type { Realm } from './entity.ts';
 import { isRealmNameValid } from './helpers.ts';
@@ -19,7 +19,7 @@ Realm
         super.initialize();
 
         const nameValidator = createValidator(
-            zod
+            z
                 .string()
                 .min(3)
                 .max(128)
@@ -42,13 +42,13 @@ Realm
         this.mount(
             'display_name',
             { optional: true },
-            createValidator(zod.string().min(3).max(256).nullable()),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
             { optional: true },
-            createValidator(zod.string().min(5).max(4096).nullable()),
+            createValidator(z.string().min(5).max(4096).nullable()),
         );
     }
 }
