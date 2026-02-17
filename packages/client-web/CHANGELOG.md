@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
+
+
+### Features
+
+* add built_in + global column to roles & permissions table ([7a456f6](https://github.com/authup/authup/commit/7a456f616ab6eb792fa256d9a8956adb36f58704))
+* show built_in column in scopes view ([166de87](https://github.com/authup/authup/commit/166de87c4238b3dcef8612f5d950f3bf50dd25d0))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 13 updates ([#2833](https://github.com/authup/authup/issues/2833)) ([ab22d62](https://github.com/authup/authup/commit/ab22d62ff8f98bd04e8e960c37be25479a6c77b8))
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#2815](https://github.com/authup/authup/issues/2815)) ([e301e20](https://github.com/authup/authup/commit/e301e205d283ee51196495faf6523763a5a632c5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/core-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/core-http-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 

@@ -1,5 +1,44 @@
 # Change Log
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
+
+
+### Features
+
+* **access:** abstractions for permission checker ([c26a1ce](https://github.com/authup/authup/commit/c26a1ce187296f60dee446bddd0adb70535e9882))
+* provisioning module  ([#2836](https://github.com/authup/authup/issues/2836)) ([08398cb](https://github.com/authup/authup/commit/08398cb587b6827108121d59f2c80ed3913b3aa4))
+* refactor policy issue/error handling ([#2831](https://github.com/authup/authup/issues/2831)) ([5bf81f5](https://github.com/authup/authup/commit/5bf81f5de8feb1d5e349e9c570618b1321d6ff3b))
+* show built_in column in scopes view ([166de87](https://github.com/authup/authup/commit/166de87c4238b3dcef8612f5d950f3bf50dd25d0))
+
+
+### Bug Fixes
+
+* allow filtering clients by id ([328386d](https://github.com/authup/authup/commit/328386d3173879c8d9f4b3fec04713a7ead94744))
+* always set built_in property in default provisioning source entities ([8a02451](https://github.com/authup/authup/commit/8a0245172665bb4efe9022c8b2b49695e7d38f37))
+* **deps:** bump the majorprod group across 1 directory with 2 updates ([#2827](https://github.com/authup/authup/issues/2827)) ([2683f17](https://github.com/authup/authup/commit/2683f17f567333a46fe64616e40053a71b6e10b1))
+* **deps:** bump the minorandpatch group across 1 directory with 13 updates ([#2833](https://github.com/authup/authup/issues/2833)) ([ab22d62](https://github.com/authup/authup/commit/ab22d62ff8f98bd04e8e960c37be25479a6c77b8))
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#2815](https://github.com/authup/authup/issues/2815)) ([e301e20](https://github.com/authup/authup/commit/e301e205d283ee51196495faf6523763a5a632c5))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2822](https://github.com/authup/authup/issues/2822)) ([f432070](https://github.com/authup/authup/commit/f4320708d9d54348c6f92da4ab23b6abc87f480e))
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#2819](https://github.com/authup/authup/issues/2819)) ([7b42a9f](https://github.com/authup/authup/commit/7b42a9f2d6d2bd0d9b4caa5109b3ad3dc0178ff9))
+* reset is confidential for system client ([756cab4](https://github.com/authup/authup/commit/756cab4418cd31e46d8e74af154ac098781c2d0b))
+* set client_id in robot_credentials flow ([da59254](https://github.com/authup/authup/commit/da592543f85a2018cc6976b7b10c97f0e10ecc88))
+* set missing built_in flags for default provisioning source ([437d804](https://github.com/authup/authup/commit/437d804dfaa82616ca2158050a631bd1d6c4b270))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/core-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/core-http-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/errors bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/server-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/specs bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+  * devDependencies
+    * @authup/client-web-slim bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 

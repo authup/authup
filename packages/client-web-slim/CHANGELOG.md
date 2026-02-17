@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 13 updates ([#2833](https://github.com/authup/authup/issues/2833)) ([ab22d62](https://github.com/authup/authup/commit/ab22d62ff8f98bd04e8e960c37be25479a6c77b8))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2822](https://github.com/authup/authup/issues/2822)) ([f432070](https://github.com/authup/authup/commit/f4320708d9d54348c6f92da4ab23b6abc87f480e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/core-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/core-http-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+  * peerDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/core-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+    * @authup/core-http-kit bumped from ^1.0.0-beta.28 to ^1.0.0-beta.29
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 

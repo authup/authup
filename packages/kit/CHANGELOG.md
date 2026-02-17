@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
+
+
+### Bug Fixes
+
+* big-int support for serialize helper ([6ad3c23](https://github.com/authup/authup/commit/6ad3c23eb73bdfd3affa323e878140dc15699b54))
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 
