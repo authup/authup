@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
+
+
+### Features
+
+* **access:** abstractions for permission checker ([c26a1ce](https://github.com/authup/authup/commit/c26a1ce187296f60dee446bddd0adb70535e9882))
+* provisioning module  ([#2836](https://github.com/authup/authup/issues/2836)) ([08398cb](https://github.com/authup/authup/commit/08398cb587b6827108121d59f2c80ed3913b3aa4))
+* refactor policy issue/error handling ([#2831](https://github.com/authup/authup/issues/2831)) ([5bf81f5](https://github.com/authup/authup/commit/5bf81f5de8feb1d5e349e9c570618b1321d6ff3b))
+
+
+### Bug Fixes
+
+* allow filtering clients by id ([328386d](https://github.com/authup/authup/commit/328386d3173879c8d9f4b3fec04713a7ead94744))
+* **deps:** bump the majorprod group across 1 directory with 2 updates ([#2827](https://github.com/authup/authup/issues/2827)) ([2683f17](https://github.com/authup/authup/commit/2683f17f567333a46fe64616e40053a71b6e10b1))
+* **deps:** bump the minorandpatch group across 1 directory with 13 updates ([#2833](https://github.com/authup/authup/issues/2833)) ([ab22d62](https://github.com/authup/authup/commit/ab22d62ff8f98bd04e8e960c37be25479a6c77b8))
+* **deps:** bump the minorandpatch group across 1 directory with 19 updates ([#2815](https://github.com/authup/authup/issues/2815)) ([e301e20](https://github.com/authup/authup/commit/e301e205d283ee51196495faf6523763a5a632c5))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2822](https://github.com/authup/authup/issues/2822)) ([f432070](https://github.com/authup/authup/commit/f4320708d9d54348c6f92da4ab23b6abc87f480e))
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#2819](https://github.com/authup/authup/issues/2819)) ([7b42a9f](https://github.com/authup/authup/commit/7b42a9f2d6d2bd0d9b4caa5109b3ad3dc0178ff9))
+* pass query fields on single resource request ([dc5fba6](https://github.com/authup/authup/commit/dc5fba634f2aaf612584640cf14c92a34492818d))
+* set client_id in robot_credentials flow ([da59254](https://github.com/authup/authup/commit/da592543f85a2018cc6976b7b10c97f0e10ecc88))
+* set command required in cli ([8de69fd](https://github.com/authup/authup/commit/8de69fd1a19294bab0b842322c1357d2dd8898cb))
+
+
+### Miscellaneous Chores
+
+* remove hardcoded release-verison ([4db9cfb](https://github.com/authup/authup/commit/4db9cfb63258a5863233dfcb8c422a3bc9cb3c3e))
+* update all packages on release ([c48b0c7](https://github.com/authup/authup/commit/c48b0c778ea4ad21160b5d4f45b7801a02478ff2))
+
 ## [1.0.0-beta.28](https://github.com/authup/authup/compare/v1.0.0-beta.27...v1.0.0-beta.28) (2026-01-13)
 
 

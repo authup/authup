@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-kit",
     "type": "module",
-    "version": "1.0.0-beta.28",
+    "version": "1.0.1-beta.28",
     "description": "A toolkit for server-side services.",
     "license": "Apache-2.0",
     "exports": {
@@ -68,17 +68,17 @@
         "winston": "^3.19.0"
     },
     "devDependencies": {
-        "@authup/core-realtime-kit": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
-        "@authup/errors": "^1.0.0-beta.28",
-        "@authup/specs": "^1.0.0-beta.28",
+        "@authup/core-realtime-kit": "^1.0.1-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
+        "@authup/errors": "^1.1.0-beta.28",
+        "@authup/specs": "^1.0.1-beta.28",
         "vitest": "^4.0.14"
     },
     "peerDependencies": {
-        "@authup/core-realtime-kit": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
-        "@authup/errors": "^1.0.0-beta.28",
-        "@authup/specs": "^1.0.0-beta.28"
+        "@authup/core-realtime-kit": "^1.0.1-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
+        "@authup/errors": "^1.1.0-beta.28",
+        "@authup/specs": "^1.0.1-beta.28"
     },
     "publishConfig": {
         "access": "public"

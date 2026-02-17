@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-core",
     "type": "module",
-    "version": "1.0.0-beta.28",
+    "version": "1.1.0-beta.28",
     "description": "This is a standalone application.",
     "license": "Apache-2.0",
     "main": "dist/index.js",
@@ -57,13 +57,13 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.28",
-        "@authup/kit": "^1.0.0-beta.28",
-        "@authup/core-kit": "^1.0.0-beta.28",
-        "@authup/core-http-kit": "^1.0.0-beta.28",
-        "@authup/errors": "^1.0.0-beta.28",
-        "@authup/server-kit": "^1.0.0-beta.28",
-        "@authup/specs": "^1.0.0-beta.28",
+        "@authup/access": "^1.1.0-beta.28",
+        "@authup/kit": "^1.0.1-beta.28",
+        "@authup/core-kit": "^1.1.0-beta.28",
+        "@authup/core-http-kit": "^1.1.0-beta.28",
+        "@authup/errors": "^1.1.0-beta.28",
+        "@authup/server-kit": "^1.0.1-beta.28",
+        "@authup/specs": "^1.0.1-beta.28",
         "@ebec/http": "^2.3.0",
         "@hapic/oauth2": "^3.1.5",
         "@routup/assets": "^3.4.2",
@@ -102,7 +102,7 @@
         "zod": "^4.3.6"
     },
     "devDependencies": {
-        "@authup/client-web-slim": "^1.0.0-beta.28",
+        "@authup/client-web-slim": "^1.0.1-beta.28",
         "@types/cors": "^2.8.19",
         "@types/ldapjs": "^3.0.6",
         "@types/morgan": "^1.9.10",
