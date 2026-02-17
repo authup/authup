@@ -17,48 +17,47 @@ import { EntityRelationLookupError } from 'typeorm-extension';
 import { buildErrorMessageForAttributes, isValidupError, stringifyPath } from 'validup';
 import { hasOwnProperty, isObject } from '@authup/kit';
 
-export function sanitizeError(error: unknown) : AuthupError {
-    if (error instanceof AuthupError) {
+export function sanitizeError(input: unknown) : AuthupError {
+    if (input instanceof AuthupError) {
+        return input;
+    }
+
+    if (input instanceof EntityRelationLookupError) {
+        return new AuthupError({
+            statusCode: BadRequestErrorOptions.statusCode,
+            code: BadRequestErrorOptions.code,
+            message: input.message,
+            stack: input.stack,
+        });
+    }
+
+    if (isValidupError(input)) {
+        const paths = input.issues.map((issue) => stringifyPath(issue.path));
+        const error = new AuthupError({
+            statusCode: BadRequestErrorOptions.statusCode,
+            code: BadRequestErrorOptions.code,
+            stack: input.stack,
+            message: input.message || buildErrorMessageForAttributes(paths),
+        });
+
+        error.issues.push(...input.issues);
         return error;
     }
 
-    if (error instanceof EntityRelationLookupError) {
+    if (input instanceof HTTPError) {
         return new AuthupError({
-            statusCode: BadRequestErrorOptions.statusCode,
-            code: BadRequestErrorOptions.code,
-            message: error.message,
-            stack: error.stack,
+            statusCode: input.statusCode,
+            code: input.code,
+            message: input.message,
+            data: input.data,
+            stack: input.stack,
         });
     }
 
-    if (isValidupError(error)) {
-        const paths = error.issues.map((issue) => stringifyPath(issue.path));
-        return new AuthupError({
-            statusCode: BadRequestErrorOptions.statusCode,
-            code: BadRequestErrorOptions.code,
-            data: {
-                issues: error.issues,
-                paths,
-            },
-            stack: error.stack,
-            message: error.message || buildErrorMessageForAttributes(paths),
-        });
-    }
-
-    if (error instanceof HTTPError) {
-        return new AuthupError({
-            statusCode: error.statusCode,
-            code: error.code,
-            message: error.message,
-            data: error.data,
-            stack: error.stack,
-        });
-    }
-
-    if (isObject(error)) {
-        const code = hasOwnProperty(error, 'code') &&
-        typeof error.code === 'string' ?
-            error.code :
+    if (isObject(input)) {
+        const code = hasOwnProperty(input, 'code') &&
+        typeof input.code === 'string' ?
+            input.code :
             undefined;
 
         /**
@@ -71,7 +70,7 @@ export function sanitizeError(error: unknown) : AuthupError {
                     statusCode: ConflictErrorOptions.statusCode,
                     code: ConflictErrorOptions.code,
                     message: 'An entry with some unique attributes already exist.',
-                    stack: error.stack,
+                    stack: input.stack,
                 });
             }
             case 'ER_DISK_FULL':
@@ -79,15 +78,15 @@ export function sanitizeError(error: unknown) : AuthupError {
                     statusCode: InsufficientStorageErrorOptions.statusCode,
                     code: InsufficientStorageErrorOptions.code,
                     message: 'No database operation possible, due the leak of free disk space.',
-                    stack: error.stack,
+                    stack: input.stack,
                 });
         }
 
         return new AuthupError({
             statusCode: InternalServerErrorOptions.statusCode,
             code: InternalServerErrorOptions.code,
-            message: error.message,
-            stack: error.stack,
+            message: input.message,
+            stack: input.stack,
         });
     }
 
