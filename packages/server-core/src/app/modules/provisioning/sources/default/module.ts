@@ -87,6 +87,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 strategy: clientStrategy,
                 attributes: {
                     built_in: true,
+                    is_confidential: true,
                     name: 'system',
                     secret: await clientCredentialsService.protect(this.config.clientSystemSecret, { secret_hashed: false }),
                     secret_hashed: false,

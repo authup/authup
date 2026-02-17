@@ -43,6 +43,9 @@ export default defineNuxtComponent({
                 key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
             },
             {
+                key: 'built_in', label: 'Built in?', thClass: 'text-center', tdClass: 'text-center',
+            },
+            {
                 key: 'created_at', label: 'Created at', thClass: 'text-center', tdClass: 'text-center',
             },
             {
@@ -88,6 +91,15 @@ export default defineNuxtComponent({
                 head-variant="'dark'"
                 outlined
             >
+                <template #cell(built_in)="data">
+                    <i
+                        class="fas"
+                        :class="{
+                            'fa-check text-success': data.item.built_in,
+                            'fa-times text-danger': !data.item.built_in,
+                        }"
+                    />
+                </template>
                 <template #cell(created_at)="data">
                     <VCTimeago :datetime="data.item.created_at" />
                 </template>
