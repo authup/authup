@@ -33,6 +33,10 @@ export function serialize(input: unknown) : string {
             return value.toString();
         }
 
+        if (typeof value === 'bigint') {
+            return value.toString();
+        }
+
         return value;
     });
 }
