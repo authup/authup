@@ -19,7 +19,10 @@ export default defineNuxtComponent({
 });
 </script>
 <template>
-    <AClientRoleAssignments :entity-id="entity.id">
+    <AClientRoleAssignments
+        :entity-id="entity.id"
+        :realm-id="entity.realm_id"
+    >
         <template #header="props">
             <ASearch
                 :load="props.load"
