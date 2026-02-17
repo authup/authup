@@ -7,7 +7,7 @@
 
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import type { ClientError } from 'hapic';
-import type { TokenCreator, TokenCreatorOptions } from '../token-creator';
+import type { TokenCreator } from '../token-creator';
 import type { ClientAuthenticationHookEventName } from './constants';
 
 export type ClientAuthenticationHookOptions = {
@@ -26,7 +26,7 @@ export type ClientAuthenticationHookOptions = {
     /**
      * Fn to create a new token, if the previous token expired.
      */
-    tokenCreator: TokenCreatorOptions | TokenCreator,
+    tokenCreator: TokenCreator,
 };
 
 export type ClientAuthenticationHookEvents = {
