@@ -16,7 +16,6 @@ import {
 } from 'hapic';
 import { getClientErrorCode } from '../helpers';
 import type { TokenCreator } from '../token-creator';
-import { createTokenCreator } from '../token-creator';
 import { ClientAuthenticationHookEventName } from './constants';
 import type { ClientAuthenticationHookEvents, ClientAuthenticationHookOptions } from './types';
 import { getClientRequestRetryState } from './utils';
@@ -53,17 +52,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         options.timer ??= true;
         this.options = options;
 
-        let creator : TokenCreator;
-        if (typeof options.tokenCreator === 'function') {
-            creator = options.tokenCreator;
-        } else {
-            creator = createTokenCreator({
-                ...options.tokenCreator,
-                baseURL: options.baseURL,
-            });
-        }
-
-        this.creator = creator;
+        this.creator = options.tokenCreator;
     }
 
     // ------------------------------------------------

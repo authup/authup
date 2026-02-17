@@ -7,18 +7,19 @@
 
 import { describe, expect, it } from 'vitest';
 import {
-    Client, ClientAuthenticationHook,
+    Client,
+    ClientAuthenticationHook,
     getClientRequestRetryState,
 } from '../../src';
+import { createUserTokenCreator } from '../../src/token-creator/presets/index.ts';
 
 describe('src/interceptor/utils', () => {
     it('should mount and unmount interceptor', () => {
         const hook = new ClientAuthenticationHook({
-            tokenCreator: {
-                type: 'user',
+            tokenCreator: createUserTokenCreator({
                 name: 'admin',
                 password: 'start123',
-            },
+            }),
         });
 
         const client = new Client();

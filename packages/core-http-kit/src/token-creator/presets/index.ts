@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum TokenCreatorVariation {
-    USER = 'user',
-    ROBOT = 'robot',
-    ROBOT_IN_VAULT = 'robotInVault',
-}
+export * from './client.ts';
+export * from './robot.ts';
+export * from './user.ts';
