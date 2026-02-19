@@ -10,7 +10,7 @@ import {
 } from '@routup/swagger';
 import fs from 'node:fs';
 import path from 'node:path';
-import { getDistPath, getSrcPath } from '../../../path.ts';
+import { DIST_PATH, SRC_PATH } from '../../../path.ts';
 import type { SwaggerOptions } from './type.ts';
 
 export class Swagger {
@@ -23,8 +23,8 @@ export class Swagger {
     protected options : SwaggerOptions;
 
     constructor(options: SwaggerOptions) {
-        this.distPath = getDistPath();
-        this.srcPath = getSrcPath();
+        this.distPath = DIST_PATH;
+        this.srcPath = SRC_PATH;
 
         this.entrypointPath = path.join(
             this.srcPath,

@@ -8,22 +8,9 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export function resolveCodePath() {
-    return path.dirname(fileURLToPath(import.meta.url));
-}
+export const CODE_PATH = path.dirname(fileURLToPath(import.meta.url));
+export const PACKAGE_PATH = path.join(CODE_PATH, '..');
+export const SRC_PATH = path.join(PACKAGE_PATH, '..', 'src');
+export const DIST_PATH = path.join(PACKAGE_PATH, '..', 'dist');
 
-export function resolvePackagePath() {
-    return path.resolve(resolveCodePath(), '..');
-}
-
-export function resolveClientWebSlimPackagePath() {
-    return path.resolve(resolveCodePath(), '..', '..', 'client-web-slim');
-}
-
-export function getSrcPath() {
-    return path.join(resolvePackagePath(), 'src');
-}
-
-export function getDistPath() {
-    return path.join(resolvePackagePath(), 'dist');
-}
+export const CLIENT_WEB_SLIM_PACKAGE_PATH = path.join(PACKAGE_PATH, '..', 'client-web-slim');

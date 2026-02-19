@@ -10,7 +10,7 @@ import {
 } from '@routup/decorators';
 import { load } from 'locter';
 import path from 'node:path';
-import { resolvePackagePath } from '../../../../../path.ts';
+import { PACKAGE_PATH } from '../../../../../path.ts';
 
 export type EndpointInfo = {
     version: string,
@@ -21,7 +21,7 @@ export type EndpointInfo = {
 export class StatusController {
     @DGet('/', [])
     async status(): Promise<EndpointInfo> {
-        const pkgJson = await load(path.join(resolvePackagePath(), 'package.json'));
+        const pkgJson = await load(path.join(PACKAGE_PATH, 'package.json'));
         const isoDate = new Date().toISOString();
 
         return {

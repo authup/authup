@@ -20,7 +20,7 @@ import {
 } from '../../app/index.ts';
 import type { IDIContainer } from '../../core/index.ts';
 import type { Config } from '../../app/index.ts';
-import { resolveCodePath } from '../../path.ts';
+import { CODE_PATH } from '../../path.ts';
 
 enum MigrationOperation {
     GENERATE = 'generate',
@@ -118,7 +118,7 @@ export function defineCLIMigrationCommand() {
                             },
                         ];
 
-                        const baseDirectory = transformFilePath(path.join(resolveCodePath(), 'adapters', 'database', 'migrations'), './src', './dist');
+                        const baseDirectory = transformFilePath(path.join(CODE_PATH, 'adapters', 'database', 'migrations'), './src', './dist');
 
                         const timestamp = Date.now();
 

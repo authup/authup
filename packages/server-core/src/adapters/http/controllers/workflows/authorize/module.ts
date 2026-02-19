@@ -16,7 +16,7 @@ import { send, useRequestParam } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { type Client, OAuth2AuthorizationCodeRequest, type Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
-import { resolveClientWebSlimPackagePath } from '../../../../../path.ts';
+import { CLIENT_WEB_SLIM_PACKAGE_PATH } from '../../../../../path.ts';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
 import {
@@ -135,7 +135,7 @@ export class AuthorizeController {
         let manifest : Record<string, any>;
         let render : CallableFunction;
 
-        const clientWebSlimPackagePath = resolveClientWebSlimPackagePath();
+        const clientWebSlimPackagePath = CLIENT_WEB_SLIM_PACKAGE_PATH;
 
         if (isJIT) {
             /**

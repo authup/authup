@@ -24,7 +24,7 @@ import {
     registerPrometheusMiddleware,
     registerRateLimitMiddleware,
 } from '../../../../adapters/http/index.ts';
-import { resolvePackagePath } from '../../../../path.ts';
+import { DIST_PATH } from '../../../../path.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
@@ -106,7 +106,7 @@ export class HTTPMiddlewareModule {
         }
 
         const middleware = await createSwaggerMiddleware({
-            documentPath: path.join(resolvePackagePath(), 'dist', 'swagger.json'),
+            documentPath: path.join(DIST_PATH, 'swagger.json'),
             options: {
                 baseURL: config.publicUrl,
                 ...this.transformBoolToEmptyObject(config.middlewareSwagger),
