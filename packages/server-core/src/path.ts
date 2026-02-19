@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 export const CODE_PATH = path.dirname(fileURLToPath(import.meta.url));
 export const PACKAGE_PATH = path.join(CODE_PATH, '..');
-export const SRC_PATH = path.join(PACKAGE_PATH, '..', 'src');
-export const DIST_PATH = path.join(PACKAGE_PATH, '..', 'dist');
+export const SRC_PATH = path.join(PACKAGE_PATH, 'src');
+export const DIST_PATH = path.join(PACKAGE_PATH, 'dist');
 
 export const CLIENT_WEB_SLIM_PACKAGE_PATH = path.join(PACKAGE_PATH, '..', 'client-web-slim');
