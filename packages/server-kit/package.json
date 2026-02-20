@@ -59,11 +59,11 @@
         "@node-rs/bcrypt": "^1.10.7",
         "@node-rs/jsonwebtoken": "^0.5.9",
         "@socket.io/redis-emitter": "^5.1.0",
-        "@types/nodemailer": "^7.0.9",
+        "@types/nodemailer": "^7.0.11",
         "locter": "^2.2.1",
         "uncrypto": "^0.1.3",
         "redis-extension": "^2.0.4",
-        "smob": "^1.5.0",
+        "smob": "^1.6.1",
         "singa": "^1.1.0",
         "winston": "^3.19.0"
     },
