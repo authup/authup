@@ -86,7 +86,7 @@ export class DataSourceOptionsBuilder {
             options.type !== 'postgres' &&
             options.type !== 'better-sqlite3'
         ) {
-            throw new Error(`The database type ${options.type} is not supported.`);
+            throw new AuthupError(`The database type ${options.type} is not supported.`);
         }
 
         options = {

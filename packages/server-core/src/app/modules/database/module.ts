@@ -108,10 +108,6 @@ export class DatabaseModule implements Module {
             options = this.optionsBuilder.buildWithEnv();
         }
 
-        if (!options) {
-            throw new AuthupError('Database options could not inferred.');
-        }
-
         if (!isDatabaseTypeSupported(options.type)) {
             throw new AuthupError(`Database type ${options.type} is not supported (only: mysql, better-sqlite3 and postgres).`);
         }
