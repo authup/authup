@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.29) (2026-02-21)
+
+
+### Features
+
+* use constants for local file paths ([54059a8](https://github.com/authup/authup/commit/54059a8b304197495981ddde4a492fa36b2d0db4))
+
+
+### Bug Fixes
+
+* catch error if cli bootstraping fails ([2c63148](https://github.com/authup/authup/commit/2c63148a8e57177cea4caadc2ce621554463af5c))
+* **deps:** bump the minorandpatch group across 1 directory with 23 updates ([#2856](https://github.com/authup/authup/issues/2856)) ([b037a7a](https://github.com/authup/authup/commit/b037a7ac40b69067fb87db1f5d10562f59bda273))
+* passing issues in sanitize error(s) ([bf2d574](https://github.com/authup/authup/commit/bf2d5749a4aba1787956dde17192f115794fdf50))
+* src-/dist-path constant ([9507d47](https://github.com/authup/authup/commit/9507d4702e37f813550be1e239c4b5cc85821cba))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+    * @authup/errors bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+
 ## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
 
 

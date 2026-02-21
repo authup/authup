@@ -30,8 +30,8 @@
         "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "dependencies": {
-        "@authup/access": "^1.0.0-beta.29",
-        "@authup/kit": "^1.0.0-beta.29",
+        "@authup/access": "^1.0.1-beta.29",
+        "@authup/kit": "^1.0.1-beta.29",
         "@authup/client-web-kit": "^1.0.0-beta.29",
         "@nuxt/kit": "^4.0.0",
         "pathtrace": "^2.1.0",
