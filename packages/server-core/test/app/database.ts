@@ -5,32 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ICache } from '@authup/server-kit';
+import { EnvironmentName } from '@authup/kit';
 import type { DataSource, DataSourceOptions } from 'typeorm';
+import { readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import {
-    CacheInjectionKey, DatabaseModule, DatabaseQueryResultCache, extendDataSourceOptions,
+    type Config, ConfigInjectionKey, DatabaseModule,
 } from '../../src';
 import type { IDIContainer } from '../../src/core';
 
 export class TestDatabaseModule extends DatabaseModule {
-    protected async createDataSourceOptions(container: IDIContainer): Promise<DataSourceOptions> {
-        const cache = container.resolve<ICache>(CacheInjectionKey);
+    protected async buildDataSourceOptions(container: IDIContainer): Promise<DataSourceOptions> {
+        const config = container.resolve<Config>(ConfigInjectionKey);
 
-        const options = extendDataSourceOptions({
-            type: 'better-sqlite3',
-            database: ':memory:',
+        const options = readDataSourceOptionsFromEnv();
+        if (
+            options &&
+            config.env === EnvironmentName.TEST
+        ) {
+            config.db = options;
+        } else {
+            config.db = {
+                type: 'better-sqlite3',
+                database: ':memory:',
+            };
+        }
+
+        container.register(ConfigInjectionKey, {
+            useValue: config,
         });
 
-        Object.assign(options, {
-            migrations: [],
-            cache: {
-                provider() {
-                    return new DatabaseQueryResultCache(cache);
-                },
-            },
-        });
-
-        return options;
+        return super.buildDataSourceOptions(container);
     }
 
     protected async synchronize(dataSource: DataSource): Promise<void> {

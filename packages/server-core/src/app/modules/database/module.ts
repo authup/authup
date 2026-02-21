@@ -19,11 +19,10 @@ import {
     setDataSource,
     synchronizeDatabaseSchema,
     unsetDataSource,
-    useDataSourceOptions,
 } from 'typeorm-extension';
 import {
+    DataSourceOptionsBuilder,
     DatabaseQueryResultCache,
-    extendDataSourceOptions,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
     setDataSourceSync,
@@ -38,10 +37,16 @@ import type { IDIContainer } from '../../../core/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
 export class DatabaseModule implements Module {
+    protected optionsBuilder : DataSourceOptionsBuilder;
+
+    constructor() {
+        this.optionsBuilder = new DataSourceOptionsBuilder();
+    }
+
     async start(container: IDIContainer): Promise<void> {
         const logger = container.resolve<Logger>(LoggerInjectionKey);
 
-        const options = await this.createDataSourceOptions(container);
+        const options = await this.buildDataSourceOptions(container);
 
         const check = await checkDatabase({
             options,
@@ -62,13 +67,9 @@ export class DatabaseModule implements Module {
 
         logger.debug('Established database connection.');
 
-        if (!check.schema) {
-            logger.debug('Applying database schema...');
-
-            await this.synchronize(dataSource);
-
-            logger.debug('Applied database schema.');
-        }
+        logger.debug('Applying database schema...');
+        await this.synchronize(dataSource);
+        logger.debug('Applied database schema.');
 
         container.register(DatabaseInjectionKey.DataSource, {
             useValue: dataSource,
@@ -97,15 +98,18 @@ export class DatabaseModule implements Module {
      *
      * @protected
      */
-    protected async createDataSourceOptions(container: IDIContainer) : Promise<DataSourceOptions> {
+    protected async buildDataSourceOptions(container: IDIContainer) : Promise<DataSourceOptions> {
         const config = container.resolve<Config>(ConfigInjectionKey);
-        const cache = container.resolve<ICache>(CacheInjectionKey);
 
-        let options : DataSourceOptions;
+        let options : DataSourceOptions | undefined;
         if (config.db) {
-            options = config.db;
+            options = this.optionsBuilder.buildWith(config.db);
         } else {
-            options = await useDataSourceOptions();
+            options = this.optionsBuilder.buildWithEnv();
+        }
+
+        if (!options) {
+            throw new AuthupError('Database options could not inferred.');
         }
 
         if (!isDatabaseTypeSupported(options.type)) {
@@ -116,15 +120,16 @@ export class DatabaseModule implements Module {
             throw new AuthupError(`Database type ${options.type} is not supported for ${config.env}.`);
         }
 
-        extendDataSourceOptions(options);
-
-        Object.assign(options, {
-            cache: {
-                provider() {
-                    return new DatabaseQueryResultCache(cache);
+        const cacheResult = container.safeResolve<ICache>(CacheInjectionKey);
+        if (cacheResult.success) {
+            Object.assign(options, {
+                cache: {
+                    provider() {
+                        return new DatabaseQueryResultCache(cacheResult.data);
+                    },
                 },
-            },
-        } satisfies Partial<DataSourceOptions>);
+            } satisfies Partial<DataSourceOptions>);
+        }
 
         return options;
     }
