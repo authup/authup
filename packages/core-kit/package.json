@@ -56,8 +56,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.29",
-        "@authup/errors": "^1.0.0-beta.29",
+        "@authup/kit": "^1.0.1-beta.29",
+        "@authup/errors": "^1.0.1-beta.29",
         "@authup/specs": "^1.0.0-beta.29",
         "@validup/adapter-zod": "^0.2.4",
         "validup": "^0.2.2",

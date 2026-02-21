@@ -29,7 +29,7 @@
     },
     "devDependencies": {
         "@authup/client-web-kit": "^1.0.0-beta.29",
-        "@authup/kit": "^1.0.0-beta.29",
+        "@authup/kit": "^1.0.1-beta.29",
         "@authup/core-kit": "^1.0.0-beta.29",
         "@authup/core-http-kit": "^1.0.0-beta.29",
         "@authup/client-web-nuxt": "^1.0.0-beta.29",

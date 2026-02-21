@@ -1,7 +1,7 @@
 {
     "name": "@authup/access",
     "type": "module",
-    "version": "1.0.0-beta.29",
+    "version": "1.0.1-beta.29",
     "description": "A library for evaluating permissions and policies.",
     "license": "Apache-2.0",
     "exports": {
@@ -50,14 +50,14 @@
         "zod": "^4.3.6"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.29",
-        "@authup/kit": "^1.0.0-beta.29",
+        "@authup/errors": "^1.0.1-beta.29",
+        "@authup/kit": "^1.0.1-beta.29",
         "vitest": "^4.0.14",
         "unplugin-swc": "^1.5.9"
     },
     "peerDependencies": {
-        "@authup/errors": "^1.0.0-beta.29",
-        "@authup/kit": "^1.0.0-beta.29"
+        "@authup/errors": "^1.0.1-beta.29",
+        "@authup/kit": "^1.0.1-beta.29"
     },
     "publishConfig": {
         "access": "public"

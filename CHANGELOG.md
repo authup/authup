@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.29) (2026-02-21)
+
+
+### Features
+
+* cleanup & add client token creator ([#2850](https://github.com/authup/authup/issues/2850)) ([4029f91](https://github.com/authup/authup/commit/4029f913e0603157ec50e0dda1ee05a7061bb504))
+* use constants for local file paths ([54059a8](https://github.com/authup/authup/commit/54059a8b304197495981ddde4a492fa36b2d0db4))
+
+
+### Bug Fixes
+
+* catch error if cli bootstraping fails ([2c63148](https://github.com/authup/authup/commit/2c63148a8e57177cea4caadc2ce621554463af5c))
+* **deps:** bump the minorandpatch group across 1 directory with 23 updates ([#2856](https://github.com/authup/authup/issues/2856)) ([b037a7a](https://github.com/authup/authup/commit/b037a7ac40b69067fb87db1f5d10562f59bda273))
+* eplicitly mark realm_id of permission as optional ([8df51d3](https://github.com/authup/authup/commit/8df51d3b6765b0d529a7a42b5f6056b0b1b3bd4d))
+* passing issues in sanitize error(s) ([bf2d574](https://github.com/authup/authup/commit/bf2d5749a4aba1787956dde17192f115794fdf50))
+* src-/dist-path constant ([9507d47](https://github.com/authup/authup/commit/9507d4702e37f813550be1e239c4b5cc85821cba))
+
 ## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
 
 

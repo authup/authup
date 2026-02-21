@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.29) (2026-02-21)
+
+
+### Features
+
+* cleanup & add client token creator ([#2850](https://github.com/authup/authup/issues/2850)) ([4029f91](https://github.com/authup/authup/commit/4029f913e0603157ec50e0dda1ee05a7061bb504))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+    * @authup/errors bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+    * @authup/errors bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+    * @authup/kit bumped from ^1.0.0-beta.29 to ^1.0.1-beta.29
+
 ## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
 
 
