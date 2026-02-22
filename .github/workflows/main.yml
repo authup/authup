@@ -99,6 +99,7 @@ jobs:
             postgres:
                 image: postgres:18
                 env:
+                    POSTGRES_DB: app
                     POSTGRES_PASSWORD: start123
                 ports:
                     - 5432:5432

@@ -48,28 +48,19 @@ export class DatabaseModule implements Module {
 
         const options = await this.buildDataSourceOptions(container);
 
-        const check = await checkDatabase({
-            options,
-        });
-
-        if (!check.exists) {
-            await createDatabase({ options, synchronize: false, ifNotExist: true });
-        }
-
-        logger.debug('Establishing database connection...');
+        await this.setup(container, options);
 
         const dataSource = new DataSource(options);
+
+        logger.debug('Establishing database connection...');
         await dataSource.initialize();
+        logger.debug('Established database connection.');
 
         // todo: maybe remove this
         setDataSource(dataSource);
         setDataSourceSync(dataSource);
 
-        logger.debug('Established database connection.');
-
-        logger.debug('Applying database schema...');
-        await this.synchronize(dataSource);
-        logger.debug('Applied database schema.');
+        await this.migrate(container, dataSource);
 
         container.register(DatabaseInjectionKey.DataSource, {
             useValue: dataSource,
@@ -87,8 +78,26 @@ export class DatabaseModule implements Module {
 
     // ----------------------------------------------------
 
-    protected async synchronize(dataSource: DataSource): Promise<void> {
+    protected async setup(container: IDIContainer, options: DataSourceOptions): Promise<void> {
+        const logger = container.resolve<Logger>(LoggerInjectionKey);
+
+        const check = await checkDatabase({
+            options,
+        });
+
+        if (!check.exists) {
+            logger.debug('Creating database...');
+            await createDatabase({ options, synchronize: false, ifNotExist: true });
+            logger.debug('Created database');
+        }
+    }
+
+    protected async migrate(container: IDIContainer, dataSource: DataSource): Promise<void> {
+        const logger = container.resolve<Logger>(LoggerInjectionKey);
+
+        logger.debug('Migrating database...');
         await synchronizeDatabaseSchema(dataSource);
+        logger.debug('Migrated database');
     }
 
     // ----------------------------------------------------
