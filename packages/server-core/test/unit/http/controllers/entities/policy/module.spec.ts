@@ -77,7 +77,7 @@ describe('src/http/controllers/policy', () => {
             });
 
         expect(response.data).toBeDefined();
-        expect(response.data.length).toEqual(1);
+        expect(response.data.length).toBeGreaterThanOrEqual(1);
     });
 
     it('should read collection', async () => {

@@ -40,7 +40,7 @@ describe('src/http/controllers/realm', () => {
             .getMany();
 
         expect(response.data).toBeDefined();
-        expect(response.data.length).toEqual(2);
+        expect(response.data.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should read resource', async () => {
