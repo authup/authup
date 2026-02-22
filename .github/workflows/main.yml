@@ -78,11 +78,40 @@ jobs:
         name: Test Packages
         needs: [build]
         runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                db: [ mysql, postgres, sqlite ]
+
+        services:
+            mysql:
+                image: mysql:9
+                env:
+                    MYSQL_ROOT_PASSWORD: start123
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping -h localhost -pstart123"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+
+            postgres:
+                image: postgres:18
+                env:
+                    POSTGRES_DB: app
+                    POSTGRES_PASSWORD: start123
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd="pg_isready -U postgres"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+
         steps:
             -   name: Checkout
                 uses: actions/checkout@v6
-                with:
-                    fetch-depth: "2"
 
             -   name: Install
                 uses: ./.github/actions/install
@@ -93,6 +122,30 @@ jobs:
             -   name: Build
                 uses: ./.github/actions/build
 
+            -   name: Set DB Environment
+                run: |
+                    if [ "${{ matrix.db }}" = "sqlite" ]; then
+                        echo "DB_TYPE=better-sqlite3" >> $GITHUB_ENV
+                        echo "DB_DATABASE=:memory:" >> $GITHUB_ENV
+
+                    elif [ "${{ matrix.db }}" = "mysql" ]; then
+                        echo "DB_TYPE=mysql" >> $GITHUB_ENV
+                        echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+                        echo "DB_PORT=3306" >> $GITHUB_ENV
+                        echo "DB_USERNAME=root" >> $GITHUB_ENV
+                        echo "DB_PASSWORD=start123" >> $GITHUB_ENV
+                        echo "DB_DATABASE=app" >> $GITHUB_ENV
+                    else
+                        echo "DB_TYPE=postgres" >> $GITHUB_ENV
+                        echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+                        echo "DB_PORT=5432" >> $GITHUB_ENV
+                        echo "DB_USERNAME=postgres" >> $GITHUB_ENV
+                        echo "DB_PASSWORD=start123" >> $GITHUB_ENV
+                        echo "DB_DATABASE=app" >> $GITHUB_ENV
+                    fi
+
             -   name: Run tests
+                env:
+                    NODE_ENV: test
                 run: |
                     npm run test

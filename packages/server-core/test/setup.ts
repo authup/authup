@@ -9,6 +9,11 @@ import 'reflect-metadata';
 
 import type { TestProject } from 'vitest/node';
 import { GenericContainer } from 'testcontainers';
+import { DependencyContainer } from '../src/core/index.ts';
+import {
+    ConfigModule, LoggerModule,
+} from '../src/index.ts';
+import { TestDatabaseModuleBase } from './app/index.ts';
 
 declare module 'vitest' {
     export interface ProvidedContext {
@@ -34,6 +39,16 @@ async function setup(project: TestProject) {
     project.provide('OPENLDAP_CONTAINER_PORT', container.getFirstMappedPort());
 
     globalThis.OPENLDAP_CONTAINER = container;
+
+    const ci = new DependencyContainer();
+    const config = new ConfigModule();
+    await config.start(ci);
+
+    const logger = new LoggerModule();
+    await logger.start(ci);
+
+    const database = new TestDatabaseModuleBase();
+    await database.start(ci);
 }
 
 async function teardown() {
