@@ -49,6 +49,7 @@ async function setup(project: TestProject) {
 
     const database = new TestDatabaseModuleBase();
     await database.start(ci);
+    await database.stop(ci);
 }
 
 async function teardown() {

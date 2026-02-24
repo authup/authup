@@ -59,7 +59,7 @@ Permission
         this.mount(
             'realm_id',
             { group: ValidatorGroup.CREATE, optional: true },
-            createValidator(z.uuid().nullable()),
+            createValidator(z.uuid().nullable().optional()),
         );
 
         this.mount(

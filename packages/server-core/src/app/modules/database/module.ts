@@ -71,7 +71,12 @@ export class DatabaseModule implements Module {
     }
 
     async stop(container: IDIContainer): Promise<void> {
-        container.unregister(DatabaseInjectionKey.DataSource);
+        const dataSource = container.safeResolve<DataSource>(DatabaseInjectionKey.DataSource);
+        if (dataSource.success) {
+            await dataSource.data.destroy();
+
+            container.unregister(DatabaseInjectionKey.DataSource);
+        }
 
         unsetDataSource();
     }
