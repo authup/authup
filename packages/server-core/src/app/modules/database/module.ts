@@ -26,6 +26,7 @@ import {
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
     setDataSourceSync,
+    unsetDataSourceSync,
 } from '../../../adapters/database/index.ts';
 import { setDomainEventPublisher } from '../../../adapters/database/event-publisher/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
@@ -79,6 +80,7 @@ export class DatabaseModule implements Module {
         }
 
         unsetDataSource();
+        unsetDataSourceSync();
     }
 
     // ----------------------------------------------------

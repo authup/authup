@@ -64,6 +64,7 @@ export function sanitizeError(input: unknown) : AuthupError {
          * @see https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html
          */
         switch (code) {
+            case '23505':
             case 'ER_DUP_ENTRY':
             case 'SQLITE_CONSTRAINT_UNIQUE': {
                 return new AuthupError({

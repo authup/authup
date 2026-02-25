@@ -69,46 +69,38 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         const permissions : Permission[] = [];
 
         if (input.relations.globalPermissions) {
-            let entities: Permission[];
-
             const hasWildcard = input.relations.globalPermissions.some((el) => el === '*');
             if (hasWildcard) {
-                entities = await this.permissionRepository.findBy({
+                permissions.push(...await this.permissionRepository.findBy({
                     realm_id: IsNull(),
                     client_id: IsNull(),
-                });
+                }));
             } else {
-                entities = await this.permissionRepository.findBy({
+                permissions.push(...await this.permissionRepository.findBy({
                     name: In(input.relations.globalPermissions),
                     realm_id: IsNull(),
                     client_id: IsNull(),
-                });
+                }));
             }
-
-            permissions.push(...entities);
         }
 
         if (
             attributes.realm_id &&
             input.relations.realmPermissions
         ) {
-            let entities: Permission[];
-
             const hasWildcard = input.relations.realmPermissions.some((el) => el === '*');
             if (hasWildcard) {
-                entities = await this.permissionRepository.findBy({
+                permissions.push(...await this.permissionRepository.findBy({
                     realm_id: attributes.realm_id,
                     client_id: IsNull(),
-                });
+                }));
             } else {
-                entities = await this.permissionRepository.findBy({
+                permissions.push(...await this.permissionRepository.findBy({
                     name: In(input.relations.realmPermissions),
                     realm_id: attributes.realm_id,
                     client_id: IsNull(),
-                });
+                }));
             }
-
-            permissions.push(...entities);
         }
 
         if (permissions.length > 0) {
@@ -121,6 +113,9 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                 });
 
                 if (!rolePermission) {
+                    // todo: this should not be required!
+                    await this.permissionRepository.save(permission);
+
                     rolePermission = this.rolePermissionRepository.create({
                         role_id: attributes.id,
                         role_realm_id: attributes.realm_id,

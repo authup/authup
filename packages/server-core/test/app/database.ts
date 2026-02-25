@@ -9,7 +9,7 @@
 import { EnvironmentName } from '@authup/kit';
 import type { Logger } from '@authup/server-kit';
 import type { DataSource, DataSourceOptions } from 'typeorm';
-import { readDataSourceOptionsFromEnv } from 'typeorm-extension';
+import { dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import {
     type Config, ConfigInjectionKey, DatabaseModule, LoggerInjectionKey,
 } from '../../src';
@@ -24,7 +24,12 @@ export class TestDatabaseModuleBase extends DatabaseModule {
             options &&
             config.env === EnvironmentName.TEST
         ) {
-            config.db = options;
+            config.db = {
+                ...options,
+                extra: {
+                    max: 1_000,
+                },
+            };
         } else {
             config.db = {
                 type: 'better-sqlite3',
@@ -37,6 +42,12 @@ export class TestDatabaseModuleBase extends DatabaseModule {
         });
 
         return super.buildDataSourceOptions(container);
+    }
+
+    protected async setup(container: IDIContainer, options: DataSourceOptions) {
+        await dropDatabase({ options, ifExist: true });
+
+        return super.setup(container, options);
     }
 }
 

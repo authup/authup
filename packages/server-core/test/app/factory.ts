@@ -14,7 +14,7 @@ import {
     LdapModule,
     LoggerModule,
     MailModule,
-    OAuth2Module, ProvisionerModule,
+    OAuth2Module,
 } from '../../src/index.ts';
 import { normalizeConfig } from '../../src/app/modules/config/normalize.ts';
 import { readConfigRawFromEnv } from '../../src/app/modules/config/read/index.ts';
@@ -50,7 +50,6 @@ export function createTestApplication() : TestApplication {
         new MailModule(),
 
         new TestDatabaseModule(),
-        new ProvisionerModule(),
         new AuthenticationModule(),
         new IdentityModule(),
         new OAuth2Module(),

@@ -9,6 +9,7 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
+import { createFakeUser } from '../../../../utils/index.ts';
 
 describe('http/controller/register', () => {
     const suite = createTestApplication();
@@ -24,11 +25,7 @@ describe('http/controller/register', () => {
     it('should register a new user', async () => {
         const response = await suite.client
             .user
-            .register({
-                name: 'test',
-                email: 'test@example.com',
-                password: 'my-password',
-            });
+            .register(createFakeUser());
 
         expect(response.active).toBeFalsy();
     });
