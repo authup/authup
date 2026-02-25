@@ -20,16 +20,7 @@ runs:
             with:
                 node-version: ${{ inputs.node-version }}
                 registry-url: ${{ inputs.node-registry }}
-
-        -   name: Use cache
-            uses: actions/cache@v4
-            with:
-                path: |
-                    node_modules
-                    */*/node_modules
-                key: ${{ runner.os }}-install-${{ hashFiles('**/package.json') }}
-                restore-keys: |
-                    ${{ runner.os }}-install-
+                cache: npm
 
         -   name: Install
             shell: bash
