@@ -17,10 +17,20 @@ export class Application {
     // ----------------------------------------------------
 
     constructor(
-        modules: Module[],
+        modules: Module[] = [],
     ) {
         this.container = new DependencyContainer();
         this.modules = modules;
+    }
+
+    // ----------------------------------------------------
+
+    addModule(module: Module): void {
+        this.modules.push(module);
+    }
+
+    addModules(modules: Module[]): void {
+        this.modules.push(...modules);
     }
 
     // ----------------------------------------------------

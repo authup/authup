@@ -9,8 +9,14 @@ import type { Client, Robot, User } from '@authup/core-kit';
 import {
     PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ScopeName, buildUserFakeEmail,
 } from '@authup/core-kit';
-import { ClientCredentialsService, RobotCredentialsService, UserCredentialsService } from '../../../../../core/index.ts';
+import type { IDIContainer } from '../../../../../core/index.ts';
+import {
+    ClientCredentialsService,
+    RobotCredentialsService,
+    UserCredentialsService,
+} from '../../../../../core/index.ts';
 import type { Config } from '../../../config/index.ts';
+import { ConfigInjectionKey } from '../../../config/index.ts';
 import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
 import type { RootProvisioningEntity } from '../../entities/root/index.ts';
 import type { ProvisioningEntityStrategy } from '../../strategy/index.ts';
@@ -18,7 +24,9 @@ import { ProvisioningEntityStrategyType } from '../../strategy/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
 
 export class DefaultProvisioningSource implements IProvisioningSource {
-    async load(config: Config): Promise<RootProvisioningEntity> {
+    async load(container: IDIContainer): Promise<RootProvisioningEntity> {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+
         const masterRealm : RealmProvisioningEntity = {
             strategy: {
                 type: ProvisioningEntityStrategyType.MERGE,
