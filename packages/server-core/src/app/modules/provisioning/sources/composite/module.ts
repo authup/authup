@@ -17,19 +17,13 @@ export class CompositeProvisioningSource implements IProvisioningSource {
     }
 
     async load(container: IDIContainer): Promise<RootProvisioningEntity> {
-        const output : RootProvisioningEntity = {
-            roles: [],
-            realms: [],
-            permissions: [],
-        };
+        const output : RootProvisioningEntity = {};
 
-        for (let i = 0; i < this.sources.length; i++) {
-            const source = this.sources[i];
+        const sourcesData = await Promise.all(
+            (this.sources).map((source) => source.load(container)),
+        );
 
-            const sourceData = await source.load(container);
-
-            this.merge(output, sourceData);
-        }
+        sourcesData.map((sourceData) => this.merge(output, sourceData));
 
         return output;
     }

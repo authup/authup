@@ -113,9 +113,6 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                 });
 
                 if (!rolePermission) {
-                    // todo: this should not be required!
-                    await this.permissionRepository.save(permission);
-
                     rolePermission = this.rolePermissionRepository.create({
                         role_id: attributes.id,
                         role_realm_id: attributes.realm_id,
