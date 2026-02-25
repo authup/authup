@@ -21,11 +21,12 @@ export class TestDatabaseModuleBase extends DatabaseModule {
     protected async buildDataSourceOptions(container: IDIContainer): Promise<DataSourceOptions> {
         const config = container.resolve<Config>(ConfigInjectionKey);
 
+        if (config.env !== EnvironmentName.TEST) {
+            return super.buildDataSourceOptions(container);
+        }
+
         const options = readDataSourceOptionsFromEnv();
-        if (
-            options &&
-            config.env === EnvironmentName.TEST
-        ) {
+        if (options) {
             config.db = options;
         } else {
             config.db = {

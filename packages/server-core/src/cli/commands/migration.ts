@@ -58,7 +58,12 @@ export function defineCLIMigrationCommand() {
                             context.args.operation === MigrationOperation.STATUS ||
                             context.args.operation === MigrationOperation.RUN
                         ) {
-                            const options = optionsBuilder.buildWith(config.db);
+                            let options : DataSourceOptions;
+                            if (config.db) {
+                                options = optionsBuilder.buildWith(config.db);
+                            } else {
+                                options = optionsBuilder.buildWithEnv();
+                            }
 
                             logger.debug(`Type: ${options.type}`);
                             logger.debug(`Database: ${options.database}`);
@@ -119,7 +124,11 @@ export function defineCLIMigrationCommand() {
                             },
                         ];
 
-                        const baseDirectory = transformFilePath(path.join(CODE_PATH, 'adapters', 'database', 'migrations'), './src', './dist');
+                        const baseDirectory = transformFilePath(
+                            path.join(CODE_PATH, 'adapters', 'database', 'migrations'),
+                            './src',
+                            './dist',
+                        );
 
                         const timestamp = Date.now();
 

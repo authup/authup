@@ -124,18 +124,16 @@ jobs:
 
             -   name: Set DB Environment
                 run: |
-                    if [ "${{ matrix.db }}" = "sqlite" ]; then
-                        echo "DB_TYPE=better-sqlite3" >> $GITHUB_ENV
-                        echo "DB_DATABASE=:memory:" >> $GITHUB_ENV
-
-                    elif [ "${{ matrix.db }}" = "mysql" ]; then
+                    if [ "${{ matrix.db }}" = "mysql" ]; then
                         echo "DB_TYPE=mysql" >> $GITHUB_ENV
                         echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
                         echo "DB_PORT=3306" >> $GITHUB_ENV
                         echo "DB_USERNAME=root" >> $GITHUB_ENV
                         echo "DB_PASSWORD=start123" >> $GITHUB_ENV
                         echo "DB_DATABASE=app" >> $GITHUB_ENV
-                    else
+                    fi
+
+                    if [ "${{ matrix.db }}" = "postgres" ]; then
                         echo "DB_TYPE=postgres" >> $GITHUB_ENV
                         echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
                         echo "DB_PORT=5432" >> $GITHUB_ENV

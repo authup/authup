@@ -45,7 +45,7 @@ export type Config = {
     /**
      * default driver: better-sqlite3
      */
-    db: DataSourceOptions,
+    db?: DataSourceOptions,
 
     /**
      * default: true
