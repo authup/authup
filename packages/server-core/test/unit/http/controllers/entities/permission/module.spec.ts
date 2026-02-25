@@ -125,7 +125,7 @@ describe('src/http/controllers/permission', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const name : string = 'PutA';
+        const { name } = createFakePermission();
 
         let response = await suite.client
             .permission
@@ -134,18 +134,19 @@ describe('src/http/controllers/permission', () => {
             });
 
         expect(response).toBeDefined();
-        expect(response.name).toEqual('PutA');
+        expect(response.name).toEqual(name);
 
         const { id } = response;
+        const { name: nextName } = createFakePermission();
 
         response = await suite.client
             .permission
             .createOrUpdate(name, {
-                name: 'PutB',
+                name: nextName,
             });
 
         expect(response).toBeDefined();
-        expect(response.name).toEqual('PutB');
+        expect(response.name).toEqual(nextName);
         expect(response.id).toEqual(id);
     });
 });

@@ -117,25 +117,27 @@ describe('src/http/controllers/scope', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const name : string = 'PutA';
+        const { name } = createFakeScope();
+
         let response = await suite.client
             .scope
             .createOrUpdate(name, {
                 name,
             });
 
-        expect(response.name).toEqual('PutA');
+        expect(response.name).toEqual(name);
 
         const { id } = response;
+        const { name: nextName } = createFakeScope();
 
         response = await suite.client
             .scope
             .createOrUpdate(name, {
-                name: 'PutB',
+                name: nextName,
             });
 
         expect(response).toBeDefined();
-        expect(response.name).toEqual('PutB');
+        expect(response.name).toEqual(nextName);
         expect(response.id).toEqual(id);
     });
 });

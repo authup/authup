@@ -6,9 +6,15 @@
  */
 
 import 'reflect-metadata';
+import { wait } from '@authup/kit';
 
 import type { TestProject } from 'vitest/node';
 import { GenericContainer } from 'testcontainers';
+import { DependencyContainer } from '../src/core/index.ts';
+import {
+    ConfigModule, DefaultProvisioningSource, LoggerModule, ProvisionerModule,
+} from '../src/index.ts';
+import { TestDatabaseModuleBase } from './app/index.ts';
 
 declare module 'vitest' {
     export interface ProvidedContext {
@@ -16,6 +22,14 @@ declare module 'vitest' {
         OPENLDAP_CONTAINER_PORT: number
     }
 }
+
+const ci = new DependencyContainer();
+const config = new ConfigModule();
+const logger = new LoggerModule();
+const database = new TestDatabaseModuleBase();
+const provisioning = new ProvisionerModule([
+    new DefaultProvisioningSource(),
+]);
 
 async function setup(project: TestProject) {
     const containerConfig = new GenericContainer('osixia/openldap')
@@ -34,6 +48,15 @@ async function setup(project: TestProject) {
     project.provide('OPENLDAP_CONTAINER_PORT', container.getFirstMappedPort());
 
     globalThis.OPENLDAP_CONTAINER = container;
+
+    await config.start(ci);
+    await logger.start(ci);
+    await database.start(ci);
+    await provisioning.start(ci);
+
+    await database.stop(ci);
+
+    await wait(0);
 }
 
 async function teardown() {

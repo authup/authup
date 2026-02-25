@@ -6,5 +6,3 @@
  */
 
 export * from './module.ts';
-export * from './entities.ts';
-export * from './subscribers.ts';

@@ -16,6 +16,10 @@ export function setDataSourceSync(dataSource: DataSource) {
     instance.setFactory(() => dataSource);
 }
 
+export function unsetDataSourceSync() {
+    instance.unset();
+}
+
 export function useDataSourceSync() {
     return instance.use();
 }

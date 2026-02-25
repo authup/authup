@@ -14,7 +14,7 @@ import {
     createDatabase, dropDatabase, generateMigration, transformFilePath,
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
-import { extendDataSourceOptions } from '../../adapters/database/index.ts';
+import { DataSourceOptionsBuilder } from '../../adapters/database/index.ts';
 import {
     Application, ConfigInjectionKey, ConfigModule, LoggerInjectionKey, LoggerModule,
 } from '../../app/index.ts';
@@ -51,13 +51,19 @@ export function defineCLIMigrationCommand() {
                         const config = container.resolve<Config>(ConfigInjectionKey);
                         const logger = container.resolve<Logger>(LoggerInjectionKey);
 
+                        const optionsBuilder = new DataSourceOptionsBuilder();
+
                         if (
                             context.args.operation === MigrationOperation.REVERT ||
                             context.args.operation === MigrationOperation.STATUS ||
                             context.args.operation === MigrationOperation.RUN
                         ) {
-                            const options = config.db;
-                            extendDataSourceOptions(options);
+                            let options : DataSourceOptions;
+                            if (config.db) {
+                                options = optionsBuilder.buildWith(config.db);
+                            } else {
+                                options = optionsBuilder.buildWithEnv();
+                            }
 
                             logger.debug(`Type: ${options.type}`);
                             logger.debug(`Database: ${options.database}`);
@@ -118,12 +124,16 @@ export function defineCLIMigrationCommand() {
                             },
                         ];
 
-                        const baseDirectory = transformFilePath(path.join(CODE_PATH, 'adapters', 'database', 'migrations'), './src', './dist');
+                        const baseDirectory = transformFilePath(
+                            path.join(CODE_PATH, 'adapters', 'database', 'migrations'),
+                            './src',
+                            './dist',
+                        );
 
                         const timestamp = Date.now();
 
                         for (let i = 0; i < connections.length; i++) {
-                            const dataSourceOptions = extendDataSourceOptions(connections[i]);
+                            const dataSourceOptions = optionsBuilder.buildWith(connections[i]);
                             const directoryPath = path.join(baseDirectory, dataSourceOptions.type);
 
                             await dropDatabase({ options: dataSourceOptions });

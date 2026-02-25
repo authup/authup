@@ -9,6 +9,7 @@ import {
     afterAll, beforeAll, describe, expect, it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
+import { createFakeUserAttribute } from '../../../../utils';
 
 describe('src/http/controllers/user-attribute', () => {
     const suite = createTestApplication();
@@ -22,12 +23,10 @@ describe('src/http/controllers/user-attribute', () => {
     });
 
     it('should create, read, update, delete resource', async () => {
-        const response = await suite.client.userAttribute.create({
-            name: 'foo',
-            value: 'bar',
-        });
+        const attribute = createFakeUserAttribute();
+        const response = await suite.client.userAttribute.create(attribute);
 
-        expect(response.name).toEqual('foo');
-        expect(response.value).toEqual('bar');
+        expect(response.name).toEqual(attribute.name);
+        expect(response.value).toEqual(attribute.value);
     });
 });

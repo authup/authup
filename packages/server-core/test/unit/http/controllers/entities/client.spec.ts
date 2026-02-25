@@ -152,7 +152,8 @@ describe('http/controllers/client', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const name : string = 'PutA';
+        const { name } = createFakeClient();
+
         let response = await suite.client
             .client
             .create({
@@ -161,18 +162,20 @@ describe('http/controllers/client', () => {
             });
 
         expect(response).toBeDefined();
-        expect(response.name).toEqual('PutA');
+        expect(response.name).toEqual(name);
 
         const { id } = response;
+
+        const { name: nextName } = createFakeClient();
 
         response = await suite.client
             .client
             .createOrUpdate(name, {
-                name: 'PutB',
+                name: nextName,
             });
 
         expect(response).toBeDefined();
-        expect(response.name).toEqual('PutB');
+        expect(response.name).toEqual(nextName);
         expect(response.id).toEqual(id);
     });
 });

@@ -12,6 +12,7 @@ import {
     ComponentsModule,
     ConfigModule,
     DatabaseModule,
+    DefaultProvisioningSource,
     HTTPModule,
     IdentityModule,
     LdapModule,
@@ -39,7 +40,9 @@ export function createApplication() {
 
         new SwaggerModule(),
         new DatabaseModule(),
-        new ProvisionerModule(),
+        new ProvisionerModule([
+            new DefaultProvisioningSource(),
+        ]),
         new LdapModule(),
 
         new AuthenticationModule(),

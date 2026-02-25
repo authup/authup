@@ -6,9 +6,10 @@
  */
 
 import type { RootProvisioningEntity } from './entities/index.ts';
+import type { IDIContainer } from '../../../core';
 
 export interface IProvisioningSource {
-    load() : Promise<RootProvisioningEntity>;
+    load(container: IDIContainer) : Promise<RootProvisioningEntity>;
 }
 
 export interface IProvisioningSynchronizer<T> {

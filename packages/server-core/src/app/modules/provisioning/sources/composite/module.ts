@@ -7,6 +7,7 @@
 
 import type { RootProvisioningEntity } from '../../entities/root/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
+import type { IDIContainer } from '../../../../../core';
 
 export class CompositeProvisioningSource implements IProvisioningSource {
     protected sources : IProvisioningSource[];
@@ -15,20 +16,14 @@ export class CompositeProvisioningSource implements IProvisioningSource {
         this.sources = sources;
     }
 
-    async load(): Promise<RootProvisioningEntity> {
-        const output : RootProvisioningEntity = {
-            roles: [],
-            realms: [],
-            permissions: [],
-        };
+    async load(container: IDIContainer): Promise<RootProvisioningEntity> {
+        const output : RootProvisioningEntity = {};
 
-        for (let i = 0; i < this.sources.length; i++) {
-            const source = this.sources[i];
+        const sourcesData = await Promise.all(
+            (this.sources).map((source) => source.load(container)),
+        );
 
-            const sourceData = await source.load();
-
-            this.merge(output, sourceData);
-        }
+        sourcesData.map((sourceData) => this.merge(output, sourceData));
 
         return output;
     }

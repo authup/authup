@@ -5,35 +5,60 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ICache } from '@authup/server-kit';
+// eslint-disable-next-line max-classes-per-file
+import { EnvironmentName } from '@authup/kit';
+import type { Logger } from '@authup/server-kit';
 import type { DataSource, DataSourceOptions } from 'typeorm';
+import { dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
+import path from 'node:path';
 import {
-    CacheInjectionKey, DatabaseModule, DatabaseQueryResultCache, extendDataSourceOptions,
+    type Config, ConfigInjectionKey, DatabaseModule, LoggerInjectionKey,
 } from '../../src';
 import type { IDIContainer } from '../../src/core';
+import { PACKAGE_PATH } from '../../src/path.ts';
 
-export class TestDatabaseModule extends DatabaseModule {
-    protected async createDataSourceOptions(container: IDIContainer): Promise<DataSourceOptions> {
-        const cache = container.resolve<ICache>(CacheInjectionKey);
+export class TestDatabaseModuleBase extends DatabaseModule {
+    protected async buildDataSourceOptions(container: IDIContainer): Promise<DataSourceOptions> {
+        const config = container.resolve<Config>(ConfigInjectionKey);
 
-        const options = extendDataSourceOptions({
-            type: 'better-sqlite3',
-            database: ':memory:',
+        if (config.env !== EnvironmentName.TEST) {
+            return super.buildDataSourceOptions(container);
+        }
+
+        const options = readDataSourceOptionsFromEnv();
+        if (options) {
+            config.db = options;
+        } else {
+            config.db = {
+                type: 'better-sqlite3',
+                database: path.join(PACKAGE_PATH, 'writable', 'test.sql'),
+            };
+        }
+
+        container.register(ConfigInjectionKey, {
+            useValue: config,
         });
 
-        Object.assign(options, {
-            migrations: [],
-            cache: {
-                provider() {
-                    return new DatabaseQueryResultCache(cache);
-                },
-            },
-        });
-
-        return options;
+        return super.buildDataSourceOptions(container);
     }
 
-    protected async synchronize(dataSource: DataSource): Promise<void> {
+    protected async setup(container: IDIContainer, options: DataSourceOptions) {
+        await dropDatabase({ options, ifExist: true });
+
+        return super.setup(container, options);
+    }
+}
+
+export class TestDatabaseModule extends TestDatabaseModuleBase {
+    protected async setup(): Promise<void> {
+        // dont do anything :)
+    }
+
+    protected async migrate(container: IDIContainer, dataSource: DataSource): Promise<void> {
+        const logger = container.resolve<Logger>(LoggerInjectionKey);
+
+        logger.debug('Synchronizing database...');
         await dataSource.synchronize();
+        logger.debug('Synchronized database...');
     }
 }

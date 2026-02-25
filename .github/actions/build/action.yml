@@ -7,7 +7,10 @@ runs:
         -   uses: actions/cache@v4
             id: build-cache
             with:
-                path: '**/dist/**'
+                path: |
+                    **/dist
+                    dist
+                    .nx
                 key: ${{ runner.os }}-build-${{ github.sha }}
 
         -   name: Build

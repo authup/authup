@@ -50,11 +50,6 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         host,
         publicUrl,
 
-        db: {
-            type: 'better-sqlite3',
-            database: path.join(writableDirectoryPath, 'db.sql'),
-        },
-
         middlewareBody: true,
         middlewareCookie: true,
         middlewareCors: true,

@@ -9,14 +9,7 @@ import type { IProvisioningSynchronizer } from '../types.ts';
 
 export abstract class BaseProvisioningSynchronizer<T> implements IProvisioningSynchronizer<T> {
     async synchronizeMany(input: T[]): Promise<T[]> {
-        const entities : T[] = [];
-
-        for (let i = 0; i < input.length; i++) {
-            const entity = await this.synchronize(input[i]);
-            entities.push(entity);
-        }
-
-        return entities;
+        return Promise.all(input.map((entity) => this.synchronize(entity)));
     }
 
     abstract synchronize(input: T): Promise<T>;
