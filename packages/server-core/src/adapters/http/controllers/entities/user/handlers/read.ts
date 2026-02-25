@@ -89,6 +89,8 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
             await permissionChecker.checkOneOf({
                 name: [
                     PermissionName.USER_READ,
+                    PermissionName.USER_UPDATE,
+                    PermissionName.USER_DELETE,
                 ],
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entities[i],
