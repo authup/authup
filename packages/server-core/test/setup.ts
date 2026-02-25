@@ -12,7 +12,7 @@ import type { TestProject } from 'vitest/node';
 import { GenericContainer } from 'testcontainers';
 import { DependencyContainer } from '../src/core/index.ts';
 import {
-    ConfigModule, LoggerModule, ProvisionerModule,
+    ConfigModule, DefaultProvisioningSource, LoggerModule, ProvisionerModule,
 } from '../src/index.ts';
 import { TestDatabaseModuleBase } from './app/index.ts';
 
@@ -27,7 +27,9 @@ const ci = new DependencyContainer();
 const config = new ConfigModule();
 const logger = new LoggerModule();
 const database = new TestDatabaseModuleBase();
-const provisioning = new ProvisionerModule();
+const provisioning = new ProvisionerModule([
+    new DefaultProvisioningSource(),
+]);
 
 async function setup(project: TestProject) {
     const containerConfig = new GenericContainer('osixia/openldap')

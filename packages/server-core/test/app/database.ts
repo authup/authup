@@ -10,10 +10,12 @@ import { EnvironmentName } from '@authup/kit';
 import type { Logger } from '@authup/server-kit';
 import type { DataSource, DataSourceOptions } from 'typeorm';
 import { dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
+import path from 'node:path';
 import {
     type Config, ConfigInjectionKey, DatabaseModule, LoggerInjectionKey,
 } from '../../src';
 import type { IDIContainer } from '../../src/core';
+import { PACKAGE_PATH } from '../../src/path.ts';
 
 export class TestDatabaseModuleBase extends DatabaseModule {
     protected async buildDataSourceOptions(container: IDIContainer): Promise<DataSourceOptions> {
@@ -24,16 +26,11 @@ export class TestDatabaseModuleBase extends DatabaseModule {
             options &&
             config.env === EnvironmentName.TEST
         ) {
-            config.db = {
-                ...options,
-                extra: {
-                    max: 1_000,
-                },
-            };
+            config.db = options;
         } else {
             config.db = {
                 type: 'better-sqlite3',
-                database: ':memory:',
+                database: path.join(PACKAGE_PATH, 'writable', 'test.sql'),
             };
         }
 

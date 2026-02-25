@@ -16,16 +16,9 @@ import type { RootProvisioningEntity } from '../../entities/root/index.ts';
 import type { ProvisioningEntityStrategy } from '../../strategy/index.ts';
 import { ProvisioningEntityStrategyType } from '../../strategy/index.ts';
 import type { IProvisioningSource } from '../../types.ts';
-import type { ConfigProvisioningSourceContext } from './types.ts';
 
 export class DefaultProvisioningSource implements IProvisioningSource {
-    protected config : Config;
-
-    constructor(ctx: ConfigProvisioningSourceContext) {
-        this.config = ctx.config;
-    }
-
-    async load(): Promise<RootProvisioningEntity> {
+    async load(config: Config): Promise<RootProvisioningEntity> {
         const masterRealm : RealmProvisioningEntity = {
             strategy: {
                 type: ProvisioningEntityStrategyType.MERGE,
@@ -43,7 +36,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         const userCredentialsService = new UserCredentialsService();
 
         let userStrategy : ProvisioningEntityStrategy<User> | undefined;
-        if (this.config.userAdminPasswordReset) {
+        if (config.userAdminPasswordReset) {
             userStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
                 attributes: ['password'],
@@ -56,9 +49,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 strategy: userStrategy,
                 attributes: {
                     name: 'admin',
-                    password: await userCredentialsService.protect(this.config.userAdminPassword),
+                    password: await userCredentialsService.protect(config.userAdminPassword),
                     email: buildUserFakeEmail('admin'),
-                    active: this.config.userAdminEnabled,
+                    active: config.userAdminEnabled,
                 },
                 relations: {
                     globalRoles: [ROLE_ADMIN_NAME],
@@ -69,7 +62,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         const clientCredentialsService = new ClientCredentialsService();
 
         let clientStrategy : ProvisioningEntityStrategy<Client> | undefined;
-        if (this.config.clientSystemSecretReset) {
+        if (config.clientSystemSecretReset) {
             clientStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
                 attributes: ['built_in', 'is_confidential', 'secret', 'secret_hashed', 'secret_encrypted'],
@@ -89,9 +82,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     built_in: true,
                     is_confidential: true,
                     name: 'system',
-                    secret: await clientCredentialsService.protect(this.config.clientSystemSecret, { secret_hashed: false }),
+                    secret: await clientCredentialsService.protect(config.clientSystemSecret, { secret_hashed: false }),
                     secret_hashed: false,
-                    active: this.config.clientSystemEnabled,
+                    active: config.clientSystemEnabled,
                 },
                 relations: {
                     globalRoles: [ROLE_ADMIN_NAME],
@@ -102,7 +95,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         const robotCredentialsService = new RobotCredentialsService();
 
         let robotStrategy : ProvisioningEntityStrategy<Robot> | undefined;
-        if (this.config.robotAdminSecretReset) {
+        if (config.robotAdminSecretReset) {
             robotStrategy = {
                 type: ProvisioningEntityStrategyType.MERGE,
                 attributes: ['secret'],
@@ -115,8 +108,8 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 strategy: robotStrategy,
                 attributes: {
                     name: 'system',
-                    secret: await robotCredentialsService.protect(this.config.robotAdminSecret),
-                    active: this.config.robotAdminEnabled,
+                    secret: await robotCredentialsService.protect(config.robotAdminSecret),
+                    active: config.robotAdminEnabled,
                 },
                 relations: {
                     globalRoles: [ROLE_ADMIN_NAME],

@@ -41,7 +41,7 @@ import type { IDIContainer } from '../../../core/index.ts';
 import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';
-import { CompositeProvisioningSource, DefaultProvisioningSource } from './sources/index.ts';
+import { CompositeProvisioningSource } from './sources/index.ts';
 import {
     ClientProvisioningSynchronizer,
     GraphProvisioningSynchronizer,
@@ -66,15 +66,8 @@ export class ProvisionerModule implements Module {
     async start(container: IDIContainer): Promise<void> {
         const config = container.resolve<Config>(ConfigInjectionKey);
 
-        const sources : IProvisioningSource[] = [
-            new DefaultProvisioningSource({
-                config,
-            }),
-            ...this.sources,
-        ];
-
-        const composite = new CompositeProvisioningSource(sources);
-        const data = await composite.load();
+        const composite = new CompositeProvisioningSource(this.sources);
+        const data = await composite.load(config);
 
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
             repository: container.resolve<Repository<Permission>>(PermissionEntity),
