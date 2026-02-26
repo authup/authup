@@ -30,11 +30,15 @@ export async function getManyClientScopeRouteHandler(req: Request, res: Response
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientScopeEntity);
     const query = repository.createQueryBuilder('clientScope');
+    query.groupBy('clientScope.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'clientScope',
         relations: {
             allowed: ['client', 'scope'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         filters: {
             allowed: ['client_id', 'scope_id', 'default', 'scope.name'],

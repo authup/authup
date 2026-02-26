@@ -31,6 +31,7 @@ export async function getManyIdentityProviderRoleRouteHandler(req: Request, res:
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
     const query = repository.createQueryBuilder('providerRole');
+    query.groupBy('providerRole.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'providerRole',
@@ -52,6 +53,9 @@ export async function getManyIdentityProviderRoleRouteHandler(req: Request, res:
                 'role',
                 'provider',
             ],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         pagination: {
             maxLimit: 50,

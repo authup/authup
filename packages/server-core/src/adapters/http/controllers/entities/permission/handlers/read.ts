@@ -30,6 +30,7 @@ export async function getManyPermissionRouteHandler(req: Request, res: Response)
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(PermissionEntity);
     const query = repository.createQueryBuilder('permission');
+    query.groupBy('permission.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'permission',
@@ -43,6 +44,9 @@ export async function getManyPermissionRouteHandler(req: Request, res: Response)
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             allowed: ['policy'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: ['id', 'name', 'created_at', 'updated_at'],

@@ -29,6 +29,7 @@ export async function getManyClientRoleRouteHandler(req: Request, res: Response)
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ClientRoleEntity);
     const query = repository.createQueryBuilder('clientRole');
+    query.groupBy('clientRole.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'clientRole',
@@ -37,6 +38,9 @@ export async function getManyClientRoleRouteHandler(req: Request, res: Response)
         },
         relations: {
             allowed: ['client', 'role'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: [

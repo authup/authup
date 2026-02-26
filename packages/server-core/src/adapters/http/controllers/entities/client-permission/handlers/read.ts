@@ -28,6 +28,7 @@ export async function getManyClientPermissionRouteHandler(req: Request, res: Res
     const dataSource = await useDataSource();
     const clientPermissionRepository = dataSource.getRepository(ClientPermissionEntity);
     const query = clientPermissionRepository.createQueryBuilder('clientPermission');
+    query.groupBy('clientPermission.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'clientPermission',
@@ -39,6 +40,9 @@ export async function getManyClientPermissionRouteHandler(req: Request, res: Res
                 'client',
                 'permission',
             ],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: [

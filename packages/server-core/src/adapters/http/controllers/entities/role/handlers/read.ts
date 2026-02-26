@@ -32,6 +32,7 @@ export async function getManyRoleRouteHandler(req: Request, res: Response) : Pro
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RoleEntity);
     const query = repository.createQueryBuilder('role');
+    query.groupBy('role.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'role',

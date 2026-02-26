@@ -29,6 +29,7 @@ export async function getManyRobotRoleRouteHandler(req: Request, res: Response) 
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotRoleEntity);
     const query = repository.createQueryBuilder('robotRole');
+    query.groupBy('robotRole.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'robotRole',
@@ -37,6 +38,9 @@ export async function getManyRobotRoleRouteHandler(req: Request, res: Response) 
         },
         relations: {
             allowed: ['robot', 'role'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: [

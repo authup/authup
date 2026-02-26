@@ -24,6 +24,7 @@ export async function getManyRealmRouteHandler(
     const repository = dataSource.getRepository(RealmEntity);
 
     const query = repository.createQueryBuilder('realm');
+    query.groupBy('realm.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'realm',

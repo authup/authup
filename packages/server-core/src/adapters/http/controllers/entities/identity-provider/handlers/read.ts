@@ -24,11 +24,15 @@ export async function getManyIdentityProviderRouteHandler(req: Request, res: Res
     const repository = new IdentityProviderRepository(dataSource);
 
     const query = repository.createQueryBuilder('provider');
+    query.groupBy('provider.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'provider',
         relations: {
             allowed: ['realm'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         fields: {
             default: [

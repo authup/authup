@@ -31,6 +31,8 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
     const dataSource = await useDataSource();
     const repository = new PolicyRepository(dataSource);
     const queryBuilder = repository.createQueryBuilder('policy');
+    queryBuilder.groupBy('policy.id');
+
     const query = useRequestQuery(req);
 
     const { pagination } = applyQuery(queryBuilder, query, {
@@ -39,6 +41,9 @@ export async function getManyPolicyRouteHandler(req: Request, res: Response): Pr
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             allowed: ['children', 'realm'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         fields: {
             default: [

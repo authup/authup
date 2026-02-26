@@ -35,6 +35,7 @@ export async function getManyUserPermissionRouteHandler(req: Request, res: Respo
     const dataSource = await useDataSource();
     const robotPermissionRepository = dataSource.getRepository(UserPermissionEntity);
     const query = robotPermissionRepository.createQueryBuilder('userPermission');
+    query.groupBy('userPermission.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userPermission',
@@ -49,6 +50,9 @@ export async function getManyUserPermissionRouteHandler(req: Request, res: Respo
                 'user',
                 'permission',
             ],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: [
