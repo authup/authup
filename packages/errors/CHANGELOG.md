@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
+
+
+### Bug Fixes
+
+* minor adjustments to bump version ([db455fd](https://github.com/authup/authup/commit/db455fd9087197aa29a19b8772cd422c82760cf6))
+
 ## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
 
 
