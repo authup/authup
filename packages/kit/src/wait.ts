@@ -5,6 +5,11 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+/**
+ * Wait for x ms.
+ *
+ * @param ms
+ */
 export async function wait(ms: number): Promise<void> {
     return new Promise<void>((resolve) => {
         setTimeout(resolve, ms);

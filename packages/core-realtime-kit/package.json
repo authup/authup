@@ -29,6 +29,7 @@
     },
     "keywords": [
         "realtime",
+        "socket",
         "socket-io"
     ],
     "author": {
