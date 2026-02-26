@@ -110,6 +110,8 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         query.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
     }
 
+    query.groupBy('provider.id');
+
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'provider',
         fields: {
@@ -127,6 +129,9 @@ export async function getOneIdentityProviderRouteHandler(req: Request, res: Resp
         },
         relations: {
             allowed: ['realm'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
     });
 

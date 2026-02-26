@@ -91,7 +91,8 @@ export async function getOneIdentityProviderRoleRouteHandler(req: Request, res: 
     const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
     const query = repository.createQueryBuilder('providerRole')
-        .where('providerRole.id = :id', { id });
+        .where('providerRole.id = :id', { id })
+        .groupBy('providerRole.id');
 
     const result = await query.getOne();
 

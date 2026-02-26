@@ -102,12 +102,18 @@ export async function getOnePermissionRouteHandler(req: Request, res: Response):
         }
     }
 
+    query.groupBy('permission.id');
+
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'permission',
         relations: {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             allowed: ['policy'],
+
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
     });
 

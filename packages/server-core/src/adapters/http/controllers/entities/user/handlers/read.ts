@@ -185,11 +185,17 @@ export async function getOneUserRouteHandler(req: Request, res: Response) : Prom
         });
     }
 
+    query.groupBy('user.id');
+
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
         fields: buildFieldsOption(),
         relations: {
             allowed: ['realm'],
+
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
     });
 

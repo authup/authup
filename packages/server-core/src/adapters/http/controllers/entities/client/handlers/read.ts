@@ -195,11 +195,16 @@ export async function getOneClientRouteHandler(req: Request, res: Response): Pro
         allowed: ['secret'],
     };
 
+    query.groupBy('client.id');
+
     applyQuery(query, useRequestQuery(req), {
         defaultPath: 'client',
         fields: options,
         relations: {
             allowed: ['realm'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
     });
 

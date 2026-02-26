@@ -121,6 +121,8 @@ export async function getOnePolicyRouteHandler(
         query.andWhere('policy.realm_id = :realmId', { realmId: realm.id });
     }
 
+    query.groupBy('policy.id');
+
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'policy',
         fields: {
@@ -142,6 +144,10 @@ export async function getOnePolicyRouteHandler(
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             allowed: ['children', 'realm'],
+
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
     });
 
