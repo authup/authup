@@ -33,6 +33,7 @@ export async function getManyRoleAttributeRouteHandler(req: Request, res: Respon
     const repository = dataSource.getRepository(RoleAttributeEntity);
 
     const query = repository.createQueryBuilder('roleAttribute');
+    query.groupBy('roleAttribute.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'roleAttribute',

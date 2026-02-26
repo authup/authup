@@ -42,6 +42,7 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(RobotEntity);
     const query = repository.createQueryBuilder('robot');
+    query.groupBy('robot.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'robot',
@@ -71,6 +72,9 @@ export async function getManyRobotRouteHandler(req: Request, res: Response) : Pr
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             allowed: ['realm', 'user'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: ['id', 'realm_id', 'user_id', 'updated_at', 'created_at'],

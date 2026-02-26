@@ -32,6 +32,7 @@ export async function getManyUserAttributeRouteHandler(req: Request, res: Respon
     const repository = dataSource.getRepository(UserAttributeEntity);
 
     const query = repository.createQueryBuilder('userAttribute');
+    query.groupBy('userAttribute.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'userAttribute',

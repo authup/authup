@@ -32,6 +32,7 @@ export async function getManyScopeRouteHandler(req: Request, res: Response) : Pr
     const dataSource = await useDataSource();
     const repository = dataSource.getRepository(ScopeEntity);
     const query = repository.createQueryBuilder('scope');
+    query.groupBy('scope.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'scope',

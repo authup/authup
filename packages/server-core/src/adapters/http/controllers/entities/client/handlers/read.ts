@@ -41,6 +41,7 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
     const repository = dataSource.getRepository(ClientEntity);
 
     const query = repository.createQueryBuilder('client');
+    query.groupBy('client.id');
 
     const options : QueryFieldsApplyOptions<ClientEntity> = {
         defaultAlias: 'client',
@@ -77,6 +78,9 @@ export async function getManyClientRouteHandler(req: Request, res: Response): Pr
         },
         relations: {
             allowed: ['realm'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: ['id', 'created_at', 'updated_at'],

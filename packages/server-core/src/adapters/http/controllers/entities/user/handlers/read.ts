@@ -48,6 +48,7 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
     const dataSource = await useDataSource();
     const repository = new UserRepository(dataSource);
     const query = repository.createQueryBuilder('user');
+    query.groupBy('user.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'user',
@@ -60,6 +61,9 @@ export async function getManyUserRouteHandler(req: Request, res: Response) : Pro
         },
         relations: {
             allowed: ['realm'],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: ['id', 'name', 'display_name', 'created_at', 'updated_at'],

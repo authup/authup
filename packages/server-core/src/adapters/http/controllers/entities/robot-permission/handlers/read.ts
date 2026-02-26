@@ -28,6 +28,7 @@ export async function getManyRobotPermissionRouteHandler(req: Request, res: Resp
     const dataSource = await useDataSource();
     const robotPermissionRepository = dataSource.getRepository(RobotPermissionEntity);
     const query = robotPermissionRepository.createQueryBuilder('robotPermission');
+    query.groupBy('robotPermission.id');
 
     const { pagination } = applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'robotPermission',
@@ -39,6 +40,9 @@ export async function getManyRobotPermissionRouteHandler(req: Request, res: Resp
                 'robot',
                 'permission',
             ],
+            onJoin: (_property, key, query) => {
+                query.addGroupBy(`${key}.id`);
+            },
         },
         sort: {
             allowed: [
