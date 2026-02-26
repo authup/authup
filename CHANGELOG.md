@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
+
+
+### Features
+
+* cleanup & add client token creator ([#2850](https://github.com/authup/authup/issues/2850)) ([4029f91](https://github.com/authup/authup/commit/4029f913e0603157ec50e0dda1ee05a7061bb504))
+* use constants for local file paths ([54059a8](https://github.com/authup/authup/commit/54059a8b304197495981ddde4a492fa36b2d0db4))
+
+
+### Bug Fixes
+
+* always groupBy query with aggregate ([#2863](https://github.com/authup/authup/issues/2863)) ([54f96ad](https://github.com/authup/authup/commit/54f96ad68efa69cff1da35d54962deb6058262ca))
+* apply groupBy for getOne endpoints ([134dbdc](https://github.com/authup/authup/commit/134dbdc88ea13b9c987ef4858c828fd34c867fed))
+* catch error if cli bootstraping fails ([2c63148](https://github.com/authup/authup/commit/2c63148a8e57177cea4caadc2ce621554463af5c))
+* **deps:** bump the minorandpatch group across 1 directory with 11 updates ([#2862](https://github.com/authup/authup/issues/2862)) ([b21809a](https://github.com/authup/authup/commit/b21809a82e94646fd2e906fe0ef0c9ee087115bd))
+* **deps:** bump the minorandpatch group across 1 directory with 23 updates ([#2856](https://github.com/authup/authup/issues/2856)) ([b037a7a](https://github.com/authup/authup/commit/b037a7ac40b69067fb87db1f5d10562f59bda273))
+* eplicitly mark realm_id of permission as optional ([8df51d3](https://github.com/authup/authup/commit/8df51d3b6765b0d529a7a42b5f6056b0b1b3bd4d))
+* minor adjustments to bump version ([db455fd](https://github.com/authup/authup/commit/db455fd9087197aa29a19b8772cd422c82760cf6))
+* passing issues in sanitize error(s) ([bf2d574](https://github.com/authup/authup/commit/bf2d5749a4aba1787956dde17192f115794fdf50))
+* remove groupBy for getOne handlers ([893dc1d](https://github.com/authup/authup/commit/893dc1dfda37e2ed40aace0b3072e78ff62370c6))
+* src-/dist-path constant ([9507d47](https://github.com/authup/authup/commit/9507d4702e37f813550be1e239c4b5cc85821cba))
+
 ## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
 
 

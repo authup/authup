@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
+
+
+### Bug Fixes
+
+* eplicitly mark realm_id of permission as optional ([8df51d3](https://github.com/authup/authup/commit/8df51d3b6765b0d529a7a42b5f6056b0b1b3bd4d))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/errors bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/specs bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+
 ## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
 
 

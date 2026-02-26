@@ -1,5 +1,34 @@
 # Change Log
 
+## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
+
+
+### Features
+
+* cleanup & add client token creator ([#2850](https://github.com/authup/authup/issues/2850)) ([4029f91](https://github.com/authup/authup/commit/4029f913e0603157ec50e0dda1ee05a7061bb504))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 11 updates ([#2862](https://github.com/authup/authup/issues/2862)) ([b21809a](https://github.com/authup/authup/commit/b21809a82e94646fd2e906fe0ef0c9ee087115bd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/errors bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/kit bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/core-kit bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/specs bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/errors bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/kit bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/core-kit bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+    * @authup/specs bumped from ^1.0.0-beta.29 to ^1.0.0-beta.30
+
 ## [1.0.0-beta.29](https://github.com/authup/authup/compare/v1.0.0-beta.28...v1.0.0-beta.29) (2026-02-17)
 
 
