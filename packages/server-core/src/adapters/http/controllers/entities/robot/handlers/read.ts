@@ -194,8 +194,6 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
         });
     }
 
-    query.groupBy('robot.id');
-
     applyQuery(query, useRequestQuery(req), {
         defaultAlias: 'robot',
         fields: {
@@ -218,10 +216,6 @@ export async function getOneRobotRouteHandler(req: Request, res: Response) : Pro
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
             allowed: ['realm', 'user'],
-
-            onJoin: (_property, key, query) => {
-                query.addGroupBy(`${key}.id`);
-            },
         },
     });
 

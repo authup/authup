@@ -71,8 +71,6 @@ export async function getOneRealmRouteHandler(
         query.where('realm.name LIKE :name', { name: id });
     }
 
-    query.groupBy('realm.id');
-
     const entity = await query.getOne();
 
     if (!entity) {
