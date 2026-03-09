@@ -1,4 +1,9 @@
-<!-- NOTE: Keep this file updated as the project evolves. When making architectural changes, adding new patterns, or discovering important conventions, update the relevant sections. -->
+<!-- 
+NOTE: 
+Keep this file and README.md updated as the project evolves.
+When making architectural changes, adding new patterns,
+or discovering important conventions, update the relevant sections.
+-->
 
 # Authup - Agent Guide
 
