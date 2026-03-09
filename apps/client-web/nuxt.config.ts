@@ -44,11 +44,11 @@ export default defineNuxtConfig({
     ],
 
     alias: {
-        '@authup/core-kit': path.join(__dirname, '..', 'core-kit', 'src'),
-        '@authup/core-http-kit': path.join(__dirname, '..', 'core-http-kit', 'src'),
-        '@authup/kit': path.join(__dirname, '..', 'kit', 'src'),
-        '@authup/client-web-kit': path.join(__dirname, '..', 'client-web-kit', 'src'),
-        '@authup/specs': path.join(__dirname, '..', 'specs', 'src'),
+        '@authup/core-kit': path.join(__dirname, '..', '..', 'packages', 'core-kit', 'src'),
+        '@authup/core-http-kit': path.join(__dirname, '..', '..', 'packages', 'core-http-kit', 'src'),
+        '@authup/kit': path.join(__dirname, '..', '..', 'packages', 'kit', 'src'),
+        '@authup/client-web-kit': path.join(__dirname, '..', '..', 'packages', 'client-web-kit', 'src'),
+        '@authup/specs': path.join(__dirname, '..', '..', 'packages', 'specs', 'src'),
     },
 
     runtimeConfig: {
