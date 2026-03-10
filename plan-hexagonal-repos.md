@@ -1,246 +1,131 @@
 # Hexagonal Repository Migration for server-core
 
 ## Context
-HTTP handlers in `adapters/http/controllers/entities/` directly call `useDataSource()` (72 files, 166 occurrences) and construct TypeORM repositories inline. This violates hexagonal architecture — the adapter layer is coupled to the database layer. The goal is to define domain repository ports in `core/`, implement them in `app/modules/`, and pass them via DIP (constructor injection) to HTTP controllers.
+HTTP handlers in `adapters/http/controllers/entities/` directly call `useDataSource()` and construct TypeORM repositories inline. This violates hexagonal architecture. The goal is to define domain repository ports in `core/`, implement them in `app/modules/database/repositories/`, and pass them via DIP (constructor injection) to HTTP controllers.
 
-## Design
+## Completed
 
-### Principles
-- **DIP via constructor** — repositories are passed as constructor arguments to controllers. No injection tokens or service locator pattern.
-- **Handlers become controller methods** — the separate `handlers/{read,write,delete}.ts` files are merged into the controller class, simplifying the code structure.
-- **Domain-specific interfaces** — port interfaces expose meaningful methods, not thin TypeORM wrappers.
+### Base interface (`core/entities/types.ts`)
+`IEntityRepository<T>` now contains all common methods:
+- `findMany`, `findOneById`, `findOneByName`, `findOneByIdOrName`, `findOneBy`
+- `create`, `merge`, `save`, `remove`, `validateJoinColumns`
+- Also exports `EntityRepositoryFindManyResult<T>` (uses `PaginationParseOutput` from `rapiq`)
 
-### Port Interfaces (`core/entities/`)
+### Realm (entity #1 — complete)
+- **Port:** `core/entities/realm/types.ts` — `IRealmRepository extends IEntityRepository<Realm>` (empty, base is sufficient)
+- **Adapter:** `app/modules/database/repositories/realm/repository.ts` — `RealmRepositoryAdapter` wraps `dataSource.getRepository(RealmEntity)`
+- **Controller:** `adapters/http/controllers/entities/realm/module.ts` — handlers merged into class methods, receives `IRealmRepository` via constructor context
+- **Wiring:** `app/modules/http/modules/controller.ts` — `createRealmController()` async factory, awaited before passing to decorators
+- **Index:** `adapters/http/controllers/entities/realm/index.ts` — only exports `module.ts` (no more handler re-exports)
+- **Barrel exports:** `core/entities/index.ts`, `app/modules/database/index.ts` updated
 
-**Base interface** in `core/entities/repository.ts`:
-```typescript
-export interface IEntityRepository<T> {
-    findMany(query: Record<string, any>): Promise<{ data: T[]; total: number }>;
-    findOne(idOrName: string, options?: { realmId?: string; selects?: string[] }): Promise<T | null>;
-    findOneBy(where: Record<string, any>): Promise<T | null>;
-    create(data: Partial<T>): T;
-    merge(entity: T, data: Partial<T>): T;
-    save(entity: T): Promise<T>;
-    remove(entity: T): Promise<void>;
-    validateJoinColumns(data: Partial<T>): Promise<void>;
-    checkUniqueness(data: Partial<T>, existing?: T): Promise<boolean>;
-}
-```
+### Identity repositories updated
+`IEntityRepository` base was expanded, so identity repos needed the new methods:
+- `ClientIdentityRepository` — `findOneByIdOrName`, `findOneBy` implemented; CRUD methods throw `Method not implemented.`
+- `RobotIdentityRepository` — same pattern
+- `UserIdentityRepository` — same pattern
 
-**Entity-specific interfaces** extend with domain methods where needed:
-- `IUserRepository` adds: `extendManyWithEA()`, `extendOneWithEA()`, `getColumnNames()`
-- `IPermissionRepository` adds: `findPolicyDescendantsTree()`, `assignToAdminRole()`
-- Others: base is sufficient
+The `Method not implemented.` stubs will be replaced with real implementations when those entities get their full repository adapters.
 
-### Adapter Implementations (`app/modules/database/repositories/`)
-
-Each adapter wraps existing TypeORM repository classes from `adapters/database/domains/` and DataSource:
-
-```typescript
-export class UserRepositoryAdapter implements IUserRepository {
-    constructor(
-        private repository: UserRepository,  // existing EARepository subclass
-        private dataSource: DataSource,
-    ) {}
-    // delegates to this.repository and typeorm-extension helpers internally
-}
-```
-
-For entities without existing custom repository classes (realm, permission), the adapter wraps `dataSource.getRepository(Entity)`.
-
-### Controller Pattern (DIP via constructor, handlers as methods)
-
-Standalone handler functions are moved into controller methods. The controller receives the repository via constructor.
-
-**Before** (current — thin controller delegates to standalone handler functions):
-```typescript
-// adapters/http/controllers/entities/user/module.ts
-@DController('/users')
-export class UserController {
-    @DGet('', [ForceLoggedInMiddleware])
-    async getMany(@DRequest() req: any, @DResponse() res: any) {
-        return getManyUserRouteHandler(req, res);  // delegates to external function
-    }
-    @DDelete('/:id', [ForceLoggedInMiddleware])
-    async drop(@DPath('id') id: string, @DRequest() req: any, @DResponse() res: any) {
-        return deleteUserRouteHandler(req, res);   // delegates to external function
-    }
-}
-
-// adapters/http/controllers/entities/user/handlers/read.ts
-export async function getManyUserRouteHandler(req: Request, res: Response) {
-    const dataSource = await useDataSource();           // direct DB coupling
-    const repository = new UserRepository(dataSource);  // constructs repo inline
-    const query = repository.createQueryBuilder('user');
-    // ... 70 lines of query building, permission checks, EA extension ...
-    return send(res, { data, meta: { total, ...pagination } });
-}
-
-// adapters/http/controllers/entities/user/handlers/delete.ts
-export async function deleteUserRouteHandler(req: Request, res: Response) {
-    const dataSource = await useDataSource();
-    const repository = new UserRepository(dataSource);
-    const entity = await repository.findOneBy({ id });
-    // ... permission checks ...
-    await repository.remove(entity);
-    return sendAccepted(res, entity);
-}
-```
-
-**After** (handler logic moved into controller methods, repository injected via constructor):
-```typescript
-// adapters/http/controllers/entities/user/module.ts
-@DTags('user')
-@DController('/users')
-export class UserController {
-    constructor(protected repository: IUserRepository) {}
-
-    @DGet('', [ForceLoggedInMiddleware])
-    async getMany(@DRequest() req: any, @DResponse() res: any): Promise<User[]> {
-        // logic from getManyUserRouteHandler moved here
-        const { data, total } = await this.repository.findMany(useRequestQuery(req));
-
-        const permissionChecker = useRequestPermissionChecker(req);
-        const identity = useRequestIdentity(req);
-        const filtered: User[] = [];
-        let filteredTotal = total;
-        for (const entity of data) {
-            if (identity?.type === 'user' && identity.id === entity.id) {
-                filtered.push(entity);
-                continue;
-            }
-            try {
-                await permissionChecker.checkOneOf({ ... });
-                filtered.push(entity);
-            } catch (e) { filteredTotal--; }
-        }
-
-        await this.repository.extendManyWithEA(filtered);
-        return send(res, { data: filtered, meta: { total: filteredTotal } });
-    }
-
-    @DDelete('/:id', [ForceLoggedInMiddleware])
-    async drop(@DPath('id') id: string, @DRequest() req: any, @DResponse() res: any) {
-        // logic from deleteUserRouteHandler moved here
-        const id = useRequestParamID(req);
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({ name: PermissionName.USER_DELETE });
-        // ... self-deletion check ...
-        const entity = await this.repository.findOneBy({ id });
-        if (!entity) throw new NotFoundError();
-        await permissionChecker.check({ name: PermissionName.USER_DELETE, input: new PolicyData({ ... }) });
-        const { id: entityId } = entity;
-        await this.repository.remove(entity);
-        entity.id = entityId;
-        return sendAccepted(res, entity);
-    }
-
-    // Similarly for add(), edit(), put(), get()
-}
-```
-
-The `handlers/` directory is deleted entirely — all logic lives in the controller class.
-
-### Wiring in HTTPControllerModule
-
-`app/modules/http/modules/controller.ts` constructs repositories and passes them to controllers:
-
-```typescript
-// Before:
-UserController,  // bare class reference
-
-// After:
-this.createUserController(),  // factory method
-
-// Factory:
-async createUserController() {
-    const dataSource = await useDataSource();
-    const repository = new UserRepositoryAdapter(
-        new UserRepository(dataSource), dataSource
-    );
-    return new UserController(repository);
-}
-```
-
-This follows the existing pattern of `createAuthorize(container)`, `createToken(container)` etc., but passes the repository directly instead of resolving from a DI container.
-
-## Migration Order (simplest → most complex)
-
-### 1. Realm
-- No EARepository, no `isEntityUnique`, already has partial constructor injection
-- **New:** `core/entities/realm/types.ts`, `app/modules/database/repositories/realm/repository.ts`
-- **Modify:** `adapters/http/controllers/entities/realm/module.ts` (merge handlers in, add constructor)
-- **Delete:** `adapters/http/controllers/entities/realm/handlers/` (logic moved to controller)
-- **Modify:** `app/modules/http/modules/controller.ts` (add `createRealmController()`)
+## Remaining Entities (in order)
 
 ### 2. Role
-- Uses `isEntityUnique()` → encapsulated in `checkUniqueness()`
-- Same file pattern as Realm
+- Uses `isEntityUnique()` → encapsulate in `checkUniqueness()` on the repository
+- **Handler files to merge:** `adapters/http/controllers/entities/role/handlers/{read,write,delete}.ts`
+- **Existing TypeORM repo:** `RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity>` in `adapters/database/domains/role/repository.ts`
+- Role has `getBoundPermissions()`, `getBoundPermissionsForMany()`, `clearBoundPermissionsCache()` — these stay on the database-layer repo, not the port
 
 ### 3. Permission
-- Adds `findPolicyDescendantsTree()`, `assignToAdminRole()` domain methods
-- Transaction handling for admin role assignment moves into repository
+- More complex: write handler uses `PolicyRepository.findDescendantsTree()` and creates `RolePermissionEntity` in a transaction
+- Port interface needs extra domain methods: `findPolicyDescendantsTree()`, `assignToAdminRole()`
+- **Handler files:** `adapters/http/controllers/entities/permission/handlers/{read,write,delete,check}.ts` (also has `check.ts`)
+- No existing custom TypeORM repo class — uses `dataSource.getRepository(PermissionEntity)` directly
 
 ### 4. Client
-- `ClientCredentialsService` stays in controller method (not repository concern)
-- Repository handles `addSelect('client.secret')` in `findOne()`
+- `ClientCredentialsService` stays in controller (business logic)
+- Repository needs to handle `addSelect('client.secret')` for sensitive field loading
+- **Existing TypeORM repo:** `ClientRepository extends Repository<ClientEntity>` in `adapters/database/domains/client/repository.ts`
+- **Handler files:** `adapters/http/controllers/entities/client/handlers/{read,write,delete}.ts`
 
 ### 5. Robot
-- Similar to Client. `RobotSynchronizationService` stays in controller.
+- Similar to Client
+- `RobotSynchronizationService` stays in controller
+- Robot write handler has an `integrity.ts` handler too
+- **Existing TypeORM repo:** `RobotRepository extends Repository<RobotEntity>` in `adapters/database/domains/robot/repository.ts`
+- **Handler files:** `adapters/http/controllers/entities/robot/handlers/{read,write,delete,integrity}.ts`
 
 ### 6. User (most complex)
-- EA support (`extendManyWithEA`, `extendOneWithEA`)
-- `getColumnNames()` for OAuth2 scope attribute resolution
-- Password handling stays in controller (business logic, not data access)
+- EA support: `extendManyWithEA()`, `extendOneWithEA()` from `UserRepository extends EARepository`
+- `getColumnNames()` for OAuth2 scope attribute resolution (uses `repository.metadata.columns`)
+- Password handling via `UserCredentialsService` stays in controller
+- Self-token handling (`isSelfToken()`) stays in controller
+- **Existing TypeORM repo:** `UserRepository extends EARepository<UserEntity, UserAttributeEntity>` in `adapters/database/domains/user/repository.ts`
+- **Handler files:** `adapters/http/controllers/entities/user/handlers/{read,write,delete}.ts`
 
-## Files Per Entity
+## Pattern (follow Realm as reference)
 
-**New files (3):**
+### Per entity, create:
 ```
-core/entities/{entity}/types.ts               (port interface)
-core/entities/{entity}/index.ts               (barrel export)
-app/modules/database/repositories/{entity}/repository.ts  (adapter)
-```
-
-**Modified files (2):**
-```
-adapters/http/controllers/entities/{entity}/module.ts  (merge handlers, add constructor)
-app/modules/http/modules/controller.ts                 (add factory method)
+core/entities/{entity}/types.ts               — I{Entity}Repository extends IEntityRepository<{Entity}>
+core/entities/{entity}/index.ts               — barrel export
+app/modules/database/repositories/{entity}/repository.ts  — {Entity}RepositoryAdapter implements I{Entity}Repository
+app/modules/database/repositories/{entity}/index.ts       — barrel export
 ```
 
-**Deleted files (3-4):**
+### Per entity, modify:
 ```
-adapters/http/controllers/entities/{entity}/handlers/read.ts
-adapters/http/controllers/entities/{entity}/handlers/write.ts
-adapters/http/controllers/entities/{entity}/handlers/delete.ts
-adapters/http/controllers/entities/{entity}/handlers/index.ts
-```
-
-## Shared/One-Time Files
-
-**New:**
-```
-core/entities/repository.ts              (base interface)
-app/modules/database/repositories/index.ts        (barrel)
-app/modules/database/repositories/{entity}/index.ts  (barrels)
+adapters/http/controllers/entities/{entity}/module.ts  — merge handlers into class, add constructor(repository)
+adapters/http/controllers/entities/{entity}/index.ts   — remove handler re-exports
+app/modules/http/modules/controller.ts                 — add async createXxxController() factory
+app/modules/database/repositories/index.ts             — add re-export
+core/entities/index.ts                                 — add re-export
 ```
 
-**Modified:**
+### Per entity, dead code after migration:
 ```
-core/entities/index.ts                        (re-export base interface)
-core/index.ts                                 (re-export)
-adapters/http/controllers/entities/{entity}/index.ts  (update exports, remove handler re-exports)
+adapters/http/controllers/entities/{entity}/handlers/   — entire directory
 ```
+
+### Controller pattern:
+- Constructor receives repository via context object (e.g. `{ repository: I{Entity}Repository, options?: ... }`)
+- Handler logic from `handlers/read.ts` → `getMany()`, `get()` methods
+- Handler logic from `handlers/write.ts` → `add()`, `edit()`, `put()` delegate to private `write()` method
+- Handler logic from `handlers/delete.ts` → `drop()` method
+- Return types: `Promise<any>` (send/sendAccepted/sendCreated return void)
+- Permission checks, validation, business logic stay in controller
+
+### Wiring pattern:
+- `HTTPControllerModule` gets async factory: `async createXxxController()`
+- Factory calls `await useDataSource()`, constructs adapter, constructs controller
+- Instance is awaited before the `decorators({ controllers: [...] })` call
+- Use `const xxxController = await this.createXxxController(container);` at top of `mount()`
+
+### Repository adapter pattern:
+- Constructor takes `DataSource`
+- Internal TypeORM repo: `this.repository = dataSource.getRepository(XxxEntity)` (or `new XxxRepository(dataSource)` for entities with custom repos)
+- `findMany()`: uses `createQueryBuilder` + `applyQuery()` with entity-specific field/filter/sort config, returns `EntityRepositoryFindManyResult<T>`
+- `findOneByIdOrName()`: UUID detection via `isUUID()`, query builder with conditional where
+- `findOneBy()`: delegates to `this.repository.findOneBy(where)`
+- `create/merge/save/remove`: delegate to TypeORM repository
+- `validateJoinColumns()`: calls `validateEntityJoinColumns(data, { dataSource, entityTarget })`
+- `checkUniqueness()`: calls `isEntityUnique({ dataSource, entityTarget, entity, entityExisting })`
 
 ## Key Reference Files
-- `core/oauth2/client/types.ts` — example port interface pattern
-- `app/modules/oauth2/repositories/client/repository.ts` — example adapter wrapping `Repository<Client>`
-- `app/modules/http/modules/controller.ts` — where factory methods go (existing: `createAuthorize()`, `createToken()`)
-- `adapters/database/domains/user/repository.ts` — existing `UserRepository extends EARepository` to wrap
-- `adapters/http/controllers/entities/user/handlers/{read,write,delete}.ts` — logic to merge into controller
+- **Completed realm controller:** `adapters/http/controllers/entities/realm/module.ts`
+- **Completed realm adapter:** `app/modules/database/repositories/realm/repository.ts`
+- **Base interface:** `core/entities/types.ts` (IEntityRepository + EntityRepositoryFindManyResult)
+- **Controller wiring:** `app/modules/http/modules/controller.ts`
+- **Existing TypeORM repos:** `adapters/database/domains/{user,client,role,robot,policy}/repository.ts`
+
+## Constraints
+- No injection tokens or service locator — DIP via constructor arguments only
+- Repository interface names must NOT contain "HTTP" (e.g. `IRealmRepository`, not `IRealmHTTPRepository`)
+- Adapter classes named `{Entity}RepositoryAdapter` (e.g. `RealmRepositoryAdapter`)
+- Controller method `findOneByIdOrName()` (not `findOne()`)
+- `findMany()` returns `EntityRepositoryFindManyResult<T>` with `{ data, meta: { total, ...pagination } }`
+- All file paths below are relative to `apps/server-core/src/`
 
 ## Verification
-- `npm run build` — all packages compile
+- `npm run build` — all packages compile (build passes as of last change)
 - `npm run test` — existing tests pass
-- Verify no remaining `useDataSource()` calls in modified controller files
-- Each entity's CRUD endpoints work via API
+- Verify no remaining `useDataSource()` calls in migrated controller files

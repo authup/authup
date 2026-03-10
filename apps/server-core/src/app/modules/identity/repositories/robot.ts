@@ -9,7 +9,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
-import type { IRobotIdentityRepository } from '../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IRobotIdentityRepository } from '../../../../core/index.ts';
 import { CachePrefix, RobotRepository } from '../../../../adapters/database/domains/index.ts';
 
 export class RobotIdentityRepository implements IRobotIdentityRepository {
@@ -19,6 +19,40 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
 
     async findOneByName(id: string, realm?: string): Promise<Robot | null> {
         return this.find(id, realm);
+    }
+
+    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Robot | null> {
+        return this.find(idOrName, realm);
+    }
+
+    async findOneBy(where: Record<string, any>): Promise<Robot | null> {
+        const dataSource = await useDataSource();
+        const repository = new RobotRepository(dataSource);
+        return repository.findOneBy(where);
+    }
+
+    async findMany(): Promise<EntityRepositoryFindManyResult<Robot>> {
+        throw new Error('Method not implemented.');
+    }
+
+    create(): Robot {
+        throw new Error('Method not implemented.');
+    }
+
+    merge(): Robot {
+        throw new Error('Method not implemented.');
+    }
+
+    async save(): Promise<Robot> {
+        throw new Error('Method not implemented.');
+    }
+
+    async remove(): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    async validateJoinColumns(): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     private async find(key: string, realmKey?: string) : Promise<Robot | null> {

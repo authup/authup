@@ -10,7 +10,7 @@ import { isUUID } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { In } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
 import { IdentityProviderMapperOperation } from '../../../../core/index.ts';
 import {
     CachePrefix,
@@ -26,6 +26,40 @@ export class UserIdentityRepository implements IUserIdentityRepository {
 
     async findOneByName(id: string, realm?: string): Promise<User | null> {
         return this.find(id, realm);
+    }
+
+    async findOneByIdOrName(idOrName: string, realm?: string): Promise<User | null> {
+        return this.find(idOrName, realm);
+    }
+
+    async findOneBy(where: Record<string, any>): Promise<User | null> {
+        const dataSource = await useDataSource();
+        const repository = new UserRepository(dataSource);
+        return repository.findOneBy(where);
+    }
+
+    async findMany(): Promise<EntityRepositoryFindManyResult<User>> {
+        throw new Error('Method not implemented.');
+    }
+
+    create(): User {
+        throw new Error('Method not implemented.');
+    }
+
+    merge(): User {
+        throw new Error('Method not implemented.');
+    }
+
+    async save(): Promise<User> {
+        throw new Error('Method not implemented.');
+    }
+
+    async remove(): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    async validateJoinColumns(): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     private async find(key: string, realmKey?: string) : Promise<User | null> {

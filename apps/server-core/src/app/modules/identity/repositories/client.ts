@@ -9,7 +9,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Client } from '@authup/core-kit';
-import type { IClientIdentityRepository } from '../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IClientIdentityRepository } from '../../../../core/index.ts';
 import { CachePrefix, ClientRepository } from '../../../../adapters/database/domains/index.ts';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
@@ -19,6 +19,40 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
 
     async findOneByName(id: string, realm?: string): Promise<Client | null> {
         return this.find(id, realm);
+    }
+
+    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Client | null> {
+        return this.find(idOrName, realm);
+    }
+
+    async findOneBy(where: Record<string, any>): Promise<Client | null> {
+        const dataSource = await useDataSource();
+        const repository = new ClientRepository(dataSource);
+        return repository.findOneBy(where);
+    }
+
+    async findMany(): Promise<EntityRepositoryFindManyResult<Client>> {
+        throw new Error('Method not implemented.');
+    }
+
+    create(): Client {
+        throw new Error('Method not implemented.');
+    }
+
+    merge(): Client {
+        throw new Error('Method not implemented.');
+    }
+
+    async save(): Promise<Client> {
+        throw new Error('Method not implemented.');
+    }
+
+    async remove(): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+
+    async validateJoinColumns(): Promise<void> {
+        throw new Error('Method not implemented.');
     }
 
     private async find(key: string, realmKey?: string) : Promise<Client | null> {
