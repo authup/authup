@@ -14,18 +14,18 @@ import {
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import type { FindOptionsWhere, Repository } from 'typeorm';
-import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
-import { UserEntity, resolveRealm } from '../../../../database/domains/index.ts';
+import type { FindOptionsWhere } from 'typeorm';
+import { resolveRealm } from '../../../../database/domains/index.ts';
+import type { IUserRepository } from '../../../../../core/index.ts';
 import { PasswordResetRequestValidator } from './validator.ts';
 
 export type PasswordResetControllerContext = {
-    repository: Repository<User>
+    repository: IUserRepository
 };
 
 @DController('/password-reset')
 export class PasswordResetController {
-    protected repository: Repository<User>;
+    protected repository: IUserRepository;
 
     protected validator : RoutupContainerAdapter<User & { token: string }>;
 
@@ -43,12 +43,7 @@ export class PasswordResetController {
     ): Promise<PasswordResetResponse> {
         const data = await this.validator.run(req);
 
-        // todo: remove this.
-        const dataSource = await useDataSource();
-        await validateEntityJoinColumns(data, {
-            dataSource,
-            entityTarget: UserEntity,
-        });
+        await this.repository.validateJoinColumns(data);
 
         const where : FindOptionsWhere<User> = {
             ...(data.name ? { name: data.name } : {}),

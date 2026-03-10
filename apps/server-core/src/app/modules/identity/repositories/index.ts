@@ -8,6 +8,5 @@
 export * from './provider/index.ts';
 
 export * from './client.ts';
-export * from './identity-provider.ts';
 export * from './robot.ts';
 export * from './user.ts';

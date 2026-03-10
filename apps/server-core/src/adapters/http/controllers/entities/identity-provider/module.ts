@@ -5,53 +5,62 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { base64URLDecode, isUUID } from '@authup/kit';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import {
-    getRequestHeader, getRequestHostName, getRequestIP, sendRedirect,
+    getRequestHeader, getRequestHostName, getRequestIP, send, sendAccepted, sendCreated, sendRedirect, useRequestParam,
 } from 'routup';
 import {
     IdentityProvider,
+    IdentityProviderAttributesValidator,
+    IdentityProviderValidator,
     IdentityType,
     type OAuth2AuthorizationCodeRequest,
+    PermissionName,
+    ValidatorGroup,
     isOAuth2IdentityProvider,
     isOpenIDIdentityProvider,
 } from '@authup/core-kit';
-import { useDataSource } from 'typeorm-extension';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import { OAuth2Error } from '@authup/specs';
-import { base64URLDecode } from '@authup/kit';
 import { URL } from 'node:url';
 import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
-import { DataSource } from 'typeorm';
-import {
-    type IIdentityProviderAccountManager,
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import type {
+    IIdentityProviderAccountManager,
+    IIdentityProviderRepository,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
+    OAuth2AuthorizationState,
+} from '../../../../../core/index.ts';
+import {
     IdentityGrantType,
     OAuth2AuthorizationCodeRequestValidator,
-    OAuth2AuthorizationState, createIdentityProviderOAuth2Authenticator,
+    createIdentityProviderOAuth2Authenticator,
 } from '../../../../../core/index.ts';
-import { useRequestParamID } from '../../../request/index.ts';
-import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
-    deleteIdentityProviderRouteHandler,
-    getManyIdentityProviderRouteHandler,
-    getOneIdentityProviderRouteHandler,
-    writeIdentityProviderRouteHandler,
-} from './handlers/index.ts';
-import { IdentityProviderRepository } from '../../../../database/domains/index.ts';
+    getRequestBodyRealmID,
+    getRequestParamID,
+    useRequestIdentityOrFail,
+    useRequestParamID,
+    useRequestPermissionChecker,
+} from '../../../request/index.ts';
+import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
 @DController('/identity-providers')
 export class IdentityProviderController {
     protected options: IdentityProviderControllerOptions;
+
+    protected repository: IIdentityProviderRepository;
 
     protected accountManager: IIdentityProviderAccountManager;
 
@@ -67,6 +76,7 @@ export class IdentityProviderController {
 
     constructor(ctx: IdentityProviderControllerContext) {
         this.options = ctx.options;
+        this.repository = ctx.repository;
         this.accountManager = ctx.accountManager;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
         this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
@@ -85,8 +95,33 @@ export class IdentityProviderController {
     async getProviders(
         @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<IdentityProvider[]> {
-        return getManyIdentityProviderRouteHandler(req, res);
+    ): Promise<any> {
+        const { data, meta } = await this.repository.findMany(useRequestQuery(req));
+
+        try {
+            const permissionChecker = useRequestPermissionChecker(req);
+            await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_READ });
+
+            for (let i = 0; i < data.length; i++) {
+                try {
+                    await permissionChecker.check({
+                        name: PermissionName.IDENTITY_PROVIDER_READ,
+                        input: new PolicyData({
+                            [BuiltInPolicyType.ATTRIBUTES]: data[i],
+                        }),
+                    });
+                } catch (e) {
+                    // do nothing
+                }
+            }
+        } catch (e) {
+            // do nothing
+        }
+
+        return send(res, {
+            data,
+            meta,
+        });
     }
 
     @DGet('/:id', [])
@@ -94,8 +129,33 @@ export class IdentityProviderController {
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<IdentityProvider> {
-        return getOneIdentityProviderRouteHandler(req, res);
+    ): Promise<any> {
+        const paramId = useRequestParamID(req, {
+            isUUID: false,
+        });
+
+        const entity = await this.repository.findOneByIdOrName(
+            paramId,
+            useRequestParam(req, 'realmId'),
+        );
+
+        if (!entity) {
+            throw new NotFoundError();
+        }
+
+        try {
+            const permissionChecker = useRequestPermissionChecker(req);
+            await permissionChecker.check({
+                name: PermissionName.IDENTITY_PROVIDER_READ,
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                }),
+            });
+        } catch (e) {
+            // do nothing
+        }
+
+        return send(res, entity);
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -104,10 +164,8 @@ export class IdentityProviderController {
             @DBody() user: NonNullable<IdentityProvider>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<IdentityProvider> {
-        return writeIdentityProviderRouteHandler(req, res, {
-            updateOnly: true,
-        });
+    ) : Promise<any> {
+        return this.write(req, res, { updateOnly: true });
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -116,8 +174,8 @@ export class IdentityProviderController {
             @DBody() user: NonNullable<IdentityProvider>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<IdentityProvider> {
-        return writeIdentityProviderRouteHandler(req, res);
+    ) : Promise<any> {
+        return this.write(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -125,8 +183,32 @@ export class IdentityProviderController {
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<IdentityProvider> {
-        return deleteIdentityProviderRouteHandler(req, res);
+    ) : Promise<any> {
+        const paramId = useRequestParamID(req);
+
+        const permissionChecker = useRequestPermissionChecker(req);
+        await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
+
+        const entity = await this.repository.findOneBy({ id: paramId });
+
+        if (!entity) {
+            throw new NotFoundError();
+        }
+
+        await permissionChecker.check({
+            name: PermissionName.IDENTITY_PROVIDER_DELETE,
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
+        });
+
+        const { id: entityId } = entity;
+
+        await this.repository.remove(entity);
+
+        entity.id = entityId;
+
+        return sendAccepted(res, entity);
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -134,8 +216,8 @@ export class IdentityProviderController {
         @DBody() user: NonNullable<IdentityProvider>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<IdentityProvider> {
-        return writeIdentityProviderRouteHandler(req, res);
+    ) : Promise<any> {
+        return this.write(req, res);
     }
 
     // ---------------------------------------------------------
@@ -147,8 +229,7 @@ export class IdentityProviderController {
         @DResponse() res: any,
     ) {
         const id = useRequestParamID(req);
-        const dataSource = await useDataSource();
-        const entity = await this.resolve(dataSource, id);
+        const entity = await this.resolve(id);
 
         if (!isOAuth2IdentityProvider(entity) && !isOpenIDIdentityProvider(entity)) {
             throw new BadRequestError('Only an identity-provider based on the oauth protocol supports authorize redirect.');
@@ -201,9 +282,8 @@ export class IdentityProviderController {
         @DResponse() res: Response,
     ) {
         const id = useRequestParamID(req);
-        const dataSource = await useDataSource();
 
-        const entity = await this.resolve(dataSource, id);
+        const entity = await this.resolve(id);
 
         if (!isOAuth2IdentityProvider(entity) && !isOpenIDIdentityProvider(entity)) {
             throw new Error(`The provider protocol ${entity.protocol} is not valid.`);
@@ -302,16 +382,98 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
-    private async resolve(dataSource: DataSource, id: string) {
-        const repository = new IdentityProviderRepository(dataSource);
-        const entity = await repository.findOneWithEA({
-            relations: {
-                realm: true,
-            },
-            where: {
-                id,
-            },
+    private async write(req: Request, res: Response, options: {
+        updateOnly?: boolean
+    } = {}): Promise<any> {
+        let group: string;
+        const id = getRequestParamID(req, { isUUID: false });
+        const realmId = getRequestBodyRealmID(req);
+
+        let entity: IdentityProvider | null | undefined;
+        if (id) {
+            const where: Record<string, any> = {};
+            if (isUUID(id)) {
+                where.id = id;
+            } else {
+                where.name = id;
+            }
+
+            if (realmId) {
+                where.realm_id = realmId;
+            }
+
+            entity = await this.repository.findOneBy(where);
+            if (!entity && options.updateOnly) {
+                throw new NotFoundError();
+            }
+        } else if (options.updateOnly) {
+            throw new NotFoundError();
+        }
+
+        const permissionChecker = useRequestPermissionChecker(req);
+        if (entity) {
+            await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
+
+            group = ValidatorGroup.UPDATE;
+        } else {
+            await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_CREATE });
+
+            group = ValidatorGroup.CREATE;
+        }
+
+        const validator = new RoutupContainerAdapter(new IdentityProviderValidator());
+        const data = await validator.run(req, {
+            group,
         });
+
+        const attributesValidator = new RoutupContainerAdapter(new IdentityProviderAttributesValidator());
+        const attributes = await attributesValidator.run(req);
+
+        await this.repository.validateJoinColumns(data);
+
+        if (entity) {
+            await permissionChecker.check({
+                name: PermissionName.IDENTITY_PROVIDER_UPDATE,
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: {
+                        ...entity,
+                        ...data,
+                    },
+                }),
+            });
+        } else {
+            if (!data.realm_id) {
+                const identity = useRequestIdentityOrFail(req);
+                data.realm_id = identity.realmId;
+            }
+
+            await permissionChecker.check({
+                name: PermissionName.IDENTITY_PROVIDER_CREATE,
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: data,
+                }),
+            });
+        }
+
+        await this.repository.checkUniqueness(data, entity || undefined);
+
+        if (entity) {
+            entity = this.repository.merge(entity, data);
+            await this.repository.saveWithEA(entity, attributes);
+
+            return sendAccepted(res, entity);
+        }
+
+        entity = this.repository.create(data);
+        await this.repository.saveWithEA(entity, attributes);
+
+        return sendCreated(res, entity);
+    }
+
+    // ---------------------------------------------------------
+
+    private async resolve(id: string) {
+        const entity = await this.repository.findOneById(id);
 
         if (!entity) {
             throw new NotFoundError();

@@ -21,6 +21,7 @@ corepack enable
 npm install                    # install all dependencies + symlink between packages/apps
 npm run build                  # build all packages (required for testing)
 npm run test                   # test all apps/packages in project (requires build step)
+npm run test --workspace=apps/server-core  # test a single app/package
 npm run lint                   # lint packages only (not apps)
 npm run lint:fix               # lint with auto-fix
 ```

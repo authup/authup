@@ -6,13 +6,12 @@
  */
 
 import type { IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
+import type { IEntityRepository } from '../types.ts';
 
-export interface IIdentityProviderRepository {
-    /**
-     * Load identity provider with realm.
-     *
-     * @param protocol
-     * @param realmKey
-     */
-    findByProtocol(protocol: IdentityProviderProtocol, realmKey?: string): Promise<IdentityProvider[]>
+export interface IIdentityProviderRepository extends IEntityRepository<IdentityProvider> {
+    checkUniqueness(data: Partial<IdentityProvider>, existing?: IdentityProvider): Promise<void>;
+
+    saveWithEA(entity: IdentityProvider, attributes?: Record<string, any>): Promise<IdentityProvider>;
+
+    findByProtocol(protocol: IdentityProviderProtocol, realmKey?: string): Promise<IdentityProvider[]>;
 }

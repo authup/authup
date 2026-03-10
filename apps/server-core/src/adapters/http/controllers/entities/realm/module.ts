@@ -20,7 +20,9 @@ import type { Request, Response } from 'routup';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import type { Repository } from 'typeorm';
 import type { IRealmRepository } from '../../../../../core/index.ts';
+import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
@@ -34,6 +36,7 @@ export type RealmControllerOptions = {
 export type RealmControllerContext = {
     options: RealmControllerOptions,
     repository: IRealmRepository,
+    keyRepository: Repository<KeyEntity>,
 };
 
 @DTags('realm')
@@ -43,9 +46,12 @@ export class RealmController {
 
     protected repository: IRealmRepository;
 
+    protected keyRepository: Repository<KeyEntity>;
+
     constructor(ctx: RealmControllerContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
+        this.keyRepository = ctx.keyRepository;
     }
 
     @DGet('', [])
@@ -142,7 +148,7 @@ export class RealmController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey[]> {
-        return getJwksRouteHandler(req, res, 'id');
+        return getJwksRouteHandler(req, res, this.keyRepository, 'id');
     }
 
     @DGet('/:id/jwks/:keyId', [])
@@ -152,7 +158,7 @@ export class RealmController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey> {
-        return getJwkRouteHandler(req, res, 'keyId');
+        return getJwkRouteHandler(req, res, this.keyRepository, 'keyId');
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

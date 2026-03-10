@@ -9,20 +9,18 @@ import { AsymmetricKey } from '@authup/server-kit';
 import { JWKType } from '@authup/specs';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
+import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import { useDataSource } from 'typeorm-extension';
-import { KeyEntity } from '../../../../../database/domains/index.ts';
+import type { KeyEntity } from '../../../../../database/domains/index.ts';
 import { getRequestStringParam, getRequestStringParamOrFail } from '../../../../request/index.ts';
 
 export async function getJwksRouteHandler(
     req: Request,
     res: Response,
+    repository: Repository<KeyEntity>,
     realmIdParamKey?: string,
 ) : Promise<any> {
-    const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(KeyEntity);
-
     const realmId = getRequestStringParam(req, realmIdParamKey || 'realmId');
 
     const entities = await repository.find({
@@ -62,12 +60,10 @@ export async function getJwksRouteHandler(
 export async function getJwkRouteHandler(
     req: Request,
     res: Response,
+    repository: Repository<KeyEntity>,
     idParamKey?: string,
 ) : Promise<any> {
     const id = getRequestStringParamOrFail(req, idParamKey || 'id');
-
-    const dataSource = await useDataSource();
-    const repository = dataSource.getRepository(KeyEntity);
 
     const entity = await repository.findOne({
         where: {

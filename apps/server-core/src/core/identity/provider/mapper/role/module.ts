@@ -8,12 +8,12 @@
 import type { IdentityProviderIdentity } from '../../types.ts';
 import { IdentityProviderAccountBaseMapper } from '../base.ts';
 import type { IdentityProviderMapperElement } from '../types.ts';
-import type { IIdentityProviderRoleMappingRepository } from './types.ts';
+import type { IIdentityProviderRoleMappingFinder } from './types.ts';
 
 export class IdentityProviderRoleMapper extends IdentityProviderAccountBaseMapper {
-    protected repository: IIdentityProviderRoleMappingRepository;
+    protected repository: IIdentityProviderRoleMappingFinder;
 
-    constructor(repository: IIdentityProviderRoleMappingRepository) {
+    constructor(repository: IIdentityProviderRoleMappingFinder) {
         super();
 
         this.repository = repository;

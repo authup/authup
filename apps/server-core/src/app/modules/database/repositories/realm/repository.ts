@@ -26,20 +26,9 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         return this.findOneBy({ id });
     }
 
-    findOneByName(name: string, realmKey?: string): Promise<Realm | null> {
+    findOneByName(name: string): Promise<Realm | null> {
         const qb = this.repository.createQueryBuilder('realm');
-        qb.where('realm.name LIKE :name', { name: realmKey });
-        if (realmKey) {
-            if (isUUID(realmKey)) {
-                qb.andWhere('robot.realm_id = :realmId', {
-                    realmId: realmKey,
-                });
-            } else {
-                qb.andWhere('realm.name = :realmName', {
-                    realmName: realmKey,
-                });
-            }
-        }
+        qb.where('realm.name LIKE :name', { name });
 
         return qb.getOne();
     }
@@ -75,10 +64,10 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         };
     }
 
-    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Realm | null> {
+    async findOneByIdOrName(idOrName: string): Promise<Realm | null> {
         return isUUID(idOrName) ?
-            this.findOneByName(idOrName, realm) :
-            this.findOneById(idOrName);
+            this.findOneById(idOrName) :
+            this.findOneByName(idOrName);
     }
 
     async findOneBy(where: Record<string, any>): Promise<Realm | null> {

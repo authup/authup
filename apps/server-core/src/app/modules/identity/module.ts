@@ -5,16 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { useDataSource } from 'typeorm-extension';
 import {
     ClientIdentityRepository,
     IdentityProviderAccountRepository,
     IdentityProviderAttributeMappingRepository,
     IdentityProviderPermissionMappingRepository,
-    IdentityProviderRepositoryAdapter,
     IdentityProviderRoleMappingRepository,
     RobotIdentityRepository,
     UserIdentityRepository,
 } from './repositories/index.ts';
+import { IdentityProviderRepositoryAdapter } from '../database/index.ts';
 import type { IDIContainer, IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core/index.ts';
 import {
     IdentityProviderAccountManager,
@@ -68,7 +69,8 @@ export class IdentityModule implements Module {
 
         // ---------------------------------------------
 
-        const identityProviderRepository = new IdentityProviderRepositoryAdapter();
+        const dataSource = await useDataSource();
+        const identityProviderRepository = new IdentityProviderRepositoryAdapter(dataSource);
         container.register(IdentityInjectionKey.ProviderLdapCollectionAuthenticator, {
             useFactory: (c) => new IdentityProviderLdapCollectionAuthenticator({
                 repository: identityProviderRepository,
