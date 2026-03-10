@@ -31,27 +31,33 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
         return repository.findOneBy(where);
     }
 
-    async findMany(): Promise<EntityRepositoryFindManyResult<Robot>> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Robot>> {
         throw new Error('Method not implemented.');
     }
 
-    create(): Robot {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    create(data: Partial<Robot>): Robot {
         throw new Error('Method not implemented.');
     }
 
-    merge(): Robot {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    merge(entity: Robot, data: Partial<Robot>): Robot {
         throw new Error('Method not implemented.');
     }
 
-    async save(): Promise<Robot> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async save(entity: Robot): Promise<Robot> {
         throw new Error('Method not implemented.');
     }
 
-    async remove(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async remove(entity: Robot): Promise<void> {
         throw new Error('Method not implemented.');
     }
 
-    async validateJoinColumns(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async validateJoinColumns(data: Partial<Robot>): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

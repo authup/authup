@@ -40,7 +40,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'realm',
             filters: {
-                allowed: ['id', 'built_in', 'display_name', 'name', 'built_in'],
+                allowed: ['id', 'built_in', 'display_name', 'name'],
             },
             pagination: {
                 maxLimit: 50,

@@ -33,8 +33,7 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
             },
             relations: {
                 allowed: ['client', 'role'],
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
+                // @ts-expect-error onJoin is not in the type definition
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
                 },

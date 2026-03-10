@@ -38,27 +38,33 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         return repository.findOneBy(where);
     }
 
-    async findMany(): Promise<EntityRepositoryFindManyResult<User>> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<User>> {
         throw new Error('Method not implemented.');
     }
 
-    create(): User {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    create(data: Partial<User>): User {
         throw new Error('Method not implemented.');
     }
 
-    merge(): User {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    merge(entity: User, data: Partial<User>): User {
         throw new Error('Method not implemented.');
     }
 
-    async save(): Promise<User> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async save(entity: User): Promise<User> {
         throw new Error('Method not implemented.');
     }
 
-    async remove(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async remove(entity: User): Promise<void> {
         throw new Error('Method not implemented.');
     }
 
-    async validateJoinColumns(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async validateJoinColumns(data: Partial<User>): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

@@ -31,27 +31,33 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
         return repository.findOneBy(where);
     }
 
-    async findMany(): Promise<EntityRepositoryFindManyResult<Client>> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Client>> {
         throw new Error('Method not implemented.');
     }
 
-    create(): Client {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    create(data: Partial<Client>): Client {
         throw new Error('Method not implemented.');
     }
 
-    merge(): Client {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    merge(entity: Client, data: Partial<Client>): Client {
         throw new Error('Method not implemented.');
     }
 
-    async save(): Promise<Client> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async save(entity: Client): Promise<Client> {
         throw new Error('Method not implemented.');
     }
 
-    async remove(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async remove(entity: Client): Promise<void> {
         throw new Error('Method not implemented.');
     }
 
-    async validateJoinColumns(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async validateJoinColumns(data: Partial<Client>): Promise<void> {
         throw new Error('Method not implemented.');
     }
 

@@ -35,7 +35,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
             defaultAlias: 'policy',
             relations: {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
+                // @ts-expect-error onJoin is not in the type definition
                 allowed: ['children', 'realm'],
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
@@ -58,7 +58,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
             },
             filters: {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
+                // @ts-expect-error onJoin is not in the type definition
                 allowed: ['id', 'name', 'type', 'parent_id', 'realm_id', 'realm.name'],
             },
             sort: {
