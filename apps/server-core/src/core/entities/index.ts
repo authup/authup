@@ -6,5 +6,6 @@
  */
 
 export * from './identity-provider/index.ts';
+export * from './realm/index.ts';
 
 export * from './types.ts';

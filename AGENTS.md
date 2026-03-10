@@ -190,6 +190,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 
 ## Key Concepts
 - Hexagonal Architecture: logic separated across packages.
+- Dependency Inversion Principle (DIP): Adapters of server-core package use DIP to inject implementations from core and app (infrastructure)
 - TypeScript & ESM: All packages use TypeScript with strict typing and modern ES module syntax.
 - No explanatory comments unless explicitly requested. Agents should rely on existing patterns and structure.
 

@@ -6,6 +6,14 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
+import type { PaginationParseOutput } from 'rapiq';
+
+export type EntityRepositoryFindManyResult<T> = {
+    data: T[],
+    meta: PaginationParseOutput & {
+        total: number
+    }
+};
 
 export interface IEntityRepository<
     T extends ObjectLiteral = ObjectLiteral,

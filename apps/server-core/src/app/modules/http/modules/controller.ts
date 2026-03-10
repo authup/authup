@@ -12,7 +12,9 @@ import { useRequestCookie, useRequestCookies } from '@routup/basic/cookie';
 import { useRequestQuery } from '@routup/basic/query';
 import type { User } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
+import { useDataSource } from 'typeorm-extension';
 import { UserEntity } from '../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../../database/index.ts';
 import {
     ClientController,
     ClientPermissionController,
@@ -74,6 +76,8 @@ import { MailInjectionKey } from '../../mail/index.ts';
 
 export class HTTPControllerModule {
     async mount(router: Router, container: IDIContainer): Promise<void> {
+        const realmController = await this.createRealmController(container);
+
         router.use(decorators({
             controllers: [
                 this.createAuthorize(container),
@@ -98,7 +102,7 @@ export class HTTPControllerModule {
                 RobotController,
                 RobotPermissionController,
                 RobotRoleController,
-                this.createRealmController(container),
+                realmController,
                 RoleController,
                 RoleAttributeController,
                 RolePermissionController,
@@ -343,13 +347,16 @@ export class HTTPControllerModule {
         });
     }
 
-    createRealmController(container: IDIContainer) {
+    async createRealmController(container: IDIContainer) {
         const config = container.resolve<Config>(ConfigInjectionKey);
+        const dataSource = await useDataSource();
+        const repository = new RealmRepositoryAdapter(dataSource);
 
         return new RealmController({
             options: {
                 baseURL: config.publicUrl,
             },
+            repository,
         });
     }
 }
