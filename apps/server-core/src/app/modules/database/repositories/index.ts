@@ -6,3 +6,4 @@
  */
 
 export * from './realm/index.ts';
+export * from './role/index.ts';

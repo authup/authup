@@ -5,8 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './identity-provider/index.ts';
-export * from './realm/index.ts';
-export * from './role/index.ts';
-
 export * from './types.ts';

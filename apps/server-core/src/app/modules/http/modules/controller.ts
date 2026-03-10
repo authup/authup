@@ -14,7 +14,7 @@ import type { User } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
 import { UserEntity } from '../../../../adapters/database/domains/index.ts';
-import { RealmRepositoryAdapter } from '../../database/index.ts';
+import { RealmRepositoryAdapter, RoleRepositoryAdapter } from '../../database/index.ts';
 import {
     ClientController,
     ClientPermissionController,
@@ -77,6 +77,7 @@ import { MailInjectionKey } from '../../mail/index.ts';
 export class HTTPControllerModule {
     async mount(router: Router, container: IDIContainer): Promise<void> {
         const realmController = await this.createRealmController(container);
+        const roleController = await this.createRoleController();
 
         router.use(decorators({
             controllers: [
@@ -103,7 +104,7 @@ export class HTTPControllerModule {
                 RobotPermissionController,
                 RobotRoleController,
                 realmController,
-                RoleController,
+                roleController,
                 RoleAttributeController,
                 RolePermissionController,
                 ScopeController,
@@ -344,6 +345,15 @@ export class HTTPControllerModule {
             accessTokenIssuer,
             refreshTokenIssuer,
             sessionManager,
+        });
+    }
+
+    async createRoleController() {
+        const dataSource = await useDataSource();
+        const repository = new RoleRepositoryAdapter(dataSource);
+
+        return new RoleController({
+            repository,
         });
     }
 
