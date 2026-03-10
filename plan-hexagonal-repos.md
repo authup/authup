@@ -62,7 +62,7 @@ EA = Extra Attributes (key-value pairs stored in a separate table, dynamically l
 
 ### 3a. Create the Port (Interface)
 
-```
+```text
 core/entities/{entity}/types.ts
 core/entities/{entity}/index.ts   — barrel export
 core/entities/index.ts            — add re-export
@@ -80,7 +80,7 @@ export interface IRoleRepository extends IEntityRepository<Role> {
 
 ### 3b. Create the Adapter
 
-```
+```text
 app/modules/database/repositories/{entity}/repository.ts
 app/modules/database/repositories/{entity}/index.ts   — barrel export
 app/modules/database/repositories/index.ts             — add re-export
@@ -249,16 +249,17 @@ After completing 2-3 entities manually as references, batch the rest:
 1. Group by complexity category
 2. Run parallel agents/workers for independent entities
 3. After all files are created, fix TypeScript errors systematically:
-   - `@ts-expect-error` placement for `applyQuery` relation options
-   - Return type annotations (`Promise<any>`)
+   - `// @ts-expect-error onJoin is not in the type definition` before `onJoin` in `applyQuery` relation options (description required by eslint)
+   - Return type annotations (`Promise<any>`) on controller methods (since `send()` returns `void`)
    - Import path corrections
    - Name clash resolution
+   - Use domain interfaces from `@authup/core-kit` (not Entity classes) in controllers and validators
 4. Run full test suite
 5. Delete all dead handler directories
 
 ## Step 6: Verification Checklist
 
-- [ ] `npx tsc --noEmit` — zero new errors in the migrated package
+- [ ] `cross-env NODE_ENV=production npx tsc -p tsconfig.build.json --noEmit` — zero errors in production build
 - [ ] All tests pass
 - [ ] No `useDataSource()` calls remain in migrated controller files
 - [ ] No imports from deleted `handlers/` directories
@@ -267,7 +268,7 @@ After completing 2-3 entities manually as references, batch the rest:
 
 ## File Structure After Migration
 
-```
+```text
 core/entities/
   types.ts                          — IEntityRepository<T>, EntityRepositoryFindManyResult<T>
   {entity}/types.ts                 — I{Entity}Repository extends IEntityRepository<Entity>

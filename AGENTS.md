@@ -22,7 +22,7 @@ npm install                    # install all dependencies + symlink between pack
 npm run build                  # build all packages (required for testing)
 npm run test                   # test all apps/packages in project (requires build step)
 npm run test --workspace=apps/server-core  # test a single app/package
-npm run lint                   # lint packages only (not apps)
+npm run lint                   # lint all packages and apps
 npm run lint:fix               # lint with auto-fix
 ```
 
@@ -128,20 +128,29 @@ The core folder contains the system's business logic. It defines ports (interfac
 | core/authentication | Authentication logic such as password validation                                                                                           |
 | core/ldap           | LDAP integration logic                                                                                                                     |
 | core/mail           | Email sending logic                                                                                                                        |
-| core/entities       | Core entity definitions                                                                                                                    |
+| core/entities       | Repository port interfaces (IEntityRepository\<T\>, per-entity I{Entity}Repository)                                                       |
 | core/di             | Dependency injection setup                                                                                                                 |
 
 Port Example:
 
 ```typescript
-export interface IUserRepository {
-getOne(id: string): Promise<User>;
-create(data: Partial<User>): Promise<User>;
-update(id: string, data: Partial<User>): Promise<User>;
+export interface IEntityRepository<T> {
+    findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<T>>;
+    findOneById(id: string): Promise<T | null>;
+    findOneByName(name: string, realm?: string): Promise<T | null>;
+    findOneByIdOrName(idOrName: string, realm?: string): Promise<T | null>;
+    findOneBy(where: Record<string, any>): Promise<T | null>;
+    create(data: Partial<T>): T;
+    save(entity: T): Promise<T>;
+    remove(entity: T): Promise<void>;
+}
+
+export interface IRoleRepository extends IEntityRepository<Role> {
+    checkUniqueness(data: Partial<Role>, existing?: Role): Promise<void>;
 }
 ```
 
-Ports are defined in the core and implemented by adapters and modules.
+Ports are defined in core/entities and implemented by adapters in app/modules/database/repositories.
 
 2. adapters – External systems
 
