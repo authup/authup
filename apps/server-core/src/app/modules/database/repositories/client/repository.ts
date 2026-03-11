@@ -5,22 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '@authup/core-kit';
+import type { Client, Realm } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IClientRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import {
-    ClientEntity,
-    resolveRealm,
-} from '../../../../../adapters/database/domains/index.ts';
+import { ClientEntity } from '../../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../realm/repository.ts';
+
+export type ClientRepositoryAdapterContext = {
+    repository: Repository<Client>,
+    realmRepository: Repository<Realm>,
+};
 
 export class ClientRepositoryAdapter implements IClientRepository {
     private readonly repository: Repository<Client>;
 
-    constructor(repository: Repository<Client>) {
-        this.repository = repository;
+    private readonly realmRepository: IRealmRepository;
+
+    constructor(ctx: ClientRepositoryAdapterContext) {
+        this.repository = ctx.repository;
+        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Client>> {
@@ -89,7 +95,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
         qb.where('client.name LIKE :name', { name });
 
         if (realmKey) {
-            const realm = await resolveRealm(realmKey);
+            const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
                 qb.andWhere('client.realm_id = :realmId', { realmId: realm.id });
             }

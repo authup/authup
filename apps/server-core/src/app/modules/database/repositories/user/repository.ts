@@ -5,22 +5,29 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { User } from '@authup/core-kit';
+import type { Realm, User } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
+import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IUserRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IRealmRepository, IUserRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { UserRepository } from '../../../../../adapters/database/domains/index.ts';
-import {
-    UserEntity,
-    resolveRealm,
-} from '../../../../../adapters/database/domains/index.ts';
+import { UserEntity } from '../../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../realm/repository.ts';
+
+export type UserRepositoryAdapterContext = {
+    repository: UserRepository,
+    realmRepository: Repository<Realm>,
+};
 
 export class UserRepositoryAdapter implements IUserRepository {
     private readonly repository: UserRepository;
 
-    constructor(repository: UserRepository) {
-        this.repository = repository;
+    private readonly realmRepository: IRealmRepository;
+
+    constructor(ctx: UserRepositoryAdapterContext) {
+        this.repository = ctx.repository;
+        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<User>> {
@@ -90,7 +97,7 @@ export class UserRepositoryAdapter implements IUserRepository {
         qb.where('user.name LIKE :name', { name });
 
         if (realmKey) {
-            const realm = await resolveRealm(realmKey);
+            const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
                 qb.andWhere('user.realm_id = :realmId', { realmId: realm.id });
             }
@@ -118,7 +125,7 @@ export class UserRepositoryAdapter implements IUserRepository {
             qb.where('user.name LIKE :name', { name: id });
 
             if (realmKey) {
-                const realm = await resolveRealm(realmKey);
+                const realm = await this.realmRepository.resolve(realmKey);
                 if (realm) {
                     qb.andWhere('user.realm_id = :realmId', { realmId: realm.id });
                 }

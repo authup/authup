@@ -5,22 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Robot } from '@authup/core-kit';
+import type { Realm, Robot } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IRobotRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IRealmRepository, IRobotRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import {
-    RobotEntity,
-    resolveRealm,
-} from '../../../../../adapters/database/domains/index.ts';
+import { RobotEntity } from '../../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../realm/repository.ts';
+
+export type RobotRepositoryAdapterContext = {
+    repository: Repository<Robot>,
+    realmRepository: Repository<Realm>,
+};
 
 export class RobotRepositoryAdapter implements IRobotRepository {
     private readonly repository: Repository<Robot>;
 
-    constructor(repository: Repository<Robot>) {
-        this.repository = repository;
+    private readonly realmRepository: IRealmRepository;
+
+    constructor(ctx: RobotRepositoryAdapterContext) {
+        this.repository = ctx.repository;
+        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Robot>> {
@@ -84,7 +90,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
         qb.where('robot.name LIKE :name', { name });
 
         if (realmKey) {
-            const realm = await resolveRealm(realmKey);
+            const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
                 qb.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
             }

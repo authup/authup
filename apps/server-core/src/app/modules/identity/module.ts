@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DataSource } from 'typeorm';
+import type { Realm } from '@authup/core-kit';
+import type { DataSource, Repository } from 'typeorm';
 import {
     ClientIdentityRepository,
     IdentityProviderAccountRepository,
@@ -16,7 +17,7 @@ import {
     UserIdentityRepository,
 } from './repositories/index.ts';
 import { DatabaseInjectionKey, IdentityProviderRepositoryAdapter } from '../database/index.ts';
-import { IdentityProviderRepository } from '../../../adapters/database/domains/index.ts';
+import { IdentityProviderRepository, RealmEntity } from '../../../adapters/database/domains/index.ts';
 import type { IDIContainer, IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core/index.ts';
 import {
     IdentityProviderAccountManager,
@@ -71,9 +72,10 @@ export class IdentityModule implements Module {
         // ---------------------------------------------
 
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
-        const identityProviderRepository = new IdentityProviderRepositoryAdapter(
-            new IdentityProviderRepository(dataSource),
-        );
+        const identityProviderRepository = new IdentityProviderRepositoryAdapter({
+            repository: new IdentityProviderRepository(dataSource),
+            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+        });
         container.register(IdentityInjectionKey.ProviderLdapCollectionAuthenticator, {
             useFactory: (c) => new IdentityProviderLdapCollectionAuthenticator({
                 repository: identityProviderRepository,

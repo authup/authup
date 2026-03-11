@@ -5,19 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Scope } from '@authup/core-kit';
+import type { Realm, Scope } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IScopeRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IRealmRepository, IScopeRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
-import { ScopeEntity, resolveRealm } from '../../../../../adapters/database/domains/index.ts';
+import { ScopeEntity } from '../../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../realm/repository.ts';
+
+export type ScopeRepositoryAdapterContext = {
+    repository: Repository<Scope>,
+    realmRepository: Repository<Realm>,
+};
 
 export class ScopeRepositoryAdapter implements IScopeRepository {
     private readonly repository: Repository<Scope>;
 
-    constructor(repository: Repository<Scope>) {
-        this.repository = repository;
+    private readonly realmRepository: IRealmRepository;
+
+    constructor(ctx: ScopeRepositoryAdapterContext) {
+        this.repository = ctx.repository;
+        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Scope>> {
@@ -69,7 +78,7 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
         qb.where('scope.name LIKE :name', { name });
 
         if (realmKey) {
-            const realm = await resolveRealm(realmKey);
+            const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
                 qb.andWhere('scope.realm_id = :realmId', { realmId: realm.id });
             }

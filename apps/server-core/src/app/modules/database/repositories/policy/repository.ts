@@ -5,22 +5,29 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Policy } from '@authup/core-kit';
+import type { Policy, Realm } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
+import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IPolicyRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IPolicyRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { PolicyRepository } from '../../../../../adapters/database/domains/index.ts';
-import {
-    PolicyEntity,
-    resolveRealm,
-} from '../../../../../adapters/database/domains/index.ts';
+import { PolicyEntity } from '../../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../realm/repository.ts';
+
+export type PolicyRepositoryAdapterContext = {
+    repository: PolicyRepository,
+    realmRepository: Repository<Realm>,
+};
 
 export class PolicyRepositoryAdapter implements IPolicyRepository {
     private readonly repository: PolicyRepository;
 
-    constructor(repository: PolicyRepository) {
-        this.repository = repository;
+    private readonly realmRepository: IRealmRepository;
+
+    constructor(ctx: PolicyRepositoryAdapterContext) {
+        this.repository = ctx.repository;
+        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Policy>> {
@@ -90,7 +97,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
         qb.where('policy.name LIKE :name', { name });
 
         if (realmKey) {
-            const realm = await resolveRealm(realmKey);
+            const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
                 qb.andWhere('policy.realm_id = :realmId', { realmId: realm.id });
             }

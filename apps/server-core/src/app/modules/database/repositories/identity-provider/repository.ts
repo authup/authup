@@ -5,22 +5,29 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
+import type { IdentityProvider, IdentityProviderProtocol, Realm } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
+import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IIdentityProviderRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IIdentityProviderRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { IdentityProviderRepository } from '../../../../../adapters/database/domains/index.ts';
-import {
-    IdentityProviderEntity,
-    resolveRealm,
-} from '../../../../../adapters/database/domains/index.ts';
+import { IdentityProviderEntity } from '../../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../realm/repository.ts';
+
+export type IdentityProviderRepositoryAdapterContext = {
+    repository: IdentityProviderRepository,
+    realmRepository: Repository<Realm>,
+};
 
 export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepository {
     private readonly repository: IdentityProviderRepository;
 
-    constructor(repository: IdentityProviderRepository) {
-        this.repository = repository;
+    private readonly realmRepository: IRealmRepository;
+
+    constructor(ctx: IdentityProviderRepositoryAdapterContext) {
+        this.repository = ctx.repository;
+        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<IdentityProvider>> {
@@ -84,7 +91,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         qb.where('provider.name = :name', { name });
 
         if (realmKey) {
-            const realm = await resolveRealm(realmKey);
+            const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
                 qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
             }
@@ -157,7 +164,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         qb.where('provider.protocol = :protocol', { protocol });
 
         if (realmKey) {
-            const realm = await resolveRealm(realmKey);
+            const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
                 qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
             }

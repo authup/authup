@@ -5,27 +5,35 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission } from '@authup/core-kit';
+import type { Permission, Realm } from '@authup/core-kit';
 import { ROLE_ADMIN_NAME } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IPermissionRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult, IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import {
     PermissionEntity,
     PolicyRepository,
     RolePermissionEntity,
     RoleRepository,
-    resolveRealm,
 } from '../../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../realm/repository.ts';
+
+export type PermissionRepositoryAdapterContext = {
+    repository: Repository<Permission>,
+    realmRepository: Repository<Realm>,
+};
 
 export class PermissionRepositoryAdapter implements IPermissionRepository {
     private readonly repository: Repository<Permission>;
 
-    constructor(repository: Repository<Permission>) {
-        this.repository = repository;
+    private readonly realmRepository: IRealmRepository;
+
+    constructor(ctx: PermissionRepositoryAdapterContext) {
+        this.repository = ctx.repository;
+        this.realmRepository = new RealmRepositoryAdapter(ctx.realmRepository);
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Permission>> {
@@ -77,7 +85,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
         qb.where('permission.name LIKE :name', { name });
 
         if (realmKey) {
-            const realm = await resolveRealm(realmKey);
+            const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
                 qb.andWhere('permission.realm_id = :realmId', { realmId: realm.id });
             }

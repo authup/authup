@@ -28,12 +28,13 @@ import {
     IdentityProviderRoleMappingEntity,
     IdentityProviderRoleMappingRepository,
     PermissionEntity,
+    RealmEntity,
     RoleRepository,
     UserIdentityRepository,
     UserPermissionEntity,
     UserRoleEntity,
-    resolveRealm,
 } from '../../../../../src';
+import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository';
 import { createTestApplication } from '../../../../app';
 
 describe('core/identity/provider/account', () => {
@@ -50,7 +51,10 @@ describe('core/identity/provider/account', () => {
     beforeAll(async () => {
         await suite.start();
 
-        realm = await resolveRealm('', true);
+        const realmRepository = new RealmRepositoryAdapter(
+            suite.dataSource.getRepository(RealmEntity),
+        );
+        realm = await realmRepository.resolve('', true);
 
         const repository = new IdentityProviderRepository(suite.dataSource);
         provider = {
