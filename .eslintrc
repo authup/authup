@@ -23,10 +23,10 @@
                     "**/test/**/*.spec.js",
                     "**/test/**/*.spec.ts",
                     "**/rollup.config.mjs",
-                    "packages/client-web/**",
-                    "packages/client-web-kit/**",
-                    "packages/client-web-slim/**",
-                    "packages/server-core/client/**"
+                    "apps/client-web/**",
+                    "apps/client-web-kit/**",
+                    "apps/client-web-slim/**",
+                    "apps/server-core/client/**"
                 ]
             }
         ],
