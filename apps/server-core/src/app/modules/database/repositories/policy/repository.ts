@@ -37,7 +37,6 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
         const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'policy',
             relations: {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error onJoin is not in the type definition
                 allowed: ['children', 'realm'],
                 onJoin: (_property: string, key: string, q: any) => {
@@ -60,8 +59,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
                 ],
             },
             filters: {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error onJoin is not in the type definition
+                // @ts-expect-error realm.name filter requires relation join
                 allowed: ['id', 'name', 'type', 'parent_id', 'realm_id', 'realm.name'],
             },
             sort: {

@@ -18,6 +18,13 @@
 - **Validation**: `validup` framework with `@validup/adapter-zod` for Zod schema integration
 - **Errors**: `@authup/errors` provides HTTP-aware error classes via `@ebec/http`
 
+## Workflow
+
+- After making changes, **always build** the affected app/package and **run ESLint** on all changed files.
+- Build: `npm run build -w <workspace>` (from repo root, e.g. `-w apps/server-core`, `-w packages/kit`)
+- Lint: `npx eslint --fix path/to/changed/file1.ts path/to/changed/file2.ts`
+- Fix any build or lint errors before considering a task complete.
+
 ## Best Practices
 
 - Use **ESM** and modern TypeScript/JavaScript.

@@ -49,7 +49,6 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
                 maxLimit: 50,
             },
             relations: {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-expect-error onJoin is not in the type definition
                 allowed: ['policy'],
                 onJoin: (_property: string, key: string, q: any) => {
