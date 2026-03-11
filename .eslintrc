@@ -24,7 +24,7 @@
                     "**/test/**/*.spec.ts",
                     "**/rollup.config.mjs",
                     "apps/client-web/**",
-                    "apps/client-web-kit/**",
+                    "packages/client-web-kit/**",
                     "apps/client-web-slim/**",
                     "apps/server-core/client/**"
                 ]
