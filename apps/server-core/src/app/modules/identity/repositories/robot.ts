@@ -9,7 +9,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
-import type { EntityRepositoryFindManyResult, IRobotIdentityRepository } from '../../../../core/index.ts';
+import type { IRobotIdentityRepository } from '../../../../core/index.ts';
 import { CachePrefix, RobotRepository } from '../../../../adapters/database/domains/index.ts';
 
 export class RobotIdentityRepository implements IRobotIdentityRepository {
@@ -29,36 +29,6 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
         const dataSource = await useDataSource();
         const repository = new RobotRepository(dataSource);
         return repository.findOneBy(where);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Robot>> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    create(data: Partial<Robot>): Robot {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    merge(entity: Robot, data: Partial<Robot>): Robot {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async save(entity: Robot): Promise<Robot> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async remove(entity: Robot): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async validateJoinColumns(data: Partial<Robot>): Promise<void> {
-        throw new Error('Method not implemented.');
     }
 
     private async find(key: string, realmKey?: string) : Promise<Robot | null> {

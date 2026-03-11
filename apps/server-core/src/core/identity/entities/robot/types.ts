@@ -6,8 +6,10 @@
  */
 
 import type { Robot } from '@authup/core-kit';
-import type { IEntityRepository } from '../../../entities/index.ts';
 
-export interface IRobotIdentityRepository extends IEntityRepository<Robot> {
-
+export interface IRobotIdentityRepository {
+    findOneById(id: string): Promise<Robot | null>;
+    findOneByName(name: string, realm?: string): Promise<Robot | null>;
+    findOneByIdOrName(idOrName: string, realm?: string): Promise<Robot | null>;
+    findOneBy(where: Record<string, any>): Promise<Robot | null>;
 }

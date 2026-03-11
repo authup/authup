@@ -10,7 +10,7 @@ import { isUUID } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { In } from 'typeorm';
 import { useDataSource } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
+import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
 import { IdentityProviderMapperOperation } from '../../../../core/index.ts';
 import {
     CachePrefix,
@@ -36,36 +36,6 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);
         return repository.findOneBy(where);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<User>> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    create(data: Partial<User>): User {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    merge(entity: User, data: Partial<User>): User {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async save(entity: User): Promise<User> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async remove(entity: User): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async validateJoinColumns(data: Partial<User>): Promise<void> {
-        throw new Error('Method not implemented.');
     }
 
     private async find(key: string, realmKey?: string) : Promise<User | null> {

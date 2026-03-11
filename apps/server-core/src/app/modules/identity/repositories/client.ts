@@ -9,7 +9,7 @@ import { buildRedisKeyPath } from '@authup/server-kit';
 import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Client } from '@authup/core-kit';
-import type { EntityRepositoryFindManyResult, IClientIdentityRepository } from '../../../../core/index.ts';
+import type { IClientIdentityRepository } from '../../../../core/index.ts';
 import { CachePrefix, ClientRepository } from '../../../../adapters/database/domains/index.ts';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
@@ -29,36 +29,6 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
         const dataSource = await useDataSource();
         const repository = new ClientRepository(dataSource);
         return repository.findOneBy(where);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Client>> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    create(data: Partial<Client>): Client {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    merge(entity: Client, data: Partial<Client>): Client {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async save(entity: Client): Promise<Client> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async remove(entity: Client): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async validateJoinColumns(data: Partial<Client>): Promise<void> {
-        throw new Error('Method not implemented.');
     }
 
     private async find(key: string, realmKey?: string) : Promise<Client | null> {
