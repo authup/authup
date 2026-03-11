@@ -6,7 +6,7 @@
  */
 
 import type { RobotRole } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRobotRoleRepository } from '../../../../../core/index.ts';
 import { RobotRoleEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -14,11 +14,8 @@ import { RobotRoleEntity } from '../../../../../adapters/database/domains/index.
 export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
     private readonly repository: Repository<RobotRole>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(RobotRoleEntity);
+    constructor(repository: Repository<RobotRole>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<RobotRole>> {
@@ -94,7 +91,7 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
 
     async validateJoinColumns(data: Partial<RobotRole>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RobotRoleEntity,
         });
     }

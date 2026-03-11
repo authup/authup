@@ -8,7 +8,7 @@
 import type { Permission } from '@authup/core-kit';
 import { ROLE_ADMIN_NAME } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IPermissionRepository } from '../../../../../core/index.ts';
@@ -24,11 +24,8 @@ import {
 export class PermissionRepositoryAdapter implements IPermissionRepository {
     private readonly repository: Repository<Permission>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(PermissionEntity);
+    constructor(repository: Repository<Permission>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Permission>> {
@@ -123,21 +120,21 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
 
     async validateJoinColumns(data: Partial<Permission>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: PermissionEntity,
         });
     }
 
     private async loadPolicyTree(entity: PermissionEntity): Promise<void> {
         if (entity.policy) {
-            const policyRepository = new PolicyRepository(this.dataSource);
+            const policyRepository = new PolicyRepository(this.repository.manager.connection);
             await policyRepository.findDescendantsTree(entity.policy);
         }
     }
 
     async checkUniqueness(data: Partial<Permission>, existing?: Permission): Promise<void> {
         const isUnique = await isEntityUnique({
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: PermissionEntity,
             entity: data,
             entityExisting: existing,
@@ -149,7 +146,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
     }
 
     async saveWithAdminRoleAssignment(entity: Permission): Promise<Permission> {
-        await this.dataSource.transaction(async (entityManager) => {
+        await this.repository.manager.connection.transaction(async (entityManager) => {
             const transactionRepository = entityManager.getRepository(PermissionEntity);
             await transactionRepository.save(entity);
 

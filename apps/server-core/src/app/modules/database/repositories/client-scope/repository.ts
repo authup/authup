@@ -6,7 +6,7 @@
  */
 
 import type { ClientScope } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
 import type { IClientScopeRepository } from '../../../../../core/entities/client-scope/types.ts';
@@ -15,11 +15,8 @@ import { ClientScopeEntity } from '../../../../../adapters/database/domains/inde
 export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
     private readonly repository: Repository<ClientScope>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(ClientScopeEntity);
+    constructor(repository: Repository<ClientScope>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<ClientScope>> {
@@ -88,7 +85,7 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
 
     async validateJoinColumns(data: Partial<ClientScope>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: ClientScopeEntity,
         });
     }

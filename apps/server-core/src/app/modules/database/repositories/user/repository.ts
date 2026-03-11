@@ -7,24 +7,20 @@
 
 import type { User } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { DataSource } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IUserRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import type { UserRepository } from '../../../../../adapters/database/domains/index.ts';
 import {
     UserEntity,
-    UserRepository,
     resolveRealm,
 } from '../../../../../adapters/database/domains/index.ts';
 
 export class UserRepositoryAdapter implements IUserRepository {
     private readonly repository: UserRepository;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = new UserRepository(dataSource);
+    constructor(repository: UserRepository) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<User>> {
@@ -182,14 +178,14 @@ export class UserRepositoryAdapter implements IUserRepository {
 
     async validateJoinColumns(data: Partial<User>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: UserEntity,
         });
     }
 
     async checkUniqueness(data: Partial<User>, existing?: User): Promise<void> {
         const isUnique = await isEntityUnique({
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: UserEntity,
             entity: data,
             entityExisting: existing,

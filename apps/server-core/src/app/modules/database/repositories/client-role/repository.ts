@@ -6,7 +6,7 @@
  */
 
 import type { ClientRole } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
 import type { IClientRoleRepository } from '../../../../../core/entities/client-role/types.ts';
@@ -15,11 +15,8 @@ import { ClientRoleEntity } from '../../../../../adapters/database/domains/index
 export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
     private readonly repository: Repository<ClientRole>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(ClientRoleEntity);
+    constructor(repository: Repository<ClientRole>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<ClientRole>> {
@@ -95,7 +92,7 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
 
     async validateJoinColumns(data: Partial<ClientRole>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: ClientRoleEntity,
         });
     }

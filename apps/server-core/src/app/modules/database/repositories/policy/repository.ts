@@ -7,24 +7,20 @@
 
 import type { Policy } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { DataSource } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IPolicyRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import type { PolicyRepository } from '../../../../../adapters/database/domains/index.ts';
 import {
     PolicyEntity,
-    PolicyRepository,
     resolveRealm,
 } from '../../../../../adapters/database/domains/index.ts';
 
 export class PolicyRepositoryAdapter implements IPolicyRepository {
     private readonly repository: PolicyRepository;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = new PolicyRepository(dataSource);
+    constructor(repository: PolicyRepository) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Policy>> {
@@ -135,14 +131,14 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
 
     async validateJoinColumns(data: Partial<Policy>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: PolicyEntity,
         });
     }
 
     async checkUniqueness(data: Partial<Policy>, existing?: Policy): Promise<void> {
         const isUnique = await isEntityUnique({
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: PolicyEntity,
             entity: data,
             entityExisting: existing,
@@ -161,7 +157,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
     }
 
     async deleteFromTree(entity: Policy): Promise<void> {
-        const treeRepository = this.dataSource.getTreeRepository(PolicyEntity);
+        const treeRepository = this.repository.manager.connection.getTreeRepository(PolicyEntity);
         await treeRepository.remove(entity as PolicyEntity);
     }
 }

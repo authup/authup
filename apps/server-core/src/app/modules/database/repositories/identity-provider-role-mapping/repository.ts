@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { IdentityProviderRoleMappingEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -14,11 +14,8 @@ import { IdentityProviderRoleMappingEntity } from '../../../../../adapters/datab
 export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityProviderRoleMappingRepository {
     private readonly repository: Repository<IdentityProviderRoleMapping>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
+    constructor(repository: Repository<IdentityProviderRoleMapping>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<IdentityProviderRoleMapping>> {
@@ -100,7 +97,7 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
 
     async validateJoinColumns(data: Partial<IdentityProviderRoleMapping>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: IdentityProviderRoleMappingEntity,
         });
     }

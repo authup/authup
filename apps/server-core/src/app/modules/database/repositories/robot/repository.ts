@@ -7,7 +7,7 @@
 
 import type { Robot } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRobotRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -19,11 +19,8 @@ import {
 export class RobotRepositoryAdapter implements IRobotRepository {
     private readonly repository: Repository<Robot>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(RobotEntity);
+    constructor(repository: Repository<Robot>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Robot>> {
@@ -136,14 +133,14 @@ export class RobotRepositoryAdapter implements IRobotRepository {
 
     async validateJoinColumns(data: Partial<Robot>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RobotEntity,
         });
     }
 
     async checkUniqueness(data: Partial<Robot>, existing?: Robot): Promise<void> {
         const isUnique = await isEntityUnique({
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RobotEntity,
             entity: data,
             entityExisting: existing,

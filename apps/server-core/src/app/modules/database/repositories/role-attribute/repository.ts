@@ -6,7 +6,7 @@
  */
 
 import type { RoleAttribute } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRoleAttributeRepository } from '../../../../../core/index.ts';
 import { RoleAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -14,11 +14,8 @@ import { RoleAttributeEntity } from '../../../../../adapters/database/domains/in
 export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository {
     private readonly repository: Repository<RoleAttribute>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(RoleAttributeEntity);
+    constructor(repository: Repository<RoleAttribute>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<RoleAttribute>> {
@@ -83,7 +80,7 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
 
     async validateJoinColumns(data: Partial<RoleAttribute>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RoleAttributeEntity,
         });
     }

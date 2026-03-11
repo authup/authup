@@ -7,7 +7,7 @@
 
 import type { Client } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IClientRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -19,11 +19,8 @@ import {
 export class ClientRepositoryAdapter implements IClientRepository {
     private readonly repository: Repository<Client>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(ClientEntity);
+    constructor(repository: Repository<Client>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Client>> {
@@ -141,14 +138,14 @@ export class ClientRepositoryAdapter implements IClientRepository {
 
     async validateJoinColumns(data: Partial<Client>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: ClientEntity,
         });
     }
 
     async checkUniqueness(data: Partial<Client>, existing?: Client): Promise<void> {
         const isUnique = await isEntityUnique({
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: ClientEntity,
             entity: data,
             entityExisting: existing,

@@ -6,7 +6,7 @@
  */
 
 import type { UserAttribute } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -14,11 +14,8 @@ import { UserAttributeEntity } from '../../../../../adapters/database/domains/in
 export class UserAttributeRepositoryAdapter implements IUserAttributeRepository {
     private readonly repository: Repository<UserAttribute>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(UserAttributeEntity);
+    constructor(repository: Repository<UserAttribute>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<UserAttribute>> {
@@ -83,7 +80,7 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
 
     async validateJoinColumns(data: Partial<UserAttribute>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: UserAttributeEntity,
         });
     }

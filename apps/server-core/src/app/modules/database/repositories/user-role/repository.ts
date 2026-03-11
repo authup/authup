@@ -6,7 +6,7 @@
  */
 
 import type { UserRole } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IUserRoleRepository } from '../../../../../core/index.ts';
 import { UserRoleEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -14,11 +14,8 @@ import { UserRoleEntity } from '../../../../../adapters/database/domains/index.t
 export class UserRoleRepositoryAdapter implements IUserRoleRepository {
     private readonly repository: Repository<UserRole>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(UserRoleEntity);
+    constructor(repository: Repository<UserRole>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<UserRole>> {
@@ -94,7 +91,7 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
 
     async validateJoinColumns(data: Partial<UserRole>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: UserRoleEntity,
         });
     }

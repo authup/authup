@@ -6,7 +6,7 @@
  */
 
 import type { RolePermission } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRolePermissionRepository } from '../../../../../core/index.ts';
 import { RolePermissionEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -14,11 +14,8 @@ import { RolePermissionEntity } from '../../../../../adapters/database/domains/i
 export class RolePermissionRepositoryAdapter implements IRolePermissionRepository {
     private readonly repository: Repository<RolePermission>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(RolePermissionEntity);
+    constructor(repository: Repository<RolePermission>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<RolePermission>> {
@@ -97,7 +94,7 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
 
     async validateJoinColumns(data: Partial<RolePermission>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RolePermissionEntity,
         });
     }

@@ -6,7 +6,7 @@
  */
 
 import type { RobotPermission } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
 import type { IRobotPermissionRepository } from '../../../../../core/entities/robot-permission/types.ts';
@@ -15,11 +15,8 @@ import { RobotPermissionEntity } from '../../../../../adapters/database/domains/
 export class RobotPermissionRepositoryAdapter implements IRobotPermissionRepository {
     private readonly repository: Repository<RobotPermission>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(RobotPermissionEntity);
+    constructor(repository: Repository<RobotPermission>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<RobotPermission>> {
@@ -98,7 +95,7 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
 
     async validateJoinColumns(data: Partial<RobotPermission>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RobotPermissionEntity,
         });
     }

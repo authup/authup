@@ -7,7 +7,7 @@
 
 import type { Role } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRoleRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
@@ -16,11 +16,8 @@ import { RoleEntity, resolveRealm } from '../../../../../adapters/database/domai
 export class RoleRepositoryAdapter implements IRoleRepository {
     private readonly repository: Repository<Role>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(RoleEntity);
+    constructor(repository: Repository<Role>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Role>> {
@@ -109,14 +106,14 @@ export class RoleRepositoryAdapter implements IRoleRepository {
 
     async validateJoinColumns(data: Partial<Role>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RoleEntity,
         });
     }
 
     async checkUniqueness(data: Partial<Role>, existing?: Role): Promise<void> {
         const isUnique = await isEntityUnique({
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RoleEntity,
             entity: data,
             entityExisting: existing,

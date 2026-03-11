@@ -6,7 +6,7 @@
  */
 
 import type { ClientPermission } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
 import type { IClientPermissionRepository } from '../../../../../core/entities/client-permission/types.ts';
@@ -15,11 +15,8 @@ import { ClientPermissionEntity } from '../../../../../adapters/database/domains
 export class ClientPermissionRepositoryAdapter implements IClientPermissionRepository {
     private readonly repository: Repository<ClientPermission>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(ClientPermissionEntity);
+    constructor(repository: Repository<ClientPermission>) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<ClientPermission>> {
@@ -98,7 +95,7 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
 
     async validateJoinColumns(data: Partial<ClientPermission>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: ClientPermissionEntity,
         });
     }

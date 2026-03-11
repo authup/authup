@@ -7,24 +7,20 @@
 
 import type { IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { DataSource } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IIdentityProviderRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import type { IdentityProviderRepository } from '../../../../../adapters/database/domains/index.ts';
 import {
     IdentityProviderEntity,
-    IdentityProviderRepository,
     resolveRealm,
 } from '../../../../../adapters/database/domains/index.ts';
 
 export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepository {
     private readonly repository: IdentityProviderRepository;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = new IdentityProviderRepository(dataSource);
+    constructor(repository: IdentityProviderRepository) {
+        this.repository = repository;
     }
 
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<IdentityProvider>> {
@@ -138,14 +134,14 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
 
     async validateJoinColumns(data: Partial<IdentityProvider>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: IdentityProviderEntity,
         });
     }
 
     async checkUniqueness(data: Partial<IdentityProvider>, existing?: IdentityProvider): Promise<void> {
         const isUnique = await isEntityUnique({
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: IdentityProviderEntity,
             entity: data,
             entityExisting: existing,

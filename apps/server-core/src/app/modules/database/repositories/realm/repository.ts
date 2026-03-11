@@ -8,7 +8,7 @@
 import type { Realm } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRealmRepository } from '../../../../../core/index.ts';
 import { RealmEntity } from '../../../../../adapters/database/domains/index.ts';
@@ -16,11 +16,8 @@ import { RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 export class RealmRepositoryAdapter implements IRealmRepository {
     private readonly repository: Repository<Realm>;
 
-    private readonly dataSource: DataSource;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-        this.repository = dataSource.getRepository(RealmEntity);
+    constructor(repository: Repository<Realm>) {
+        this.repository = repository;
     }
 
     findOneById(id: string): Promise<Realm | null> {
@@ -93,7 +90,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
     async validateJoinColumns(data: Partial<Realm>): Promise<void> {
         await validateEntityJoinColumns(data, {
-            dataSource: this.dataSource,
+            dataSource: this.repository.manager.connection,
             entityTarget: RealmEntity,
         });
     }
