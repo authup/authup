@@ -27,7 +27,6 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
             defaultAlias: 'clientScope',
             relations: {
                 allowed: ['client', 'scope'],
-                // @ts-expect-error onJoin is not in the type definition
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
                 },

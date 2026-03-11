@@ -33,7 +33,6 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
                     'client',
                     'permission',
                 ],
-                // @ts-expect-error onJoin is not in the type definition
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
                 },

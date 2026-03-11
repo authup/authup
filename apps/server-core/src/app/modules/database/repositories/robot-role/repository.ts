@@ -29,7 +29,6 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
             },
             relations: {
                 allowed: ['robot', 'role'],
-                // @ts-expect-error onJoin is not in the type definition
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
                 },
