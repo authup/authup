@@ -15,22 +15,25 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere } from 'typeorm';
-import { resolveRealm } from '../../../../database/domains/index.ts';
-import type { IUserRepository } from '../../../../../core/index.ts';
+import type { IRealmRepository, IUserRepository } from '../../../../../core/index.ts';
 import { PasswordResetRequestValidator } from './validator.ts';
 
 export type PasswordResetControllerContext = {
-    repository: IUserRepository
+    repository: IUserRepository,
+    realmRepository: IRealmRepository,
 };
 
 @DController('/password-reset')
 export class PasswordResetController {
     protected repository: IUserRepository;
 
+    protected realmRepository: IRealmRepository;
+
     protected validator : RoutupContainerAdapter<User & { token: string }>;
 
     constructor(ctx: PasswordResetControllerContext) {
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
 
         const validator = new PasswordResetRequestValidator();
         this.validator = new RoutupContainerAdapter(validator);
@@ -51,7 +54,7 @@ export class PasswordResetController {
             reset_hash: data.token,
         };
 
-        const realm = await resolveRealm(data.realm_id, true);
+        const realm = await this.realmRepository.resolve(data.realm_id, true);
         where.realm_id = realm.id;
 
         const entity = await this.repository.findOneBy(where);

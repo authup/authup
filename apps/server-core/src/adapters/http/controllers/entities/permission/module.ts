@@ -28,9 +28,8 @@ import { useRequestQuery } from '@routup/basic/query';
 import { useRequestBody } from '@routup/basic/body';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { DataSource } from 'typeorm';
-import type { IPermissionRepository } from '../../../../../core/index.ts';
+import type { IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { PermissionDatabaseRepository, PolicyEngine } from '../../../../../security/index.ts';
-import { resolveRealm } from '../../../../database/domains/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     getRequestBodyRealmID,
@@ -44,6 +43,7 @@ import {
 
 export type PermissionControllerContext = {
     repository: IPermissionRepository,
+    realmRepository: IRealmRepository,
     dataSource: DataSource,
 };
 
@@ -52,10 +52,13 @@ export type PermissionControllerContext = {
 export class PermissionController {
     protected repository: IPermissionRepository;
 
+    protected realmRepository: IRealmRepository;
+
     protected dataSource: DataSource;
 
     constructor(ctx: PermissionControllerContext) {
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
         this.dataSource = ctx.dataSource;
     }
 
@@ -102,7 +105,7 @@ export class PermissionController {
         if (isUUID(id)) {
             criteria = { id };
         } else {
-            const realm = await resolveRealm(useRequestParam(req, 'realmId'));
+            const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'));
             criteria = {
                 name: id,
                 ...(realm ? { realm_id: realm.id } : {}),

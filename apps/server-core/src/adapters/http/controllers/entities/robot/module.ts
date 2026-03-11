@@ -25,9 +25,9 @@ import { useRequestQuery } from '@routup/basic/query';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { isVaultClientUsable } from '@authup/server-kit';
 import type { DataSource } from 'typeorm';
-import type { IRobotRepository } from '../../../../../core/index.ts';
+import type { IRealmRepository, IRobotRepository } from '../../../../../core/index.ts';
 import { OAuth2ScopeAttributesResolver, RobotCredentialsService } from '../../../../../core/index.ts';
-import { RobotEntity, RobotRepository, resolveRealm } from '../../../../database/domains/index.ts';
+import { RobotEntity, RobotRepository } from '../../../../database/domains/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../services/index.ts';
@@ -43,6 +43,7 @@ import {
 
 export type RobotControllerContext = {
     repository: IRobotRepository,
+    realmRepository: IRealmRepository,
     dataSource: DataSource,
 };
 
@@ -51,10 +52,13 @@ export type RobotControllerContext = {
 export class RobotController {
     protected repository: IRobotRepository;
 
+    protected realmRepository: IRealmRepository;
+
     protected dataSource: DataSource;
 
     constructor(ctx: RobotControllerContext) {
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
         this.dataSource = ctx.dataSource;
     }
 
@@ -166,7 +170,7 @@ export class RobotController {
             identity &&
             identity.type === 'robot'
         ) {
-            const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
+            const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'), true);
             if (
                 identity.realmId === realm.id &&
                 identity.data &&
@@ -215,7 +219,7 @@ export class RobotController {
             if (isUUID(paramId)) {
                 entity = await this.repository.findOneById(paramId);
             } else {
-                const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
+                const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'), true);
                 entity = await this.repository.findOneBy({
                     name: paramId,
                     realm_id: realm.id,
@@ -440,7 +444,7 @@ export class RobotController {
         } else {
             query.where('robot.name LIKE :name', { name: id });
 
-            realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
+            realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'), true);
             query.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
         }
 

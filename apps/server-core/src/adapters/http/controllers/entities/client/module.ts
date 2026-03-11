@@ -22,10 +22,8 @@ import {
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import type { DataSource } from 'typeorm';
-import type { IClientRepository } from '../../../../../core/index.ts';
+import type { IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { ClientCredentialsService, OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
-import { resolveRealm } from '../../../../database/domains/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import {
@@ -41,7 +39,7 @@ import {
 
 export type ClientControllerContext = {
     repository: IClientRepository,
-    dataSource: DataSource,
+    realmRepository: IRealmRepository,
 };
 
 @DTags('oauth2')
@@ -49,11 +47,11 @@ export type ClientControllerContext = {
 export class ClientController {
     protected repository: IClientRepository;
 
-    protected dataSource: DataSource;
+    protected realmRepository: IRealmRepository;
 
     constructor(ctx: ClientControllerContext) {
         this.repository = ctx.repository;
-        this.dataSource = ctx.dataSource;
+        this.realmRepository = ctx.realmRepository;
     }
 
     @DGet('', [])
@@ -163,7 +161,7 @@ export class ClientController {
                 useRequestParam(req, 'realmId'),
             );
         } else {
-            const realm = await resolveRealm(useRequestParam(req, 'realmId'), true);
+            const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'), true);
             entity = await this.repository.findOneBy({
                 name: paramId,
                 realm_id: realm.id,

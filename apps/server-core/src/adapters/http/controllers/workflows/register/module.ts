@@ -16,8 +16,9 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { IMailClient, type IUserRepository, UserCredentialsService } from '../../../../../core/index.ts';
-import { resolveRealm } from '../../../../database/domains/index.ts';
+import {
+    IMailClient, type IRealmRepository, type IUserRepository, UserCredentialsService,
+} from '../../../../../core/index.ts';
 import { RequestHandlerOperation } from '../../../request/index.ts';
 import { RegisterRequestValidator } from './validator.ts';
 
@@ -29,7 +30,8 @@ export type RegisterControllerOptions = {
 export type RegisterControllerContext = {
     options: RegisterControllerOptions,
     mailClient: IMailClient,
-    repository: IUserRepository
+    repository: IUserRepository,
+    realmRepository: IRealmRepository,
 };
 
 @DController('/register')
@@ -40,12 +42,15 @@ export class RegisterController {
 
     protected repository: IUserRepository;
 
+    protected realmRepository: IRealmRepository;
+
     protected validator : RoutupContainerAdapter<User>;
 
     constructor(ctx: RegisterControllerContext) {
         this.options = ctx.options;
         this.mailClient = ctx.mailClient;
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
 
         const validator = new RegisterRequestValidator();
         this.validator = new RoutupContainerAdapter(validator);
@@ -79,7 +84,7 @@ export class RegisterController {
         entity.password = entity.password || createNanoID(64);
         entity.password = await credentialsService.protect(entity.password);
 
-        const realm = await resolveRealm(entity.realm_id, true);
+        const realm = await this.realmRepository.resolve(entity.realm_id, true);
         entity.realm_id = realm.id;
 
         await this.repository.save(entity);

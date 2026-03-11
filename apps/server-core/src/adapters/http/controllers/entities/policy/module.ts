@@ -25,9 +25,8 @@ import type { Request, Response } from 'routup';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
-import type { IPolicyRepository } from '../../../../../core/index.ts';
+import type { IPolicyRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { PolicyEngine } from '../../../../../security/index.ts';
-import { resolveRealm } from '../../../../database/domains/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { PolicyValidator } from './utils/index.ts';
 import {
@@ -43,6 +42,7 @@ import {
 
 export type PolicyControllerContext = {
     repository: IPolicyRepository,
+    realmRepository: IRealmRepository,
 };
 
 @DTags('policy')
@@ -50,8 +50,11 @@ export type PolicyControllerContext = {
 export class PolicyController {
     protected repository: IPolicyRepository;
 
+    protected realmRepository: IRealmRepository;
+
     constructor(ctx: PolicyControllerContext) {
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
     }
 
     @DGet('', [])
@@ -131,7 +134,7 @@ export class PolicyController {
         if (isUUID(paramId)) {
             criteria = { id: paramId };
         } else {
-            const realm = await resolveRealm(useRequestParam(req, 'realmId'));
+            const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'));
             criteria = {
                 name: paramId,
                 ...(realm ? { realm_id: realm.id } : {}),

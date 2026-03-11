@@ -6,6 +6,7 @@
  */
 
 import type { Realm } from '@authup/core-kit';
+import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { DataSource, Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
@@ -95,5 +96,23 @@ export class RealmRepositoryAdapter implements IRealmRepository {
             dataSource: this.dataSource,
             entityTarget: RealmEntity,
         });
+    }
+
+    async resolve(id: string | undefined, withFallback: true): Promise<Realm>;
+
+    async resolve(id: string | undefined, withFallback?: boolean): Promise<Realm | null>;
+
+    async resolve(id: string | undefined, withFallback?: boolean): Promise<Realm | null> {
+        let entity: Realm | null = null;
+
+        if (id) {
+            entity = await this.findOneByIdOrName(id);
+        }
+
+        if (!entity && withFallback) {
+            entity = await this.findOneBy({ name: REALM_MASTER_NAME });
+        }
+
+        return entity;
     }
 }
