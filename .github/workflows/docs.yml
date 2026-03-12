@@ -33,7 +33,7 @@ jobs:
 
             - name: Upload artifact
               if: ${{ github.event_name == 'push' }}
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: docs-dist
                   path: ./docs/src/.vitepress/dist
