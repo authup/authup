@@ -1,0 +1,43 @@
+import{_ as a,o as n,c as e,ae as p}from"./chunks/framework.EHGTsUvI.js";const _=JSON.parse('{"title":"Nginx","description":"","frontmatter":{},"headers":[],"relativePath":"guide/deployment/nginx.md","filePath":"guide/deployment/nginx.md"}'),i={name:"guide/deployment/nginx.md"};function t(l,s,o,c,r,d){return n(),e("div",null,[...s[0]||(s[0]=[p(`<h1 id="nginx" tabindex="-1">Nginx <a class="header-anchor" href="#nginx" aria-label="Permalink to &quot;Nginx&quot;">​</a></h1><p>To configure nginx as a reverse proxy, we need to create a new file (e.g. <code>app</code>) in the directory <code>/etc/nginx/sites-enabled</code>.</p><div class="warning custom-block"><p class="custom-block-title">Info</p><p>Don&#39;t forget to replace the placeholders with the actual values:</p><ul><li><code>[DOMAIN]</code> Domain name (e.g. app.example.com)</li><li><code>[CLIENT_WEB_PORT]</code>: Port of the client web application.</li><li><code>[SERVER_CORE_PORT]</code>: Port of the server core application.</li></ul></div><div class="language-txt vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">txt</span><pre class="shiki shiki-themes github-light github-dark vp-code" tabindex="0"><code><span class="line"><span>map $sent_http_content_type $expires {</span></span>
+<span class="line"><span>    &quot;text/html&quot;                 epoch;</span></span>
+<span class="line"><span>    &quot;text/html; charset=utf-8&quot;  epoch;</span></span>
+<span class="line"><span>    default                     off;</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>server {</span></span>
+<span class="line"><span>    server_name [DOMAIN];</span></span>
+<span class="line"><span>    listen 80;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>    gzip            on;</span></span>
+<span class="line"><span>    gzip_types      text/plain application/xml text/css application/javascript;</span></span>
+<span class="line"><span>    gzip_min_length 1000;</span></span>
+<span class="line"><span>    </span></span>
+<span class="line"><span>    client_max_body_size 0;</span></span>
+<span class="line"><span>    chunked_transfer_encoding on;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>    location / {</span></span>
+<span class="line"><span>        expires $expires;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>        proxy_redirect                      off;</span></span>
+<span class="line"><span>        proxy_set_header Host               $host;</span></span>
+<span class="line"><span>        proxy_set_header X-Real-IP          $remote_addr;</span></span>
+<span class="line"><span>        proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;</span></span>
+<span class="line"><span>        proxy_set_header X-Forwarded-Proto  $scheme;</span></span>
+<span class="line"><span>        proxy_read_timeout          1m;</span></span>
+<span class="line"><span>        proxy_connect_timeout       1m;</span></span>
+<span class="line"><span>        proxy_pass                          http://127.0.0.1:[CLIENT_WEB_PORT];</span></span>
+<span class="line"><span>    }</span></span>
+<span class="line"><span>    </span></span>
+<span class="line"><span>    location /api/ {</span></span>
+<span class="line"><span>        rewrite ^/api(/.*)$ $1 break;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>        proxy_redirect                      off;</span></span>
+<span class="line"><span>        proxy_set_header Host               $host;</span></span>
+<span class="line"><span>        proxy_set_header X-Real-IP          $remote_addr;</span></span>
+<span class="line"><span>        proxy_set_header X-Forwarded-For    $proxy_add_x_forwarded_for;</span></span>
+<span class="line"><span>        proxy_set_header X-Forwarded-Proto  $scheme;</span></span>
+<span class="line"><span>        proxy_read_timeout          2m;</span></span>
+<span class="line"><span>        proxy_connect_timeout       2m;</span></span>
+<span class="line"><span>        proxy_pass                          http://127.0.0.1:[SERVER_CORE_PORT];</span></span>
+<span class="line"><span>    }</span></span>
+<span class="line"><span>}</span></span></code></pre></div><h2 id="certificate" tabindex="-1">Certificate <a class="header-anchor" href="#certificate" aria-label="Permalink to &quot;Certificate&quot;">​</a></h2><p>The easiest way to set up a certificate is with the help of certbot. On a Linux based system, letsencrypt can be installed with the following command.</p><div class="language-shell vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">shell</span><pre class="shiki shiki-themes github-light github-dark vp-code" tabindex="0"><code><span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">sudo</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> apt</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> install</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> certbot</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> python3-certbot-nginx</span></span></code></pre></div><p>A certificate can be requested and installed with the following command.</p><div class="language-shell vp-adaptive-theme"><button title="Copy Code" class="copy"></button><span class="lang">shell</span><pre class="shiki shiki-themes github-light github-dark vp-code" tabindex="0"><code><span class="line"><span style="--shiki-light:#6F42C1;--shiki-dark:#B392F0;">sudo</span><span style="--shiki-light:#032F62;--shiki-dark:#9ECBFF;"> certbot</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> --nginx</span><span style="--shiki-light:#005CC5;--shiki-dark:#79B8FF;"> -d</span><span style="--shiki-light:#24292E;--shiki-dark:#E1E4E8;"> [DOMAIN]</span></span></code></pre></div>`,9)])])}const g=a(i,[["render",t]]);export{_ as __pageData,g as default};
