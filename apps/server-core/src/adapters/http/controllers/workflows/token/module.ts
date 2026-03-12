@@ -18,7 +18,6 @@ import type { Request, Response } from 'routup';
 import { getRequestHostName, sendAccepted } from 'routup';
 import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
-import { useDataSource } from 'typeorm-extension';
 import { pickRecord } from '@authup/kit';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext, TokenControllerOptions } from './types.ts';
@@ -39,7 +38,7 @@ import {
     guessOauth2GrantTypeByRequest,
 } from '../../../adapters/index.ts';
 import { extractTokenFromRequest } from './utils/index.ts';
-import { IdentityPermissionService } from '../../../../../services/index.ts';
+import type { IdentityPermissionService } from '../../../../../services/index.ts';
 
 @DTags('auth')
 @DController('/token')
@@ -56,6 +55,8 @@ export class TokenController {
 
     protected identityResolver : IIdentityResolver;
 
+    protected identityPermissionService : IdentityPermissionService;
+
     protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
     // -------------------------------------------
@@ -67,6 +68,7 @@ export class TokenController {
         this.tokenVerifier = ctx.tokenVerifier;
         this.tokenRevoker = ctx.tokenRevoker;
         this.identityResolver = ctx.identityResolver;
+        this.identityPermissionService = ctx.identityPermissionService;
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
@@ -119,15 +121,12 @@ export class TokenController {
             const payload = await this.tokenVerifier.verify(token, {
                 skipActiveCheck: true,
             });
-            const dataSource = await useDataSource();
-            const identityPermissionService = new IdentityPermissionService(dataSource);
-
             if (!payload.sub || !payload.sub_kind) {
                 throw OAuth2Error.identityInvalid();
             }
 
             // todo: only receive client specific permissions
-            const permissions = await identityPermissionService.getFor({
+            const permissions = await this.identityPermissionService.getFor({
                 id: payload.sub,
                 type: payload.sub_kind,
                 clientId: payload.client_id,

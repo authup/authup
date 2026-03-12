@@ -7,11 +7,11 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { ClientRoleEntity } from '../../../../../database/domains/index.ts';
+import type { ClientRole } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class ClientRoleRequestValidator extends Container<
-ClientRoleEntity
+ClientRole
 > {
     protected initialize() {
         super.initialize();

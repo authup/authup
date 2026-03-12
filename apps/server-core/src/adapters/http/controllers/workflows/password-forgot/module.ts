@@ -17,7 +17,7 @@ import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { FindOptionsWhere, Repository } from 'typeorm';
 import { IMailClient } from '../../../../../core/index.ts';
-import { resolveRealm } from '../../../../database/domains/index.ts';
+import type { IRealmRepository } from '../../../../../core/index.ts';
 import { PasswordForgotRequestValidator } from './validator.ts';
 
 export type PasswordForgotControllerOptions = {
@@ -28,7 +28,8 @@ export type PasswordForgotControllerOptions = {
 export type PasswordForgotControllerContext = {
     options: PasswordForgotControllerOptions,
     mailClient: IMailClient,
-    repository: Repository<User>
+    repository: Repository<User>,
+    realmRepository: IRealmRepository,
 };
 
 @DController('/password-forgot')
@@ -37,6 +38,8 @@ export class PasswordForgotController {
 
     protected repository: Repository<User>;
 
+    protected realmRepository: IRealmRepository;
+
     protected mailClient: IMailClient;
 
     protected validator : RoutupContainerAdapter<User>;
@@ -44,6 +47,7 @@ export class PasswordForgotController {
     constructor(ctx: PasswordForgotControllerContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
         this.mailClient = ctx.mailClient;
 
         const validator = new PasswordForgotRequestValidator();
@@ -70,7 +74,7 @@ export class PasswordForgotController {
             ...(data.email ? { email: data.email } : {}),
         };
 
-        const realm = await resolveRealm(data.realm_id, true);
+        const realm = await this.realmRepository.resolve(data.realm_id, true);
         where.realm_id = realm.id;
 
         const query = this.repository.createQueryBuilder('user');

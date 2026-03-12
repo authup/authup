@@ -7,11 +7,11 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { UserAttributeEntity } from '../../../../../database/domains/index.ts';
+import type { UserAttribute } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class UserAttributeRequestValidator extends Container<
-UserAttributeEntity
+UserAttribute
 > {
     protected initialize() {
         super.initialize();

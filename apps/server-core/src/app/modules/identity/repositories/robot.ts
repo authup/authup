@@ -21,6 +21,16 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
         return this.find(id, realm);
     }
 
+    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Robot | null> {
+        return this.find(idOrName, realm);
+    }
+
+    async findOneBy(where: Record<string, any>): Promise<Robot | null> {
+        const dataSource = await useDataSource();
+        const repository = new RobotRepository(dataSource);
+        return repository.findOneBy(where);
+    }
+
     private async find(key: string, realmKey?: string) : Promise<Robot | null> {
         const dataSource = await useDataSource();
         const repository = new RobotRepository(dataSource);

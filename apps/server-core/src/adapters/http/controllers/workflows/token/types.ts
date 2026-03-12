@@ -14,6 +14,7 @@ import type {
     IOAuth2TokenRevoker,
     IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../../core/index.ts';
+import type { IdentityPermissionService } from '../../../../../services/index.ts';
 
 export type TokenControllerOptions = {
     cookieDomains: string[]
@@ -33,6 +34,7 @@ export type TokenControllerContext = {
     sessionManager: ISessionManager,
 
     identityResolver: IIdentityResolver,
+    identityPermissionService: IdentityPermissionService,
 
     clientAuthenticator: ICredentialsAuthenticator<Client>
     robotAuthenticator: ICredentialsAuthenticator<Robot>

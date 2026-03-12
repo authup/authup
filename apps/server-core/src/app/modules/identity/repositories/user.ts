@@ -28,6 +28,16 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         return this.find(id, realm);
     }
 
+    async findOneByIdOrName(idOrName: string, realm?: string): Promise<User | null> {
+        return this.find(idOrName, realm);
+    }
+
+    async findOneBy(where: Record<string, any>): Promise<User | null> {
+        const dataSource = await useDataSource();
+        const repository = new UserRepository(dataSource);
+        return repository.findOneBy(where);
+    }
+
     private async find(key: string, realmKey?: string) : Promise<User | null> {
         const dataSource = await useDataSource();
         const repository = new UserRepository(dataSource);

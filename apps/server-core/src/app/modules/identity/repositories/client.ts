@@ -21,6 +21,16 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
         return this.find(id, realm);
     }
 
+    async findOneByIdOrName(idOrName: string, realm?: string): Promise<Client | null> {
+        return this.find(idOrName, realm);
+    }
+
+    async findOneBy(where: Record<string, any>): Promise<Client | null> {
+        const dataSource = await useDataSource();
+        const repository = new ClientRepository(dataSource);
+        return repository.findOneBy(where);
+    }
+
     private async find(key: string, realmKey?: string) : Promise<Client | null> {
         const dataSource = await useDataSource();
         const repository = new ClientRepository(dataSource);

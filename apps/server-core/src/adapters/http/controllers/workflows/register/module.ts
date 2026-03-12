@@ -16,10 +16,9 @@ import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { randomBytes } from 'node:crypto';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import type { Repository } from 'typeorm';
-import { useDataSource, validateEntityJoinColumns } from 'typeorm-extension';
-import { IMailClient, UserCredentialsService } from '../../../../../core/index.ts';
-import { UserEntity, resolveRealm } from '../../../../database/domains/index.ts';
+import {
+    IMailClient, type IRealmRepository, type IUserRepository, UserCredentialsService,
+} from '../../../../../core/index.ts';
 import { RequestHandlerOperation } from '../../../request/index.ts';
 import { RegisterRequestValidator } from './validator.ts';
 
@@ -31,7 +30,8 @@ export type RegisterControllerOptions = {
 export type RegisterControllerContext = {
     options: RegisterControllerOptions,
     mailClient: IMailClient,
-    repository: Repository<User>
+    repository: IUserRepository,
+    realmRepository: IRealmRepository,
 };
 
 @DController('/register')
@@ -40,7 +40,9 @@ export class RegisterController {
 
     protected mailClient: IMailClient;
 
-    protected repository: Repository<User>;
+    protected repository: IUserRepository;
+
+    protected realmRepository: IRealmRepository;
 
     protected validator : RoutupContainerAdapter<User>;
 
@@ -48,6 +50,7 @@ export class RegisterController {
         this.options = ctx.options;
         this.mailClient = ctx.mailClient;
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
 
         const validator = new RegisterRequestValidator();
         this.validator = new RoutupContainerAdapter(validator);
@@ -66,12 +69,7 @@ export class RegisterController {
             group: RequestHandlerOperation.CREATE,
         });
 
-        // todo: remove this
-        const dataSource = await useDataSource();
-        await validateEntityJoinColumns(data, {
-            dataSource,
-            entityTarget: UserEntity,
-        });
+        await this.repository.validateJoinColumns(data);
 
         if (this.options.emailVerification) {
             data.active = false;
@@ -86,7 +84,7 @@ export class RegisterController {
         entity.password = entity.password || createNanoID(64);
         entity.password = await credentialsService.protect(entity.password);
 
-        const realm = await resolveRealm(entity.realm_id, true);
+        const realm = await this.realmRepository.resolve(entity.realm_id, true);
         entity.realm_id = realm.id;
 
         await this.repository.save(entity);

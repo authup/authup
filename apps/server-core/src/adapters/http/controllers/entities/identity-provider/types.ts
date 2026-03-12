@@ -7,6 +7,7 @@
 
 import type {
     IIdentityProviderAccountManager,
+    IIdentityProviderRepository,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
     IOAuth2TokenIssuer,
@@ -23,6 +24,8 @@ export type IdentityProviderControllerOptions = {
 
 export type IdentityProviderControllerContext = {
     options: IdentityProviderControllerOptions,
+
+    repository: IIdentityProviderRepository,
 
     accountManager: IIdentityProviderAccountManager,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,

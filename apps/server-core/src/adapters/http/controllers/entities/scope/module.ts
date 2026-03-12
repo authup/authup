@@ -8,24 +8,61 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { isUUID } from '@authup/kit';
+import { NotFoundError } from '@ebec/http';
+import {
+    PermissionName, ScopeValidator, ValidatorGroup,
+} from '@authup/core-kit';
 import type { Scope } from '@authup/core-kit';
+import type { Request, Response } from 'routup';
+import { send, sendAccepted, sendCreated } from 'routup';
+import { useRequestQuery } from '@routup/basic/query';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import type { IScopeRepository } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
-    deleteScopeRouteHandler,
-    getManyScopeRouteHandler,
-    getOneScopeRouteHandler,
-    writeScopeRouteHandler,
-} from './handlers/index.ts';
+    getRequestBodyRealmID,
+    getRequestParamID,
+    isRequestIdentityMasterRealmMember,
+    useRequestIdentityOrFail,
+    useRequestParamID,
+    useRequestPermissionChecker,
+} from '../../../request/index.ts';
+
+export type ScopeControllerContext = {
+    repository: IScopeRepository,
+};
 
 @DTags('scope')
 @DController('/scopes')
 export class ScopeController {
+    protected repository: IScopeRepository;
+
+    constructor(ctx: ScopeControllerContext) {
+        this.repository = ctx.repository;
+    }
+
     @DGet('', [])
     async getMany(
         @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<Scope[]> {
-        return getManyScopeRouteHandler(req, res);
+    ): Promise<any> {
+        const permissionChecker = useRequestPermissionChecker(req);
+        await permissionChecker.preCheckOneOf({
+            name: [
+                PermissionName.SCOPE_READ,
+                PermissionName.SCOPE_UPDATE,
+                PermissionName.SCOPE_DELETE,
+            ],
+        });
+
+        const { data, meta } = await this.repository.findMany(useRequestQuery(req));
+
+        return send(res, {
+            data,
+            meta,
+        });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -33,17 +70,36 @@ export class ScopeController {
         @DBody() data: Pick<Scope, 'name'>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<Scope> {
-        return writeScopeRouteHandler(req, res);
+    ): Promise<any> {
+        return this.write(req, res);
     }
 
     @DGet('/:id', [])
-    async getOne(
+    async get(
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<Scope> {
-        return getOneScopeRouteHandler(req, res);
+    ): Promise<any> {
+        const permissionChecker = useRequestPermissionChecker(req);
+        await permissionChecker.preCheckOneOf({
+            name: [
+                PermissionName.SCOPE_READ,
+                PermissionName.SCOPE_UPDATE,
+                PermissionName.SCOPE_DELETE,
+            ],
+        });
+
+        const paramId = useRequestParamID(req, {
+            isUUID: false,
+        });
+
+        const entity = await this.repository.findOneByIdOrName(paramId);
+
+        if (!entity) {
+            throw new NotFoundError();
+        }
+
+        return send(res, entity);
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -52,10 +108,8 @@ export class ScopeController {
             @DBody() data: Pick<Scope, 'name'>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<Scope> {
-        return writeScopeRouteHandler(req, res, {
-            updateOnly: true,
-        });
+    ): Promise<any> {
+        return this.write(req, res, { updateOnly: true });
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -64,8 +118,8 @@ export class ScopeController {
             @DBody() data: Pick<Scope, 'name'>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<Scope> {
-        return writeScopeRouteHandler(req, res);
+    ): Promise<any> {
+        return this.write(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -73,7 +127,121 @@ export class ScopeController {
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<Scope> {
-        return deleteScopeRouteHandler(req, res);
+    ): Promise<any> {
+        const paramId = useRequestParamID(req);
+
+        const permissionChecker = useRequestPermissionChecker(req);
+        await permissionChecker.preCheck({ name: PermissionName.SCOPE_DELETE });
+
+        const entity = await this.repository.findOneBy({ id: paramId });
+
+        if (!entity) {
+            throw new NotFoundError();
+        }
+
+        await permissionChecker.check({
+            name: PermissionName.SCOPE_DELETE,
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
+        });
+
+        const { id: entityId } = entity;
+
+        await this.repository.remove(entity);
+
+        entity.id = entityId;
+
+        return sendAccepted(res, entity);
+    }
+
+    // ------------------------------------------------------------------
+
+    private async write(req: Request, res: Response, options: {
+        updateOnly?: boolean
+    } = {}): Promise<any> {
+        let group: string;
+        const id = getRequestParamID(req, { isUUID: false });
+        const realmId = getRequestBodyRealmID(req);
+
+        let entity: Scope | null | undefined;
+        if (id) {
+            const where: Record<string, any> = {};
+            if (isUUID(id)) {
+                where.id = id;
+            } else {
+                where.name = id;
+            }
+
+            if (realmId) {
+                where.realm_id = realmId;
+            }
+
+            entity = await this.repository.findOneBy(where);
+            if (!entity && options.updateOnly) {
+                throw new NotFoundError();
+            }
+        } else if (options.updateOnly) {
+            throw new NotFoundError();
+        }
+
+        const permissionChecker = useRequestPermissionChecker(req);
+        if (entity) {
+            await permissionChecker.preCheck({ name: PermissionName.SCOPE_UPDATE });
+
+            group = ValidatorGroup.UPDATE;
+        } else {
+            await permissionChecker.preCheck({ name: PermissionName.SCOPE_CREATE });
+
+            group = ValidatorGroup.CREATE;
+        }
+
+        const validator = new ScopeValidator();
+        const validatorAdapter = new RoutupContainerAdapter(validator);
+        const data = await validatorAdapter.run(req, {
+            group,
+        });
+
+        await this.repository.validateJoinColumns(data);
+
+        if (entity) {
+            await permissionChecker.check({
+                name: PermissionName.SCOPE_UPDATE,
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: {
+                        ...entity,
+                        ...data,
+                    },
+                }),
+            });
+        } else {
+            if (!data.realm_id) {
+                const identity = useRequestIdentityOrFail(req);
+                if (!isRequestIdentityMasterRealmMember(identity)) {
+                    data.realm_id = identity.realmId;
+                }
+            }
+
+            await permissionChecker.check({
+                name: PermissionName.SCOPE_CREATE,
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: data,
+                }),
+            });
+        }
+
+        await this.repository.checkUniqueness(data, entity || undefined);
+
+        if (entity) {
+            entity = this.repository.merge(entity, data);
+            await this.repository.save(entity);
+
+            return sendAccepted(res, entity);
+        }
+
+        entity = this.repository.create(data);
+        await this.repository.save(entity);
+
+        return sendCreated(res, entity);
     }
 }

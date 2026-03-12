@@ -8,12 +8,12 @@
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import type { Request } from 'routup';
-import type { UserAttributeEntity } from '../../../../../database/domains/index.ts';
+import type { UserAttribute } from '@authup/core-kit';
 import { useRequestIdentity, useRequestPermissionChecker } from '../../../../request/index.ts';
 
 export async function canRequestManageUserAttribute(
     req: Request,
-    entity: UserAttributeEntity,
+    entity: UserAttribute,
 ) : Promise<boolean> {
     const permissionChecker = useRequestPermissionChecker(req);
     const identity = useRequestIdentity(req);

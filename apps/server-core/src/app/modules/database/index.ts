@@ -7,3 +7,4 @@
 
 export * from './constants.ts';
 export * from './module.ts';
+export * from './repositories/index.ts';

@@ -9,41 +9,62 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { OAuth2AuthorizationResponseType, OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import type { Realm } from '@authup/core-kit';
-import { useDataSource } from 'typeorm-extension';
-import { NotFoundError } from '@ebec/http';
-import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { isPropertySet, isUUID } from '@authup/kit';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
-    deleteRealmRouteHandler,
-    getManyRealmRouteHandler,
-    getOneRealmRouteHandler,
-    writeRealmRouteHandler,
-} from './handlers/index.ts';
+    PermissionName, REALM_MASTER_NAME, RealmValidator,
+} from '@authup/core-kit';
+import type { Realm } from '@authup/core-kit';
+import type { Request, Response } from 'routup';
+import { send, sendAccepted, sendCreated } from 'routup';
+import { useRequestQuery } from '@routup/basic/query';
+import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import type { Repository } from 'typeorm';
+import type { IRealmRepository } from '../../../../../core/index.ts';
+import type { KeyEntity } from '../../../../database/domains/index.ts';
+import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { RealmEntity } from '../../../../database/domains/index.ts';
+import {
+    RequestHandlerOperation, getRequestParamID, useRequestParamID, useRequestPermissionChecker,
+} from '../../../request/index.ts';
 
 export type RealmControllerOptions = {
     baseURL: string
 };
 
 export type RealmControllerContext = {
-    options: RealmControllerOptions
+    options: RealmControllerOptions,
+    repository: IRealmRepository,
+    keyRepository: Repository<KeyEntity>,
 };
+
 @DTags('realm')
 @DController('/realms')
 export class RealmController {
     protected options: RealmControllerOptions;
 
+    protected repository: IRealmRepository;
+
+    protected keyRepository: Repository<KeyEntity>;
+
     constructor(ctx: RealmControllerContext) {
         this.options = ctx.options;
+        this.repository = ctx.repository;
+        this.keyRepository = ctx.keyRepository;
     }
 
     @DGet('', [])
     async getMany(
         @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<Realm[]> {
-        return getManyRealmRouteHandler(req, res);
+    ): Promise<any> {
+        const { data, meta } = await this.repository.findMany(useRequestQuery(req));
+
+        return send(res, {
+            data,
+            meta,
+        });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -51,8 +72,8 @@ export class RealmController {
         @DBody() user: NonNullable<Realm>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<Realm> {
-        return writeRealmRouteHandler(req, res, {
+    ) : Promise<any> {
+        return this.write(req, res, {
             updateOnly: true,
         });
     }
@@ -62,18 +83,25 @@ export class RealmController {
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ): Promise<Realm> {
-        return getOneRealmRouteHandler(req, res);
+    ): Promise<any> {
+        const paramId = useRequestParamID(req, {
+            isUUID: false,
+        });
+
+        const entity = await this.repository.findOneByIdOrName(paramId);
+
+        if (!entity) {
+            throw new NotFoundError();
+        }
+
+        return send(res, entity);
     }
 
     @DGet('/:id/.well-known/openid-configuration', [])
     async getOpenIdConfiguration(
         @DPath('id') id: string,
     ): Promise<OpenIDProviderMetadata> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(RealmEntity);
-
-        const entity = await repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({ id });
 
         if (!entity) {
             throw new NotFoundError();
@@ -120,7 +148,7 @@ export class RealmController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey[]> {
-        return getJwksRouteHandler(req, res, 'id');
+        return getJwksRouteHandler(req, res, this.keyRepository, 'id');
     }
 
     @DGet('/:id/jwks/:keyId', [])
@@ -130,7 +158,7 @@ export class RealmController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey> {
-        return getJwkRouteHandler(req, res, 'keyId');
+        return getJwkRouteHandler(req, res, this.keyRepository, 'keyId');
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -139,8 +167,8 @@ export class RealmController {
             @DBody() user: NonNullable<Realm>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<Realm> {
-        return writeRealmRouteHandler(req, res, { updateOnly: true });
+    ) : Promise<any> {
+        return this.write(req, res, { updateOnly: true });
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -149,8 +177,8 @@ export class RealmController {
             @DBody() user: NonNullable<Realm>,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<Realm> {
-        return writeRealmRouteHandler(req, res);
+    ) : Promise<any> {
+        return this.write(req, res);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -158,7 +186,115 @@ export class RealmController {
         @DPath('id') id: string,
             @DRequest() req: any,
             @DResponse() res: any,
-    ) : Promise<Realm> {
-        return deleteRealmRouteHandler(req, res);
+    ) : Promise<any> {
+        const paramId = useRequestParamID(req);
+
+        const permissionChecker = useRequestPermissionChecker(req);
+        await permissionChecker.preCheck({ name: PermissionName.REALM_DELETE });
+
+        const entity = await this.repository.findOneBy({ id: paramId });
+
+        if (!entity) {
+            throw new NotFoundError();
+        }
+
+        if (entity.built_in) {
+            throw new BadRequestError('A built-in realm can not be deleted.');
+        }
+
+        await permissionChecker.check({
+            name: PermissionName.REALM_DELETE,
+            input: new PolicyData({
+                [BuiltInPolicyType.ATTRIBUTES]: entity,
+            }),
+        });
+
+        const { id: entityId } = entity;
+
+        await this.repository.remove(entity);
+
+        entity.id = entityId;
+
+        return sendAccepted(res, entity);
+    }
+
+    // ------------------------------------------------------------------
+
+    private async write(req: Request, res: Response, options: {
+        updateOnly?: boolean
+    } = {}): Promise<any> {
+        let group: string;
+        const id = getRequestParamID(req, { isUUID: false });
+
+        let entity: Realm | null | undefined;
+        if (id) {
+            const where: Record<string, any> = {};
+            if (isUUID(id)) {
+                where.id = id;
+            } else {
+                where.name = id;
+            }
+
+            entity = await this.repository.findOneBy(where);
+            if (!entity && options.updateOnly) {
+                throw new NotFoundError();
+            }
+        }
+
+        const permissionChecker = useRequestPermissionChecker(req);
+        if (entity) {
+            await permissionChecker.preCheck({ name: PermissionName.REALM_UPDATE });
+
+            group = RequestHandlerOperation.UPDATE;
+        } else {
+            await permissionChecker.preCheck({ name: PermissionName.REALM_CREATE });
+
+            group = RequestHandlerOperation.CREATE;
+        }
+
+        const validator = new RealmValidator();
+        const validatorAdapter = new RoutupContainerAdapter(validator);
+        const data = await validatorAdapter.run(req, {
+            group,
+        });
+
+        await this.repository.validateJoinColumns(data);
+
+        if (entity) {
+            await permissionChecker.check({
+                name: PermissionName.REALM_UPDATE,
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: {
+                        ...entity,
+                        ...data,
+                    },
+                }),
+            });
+
+            if (entity.name === REALM_MASTER_NAME && isPropertySet(data, 'name') && entity.name !== data.name) {
+                throw new BadRequestError(`The name of the ${REALM_MASTER_NAME} can not be changed.`);
+            }
+        } else {
+            await permissionChecker.check({
+                name: PermissionName.REALM_CREATE,
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: data,
+                }),
+            });
+        }
+
+        // ----------------------------------------------
+
+        if (entity) {
+            entity = this.repository.merge(entity, data);
+            await this.repository.save(entity);
+
+            return sendAccepted(res, entity);
+        }
+
+        entity = this.repository.create(data);
+        await this.repository.save(entity);
+
+        return sendCreated(res, entity);
     }
 }

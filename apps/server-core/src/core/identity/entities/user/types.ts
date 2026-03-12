@@ -7,12 +7,14 @@
 
 import type { User } from '@authup/core-kit';
 import type { IdentityProviderMapperElement } from '../../provider/index.ts';
-import type { IEntityRepository } from '../../../entities/index.ts';
 
-export interface IUserIdentityRepository extends IEntityRepository<User> {
+export interface IUserIdentityRepository {
+    findOneById(id: string): Promise<User | null>;
+    findOneByName(name: string, realm?: string): Promise<User | null>;
+    findOneByIdOrName(idOrName: string, realm?: string): Promise<User | null>;
+    findOneBy(where: Record<string, any>): Promise<User | null>;
+
     savePermissions(user: User, items: IdentityProviderMapperElement[]) : Promise<void>;
-
     saveRoles(user: User, items: IdentityProviderMapperElement[]) : Promise<void>;
-
     saveOneWithEA(user: Partial<User>, extraAttributes: Record<string, any>) : Promise<User>;
 }

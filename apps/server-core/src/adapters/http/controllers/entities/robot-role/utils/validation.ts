@@ -7,11 +7,11 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { RobotRoleEntity } from '../../../../../database/domains/index.ts';
+import type { RobotRole } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class RobotRoleRequestValidator extends Container<
-RobotRoleEntity
+RobotRole
 > {
     protected initialize() {
         super.initialize();

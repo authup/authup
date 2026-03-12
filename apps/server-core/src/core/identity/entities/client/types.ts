@@ -6,8 +6,10 @@
  */
 
 import type { Client } from '@authup/core-kit';
-import type { IEntityRepository } from '../../../entities/types.ts';
 
-export interface IClientIdentityRepository extends IEntityRepository<Client> {
-
+export interface IClientIdentityRepository {
+    findOneById(id: string): Promise<Client | null>;
+    findOneByName(name: string, realm?: string): Promise<Client | null>;
+    findOneByIdOrName(idOrName: string, realm?: string): Promise<Client | null>;
+    findOneBy(where: Record<string, any>): Promise<Client | null>;
 }

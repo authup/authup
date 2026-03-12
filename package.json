@@ -57,7 +57,7 @@
     "scripts": {
         "build": "npx nx run-many -t build",
         "test": "npx nx run-many -t test",
-        "lint": "eslint --ext .ts ./packages",
+        "lint": "eslint --ext .ts ./packages ./apps",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "husky"
     },
