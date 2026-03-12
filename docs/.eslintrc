@@ -1,0 +1,32 @@
+{
+    "extends": [
+        "@tada5hi/eslint-config-vue-typescript"
+    ],
+    "parserOptions": {
+        "project": "./tsconfig.json",
+        "extraFileExtensions": [".vue"]
+    },
+    "rules": {
+        "class-methods-use-this": "off",
+
+        "no-continue": "off",
+        "no-underscore-dangle": "off",
+        "no-shadow": "off",
+        "import/no-extraneous-dependencies": ["error", {
+            "devDependencies": true,
+            "optionalDependencies": false,
+            "peerDependencies": false
+        }],
+
+        "@typescript-eslint/no-this-alias": "off"
+    },
+    "ignorePatterns": [
+        "**/dist/*",
+        "**/*.d.ts",
+        "**/writable/**",
+        "**/packages/frontend/ui/components/svg/**"
+    ],
+    "globals": {
+        "NodeJS": true
+    }
+}
