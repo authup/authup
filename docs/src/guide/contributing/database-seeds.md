@@ -37,6 +37,6 @@ import {
     // run seed
     const seeder = new DatabaseSeeder();
     
-    await seeder.run(connection);
+    await seeder.run(dataSource);
 })();
 ```

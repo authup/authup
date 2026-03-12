@@ -8,7 +8,7 @@ import {
 import { Router } from "routup";
 import path from "path";
 
-const app = new Router();
+const router = new Router();
 
 // Register middlewares
 registerMiddlewares(router);

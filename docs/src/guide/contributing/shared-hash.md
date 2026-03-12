@@ -31,7 +31,7 @@ The method `hash()` returns the hashed value of an input string.
 
 **Type**
 ```ts
-declare async function hash(value: string) : Promise<string>;
+declare async function hash(value: string, rounds?: number) : Promise<string>;
 ```
 
 **Example**

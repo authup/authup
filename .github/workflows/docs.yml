@@ -27,7 +27,7 @@ jobs:
               run: npm ci
 
             - name: Build
-              run: npm run build
+              run: npm run build -w docs
 
             - name: CNAME
               if: ${{ github.event_name == 'push' }}
@@ -37,8 +37,8 @@ jobs:
                   echo "authup.org" > CNAME
 
             - name: Deploy
-              uses: peaceiris/actions-gh-pages@v3
+              uses: peaceiris/actions-gh-pages@v4
               if: ${{ github.event_name == 'push' }}
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
-                  publish_dir: ./src/.vitepress/dist
+                  publish_dir: ./docs/src/.vitepress/dist

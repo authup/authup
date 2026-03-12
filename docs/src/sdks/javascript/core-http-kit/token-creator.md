@@ -8,8 +8,8 @@ The following strategies are built in and can be used as follows.
 ## User Strategy
 
 ```typescript
-import type { TokenCreator } from '@auhtup/core-http-kit';
-import { createTokenCreator } from '@auhtup/core-http-kit';
+import type { TokenCreator } from '@authup/core-http-kit';
+import { createTokenCreator } from '@authup/core-http-kit';
 
 const creator : TokenCreator = createTokenCreator({
     type: 'user',
@@ -27,8 +27,8 @@ console.log(tokenPayload);
 ## Robot Strategy
 
 ```typescript
-import type { TokenCreator } from '@auhtup/core-http-kit';
-import { createTokenCreator } from '@auhtup/core-http-kit';
+import type { TokenCreator } from '@authup/core-http-kit';
+import { createTokenCreator } from '@authup/core-http-kit';
 
 const creator : TokenCreator = createTokenCreator({
     type: 'robot',
@@ -44,8 +44,8 @@ console.log(tokenPayload);
 ## RobotInVault Strategy
 
 ```typescript
-import type { TokenCreator } from '@auhtup/core-http-kit';
-import { createTokenCreator } from '@auhtup/core-http-kit';
+import type { TokenCreator } from '@authup/core-http-kit';
+import { createTokenCreator } from '@authup/core-http-kit';
 
 const creator : TokenCreator = createTokenCreator({
     type: 'robotInVault',
@@ -60,7 +60,7 @@ console.log(tokenPayload);
 
 ## Custom Strategy
 ```typescript
-import type { TokenCreator } from '@auhtup/core-http-kit';
+import type { TokenCreator } from '@authup/core-http-kit';
 
 const creator : TokenCreator = async () => {
     return {

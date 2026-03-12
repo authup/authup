@@ -81,7 +81,7 @@ export class Comment {
     text: string;
 
     @ManyToOne(() => UserEntity, { onDelete: 'cascade' })
-    @JoinColumn({ name: 'realm_id' })
+    @JoinColumn({ name: 'user_id' })
     user: UserEntity;
     
     @Column()

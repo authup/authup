@@ -1,9 +1,13 @@
 # Configuration
 
 The API configuration can be provided in different file formats, 
-such as `authup.api.{conf,js,ts,...}`.
+such as `authup.server.core.{conf,js,ts,...}`.
 
 The environment variables in the .env file variant can also be provided via runtime environment.
+
+::: danger Security
+Always change the default admin password (`start123`) and robot secret before deploying to production.
+:::
 
 ::: code-group
 

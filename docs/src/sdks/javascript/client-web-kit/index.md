@@ -17,8 +17,7 @@ npm install @authup/client-web-kit --save-dev
 Create a file in the plugins folder (e.g. `plugins/authup.ts`) to integrate it into the application.
 
 ```typescript
-import { APIClient } from '@authup/core';
-import { install } from '@authup/client-vue';
+import { install } from '@authup/client-web-kit';
 import { createApp } from 'vue'
 
 const app = createApp({
@@ -26,9 +25,6 @@ const app = createApp({
 });
 
 app.use(install, {
-    apiClient: new APIClient({
-        baseURL: 'http://localhost:3010'
-    }),
-    store: useAuthupStore()
+    baseURL: 'http://localhost:3010'
 });
 ```
