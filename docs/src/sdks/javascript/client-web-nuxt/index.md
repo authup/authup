@@ -76,7 +76,7 @@ export type RuntimeOptions = {
 
     /**
      * Path of the home route
-     * Default: /logout
+     * Default: /
      */
     homeRoute?: string,
 

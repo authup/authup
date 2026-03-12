@@ -4,18 +4,38 @@
 
 **Type**
 ```typescript
-import { User } from '@authup/core-kit';
+import { Realm } from '@authup/core-kit';
 
 interface Client {
     id: string,
 
+    // ------------------------------------------------------------------
+
+    active: boolean;
+
+    built_in: boolean;
+
+    is_confidential: boolean,
+
+    // ------------------------------------------------------------------
+
     name: string,
+
+    display_name: string | null;
 
     description: string | null,
 
-    secret: string,
+    // ------------------------------------------------------------------
 
-    redirect_url: string | null,
+    secret: string | null,
+
+    secret_hashed: boolean,
+
+    secret_encrypted: boolean,
+
+    // ------------------------------------------------------------------
+
+    redirect_uri: string | null,
 
     grant_types: string | null,
 
@@ -25,29 +45,28 @@ interface Client {
 
     root_url: string | null,
 
-    is_confidential: boolean
+    // ------------------------------------------------------------------
+
+    created_at: string,
+
+    updated_at: string,
 
     // ------------------------------------------------------------------
 
     realm_id: Realm['id'],
 
     realm: Realm,
-    
-    user_id: User['id'] | null,
-
-    user: User | null
 }
 ```
 
 **References**
 - [Realm](#realm)
-- [User](#user)
 
 ## `IdentityProvider`
 
 **Type**
 ```typescript
-import { 
+import {
     IdentityProviderProtocol,
     IdentityProviderPreset,
     Realm
@@ -58,7 +77,7 @@ interface IdentityProvider {
 
     name: string,
 
-    slug: string;
+    display_name: string | null;
 
     protocol: `${IdentityProviderProtocol}` | null;
 
@@ -66,9 +85,9 @@ interface IdentityProvider {
 
     enabled: boolean;
 
-    created_at: Date | string;
+    created_at: string;
 
-    updated_at: Date | string;
+    updated_at: string;
 
     realm_id: Realm['id'];
 
@@ -112,7 +131,7 @@ enum IdentityProviderPreset {
 **Type**
 ```typescript
 import {
-    IdentityProvider, 
+    IdentityProvider,
     Realm,
     User
 } from '@authup/core-kit';
@@ -120,19 +139,11 @@ import {
 interface IdentityProviderAccount {
     id: string;
 
-    access_token: string;
-
-    refresh_token: string;
-
     provider_user_id: string;
 
     provider_user_name: string;
 
     provider_user_email: string;
-
-    expires_in: number;
-
-    expires_at: Date;
 
     created_at: Date;
 
@@ -144,9 +155,17 @@ interface IdentityProviderAccount {
 
     user: User;
 
-    provider_id: string;
+    user_realm_id: Realm['id'] | null;
+
+    user_realm: Realm | null;
+
+    provider_id: IdentityProvider['id'];
 
     provider: IdentityProvider;
+
+    provider_realm_id: Realm['id'] | null;
+
+    provider_realm: Realm | null;
 }
 ```
 **References**
@@ -154,20 +173,18 @@ interface IdentityProviderAccount {
 - [Realm](#realm)
 - [User](#user)
 
-## `IdentityProviderRole`
+## `IdentityProviderRoleMapping`
 
 **Type**
 ```typescript
-import { 
-    IdentityProvider,
-    Realm, 
+import {
+    IdentityProviderBaseMapping,
+    Realm,
     Role
 } from '@authup/core-kit';
 
-interface IdentityProviderRole {
+interface IdentityProviderRoleMapping extends IdentityProviderBaseMapping {
     id: string;
-
-    external_id: string;
 
     created_at: Date;
 
@@ -182,61 +199,131 @@ interface IdentityProviderRole {
     role_realm_id: Realm['id'] | null;
 
     role_realm: Realm | null;
+}
+```
 
-    provider_id: string;
+**References**
+- [IdentityProviderBaseMapping](#identityproviderbasemapping)
+- [Realm](#realm)
+- [Role](#role)
+
+## `IdentityProviderBaseMapping`
+
+**Type**
+```typescript
+import {
+    IdentityProvider,
+    IdentityProviderMappingSyncMode,
+    Realm
+} from '@authup/core-kit';
+
+interface IdentityProviderBaseMapping {
+    name: string | null;
+
+    value: string | null;
+
+    value_is_regex: boolean;
+
+    synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
+
+    provider_id: IdentityProvider['id'];
 
     provider: IdentityProvider;
 
-    provider_realm_id: Realm['id'] | null;
+    provider_realm_id: Realm['id'];
 
-    provider_realm: Realm | null;
+    provider_realm: Realm;
 }
 ```
 
 **References**
 - [IdentityProvider](#identityprovider)
+- [IdentityProviderMappingSyncMode](#identityprovidermappingsyncmode)
 - [Realm](#realm)
-- [Role](#role)
+
+## `IdentityProviderMappingSyncMode`
+**Type**
+```typescript
+enum IdentityProviderMappingSyncMode {
+    ONCE = 'once',
+    ALWAYS = 'always',
+    INHERIT = 'inherit',
+}
+```
 
 ## `Permission`
 
 **Type**
 ```typescript
+import { Client, Policy, Realm } from '@authup/core-kit';
+
 interface Permission {
     id: string;
 
-    target: string | null;
+    built_in: boolean;
 
-    created_at: Date;
+    name: string;
 
-    updated_at: Date;
+    display_name: string | null;
+
+    description: string | null;
+
+    // ------------------------------------------------------------------
+
+    policy_id: Policy['id'] | null;
+
+    policy: Policy | null;
+
+    // ------------------------------------------------------------------
+
+    client_id: Client['id'] | null;
+
+    client: Client | null;
+
+    // ------------------------------------------------------------------
+
+    realm_id: Realm['id'] | null;
+
+    realm: Realm | null;
+
+    // ------------------------------------------------------------------
+
+    created_at: string;
+
+    updated_at: string;
 }
 ```
+
+**References**
+- [Client](#client)
+- [Policy](#policy)
+- [Realm](#realm)
 
 ## `PermissionRelation`
 
 **Type**
 ```typescript
-import { Permission } from '@authup/core-kit';
+import { Permission, Policy, Realm } from '@authup/core-kit';
 
 interface PermissionRelation {
-    power: number;
+    policy_id: Policy['id'] | null;
 
-    condition: string | null;
-
-    fields: string | null;
-
-    negation: boolean;
-
-    target: string | null;
-
-    // ------------------------------------------------------------------
+    policy: Policy | null;
 
     permission_id: Permission['id'];
 
     permission: Permission;
+
+    permission_realm_id: Realm['id'] | null;
+
+    permission_realm: Realm | null;
 }
 ```
+
+**References**
+- [Permission](#permission)
+- [Policy](#policy)
+- [Realm](#realm)
 
 ## `Realm`
 
@@ -246,6 +333,8 @@ interface Realm {
     id: string;
 
     name: string;
+
+    display_name: string | null;
 
     description: string | null;
 
@@ -261,7 +350,7 @@ interface Realm {
 
 **Type**
 ```typescript
-import { Realm, User } from '@authup/core-kit';
+import { Client, Realm, User } from '@authup/core-kit';
 
 interface Robot {
     id: string;
@@ -269,6 +358,8 @@ interface Robot {
     secret: string;
 
     name: string;
+
+    display_name: string | null;
 
     description: string;
 
@@ -286,6 +377,14 @@ interface Robot {
 
     user: User | null;
 
+    // ------------------------------------------------------------------
+
+    client_id: Client['id'] | null;
+
+    client: Client | null;
+
+    // ------------------------------------------------------------------
+
     realm_id: Realm['id'];
 
     realm: Realm;
@@ -293,6 +392,7 @@ interface Robot {
 ```
 
 **References**
+- [Client](#client)
 - [Realm](#realm)
 - [User](#user)
 
@@ -300,7 +400,7 @@ interface Robot {
 
 **Type**
 ```typescript
-import { PermissionRelation, Realm, Robot } from '@authup/core-kit';
+import { PermissionRelation, Robot, Realm } from '@authup/core-kit';
 
 interface RobotPermission extends PermissionRelation {
     id: string;
@@ -332,7 +432,7 @@ interface RobotPermission extends PermissionRelation {
 
 **Type**
 ```typescript
-import { Realm, Role } from '@authup/core-kit';
+import { Realm, Robot, Role } from '@authup/core-kit';
 
 interface RobotRole {
     id: string;
@@ -365,22 +465,33 @@ interface RobotRole {
 
 **References**
 - [Realm](#realm)
+- [Robot](#robot)
 - [Role](#role)
 
 ## `Role`
 
 **Type**
 ```typescript
-import { Realm } from '@authup/core-kit';
+import { Client, Realm } from '@authup/core-kit';
 
 interface Role {
     id: string;
 
+    built_in: boolean;
+
     name: string;
+
+    display_name: string | null;
 
     target: string | null;
 
     description: string | null;
+
+    // ------------------------------------------------------------------
+
+    client_id: Client['id'] | null;
+
+    client: Client | null;
 
     // ------------------------------------------------------------------
 
@@ -397,6 +508,10 @@ interface Role {
 
 ```
 
+**References**
+- [Client](#client)
+- [Realm](#realm)
+
 ## `RoleAttribute`
 
 **Type**
@@ -406,7 +521,7 @@ import { Realm, Role } from '@authup/core-kit';
 interface RoleAttribute {
     id: string;
 
-    key: string;
+    name: string;
 
     value: string | null;
 
@@ -468,7 +583,7 @@ interface RolePermission extends PermissionRelation {
 
 **Type**
 ```typescript
-import { Realm } from '@authup/core-kit';
+import { Client, Realm } from '@authup/core-kit';
 
 interface User {
     id: string;
@@ -481,9 +596,9 @@ interface User {
 
     last_name: string | null;
 
-    display_name: string;
+    display_name: string | null;
 
-    email: string | null;
+    email: string;
 
     password: string | null;
 
@@ -497,9 +612,9 @@ interface User {
 
     reset_hash: string | null;
 
-    reset_at: Date | null;
+    reset_at: string | null;
 
-    reset_expires: Date | null;
+    reset_expires: string | null;
 
     // ------------------------------------------------------------------
 
@@ -521,16 +636,24 @@ interface User {
 
     // ------------------------------------------------------------------
 
-    realm_id: string;
+    client_id: Client['id'] | null;
+
+    client: Client | null;
+
+    // ------------------------------------------------------------------
+
+    realm_id: Realm['id'];
 
     realm: Realm;
 
-    // extra user attributes :)
-    extra?: Record<string, any>;
+    // ------------------------------------------------------------------
+
+    [key: string]: any
 }
 ```
 
 **References**
+- [Client](#client)
 - [Realm](#realm)
 
 ## `UserAttribute`
@@ -542,7 +665,7 @@ import { Realm, User } from '@authup/core-kit';
 interface UserAttribute {
     id: string;
 
-    key: string;
+    name: string;
 
     value: string | null;
 

@@ -1,191 +1,55 @@
 # Key Pair
 
-## `useKeyPair`
+The key pair API has been redesigned. Key pairs are now managed using the Web Crypto API
+via the `AsymmetricKey` and `createAsymmetricKeyPair` utilities in `@authup/server-kit`.
 
-The method `useKeyPair()` can be used to create a key-pair, if it does not already exist or
-use an internal runtime cache, if the key was once loaded before.
+The old `useKeyPair`, `createKeyPair`, and `deleteKeyPair` functions no longer exist.
+
+## `createAsymmetricKeyPair`
+
+Creates an asymmetric key pair using the Web Crypto API.
 
 **Type**
 ```ts
-declare async function useKeyPair(value?: Partial<KeyPairOptions> | string) : Promise<KeyPair>;
+declare async function createAsymmetricKeyPair(
+    options: AsymmetricKeyPairCreateOptionsInput
+) : Promise<CryptoKeyPair>;
 ```
 
 **Example**
 ```typescript
-import {
-      useKeyPair,
-      KeyPairOptions 
-  } from '@authup/server-core';
-
-const options: Partial<KeyPairOptions> = {
-    /* ... */
-}
+import { createAsymmetricKeyPair } from '@authup/server-kit';
 
 (async () => {
-    const keyPair = await useKeyPair(options);
+    const keyPair = await createAsymmetricKeyPair({
+        name: 'RSASSA-PKCS1-v1_5',
+        hash: 'SHA-256',
+    });
 
     console.log(keyPair);
-    // {privateKey: 'xxx', publicKey: 'xxx'}
+    // { privateKey: CryptoKey, publicKey: CryptoKey }
 })();
 ```
 
-**Type References**
-- [KeyPair](#keypair)
-- [KeyPairOptions](#keypairoptions)
+## `AsymmetricKey`
 
-## `createKeyPair`
-
-The method `createKeyPair()` can be used to create a key-pair.
-
-**Type**
-```ts
-declare async function createKeyPair(
-    options?: Partial<KeyPairOptions>
-) : Promise<KeyPair>;
-```
-
-**Example**
-```typescript
-import {
-    createKeyPair,
-    KeyPairOptions 
-} from '@authup/server-core';
-
-const options: Partial<KeyPairOptions> = {
-    /* ... */
-}
-
-(async () => {
-    const keyPair = await createKeyPair(options);
-
-    console.log(keyPair);
-    // {privateKey: 'xxx', publicKey: 'xxx'}
-})();
-```
-
-**References**
-- [KeyPair](#keypair)
-- [KeyPairOptions](#keypairoptions)
-
-## `deleteKeyPair`
-
-The method `deleteKeyPair()` will attempt to delete the specified key-pair on disc.
-
-**Type**
-```ts
-declare async function deleteKeyPair(options?: Partial<KeyPairOptions>) : Promise<void>;
-```
-
-**Example**
-```typescript
-import {
-    deleteKeyPair,
-    KeyPairOptions 
-} from '@authup/server-core';
-  
-const options: Partial<KeyPairOptions> = {
-    /* ... */
-}
-  
-(async () => {
-    await deleteKeyPair(options);
-})();
-```
-
-**References**
-- [KeyPair](#keypair)
-- [KeyPairOptions](#keypairoptions)
-
-## `KeyPair`
+A wrapper class for `CryptoKey` that provides PEM encoding and import utilities.
 
 ```typescript
-type KeyPair = {
-    privateKey: string,
-    publicKey: string
-};
+import { AsymmetricKey } from '@authup/server-kit';
+
+// Import from base64-encoded key
+const key = await AsymmetricKey.fromBase64({
+    format: 'spki',
+    key: base64PublicKey,
+    options: {
+        name: 'RSASSA-PKCS1-v1_5',
+        hash: 'SHA-256',
+    },
+});
+
+// Convert to PEM
+const pem = await key.toPem();
 ```
 
-## `KeyPairOptions`
-```typescript
-export type KeyPairOptions = KeyPairBaseOptions & KeyPairGenerator;
-```
-
-## `KeyPairBaseOptions`
-```typescript
-export type KeyPairBaseOptions = {
-    /**
-     * Directory where to save key-pair.
-     *
-     * default: process.cwd()
-     */
-    directory: string,
-    /**
-     * Private key name
-     *
-     * default: private
-     */
-    privateName: string,
-    /**
-     * Extension for private key.
-     *
-     * default: pem
-     */
-    privateExtension: string,
-    /**
-     * Public key name
-     *
-     * default: public
-     */
-    publicName: string,
-    /**
-     * Extension for public key.
-     *
-     * default: pem
-     */
-    publicExtension: string,
-    /**
-     * Passphrase for private key.
-     *
-     * default: undefined
-     */
-    passphrase: string,
-    /**
-     * Save key-pair to file system.
-     *
-     * default: true
-     */
-    save: boolean
-};
-```
-
-## `KeyPairGenerator`
-
-```typescript
-import {
-    DSAKeyPairOptions,
-    ECKeyPairOptions,
-    RSAKeyPairOptions,
-    RSAPSSKeyPairOptions,
-} from 'crypto';
-
-export type KeyPairGenerator = DSAKeyPairGenerator |
-    RSAKeyPairGenerator |
-    RSAPSSKeyPairGenerator |
-    ECKeyPairGenerator;
-
-export type RSAKeyPairGenerator = {
-    type: 'rsa'
-} & RSAKeyPairOptions<'pem', 'pem'>;
-
-export type RSAPSSKeyPairGenerator = {
-    type: 'rsa-pss',
-} & RSAPSSKeyPairOptions<'pem', 'pem'>;
-
-export type DSAKeyPairGenerator = {
-    type: 'dsa'
-} & DSAKeyPairOptions<'pem', 'pem'>;
-
-export type ECKeyPairGenerator = {
-    type: 'ec',
-} & ECKeyPairOptions<'pem', 'pem'>;
-```
+See `packages/server-kit/src/crypto/key/` for the full API.

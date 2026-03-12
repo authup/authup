@@ -7,11 +7,11 @@ The package contains a **record** component for the following resources:
 - **AClientScope**
 - **AIdentityProvider**
 - **APermission**
+- **APolicy**
 - **ARealm**
 - **ARobot**
 - **ARole**
 - **AScope**
-- **AScopeClient**
 - **AUser**
 
 These components always represent a single resource record. 

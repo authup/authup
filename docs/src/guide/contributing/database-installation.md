@@ -1,7 +1,4 @@
 # Installation
 
-Add the package as dependency to the project.
-
-```sh
-npm install @authup/server-database --save
-```
+Database functionality is part of the server-core application (`apps/server-core`)
+and is not available as a standalone package.

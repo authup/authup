@@ -4,14 +4,13 @@ The package contains a **form** component for the following resources:
 
 `General`
 - **AClientForm**
-- **AClientScopeForm**
 - **AIdentityProviderForm**
 - **APermissionForm**
+- **APolicyForm**
 - **ARealmForm**
 - **ARobotForm**
 - **ARoleForm**
 - **AScopeForm**
-- **AScopeClientForm**
 - **AUserForm**
 
 These forms always represent a single resource.

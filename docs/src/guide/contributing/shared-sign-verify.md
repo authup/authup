@@ -2,187 +2,135 @@
 
 ## `signToken`
 
-The method `signToken()` can be used to sign a payload.
+The method `signToken()` can be used to sign a JWT payload.
 
 **Type**
 ```ts
-import {
-    TokenSignOptions
-} from '@authup/server-utils';
+import type { JWTClaims } from '@authup/specs';
+import type { TokenSignOptions } from '@authup/server-kit';
 
 declare async function signToken(
-    payload: string | object | Buffer | Record<string, any>,
-    options?: TokenSignOptions
+    claims: JWTClaims,
+    context: TokenSignOptions
 ): Promise<string>;
 ```
 
 **Example**
 ```typescript
-import {
-    signToken
-} from '@authup/server-utils';
+import { signToken } from '@authup/server-kit';
 
 (async () => {
-    const token : Record<string, any> = {foo: 'bar'};
-    const tokenSigned = await signToken(
-        token, 
+    const token = await signToken(
+        { sub: 'user-id', foo: 'bar' },
         {
-            type: 'rsa',
-            expiresIn: 3600
+            type: 'RSA',
+            key: privateKey, // base64-encoded string or CryptoKey
         }
     );
-});
+})();
 ```
 **References**
 - [TokenSignOptions](#tokensignoptions)
 
-## `decodeToken`
+## `extractTokenPayload`
 
-The method `decodeToken()` can be used to decode the payload of a JWT token without verification.
+The method `extractTokenPayload()` can be used to extract the payload of a JWT token without verification.
+This replaces the old `decodeToken()` function.
 
 **Type**
 ```typescript
-import {
-    TokenDecodeOptions
-} from '@authup/server-utils';
-import { Jwt, JwtPayload } from 'jsonwebtoken';
+import type { JWTClaims } from '@authup/specs';
 
-declare function decodeToken(
-    token: string, 
-    options: TokenDecodeOptions & { complete: true }
-): null | Jwt;
-
-declare function decodeToken(
-    token: string, 
-    options?: TokenDecodeOptions
-): JwtPayload | string | null;
+declare function extractTokenPayload(token: string): JWTClaims;
 ```
 
 **Example**
 ```typescript
-import {
-    decodeToken
-} from "@authup/server-utils";
+import { extractTokenPayload } from '@authup/server-kit';
 
-(async () => {
-    const tokenSigned = '...';
-    const tokenVerified = decodeToken(tokenSigned);
-
-    console.log(tokenVerified);
-    // {iat: 1642942322, exp: 1642945922, foo: 'bar', ... }
-});
+const payload = extractTokenPayload(tokenString);
+console.log(payload);
+// { iat: 1642942322, exp: 1642945922, foo: 'bar', ... }
 ```
-**References**
-- [TokenSignOptions](#tokensignoptions)
+
+## `extractTokenHeader`
+
+The method `extractTokenHeader()` extracts the header of a JWT token without verification.
+
+**Type**
+```typescript
+import type { JWTHeader } from '@authup/specs';
+
+declare function extractTokenHeader(token: string): JWTHeader;
+```
 
 ## `verifyToken`
 
-The method `decodeToken()` can be used to decode and verify a JWT token.
+The method `verifyToken()` can be used to decode and verify a JWT token.
 
 **Type**
 ```ts
-import {
-    TokenVerifyOptions
-} from '@authup/server-utils';
-import { Jwt, JwtPayload } from 'jsonwebtoken';
-
-export async function verifyToken(
-    token: string, 
-    context: TokenVerifyOptions & { complete: true }
-): Promise<string | Jwt>;
+import type { OAuth2TokenPayload } from '@authup/specs';
+import type { TokenVerifyOptions } from '@authup/server-kit';
 
 declare async function verifyToken(
     token: string,
     context: TokenVerifyOptions
-): Promise<JwtPayload | string>;
-
-declare async function verifyToken(
-    token: string,
-    options?: TokenVerifyOptions
-): Promise<JwtPayload | Jwt | string>;
+): Promise<OAuth2TokenPayload>;
 ```
+
 **Example**
 ```typescript
-import {
-    signToken
-} from "@authup/server-utils";
+import { verifyToken } from '@authup/server-kit';
 
 (async () => {
-    const tokenSigned = '...';
-    const tokenVerified = await verifyToken(tokenSigned);
+    const payload = await verifyToken(tokenString, {
+        type: 'RSA',
+        key: publicKey, // base64-encoded string or CryptoKey
+    });
 
-    console.log(tokenVerified);
-    // {iat: 1642942322, exp: 1642945922, foo: 'bar', ... }
-});
+    console.log(payload);
+    // { iat: 1642942322, exp: 1642945922, sub: '...', ... }
+})();
 ```
 **References**
-- [TokenSignOptions](#tokensignoptions)
+- [TokenVerifyOptions](#tokenverifyoptions)
 
 ## `TokenSignOptions`
 
-:::info Hint
-The type is simplified for better readability.
-:::
-
 ```typescript
-import { KeyPair, KeyPairOptions } from '@authup/server-utils';
-import { SignOptions } from 'jsonwebtoken';
-
-export type TokenSignOptions = ({
-    type: 'rsa',
-    algorithm?: 'RS256' | 'RS384' | 'RS512' |
-        'PS256' | 'PS384' | 'PS512',
-    keyPair: KeyPair | Partial<KeyPairOptions> | string
+type TokenSignOptions = {
+    type: 'RSA',
+    algorithm?: 'RS256' | 'RS384' | 'RS512' | 'PS256' | 'PS384' | 'PS512',
+    key: string | CryptoKey,
+    keyId?: string,
 } | {
-    type: 'ec',
-    algorithm?: 'ES256' | 'ES384' | 'ES512',
-    keyPair: KeyPair | Partial<KeyPairOptions> | string
+    type: 'EC',
+    algorithm?: 'ES256' | 'ES384',
+    key: string | CryptoKey,
+    keyId?: string,
 } | {
     type: 'oct',
     algorithm?: 'HS256' | 'HS384' | 'HS512',
-    secret: string | Buffer
-}) & Omit<SignOptions, 'algorithm'>;
+    key: string | CryptoKey,
+    keyId?: string,
+};
 ```
-
-**References**
-- [KeyPair](shared-key-pair.md#keypair)
-- [KeyPairOptions](shared-key-pair.md#keypairoptions)
 
 ## `TokenVerifyOptions`
 
-:::info Hint
-The type is simplified for better readability.
-:::
-
 ```typescript
-import { KeyType } from '@authup/core';
-import { KeyPair, KeyPairOptions } from '@authup/server-utils';
-import { VerifyOptions } from 'jsonwebtoken';
-
-export type TokenVerifyOptions = ({
-    type: 'rsa',
-    algorithms?: ('RS256' | 'RS384' | 'RS512' |
-        'PS256' | 'PS384' | 'PS512')[],
-    keyPair: KeyPair | Partial<KeyPairOptions> | string
+type TokenVerifyOptions = {
+    type: 'RSA',
+    algorithms?: ('RS256' | 'RS384' | 'RS512' | 'PS256' | 'PS384' | 'PS512')[],
+    key: string | CryptoKey,
 } | {
-    type: 'ec',
-    algorithms?: ('ES256' | 'ES384' | 'ES512')[],
-    keyPair: KeyPair | Partial<KeyPairOptions> | string
+    type: 'EC',
+    algorithms?: ('ES256' | 'ES384')[],
+    key: string | CryptoKey,
 } | {
     type: 'oct',
     algorithms?: ('HS256' | 'HS384' | 'HS512')[],
-    secret: string | Buffer
-}) & Omit<VerifyOptions, 'algorithms'>;
-```
-
-**References**
-- [KeyPair](shared-key-pair.md#keypair)
-- [KeyPairOptions](shared-key-pair.md#keypairoptions)
-
-## `TokenDecodeOptions`
-
-```typescript
-import { DecodeOptions } from 'jsonwebtoken';
-
-type TokenDecodeOptions = DecodeOptions;
+    key: string | CryptoKey,
+};
 ```

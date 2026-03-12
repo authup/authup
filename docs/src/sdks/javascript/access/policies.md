@@ -2,7 +2,7 @@
 
 The system provides a set of built-in policies that are evaluated by the policy engine by default.
 These policy evaluators can be overridden if needed.
-In addition, custom evaluators can be added and registered to extend the system’s capabilities.
+In addition, custom evaluators can be added and registered to extend the system's capabilities.
 
 The following built-in policies are available:
 - [Attributes](#attributes)
@@ -15,7 +15,7 @@ The following built-in policies are available:
 
 ## Attributes
 
-The attributes policy configuration specifies conditions in the form of a MongoDB query, which are evaluated against the input’s attributes property.
+The attributes policy configuration specifies conditions in the form of a MongoDB query, which are evaluated against the `attributes` key in the policy data.
 
 **`Config`**
 ```typescript
@@ -26,11 +26,18 @@ export interface AttributesPolicy {
 
 **`Evaluator`**
 ```typescript
-import { AttributesPolicyEvaluator } from '@authup/access';
+import { AttributesPolicyEvaluator, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 
 const evaluator = new AttributesPolicyEvaluator();
-evaluator.evaluate({
-    config: {
+
+const data = new PolicyData();
+data.set('attributes', {
+    name: 'Peter',
+    age: 15,
+});
+
+evaluator.evaluate(
+    {
         query: {
             name: {
                 $regex: /t/,
@@ -41,13 +48,8 @@ evaluator.evaluate({
             },
         }
     },
-    input: {
-        attributes: {
-            name: 'Peter',
-            age: 15,
-        },
-    }
-})
+    definePolicyEvaluationContext({ data }),
+)
 ```
 
 One or many conditions can be specified using the MongoDB [query language](http://docs.mongodb.org/manual/reference/operator/query/)
@@ -90,7 +92,7 @@ The list of supported operators:
 
 ## AttributeNames
 
-The Attribute Names Policy restricts the set of allowed keys in the input’s attributes property.
+The Attribute Names Policy restricts the set of allowed keys in the `attributes` key of the policy data.
 
 **`Config`**
 ```typescript
@@ -101,20 +103,22 @@ export interface AttributeNamesPolicy {
 
 **`Evaluator`**
 ```typescript
-import { AttributeNamesPolicyEvaluator } from '@authup/access';
+import { AttributeNamesPolicyEvaluator, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 
 const evaluator = new AttributeNamesPolicyEvaluator();
-evaluator.evaluate({
-    config: {
+
+const data = new PolicyData();
+data.set('attributes', {
+    name: 'Peter',
+    age: 15,
+});
+
+evaluator.evaluate(
+    {
         names: ['name', 'age']
     },
-    input: {
-        attributes: {
-            name: 'Peter',
-            age: 15,
-        },
-    }
-})
+    definePolicyEvaluationContext({ data }),
+)
 ```
 
 ## Date
@@ -133,18 +137,20 @@ export interface DatePolicy {
 
 **`Evaluator`**
 ```typescript
-import { DatePolicyEvaluator } from '@authup/access';
+import { DatePolicyEvaluator, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 
 const evaluator = new DatePolicyEvaluator();
-evaluator.evaluate({
-    config: {
+
+const data = new PolicyData();
+data.set('date', '2024-04-15'); // optional
+
+evaluator.evaluate(
+    {
         start: '2024-04-01',
         end: '2024-05-01',
     },
-    input: {
-        dateTime: '2024-04-15' // optional
-    }
-})
+    definePolicyEvaluationContext({ data }),
+)
 ```
 
 
@@ -167,8 +173,8 @@ TODO
 
 ## RealmMatch
 
-The RealmMatch Policy requires that the identity’s realm matches one or more realm attributes 
-of a resource, or one of the key-value pairs in the resource’s attributes property.
+The RealmMatch Policy requires that the identity's realm matches one or more realm attributes
+of a resource, or one of the key-value pairs in the resource's attributes property.
 
 ```typescript
 export interface RealmMatchPolicy {
@@ -245,11 +251,15 @@ export interface TimePolicy {
 
 **`Evaluator`**
 ```typescript
-import { TimePolicyEvaluator } from '@authup/access';
+import { TimePolicyEvaluator, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 
 const evaluator = new TimePolicyEvaluator();
-evaluator.evaluate({
-    config: {
+
+const data = new PolicyData();
+data.set('time', '2024-04-15'); // optional
+
+evaluator.evaluate(
+    {
         start: '08:00:00',
         end: '16:00:00',
         interval: 'daily',
@@ -257,8 +267,6 @@ evaluator.evaluate({
         dayOfMonth: 1,
         dayOfYear: 1,
     },
-    input: {
-        dateTime: '2024-04-15' // optional
-    }
-})
+    definePolicyEvaluationContext({ data }),
+)
 ```

@@ -2,7 +2,7 @@
 
 ## `compare`
 
-The method `compare()` compares a raw value with a hashed value. 
+The method `compare()` compares a raw value with a hashed value.
 
 **Type**
 ```ts
@@ -14,7 +14,7 @@ declare async function compare(value: string, hashedValue: string) : Promise<boo
 import {
     compare,
     hash
-} from "@authup/server-utils";
+} from "@authup/server-kit";
 
 (async () => {
     const hashed = await hash('start123', 10); // 10 rounds
@@ -38,7 +38,7 @@ declare async function hash(value: string, rounds?: number) : Promise<string>;
 ```typescript
 import {
     hash
-} from "@authup/server-utils";
+} from "@authup/server-kit";
 
 (async () => {
     const hashed = await hash('start123', 10); // 10 rounds

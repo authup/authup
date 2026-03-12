@@ -1,28 +1,7 @@
 # Controllers
-The controllers must be registered in the gap of the common- & error-[middlewares](middlewares.md).
 
-```typescript
-import {
-    registerControllers
-} from "@authup/server-http";
+Controllers are part of the server-core application and are located in
+`apps/server-core/src/adapters/http/controllers/`.
 
-import { Router } from "routup";
-import path from "path";
-
-const router = new Router();
-
-// Register middlewares
-/* ... */
-
-// Register controllers
-/* ... */
-
-// Register controllers
-registerControllers(router);
-
-// Register error middleware
-/* ... */
-
-
-router.listen(3010);
-```
+They are no longer available as a standalone package. See the
+[Architecture](./../../../AGENTS.md) guide for details on the controller pattern.
