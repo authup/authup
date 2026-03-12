@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+    push:
+        branches:
+            - master
+        paths:
+            - 'docs/**'
+    pull_request:
+        branches:
+            - master
+        paths:
+            - 'docs/**'
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - uses: actions/checkout@v6
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+
+            - name: Install
+              run: npm ci
+
+            - name: Build
+              run: npm run build
+
+            - name: CNAME
+              if: ${{ github.event_name == 'push' }}
+              run: |
+                  cd ./docs/src/.vitepress/dist/
+                  touch CNAME
+                  echo "authup.org" > CNAME
+
+            - name: Deploy
+              uses: peaceiris/actions-gh-pages@v3
+              if: ${{ github.event_name == 'push' }}
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./src/.vitepress/dist
