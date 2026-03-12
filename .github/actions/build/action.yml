@@ -1,0 +1,17 @@
+name: 'Build'
+description: 'Prepares the repo for a job by running the build'
+
+runs:
+    using: 'composite'
+    steps:
+        -   uses: actions/cache@v3
+            id: build-cache
+            with:
+                path: '**/dist/**'
+                key: ${{ runner.os }}-build-${{ github.sha }}
+
+        -   name: Build
+            shell: bash
+            if: steps.build-cache.outputs.cache-hit != 'true'
+            run: |
+                npm run build

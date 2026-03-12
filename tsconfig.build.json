@@ -1,0 +1,27 @@
+{
+    "extends": "@tada5hi/tsconfig",
+    "compilerOptions": {
+        "strict": true,
+        "sourceMap": true,
+
+        "declaration": true,
+        "declarationMap": true,
+
+        "skipLibCheck": true,
+
+        "esModuleInterop": true,
+        "lib": ["ESNext", "DOM"],
+        // compiled code js version
+        "target": "ES2022",
+
+        "moduleResolution": "bundler",
+        // compiled code format (esm/cjs)
+        "module": "ESNext",
+
+        "allowImportingTsExtensions": true
+    },
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

@@ -1,0 +1,17 @@
+{
+    "include-component-in-tag": false,
+    "release-type": "node",
+    "release-as": "1.0.0-beta.30",
+    "packages": {
+        "packages/server-http": {"component": "http"},
+        "packages/server-kit": {"component": "kit"},
+        "packages/server-socket-io": {"component": "socket-io"}
+    },
+    "plugins": [
+        {
+            "type": "node-workspace",
+            "updatePeerDependencies": true
+        }
+    ],
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json"
+}
