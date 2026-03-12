@@ -43,20 +43,13 @@ export default {
      */
     cookieDomain: undefined,
     
-    /**
-     * Redirect URL after successful login with
-     * external identity provider.
-     * default: http://localhost:3000
-     */
-    authorizeRedirectUrl: 'http://localhost:3000',
-
     // ----------------------------------------------------
 
     /**
      * Refresh token validity in seconds (default: 259,200s / 3 days).
-     * default: 259_000
+     * default: 259_200
      */
-    tokenRefreshMaxAge: 259_000,
+    tokenRefreshMaxAge: 259_200,
 
     /**
      * Access token validity in seconds (default: 3600s / 1 hour).
@@ -93,12 +86,6 @@ export default {
     userAdminEnabled: true,
     
     /**
-     * The name of the default admin user.
-     * default: 'admin'
-     */
-    userAdminName: 'admin',
-    
-    /**
      * The password of the default admin user.
      * default: 'start123'
      */
@@ -119,16 +106,10 @@ export default {
     robotAdminEnabled: false,
     
     /**
-     * The name of the default robot.
-     * default: system
+     * The secret of the default robot.
+     * default: 'start123'
      */
-    robotAdminName: 'system',
-    
-    /**
-     * The secret of the default admin user.
-     * default: (generated)
-     */
-    robotAdminSecret: 'foo',
+    robotAdminSecret: 'start123',
     
     /**
      * Reset the robot secret on application startup.
@@ -141,16 +122,13 @@ export default {
 ```dotenv [authup.server.core.conf]
 port=3001
 publicUrl=http://localhost:3001
-authorizeRedirectUrl=http://localhost:3000
 registration=false
 emailVerification=false
 forgotPassword=false
-userAdminName=admin
 userAdminPassword=start123
 userAdminPasswordReset=false
 robotAdminEnabled=false
-robotAdminName=system
-robotAdminSecret=foo
+robotAdminSecret=start123
 robotAdminSecretReset=false
 
 ```
@@ -158,16 +136,13 @@ robotAdminSecretReset=false
 ```dotenv [.env]
 PORT=3001
 PUBLIC_URL=http://localhost:3001
-AUTHORIZE_REDIRECT_URL=http://localhost:3000
 REGISTRATION=false
 EMAIL_VERIFICATION=false
 FORGOT_PASSWORD=false
-USER_ADMIN_NAME=admin
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false
-ROBOT_ADMIN_NAME=system
-ROBOT_ADMIN_SECRET=foo
+ROBOT_ADMIN_SECRET=start123
 ROBOT_ADMIN_SECRET_RESET=false
 
 ```

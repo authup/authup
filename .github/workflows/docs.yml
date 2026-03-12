@@ -6,17 +6,19 @@ on:
             - master
         paths:
             - 'docs/**'
+            - '.github/workflows/docs.yml'
     pull_request:
         branches:
             - master
         paths:
             - 'docs/**'
+            - '.github/workflows/docs.yml'
 
 jobs:
-    deploy:
+    build:
         runs-on: ubuntu-latest
         permissions:
-            contents: write
+            contents: read
         steps:
             - uses: actions/checkout@v6
             - uses: actions/setup-node@v4
@@ -29,16 +31,31 @@ jobs:
             - name: Build
               run: npm run build -w docs
 
-            - name: CNAME
+            - name: Upload artifact
               if: ${{ github.event_name == 'push' }}
-              run: |
-                  cd ./docs/src/.vitepress/dist/
-                  touch CNAME
-                  echo "authup.org" > CNAME
+              uses: actions/upload-artifact@v4
+              with:
+                  name: docs-dist
+                  path: ./docs/src/.vitepress/dist
+
+    deploy:
+        if: ${{ github.event_name == 'push' }}
+        needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Download artifact
+              uses: actions/download-artifact@v4
+              with:
+                  name: docs-dist
+                  path: ./dist
+
+            - name: CNAME
+              run: echo "authup.org" > ./dist/CNAME
 
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v4
-              if: ${{ github.event_name == 'push' }}
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
-                  publish_dir: ./docs/src/.vitepress/dist
+                  publish_dir: ./dist
