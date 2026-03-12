@@ -11,7 +11,7 @@ Creates an asymmetric key pair using the Web Crypto API.
 
 **Type**
 ```ts
-declare async function createAsymmetricKeyPair(
+declare function createAsymmetricKeyPair(
     options: AsymmetricKeyPairCreateOptionsInput
 ) : Promise<CryptoKeyPair>;
 ```

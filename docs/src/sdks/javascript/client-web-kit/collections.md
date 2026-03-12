@@ -72,7 +72,7 @@ The package contains a **list** component for the following resources:
 <template>
     <AUsers :query="query">
         <template #header="props">
-            <ListHeader text="AUsers" />
+            <ATitle text="AUsers" />
 
             <ASearch
                 :busy="props.busy"
@@ -128,7 +128,7 @@ The query prop has the following parameters:
 - **sort**: Sort the resources according to one or more keys in asc/desc direction.
 
 ::: tip
-For this purpose [rapiq](https://github.com/tada5hi) is used.
+For this purpose [rapiq](https://github.com/tada5hi/rapiq) is used.
 Visit the documentation for more details about the parameters and the scheme.
 :::
 

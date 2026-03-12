@@ -251,6 +251,50 @@ enum IdentityProviderMappingSyncMode {
 }
 ```
 
+## `Policy`
+
+**Type**
+```typescript
+import { PolicyWithType, Realm } from '@authup/core-kit';
+
+interface Policy {
+    id: string;
+
+    built_in: boolean;
+
+    type: string;
+
+    name: string;
+
+    display_name: string | null;
+
+    description: string | null;
+
+    invert: boolean;
+
+    children: PolicyWithType<Policy>[];
+
+    parent_id: Policy['id'] | null;
+
+    parent: PolicyWithType<Policy> | null;
+
+    // ------------------------------------------------------------------
+
+    realm_id: Realm['id'] | null;
+
+    realm: Realm | null;
+
+    // ------------------------------------------------------------------
+
+    created_at: string;
+
+    updated_at: string;
+}
+```
+
+**References**
+- [Realm](#realm)
+
 ## `Permission`
 
 **Type**

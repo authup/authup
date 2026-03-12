@@ -37,7 +37,7 @@ const repository = new PermissionMemoryRepository(items);
 ## Check
 
 To check if a permission will be granted use the `check` method.
-The `check` method accepts an object of type [PermissionCheckerCheckContext](./api-reference.md#permissioncheckercheckoptions).
+The `check` method accepts an object of type [PermissionCheckerCheckContext](./api-reference.md#permissioncheckercheckontext).
 
 ```typescript
 import { PermissionChecker, PermissionMemoryRepository, PolicyData } from '@authup/access';

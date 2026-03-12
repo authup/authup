@@ -14,7 +14,7 @@ The package contains a **form** component for the following resources:
 - **AUserForm**
 
 These forms always represent a single resource.
-They have the same component [props](records#props) as the [entity](records) components.
+They accept an `entity` prop to pass the resource data for editing.
 
 ## Usage
 

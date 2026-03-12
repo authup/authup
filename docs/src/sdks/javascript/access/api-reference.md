@@ -64,7 +64,6 @@ Each built-in policy type uses a specific key to look up its data:
 | Key                 | Expected Value                                        | Used By            |
 |---------------------|-------------------------------------------------------|--------------------|
 | `attributes`        | `Record<string, any>`                                 | Attributes         |
-| `attributeNames`    | `Record<string, any>`                                 | AttributeNames     |
 | `date`              | `Date \| string \| number`                            | Date               |
 | `time`              | `Date \| string \| number`                            | Time               |
 | `identity`          | [IdentityPolicyData](#identitypolicydata)             | Identity           |
