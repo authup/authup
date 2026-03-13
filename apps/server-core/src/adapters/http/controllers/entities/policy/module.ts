@@ -212,6 +212,10 @@ export class PolicyController {
             throw new NotFoundError();
         }
 
+        if (entity.built_in) {
+            throw new BadRequestError('A built-in policy can not be deleted.');
+        }
+
         await permissionChecker.check({
             name: PermissionName.PERMISSION_DELETE,
             input: new PolicyData({
@@ -298,6 +302,10 @@ export class PolicyController {
         await this.repository.checkUniqueness(data, entity || undefined);
 
         if (entity) {
+            if (entity.built_in) {
+                throw new BadRequestError('A built-in policy can not be updated.');
+            }
+
             await permissionChecker.check({
                 name: PermissionName.PERMISSION_UPDATE,
                 input: new PolicyData({
