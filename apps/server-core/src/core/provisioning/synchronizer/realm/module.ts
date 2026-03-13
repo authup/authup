@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
-import type { Repository } from 'typeorm';
+import type { IRealmRepository } from '../../../entities/index.ts';
 import type { ClientProvisioningEntity, ScopeProvisioningEntity } from '../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
@@ -23,7 +22,7 @@ import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RealmProvisioningSynchronizerContext } from './types.ts';
 
 export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<RealmProvisioningEntity> {
-    protected repository : Repository<Realm>;
+    protected repository : IRealmRepository;
 
     protected clientSynchronizer: IProvisioningSynchronizer<ClientProvisioningEntity>;
 
@@ -54,6 +53,14 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
         });
+
+        if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
+            if (attributes) {
+                await this.repository.remove(attributes);
+            }
+            return { ...input, attributes: attributes || input.attributes };
+        }
+
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE:
@@ -68,11 +75,11 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
-                    attributes = await this.repository.save(input.attributes);
+                    attributes = await this.repository.save(this.repository.create(input.attributes));
                     break;
             }
         } else {
-            attributes = await this.repository.save(input.attributes);
+            attributes = await this.repository.save(this.repository.create(input.attributes));
         }
 
         if (input.relations && input.relations.clients) {

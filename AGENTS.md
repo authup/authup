@@ -1,4 +1,4 @@
-<!-- NOTE: Keep this file and the root README.md updated as the project evolves. When making architectural changes, adding new patterns, or discovering important conventions, update the relevant sections. -->
+<!-- NOTE: Keep this file and all corresponding files in the .agents directory updated as the project evolves. When making architectural changes, adding new patterns, or discovering important conventions, update the relevant sections. -->
 
 # Authup - Agent Guide
 

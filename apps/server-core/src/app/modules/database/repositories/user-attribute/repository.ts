@@ -10,6 +10,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class UserAttributeRepositoryAdapter implements IUserAttributeRepository {
     private readonly repository: Repository<UserAttribute>;
@@ -58,8 +59,12 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<UserAttribute[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<UserAttribute | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<UserAttribute>): UserAttribute {

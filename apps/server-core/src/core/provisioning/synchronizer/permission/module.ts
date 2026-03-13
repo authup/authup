@@ -5,31 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Scope } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
-import type { Repository } from 'typeorm';
-import { IsNull } from 'typeorm';
-import type { ScopeProvisioningEntity } from '../../entities/index.ts';
+import type { IPermissionRepository } from '../../../entities/index.ts';
+import type { PermissionProvisioningEntity } from '../../entities/permission';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
-import type { ScopeProvisioningSynchronizerContext } from './types.ts';
+import type { PermissionProvisioningSynchronizerContext } from './types.ts';
 
-export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<ScopeProvisioningEntity> {
-    protected repository : Repository<Scope>;
+export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchronizer<PermissionProvisioningEntity> {
+    protected repository : IPermissionRepository;
 
-    constructor(ctx: ScopeProvisioningSynchronizerContext) {
+    constructor(ctx: PermissionProvisioningSynchronizerContext) {
         super();
 
         this.repository = ctx.repository;
     }
 
-    async synchronize(input: ScopeProvisioningEntity): Promise<ScopeProvisioningEntity> {
+    async synchronize(input: PermissionProvisioningEntity): Promise<PermissionProvisioningEntity> {
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
 
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || IsNull(),
+            realm_id: input.attributes.realm_id || null,
+            client_id: input.attributes.client_id || null,
         });
+
+        if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
+            if (attributes) {
+                await this.repository.remove(attributes);
+            }
+            return { ...input, attributes: attributes || input.attributes };
+        }
+
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE:
@@ -44,11 +51,11 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
-                    attributes = await this.repository.save(input.attributes);
+                    attributes = await this.repository.save(this.repository.create(input.attributes));
                     break;
             }
         } else {
-            attributes = await this.repository.save(input.attributes);
+            attributes = await this.repository.save(this.repository.create(input.attributes));
         }
 
         return {

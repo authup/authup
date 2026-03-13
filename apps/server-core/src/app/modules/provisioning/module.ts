@@ -16,11 +16,10 @@ import type {
     Role,
     RolePermission,
     Scope,
-    User,
     UserPermission,
     UserRole,
 } from '@authup/core-kit';
-import type { Repository } from 'typeorm';
+import type { DataSource, Repository } from 'typeorm';
 import {
     ClientEntity,
     ClientPermissionEntity,
@@ -33,13 +32,13 @@ import {
     RoleEntity,
     RolePermissionEntity,
     ScopeEntity,
-    UserEntity,
     UserPermissionEntity,
     UserRoleEntity,
 } from '../../../adapters/database/index.ts';
+import {
+    UserRepository,
+} from '../../../adapters/database/domains/index.ts';
 import type { IDIContainer } from '../../../core/index.ts';
-import type { Module } from '../types.ts';
-import { CompositeProvisioningSource } from './sources/index.ts';
 import {
     ClientProvisioningSynchronizer,
     GraphProvisioningSynchronizer,
@@ -49,10 +48,29 @@ import {
     RoleProvisioningSynchronizer,
     ScopeProvisioningSynchronizer,
     UserProvisioningSynchronizer,
-} from './synchronizer/index.ts';
+} from '../../../core/provisioning/synchronizer/index.ts';
 import type {
     IProvisioningSource,
-} from './types.ts';
+} from '../../../core/provisioning/types.ts';
+import {
+    ClientPermissionRepositoryAdapter,
+    ClientRepositoryAdapter,
+    ClientRoleRepositoryAdapter,
+    PermissionRepositoryAdapter,
+    RealmRepositoryAdapter,
+    RobotPermissionRepositoryAdapter,
+    RobotRepositoryAdapter,
+    RobotRoleRepositoryAdapter,
+    RolePermissionRepositoryAdapter,
+    RoleRepositoryAdapter,
+    ScopeRepositoryAdapter,
+    UserPermissionRepositoryAdapter,
+    UserRepositoryAdapter,
+    UserRoleRepositoryAdapter,
+} from '../database/repositories/index.ts';
+import { DatabaseInjectionKey } from '../database/index.ts';
+import type { Module } from '../types.ts';
+import { CompositeProvisioningSource } from './sources/index.ts';
 
 export class ProvisionerModule implements Module {
     protected sources: IProvisioningSource[];
@@ -65,54 +83,92 @@ export class ProvisionerModule implements Module {
         const composite = new CompositeProvisioningSource(this.sources);
         const data = await composite.load(container);
 
-        const permissionSynchronizer = new PermissionProvisioningSynchronizer({
+        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
+
+        const permissionRepository = new PermissionRepositoryAdapter({
             repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            realmRepository,
+        });
+        const roleRepository = new RoleRepositoryAdapter({
+            repository: container.resolve<Repository<Role>>(RoleEntity),
+            realmRepository,
+        });
+        const clientRepository = new ClientRepositoryAdapter({
+            repository: container.resolve<Repository<Client>>(ClientEntity),
+            realmRepository,
+        });
+
+        const permissionSynchronizer = new PermissionProvisioningSynchronizer({
+            repository: permissionRepository,
         });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
-            repository: container.resolve<Repository<Role>>(RoleEntity),
-            permissionRepository: container.resolve<Repository<Permission>>(PermissionEntity),
-            rolePermissionRepository: container.resolve<Repository<RolePermission>>(RolePermissionEntity),
+            repository: roleRepository,
+            permissionRepository,
+            rolePermissionRepository: new RolePermissionRepositoryAdapter(
+                container.resolve<Repository<RolePermission>>(RolePermissionEntity),
+            ),
         });
 
         const clientSynchronizer = new ClientProvisioningSynchronizer({
-            clientRepository: container.resolve<Repository<Client>>(ClientEntity),
-            clientRoleRepository: container.resolve<Repository<ClientRole>>(ClientRoleEntity),
-            clientPermissionRepository: container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
+            clientRepository,
+            clientRoleRepository: new ClientRoleRepositoryAdapter(
+                container.resolve<Repository<ClientRole>>(ClientRoleEntity),
+            ),
+            clientPermissionRepository: new ClientPermissionRepositoryAdapter(
+                container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
+            ),
 
-            roleRepository: container.resolve<Repository<Role>>(RoleEntity),
-            permissionRepository: container.resolve<Repository<Permission>>(PermissionEntity),
+            roleRepository,
+            permissionRepository,
 
             roleSynchronizer,
             permissionSynchronizer,
         });
 
         const userSynchronizer = new UserProvisioningSynchronizer({
-            userRepository: container.resolve<Repository<User>>(UserEntity),
-            userRoleRepository: container.resolve<Repository<UserRole>>(UserRoleEntity),
-            userPermissionRepository: container.resolve<Repository<UserPermission>>(UserPermissionEntity),
+            userRepository: new UserRepositoryAdapter({
+                repository: new UserRepository(dataSource),
+                realmRepository,
+            }),
+            userRoleRepository: new UserRoleRepositoryAdapter(
+                container.resolve<Repository<UserRole>>(UserRoleEntity),
+            ),
+            userPermissionRepository: new UserPermissionRepositoryAdapter(
+                container.resolve<Repository<UserPermission>>(UserPermissionEntity),
+            ),
 
-            clientRepository: container.resolve<Repository<Client>>(ClientEntity),
-            roleRepository: container.resolve<Repository<Role>>(RoleEntity),
-            permissionRepository: container.resolve<Repository<Permission>>(PermissionEntity),
+            clientRepository,
+            roleRepository,
+            permissionRepository,
         });
 
         const robotSynchronizer = new RobotProvisioningSynchronizer({
-            robotRepository: container.resolve<Repository<Robot>>(RobotEntity),
-            robotRoleRepository: container.resolve<Repository<RobotRole>>(RobotRoleEntity),
-            robotPermissionRepository: container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
+            robotRepository: new RobotRepositoryAdapter({
+                repository: container.resolve<Repository<Robot>>(RobotEntity),
+                realmRepository,
+            }),
+            robotRoleRepository: new RobotRoleRepositoryAdapter(
+                container.resolve<Repository<RobotRole>>(RobotRoleEntity),
+            ),
+            robotPermissionRepository: new RobotPermissionRepositoryAdapter(
+                container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
+            ),
 
-            clientRepository: container.resolve<Repository<Client>>(ClientEntity),
-            roleRepository: container.resolve<Repository<Role>>(RoleEntity),
-            permissionRepository: container.resolve<Repository<Permission>>(PermissionEntity),
+            roleRepository,
+            permissionRepository,
         });
 
         const scopeSynchronizer = new ScopeProvisioningSynchronizer({
-            repository: container.resolve<Repository<Scope>>(ScopeEntity),
+            repository: new ScopeRepositoryAdapter({
+                repository: container.resolve<Repository<Scope>>(ScopeEntity),
+                realmRepository,
+            }),
         });
 
         const realmSynchronizer = new RealmProvisioningSynchronizer({
-            repository: container.resolve<Repository<Realm>>(RealmEntity),
+            repository: new RealmRepositoryAdapter(realmRepository),
 
             clientSynchronizer,
             roleSynchronizer,

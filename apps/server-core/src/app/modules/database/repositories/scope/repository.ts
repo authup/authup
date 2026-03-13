@@ -11,6 +11,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRealmRepository, IScopeRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 import { ScopeEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -93,8 +94,12 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
             this.findOneByName(idOrName, realm);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<Scope[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<Scope | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<Scope>): Scope {

@@ -10,6 +10,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IUserRoleRepository } from '../../../../../core/index.ts';
 import { UserRoleEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class UserRoleRepositoryAdapter implements IUserRoleRepository {
     private readonly repository: Repository<UserRole>;
@@ -68,8 +69,12 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<UserRole[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<UserRole | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<UserRole>): UserRole {

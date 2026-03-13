@@ -13,6 +13,7 @@ import type { EntityRepositoryFindManyResult, IPolicyRepository, IRealmRepositor
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { PolicyRepository } from '../../../../../adapters/database/domains/index.ts';
 import { PolicyEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type PolicyRepositoryAdapterContext = {
@@ -114,8 +115,12 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
             this.findOneByName(idOrName, realm);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<Policy[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<Policy | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<Policy>): Policy {

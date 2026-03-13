@@ -129,6 +129,12 @@ export default defineConfig({
                     ]
                 },
                 {
+                    text: 'Provisioning',
+                    items: [
+                        { text: 'Overview', link: '/guide/deployment/provisioning' }
+                    ]
+                },
+                {
                     text: 'Reverse Proxy',
                     items: [
                         { text: 'Nginx', link: '/guide/deployment/nginx' }

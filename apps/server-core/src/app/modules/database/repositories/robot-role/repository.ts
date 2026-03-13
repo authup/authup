@@ -10,6 +10,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRobotRoleRepository } from '../../../../../core/index.ts';
 import { RobotRoleEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
     private readonly repository: Repository<RobotRole>;
@@ -68,8 +69,12 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<RobotRole[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<RobotRole | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<RobotRole>): RobotRole {

@@ -11,6 +11,7 @@ import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
 import type { IClientScopeRepository } from '../../../../../core/entities/client-scope/types.ts';
 import { ClientScopeEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
     private readonly repository: Repository<ClientScope>;
@@ -62,8 +63,12 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<ClientScope[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<ClientScope | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<ClientScope>): ClientScope {

@@ -26,6 +26,8 @@ export interface IEntityRepository<
 
     findOneByIdOrName(idOrName: string, realm?: string): Promise<T | null>;
 
+    findManyBy(where: Record<string, any>): Promise<T[]>;
+
     findOneBy(where: Record<string, any>): Promise<T | null>;
 
     create(data: Partial<T>): T;

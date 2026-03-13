@@ -5,11 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    Permission,
-} from '@authup/core-kit';
-import type { Repository } from 'typeorm';
+import type { IPermissionRepository } from '../../../entities/index.ts';
 
 export type PermissionProvisioningSynchronizerContext = {
-    repository: Repository<Permission>,
+    repository: IPermissionRepository,
 };

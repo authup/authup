@@ -11,6 +11,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRealmRepository, IRoleRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 import { RoleEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -93,8 +94,12 @@ export class RoleRepositoryAdapter implements IRoleRepository {
             this.findOneByName(idOrName, realm);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<Role[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<Role | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<Role>): Role {
