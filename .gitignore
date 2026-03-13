@@ -1,5 +1,4 @@
-.claude
-!.claude/skills
+.claude/settings.local.json
 .DS_Store
 dist
 node_modules
