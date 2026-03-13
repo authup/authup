@@ -1,6 +1,6 @@
 # Policy Implementation — Release N (Current)
 
-This document covers everything to implement for the current release.
+This document covers the current release policy implementation.
 Use alongside `.agents/*.md` (loaded via `CLAUDE.md`) for general patterns.
 
 ## Overview
@@ -8,11 +8,11 @@ Use alongside `.agents/*.md` (loaded via `CLAUDE.md`) for general patterns.
 Transition from implicit in-memory policy fallback to explicit database-backed system policies.
 After this release, all permissions have an explicit `policy_id` (or `null` for unrestricted).
 
-## Checklist
+## Implementation Status
 
-### 1. `SystemPolicyName` Constants — `packages/access`
+### 1. `SystemPolicyName` Constants — `packages/access` ✅
 
-Add to `packages/access/src/policy/built-in/constants.ts` (where `BuiltInPolicyType` lives):
+Added to `packages/access/src/policy/built-in/constants.ts`:
 
 ```typescript
 export const SystemPolicyName = {
@@ -23,109 +23,97 @@ export const SystemPolicyName = {
 } as const;
 ```
 
-Re-export via `packages/access/src/policy/index.ts`.
+Re-exported via `packages/access/src/policy/index.ts`.
 
-Build `packages/access` after this change.
+**Reminder:** Rebuild `packages/access` after any change to this package.
 
-### 2. Config Option — `apps/server-core`
+### 2. Config Option — `apps/server-core` ✅
 
-Add `PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT` across these files following existing patterns:
+`PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT` added across all config files:
 
-| File | What to add |
-|------|-------------|
-| `app/modules/config/constants.ts` | `PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT` to `ConfigEnvironmentVariableName` enum |
-| `app/modules/config/types.ts` | `permissionsDefaultPolicyAssignment: boolean` to `Config` type |
-| `app/modules/config/parse.ts` | `permissionsDefaultPolicyAssignment: zod.boolean().optional()` to zod schema |
-| `app/modules/config/normalize.ts` | `permissionsDefaultPolicyAssignment: true` as default |
-| `app/modules/config/read/env.ts` | Read env with `readBool(ConfigEnvironmentVariableName.PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT)` |
+| File | Status |
+|------|--------|
+| `app/modules/config/constants.ts` | ✅ Enum entry |
+| `app/modules/config/types.ts` | ✅ `permissionsDefaultPolicyAssignment: boolean` |
+| `app/modules/config/parse.ts` | ✅ Zod schema entry |
+| `app/modules/config/normalize.ts` | ✅ Default: `true` |
+| `app/modules/config/read/env.ts` | ✅ Env reading |
 
-Log a deprecation warning at startup when the option is active (including when defaulted to `true`).
+Deprecation warning logged at startup when active.
 
-### 3. Policy Provisioning Synchronizer — `apps/server-core`
+### 3. Policy Provisioning Synchronizer — `apps/server-core` ✅
 
-Create a policy synchronizer in `core/provisioning/synchronizer/policy/`.
+`core/provisioning/synchronizer/policy/module.ts` — `PolicyProvisioningSynchronizer`
 
-Uses `IPolicyRepository` (port interface from `core/entities/policy/types.ts`).
+Uses `IPolicyRepository` + `IPermissionRepository` (port interfaces).
 
-#### Sync logic
+#### Implemented sync logic
 
-**Step 1 — Leaf policies:** For each of `system.identity`, `system.permission-binding`, `system.realm-match`:
-- `findOneBy({ name, built_in: true })` (write-path, no EA loading)
-- If not found → create with `built_in: true`, `realm_id: null`, correct `type`
-- If found → verify type matches, update EA if changed
-- For `system.realm-match`, set EA attributes:
-  - `attributeName` → `['realm_id']`
-  - `attributeNameStrict` → `false`
-  - `identityMasterMatchAll` → `true`
+- Root-first approach: `system.default` (composite) declared with children inline
+- `synchronize()`: find-by-name → create or merge+update (including `parent_id`/`parent` for reattachment)
+- `synchronizeChildren()`: syncs declared children, then runs `cleanupStaleChildren()`
+- **Stale child cleanup**: children in DB but not in declaration are:
+  - **Deleted** if no permission references them (`deleteFromTree`)
+  - **Detached** if referenced by permissions (`parent_id = null`, `built_in = false` → becomes standalone user-owned policy)
 
-**Step 2 — Composite policy:** For `system.default`:
-- `findOneBy({ name: 'system.default', built_in: true })`
-- If not found → create with `type: composite`, `decisionStrategy: UNANIMOUS`, `built_in: true`
-- If found → teardown children from closure table, then rebuild
-- Set leaf policies as children via `parent_id` + `saveWithEA()`
+System policy definitions in `app/modules/provisioning/system-policies.ts` — `buildSystemPolicyProvisioningEntities()`.
 
-**Step 3 — Backfill:** Assign `system.default` to all permissions where:
-- `policy_id IS NULL`
-- `created_at <= system.default.created_at`
+### 4. Wired into `ProvisionerModule` ✅
 
-The backfill needs direct query builder or raw DataSource access. Implement as a separate step in `ProvisionerModule.start()` between policy sync and permission sync.
+`app/modules/provisioning/module.ts` runs in phases:
 
-### 4. Wire into `ProvisionerModule`
+1. **Phase 1** — Policy sync (`PolicyProvisioningSynchronizer`)
+2. **Phase 1b** — Backfill: `UPDATE permissions SET policy_id = :defaultId WHERE policy_id IS NULL AND created_at <= :cutoff`
+3. **Phase 1c** — Resolve `defaultPolicyId` from config + DB lookup; log deprecation warning
+4. **Phase 2** — Permissions, roles, realms, etc. (unchanged, receives `defaultPolicyId`)
 
-In `app/modules/provisioning/module.ts`, add policy synchronizer **before** permission synchronizer.
+`permissionRepository` is created in Phase 1 and reused in Phase 2.
 
-Provisioning order becomes:
-1. **System policies** (create/sync the policy tree + backfill)
-2. Permissions
-3. Roles, users, clients, etc. (unchanged)
+### 5. Default Policy Assignment in Permission Creation ✅
 
-### 5. Apply Config Option in Permission Creation
-
-`ProvisionerModule` resolves the `system.default` policy once at startup and injects `defaultPolicyId` into both the controller and the provisioning synchronizer.
+`ProvisionerModule` resolves `system.default` once at startup, injects `defaultPolicyId` into:
 
 **a) Permission HTTP controller** (`adapters/http/controllers/entities/permission/module.ts`):
-
-In the write method, when creating a new permission without `policy_id`:
-- If `defaultPolicyId` is set → assign it before `validateJoinColumns`
+- Assigns `defaultPolicyId` before `validateJoinColumns` (create path only)
 
 **b) Permission provisioning synchronizer** (`core/provisioning/synchronizer/permission/module.ts`):
+- Assigns `defaultPolicyId` during creation if no `policy_id` provided
 
-Same logic — if provisioning entity has no `policy_id` and `defaultPolicyId` is set, assign it during creation.
+### 6. In-Memory Fallback Removed ✅
 
-### 6. Remove In-Memory Fallback
+`apps/server-core/src/security/permission/provider/db.ts`:
+- `getDefaultPolicy()` removed entirely
+- `findOne()`: loads policy tree from DB via `findDescendantsTree`, returns `policy: undefined` when no policy assigned
 
-In `apps/server-core/src/security/permission/provider/db.ts`:
+### 7. Built-in Policy API Guards ✅
 
-- Remove `getDefaultPolicy()` method entirely
-- Update `findOne()`:
-  - If `entity.policy` exists → load policy tree (unchanged)
-  - If `entity.policy` is null → return with `policy: undefined` (unrestricted)
-
-### 7. Built-in Policy API Guards
-
-Already implemented (checklist item `[x]`). Verify:
+Already implemented in `adapters/http/controllers/entities/policy/module.ts`:
 - Update of `built_in = true` policy → `400 Bad Request`
 - Delete of `built_in = true` policy → `400 Bad Request`
 
-### 8. Tests
+### 8. Tests ❌ TODO
 
-| Area | What to test |
-|------|-------------|
-| Policy sync | Creates all leaf policies with correct type, `built_in: true`, `realm_id: null` |
-| Policy sync | Creates `system.default` composite with correct children, `decisionStrategy: UNANIMOUS` |
-| Policy sync | Idempotent — running twice produces same result, no duplicates |
-| Policy sync | `system.realm-match` EA attributes correctly set |
-| Backfill | Assigns `system.default` to permissions with `policy_id IS NULL` and `created_at <= cutoff` |
-| Backfill | Does not touch permissions with `policy_id IS NULL` and `created_at > cutoff` |
-| Backfill | Does not touch permissions that already have a `policy_id` |
-| Built-in guards | Update/delete of built-in policy returns 400 |
-| Built-in guards | Update/delete of non-built-in policy works |
-| Evaluation | `findOne()` returns `policy: undefined` when `policy_id` is null |
-| Evaluation | `PermissionChecker.check()` allows access when no policy (unrestricted) |
-| Evaluation | `PermissionChecker.check()` evaluates policy when present |
-| Config | `true` → assigns `system.default` to new permissions without `policy_id` |
-| Config | `false` → leaves `policy_id = null` |
-| Config | Deprecation warning logged at startup |
+No dedicated policy provisioning tests exist yet. The existing provisioning test (`test/unit/modules/provisioning.spec.ts`) covers overall provisioning but not policy-specific scenarios.
+
+| Area | What to test | Status |
+|------|-------------|--------|
+| Policy sync | Creates all leaf policies with correct type, `built_in: true`, `realm_id: null` | ❌ |
+| Policy sync | Creates `system.default` composite with correct children, `decisionStrategy: UNANIMOUS` | ❌ |
+| Policy sync | Idempotent — running twice produces same result, no duplicates | ❌ |
+| Policy sync | `system.realm-match` EA attributes correctly set | ❌ |
+| Policy sync | Stale child without permission references is deleted | ❌ |
+| Policy sync | Stale child with permission references is detached (`parent_id = null`, `built_in = false`) | ❌ |
+| Backfill | Assigns `system.default` to permissions with `policy_id IS NULL` and `created_at <= cutoff` | ❌ |
+| Backfill | Does not touch permissions with `policy_id IS NULL` and `created_at > cutoff` | ❌ |
+| Backfill | Does not touch permissions that already have a `policy_id` | ❌ |
+| Built-in guards | Update/delete of built-in policy returns 400 | ✅ (in `policy/module.spec.ts`) |
+| Built-in guards | Update/delete of non-built-in policy works | ✅ (in `policy/module.spec.ts`) |
+| Evaluation | `findOne()` returns `policy: undefined` when `policy_id` is null | ❌ |
+| Evaluation | `PermissionChecker.check()` allows access when no policy (unrestricted) | ❌ |
+| Evaluation | `PermissionChecker.check()` evaluates policy when present | ❌ |
+| Config | `true` → assigns `system.default` to new permissions without `policy_id` | ❌ |
+| Config | `false` → leaves `policy_id = null` | ❌ |
+| Config | Deprecation warning logged at startup | ❌ |
 
 ## System Policy Tree Reference
 
@@ -139,16 +127,26 @@ system.default (CompositePolicy, UNANIMOUS, built_in: true)
     EA: identityMasterMatchAll = true
 ```
 
-## Key Interfaces
+## Key Implementation Details
 
-```typescript
-// IPolicyRepository (core/entities/policy/types.ts)
-interface IPolicyRepository extends IEntityRepository<Policy> {
-    checkUniqueness(data, existing?): Promise<void>;
-    saveWithEA(entity, data?): Promise<Policy>;
-    deleteFromTree(entity): Promise<void>;
-}
-```
+### Closure table requirement
+
+TypeORM's closure table (`auth_policy_tree`) requires the `parent` relation (not just `parent_id`) to be set on child entities before `save()`. Without it, `findDescendantsTree()` returns `children: []`.
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `packages/access/src/policy/built-in/constants.ts` | `SystemPolicyName` constants |
+| `apps/server-core/src/app/modules/config/*` | Config option across 5 files |
+| `apps/server-core/src/core/provisioning/entities/policy/` | `PolicyProvisioningEntity` type (new) |
+| `apps/server-core/src/core/provisioning/synchronizer/policy/` | `PolicyProvisioningSynchronizer` (new) |
+| `apps/server-core/src/core/provisioning/synchronizer/permission/` | `defaultPolicyId` support |
+| `apps/server-core/src/app/modules/provisioning/system-policies.ts` | System policy definitions (new) |
+| `apps/server-core/src/app/modules/provisioning/module.ts` | Phase 1/1b/1c wiring |
+| `apps/server-core/src/adapters/http/controllers/entities/permission/module.ts` | `defaultPolicyId` in controller |
+| `apps/server-core/src/app/modules/http/modules/controller.ts` | Wiring `defaultPolicyId` to controller |
+| `apps/server-core/src/security/permission/provider/db.ts` | Removed `getDefaultPolicy()` fallback |
 
 ## Migration Safety
 
