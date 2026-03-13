@@ -1,4 +1,5 @@
 .claude
+!.claude/skills
 .DS_Store
 dist
 node_modules

@@ -1,0 +1,58 @@
+{
+    "name": "@authup/server-adapter-http",
+    "type": "module",
+    "version": "1.0.0-beta.30",
+    "description": "A http plugin for authup.",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs"
+        }
+    },
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist/"
+    ],
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "rollup -c",
+        "build": "rimraf ./dist && cross-env NODE_ENV=production npm run build:js && npm run build:types"
+    },
+    "keywords": [
+        "http",
+        "plugin",
+        "auth"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/server-adapter-http"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {
+        "@authup/server-adapter-kit": "^1.0.0-beta.30",
+        "@authup/core-kit": "^1.0.0-beta.30",
+        "@authup/core-http-kit": "^1.0.0-beta.30"
+    },
+    "devDependencies": {
+        "vitest": "^4.0.18"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "gitHead": "ed48328bdd01d844915c26c6fcfb7fdcc1f33396"
+}

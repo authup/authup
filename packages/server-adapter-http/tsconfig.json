@@ -1,0 +1,10 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "paths": {
+            "@authup/server-adapter-kit": ["./packages/server-adapter-kit/src"],
+            "@authup/core-kit": ["./packages/core-kit/src"],
+            "@authup/core-http-kit": ["./packages/core-http-kit/src"],
+        }
+    }
+}
