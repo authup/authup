@@ -6,8 +6,12 @@ name: CI
 on:
     push:
         branches: [develop, master, next, beta, alpha]
+        paths-ignore:
+            - 'docs/**'
     pull_request:
         types: [ opened, synchronize ]
+        paths-ignore:
+            - 'docs/**'
 
 env:
     NODE_VERSION: 22
@@ -78,6 +82,29 @@ jobs:
         name: Test Packages
         needs: [build]
         runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v6
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
+
+            -   name: Build
+                uses: ./.github/actions/build
+
+            -   name: Run tests
+                env:
+                    NODE_ENV: test
+                run: |
+                    npx nx run-many -t test --exclude=@authup/server-core
+
+    tests-server-core:
+        name: Test Server Core
+        needs: [build]
+        runs-on: ubuntu-latest
 
         strategy:
             matrix:
@@ -146,4 +173,4 @@ jobs:
                 env:
                     NODE_ENV: test
                 run: |
-                    npm run test
+                    npm run test --workspace=apps/server-core
