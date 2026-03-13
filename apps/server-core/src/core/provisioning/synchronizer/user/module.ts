@@ -95,9 +95,9 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                     attributes = await this.userRepository.save(attributes);
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
-                    if (!input.attributes.email && input.attributes.name) {
-                        input.attributes.email = buildUserFakeEmail(input.attributes.name);
-                    }
+                    input.attributes.email = input.attributes.email ||
+                        attributes.email ||
+                        (input.attributes.name ? buildUserFakeEmail(input.attributes.name) : undefined);
 
                     input.attributes.id = attributes.id;
                     attributes = await this.userRepository.save(this.userRepository.create(input.attributes));

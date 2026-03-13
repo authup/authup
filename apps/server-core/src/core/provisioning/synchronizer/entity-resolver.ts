@@ -16,7 +16,7 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
     }
 
     async resolveGlobal(names?: string[]): Promise<T[]> {
-        if (!names) {
+        if (!names || names.length === 0) {
             return [];
         }
 
@@ -36,7 +36,7 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
     }
 
     async resolveRealm(names: string[] | undefined, realmId: string): Promise<T[]> {
-        if (!names) {
+        if (!names || names.length === 0) {
             return [];
         }
 
@@ -56,7 +56,7 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
     }
 
     async resolveClient(names: string[] | undefined, realmId: string, clientId: string): Promise<T[]> {
-        if (!names) {
+        if (!names || names.length === 0) {
             return [];
         }
 
