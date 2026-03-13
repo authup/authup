@@ -12,6 +12,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRealmRepository } from '../../../../../core/index.ts';
 import { RealmEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class RealmRepositoryAdapter implements IRealmRepository {
     private readonly repository: Repository<Realm>;
@@ -68,8 +69,12 @@ export class RealmRepositoryAdapter implements IRealmRepository {
             this.findOneByName(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<Realm[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<Realm | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<Realm>): Realm {

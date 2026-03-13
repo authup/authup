@@ -11,6 +11,7 @@ import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
 import type { IRobotPermissionRepository } from '../../../../../core/entities/robot-permission/types.ts';
 import { RobotPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class RobotPermissionRepositoryAdapter implements IRobotPermissionRepository {
     private readonly repository: Repository<RobotPermission>;
@@ -72,8 +73,12 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<RobotPermission[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<RobotPermission | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<RobotPermission>): RobotPermission {

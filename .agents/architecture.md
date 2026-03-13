@@ -24,6 +24,7 @@ The core folder contains the system's business logic. It defines ports (interfac
 | core/ldap           | LDAP integration logic                                                                                                                     |
 | core/mail           | Email sending logic                                                                                                                        |
 | core/entities       | Repository port interfaces (IEntityRepository\<T\>, per-entity I{Entity}Repository)                                                       |
+| core/provisioning   | Provisioning business logic: entity types, strategies, synchronizers, entity resolver and junction synchronizer helpers                     |
 | core/di             | Dependency injection setup                                                                                                                 |
 
 ### 2. adapters/ — External Systems
@@ -56,7 +57,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 | app/modules/vault            | Secret management                                                                                          |
 | app/modules/runtime          | Runtime lifecycle                                                                                          |
 | app/modules/swagger          | API documentation generation                                                                               |
-| app/modules/provisioning     | Initial data seeding                                                                                       |
+| app/modules/provisioning     | Wires repository adapters to core provisioning synchronizers; hosts provisioning sources (default, file, composite) |
 
 ## Repository Pattern (Ports & Adapters)
 
@@ -199,6 +200,29 @@ Entities like user, policy, and identity-provider store dynamic key-value pairs 
 - `findMany()`: Call `extendManyWithEA()` after loading
 - `saveWithEA()`: Do NOT call `extendOneWithEA()` after save
 
+## Provisioning Architecture
+
+The provisioning system declaratively synchronizes entities (permissions, roles, users, etc.) into the database on startup. It follows the same hexagonal pattern: core logic in `core/provisioning/`, wiring in `app/modules/provisioning/`.
+
+### Layers
+
+- **core/provisioning/entities/**: Provisioning entity types and validators (what can be provisioned)
+- **core/provisioning/strategy/**: Strategy types (`createOnly`, `merge`, `replace`, `absent`) and normalization
+- **core/provisioning/synchronizer/**: Business logic that applies strategies and manages relations
+  - `entity-resolver.ts`: `ProvisioningEntityResolver<T>` — resolves Permission/Role entities by name with wildcard support and scope filtering (global, realm, client)
+  - `junction-synchronizer.ts`: `ProvisioningJunctionSynchronizer<T>` — ensures junction entries (e.g. RolePermission, UserRole) exist between owner and target entities
+  - `{entity}/module.ts`: Per-entity synchronizer composing resolver + junction helpers
+- **app/modules/provisioning/sources/**: Data sources that produce `RootProvisioningEntity`
+  - `default/`: Built-in defaults (admin user, system client, all permissions/scopes)
+  - `file/`: Loads `.json`, `.yaml`, `.ts`, `.js` files from a directory
+  - `composite/`: Merges multiple sources with dedup by composite key (`name:realm_id:client_id`)
+- **app/modules/provisioning/module.ts**: `ProvisionerModule` — creates shared repository adapter instances and wires them to synchronizers
+
+### Synchronization Order
+
+`GraphProvisioningSynchronizer` processes: permissions → roles → scopes → realms.
+`RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → robots → scopes.
+
 ### File Structure
 
 ```text
@@ -220,4 +244,18 @@ adapters/http/controllers/entities/
 
 app/modules/http/modules/
   controller.ts                     — Factory methods, wiring
+
+core/provisioning/
+  entities/{entity}/types.ts        — Provisioning entity types and validators
+  strategy/                         — Strategy enum, types, normalize, validator
+  synchronizer/entity-resolver.ts   — ProvisioningEntityResolver<T>
+  synchronizer/junction-synchronizer.ts — ProvisioningJunctionSynchronizer<T>
+  synchronizer/{entity}/module.ts   — Per-entity synchronizer
+  synchronizer/{entity}/types.ts    — Synchronizer context type
+
+app/modules/provisioning/
+  module.ts                         — ProvisionerModule (wiring)
+  sources/default/module.ts         — DefaultProvisioningSource
+  sources/file/module.ts            — FileProvisioningSource
+  sources/composite/module.ts       — CompositeProvisioningSource (merge + dedup)
 ```

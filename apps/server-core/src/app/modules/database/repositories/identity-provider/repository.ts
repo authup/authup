@@ -13,6 +13,7 @@ import type { EntityRepositoryFindManyResult, IIdentityProviderRepository, IReal
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { IdentityProviderRepository } from '../../../../../adapters/database/domains/index.ts';
 import { IdentityProviderEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type IdentityProviderRepositoryAdapterContext = {
@@ -109,8 +110,12 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
             this.findOneByName(idOrName, realm);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<IdentityProvider[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<IdentityProvider | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<IdentityProvider>): IdentityProvider {

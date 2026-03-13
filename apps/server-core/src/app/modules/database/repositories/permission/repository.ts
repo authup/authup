@@ -13,6 +13,7 @@ import { IsNull } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 import {
     PermissionEntity,
     PolicyRepository,
@@ -105,8 +106,12 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
         return result;
     }
 
+    async findManyBy(where: Record<string, any>): Promise<Permission[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<Permission | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<Permission>): Permission {

@@ -11,6 +11,7 @@ import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
 import type { IClientPermissionRepository } from '../../../../../core/entities/client-permission/types.ts';
 import { ClientPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class ClientPermissionRepositoryAdapter implements IClientPermissionRepository {
     private readonly repository: Repository<ClientPermission>;
@@ -72,8 +73,12 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<ClientPermission[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<ClientPermission | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<ClientPermission>): ClientPermission {

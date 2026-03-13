@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum ProvisioningEntityStrategyType {
-    REPLACE = 'replace',
-    MERGE = 'merge',
-    CREATE_ONLY = 'createOnly',
-}
+import type { IScopeRepository } from '../../../entities/index.ts';
+
+export type ScopeProvisioningSynchronizerContext = {
+    repository: IScopeRepository,
+};

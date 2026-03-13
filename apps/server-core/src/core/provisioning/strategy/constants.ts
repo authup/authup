@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from '../../../core/provisioning/index.ts';
-export * from './sources/index.ts';
-export * from './module.ts';
+export enum ProvisioningEntityStrategyType {
+    REPLACE = 'replace',
+    MERGE = 'merge',
+    CREATE_ONLY = 'createOnly',
+    ABSENT = 'absent',
+}

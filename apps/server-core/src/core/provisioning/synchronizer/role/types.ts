@@ -6,12 +6,11 @@
  */
 
 import type {
-    Permission, Role, RolePermission,
-} from '@authup/core-kit';
-import type { Repository } from 'typeorm';
+    IPermissionRepository, IRolePermissionRepository, IRoleRepository,
+} from '../../../entities/index.ts';
 
 export type RoleProvisioningSynchronizerContext = {
-    repository: Repository<Role>,
-    permissionRepository: Repository<Permission>,
-    rolePermissionRepository: Repository<RolePermission>
+    repository: IRoleRepository,
+    permissionRepository: IPermissionRepository,
+    rolePermissionRepository: IRolePermissionRepository,
 };

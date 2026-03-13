@@ -10,6 +10,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IUserPermissionRepository } from '../../../../../core/index.ts';
 import { UserPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class UserPermissionRepositoryAdapter implements IUserPermissionRepository {
     private readonly repository: Repository<UserPermission>;
@@ -74,8 +75,12 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<UserPermission[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<UserPermission | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<UserPermission>): UserPermission {

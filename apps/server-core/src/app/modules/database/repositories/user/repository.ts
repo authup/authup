@@ -13,6 +13,7 @@ import type { EntityRepositoryFindManyResult, IRealmRepository, IUserRepository 
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { UserRepository } from '../../../../../adapters/database/domains/index.ts';
 import { UserEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type UserRepositoryAdapterContext = {
@@ -162,8 +163,12 @@ export class UserRepositoryAdapter implements IUserRepository {
         return entity;
     }
 
+    async findManyBy(where: Record<string, any>): Promise<User[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<User | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<User>): User {
