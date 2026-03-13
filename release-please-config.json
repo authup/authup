@@ -49,6 +49,10 @@
                 "core-realtime-kit",
                 "errors",
                 "kit",
+
+                "server-adapter-http",
+                "server-adapter-kit",
+                "server-adapter-socket-io",
                 "server-kit",
                 "specs"
             ]
