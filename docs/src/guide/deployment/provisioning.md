@@ -292,8 +292,8 @@ using the `merge` or `replace` strategy.
 Entities are synchronized in dependency order:
 
 1. Permissions (global)
-2. Scopes (global)
-3. Roles (global, with permission assignments)
+2. Roles (global, with permission assignments)
+3. Scopes (global)
 4. Realms, then for each realm:
    1. Clients (with nested permissions/roles)
    2. Permissions (realm-scoped)
