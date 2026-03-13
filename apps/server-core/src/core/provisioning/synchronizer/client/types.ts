@@ -6,9 +6,12 @@
  */
 
 import type {
-    Client, ClientPermission, ClientRole, Permission, Role,
-} from '@authup/core-kit';
-import type { Repository } from 'typeorm';
+    IClientPermissionRepository,
+    IClientRepository,
+    IClientRoleRepository,
+    IPermissionRepository,
+    IRoleRepository,
+} from '../../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
 import type {
@@ -17,13 +20,13 @@ import type {
 } from '../../types.ts';
 
 export type ClientProvisioningSynchronizerContext = {
-    clientRepository: Repository<Client>,
-    clientRoleRepository: Repository<ClientRole>,
-    clientPermissionRepository: Repository<ClientPermission>,
+    clientRepository: IClientRepository,
+    clientRoleRepository: IClientRoleRepository,
+    clientPermissionRepository: IClientPermissionRepository,
 
-    roleRepository: Repository<Role>,
-    permissionRepository: Repository<Permission>,
+    roleRepository: IRoleRepository,
+    permissionRepository: IPermissionRepository,
 
     roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,
-    permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>
+    permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,
 };

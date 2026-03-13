@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RootProvisioningEntity } from '../../entities/root/index.ts';
-import type { IProvisioningSource } from '../../types.ts';
+import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/root/index.ts';
+import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
 import type { IDIContainer } from '../../../../../core';
 
 export class CompositeProvisioningSource implements IProvisioningSource {

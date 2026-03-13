@@ -5,11 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    Scope,
-} from '@authup/core-kit';
-import type { Repository } from 'typeorm';
+import type { IScopeRepository } from '../../../entities/index.ts';
 
 export type ScopeProvisioningSynchronizerContext = {
-    repository: Repository<Scope>,
+    repository: IScopeRepository,
 };

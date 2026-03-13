@@ -11,6 +11,7 @@ import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
 import type { IClientRoleRepository } from '../../../../../core/entities/client-role/types.ts';
 import { ClientRoleEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
     private readonly repository: Repository<ClientRole>;
@@ -69,8 +70,12 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<ClientRole[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<ClientRole | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<ClientRole>): ClientRole {

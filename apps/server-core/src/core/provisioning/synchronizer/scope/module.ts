@@ -5,17 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Scope } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
-import type { Repository } from 'typeorm';
-import { IsNull } from 'typeorm';
+import type { IScopeRepository } from '../../../entities/index.ts';
 import type { ScopeProvisioningEntity } from '../../entities/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { ScopeProvisioningSynchronizerContext } from './types.ts';
 
 export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<ScopeProvisioningEntity> {
-    protected repository : Repository<Scope>;
+    protected repository : IScopeRepository;
 
     constructor(ctx: ScopeProvisioningSynchronizerContext) {
         super();
@@ -28,7 +26,7 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || IsNull(),
+            realm_id: input.attributes.realm_id || null,
         });
         if (attributes) {
             switch (strategy.type) {
@@ -44,11 +42,11 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
-                    attributes = await this.repository.save(input.attributes);
+                    attributes = await this.repository.save(this.repository.create(input.attributes));
                     break;
             }
         } else {
-            attributes = await this.repository.save(input.attributes);
+            attributes = await this.repository.save(this.repository.create(input.attributes));
         }
 
         return {

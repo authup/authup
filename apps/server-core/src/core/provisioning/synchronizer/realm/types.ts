@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core-kit';
-import type { Repository } from 'typeorm';
+import type { IRealmRepository } from '../../../entities/index.ts';
 import type { ScopeProvisioningEntity } from '../../entities/index.ts';
 import type { ClientProvisioningEntity } from '../../entities/client/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
@@ -19,7 +18,7 @@ import type {
 } from '../../types.ts';
 
 export type RealmProvisioningSynchronizerContext = {
-    repository: Repository<Realm>,
+    repository: IRealmRepository,
 
     clientSynchronizer: IProvisioningSynchronizer<ClientProvisioningEntity>,
     roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,

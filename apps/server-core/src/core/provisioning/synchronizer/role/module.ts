@@ -6,22 +6,21 @@
  */
 
 import type {
-    Permission, Role, RolePermission,
+    Permission,
 } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
-import type { Repository } from 'typeorm';
-import { In, IsNull } from 'typeorm';
+import type { IPermissionRepository, IRolePermissionRepository, IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RoleProvisioningSynchronizerContext } from './types.ts';
 
 export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<RoleProvisioningEntity> {
-    protected repository : Repository<Role>;
+    protected repository : IRoleRepository;
 
-    protected permissionRepository : Repository<Permission>;
+    protected permissionRepository : IPermissionRepository;
 
-    protected rolePermissionRepository: Repository<RolePermission>;
+    protected rolePermissionRepository: IRolePermissionRepository;
 
     constructor(ctx: RoleProvisioningSynchronizerContext) {
         super();
@@ -35,8 +34,8 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || IsNull(),
-            client_id: input.attributes.client_id || IsNull(),
+            realm_id: input.attributes.realm_id || null,
+            client_id: input.attributes.client_id || null,
         });
         if (attributes) {
             switch (strategy.type) {
@@ -52,11 +51,11 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
-                    attributes = await this.repository.save(input.attributes);
+                    attributes = await this.repository.save(this.repository.create(input.attributes));
                     break;
             }
         } else {
-            attributes = await this.repository.save(input.attributes);
+            attributes = await this.repository.save(this.repository.create(input.attributes));
         }
 
         if (!input.relations) {
@@ -71,15 +70,15 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         if (input.relations.globalPermissions) {
             const hasWildcard = input.relations.globalPermissions.some((el) => el === '*');
             if (hasWildcard) {
-                permissions.push(...await this.permissionRepository.findBy({
-                    realm_id: IsNull(),
-                    client_id: IsNull(),
+                permissions.push(...await this.permissionRepository.findManyBy({
+                    realm_id: null,
+                    client_id: null,
                 }));
             } else {
-                permissions.push(...await this.permissionRepository.findBy({
-                    name: In(input.relations.globalPermissions),
-                    realm_id: IsNull(),
-                    client_id: IsNull(),
+                permissions.push(...await this.permissionRepository.findManyBy({
+                    name: input.relations.globalPermissions,
+                    realm_id: null,
+                    client_id: null,
                 }));
             }
         }
@@ -90,15 +89,15 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         ) {
             const hasWildcard = input.relations.realmPermissions.some((el) => el === '*');
             if (hasWildcard) {
-                permissions.push(...await this.permissionRepository.findBy({
+                permissions.push(...await this.permissionRepository.findManyBy({
                     realm_id: attributes.realm_id,
-                    client_id: IsNull(),
+                    client_id: null,
                 }));
             } else {
-                permissions.push(...await this.permissionRepository.findBy({
-                    name: In(input.relations.realmPermissions),
+                permissions.push(...await this.permissionRepository.findManyBy({
+                    name: input.relations.realmPermissions,
                     realm_id: attributes.realm_id,
-                    client_id: IsNull(),
+                    client_id: null,
                 }));
             }
         }

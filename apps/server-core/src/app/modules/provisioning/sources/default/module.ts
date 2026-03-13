@@ -17,11 +17,11 @@ import {
 } from '../../../../../core/index.ts';
 import type { Config } from '../../../config/index.ts';
 import { ConfigInjectionKey } from '../../../config/index.ts';
-import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
-import type { RootProvisioningEntity } from '../../entities/root/index.ts';
-import type { ProvisioningEntityStrategy } from '../../strategy/index.ts';
-import { ProvisioningEntityStrategyType } from '../../strategy/index.ts';
-import type { IProvisioningSource } from '../../types.ts';
+import type { RealmProvisioningEntity } from '../../../../../core/provisioning/entities/realm/index.ts';
+import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/root/index.ts';
+import type { ProvisioningEntityStrategy } from '../../../../../core/provisioning/strategy/index.ts';
+import { ProvisioningEntityStrategyType } from '../../../../../core/provisioning/strategy/index.ts';
+import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
 
 export class DefaultProvisioningSource implements IProvisioningSource {
     async load(container: IDIContainer): Promise<RootProvisioningEntity> {

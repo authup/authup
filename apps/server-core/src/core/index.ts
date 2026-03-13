@@ -12,3 +12,4 @@ export * from './mail/index.ts';
 export * from './oauth2/index.ts';
 export * from './identity/index.ts';
 export * from './ldap/index.ts';
+export * from './provisioning/index.ts';

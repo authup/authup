@@ -10,6 +10,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { IdentityProviderRoleMappingEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityProviderRoleMappingRepository {
     private readonly repository: Repository<IdentityProviderRoleMapping>;
@@ -74,8 +75,12 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<IdentityProviderRoleMapping[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<IdentityProviderRoleMapping | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<IdentityProviderRoleMapping>): IdentityProviderRoleMapping {

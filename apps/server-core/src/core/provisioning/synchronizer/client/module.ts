@@ -6,11 +6,16 @@
  */
 
 import type {
-    Client, ClientPermission, ClientRole, Permission, Role,
+    Permission, Role,
 } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
-import type { Repository } from 'typeorm';
-import { In, IsNull } from 'typeorm';
+import type {
+    IClientPermissionRepository,
+    IClientRepository,
+    IClientRoleRepository,
+    IPermissionRepository,
+    IRoleRepository,
+} from '../../../entities/index.ts';
 import type { ClientProvisioningEntity } from '../../entities/client';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
@@ -23,15 +28,15 @@ import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { ClientProvisioningSynchronizerContext } from './types.ts';
 
 export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer<ClientProvisioningEntity> {
-    protected clientRepository: Repository<Client>;
+    protected clientRepository: IClientRepository;
 
-    protected clientRoleRepository: Repository<ClientRole>;
+    protected clientRoleRepository: IClientRoleRepository;
 
-    protected clientPermissionRepository: Repository<ClientPermission>;
+    protected clientPermissionRepository: IClientPermissionRepository;
 
-    protected roleRepository: Repository<Role>;
+    protected roleRepository: IRoleRepository;
 
-    protected permissionRepository: Repository<Permission>;
+    protected permissionRepository: IPermissionRepository;
 
     protected permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>;
 
@@ -55,7 +60,7 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
         let attributes = await this.clientRepository.findOneBy({
             name: input.attributes.name,
-            realm_id: input.attributes.realm_id || IsNull(),
+            realm_id: input.attributes.realm_id || null,
         });
         if (attributes) {
             switch (strategy.type) {
@@ -70,11 +75,11 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
                     break;
                 case ProvisioningEntityStrategyType.REPLACE:
                     input.attributes.id = attributes.id;
-                    attributes = await this.clientRepository.save(input.attributes);
+                    attributes = await this.clientRepository.save(this.clientRepository.create(input.attributes));
                     break;
             }
         } else {
-            attributes = await this.clientRepository.save(input.attributes);
+            attributes = await this.clientRepository.save(this.clientRepository.create(input.attributes));
         }
 
         // Permissions (Global + Realm)
@@ -85,15 +90,15 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
             const hasWildcard = input.relations.globalPermissions.some((el) => el === '*');
             if (hasWildcard) {
-                entities = await this.permissionRepository.findBy({
-                    realm_id: IsNull(),
-                    client_id: IsNull(),
+                entities = await this.permissionRepository.findManyBy({
+                    realm_id: null,
+                    client_id: null,
                 });
             } else {
-                entities = await this.permissionRepository.findBy({
-                    name: In(input.relations.globalPermissions),
-                    realm_id: IsNull(),
-                    client_id: IsNull(),
+                entities = await this.permissionRepository.findManyBy({
+                    name: input.relations.globalPermissions,
+                    realm_id: null,
+                    client_id: null,
                 });
             }
 
@@ -105,15 +110,15 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
             const hasWildcard = input.relations.realmPermissions.some((el) => el === '*');
             if (hasWildcard) {
-                entities = await this.permissionRepository.findBy({
+                entities = await this.permissionRepository.findManyBy({
                     realm_id: attributes.realm_id,
-                    client_id: IsNull(),
+                    client_id: null,
                 });
             } else {
-                entities = await this.permissionRepository.findBy({
-                    name: In(input.relations.realmPermissions),
+                entities = await this.permissionRepository.findManyBy({
+                    name: input.relations.realmPermissions,
                     realm_id: attributes.realm_id,
-                    client_id: IsNull(),
+                    client_id: null,
                 });
             }
 
@@ -149,15 +154,15 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
             const hasWildcard = input.relations.globalRoles.some((el) => el === '*');
             if (hasWildcard) {
-                entities = await this.roleRepository.findBy({
-                    realm_id: IsNull(),
-                    client_id: IsNull(),
+                entities = await this.roleRepository.findManyBy({
+                    realm_id: null,
+                    client_id: null,
                 });
             } else {
-                entities = await this.roleRepository.findBy({
-                    name: In(input.relations.globalRoles),
-                    realm_id: IsNull(),
-                    client_id: IsNull(),
+                entities = await this.roleRepository.findManyBy({
+                    name: input.relations.globalRoles,
+                    realm_id: null,
+                    client_id: null,
                 });
             }
 
@@ -169,15 +174,15 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
             const hasWildcard = input.relations.realmRoles.some((el) => el === '*');
             if (hasWildcard) {
-                entities = await this.roleRepository.findBy({
+                entities = await this.roleRepository.findManyBy({
                     realm_id: attributes.realm_id,
-                    client_id: IsNull(),
+                    client_id: null,
                 });
             } else {
-                entities = await this.roleRepository.findBy({
-                    name: In(input.relations.realmRoles),
+                entities = await this.roleRepository.findManyBy({
+                    name: input.relations.realmRoles,
                     realm_id: attributes.realm_id,
-                    client_id: IsNull(),
+                    client_id: null,
                 });
             }
 

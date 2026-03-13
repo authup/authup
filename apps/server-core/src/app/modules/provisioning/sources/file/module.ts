@@ -7,9 +7,9 @@
 
 import { load, locateMany } from 'locter';
 import path from 'node:path';
-import type { RootProvisioningEntity } from '../../entities/index.ts';
-import { RootProvisioningValidator } from '../../entities/index.ts';
-import type { IProvisioningSource } from '../../types.ts';
+import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/index.ts';
+import { RootProvisioningValidator } from '../../../../../core/provisioning/entities/index.ts';
+import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
 import { CompositeProvisioningSource } from '../composite/index.ts';
 import type { FileEntitySchemaImporterOptions } from './types.ts';
 

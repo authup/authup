@@ -11,6 +11,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IClientRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 import { ClientEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -109,8 +110,12 @@ export class ClientRepositoryAdapter implements IClientRepository {
             this.findOneByName(idOrName, realm);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<Client[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<Client | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     async findOneWithSecret(where: Record<string, any>): Promise<Client | null> {

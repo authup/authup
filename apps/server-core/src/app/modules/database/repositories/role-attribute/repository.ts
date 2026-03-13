@@ -10,6 +10,7 @@ import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRoleAttributeRepository } from '../../../../../core/index.ts';
 import { RoleAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
+import { translateWhereConditions } from '../helpers.ts';
 
 export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository {
     private readonly repository: Repository<RoleAttribute>;
@@ -58,8 +59,12 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
         return this.findOneById(idOrName);
     }
 
+    async findManyBy(where: Record<string, any>): Promise<RoleAttribute[]> {
+        return this.repository.findBy(translateWhereConditions(where));
+    }
+
     async findOneBy(where: Record<string, any>): Promise<RoleAttribute | null> {
-        return this.repository.findOneBy(where);
+        return this.repository.findOneBy(translateWhereConditions(where));
     }
 
     create(data: Partial<RoleAttribute>): RoleAttribute {
