@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm } from '@authup/core-kit';
+import type { Realm, UserPermission, UserRole } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
 import {
     ClientIdentityRepository,
@@ -17,7 +17,15 @@ import {
     UserIdentityRepository,
 } from './repositories/index.ts';
 import { DatabaseInjectionKey, IdentityProviderRepositoryAdapter } from '../database/index.ts';
-import { IdentityProviderRepository, RealmEntity } from '../../../adapters/database/domains/index.ts';
+import {
+    ClientRepository,
+    IdentityProviderRepository,
+    RealmEntity,
+    RobotRepository,
+    UserPermissionEntity,
+    UserRepository,
+    UserRoleEntity,
+} from '../../../adapters/database/domains/index.ts';
 import type { IDIContainer, IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core/index.ts';
 import {
     IdentityProviderAccountManager,
@@ -34,9 +42,19 @@ import { IdentityInjectionKey } from './constants.ts';
 
 export class IdentityModule implements Module {
     async start(container: IDIContainer): Promise<void> {
-        const clientRepository = new ClientIdentityRepository();
-        const robotRepository = new RobotIdentityRepository();
-        const userRepository = new UserIdentityRepository();
+        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+
+        const clientRepository = new ClientIdentityRepository(
+            new ClientRepository(dataSource),
+        );
+        const robotRepository = new RobotIdentityRepository(
+            new RobotRepository(dataSource),
+        );
+        const userRepository = new UserIdentityRepository({
+            repository: new UserRepository(dataSource),
+            userPermissionRepository: container.resolve<Repository<UserPermission>>(UserPermissionEntity),
+            userRoleRepository: container.resolve<Repository<UserRole>>(UserRoleEntity),
+        });
 
         container.register(IdentityInjectionKey.Resolver, {
             useFactory: () => new IdentityResolver({
@@ -71,7 +89,6 @@ export class IdentityModule implements Module {
 
         // ---------------------------------------------
 
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const identityProviderRepository = new IdentityProviderRepositoryAdapter({
             repository: new IdentityProviderRepository(dataSource),
             realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
