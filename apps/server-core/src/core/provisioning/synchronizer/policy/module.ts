@@ -29,6 +29,8 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
             entity = this.repository.merge(entity, {
                 type: input.attributes.type,
                 built_in: input.attributes.built_in,
+                parent_id: input.attributes.parent_id,
+                parent: input.attributes.parent,
             });
             await this.repository.saveWithEA(entity, input.ea);
         } else {

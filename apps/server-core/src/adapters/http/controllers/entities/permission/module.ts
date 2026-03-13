@@ -299,6 +299,10 @@ export class PermissionController {
             group,
         });
 
+        if (!entity && this.defaultPolicyId && !data.policy_id) {
+            data.policy_id = this.defaultPolicyId;
+        }
+
         await this.repository.validateJoinColumns(data);
 
         if (entity) {
@@ -361,10 +365,6 @@ export class PermissionController {
             data.policy.realm_id !== data.realm_id
         ) {
             throw new BadRequestError('Policy realm and permission realm must be equal.');
-        }
-
-        if (this.defaultPolicyId && !data.policy_id) {
-            data.policy_id = this.defaultPolicyId;
         }
 
         entity = this.repository.create(data);

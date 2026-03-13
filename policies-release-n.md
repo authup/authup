@@ -81,18 +81,16 @@ Provisioning order becomes:
 
 ### 5. Apply Config Option in Permission Creation
 
+`ProvisionerModule` resolves the `system.default` policy once at startup and injects `defaultPolicyId` into both the controller and the provisioning synchronizer.
+
 **a) Permission HTTP controller** (`adapters/http/controllers/entities/permission/module.ts`):
 
 In the write method, when creating a new permission without `policy_id`:
-- Check `config.permissionsDefaultPolicyAssignment`
-- If `true` → look up `system.default` by name via `IPolicyRepository` and assign its ID
-- Add `IPolicyRepository` to the controller context
+- If `defaultPolicyId` is set → assign it before `validateJoinColumns`
 
 **b) Permission provisioning synchronizer** (`core/provisioning/synchronizer/permission/module.ts`):
 
-Same logic — if provisioning entity has no `policy_id` and config is `true`, look up and assign `system.default`.
-
-The synchronizer resolves the default policy by name (`SystemPolicyName.DEFAULT`), not by ID.
+Same logic — if provisioning entity has no `policy_id` and `defaultPolicyId` is set, assign it during creation.
 
 ### 6. Remove In-Memory Fallback
 
@@ -131,7 +129,7 @@ Already implemented (checklist item `[x]`). Verify:
 
 ## System Policy Tree Reference
 
-```
+```text
 system.default (CompositePolicy, UNANIMOUS, built_in: true)
 ├ system.identity (IdentityPolicy, built_in: true)
 ├ system.permission-binding (PermissionBindingPolicy, built_in: true)

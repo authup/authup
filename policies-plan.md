@@ -74,7 +74,7 @@ Policies may be combined using composite policies with decision strategies:
 
 Example tree:
 
-```
+```text
 CompositePolicy (UNANIMOUS)
 ├ IdentityPolicy
 ├ PermissionBindingPolicy
@@ -140,7 +140,7 @@ The `system.default` policy replaces the current in-memory fallback in `Permissi
 
 Structure:
 
-```
+```text
 system.default (CompositePolicy, UNANIMOUS)
 ├ system.identity (IdentityPolicy)
 ├ system.permission-binding (PermissionBindingPolicy)
