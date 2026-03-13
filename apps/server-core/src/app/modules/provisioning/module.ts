@@ -99,6 +99,11 @@ export class ProvisionerModule implements Module {
         // Phase 1: Synchronize system policies (before everything else)
         // ---------------------------------------------------------------
 
+        const permissionRepository = new PermissionRepositoryAdapter({
+            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            realmRepository,
+        });
+
         const policyRepository = new PolicyRepositoryAdapter({
             repository: new PolicyRepository(dataSource),
             realmRepository,
@@ -106,6 +111,7 @@ export class ProvisionerModule implements Module {
 
         const policySynchronizer = new PolicyProvisioningSynchronizer({
             repository: policyRepository,
+            permissionRepository,
         });
 
         const systemPolicies = buildSystemPolicyProvisioningEntities();
@@ -146,10 +152,6 @@ export class ProvisionerModule implements Module {
         // Phase 2: Synchronize permissions, roles, realms, etc.
         // ---------------------------------------------------------------
 
-        const permissionRepository = new PermissionRepositoryAdapter({
-            repository: container.resolve<Repository<Permission>>(PermissionEntity),
-            realmRepository,
-        });
         const roleRepository = new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository,

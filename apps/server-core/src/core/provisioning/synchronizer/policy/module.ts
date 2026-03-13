@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPolicyRepository } from '../../../entities/index.ts';
+import type { Policy } from '@authup/core-kit';
+import type { IPermissionRepository, IPolicyRepository } from '../../../entities/index.ts';
 import type { PolicyProvisioningEntity } from '../../entities/policy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { PolicyProvisioningSynchronizerContext } from './types.ts';
@@ -13,10 +14,13 @@ import type { PolicyProvisioningSynchronizerContext } from './types.ts';
 export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer<PolicyProvisioningEntity> {
     protected repository: IPolicyRepository;
 
+    protected permissionRepository: IPermissionRepository;
+
     constructor(ctx: PolicyProvisioningSynchronizerContext) {
         super();
 
         this.repository = ctx.repository;
+        this.permissionRepository = ctx.permissionRepository;
     }
 
     async synchronize(input: PolicyProvisioningEntity): Promise<PolicyProvisioningEntity> {
@@ -52,11 +56,50 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         parentId: string,
         children: PolicyProvisioningEntity[],
     ): Promise<void> {
+        const declaredNames = children.map((c) => c.attributes.name);
+
         await children.reduce(async (prev, child) => {
             await prev;
             child.attributes.parent_id = parentId;
             child.attributes.parent = { id: parentId } as any;
             await this.synchronize(child);
         }, Promise.resolve());
+
+        await this.cleanupStaleChildren(parentId, declaredNames);
+    }
+
+    private async cleanupStaleChildren(
+        parentId: string,
+        declaredNames: (string | undefined)[],
+    ): Promise<void> {
+        const existingChildren = await this.repository.findManyBy({
+            parent_id: parentId,
+        });
+
+        const staleChildren = existingChildren.filter(
+            (child) => declaredNames.indexOf(child.name) === -1,
+        );
+
+        await staleChildren.reduce(async (prev, child) => {
+            await prev;
+            await this.cleanupStaleChild(child);
+        }, Promise.resolve());
+    }
+
+    private async cleanupStaleChild(child: Policy): Promise<void> {
+        const referencingPermissions = await this.permissionRepository.findManyBy({
+            policy_id: child.id,
+        });
+
+        if (referencingPermissions.length === 0) {
+            await this.repository.deleteFromTree(child);
+        } else {
+            const detached = this.repository.merge(child, {
+                parent_id: null,
+                parent: null,
+                built_in: false,
+            });
+            await this.repository.saveWithEA(detached);
+        }
     }
 }
