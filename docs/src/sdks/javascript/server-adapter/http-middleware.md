@@ -1,53 +1,51 @@
 # HTTP
 
-The http server plugin provides utilities for http based services.
+The HTTP server adapter provides middleware for HTTP based services.
 
 ## Installation
 
 Add the package as a dependency to the project.
 
 ```sh
-npm install @authup/server-core-plugin-http --save
+npm install @authup/server-adapter-http --save
 ```
 
 ## Middleware
 
-The http middleware should be injected at the beginning of the chain.
+The HTTP middleware should be injected at the beginning of the chain.
 
-The middleware is used to validate the bearer token by authorization header (or by cookie).
-It calls a callback function with general information (realm, abilities, ...) and information about the corresponding robot or user of the token.
+The middleware validates the Bearer token from the `Authorization` header (or from a cookie).
+It calls a handler callback with the verification data (realm, permissions, user/robot info, etc.).
 
-The `createMiddleware` method, accepts a configuration object.
-The redis client, if enabled, is used to cache verification responses from the backend service.
+The `createMiddleware` method accepts a configuration object with a `tokenVerifier` (from `@authup/server-adapter-kit`)
+and a `tokenVerifierHandler` callback.
 
 ```typescript
 import { Router } from 'routup';
-import { createMiddleware } from '@authup/server-core-plugin-http';
-import { createClient } from 'redis-extension';
+import { createMiddleware } from '@authup/server-adapter-http';
+import { TokenVerifier } from '@authup/server-adapter-kit';
 
 // setup router
 const router = new Router();
 
-// setup socket middleware for socket server
+// create token verifier
+const tokenVerifier = new TokenVerifier({
+    baseURL: 'http://localhost:3001/',
+    creator: {
+        type: 'user',
+        name: 'admin',
+        password: 'start123',
+    },
+});
+
+// setup http middleware
 router.use(createMiddleware({
     tokenByCookie: (req, cookieName) => req.cookies[cookieName],
-    tokenVerifier: {
-        baseURL: 'http://localhost:3001/',
-        creator: {
-            type: 'user',
-            name: 'admin',
-            password: 'start123',
-        },
-        cache: {
-            type: 'redis',
-            client: createClient({ connectionString: 'redis://127.0.0.1' })
-        }
-    },
+    tokenVerifier,
     tokenVerifierHandler: (req, data) => {
         console.log(data);
-        // { 'realmId': 'xxx', userId: 'xxx', userName: 'xxx', ... }
+        // { sub: 'xxx', realm_id: 'xxx', permissions: [...], ... }
     }
-    /* ... */
 }));
 
 router.listen(3000);

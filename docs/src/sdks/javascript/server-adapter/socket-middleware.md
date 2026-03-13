@@ -1,56 +1,50 @@
 # Socket.io
 
-The socket-io server plugin provides utilities for socket.io based services.
+The socket.io server adapter provides middleware for socket.io based services.
 
 ## Installation
 
 Add the package as a dependency to the project.
 
 ```sh
-npm install @authup/server-core-plugin-socket-io --save
+npm install @authup/server-adapter-socket-io --save
 ```
 
 ## Configuration
 
 The socket middleware should be injected at the beginning of the chain.
 
-Besides, validating the authorization header, the `createSocketMiddleware` also extends the request
-with general information (realm, abilities, ...) and information about the corresponding robot or user of the token.
+The middleware validates the token from `socket.handshake.auth.token` and calls a handler
+with the verification data (realm, permissions, user/robot info, etc.).
 
-The `createMiddleware` method, accepts a configuration object.
-The redis client, if enabled, is used to cache verification responses from the backend service.
+The `createMiddleware` method accepts a configuration object with a `tokenVerifier` (from `@authup/server-adapter-kit`)
+and a `tokenVerifierHandler` callback.
 
 ```typescript
 import { Server } from 'socket.io';
-import { createMiddleware } from '@authup/server-core-plugin-socket-io';
-import { createClient } from 'redis-extension';
-
-// create redis client
-const redis = createClient({ connectionString: 'redis://127.0.0.1' });
+import { createMiddleware } from '@authup/server-adapter-socket-io';
+import { TokenVerifier } from '@authup/server-adapter-kit';
 
 // setup socket.io server
 const server = new Server();
 
+// create token verifier
+const tokenVerifier = new TokenVerifier({
+    baseURL: 'http://localhost:3010/',
+    creator: {
+        type: 'user',
+        name: 'admin',
+        password: 'start123',
+    },
+});
+
 // setup socket middleware for socket server
 server.use(createMiddleware({
-    tokenByCookie: (req, cookieName) => req.cookies[cookieName],
-    tokenVerifier: {
-        baseURL: 'http://localhost:3010/',
-        creator: {
-            type: 'user',
-            name: 'admin',
-            password: 'start123',
-        },
-        cache: {
-            type: 'redis',
-            client: redis
-        }
-    },
-    tokenVerifierHandler: (req, data) => {
+    tokenVerifier,
+    tokenVerifierHandler: (socket, data) => {
         console.log(data);
-        // { 'realmId': 'xxx', userId: 'xxx', userName: 'xxx', ... }
+        // { sub: 'xxx', realm_id: 'xxx', permissions: [...], ... }
     }
-    /* ... */
 }));
 
 // ...
