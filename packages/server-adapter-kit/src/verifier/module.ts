@@ -173,7 +173,7 @@ export class TokenVerifier implements ITokenVerifier {
         }
 
         if ('active' in payload && !payload.active) {
-            throw JWTError.payloadInvalid('The token is inactive.');
+            throw JWTError.notActive();
         }
 
         const secondsDiff = this.getTokenExpiresIn(payload);
