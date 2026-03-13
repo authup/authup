@@ -9,6 +9,7 @@ export * from './client/index.ts';
 export * from './entity-resolver.ts';
 export * from './junction-synchronizer.ts';
 export * from './permission/index.ts';
+export * from './policy/index.ts';
 export * from './realm/index.ts';
 export * from './role/index.ts';
 export * from './root/index.ts';

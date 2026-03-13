@@ -9,4 +9,5 @@ import type { IPermissionRepository } from '../../../entities/index.ts';
 
 export type PermissionProvisioningSynchronizerContext = {
     repository: IPermissionRepository,
+    defaultPolicyId?: string,
 };

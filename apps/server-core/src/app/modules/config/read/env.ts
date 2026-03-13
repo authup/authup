@@ -182,5 +182,10 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.permissions = permissions;
     }
 
+    const permissionsDefaultPolicyAssignment = readBool(ConfigEnvironmentVariableName.PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT);
+    if (typeof permissionsDefaultPolicyAssignment !== 'undefined') {
+        options.permissionsDefaultPolicyAssignment = permissionsDefaultPolicyAssignment;
+    }
+
     return options;
 }

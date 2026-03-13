@@ -15,10 +15,13 @@ import type { PermissionProvisioningSynchronizerContext } from './types.ts';
 export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchronizer<PermissionProvisioningEntity> {
     protected repository : IPermissionRepository;
 
+    protected defaultPolicyId?: string;
+
     constructor(ctx: PermissionProvisioningSynchronizerContext) {
         super();
 
         this.repository = ctx.repository;
+        this.defaultPolicyId = ctx.defaultPolicyId;
     }
 
     async synchronize(input: PermissionProvisioningEntity): Promise<PermissionProvisioningEntity> {
@@ -55,6 +58,10 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
                     break;
             }
         } else {
+            if (this.defaultPolicyId && !input.attributes.policy_id) {
+                input.attributes.policy_id = this.defaultPolicyId;
+            }
+
             attributes = await this.repository.save(this.repository.create(input.attributes));
         }
 

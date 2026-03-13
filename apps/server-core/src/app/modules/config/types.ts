@@ -249,6 +249,15 @@ export type Config = {
      * default: []
      */
     permissions: string | string[],
+
+    /**
+     * Auto-assign system.default policy to new permissions without policy_id.
+     * Transitional option — will be removed in next major release.
+     * default: true
+     *
+     * @deprecated
+     */
+    permissionsDefaultPolicyAssignment: boolean,
 };
 
 export type ConfigInput = Partial<Config>;

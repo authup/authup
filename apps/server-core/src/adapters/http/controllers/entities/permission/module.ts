@@ -28,7 +28,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import { useRequestBody } from '@routup/basic/body';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { DataSource } from 'typeorm';
-import type { IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
+import type { IPermissionRepository, IPolicyRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { PermissionDatabaseRepository, PolicyEngine } from '../../../../../security/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
@@ -44,7 +44,9 @@ import {
 export type PermissionControllerContext = {
     repository: IPermissionRepository,
     realmRepository: IRealmRepository,
+    policyRepository: IPolicyRepository,
     dataSource: DataSource,
+    defaultPolicyId?: string,
 };
 
 @DTags('permission')
@@ -54,12 +56,18 @@ export class PermissionController {
 
     protected realmRepository: IRealmRepository;
 
+    protected policyRepository: IPolicyRepository;
+
     protected dataSource: DataSource;
+
+    protected defaultPolicyId?: string;
 
     constructor(ctx: PermissionControllerContext) {
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.policyRepository = ctx.policyRepository;
         this.dataSource = ctx.dataSource;
+        this.defaultPolicyId = ctx.defaultPolicyId;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -353,6 +361,10 @@ export class PermissionController {
             data.policy.realm_id !== data.realm_id
         ) {
             throw new BadRequestError('Policy realm and permission realm must be equal.');
+        }
+
+        if (this.defaultPolicyId && !data.policy_id) {
+            data.policy_id = this.defaultPolicyId;
         }
 
         entity = this.repository.create(data);
