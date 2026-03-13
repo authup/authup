@@ -18,9 +18,13 @@ export type ProvisioningEntityReplaceStrategy = {
 export type ProvisioningEntityCreateOnlyStrategy = {
     type: `${ProvisioningEntityStrategyType.CREATE_ONLY}`
 };
+export type ProvisioningEntityAbsentStrategy = {
+    type: `${ProvisioningEntityStrategyType.ABSENT}`
+};
 
 export type ProvisioningEntityStrategy<
     A extends ObjectLiteral = ObjectLiteral,
 > = ProvisioningEntityMergeStrategy<A> |
 ProvisioningEntityReplaceStrategy |
-ProvisioningEntityCreateOnlyStrategy;
+ProvisioningEntityCreateOnlyStrategy |
+ProvisioningEntityAbsentStrategy;

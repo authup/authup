@@ -29,28 +29,43 @@ export class CompositeProvisioningSource implements IProvisioningSource {
     }
 
     merge(target: RootProvisioningEntity, source: RootProvisioningEntity) {
-        if (source.roles) {
-            // todo: unique check and merge
-            target.roles = target.roles || [];
-            target.roles.push(...source.roles);
-        }
+        target.permissions = this.mergeEntities(target.permissions, source.permissions);
+        target.roles = this.mergeEntities(target.roles, source.roles);
+        target.scopes = this.mergeEntities(target.scopes, source.scopes);
+        target.realms = this.mergeEntities(target.realms, source.realms);
+    }
 
-        if (source.realms) {
-            // todo: unique check and merge
-            target.realms = target.realms || [];
-            target.realms.push(...source.realms);
-        }
+    private buildEntityKey(
+        attributes: { name?: string, realm_id?: string | null, client_id?: string | null },
+    ): string | undefined {
+        if (!attributes.name) return undefined;
+        return `${attributes.name}:${attributes.realm_id || ''}:${attributes.client_id || ''}`;
+    }
 
-        if (source.permissions) {
-            // todo: unique check and merge
-            target.permissions = target.permissions || [];
-            target.permissions.push(...source.permissions);
-        }
+    private mergeEntities<
+        T extends { attributes: { name?: string, realm_id?: string | null, client_id?: string | null } },
+    >(
+        target: T[] | undefined,
+        source: T[] | undefined,
+    ): T[] | undefined {
+        if (!source) return target;
+        if (!target) return [...source];
 
-        if (source.scopes) {
-            // todo: unique check and merge
-            target.scopes = target.scopes || [];
-            target.scopes.push(...source.scopes);
-        }
+        const result = [...target];
+        source.forEach((item) => {
+            const key = this.buildEntityKey(item.attributes);
+            if (!key) {
+                result.push(item);
+                return;
+            }
+
+            const idx = result.findIndex((r) => this.buildEntityKey(r.attributes) === key);
+            if (idx !== -1) {
+                result[idx] = item;
+            } else {
+                result.push(item);
+            }
+        });
+        return result;
     }
 }

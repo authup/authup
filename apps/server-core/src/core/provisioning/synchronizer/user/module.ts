@@ -6,7 +6,7 @@
  */
 
 import type {
-    Permission, Role,
+    Permission, Role, UserPermission, UserRole,
 } from '@authup/core-kit';
 import {
     buildUserFakeEmail,
@@ -14,39 +14,47 @@ import {
 import { pickRecord } from '@authup/kit';
 import type {
     IClientRepository,
-    IPermissionRepository,
-    IRoleRepository,
-    IUserPermissionRepository,
     IUserRepository,
-    IUserRoleRepository,
 } from '../../../entities/index.ts';
 import type { UserProvisioningEntity } from '../../entities/user/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
+import { ProvisioningEntityResolver } from '../entity-resolver.ts';
+import { ProvisioningJunctionSynchronizer } from '../junction-synchronizer.ts';
 import type { UserProvisioningSynchronizerContext } from './types.ts';
 
 export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<UserProvisioningEntity> {
     protected userRepository: IUserRepository;
 
-    protected userRoleRepository: IUserRoleRepository;
-
-    protected userPermissionRepository: IUserPermissionRepository;
-
-    protected roleRepository: IRoleRepository;
-
-    protected permissionRepository: IPermissionRepository;
-
     protected clientRepository: IClientRepository;
+
+    protected permissionResolver: ProvisioningEntityResolver<Permission>;
+
+    protected roleResolver: ProvisioningEntityResolver<Role>;
+
+    protected permissionJunction: ProvisioningJunctionSynchronizer<UserPermission>;
+
+    protected roleJunction: ProvisioningJunctionSynchronizer<UserRole>;
 
     constructor(ctx: UserProvisioningSynchronizerContext) {
         super();
 
         this.userRepository = ctx.userRepository;
-        this.userRoleRepository = ctx.userRoleRepository;
-        this.userPermissionRepository = ctx.userPermissionRepository;
-        this.roleRepository = ctx.roleRepository;
-        this.permissionRepository = ctx.permissionRepository;
         this.clientRepository = ctx.clientRepository;
+
+        this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
+        this.roleResolver = new ProvisioningEntityResolver(ctx.roleRepository);
+
+        this.permissionJunction = new ProvisioningJunctionSynchronizer({
+            repository: ctx.userPermissionRepository,
+            ownerKey: 'user_id',
+            ownerRealmKey: 'user_realm_id',
+        });
+        this.roleJunction = new ProvisioningJunctionSynchronizer({
+            repository: ctx.userRoleRepository,
+            ownerKey: 'user_id',
+            ownerRealmKey: 'user_realm_id',
+        });
     }
 
     async synchronize(input: UserProvisioningEntity): Promise<UserProvisioningEntity> {
@@ -57,6 +65,13 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             realm_id: input.attributes.realm_id || null,
             client_id: input.attributes.client_id || null,
         });
+
+        if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
+            if (attributes) {
+                await this.userRepository.remove(attributes);
+            }
+            return { ...input, attributes: attributes || input.attributes };
+        }
 
         if (attributes) {
             switch (strategy.type) {
@@ -97,46 +112,17 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         }
 
         // Permissions (Global, Realm & Client)
-        const permissions : Permission[] = [];
-        if (input.relations && input.relations.globalPermissions) {
-            let entities : Permission[];
-
-            const hasWildcard = input.relations.globalPermissions.some((el) => el === '*');
-            if (hasWildcard) {
-                entities = await this.permissionRepository.findManyBy({
-                    realm_id: null,
-                    client_id: null,
-                });
-            } else {
-                entities = await this.permissionRepository.findManyBy({
-                    name: input.relations.globalPermissions,
-                    realm_id: null,
-                    client_id: null,
-                });
-            }
-
-            permissions.push(...entities);
-        }
-
-        if (input.relations && input.relations.realmPermissions) {
-            let entities : Permission[];
-
-            const hasWildcard = input.relations.realmPermissions.some((el) => el === '*');
-            if (hasWildcard) {
-                entities = await this.permissionRepository.findManyBy({
-                    realm_id: attributes.realm_id,
-                    client_id: null,
-                });
-            } else {
-                entities = await this.permissionRepository.findManyBy({
-                    name: input.relations.realmPermissions,
-                    realm_id: attributes.realm_id,
-                    client_id: null,
-                });
-            }
-
-            permissions.push(...entities);
-        }
+        const permissions : Permission[] = [
+            ...await this.permissionResolver.resolveGlobal(
+                input.relations && input.relations.globalPermissions,
+            ),
+            ...(attributes.realm_id ?
+                await this.permissionResolver.resolveRealm(
+                    input.relations && input.relations.realmPermissions,
+                    attributes.realm_id,
+                ) :
+                []),
+        ];
 
         if (input.relations && input.relations.clientPermissions) {
             const clientKeys = Object.keys(input.relations.clientPermissions);
@@ -147,90 +133,37 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                 });
 
                 if (client) {
-                    let entities : Permission[] = [];
-
-                    const hasWildcard = input.relations.clientPermissions[clientKeys[i]].some((el) => el === '*');
-                    if (hasWildcard) {
-                        entities = await this.permissionRepository.findManyBy({
-                            realm_id: attributes.realm_id,
-                            client_id: client.id,
-                        });
-                    } else {
-                        entities = await this.permissionRepository.findManyBy({
-                            name: input.relations.clientPermissions[clientKeys[i]],
-                            realm_id: attributes.realm_id,
-                            client_id: client.id,
-                        });
-                    }
-
+                    const entities = await this.permissionResolver.resolveClient(
+                        input.relations.clientPermissions[clientKeys[i]],
+                        attributes.realm_id,
+                        client.id,
+                    );
                     permissions.push(...entities);
                 }
             }
         }
 
         if (permissions.length > 0) {
-            for (let i = 0; i < permissions.length; i++) {
-                const permission = permissions[i];
-
-                let userPermission = await this.userPermissionRepository.findOneBy({
-                    user_id: attributes.id,
-                    permission_id: permission.id,
-                });
-
-                if (!userPermission) {
-                    userPermission = this.userPermissionRepository.create({
-                        user_id: attributes.id,
-                        user_realm_id: attributes.realm_id,
-                        permission_id: permission.id,
-                        permission_realm_id: permission.realm_id,
-                    });
-
-                    await this.userPermissionRepository.save(userPermission);
-                }
-            }
+            await this.permissionJunction.synchronize(
+                attributes,
+                permissions,
+                'permission_id',
+                'permission_realm_id',
+            );
         }
 
-        // Role (Global, Realm & Client)
-        const roles : Role[] = [];
-        if (input.relations && input.relations.globalRoles) {
-            let entities : Role[];
-
-            const hasWildcard = input.relations.globalRoles.some((el) => el === '*');
-            if (hasWildcard) {
-                entities = await this.roleRepository.findManyBy({
-                    realm_id: null,
-                    client_id: null,
-                });
-            } else {
-                entities = await this.roleRepository.findManyBy({
-                    name: input.relations.globalRoles,
-                    realm_id: null,
-                    client_id: null,
-                });
-            }
-
-            roles.push(...entities);
-        }
-
-        if (input.relations && input.relations.realmRoles) {
-            let entities : Role[];
-
-            const hasWildcard = input.relations.realmRoles.some((el) => el === '*');
-            if (hasWildcard) {
-                entities = await this.roleRepository.findManyBy({
-                    realm_id: attributes.realm_id,
-                    client_id: null,
-                });
-            } else {
-                entities = await this.roleRepository.findManyBy({
-                    name: input.relations.realmRoles,
-                    realm_id: attributes.realm_id,
-                    client_id: null,
-                });
-            }
-
-            roles.push(...entities);
-        }
+        // Roles (Global, Realm & Client)
+        const roles : Role[] = [
+            ...await this.roleResolver.resolveGlobal(
+                input.relations && input.relations.globalRoles,
+            ),
+            ...(attributes.realm_id ?
+                await this.roleResolver.resolveRealm(
+                    input.relations && input.relations.realmRoles,
+                    attributes.realm_id,
+                ) :
+                []),
+        ];
 
         if (input.relations && input.relations.clientRoles) {
             const clientKeys = Object.keys(input.relations.clientRoles);
@@ -241,47 +174,23 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                 });
 
                 if (client) {
-                    let entities : Role[];
-
-                    const hasWildcard = input.relations.clientRoles[clientKeys[i]].some((el) => el === '*');
-                    if (hasWildcard) {
-                        entities = await this.roleRepository.findManyBy({
-                            realm_id: attributes.realm_id,
-                            client_id: client.id,
-                        });
-                    } else {
-                        entities = await this.roleRepository.findManyBy({
-                            name: input.relations.clientRoles[clientKeys[i]],
-                            realm_id: attributes.realm_id,
-                            client_id: client.id,
-                        });
-                    }
-
+                    const entities = await this.roleResolver.resolveClient(
+                        input.relations.clientRoles[clientKeys[i]],
+                        attributes.realm_id,
+                        client.id,
+                    );
                     roles.push(...entities);
                 }
             }
         }
 
         if (roles.length > 0) {
-            for (let i = 0; i < roles.length; i++) {
-                const role = roles[i];
-
-                let userRole = await this.userRoleRepository.findOneBy({
-                    user_id: attributes.id,
-                    role_id: role.id,
-                });
-
-                if (!userRole) {
-                    userRole = this.userRoleRepository.create({
-                        user_id: attributes.id,
-                        user_realm_id: attributes.realm_id,
-                        role_id: role.id,
-                        role_realm_id: role.realm_id,
-                    });
-
-                    await this.userRoleRepository.save(userRole);
-                }
-            }
+            await this.roleJunction.synchronize(
+                attributes,
+                roles,
+                'role_id',
+                'role_realm_id',
+            );
         }
 
         return {

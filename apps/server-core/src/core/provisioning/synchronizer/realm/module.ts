@@ -53,6 +53,14 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
         let attributes = await this.repository.findOneBy({
             name: input.attributes.name,
         });
+
+        if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
+            if (attributes) {
+                await this.repository.remove(attributes);
+            }
+            return { ...input, attributes: attributes || input.attributes };
+        }
+
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE:

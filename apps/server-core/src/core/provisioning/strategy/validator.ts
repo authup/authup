@@ -37,7 +37,7 @@ export class ProvisioningStrategyValidator extends Container<ProvisioningEntityS
         const altContainer = new Container<ProvisioningEntityReplaceStrategy>();
         altContainer.mount('type', createValidator(
             z
-                .enum(['replace', 'createOnly']),
+                .enum(['replace', 'createOnly', 'absent']),
         ));
         this.mount(altContainer);
     }

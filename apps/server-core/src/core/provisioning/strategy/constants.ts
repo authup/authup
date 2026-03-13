@@ -9,4 +9,5 @@ export enum ProvisioningEntityStrategyType {
     REPLACE = 'replace',
     MERGE = 'merge',
     CREATE_ONLY = 'createOnly',
+    ABSENT = 'absent',
 }

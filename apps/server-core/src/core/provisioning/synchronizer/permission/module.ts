@@ -29,6 +29,14 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
             realm_id: input.attributes.realm_id || null,
             client_id: input.attributes.client_id || null,
         });
+
+        if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
+            if (attributes) {
+                await this.repository.remove(attributes);
+            }
+            return { ...input, attributes: attributes || input.attributes };
+        }
+
         if (attributes) {
             switch (strategy.type) {
                 case ProvisioningEntityStrategyType.MERGE:

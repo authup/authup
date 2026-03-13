@@ -86,32 +86,33 @@ export class ProvisionerModule implements Module {
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
+        const permissionRepository = new PermissionRepositoryAdapter({
+            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            realmRepository,
+        });
+        const roleRepository = new RoleRepositoryAdapter({
+            repository: container.resolve<Repository<Role>>(RoleEntity),
+            realmRepository,
+        });
+        const clientRepository = new ClientRepositoryAdapter({
+            repository: container.resolve<Repository<Client>>(ClientEntity),
+            realmRepository,
+        });
+
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
-            repository: new PermissionRepositoryAdapter({
-                repository: container.resolve<Repository<Permission>>(PermissionEntity),
-                realmRepository,
-            }),
+            repository: permissionRepository,
         });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
-            repository: new RoleRepositoryAdapter({
-                repository: container.resolve<Repository<Role>>(RoleEntity),
-                realmRepository,
-            }),
-            permissionRepository: new PermissionRepositoryAdapter({
-                repository: container.resolve<Repository<Permission>>(PermissionEntity),
-                realmRepository,
-            }),
+            repository: roleRepository,
+            permissionRepository,
             rolePermissionRepository: new RolePermissionRepositoryAdapter(
                 container.resolve<Repository<RolePermission>>(RolePermissionEntity),
             ),
         });
 
         const clientSynchronizer = new ClientProvisioningSynchronizer({
-            clientRepository: new ClientRepositoryAdapter({
-                repository: container.resolve<Repository<Client>>(ClientEntity),
-                realmRepository,
-            }),
+            clientRepository,
             clientRoleRepository: new ClientRoleRepositoryAdapter(
                 container.resolve<Repository<ClientRole>>(ClientRoleEntity),
             ),
@@ -119,14 +120,8 @@ export class ProvisionerModule implements Module {
                 container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
             ),
 
-            roleRepository: new RoleRepositoryAdapter({
-                repository: container.resolve<Repository<Role>>(RoleEntity),
-                realmRepository,
-            }),
-            permissionRepository: new PermissionRepositoryAdapter({
-                repository: container.resolve<Repository<Permission>>(PermissionEntity),
-                realmRepository,
-            }),
+            roleRepository,
+            permissionRepository,
 
             roleSynchronizer,
             permissionSynchronizer,
@@ -144,18 +139,9 @@ export class ProvisionerModule implements Module {
                 container.resolve<Repository<UserPermission>>(UserPermissionEntity),
             ),
 
-            clientRepository: new ClientRepositoryAdapter({
-                repository: container.resolve<Repository<Client>>(ClientEntity),
-                realmRepository,
-            }),
-            roleRepository: new RoleRepositoryAdapter({
-                repository: container.resolve<Repository<Role>>(RoleEntity),
-                realmRepository,
-            }),
-            permissionRepository: new PermissionRepositoryAdapter({
-                repository: container.resolve<Repository<Permission>>(PermissionEntity),
-                realmRepository,
-            }),
+            clientRepository,
+            roleRepository,
+            permissionRepository,
         });
 
         const robotSynchronizer = new RobotProvisioningSynchronizer({
@@ -170,18 +156,8 @@ export class ProvisionerModule implements Module {
                 container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
             ),
 
-            clientRepository: new ClientRepositoryAdapter({
-                repository: container.resolve<Repository<Client>>(ClientEntity),
-                realmRepository,
-            }),
-            roleRepository: new RoleRepositoryAdapter({
-                repository: container.resolve<Repository<Role>>(RoleEntity),
-                realmRepository,
-            }),
-            permissionRepository: new PermissionRepositoryAdapter({
-                repository: container.resolve<Repository<Permission>>(PermissionEntity),
-                realmRepository,
-            }),
+            roleRepository,
+            permissionRepository,
         });
 
         const scopeSynchronizer = new ScopeProvisioningSynchronizer({

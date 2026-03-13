@@ -6,7 +6,6 @@
  */
 
 import type {
-    IClientRepository,
     IPermissionRepository,
     IRobotPermissionRepository,
     IRobotRepository,
@@ -19,7 +18,6 @@ export type RobotProvisioningSynchronizerContext = {
     robotRoleRepository: IRobotRoleRepository,
     robotPermissionRepository: IRobotPermissionRepository,
 
-    clientRepository: IClientRepository,
     roleRepository: IRoleRepository,
     permissionRepository: IPermissionRepository,
 };
