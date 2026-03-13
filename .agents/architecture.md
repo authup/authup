@@ -220,7 +220,7 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 
 ### Synchronization Order
 
-`GraphProvisioningSynchronizer` processes: permissions → roles → scopes → realms.
+`GraphProvisioningSynchronizer` processes in order: permissions → roles → scopes → realms.
 `RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → robots → scopes.
 
 ### File Structure
