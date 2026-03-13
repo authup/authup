@@ -32,6 +32,7 @@ import {
     RoleRepository,
     UserIdentityRepository,
     UserPermissionEntity,
+    UserRepository,
     UserRoleEntity,
 } from '../../../../../src';
 import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository';
@@ -90,7 +91,11 @@ describe('core/identity/provider/account', () => {
 
         const providerAccountRepository = new IdentityProviderAccountRepository();
 
-        const userRepository = new UserIdentityRepository();
+        const userRepository = new UserIdentityRepository({
+            repository: new UserRepository(suite.dataSource),
+            userPermissionRepository: suite.dataSource.getRepository(UserPermissionEntity),
+            userRoleRepository: suite.dataSource.getRepository(UserRoleEntity),
+        });
 
         accountManager = new IdentityProviderAccountManager({
             attributeMapper,

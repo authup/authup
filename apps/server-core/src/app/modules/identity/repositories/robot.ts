@@ -6,13 +6,19 @@
  */
 
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
 import type { IRobotIdentityRepository } from '../../../../core/index.ts';
-import { CachePrefix, RobotRepository } from '../../../../adapters/database/domains/index.ts';
+import type { RobotRepository } from '../../../../adapters/database/domains/index.ts';
+import { CachePrefix } from '../../../../adapters/database/domains/index.ts';
 
 export class RobotIdentityRepository implements IRobotIdentityRepository {
+    private readonly repository: RobotRepository;
+
+    constructor(repository: RobotRepository) {
+        this.repository = repository;
+    }
+
     async findOneById(id: string): Promise<Robot | null> {
         return this.find(id);
     }
@@ -26,14 +32,11 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Robot | null> {
-        const dataSource = await useDataSource();
-        const repository = new RobotRepository(dataSource);
-        return repository.findOneBy(where);
+        return this.repository.findOneBy(where);
     }
 
     private async find(key: string, realmKey?: string) : Promise<Robot | null> {
-        const dataSource = await useDataSource();
-        const repository = new RobotRepository(dataSource);
+        const { repository } = this;
         const query = repository.createQueryBuilder('robot')
             .leftJoinAndSelect('robot.realm', 'realm');
 

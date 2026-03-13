@@ -5,21 +5,35 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { User } from '@authup/core-kit';
+import type { User, UserPermission, UserRole } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
+import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
-import { useDataSource } from 'typeorm-extension';
 import type { IUserIdentityRepository, IdentityProviderMapperElement } from '../../../../core/index.ts';
 import { IdentityProviderMapperOperation } from '../../../../core/index.ts';
-import {
-    CachePrefix,
-    UserPermissionEntity,
-    UserRepository,
-    UserRoleEntity,
-} from '../../../../adapters/database/domains/index.ts';
+import type { UserRepository } from '../../../../adapters/database/domains/index.ts';
+import { CachePrefix } from '../../../../adapters/database/domains/index.ts';
+
+export type UserIdentityRepositoryContext = {
+    repository: UserRepository,
+    userPermissionRepository: Repository<UserPermission>,
+    userRoleRepository: Repository<UserRole>,
+};
 
 export class UserIdentityRepository implements IUserIdentityRepository {
+    private readonly repository: UserRepository;
+
+    private readonly userPermissionRepository: Repository<UserPermission>;
+
+    private readonly userRoleRepository: Repository<UserRole>;
+
+    constructor(ctx: UserIdentityRepositoryContext) {
+        this.repository = ctx.repository;
+        this.userPermissionRepository = ctx.userPermissionRepository;
+        this.userRoleRepository = ctx.userRoleRepository;
+    }
+
     async findOneById(id: string): Promise<User | null> {
         return this.find(id);
     }
@@ -33,14 +47,11 @@ export class UserIdentityRepository implements IUserIdentityRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<User | null> {
-        const dataSource = await useDataSource();
-        const repository = new UserRepository(dataSource);
-        return repository.findOneBy(where);
+        return this.repository.findOneBy(where);
     }
 
     private async find(key: string, realmKey?: string) : Promise<User | null> {
-        const dataSource = await useDataSource();
-        const repository = new UserRepository(dataSource);
+        const { repository } = this;
         const query = repository.createQueryBuilder('user')
             .leftJoinAndSelect('user.realm', 'realm');
 
@@ -89,16 +100,12 @@ export class UserIdentityRepository implements IUserIdentityRepository {
     }
 
     async saveOneWithEA(user: Partial<User>, extraAttributes: Record<string, any>): Promise<User> {
-        const dataSource = await useDataSource();
-        const repository = new UserRepository(dataSource);
-
-        const entity = repository.create(user);
-        return repository.saveOneWithEA(entity, extraAttributes);
+        const entity = this.repository.create(user);
+        return this.repository.saveOneWithEA(entity, extraAttributes);
     }
 
     async savePermissions(user: User, items: IdentityProviderMapperElement[]): Promise<void> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(UserPermissionEntity);
+        const { userPermissionRepository: repository } = this;
 
         const ids = items.map((item) => item.value);
 
@@ -111,7 +118,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             permission_id: In(ids),
         });
 
-        const entitiesToDelete : UserPermissionEntity[] = [];
+        const entitiesToDelete : UserPermission[] = [];
         for (let i = 0; i < entities.length; i++) {
             const index = idsToDelete.indexOf(entities[i].permission_id);
             if (index === -1) {
@@ -125,7 +132,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             await repository.remove(entitiesToDelete);
         }
 
-        const entitiesToCreate : UserPermissionEntity[] = [];
+        const entitiesToCreate : UserPermission[] = [];
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
 
@@ -156,8 +163,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
     }
 
     async saveRoles(user: User, items: IdentityProviderMapperElement[]): Promise<void> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(UserRoleEntity);
+        const { userRoleRepository: repository } = this;
 
         const ids = items.map((item) => item.value);
 
@@ -170,7 +176,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             role_id: In(ids),
         });
 
-        const entitiesToDelete : UserRoleEntity[] = [];
+        const entitiesToDelete : UserRole[] = [];
         for (let i = 0; i < entities.length; i++) {
             const index = idsToDelete.indexOf(entities[i].role_id);
             if (index === -1) {
@@ -184,7 +190,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             await repository.remove(entitiesToDelete);
         }
 
-        const entitiesToCreate : UserRoleEntity[] = [];
+        const entitiesToCreate : UserRole[] = [];
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (item.operation !== IdentityProviderMapperOperation.CREATE) {

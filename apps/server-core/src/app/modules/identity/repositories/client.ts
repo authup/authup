@@ -6,13 +6,19 @@
  */
 
 import { buildRedisKeyPath } from '@authup/server-kit';
-import { useDataSource } from 'typeorm-extension';
 import { isUUID } from '@authup/kit';
 import type { Client } from '@authup/core-kit';
 import type { IClientIdentityRepository } from '../../../../core/index.ts';
-import { CachePrefix, ClientRepository } from '../../../../adapters/database/domains/index.ts';
+import type { ClientRepository } from '../../../../adapters/database/domains/index.ts';
+import { CachePrefix } from '../../../../adapters/database/domains/index.ts';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
+    private readonly repository: ClientRepository;
+
+    constructor(repository: ClientRepository) {
+        this.repository = repository;
+    }
+
     async findOneById(id: string): Promise<Client | null> {
         return this.find(id);
     }
@@ -26,14 +32,11 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
     }
 
     async findOneBy(where: Record<string, any>): Promise<Client | null> {
-        const dataSource = await useDataSource();
-        const repository = new ClientRepository(dataSource);
-        return repository.findOneBy(where);
+        return this.repository.findOneBy(where);
     }
 
     private async find(key: string, realmKey?: string) : Promise<Client | null> {
-        const dataSource = await useDataSource();
-        const repository = new ClientRepository(dataSource);
+        const { repository } = this;
         const query = repository.createQueryBuilder('client')
             .leftJoinAndSelect('client.realm', 'realm');
 
