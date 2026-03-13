@@ -322,6 +322,184 @@ This is already how `PermissionChecker.check()` works (see `packages/access/src/
 - `PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=false` leaves `policy_id = null`
 - Deprecation warning is logged at startup when the option is active
 
+## Implementation Details
+
+Note: General patterns for repositories, controllers, EA, and wiring are documented in `.agents/*.md` (loaded via `CLAUDE.md`). This section covers only feature-specific details.
+
+### 1. `SystemPolicyName` Constants
+
+Add to `packages/access/src/policy/built-in/constants.ts` (where `BuiltInPolicyType` lives) and re-export via `packages/access/src/policy/index.ts`:
+
+```typescript
+export const SystemPolicyName = {
+    DEFAULT: 'system.default',
+    IDENTITY: 'system.identity',
+    PERMISSION_BINDING: 'system.permission-binding',
+    REALM_MATCH: 'system.realm-match',
+} as const;
+```
+
+Build `packages/access` after this change since `apps/server-core` depends on it.
+
+### 2. Config Option
+
+Add `PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT` following the existing pattern across 4 files:
+
+**`app/modules/config/constants.ts`** — add to `ConfigEnvironmentVariableName` enum:
+```typescript
+PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT = 'PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT',
+```
+
+**`app/modules/config/types.ts`** — add to `Config` type:
+```typescript
+/**
+ * Auto-assign system.default policy to new permissions without policy_id.
+ * Transitional option — will be removed in next major release.
+ * default: true
+ */
+permissionsDefaultPolicyAssignment: boolean,
+```
+
+**`app/modules/config/parse.ts`** — add to zod schema:
+```typescript
+permissionsDefaultPolicyAssignment: zod.boolean().optional(),
+```
+
+**`app/modules/config/normalize.ts`** — add default in the return object:
+```typescript
+permissionsDefaultPolicyAssignment: true,
+```
+
+**`app/modules/config/read/env.ts`** — add env reading:
+```typescript
+const permissionsDefaultPolicyAssignment = readBool(ConfigEnvironmentVariableName.PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT);
+if (typeof permissionsDefaultPolicyAssignment !== 'undefined') {
+    options.permissionsDefaultPolicyAssignment = permissionsDefaultPolicyAssignment;
+}
+```
+
+### 3. Policy Synchronizer
+
+The new policy synchronizer uses `IPolicyRepository` (port interface). Key methods needed:
+
+- `findOneByName(name)` — find existing policy by name (returns with EA loaded)
+- `findOneBy({ name, built_in: true })` — find without EA (for write path)
+- `create(data)` → `save(entity)` — create new policy
+- `saveWithEA(entity, eaData)` — save with extra attributes + update closure table
+
+The `IPolicyRepository` port (in `core/entities/policy/types.ts`) exposes:
+```typescript
+interface IPolicyRepository extends IEntityRepository<Policy> {
+    checkUniqueness(data, existing?): Promise<void>;
+    saveWithEA(entity, data?): Promise<Policy>;
+    deleteFromTree(entity): Promise<void>;
+}
+```
+
+`saveWithEA()` internally calls `saveOneWithEA()` (persists EA key-value pairs to `auth_policy_attributes`) and `updateClosureTable()` (maintains `auth_policy_tree`).
+
+For the `system.realm-match` policy, the EA attributes stored are:
+- `attributeName` → `['realm_id']` (serialized by the `PolicyAttributeEntity` value transformer)
+- `attributeNameStrict` → `false`
+- `identityMasterMatchAll` → `true`
+
+To set `parent_id` on leaf policies (linking them to the composite), set `parent_id` on the entity before calling `saveWithEA()`. The closure table is updated automatically.
+
+### 4. `PermissionDatabaseRepository` After-State
+
+File: `apps/server-core/src/security/permission/provider/db.ts`
+
+Remove `getDefaultPolicy()` entirely. Change `findOne()`:
+
+```typescript
+async findOne(options: PermissionGetOptions): Promise<PermissionItem | null> {
+    // ... existing where/cache logic unchanged ...
+
+    if (entity) {
+        let policy: PolicyWithType | undefined;
+        if (entity.policy) {
+            policy = await this.policyRepository.findDescendantsTree(entity.policy);
+        }
+        // No else — policy stays undefined (unrestricted)
+
+        return {
+            name: entity.name,
+            realmId: entity.realm_id,
+            clientId: entity.client_id,
+            policy,
+        };
+    }
+
+    return null;
+}
+```
+
+### 5. Permission Write Path — Applying Config Option
+
+The config option applies in two places:
+
+**a) Permission HTTP controller** (`adapters/http/controllers/entities/permission/module.ts`):
+
+In the `write()` method, after validation and before save, if creating a new permission and `policy_id` is not set:
+
+```typescript
+if (!entity && !data.policy_id) {
+    const config = container.resolve<Config>(ConfigInjectionKey);
+    if (config.permissionsDefaultPolicyAssignment) {
+        const defaultPolicy = await this.policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+        if (defaultPolicy) {
+            data.policy_id = defaultPolicy.id;
+        }
+    }
+}
+```
+
+The controller needs `IPolicyRepository` added to its context. Alternatively, resolve the default policy ID once at startup and pass it into the controller context.
+
+**b) Permission provisioning synchronizer** (`app/modules/provisioning/synchronizer/permission/module.ts`):
+
+Same logic — if `policy_id` is not set on the provisioning entity attributes and config is `true`, look up and assign `system.default`.
+
+### 6. Backfill Implementation
+
+In the policy synchronizer, after creating/syncing system policies:
+
+```typescript
+// After system.default is created/found:
+const defaultPolicy = await this.repository.findOneByName(SystemPolicyName.DEFAULT);
+if (defaultPolicy) {
+    // Backfill: assign to all permissions created before or at the same time as the default policy
+    await permissionRepository.createQueryBuilder('permission')
+        .update()
+        .set({ policy_id: defaultPolicy.id })
+        .where('policy_id IS NULL')
+        .andWhere('created_at <= :cutoff', { cutoff: defaultPolicy.created_at })
+        .execute();
+}
+```
+
+Note: This backfill needs direct query builder access. Since the policy synchronizer uses `IPolicyRepository`, it will need the permission repository passed in its context too. Alternatively, the backfill can be a separate step in `ProvisionerModule.start()` between policy sync and permission sync, using a raw query via the DataSource.
+
+### 7. Wiring in `ProvisionerModule`
+
+In `app/modules/provisioning/module.ts`, add the policy synchronizer before the permission synchronizer:
+
+```typescript
+// After data is loaded from sources:
+const policyRepository = new PolicyRepositoryAdapter({
+    repository: new PolicyRepository(dataSource),
+    realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+});
+
+const policySynchronizer = new PolicyProvisioningSynchronizer({
+    repository: policyRepository,
+});
+await policySynchronizer.synchronize();
+
+// Then backfill permissions...
+// Then existing permission/role/client/etc. synchronization...
+```
+
 ## Implementation Checklist
 
 ### `packages/access`
