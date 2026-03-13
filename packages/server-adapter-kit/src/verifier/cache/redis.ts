@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createHash } from 'node:crypto';
 import type { Client } from 'redis-extension';
 import { JsonAdapter, createClient } from 'redis-extension';
 import type { TokenVerificationData } from '../types';
@@ -43,7 +44,8 @@ export class RedisTokenVerifierCache implements ITokenVerifierCache {
         );
     }
 
-    protected buildKey(key: string) {
-        return `token:${key}`;
+    protected buildKey(token: string) {
+        const hash = createHash('sha256').update(token).digest('hex');
+        return `token:${hash}`;
     }
 }

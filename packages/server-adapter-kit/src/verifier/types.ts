@@ -21,7 +21,13 @@ export interface ITokenVerifier {
 export type TokenVerifierContext = {
     baseURL: string,
     creator?: TokenCreator,
-    cache?: ITokenVerifierCache
+    cache?: ITokenVerifierCache,
+    /**
+     * Maximum TTL (in seconds) for caching remote introspection results.
+     * Limits how long a revoked token can remain cached as valid.
+     * If not set, the remaining token lifetime is used.
+     */
+    maxRemoteCacheTTL?: number,
 };
 
 export type TokenVerificationData = OAuth2TokenPayload & {

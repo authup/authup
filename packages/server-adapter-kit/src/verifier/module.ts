@@ -38,8 +38,11 @@ export class TokenVerifier implements ITokenVerifier {
 
     protected cache : ITokenVerifierCache | undefined;
 
+    protected maxRemoteCacheTTL: number | undefined;
+
     constructor(ctx: TokenVerifierContext) {
         this.cache = ctx.cache;
+        this.maxRemoteCacheTTL = ctx.maxRemoteCacheTTL;
         this.client = new Client({ baseURL: ctx.baseURL });
 
         if (ctx.creator) {
@@ -84,11 +87,17 @@ export class TokenVerifier implements ITokenVerifier {
         let jwk : OAuth2JsonWebKey;
 
         try {
-            // todo: this should be cashed as well :)
+            // todo: this should be cached as well :)
             jwk = await this.client.getJwk(header.kid);
         } catch (e) {
-            /* istanbul ignore next */
-            throw JWTError.payloadPropertyInvalid('kid');
+            if (isObject(e) && isObject(e.response) && e.response.status === 404) {
+                throw JWTError.payloadPropertyInvalid('kid');
+            }
+
+            throw new JWTError({
+                message: 'Failed to fetch JWK from auth server.',
+                cause: e as Error,
+            });
         }
 
         const key = await importJWK(jwk);
@@ -177,11 +186,14 @@ export class TokenVerifier implements ITokenVerifier {
         }
 
         const secondsDiff = this.getTokenExpiresIn(payload);
+        const cacheTTL = this.maxRemoteCacheTTL ?
+            Math.min(secondsDiff, this.maxRemoteCacheTTL) :
+            secondsDiff;
 
         output = this.transform(payload);
 
         if (this.cache) {
-            await this.cache.set(token, output, secondsDiff);
+            await this.cache.set(token, output, cacheTTL);
         }
 
         return output;
