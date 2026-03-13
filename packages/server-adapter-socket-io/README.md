@@ -1,10 +1,10 @@
-# @authup/plugin-socket-io 🌉
+# @authup/server-adapter-socket-io 🌉
 
-[![npm version](https://badge.fury.io/js/@authup%2Fplugin-socket-io.svg)](https://badge.fury.io/js/@authup%2Fplugin-socket-io)
-[![main](https://github.com/authup/plugins/actions/workflows/main.yml/badge.svg)](https://github.com/authup/plugins/actions/workflows/main.yml)
-[![Known Vulnerabilities](https://snyk.io/test/github/authup/plugins/badge.svg)](https://snyk.io/test/github/authup/plugins)
+[![npm version](https://badge.fury.io/js/@authup%2Fserver-adapter-socket-io.svg)](https://badge.fury.io/js/@authup%2Fserver-adapter-socket-io)
+[![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
+[![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 
-A socket.io plugin for authup.
+A socket.io adapter for authup.
 
 **Table of Contents**
 

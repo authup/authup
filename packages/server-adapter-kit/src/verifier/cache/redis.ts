@@ -33,7 +33,7 @@ export class RedisTokenVerifierCache implements ITokenVerifierCache {
         return this.instance.get(this.buildKey(token));
     }
 
-    set(token: string, data: TokenVerificationData, seconds?: number): Promise<void> {
+    set(token: string, data: TokenVerificationData, seconds: number): Promise<void> {
         return this.instance.set(
             this.buildKey(token),
             data,

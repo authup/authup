@@ -9,5 +9,5 @@ import type { TokenVerificationData } from '../types';
 
 export interface ITokenVerifierCache {
     get(token: string) : Promise<TokenVerificationData | undefined>;
-    set(token: string, data: TokenVerificationData, seconds?: number) : Promise<void>;
+    set(token: string, data: TokenVerificationData, seconds: number) : Promise<void>;
 }

@@ -17,7 +17,7 @@
 
 ### Features
 
-* epxlicit cache + tokenVerifier instance ([2a69258](https://github.com/authup/adapters/commit/2a69258addaf36f06ec7cc128bf993f20a2f0202))
+* explicit cache + tokenVerifier instance ([2a69258](https://github.com/authup/adapters/commit/2a69258addaf36f06ec7cc128bf993f20a2f0202))
 
 
 ### Bug Fixes
@@ -61,7 +61,7 @@
 
 ### Features
 
-* init project form source ([9bb2008](https://github.com/authup/adapters/commit/9bb20089d4cfce0511789858b49fa5c51eb4b6f2))
+* init project from source ([9bb2008](https://github.com/authup/adapters/commit/9bb20089d4cfce0511789858b49fa5c51eb4b6f2))
 * use ttl-cache library for memory cache ([7877a87](https://github.com/authup/adapters/commit/7877a875e0076c320b617643875f6322b69cb6e4))
 
 

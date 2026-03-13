@@ -172,6 +172,10 @@ export class TokenVerifier implements ITokenVerifier {
             });
         }
 
+        if ('active' in payload && !payload.active) {
+            throw JWTError.payloadInvalid('The token is inactive.');
+        }
+
         const secondsDiff = this.getTokenExpiresIn(payload);
 
         output = this.transform(payload);
@@ -184,8 +188,8 @@ export class TokenVerifier implements ITokenVerifier {
     }
 
     /**
-     * Return remaining seconds for token.
-     * Throw error if seconds <= 0
+     * Return remaining seconds until token expires.
+     * Throw error if token is already expired.
      *
      * @param payload
      * @protected
@@ -195,11 +199,8 @@ export class TokenVerifier implements ITokenVerifier {
             throw JWTError.payloadPropertyInvalid('exp');
         }
 
-        if (!payload.iat) {
-            throw JWTError.payloadPropertyInvalid('iat');
-        }
-
-        const secondsDiff = payload.exp - payload.iat;
+        const now = Math.floor(Date.now() / 1000);
+        const secondsDiff = payload.exp - now;
         /* istanbul ignore next */
         if (secondsDiff <= 0) {
             throw JWTError.expired();

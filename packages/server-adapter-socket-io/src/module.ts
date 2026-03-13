@@ -5,26 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenVerificationData } from '@authup/server-adapter-kit';
 import type { MiddlewareOptions, Next, Socket } from './types';
 
 export function createMiddleware(context: MiddlewareOptions) {
     return async (socket: Socket, next: Next) => {
         const { token } = socket.handshake.auth;
 
-        if (!token) {
+        if (!token || typeof token !== 'string') {
             return next();
         }
 
-        let data : TokenVerificationData | undefined;
-
         try {
-            data = await context.tokenVerifier.verify(token);
+            const data = await context.tokenVerifier.verify(token);
+            context.tokenVerifierHandler(socket, data);
         } catch (e) {
             return next(e as Error);
         }
-
-        context.tokenVerifierHandler(socket, data);
 
         return next();
     };

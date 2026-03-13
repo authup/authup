@@ -46,13 +46,13 @@
     "license": "Apache-2.0",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/authup/adapters.git",
-        "directory": "packages/server-kit"
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/server-adapter-kit"
     },
     "bugs": {
-        "url": "https://github.com/authup/adapters/issues"
+        "url": "https://github.com/authup/authup/issues"
     },
-    "homepage": "https://github.com/authup/adapters#readme",
+    "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/kit": "^1.0.0-beta.30",
         "@authup/errors": "^1.0.0-beta.30",

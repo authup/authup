@@ -11,7 +11,7 @@ import { JWTError } from '@authup/specs';
 import type { TokenIntrospectParameters } from '@hapic/oauth2';
 import { createResponseError } from '../utils';
 
-export const TokenPayload : Omit<OAuth2TokenIntrospectionResponse, 'exp'> = {
+export const TokenPayload : OAuth2TokenIntrospectionResponse = {
     active: true,
     permissions: [],
     kind: 'access_token',
@@ -27,8 +27,10 @@ export const TokenPayload : Omit<OAuth2TokenIntrospectionResponse, 'exp'> = {
     given_name: null,
     nickname: 'admin',
     preferred_username: 'admin',
-    email: 'peter.placzek1996@gmail.com',
+    email: 'admin@example.com',
     email_verified: true,
+    exp: Math.floor(Date.now() / 1000) + 3600,
+    iat: Math.floor(Date.now() / 1000),
 };
 
 export async function introspectToken(data: TokenIntrospectParameters = {}) : Promise<OAuth2TokenIntrospectionResponse> {
@@ -40,7 +42,7 @@ export async function introspectToken(data: TokenIntrospectParameters = {}) : Pr
             throw createResponseError(JWTError.expired());
         }
         default: {
-            return TokenPayload as OAuth2TokenIntrospectionResponse;
+            return TokenPayload;
         }
     }
 }

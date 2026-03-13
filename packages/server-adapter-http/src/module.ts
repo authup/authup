@@ -7,7 +7,6 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { CookieName } from '@authup/core-http-kit';
-import type { TokenVerificationData } from '@authup/server-adapter-kit';
 import type { Middleware, MiddlewareOptions, Next } from './types';
 
 export function createMiddleware(context: MiddlewareOptions) : Middleware {
@@ -30,32 +29,30 @@ export function createMiddleware(context: MiddlewareOptions) : Middleware {
             return;
         }
 
-        const spaceIndex = authorization.indexOf(' ');
-        if (spaceIndex === -1) {
-            throw new Error('The authorization header is malformed.');
-        }
-
-        const type = authorization.substring(0, spaceIndex);
-        if (type !== 'Bearer') {
-            throw new Error('Only Bearer tokens are accepted as authentication method.');
-        }
-
-        const token = authorization.substring(spaceIndex + 1);
-        if (token.length === 0) {
-            throw new Error('The bearer token value is empty.');
-        }
-
-        let data : TokenVerificationData | undefined;
-
         try {
-            data = await context.tokenVerifier.verify(token);
+            const spaceIndex = authorization.indexOf(' ');
+            if (spaceIndex === -1) {
+                throw new Error('The authorization header is malformed.');
+            }
+
+            const type = authorization.substring(0, spaceIndex);
+            if (type !== 'Bearer') {
+                throw new Error('Only Bearer tokens are accepted as authentication method.');
+            }
+
+            const token = authorization.substring(spaceIndex + 1);
+            if (token.length === 0) {
+                throw new Error('The bearer token value is empty.');
+            }
+
+            const data = await context.tokenVerifier.verify(token);
+
+            context.tokenVerifierHandler(req, data);
         } catch (e) {
             next(e as Error);
 
             return;
         }
-
-        context.tokenVerifierHandler(req, data);
 
         next();
     };
