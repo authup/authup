@@ -51,8 +51,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
     }
 
     private async find(key: string, realmKey?: string) : Promise<User | null> {
-        const { repository } = this;
-        const query = repository.createQueryBuilder('user')
+        const query = this.repository.createQueryBuilder('user')
             .leftJoinAndSelect('user.realm', 'realm');
 
         const isId = isUUID(key);
@@ -74,7 +73,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
             }
         }
 
-        const { columns } = repository.metadata;
+        const { columns } = this.repository.metadata;
         for (let i = 0; i < columns.length; i++) {
             if (!columns[i].isSelect) {
                 query.addSelect(`user.${columns[i].databaseName}`);
@@ -93,7 +92,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
 
         const entity = await query.getOne();
         if (entity) {
-            return repository.extendOneWithEA(entity);
+            return this.repository.extendOneWithEA(entity);
         }
 
         return null;

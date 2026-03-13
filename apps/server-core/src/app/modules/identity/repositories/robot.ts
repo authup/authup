@@ -36,8 +36,7 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
     }
 
     private async find(key: string, realmKey?: string) : Promise<Robot | null> {
-        const { repository } = this;
-        const query = repository.createQueryBuilder('robot')
+        const query = this.repository.createQueryBuilder('robot')
             .leftJoinAndSelect('robot.realm', 'realm');
 
         const isId = isUUID(key);
@@ -59,7 +58,7 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
             }
         }
 
-        const { columns } = repository.metadata;
+        const { columns } = this.repository.metadata;
         for (let i = 0; i < columns.length; i++) {
             if (!columns[i].isSelect) {
                 query.addSelect(`robot.${columns[i].databaseName}`);

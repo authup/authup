@@ -36,8 +36,7 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
     }
 
     private async find(key: string, realmKey?: string) : Promise<Client | null> {
-        const { repository } = this;
-        const query = repository.createQueryBuilder('client')
+        const query = this.repository.createQueryBuilder('client')
             .leftJoinAndSelect('client.realm', 'realm');
 
         const isId = isUUID(key);
@@ -58,7 +57,7 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
                 }
             }
         }
-        const { columns } = repository.metadata;
+        const { columns } = this.repository.metadata;
         for (let i = 0; i < columns.length; i++) {
             if (!columns[i].isSelect) {
                 query.addSelect(`client.${columns[i].databaseName}`);
