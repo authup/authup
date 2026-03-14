@@ -5,52 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Application } from './module.ts';
+import { ApplicationBuilder } from './builder.ts';
 import {
-    AuthenticationModule,
-    CacheModule,
-    ComponentsModule,
-    ConfigModule,
-    DatabaseModule,
     DefaultProvisioningSource,
-    HTTPModule,
-    IdentityModule,
-    LdapModule,
-    LoggerModule,
-    MailModule,
-    OAuth2Module,
     ProvisionerModule,
-    RuntimeModule,
-    SwaggerModule,
-    VaultModule,
 } from './modules/index.ts';
 
 export function createApplication() {
-    return new Application([
-        new ConfigModule(),
-        new LoggerModule(),
-
-        new CacheModule(),
-
-        new MailModule(),
-
-        new VaultModule(),
-
-        new RuntimeModule(),
-
-        new SwaggerModule(),
-        new DatabaseModule(),
-        new ProvisionerModule([
+    return new ApplicationBuilder()
+        .withConfig()
+        .withLogger()
+        .withCache()
+        .withMail()
+        .withVault()
+        .withRuntime()
+        .withSwagger()
+        .withDatabase()
+        .withProvisioning(new ProvisionerModule([
             new DefaultProvisioningSource(),
-        ]),
-        new LdapModule(),
-
-        new AuthenticationModule(),
-        new IdentityModule(),
-        new OAuth2Module(),
-
-        new ComponentsModule(),
-
-        new HTTPModule(),
-    ]);
+        ]))
+        .withLdap()
+        .withAuthentication()
+        .withIdentity()
+        .withOAuth2()
+        .withComponents()
+        .withHTTP()
+        .build();
 }

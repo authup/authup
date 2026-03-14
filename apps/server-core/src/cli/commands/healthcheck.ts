@@ -10,7 +10,7 @@ import http from 'node:http';
 import process from 'node:process';
 import type { Config } from '../../app/index.ts';
 import {
-    Application, ConfigInjectionKey, ConfigModule,
+    ApplicationBuilder, ConfigInjectionKey,
 } from '../../app/index.ts';
 
 export function defineCLIHealthCheckCommand() {
@@ -19,9 +19,9 @@ export function defineCLIHealthCheckCommand() {
             name: 'healthcheck',
         },
         async setup() {
-            const app = new Application([
-                new ConfigModule(),
-            ]);
+            const app = new ApplicationBuilder()
+                .withConfig()
+                .build();
 
             await app.start();
 

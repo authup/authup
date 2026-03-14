@@ -8,6 +8,9 @@
 import type { IDIContainer } from '../../core/di/types.ts';
 
 export interface Module {
+    readonly name: string;
+    readonly dependsOn?: string[];
+
     start(container: IDIContainer) : Promise<void>;
 
     stop?(container: IDIContainer): Promise<void>

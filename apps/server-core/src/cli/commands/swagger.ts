@@ -9,7 +9,7 @@ import { defineCommand } from 'citty';
 import process from 'node:process';
 import type { Config } from '../../app/index.ts';
 import { Swagger } from '../../adapters/http/index.ts';
-import { Application, ConfigInjectionKey, ConfigModule } from '../../app/index.ts';
+import { ApplicationBuilder, ConfigInjectionKey } from '../../app/index.ts';
 
 export function defineCLISwaggerCommand() {
     return defineCommand({
@@ -26,9 +26,9 @@ export function defineCLISwaggerCommand() {
             },
         },
         async setup(context) {
-            const app = new Application([
-                new ConfigModule(),
-            ]);
+            const app = new ApplicationBuilder()
+                .withConfig()
+                .build();
 
             await app.start();
 

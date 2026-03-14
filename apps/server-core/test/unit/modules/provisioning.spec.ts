@@ -36,7 +36,7 @@ import {
     PolicyRepositoryAdapter,
 } from '../../../src/app/modules/database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../../../src/app/modules/database/index.ts';
-import { TestDatabaseModule } from '../../app/index.ts';
+import { createTestDatabaseModuleForSuite } from '../../app/index.ts';
 
 describe('app/modules/provisioning', () => {
     let di: IDIContainer;
@@ -47,7 +47,7 @@ describe('app/modules/provisioning', () => {
     const config = new ConfigModule();
     const logger = new LoggerModule();
     const cache = new CacheModule();
-    const database = new TestDatabaseModule();
+    const database = createTestDatabaseModuleForSuite();
 
     beforeAll(async () => {
         di = new DependencyContainer();

@@ -5,60 +5,64 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-// eslint-disable-next-line max-classes-per-file
 import { EnvironmentName } from '@authup/kit';
-import type { Logger } from '@authup/server-kit';
-import type { DataSource, DataSourceOptions } from 'typeorm';
-import { dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
+import { createDatabase, dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
+import fs from 'node:fs';
 import path from 'node:path';
 import {
-    type Config, ConfigInjectionKey, DatabaseModule, LoggerInjectionKey,
+    type Config, ConfigInjectionKey, DatabaseModule,
 } from '../../src';
 import type { IDIContainer } from '../../src/core';
 import { PACKAGE_PATH } from '../../src/path.ts';
 
-export class TestDatabaseModuleBase extends DatabaseModule {
-    protected async buildDataSourceOptions(container: IDIContainer): Promise<DataSourceOptions> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+async function prepareTestBuild(container: IDIContainer): Promise<void> {
+    const config = container.resolve<Config>(ConfigInjectionKey);
 
-        if (config.env !== EnvironmentName.TEST) {
-            return super.buildDataSourceOptions(container);
-        }
-
-        const options = readDataSourceOptionsFromEnv();
-        if (options) {
-            config.db = options;
-        } else {
-            config.db = {
-                type: 'better-sqlite3',
-                database: path.join(PACKAGE_PATH, 'writable', 'test.sql'),
-            };
-        }
-
-        container.register(ConfigInjectionKey, {
-            useValue: config,
-        });
-
-        return super.buildDataSourceOptions(container);
+    if (config.env !== EnvironmentName.TEST) {
+        throw new Error('Test database module can only run with EnvironmentName.TEST');
     }
 
-    protected async setup(container: IDIContainer, options: DataSourceOptions) {
-        await dropDatabase({ options, ifExist: true });
-
-        return super.setup(container, options);
+    const options = readDataSourceOptionsFromEnv();
+    if (options) {
+        config.db = options;
+    } else {
+        config.db = {
+            type: 'better-sqlite3',
+            database: path.join(PACKAGE_PATH, 'writable', 'test.sql'),
+        };
     }
+
+    container.register(ConfigInjectionKey, {
+        useValue: config,
+    });
 }
 
-export class TestDatabaseModule extends TestDatabaseModuleBase {
-    protected async setup(): Promise<void> {
-        // dont do anything :)
-    }
+export function createTestDatabaseModuleForSetup(): DatabaseModule {
+    return new DatabaseModule({
+        prepareBuild: prepareTestBuild,
+        async setup(_container, options) {
+            await dropDatabase({ options, ifExist: true });
 
-    protected async migrate(container: IDIContainer, dataSource: DataSource): Promise<void> {
-        const logger = container.resolve<Logger>(LoggerInjectionKey);
+            if (typeof options.database === 'string') {
+                fs.mkdirSync(path.dirname(options.database), { recursive: true });
+            }
 
-        logger.debug('Synchronizing database...');
-        await dataSource.synchronize();
-        logger.debug('Synchronized database...');
-    }
+            await createDatabase({ options, synchronize: false, ifNotExist: true });
+        },
+        async migrate(_container, dataSource) {
+            await dataSource.synchronize();
+        },
+    });
+}
+
+export function createTestDatabaseModuleForSuite(): DatabaseModule {
+    return new DatabaseModule({
+        prepareBuild: prepareTestBuild,
+        async setup() {
+            // do nothing — DB already exists from global setup
+        },
+        async migrate(_container, dataSource) {
+            await dataSource.synchronize();
+        },
+    });
 }

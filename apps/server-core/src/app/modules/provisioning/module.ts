@@ -77,12 +77,19 @@ import { DatabaseInjectionKey } from '../database/index.ts';
 import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import { CompositeProvisioningSource } from './sources/index.ts';
 
 export class ProvisionerModule implements Module {
+    readonly name: string;
+
+    readonly dependsOn: string[];
+
     protected sources: IProvisioningSource[];
 
     constructor(sources: IProvisioningSource[] = []) {
+        this.name = ModuleName.PROVISIONING;
+        this.dependsOn = [ModuleName.DATABASE];
         this.sources = sources;
     }
 

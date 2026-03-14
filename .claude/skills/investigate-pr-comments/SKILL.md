@@ -42,12 +42,44 @@ For each comment classified as a **real issue**:
 2. Run `npx eslint --fix` on changed files
 3. Run `npm run test --workspace=<affected-workspace>` to verify
 
-## Step 4: Report
+## Step 4: Resolve fixed threads on GitHub
+
+For each comment classified as **Real issue** that was successfully fixed, resolve the review thread on GitHub:
+
+1. Fetch all review thread IDs via GraphQL:
+   ```bash
+   gh api graphql -f query='{
+     repository(owner: "<owner>", name: "<repo>") {
+       pullRequest(number: <number>) {
+         reviewThreads(first: 50) {
+           nodes {
+             id
+             isResolved
+             comments(first: 1) {
+               nodes { body path }
+             }
+           }
+         }
+       }
+     }
+   }'
+   ```
+
+2. Match each fixed comment to its thread by `path` and body content.
+
+3. Resolve only the threads corresponding to fixed issues:
+   ```bash
+   gh api graphql -f query='mutation { resolveReviewThread(input: { threadId: "<thread_id>" }) { thread { isResolved } } }'
+   ```
+
+Do NOT resolve threads for comments classified as Invalid, Stylistic, or Already fixed — only resolve threads where you applied a code fix.
+
+## Step 5: Report
 
 Present a summary table of all comments:
 
 | Comment | File | Verdict | Action |
 |---------|------|---------|--------|
-| Short description | `path#line` | Real issue / Already fixed / Invalid / Stylistic | Fixed / None |
+| Short description | `path#line` | Real issue / Already fixed / Invalid / Stylistic | Fixed + Resolved / Fixed / None |
 
-If `--dry-run` was passed as `$ARGUMENTS`, skip Step 3 and only report the classification without making changes.
+If `--dry-run` was passed as `$ARGUMENTS`, skip Steps 3-4 and only report the classification without making changes or resolving threads.

@@ -21,4 +21,5 @@ export * from './swagger/index.ts';
 export * from './mail/index.ts';
 export * from './vault/index.ts';
 
+export * from './constants.ts';
 export * from './types.ts';

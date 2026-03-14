@@ -6,23 +6,18 @@
  */
 
 import {
-    AuthenticationModule,
-    CacheModule,
+    ApplicationBuilder,
     ConfigModule,
-    HTTPModule,
-    IdentityModule,
-    LdapModule,
-    LoggerModule,
-    MailModule,
-    OAuth2Module,
 } from '../../src/index.ts';
+import type { Config } from '../../src/index.ts';
 import { normalizeConfig } from '../../src/app/modules/config/normalize.ts';
 import { readConfigRawFromEnv } from '../../src/app/modules/config/read/index.ts';
 
 import { TestApplication } from './module.ts';
-import { TestDatabaseModule } from './database.ts';
+import { TestHTTPApplication } from './http.ts';
+import { createTestDatabaseModuleForSuite } from './database.ts';
 
-export function createTestApplication() : TestApplication {
+function buildTestConfig(): Config {
     const raw = readConfigRawFromEnv();
     const config = normalizeConfig(raw);
 
@@ -42,18 +37,32 @@ export function createTestApplication() : TestApplication {
     config.registration = true;
     config.emailVerification = true;
 
-    return new TestApplication([
-        new ConfigModule(config),
-        new LoggerModule(),
-        new CacheModule(),
-        new LdapModule(),
-        new MailModule(),
+    return config;
+}
 
-        new TestDatabaseModule(),
-        new AuthenticationModule(),
-        new IdentityModule(),
-        new OAuth2Module(),
+export function createTestApplication() : TestHTTPApplication {
+    const modules = new ApplicationBuilder()
+        .withConfig(new ConfigModule(buildTestConfig()))
+        .withLogger()
+        .withCache()
+        .withLdap()
+        .withMail()
+        .withDatabase(createTestDatabaseModuleForSuite())
+        .withAuthentication()
+        .withIdentity()
+        .withOAuth2()
+        .withHTTP()
+        .buildModules();
 
-        new HTTPModule(),
-    ]);
+    return new TestHTTPApplication(modules);
+}
+
+export function createTestDatabaseApplication() : TestApplication {
+    const modules = new ApplicationBuilder()
+        .withConfig(new ConfigModule(buildTestConfig()))
+        .withLogger()
+        .withDatabase(createTestDatabaseModuleForSuite())
+        .buildModules();
+
+    return new TestApplication(modules);
 }

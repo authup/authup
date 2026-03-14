@@ -8,12 +8,22 @@
 import type { Logger } from '@authup/server-kit';
 import { Swagger } from '../../../adapters/http/index.ts';
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import type { IDIContainer } from '../../../core/index.ts';
 import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
 export class SwaggerModule implements Module {
+    readonly name: string;
+
+    readonly dependsOn: string[];
+
+    constructor() {
+        this.name = ModuleName.SWAGGER;
+        this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
+    }
+
     async start(container: IDIContainer): Promise<void> {
         const config = container.resolve<Config>(ConfigInjectionKey);
         const logger = container.resolve<Logger>(LoggerInjectionKey);

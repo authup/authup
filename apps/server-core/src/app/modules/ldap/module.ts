@@ -7,10 +7,17 @@
 
 import { LdapClientFactory } from '../../../adapters/shared/ldap/index.ts';
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import { LDAPInjectionKey } from './constants.ts';
 import type { IDIContainer } from '../../../core/index.ts';
 
 export class LdapModule implements Module {
+    readonly name: string;
+
+    constructor() {
+        this.name = ModuleName.LDAP;
+    }
+
     async start(container: IDIContainer): Promise<void> {
         container.register(LDAPInjectionKey.ClientFactory, {
             useFactory: () => new LdapClientFactory(),

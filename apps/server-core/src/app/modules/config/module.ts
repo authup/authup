@@ -6,6 +6,7 @@
  */
 
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import { ConfigInjectionKey } from './constants.ts';
 import type { IDIContainer } from '../../../core/index.ts';
 import { normalizeConfig } from './normalize.ts';
@@ -14,11 +15,14 @@ import { readConfigRaw } from './read/index.ts';
 import type { Config } from './types.ts';
 
 export class ConfigModule implements Module {
+    readonly name: string;
+
     protected instance : Config | undefined;
 
     // ----------------------------------------------------
 
     constructor(config?: Config) {
+        this.name = ModuleName.CONFIG;
         this.instance = config;
     }
 
