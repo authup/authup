@@ -13,6 +13,8 @@ export interface IUserRepository extends IEntityRepository<User> {
     checkUniqueness(data: Partial<User>, existing?: User): Promise<void>;
 
     findOne(id: string, query?: Record<string, any>, realm?: string): Promise<User | null>;
+
+    findOneByWithEmail(where: Record<string, any>): Promise<User | null>;
 }
 
 export interface IUserService {

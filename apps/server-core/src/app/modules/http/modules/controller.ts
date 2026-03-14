@@ -50,7 +50,6 @@ import {
     RolePermissionEntity,
     ScopeEntity,
     UserAttributeEntity,
-    UserEntity,
     UserPermissionEntity,
     UserRepository,
     UserRoleEntity,
@@ -131,9 +130,11 @@ import {
     ClientScopeService,
     ClientService,
     CredentialsAuthenticator,
+    PasswordRecoveryService,
     PermissionService,
     PolicyService,
     RealmService,
+    RegistrationService,
     RobotAuthenticator,
     RobotPermissionService,
     RobotRoleService,
@@ -353,25 +354,37 @@ export class HTTPControllerModule {
     }
 
     createActivateController(container: IDIContainer) {
-        const repository = container.resolve<Repository<User>>(UserEntity);
-
         return new ActivateController({
-            repository,
+            service: this.createRegistrationService(container),
         });
     }
 
     createPasswordForgotController(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const repository = container.resolve<Repository<User>>(UserEntity);
-        const mailClient = container.resolve<IMailClient>(MailInjectionKey);
-        const realmRepository = new RealmRepositoryAdapter(
-            container.resolve<Repository<Realm>>(RealmEntity),
-        );
-
         return new PasswordForgotController({
+            service: this.createPasswordRecoveryService(container),
+        });
+    }
+
+    createPasswordResetController(container: IDIContainer) {
+        return new PasswordResetController({
+            service: this.createPasswordRecoveryService(container),
+        });
+    }
+
+    createPasswordRecoveryService(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
+        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
+        const repository = new UserRepositoryAdapter({
+            repository: new UserRepository(dataSource),
+            realmRepository,
+        });
+        const mailClient = container.resolve<IMailClient>(MailInjectionKey);
+
+        return new PasswordRecoveryService({
             mailClient,
             repository,
-            realmRepository,
+            realmRepository: new RealmRepositoryAdapter(realmRepository),
             options: {
                 registration: config.registration,
                 emailVerification: config.emailVerification,
@@ -379,21 +392,13 @@ export class HTTPControllerModule {
         });
     }
 
-    createPasswordResetController(container: IDIContainer) {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
-        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
-        const repository = new UserRepositoryAdapter({
-            repository: new UserRepository(dataSource),
-            realmRepository,
-        });
-
-        return new PasswordResetController({
-            repository,
-            realmRepository: new RealmRepositoryAdapter(realmRepository),
+    createRegisterController(container: IDIContainer) {
+        return new RegisterController({
+            service: this.createRegistrationService(container),
         });
     }
 
-    createRegisterController(container: IDIContainer) {
+    createRegistrationService(container: IDIContainer) {
         const config = container.resolve<Config>(ConfigInjectionKey);
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
@@ -403,7 +408,7 @@ export class HTTPControllerModule {
         });
         const mailClient = container.resolve<IMailClient>(MailInjectionKey);
 
-        return new RegisterController({
+        return new RegistrationService({
             mailClient,
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
