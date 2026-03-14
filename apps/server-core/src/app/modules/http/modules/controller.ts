@@ -500,7 +500,6 @@ export class HTTPControllerModule {
         return new PermissionController({
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
-            policyRepository,
             dataSource,
             defaultPolicyId,
         });
