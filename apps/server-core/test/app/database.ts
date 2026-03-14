@@ -7,6 +7,7 @@
 
 import { EnvironmentName } from '@authup/kit';
 import { createDatabase, dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
+import fs from 'node:fs';
 import path from 'node:path';
 import {
     type Config, ConfigInjectionKey, DatabaseModule,
@@ -41,6 +42,11 @@ export function createTestDatabaseModuleForSetup(): DatabaseModule {
         prepareBuild: prepareTestBuild,
         async setup(_container, options) {
             await dropDatabase({ options, ifExist: true });
+
+            if (typeof options.database === 'string') {
+                fs.mkdirSync(path.dirname(options.database), { recursive: true });
+            }
+
             await createDatabase({ options, synchronize: false, ifNotExist: true });
         },
         async migrate(_container, dataSource) {
