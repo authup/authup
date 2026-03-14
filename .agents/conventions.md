@@ -17,6 +17,7 @@
 
 - **Validation**: `validup` framework with `@validup/adapter-zod` for Zod schema integration
 - **Errors**: `@authup/errors` provides HTTP-aware error classes via `@ebec/http`
+- **Validation location**: Validators from `@authup/core-kit` (e.g., `RoleValidator`, `UserValidator`) run inside core services, not in controllers. Services receive raw `Record<string, any>` data and call `validator.run(data, { group: ValidatorGroup.CREATE })` internally. Controllers use `useRequestBody(req)` to pass the raw body to the service.
 
 ## Workflow
 
