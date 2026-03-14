@@ -25,6 +25,11 @@
 - Lint: `npx eslint --fix path/to/changed/file1.ts path/to/changed/file2.ts`
 - Fix any build or lint errors before considering a task complete.
 
+## File Organization
+
+- Exported **types** (interfaces, type aliases) must live in a `types.ts` file in the same directory, not inline in the implementation module. Implementation files import from `types.ts`.
+- Barrel `index.ts` files re-export from `types.ts` and implementation modules.
+
 ## Best Practices
 
 - Use **ESM** and modern TypeScript/JavaScript.
