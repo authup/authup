@@ -38,9 +38,19 @@ import {
 import { LDAPInjectionKey } from '../ldap/index.ts';
 
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import { IdentityInjectionKey } from './constants.ts';
 
 export class IdentityModule implements Module {
+    readonly name: string;
+
+    readonly dependsOn: string[];
+
+    constructor() {
+        this.name = ModuleName.IDENTITY;
+        this.dependsOn = [ModuleName.DATABASE];
+    }
+
     async start(container: IDIContainer): Promise<void> {
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
 

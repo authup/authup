@@ -19,6 +19,7 @@ import type {
     IOAuth2TokenSigner,
 } from '../../../core/index.ts';
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 
 import {
     OAuth2AuthorizationCodeRepository,
@@ -45,6 +46,15 @@ import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/doma
 import { ConfigInjectionKey } from '../config/index.ts';
 
 export class OAuth2Module implements Module {
+    readonly name: string;
+
+    readonly dependsOn: string[];
+
+    constructor() {
+        this.name = ModuleName.OAUTH2;
+        this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG];
+    }
+
     async start(container: IDIContainer) : Promise<void> {
         const config = container.resolve<Config>(ConfigInjectionKey);
 

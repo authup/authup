@@ -14,12 +14,17 @@ import {
 import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import { HTTPInjectionKey } from './constants.ts';
 import type { IDIContainer } from '../../../core/index.ts';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
 export class HTTPModule implements Module {
+    readonly name: string;
+
+    readonly dependsOn: string[];
+
     protected instance : IServer | undefined;
 
     protected middleware : HTTPMiddlewareModule;
@@ -27,6 +32,8 @@ export class HTTPModule implements Module {
     protected controller : HTTPControllerModule;
 
     constructor() {
+        this.name = ModuleName.HTTP;
+        this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
         this.controller = new HTTPControllerModule();
         this.middleware = new HTTPMiddlewareModule();
     }

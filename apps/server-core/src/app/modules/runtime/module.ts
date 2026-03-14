@@ -7,12 +7,22 @@
 
 import type { Logger } from '@authup/server-kit';
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import type { IDIContainer } from '../../../core/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
 export class RuntimeModule implements Module {
+    readonly name: string;
+
+    readonly dependsOn: string[];
+
+    constructor() {
+        this.name = ModuleName.RUNTIME;
+        this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
+    }
+
     async start(container: IDIContainer): Promise<void> {
         const config = container.resolve<Config>(ConfigInjectionKey);
         const logger = container.resolve<Logger>(LoggerInjectionKey);

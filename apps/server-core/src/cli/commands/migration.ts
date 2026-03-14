@@ -47,6 +47,8 @@ export function defineCLIMigrationCommand() {
                 new ConfigModule(),
                 new LoggerModule(),
                 {
+                    name: 'migration',
+                    dependsOn: ['config', 'logger'],
                     async start(container: IDIContainer): Promise<void> {
                         const config = container.resolve<Config>(ConfigInjectionKey);
                         const logger = container.resolve<Logger>(LoggerInjectionKey);

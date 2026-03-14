@@ -32,15 +32,22 @@ import { setDomainEventPublisher } from '../../../adapters/database/event-publis
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { Config } from '../config/index.ts';
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import { DatabaseInjectionKey } from './constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IDIContainer } from '../../../core/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
 export class DatabaseModule implements Module {
+    readonly name: string;
+
+    readonly dependsOn: string[];
+
     protected optionsBuilder : DataSourceOptionsBuilder;
 
     constructor() {
+        this.name = ModuleName.DATABASE;
+        this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
         this.optionsBuilder = new DataSourceOptionsBuilder();
     }
 

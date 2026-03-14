@@ -20,10 +20,20 @@ import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
 import type { Module } from '../types.ts';
+import { ModuleName } from '../constants.ts';
 import { AuthenticationInjectionKey } from './constants.ts';
 import { SessionRepository } from './repositories/index.ts';
 
 export class AuthenticationModule implements Module {
+    readonly name: string;
+
+    readonly dependsOn: string[];
+
+    constructor() {
+        this.name = ModuleName.AUTHENTICATION;
+        this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE];
+    }
+
     async start(container: IDIContainer): Promise<void> {
         container.register(AuthenticationInjectionKey.SessionRepository, {
             useFactory: (c) => {
