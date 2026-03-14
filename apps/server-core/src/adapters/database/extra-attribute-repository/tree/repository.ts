@@ -275,7 +275,7 @@ export class EATreeRepository<
                             acc[curr[descendantColumn.databasePath]] = [];
                         }
 
-                        acc[curr[descendantColumn.databasePath]] = curr[ancestorColumn.databasePath];
+                        acc[curr[descendantColumn.databasePath]].push(curr[ancestorColumn.databasePath]);
                         return acc;
                     }, {} as Record<string, string[]>);
 
