@@ -52,7 +52,7 @@ export class OAuth2Module implements Module {
 
     constructor() {
         this.name = ModuleName.OAUTH2;
-        this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG];
+        this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG, ModuleName.IDENTITY];
     }
 
     async start(container: IDIContainer) : Promise<void> {

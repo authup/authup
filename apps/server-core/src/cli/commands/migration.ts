@@ -70,15 +70,17 @@ async function runMigrationOperation(
     });
     await dataSource.initialize();
 
-    if (operation === MigrationOperation.REVERT) {
-        await dataSource.undoLastMigration();
-    } else if (operation === MigrationOperation.STATUS) {
-        await dataSource.showMigrations();
-    } else {
-        await dataSource.runMigrations();
+    try {
+        if (operation === MigrationOperation.REVERT) {
+            await dataSource.undoLastMigration();
+        } else if (operation === MigrationOperation.STATUS) {
+            await dataSource.showMigrations();
+        } else {
+            await dataSource.runMigrations();
+        }
+    } finally {
+        await dataSource.destroy();
     }
-
-    await dataSource.destroy();
 }
 
 async function generateMigrations(): Promise<void> {
@@ -120,15 +122,20 @@ async function generateMigrations(): Promise<void> {
 
         const dataSource = new DataSource(dataSourceOptions);
         await dataSource.initialize();
-        await dataSource.runMigrations();
 
-        await generateMigration({
-            dataSource,
-            name: 'Default',
-            directoryPath,
-            timestamp,
-            prettify: true,
-        });
+        try {
+            await dataSource.runMigrations();
+
+            await generateMigration({
+                dataSource,
+                name: 'Default',
+                directoryPath,
+                timestamp,
+                prettify: true,
+            });
+        } finally {
+            await dataSource.destroy();
+        }
     }
 }
 
