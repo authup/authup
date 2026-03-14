@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.1-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.1-beta.30) (2026-03-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 
