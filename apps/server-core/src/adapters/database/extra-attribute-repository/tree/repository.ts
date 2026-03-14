@@ -279,11 +279,10 @@ export class EATreeRepository<
                         return acc;
                     }, {} as Record<string, string[]>);
 
-                    const accKeys = Object.keys(acc);
                     // 5. Check if for each child a relation exists with each ancestor (create if not exist)
-                    for (let i = 0; i < accKeys.length; i++) {
-                        const descendant = accKeys[i];
-                        const ancestorsOfDescendent = acc[descendant];
+                    for (let i = 0; i < descendantIds.length; i++) {
+                        const descendant = descendantIds[i];
+                        const ancestorsOfDescendent = acc[descendant] ?? [];
 
                         for (let j = 0; j < ancestorIds.length; j++) {
                             const index = ancestorsOfDescendent.indexOf(ancestorIds[j]);
