@@ -19,7 +19,7 @@ async function prepareTestBuild(container: IDIContainer): Promise<void> {
     const config = container.resolve<Config>(ConfigInjectionKey);
 
     if (config.env !== EnvironmentName.TEST) {
-        return;
+        throw new Error('Test database module can only run with EnvironmentName.TEST');
     }
 
     const options = readDataSourceOptionsFromEnv();
