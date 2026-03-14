@@ -90,6 +90,8 @@ export class RealmService extends AbstractEntityService implements IRealmService
             if (!entity && options.updateOnly) {
                 throw new NotFoundError();
             }
+        } else if (options.updateOnly) {
+            throw new NotFoundError();
         }
 
         if (entity) {

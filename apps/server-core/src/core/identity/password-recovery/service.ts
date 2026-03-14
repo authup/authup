@@ -101,6 +101,10 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             throw new NotFoundError();
         }
 
+        if (!entity.reset_expires || new Date(entity.reset_expires) < new Date()) {
+            throw new BadRequestError('Reset token has expired.');
+        }
+
         const credentialsService = new UserCredentialsService();
         const hashedPassword = await credentialsService.protect(validated.password);
 

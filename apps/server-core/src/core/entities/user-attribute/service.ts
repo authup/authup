@@ -183,8 +183,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             actor.identity.type === 'user' &&
             actor.identity.data.id === entity.user_id;
 
-        try {
-            if (isMe) {
+        if (isMe) {
+            try {
                 await actor.permissionChecker.check({
                     name: PermissionName.USER_SELF_MANAGE,
                     input: new PolicyData({
@@ -193,26 +193,22 @@ export class UserAttributeService extends AbstractEntityService implements IUser
                 });
 
                 return true;
-            }
-        } catch (e) {
-            if (!isMe) {
+            } catch {
                 return false;
             }
         }
 
-        if (!isMe) {
-            try {
-                await actor.permissionChecker.check({
-                    name: PermissionName.USER_UPDATE,
-                    input: new PolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    }),
-                });
-            } catch (e) {
-                return false;
-            }
-        }
+        try {
+            await actor.permissionChecker.check({
+                name: PermissionName.USER_UPDATE,
+                input: new PolicyData({
+                    [BuiltInPolicyType.ATTRIBUTES]: entity,
+                }),
+            });
 
-        return true;
+            return true;
+        } catch {
+            return false;
+        }
     }
 }

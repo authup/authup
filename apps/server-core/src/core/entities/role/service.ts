@@ -149,6 +149,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             });
 
             entity = this.repository.merge(entity, validated);
+            await this.repository.checkUniqueness(validated, entity);
             await this.repository.save(entity);
 
             return { entity, created: false };

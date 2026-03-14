@@ -219,18 +219,21 @@ export class UserService extends AbstractEntityService implements IUserService {
         const credentialsService = new UserCredentialsService();
 
         if (entity) {
+            const originalName = entity.name;
+            const originalNameLocked = entity.name_locked;
+
             entity = this.repository.merge(entity, validated);
 
             if (
                 validated.name &&
-                validated.name !== entity.name
+                validated.name !== originalName
             ) {
                 if (validated.name_locked) {
                     entity.name_locked = validated.name_locked;
                 }
 
-                if (entity.name_locked) {
-                    removeObjectProperty(validated, 'name');
+                if (originalNameLocked && !validated.name_locked) {
+                    entity.name = originalName;
                 }
             }
 
