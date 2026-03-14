@@ -53,11 +53,12 @@ export class DatabaseModule implements Module {
 
     protected options: DatabaseModuleOptions;
 
-    constructor(options?: DatabaseModuleOptions) {
+    constructor(options: DatabaseModuleOptions = {}) {
         this.name = ModuleName.DATABASE;
         this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
+
         this.optionsBuilder = new DataSourceOptionsBuilder();
-        this.options = options || {};
+        this.options = options;
     }
 
     async start(container: IDIContainer): Promise<void> {

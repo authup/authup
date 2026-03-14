@@ -6,6 +6,7 @@
  */
 
 import { Application } from './module.ts';
+import type { IApplication } from './types.ts';
 import type { Module } from './modules/index.ts';
 import {
     AuthenticationModule,
@@ -119,11 +120,11 @@ export class ApplicationBuilder {
 
     // ----------------------------------------------------
 
-    build(): Application;
+    build(): IApplication;
 
     build<T extends Application>(ApplicationClass: new (modules?: Module[]) => T): T;
 
-    build<T extends Application>(ApplicationClass?: new (modules?: Module[]) => T): Application | T {
+    build<T extends Application>(ApplicationClass?: new (modules?: Module[]) => T): IApplication | T {
         const modules: Module[] = [];
 
         this.slots.forEach((slot, name) => {

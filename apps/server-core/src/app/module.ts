@@ -9,8 +9,9 @@ import { AuthupError } from '@authup/errors';
 import { DependencyContainer } from '../core/index.ts';
 import type { Module } from './modules/index.ts';
 import type { IDIContainer } from '../core/di/types.ts';
+import type { IApplication } from './types.ts';
 
-export class Application {
+export class Application implements IApplication {
     public readonly container: IDIContainer;
 
     protected modules: Map<string, Module>;
