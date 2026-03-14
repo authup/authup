@@ -90,6 +90,8 @@ export function parseConfig(input: unknown = {}): ConfigInput {
         permissions: zod.string()
             .or(zod.array(zod.string()))
             .optional(),
+
+        permissionsDefaultPolicyAssignment: zod.boolean().optional(),
     } satisfies Record<keyof Config, any>);
 
     return schema.parse(input);

@@ -4,6 +4,7 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
+import { SystemPolicyName } from '@authup/access';
 import type {
     Client,
     ClientPermission,
@@ -19,6 +20,7 @@ import type {
     UserPermission,
     UserRole,
 } from '@authup/core-kit';
+import { useLogger } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
 import {
     ClientEntity,
@@ -36,6 +38,7 @@ import {
     UserRoleEntity,
 } from '../../../adapters/database/index.ts';
 import {
+    PolicyRepository,
     UserRepository,
 } from '../../../adapters/database/domains/index.ts';
 import type { IDIContainer } from '../../../core/index.ts';
@@ -43,6 +46,7 @@ import {
     ClientProvisioningSynchronizer,
     GraphProvisioningSynchronizer,
     PermissionProvisioningSynchronizer,
+    PolicyProvisioningSynchronizer,
     RealmProvisioningSynchronizer,
     RobotProvisioningSynchronizer,
     RoleProvisioningSynchronizer,
@@ -57,6 +61,7 @@ import {
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
     PermissionRepositoryAdapter,
+    PolicyRepositoryAdapter,
     RealmRepositoryAdapter,
     RobotPermissionRepositoryAdapter,
     RobotRepositoryAdapter,
@@ -69,6 +74,8 @@ import {
     UserRoleRepositoryAdapter,
 } from '../database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';
 import { CompositeProvisioningSource } from './sources/index.ts';
 
@@ -83,6 +90,7 @@ export class ProvisionerModule implements Module {
         const composite = new CompositeProvisioningSource(this.sources);
         const data = await composite.load(container);
 
+        const config = container.resolve<Config>(ConfigInjectionKey);
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
@@ -90,6 +98,40 @@ export class ProvisionerModule implements Module {
             repository: container.resolve<Repository<Permission>>(PermissionEntity),
             realmRepository,
         });
+
+        const policyRepository = new PolicyRepositoryAdapter({
+            repository: new PolicyRepository(dataSource),
+            realmRepository,
+        });
+
+        // ---------------------------------------------------------------
+        // Resolve defaultPolicyId from DB (exists from previous runs)
+        // ---------------------------------------------------------------
+
+        let defaultPolicyId: string | undefined;
+        if (config.permissionsDefaultPolicyAssignment) {
+            const existingPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+            if (existingPolicy) {
+                defaultPolicyId = existingPolicy.id;
+            }
+
+            useLogger().warn(
+                'DEPRECATED: permissionsDefaultPolicyAssignment is enabled. ' +
+                'New permissions without policy_id will be auto-assigned the system.default policy. ' +
+                'This option will be removed in the next major release. ' +
+                'Set PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=false to opt into the allow-by-default model.',
+            );
+        }
+
+        // ---------------------------------------------------------------
+        // Synchronize all entities (policies → permissions → roles → ...)
+        // ---------------------------------------------------------------
+
+        const policySynchronizer = new PolicyProvisioningSynchronizer({
+            repository: policyRepository,
+            permissionRepository,
+        });
+
         const roleRepository = new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository,
@@ -101,6 +143,7 @@ export class ProvisionerModule implements Module {
 
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
             repository: permissionRepository,
+            defaultPolicyId,
         });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
@@ -179,6 +222,7 @@ export class ProvisionerModule implements Module {
         });
 
         const rootSynchronizer = new GraphProvisioningSynchronizer({
+            policySynchronizer,
             permissionSynchronizer,
             roleSynchronizer,
             realmSynchronizer,
@@ -186,5 +230,21 @@ export class ProvisionerModule implements Module {
         });
 
         await rootSynchronizer.synchronize(data);
+
+        // ---------------------------------------------------------------
+        // Backfill: assign system.default to permissions without policy_id
+        // ---------------------------------------------------------------
+
+        if (config.permissionsDefaultPolicyAssignment) {
+            const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+            if (defaultPolicy) {
+                await dataSource
+                    .createQueryBuilder()
+                    .update(PermissionEntity)
+                    .set({ policy_id: defaultPolicy.id })
+                    .where('policy_id IS NULL')
+                    .execute();
+            }
+        }
     }
 }

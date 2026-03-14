@@ -45,6 +45,7 @@ export type PermissionControllerContext = {
     repository: IPermissionRepository,
     realmRepository: IRealmRepository,
     dataSource: DataSource,
+    defaultPolicyId?: string,
 };
 
 @DTags('permission')
@@ -56,10 +57,13 @@ export class PermissionController {
 
     protected dataSource: DataSource;
 
+    protected defaultPolicyId?: string;
+
     constructor(ctx: PermissionControllerContext) {
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.dataSource = ctx.dataSource;
+        this.defaultPolicyId = ctx.defaultPolicyId;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -290,6 +294,10 @@ export class PermissionController {
         const data = await validatorAdapter.run(req, {
             group,
         });
+
+        if (!entity && this.defaultPolicyId && typeof data.policy_id === 'undefined') {
+            data.policy_id = this.defaultPolicyId;
+        }
 
         await this.repository.validateJoinColumns(data);
 

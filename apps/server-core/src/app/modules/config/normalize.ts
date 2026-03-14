@@ -79,6 +79,7 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         robotAdminSecretReset: false,
 
         permissions: [],
+        permissionsDefaultPolicyAssignment: true,
         ...parsed,
     };
 }

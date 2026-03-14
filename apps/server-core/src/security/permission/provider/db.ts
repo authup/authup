@@ -6,16 +6,12 @@
  */
 
 import type {
-    CompositePolicy,
     IPermissionRepository,
-    IdentityPolicy,
-    PermissionBindingPolicy,
     PermissionGetOptions,
     PermissionItem,
     PolicyWithType,
-    RealmMatchPolicy,
 } from '@authup/access';
-import { BuiltInPolicyType, DecisionStrategy, buildPermissionItemKey } from '@authup/access';
+import { buildPermissionItemKey } from '@authup/access';
 import type { Permission } from '@authup/core-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
@@ -69,8 +65,6 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
             let policy : PolicyWithType | undefined;
             if (entity.policy) {
                 policy = await this.policyRepository.findDescendantsTree(entity.policy);
-            } else {
-                policy = this.getDefaultPolicy();
             }
 
             return {
@@ -82,34 +76,5 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
         }
 
         return null;
-    }
-
-    getDefaultPolicy() {
-        const children : PolicyWithType[] = [];
-        const identity : PolicyWithType<IdentityPolicy> = {
-            type: BuiltInPolicyType.IDENTITY,
-        };
-        children.push(identity);
-
-        const realmMatch : PolicyWithType<RealmMatchPolicy> = {
-            type: BuiltInPolicyType.REALM_MATCH,
-            attributeName: ['realm_id'],
-            attributeNameStrict: false,
-            identityMasterMatchAll: true,
-        };
-        children.push(realmMatch);
-
-        const permissionBinding : PolicyWithType<PermissionBindingPolicy> = {
-            type: BuiltInPolicyType.PERMISSION_BINDING,
-        };
-        children.push(permissionBinding);
-
-        const composite : PolicyWithType<CompositePolicy> = {
-            type: BuiltInPolicyType.COMPOSITE,
-            children,
-            decisionStrategy: DecisionStrategy.UNANIMOUS,
-        };
-
-        return composite;
     }
 }

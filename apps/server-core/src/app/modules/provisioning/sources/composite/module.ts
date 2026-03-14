@@ -29,6 +29,7 @@ export class CompositeProvisioningSource implements IProvisioningSource {
     }
 
     merge(target: RootProvisioningEntity, source: RootProvisioningEntity) {
+        target.policies = this.mergeEntities(target.policies, source.policies);
         target.permissions = this.mergeEntities(target.permissions, source.permissions);
         target.roles = this.mergeEntities(target.roles, source.roles);
         target.scopes = this.mergeEntities(target.scopes, source.scopes);

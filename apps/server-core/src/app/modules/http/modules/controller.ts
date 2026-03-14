@@ -30,6 +30,7 @@ import type {
     UserRole,
 } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
+import { SystemPolicyName } from '@authup/access';
 import {
     ClientEntity,
     ClientPermissionEntity,
@@ -141,7 +142,7 @@ export class HTTPControllerModule {
     async mount(router: Router, container: IDIContainer): Promise<void> {
         const realmController = this.createRealmController(container);
         const roleController = this.createRoleController(container);
-        const permissionController = this.createPermissionController(container);
+        const permissionController = await this.createPermissionController(container);
         const clientController = this.createClientController(container);
         const robotController = this.createRobotController(container);
         const clientPermissionController = this.createClientPermissionController(container);
@@ -475,14 +476,33 @@ export class HTTPControllerModule {
         return new RobotController({ repository, realmRepository: new RealmRepositoryAdapter(realmRepository), dataSource });
     }
 
-    createPermissionController(container: IDIContainer) {
+    async createPermissionController(container: IDIContainer) {
+        const config = container.resolve<Config>(ConfigInjectionKey);
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new PermissionRepositoryAdapter({
             repository: container.resolve<Repository<Permission>>(PermissionEntity),
             realmRepository,
         });
-        return new PermissionController({ repository, realmRepository: new RealmRepositoryAdapter(realmRepository), dataSource });
+        const policyRepository = new PolicyRepositoryAdapter({
+            repository: new PolicyRepository(dataSource),
+            realmRepository,
+        });
+
+        let defaultPolicyId: string | undefined;
+        if (config.permissionsDefaultPolicyAssignment) {
+            const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+            if (defaultPolicy) {
+                defaultPolicyId = defaultPolicy.id;
+            }
+        }
+
+        return new PermissionController({
+            repository,
+            realmRepository: new RealmRepositoryAdapter(realmRepository),
+            dataSource,
+            defaultPolicyId,
+        });
     }
 
     createRoleController(container: IDIContainer) {

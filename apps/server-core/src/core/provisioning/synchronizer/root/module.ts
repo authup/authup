@@ -6,12 +6,13 @@
  */
 
 import type {
+    PolicyProvisioningEntity,
     RealmProvisioningEntity,
     RoleProvisioningEntity,
     RootProvisioningEntity,
     ScopeProvisioningEntity,
 } from '../../entities/index.ts';
-import type { PermissionProvisioningEntity } from '../../entities/permission';
+import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type {
     IProvisioningSynchronizer,
 
@@ -20,6 +21,8 @@ import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RootProvisioningSynchronizerContext } from './types.ts';
 
 export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<RootProvisioningEntity> {
+    protected policySynchronizer: IProvisioningSynchronizer<PolicyProvisioningEntity>;
+
     protected realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningEntity>;
 
     protected permissionSynchronizer : IProvisioningSynchronizer<PermissionProvisioningEntity>;
@@ -31,6 +34,7 @@ export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<
     constructor(ctx: RootProvisioningSynchronizerContext) {
         super();
 
+        this.policySynchronizer = ctx.policySynchronizer;
         this.permissionSynchronizer = ctx.permissionSynchronizer;
         this.realmSynchronizer = ctx.realmSynchronizer;
         this.roleSynchronizer = ctx.roleSynchronizer;
@@ -39,6 +43,10 @@ export class GraphProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
     async synchronize(input: RootProvisioningEntity): Promise<RootProvisioningEntity> {
         const output : RootProvisioningEntity = {};
+
+        if (input.policies) {
+            output.policies = await this.policySynchronizer.synchronizeMany(input.policies);
+        }
 
         if (input.permissions) {
             output.permissions = await this.permissionSynchronizer.synchronizeMany(input.permissions);

@@ -259,38 +259,39 @@ export class EATreeRepository<
                 const descendantIds = descendants
                     .map((descendant) => descendant[descendantColumn.databasePath]);
 
-                // 4. get all ancestors of each descendant :)
-                const ancestorsOfDescendants = await manager.query<Record<string, any>[]>(
-                    `Select *
-                         FROM ${tableName}
-                         WHERE
-                             ${ancestorColumn.databasePath} != '${primaryKeyValue}' AND
-                             ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                             ${descendantColumn.databasePath} IN (${descendantIds.map((descendantId) => `'${descendantId}'`).join(',')});`,
-                );
+                if (descendantIds.length > 0) {
+                    // 4. get all ancestors of each descendant :)
+                    const ancestorsOfDescendants = await manager.query<Record<string, any>[]>(
+                        `Select *
+                             FROM ${tableName}
+                             WHERE
+                                 ${ancestorColumn.databasePath} != '${primaryKeyValue}' AND
+                                 ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
+                                 ${descendantColumn.databasePath} IN (${descendantIds.map((descendantId) => `'${descendantId}'`).join(',')});`,
+                    );
 
-                const acc = ancestorsOfDescendants.reduce((acc, curr) => {
-                    if (!acc[curr[descendantColumn.databasePath]]) {
-                        acc[curr[descendantColumn.databasePath]] = [];
-                    }
+                    const acc = ancestorsOfDescendants.reduce((acc, curr) => {
+                        if (!acc[curr[descendantColumn.databasePath]]) {
+                            acc[curr[descendantColumn.databasePath]] = [];
+                        }
 
-                    acc[curr[descendantColumn.databasePath]] = curr[ancestorColumn.databasePath];
-                    return acc;
-                }, {} as Record<string, string[]>);
+                        acc[curr[descendantColumn.databasePath]].push(curr[ancestorColumn.databasePath]);
+                        return acc;
+                    }, {} as Record<string, string[]>);
 
-                const accKeys = Object.keys(acc);
-                // 5. Check if for each child a relation exists with each ancestor (create if not exist)
-                for (let i = 0; i < accKeys.length; i++) {
-                    const descendant = accKeys[i];
-                    const ancestorsOfDescendent = acc[descendant];
+                    // 5. Check if for each child a relation exists with each ancestor (create if not exist)
+                    for (let i = 0; i < descendantIds.length; i++) {
+                        const descendant = descendantIds[i];
+                        const ancestorsOfDescendent = acc[descendant] ?? [];
 
-                    for (let j = 0; j < ancestorIds.length; j++) {
-                        const index = ancestorsOfDescendent.indexOf(ancestorIds[j]);
-                        if (index === -1) {
-                            await manager.query(`INSERT INTO
-                                                    ${tableName}
-                                                 (${ancestorColumn.databasePath}, ${descendantColumn.databasePath}) VALUES
-                                                   ('${ancestorIds[j]}','${descendant}');`);
+                        for (let j = 0; j < ancestorIds.length; j++) {
+                            const index = ancestorsOfDescendent.indexOf(ancestorIds[j]);
+                            if (index === -1) {
+                                await manager.query(`INSERT INTO
+                                                        ${tableName}
+                                                     (${ancestorColumn.databasePath}, ${descendantColumn.databasePath}) VALUES
+                                                       ('${ancestorIds[j]}','${descendant}');`);
+                            }
                         }
                     }
                 }

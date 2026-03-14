@@ -44,3 +44,10 @@ export enum BuiltInPolicyType {
     // Location (LBAC)
     // Device (DBAC)
 }
+
+export const SystemPolicyName = {
+    DEFAULT: 'system.default',
+    IDENTITY: 'system.identity',
+    PERMISSION_BINDING: 'system.permission-binding',
+    REALM_MATCH: 'system.realm-match',
+} as const;

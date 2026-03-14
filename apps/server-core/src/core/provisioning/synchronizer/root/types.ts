@@ -5,16 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ScopeProvisioningEntity } from '../../entities';
-import type { PermissionProvisioningEntity } from '../../entities/permission';
-import type { RealmProvisioningEntity } from '../../entities/realm';
-import type { RoleProvisioningEntity } from '../../entities/role';
+import type { PolicyProvisioningEntity } from '../../entities/policy/index.ts';
+import type { ScopeProvisioningEntity } from '../../entities/scope/index.ts';
+import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
+import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
+import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type {
     IProvisioningSynchronizer,
 
 } from '../../types.ts';
 
 export type RootProvisioningSynchronizerContext = {
+    policySynchronizer: IProvisioningSynchronizer<PolicyProvisioningEntity>,
     permissionSynchronizer: IProvisioningSynchronizer<PermissionProvisioningEntity>,
     realmSynchronizer: IProvisioningSynchronizer<RealmProvisioningEntity>,
     roleSynchronizer: IProvisioningSynchronizer<RoleProvisioningEntity>,

@@ -6,12 +6,18 @@
  */
 
 import type { PermissionProvisioningEntity } from '../permission/index.ts';
+import type { PolicyProvisioningEntity } from '../policy/index.ts';
 import type { RealmProvisioningEntity } from '../realm/index.ts';
-import type { RoleProvisioningEntity } from '../role';
-import type { ScopeProvisioningEntity } from '../scope';
+import type { RoleProvisioningEntity } from '../role/index.ts';
+import type { ScopeProvisioningEntity } from '../scope/index.ts';
 import type { BaseProvisioningEntity } from '../types.ts';
 
 export type RootProvisioningEntity = BaseProvisioningEntity & {
+    /**
+     * Create or update system policies
+     */
+    policies?: PolicyProvisioningEntity[],
+
     /**
      * Create or update realms
      */

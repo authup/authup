@@ -115,7 +115,18 @@ export default {
      * Reset the robot secret on application startup.
      * default: false
      */
-    robotAdminSecretReset: false
+    robotAdminSecretReset: false,
+
+    // ----------------------------------------------------
+
+    /**
+     * Auto-assign the system.default policy to new permissions
+     * created without an explicit policy_id.
+     * Transitional option — will be removed in the next major release.
+     * Set to false to opt into the allow-by-default model.
+     * default: true
+     */
+    permissionsDefaultPolicyAssignment: true,
 }
 ```
 
@@ -130,6 +141,7 @@ userAdminPasswordReset=false
 robotAdminEnabled=false
 robotAdminSecret=start123
 robotAdminSecretReset=false
+permissionsDefaultPolicyAssignment=true
 
 ```
 
@@ -144,6 +156,7 @@ USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false
 ROBOT_ADMIN_SECRET=start123
 ROBOT_ADMIN_SECRET_RESET=false
+PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=true
 
 ```
 :::
