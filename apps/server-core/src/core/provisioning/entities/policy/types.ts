@@ -9,6 +9,6 @@ import type { BaseProvisioningEntity } from '../types.ts';
 
 export type PolicyProvisioningEntity = BaseProvisioningEntity<Policy> & {
     attributes: Partial<Policy>,
-    ea?: Record<string, any>,
+    extraAttributes?: Record<string, any>,
     children?: PolicyProvisioningEntity[],
 };

@@ -16,7 +16,7 @@ export function buildSystemPolicyProvisioningEntities(): PolicyProvisioningEntit
             built_in: true,
             realm_id: null,
         },
-        ea: {
+        extraAttributes: {
             decisionStrategy: DecisionStrategy.UNANIMOUS,
         },
         children: [
@@ -43,7 +43,7 @@ export function buildSystemPolicyProvisioningEntities(): PolicyProvisioningEntit
                     built_in: true,
                     realm_id: null,
                 },
-                ea: {
+                extraAttributes: {
                     attributeName: ['realm_id'],
                     attributeNameStrict: false,
                     identityMasterMatchAll: true,

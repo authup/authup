@@ -36,10 +36,10 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
                 parent_id: input.attributes.parent_id,
                 parent: input.attributes.parent,
             });
-            await this.repository.saveWithEA(entity, input.ea);
+            await this.repository.saveWithEA(entity, input.extraAttributes);
         } else {
             entity = this.repository.create(input.attributes);
-            await this.repository.saveWithEA(entity, input.ea);
+            await this.repository.saveWithEA(entity, input.extraAttributes);
         }
 
         if (input.children && input.children.length > 0) {
