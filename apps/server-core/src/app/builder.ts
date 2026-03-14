@@ -120,11 +120,7 @@ export class ApplicationBuilder {
 
     // ----------------------------------------------------
 
-    build(): IApplication;
-
-    build<T extends Application>(ApplicationClass: new (modules?: Module[]) => T): T;
-
-    build<T extends Application>(ApplicationClass?: new (modules?: Module[]) => T): IApplication | T {
+    buildModules(): Module[] {
         const modules: Module[] = [];
 
         this.slots.forEach((slot, name) => {
@@ -143,11 +139,11 @@ export class ApplicationBuilder {
             }
         });
 
-        if (ApplicationClass) {
-            return new ApplicationClass(modules);
-        }
+        return modules;
+    }
 
-        return new Application(modules);
+    build(): IApplication {
+        return new Application(this.buildModules());
     }
 
     // ----------------------------------------------------

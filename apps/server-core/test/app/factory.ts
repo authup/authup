@@ -41,7 +41,7 @@ function buildTestConfig(): Config {
 }
 
 export function createTestApplication() : TestHTTPApplication {
-    return new ApplicationBuilder()
+    const modules = new ApplicationBuilder()
         .withConfig(new ConfigModule(buildTestConfig()))
         .withLogger()
         .withCache()
@@ -52,13 +52,17 @@ export function createTestApplication() : TestHTTPApplication {
         .withIdentity()
         .withOAuth2()
         .withHTTP()
-        .build(TestHTTPApplication);
+        .buildModules();
+
+    return new TestHTTPApplication(modules);
 }
 
 export function createTestDatabaseApplication() : TestApplication {
-    return new ApplicationBuilder()
+    const modules = new ApplicationBuilder()
         .withConfig(new ConfigModule(buildTestConfig()))
         .withLogger()
         .withDatabase(createTestDatabaseModuleForSuite())
-        .build(TestApplication);
+        .buildModules();
+
+    return new TestApplication(modules);
 }
