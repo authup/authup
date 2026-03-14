@@ -10,13 +10,11 @@ import {
 } from '@routup/decorators';
 import type { UserPermission } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
+import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { IUserPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { UserPermissionRequestValidator } from './utils/index.ts';
 import {
-    RequestHandlerOperation,
     buildActorContext,
     useRequestParamID,
 } from '../../../request/index.ts';
@@ -53,10 +51,7 @@ export class UserPermissionController {
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const validator = new RoutupContainerAdapter(new UserPermissionRequestValidator());
-        const data = await validator.run(req, { group: RequestHandlerOperation.CREATE });
-
-        const entity = await this.service.create(data, actor);
+        const entity = await this.service.create(useRequestBody(req), actor);
 
         return sendCreated(res, entity);
     }

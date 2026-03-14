@@ -10,16 +10,14 @@ import {
 } from '@routup/decorators';
 import type { ClientScope } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
+import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { IClientScopeService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
-    RequestHandlerOperation,
     buildActorContext,
     useRequestParamID,
 } from '../../../request/index.ts';
-import { ClientScopeRequestValidator } from './utils/index.ts';
 
 export type ClientScopeControllerContext = {
     service: IClientScopeService,
@@ -53,10 +51,7 @@ export class ClientScopeController {
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const validator = new RoutupContainerAdapter(new ClientScopeRequestValidator());
-        const validatedData = await validator.run(req, { group: RequestHandlerOperation.CREATE });
-
-        const entity = await this.service.create(validatedData, actor);
+        const entity = await this.service.create(useRequestBody(req), actor);
 
         return sendCreated(res, entity);
     }

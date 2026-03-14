@@ -17,14 +17,12 @@ import {
 } from '@routup/decorators';
 import { useRequestQuery } from '@routup/basic/query';
 import { useRequestBody } from '@routup/basic/body';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import type { IPolicyRepository, IPolicyService, IRealmRepository } from '../../../../../core/index.ts';
 import { PolicyEngine } from '../../../../../security/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { PolicyValidator } from './utils/index.ts';
 import {
     buildActorContext,
     getRequestParamID,
@@ -153,14 +151,9 @@ export class PolicyController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const validator = new RoutupContainerAdapter(new PolicyValidator());
-        const validated = await validator.run(req, {
-            group: 'update',
-        });
-
         const entity = await this.service.update(
             useRequestParamID(req, { isUUID: false }),
-            validated,
+            useRequestBody(req),
             actor,
         );
 
@@ -177,14 +170,9 @@ export class PolicyController {
         const actor = buildActorContext(req);
         const paramId = getRequestParamID(req, { isUUID: false });
 
-        const validator = new RoutupContainerAdapter(new PolicyValidator());
-        const validated = await validator.run(req, {
-            group: 'create',
-        });
-
         const { entity, created } = await this.service.save(
             paramId || undefined,
-            validated,
+            useRequestBody(req),
             actor,
         );
 
@@ -214,12 +202,7 @@ export class PolicyController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const validator = new RoutupContainerAdapter(new PolicyValidator());
-        const validated = await validator.run(req, {
-            group: 'create',
-        });
-
-        const entity = await this.service.create(validated, actor);
+        const entity = await this.service.create(useRequestBody(req), actor);
 
         return sendCreated(res, entity);
     }

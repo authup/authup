@@ -12,17 +12,15 @@ import { ForbiddenError } from '@ebec/http';
 import type { ClientRole } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { useRequestBody } from '@routup/basic/body';
 import type { IClientRoleRepository, IClientRoleService } from '../../../../../core/index.ts';
 import type { IdentityPermissionService } from '../../../../../services/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
-    RequestHandlerOperation,
     buildActorContext,
     useRequestIdentityOrFail,
     useRequestParamID,
 } from '../../../request/index.ts';
-import { ClientRoleRequestValidator } from './utils/index.ts';
 
 export type ClientRoleControllerContext = {
     service: IClientRoleService,
@@ -58,30 +56,29 @@ export class ClientRoleController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: Pick<ClientRole, 'role_id' | 'client_id'>,
+        @DBody() _body: Pick<ClientRole, 'role_id' | 'client_id'>,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const validator = new RoutupContainerAdapter(new ClientRoleRequestValidator());
-        const validatedData = await validator.run(req, { group: RequestHandlerOperation.CREATE });
+        const data = useRequestBody(req);
 
-        await this.repository.validateJoinColumns(validatedData);
+        await this.repository.validateJoinColumns(data);
 
-        if (validatedData.role) {
+        if (data.role) {
             const identity = useRequestIdentityOrFail(req);
             const hasPermissions = await this.identityPermissionService.isSuperset(identity, {
                 type: 'role',
-                id: validatedData.role.id,
-                clientId: validatedData.role.client_id,
+                id: data.role.id,
+                clientId: data.role.client_id,
             });
             if (!hasPermissions) {
                 throw new ForbiddenError('You don\'t own the required permissions.');
             }
         }
 
-        const entity = await this.service.create(validatedData, actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }

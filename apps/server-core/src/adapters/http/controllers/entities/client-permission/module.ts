@@ -10,16 +10,14 @@ import {
 } from '@routup/decorators';
 import type { ClientPermission } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
+import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { IClientPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
-    RequestHandlerOperation,
     buildActorContext,
     useRequestParamID,
 } from '../../../request/index.ts';
-import { ClientPermissionRequestValidator } from './utils/index.ts';
 
 export type ClientPermissionControllerContext = {
     service: IClientPermissionService,
@@ -53,10 +51,7 @@ export class ClientPermissionController {
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const validator = new RoutupContainerAdapter(new ClientPermissionRequestValidator());
-        const validatedData = await validator.run(req, { group: RequestHandlerOperation.CREATE });
-
-        const entity = await this.service.create(validatedData, actor);
+        const entity = await this.service.create(useRequestBody(req), actor);
 
         return sendCreated(res, entity);
     }

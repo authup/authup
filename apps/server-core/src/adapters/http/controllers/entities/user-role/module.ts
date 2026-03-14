@@ -12,13 +12,11 @@ import { ForbiddenError } from '@ebec/http';
 import type { UserRole } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { useRequestBody } from '@routup/basic/body';
 import type { IUserRoleRepository, IUserRoleService } from '../../../../../core/index.ts';
 import type { IdentityPermissionService } from '../../../../../services/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { UserRoleRequestValidator } from './utils/index.ts';
 import {
-    RequestHandlerOperation,
     buildActorContext,
     useRequestIdentityOrFail,
     useRequestParamID,
@@ -64,8 +62,7 @@ export class UserRoleController {
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const validator = new RoutupContainerAdapter(new UserRoleRequestValidator());
-        const data = await validator.run(req, { group: RequestHandlerOperation.CREATE });
+        const data = useRequestBody(req);
 
         await this.repository.validateJoinColumns(data);
 
