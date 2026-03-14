@@ -7,4 +7,5 @@
 
 export * from './database';
 export * from './factory';
+export * from './http';
 export * from './module';

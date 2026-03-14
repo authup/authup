@@ -13,7 +13,7 @@ import { GenericContainer } from 'testcontainers';
 import {
     ApplicationBuilder, DefaultProvisioningSource, ProvisionerModule,
 } from '../src/index.ts';
-import { TestDatabaseModuleBase } from './app/index.ts';
+import { createTestDatabaseModuleForSetup } from './app/index.ts';
 
 declare module 'vitest' {
     export interface ProvidedContext {
@@ -25,7 +25,7 @@ declare module 'vitest' {
 const app = new ApplicationBuilder()
     .withConfig()
     .withLogger()
-    .withDatabase(new TestDatabaseModuleBase())
+    .withDatabase(createTestDatabaseModuleForSetup())
     .withProvisioning(new ProvisionerModule([
         new DefaultProvisioningSource(),
     ]))

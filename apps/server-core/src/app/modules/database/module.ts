@@ -38,6 +38,12 @@ import { ConfigInjectionKey } from '../config/index.ts';
 import type { IDIContainer } from '../../../core/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
+export type DatabaseModuleOptions = {
+    prepareBuild?: (container: IDIContainer) => Promise<void>;
+    setup?: (container: IDIContainer, options: DataSourceOptions) => Promise<void>;
+    migrate?: (container: IDIContainer, dataSource: DataSource) => Promise<void>;
+};
+
 export class DatabaseModule implements Module {
     readonly name: string;
 
@@ -45,20 +51,31 @@ export class DatabaseModule implements Module {
 
     protected optionsBuilder : DataSourceOptionsBuilder;
 
-    constructor() {
+    protected options: DatabaseModuleOptions;
+
+    constructor(options?: DatabaseModuleOptions) {
         this.name = ModuleName.DATABASE;
         this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
         this.optionsBuilder = new DataSourceOptionsBuilder();
+        this.options = options || {};
     }
 
     async start(container: IDIContainer): Promise<void> {
         const logger = container.resolve<Logger>(LoggerInjectionKey);
 
-        const options = await this.buildDataSourceOptions(container);
+        if (this.options.prepareBuild) {
+            await this.options.prepareBuild(container);
+        }
 
-        await this.setup(container, options);
+        const dataSourceOptions = await this.buildDataSourceOptions(container);
 
-        const dataSource = new DataSource(options);
+        if (this.options.setup) {
+            await this.options.setup(container, dataSourceOptions);
+        } else {
+            await this.setup(container, dataSourceOptions);
+        }
+
+        const dataSource = new DataSource(dataSourceOptions);
 
         logger.debug('Establishing database connection...');
         await dataSource.initialize();
@@ -68,7 +85,11 @@ export class DatabaseModule implements Module {
         setDataSource(dataSource);
         setDataSourceSync(dataSource);
 
-        await this.migrate(container, dataSource);
+        if (this.options.migrate) {
+            await this.options.migrate(container, dataSource);
+        } else {
+            await this.migrate(container, dataSource);
+        }
 
         container.register(DatabaseInjectionKey.DataSource, {
             useValue: dataSource,

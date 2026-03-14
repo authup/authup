@@ -9,13 +9,15 @@ import {
     ApplicationBuilder,
     ConfigModule,
 } from '../../src/index.ts';
+import type { Config } from '../../src/index.ts';
 import { normalizeConfig } from '../../src/app/modules/config/normalize.ts';
 import { readConfigRawFromEnv } from '../../src/app/modules/config/read/index.ts';
 
 import { TestApplication } from './module.ts';
-import { TestDatabaseModule } from './database.ts';
+import { TestHTTPApplication } from './http.ts';
+import { createTestDatabaseModuleForSuite } from './database.ts';
 
-export function createTestApplication() : TestApplication {
+function buildTestConfig(): Config {
     const raw = readConfigRawFromEnv();
     const config = normalizeConfig(raw);
 
@@ -35,16 +37,28 @@ export function createTestApplication() : TestApplication {
     config.registration = true;
     config.emailVerification = true;
 
+    return config;
+}
+
+export function createTestApplication() : TestHTTPApplication {
     return new ApplicationBuilder()
-        .withConfig(new ConfigModule(config))
+        .withConfig(new ConfigModule(buildTestConfig()))
         .withLogger()
         .withCache()
         .withLdap()
         .withMail()
-        .withDatabase(new TestDatabaseModule())
+        .withDatabase(createTestDatabaseModuleForSuite())
         .withAuthentication()
         .withIdentity()
         .withOAuth2()
         .withHTTP()
+        .build(TestHTTPApplication);
+}
+
+export function createTestDatabaseApplication() : TestApplication {
+    return new ApplicationBuilder()
+        .withConfig(new ConfigModule(buildTestConfig()))
+        .withLogger()
+        .withDatabase(createTestDatabaseModuleForSuite())
         .build(TestApplication);
 }
