@@ -213,14 +213,16 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
   - `junction-synchronizer.ts`: `ProvisioningJunctionSynchronizer<T>` — ensures junction entries (e.g. RolePermission, UserRole) exist between owner and target entities
   - `{entity}/module.ts`: Per-entity synchronizer composing resolver + junction helpers
 - **app/modules/provisioning/sources/**: Data sources that produce `RootProvisioningEntity`
-  - `default/`: Built-in defaults (admin user, system client, all permissions/scopes)
+  - `default/`: Built-in defaults (system policies, admin user, system client, all permissions/scopes)
   - `file/`: Loads `.json`, `.yaml`, `.ts`, `.js` files from a directory
   - `composite/`: Merges multiple sources with dedup by composite key (`name:realm_id:client_id`)
 - **app/modules/provisioning/module.ts**: `ProvisionerModule` — creates shared repository adapter instances and wires them to synchronizers
 
 ### Synchronization Order
 
-`GraphProvisioningSynchronizer` processes in order: permissions → roles → scopes → realms.
+`ProvisionerModule` delegates to `GraphProvisioningSynchronizer`, then runs backfill (config-gated).
+
+`GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
 `RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → robots → scopes.
 
 ### File Structure

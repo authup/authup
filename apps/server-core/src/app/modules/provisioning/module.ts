@@ -78,7 +78,6 @@ import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';
 import { CompositeProvisioningSource } from './sources/index.ts';
-import { buildSystemPolicyProvisioningEntities } from './system-policies.ts';
 
 export class ProvisionerModule implements Module {
     protected sources: IProvisioningSource[];
@@ -95,10 +94,6 @@ export class ProvisionerModule implements Module {
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
-        // ---------------------------------------------------------------
-        // Phase 1: Synchronize system policies (before everything else)
-        // ---------------------------------------------------------------
-
         const permissionRepository = new PermissionRepositoryAdapter({
             repository: container.resolve<Repository<Permission>>(PermissionEntity),
             realmRepository,
@@ -109,36 +104,16 @@ export class ProvisionerModule implements Module {
             realmRepository,
         });
 
-        const policySynchronizer = new PolicyProvisioningSynchronizer({
-            repository: policyRepository,
-            permissionRepository,
-        });
-
-        const systemPolicies = buildSystemPolicyProvisioningEntities();
-        await policySynchronizer.synchronize(systemPolicies);
-
         // ---------------------------------------------------------------
-        // Phase 1b: Backfill existing permissions with system.default
-        // ---------------------------------------------------------------
-
-        const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
-        if (defaultPolicy) {
-            await dataSource
-                .createQueryBuilder()
-                .update(PermissionEntity)
-                .set({ policy_id: defaultPolicy.id })
-                .where('policy_id IS NULL')
-                .andWhere('created_at <= :cutoff', { cutoff: defaultPolicy.created_at })
-                .execute();
-        }
-
-        // ---------------------------------------------------------------
-        // Phase 1c: Resolve default policy for permission creation
+        // Resolve defaultPolicyId from DB (exists from previous runs)
         // ---------------------------------------------------------------
 
         let defaultPolicyId: string | undefined;
-        if (config.permissionsDefaultPolicyAssignment && defaultPolicy) {
-            defaultPolicyId = defaultPolicy.id;
+        if (config.permissionsDefaultPolicyAssignment) {
+            const existingPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+            if (existingPolicy) {
+                defaultPolicyId = existingPolicy.id;
+            }
 
             useLogger().warn(
                 'DEPRECATED: permissionsDefaultPolicyAssignment is enabled. ' +
@@ -149,8 +124,13 @@ export class ProvisionerModule implements Module {
         }
 
         // ---------------------------------------------------------------
-        // Phase 2: Synchronize permissions, roles, realms, etc.
+        // Synchronize all entities (policies → permissions → roles → ...)
         // ---------------------------------------------------------------
+
+        const policySynchronizer = new PolicyProvisioningSynchronizer({
+            repository: policyRepository,
+            permissionRepository,
+        });
 
         const roleRepository = new RoleRepositoryAdapter({
             repository: container.resolve<Repository<Role>>(RoleEntity),
@@ -242,6 +222,7 @@ export class ProvisionerModule implements Module {
         });
 
         const rootSynchronizer = new GraphProvisioningSynchronizer({
+            policySynchronizer,
             permissionSynchronizer,
             roleSynchronizer,
             realmSynchronizer,
@@ -249,5 +230,21 @@ export class ProvisionerModule implements Module {
         });
 
         await rootSynchronizer.synchronize(data);
+
+        // ---------------------------------------------------------------
+        // Backfill: assign system.default to permissions without policy_id
+        // ---------------------------------------------------------------
+
+        if (config.permissionsDefaultPolicyAssignment) {
+            const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+            if (defaultPolicy) {
+                await dataSource
+                    .createQueryBuilder()
+                    .update(PermissionEntity)
+                    .set({ policy_id: defaultPolicy.id })
+                    .where('policy_id IS NULL')
+                    .execute();
+            }
+        }
     }
 }

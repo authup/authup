@@ -7,4 +7,3 @@
 
 export * from './sources/index.ts';
 export * from './module.ts';
-export * from './system-policies.ts';
