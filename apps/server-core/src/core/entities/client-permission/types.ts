@@ -6,7 +6,15 @@
  */
 
 import type { ClientPermission } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { ActorContext } from '../actor/types.ts';
+import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
 export interface IClientPermissionRepository extends IEntityRepository<ClientPermission> {
+}
+
+export interface IClientPermissionService {
+    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<ClientPermission>>;
+    getOne(id: string, actor: ActorContext): Promise<ClientPermission>;
+    create(data: Record<string, any>, actor: ActorContext): Promise<ClientPermission>;
+    delete(id: string, actor: ActorContext): Promise<ClientPermission>;
 }

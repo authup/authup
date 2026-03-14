@@ -6,7 +6,15 @@
  */
 
 import type { ClientRole } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { ActorContext } from '../actor/types.ts';
+import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
 export interface IClientRoleRepository extends IEntityRepository<ClientRole> {
+}
+
+export interface IClientRoleService {
+    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<ClientRole>>;
+    getOne(id: string, actor: ActorContext): Promise<ClientRole>;
+    create(data: Record<string, any>, actor: ActorContext): Promise<ClientRole>;
+    delete(id: string, actor: ActorContext): Promise<ClientRole>;
 }

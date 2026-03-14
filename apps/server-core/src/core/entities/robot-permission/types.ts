@@ -6,7 +6,15 @@
  */
 
 import type { RobotPermission } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { ActorContext } from '../actor/types.ts';
+import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
 export interface IRobotPermissionRepository extends IEntityRepository<RobotPermission> {
+}
+
+export interface IRobotPermissionService {
+    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<RobotPermission>>;
+    getOne(id: string, actor: ActorContext): Promise<RobotPermission>;
+    create(data: Record<string, any>, actor: ActorContext): Promise<RobotPermission>;
+    delete(id: string, actor: ActorContext): Promise<RobotPermission>;
 }

@@ -6,7 +6,15 @@
  */
 
 import type { RobotRole } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { ActorContext } from '../actor/types.ts';
+import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
 export interface IRobotRoleRepository extends IEntityRepository<RobotRole> {
+}
+
+export interface IRobotRoleService {
+    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<RobotRole>>;
+    getOne(id: string, actor: ActorContext): Promise<RobotRole>;
+    create(data: Record<string, any>, actor: ActorContext): Promise<RobotRole>;
+    delete(id: string, actor: ActorContext): Promise<RobotRole>;
 }

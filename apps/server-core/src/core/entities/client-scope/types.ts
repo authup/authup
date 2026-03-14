@@ -6,7 +6,15 @@
  */
 
 import type { ClientScope } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { ActorContext } from '../actor/types.ts';
+import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
 export interface IClientScopeRepository extends IEntityRepository<ClientScope> {
+}
+
+export interface IClientScopeService {
+    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<ClientScope>>;
+    getOne(id: string, actor: ActorContext): Promise<ClientScope>;
+    create(data: Record<string, any>, actor: ActorContext): Promise<ClientScope>;
+    delete(id: string, actor: ActorContext): Promise<ClientScope>;
 }
