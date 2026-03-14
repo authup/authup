@@ -95,14 +95,23 @@ realms:
 
 ### Root
 
-The top-level object has four optional arrays. Items at this level are **global** (not scoped to any realm).
+The top-level object has five optional arrays. Items at this level are **global** (not scoped to any realm).
 
 | Field         | Type                          | Description               |
 |---------------|-------------------------------|---------------------------|
+| `policies`    | `PolicyProvisioning[]`        | Global policies           |
 | `permissions` | `PermissionProvisioning[]`    | Global permissions        |
 | `scopes`      | `ScopeProvisioning[]`         | Global scopes             |
 | `roles`       | `RoleProvisioning[]`          | Global roles              |
 | `realms`      | `RealmProvisioning[]`         | Realms with nested entities |
+
+### Policy
+
+| Field              | Type                     | Description                          |
+|--------------------|--------------------------|--------------------------------------|
+| `attributes`       | object                   | `name` (required), `type`, `built_in`, `realm_id` |
+| `extraAttributes`  | object                   | Policy-specific configuration (e.g. `decisionStrategy`, `attributeName`) |
+| `children`         | `PolicyProvisioning[]`   | Child policies (for composite policies) |
 
 ### Permission
 
@@ -291,10 +300,11 @@ using the `merge` or `replace` strategy.
 
 Entities are synchronized in dependency order:
 
-1. Permissions (global)
-2. Roles (global, with permission assignments)
-3. Scopes (global)
-4. Realms, then for each realm:
+1. Policies (global)
+2. Permissions (global)
+3. Roles (global, with permission assignments)
+4. Scopes (global)
+5. Realms, then for each realm:
    1. Clients (with nested permissions/roles)
    2. Permissions (realm-scoped)
    3. Roles (realm-scoped, with permission assignments)
