@@ -6,15 +6,8 @@
  */
 
 import {
-    AuthenticationModule,
-    CacheModule,
+    ApplicationBuilder,
     ConfigModule,
-    HTTPModule,
-    IdentityModule,
-    LdapModule,
-    LoggerModule,
-    MailModule,
-    OAuth2Module,
 } from '../../src/index.ts';
 import { normalizeConfig } from '../../src/app/modules/config/normalize.ts';
 import { readConfigRawFromEnv } from '../../src/app/modules/config/read/index.ts';
@@ -42,18 +35,16 @@ export function createTestApplication() : TestApplication {
     config.registration = true;
     config.emailVerification = true;
 
-    return new TestApplication([
-        new ConfigModule(config),
-        new LoggerModule(),
-        new CacheModule(),
-        new LdapModule(),
-        new MailModule(),
-
-        new TestDatabaseModule(),
-        new AuthenticationModule(),
-        new IdentityModule(),
-        new OAuth2Module(),
-
-        new HTTPModule(),
-    ]);
+    return new ApplicationBuilder()
+        .withConfig(new ConfigModule(config))
+        .withLogger()
+        .withCache()
+        .withLdap()
+        .withMail()
+        .withDatabase(new TestDatabaseModule())
+        .withAuthentication()
+        .withIdentity()
+        .withOAuth2()
+        .withHTTP()
+        .build(TestApplication);
 }

@@ -10,9 +10,8 @@ import { wait } from '@authup/kit';
 
 import type { TestProject } from 'vitest/node';
 import { GenericContainer } from 'testcontainers';
-import { DependencyContainer } from '../src/core/index.ts';
 import {
-    ConfigModule, DefaultProvisioningSource, LoggerModule, ProvisionerModule,
+    ApplicationBuilder, DefaultProvisioningSource, ProvisionerModule,
 } from '../src/index.ts';
 import { TestDatabaseModuleBase } from './app/index.ts';
 
@@ -23,13 +22,14 @@ declare module 'vitest' {
     }
 }
 
-const ci = new DependencyContainer();
-const config = new ConfigModule();
-const logger = new LoggerModule();
-const database = new TestDatabaseModuleBase();
-const provisioning = new ProvisionerModule([
-    new DefaultProvisioningSource(),
-]);
+const app = new ApplicationBuilder()
+    .withConfig()
+    .withLogger()
+    .withDatabase(new TestDatabaseModuleBase())
+    .withProvisioning(new ProvisionerModule([
+        new DefaultProvisioningSource(),
+    ]))
+    .build();
 
 async function setup(project: TestProject) {
     const containerConfig = new GenericContainer('osixia/openldap')
@@ -49,12 +49,8 @@ async function setup(project: TestProject) {
 
     globalThis.OPENLDAP_CONTAINER = container;
 
-    await config.start(ci);
-    await logger.start(ci);
-    await database.start(ci);
-    await provisioning.start(ci);
-
-    await database.stop(ci);
+    await app.start();
+    await app.stop();
 
     await wait(0);
 }
