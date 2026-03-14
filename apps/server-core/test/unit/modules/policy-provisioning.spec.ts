@@ -359,5 +359,31 @@ describe('policy provisioning', () => {
             expect(created).toBeDefined();
             expect(created!.policy_id).toBeNull();
         });
+
+        it('should not override explicit policy_id null when defaultPolicyId is set', async () => {
+            const synchronizer = new PolicyProvisioningSynchronizer({
+                repository: policyRepositoryAdapter,
+                permissionRepository: permissionRepositoryAdapter,
+            });
+            const input = buildSystemPolicyProvisioningEntities();
+            await synchronizer.synchronize(input);
+
+            const defaultPolicy = await policyRepositoryAdapter.findOneByName(SystemPolicyName.DEFAULT);
+            expect(defaultPolicy).toBeDefined();
+
+            const permSynchronizer = new PermissionProvisioningSynchronizer({
+                repository: permissionRepositoryAdapter,
+                defaultPolicyId: defaultPolicy!.id,
+            });
+
+            await permSynchronizer.synchronize({
+                attributes: { name: 'test_explicit_null', built_in: false, policy_id: null as any },
+            });
+
+            const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
+            const created = await permissionRepo.findOneBy({ name: 'test_explicit_null' });
+            expect(created).toBeDefined();
+            expect(created!.policy_id).toBeNull();
+        });
     });
 });

@@ -299,7 +299,7 @@ export class PermissionController {
             group,
         });
 
-        if (!entity && this.defaultPolicyId && !data.policy_id) {
+        if (!entity && this.defaultPolicyId && typeof data.policy_id === 'undefined') {
             data.policy_id = this.defaultPolicyId;
         }
 

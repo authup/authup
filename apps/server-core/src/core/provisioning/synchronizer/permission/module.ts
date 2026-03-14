@@ -58,7 +58,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
                     break;
             }
         } else {
-            if (this.defaultPolicyId && !input.attributes.policy_id) {
+            if (this.defaultPolicyId && typeof input.attributes.policy_id === 'undefined') {
                 input.attributes.policy_id = this.defaultPolicyId;
             }
 
