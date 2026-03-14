@@ -1,5 +1,26 @@
 # Change Log
 
+## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.30) (2026-03-14)
+
+
+### Features
+
+* move applications/services to apps directory ([#2875](https://github.com/authup/authup/issues/2875)) ([b39354a](https://github.com/authup/authup/commit/b39354a8bd568e09493179413724e9e4bb018aa2))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#2895](https://github.com/authup/authup/issues/2895)) ([7ecc0ad](https://github.com/authup/authup/commit/7ecc0ada93a81d9b57f7c89d4823c5ee06c7d7c0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+    * @authup/core-http-kit bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

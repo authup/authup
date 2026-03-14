@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.30) (2026-03-14)
+
+
+### Features
+
+* add system policy provisioning and config-gated permission backfill ([#2904](https://github.com/authup/authup/issues/2904)) ([50037cb](https://github.com/authup/authup/commit/50037cbe613e3b615747cf1272929c8fcb27f97d))
+* adjust identity repositories ([#2903](https://github.com/authup/authup/issues/2903)) ([8e6043f](https://github.com/authup/authup/commit/8e6043fd4ad8adcb8f4cd25c19932423e17f8ce8))
+* custom repositories for database entities/repositories ([#2880](https://github.com/authup/authup/issues/2880)) ([9210640](https://github.com/authup/authup/commit/92106401bb96eb7cd773bfe0799482a514676fe0))
+* move applications/services to apps directory ([#2875](https://github.com/authup/authup/issues/2875)) ([b39354a](https://github.com/authup/authup/commit/b39354a8bd568e09493179413724e9e4bb018aa2))
+* restructure server-core application with modular builder pattern ([#2908](https://github.com/authup/authup/issues/2908)) ([7fb6568](https://github.com/authup/authup/commit/7fb65680a6878d90bfe945a12e1ab35e3cb929ce))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#2895](https://github.com/authup/authup/issues/2895)) ([7ecc0ad](https://github.com/authup/authup/commit/7ecc0ada93a81d9b57f7c89d4823c5ee06c7d7c0))
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-http",
     "type": "module",
-    "version": "1.0.0-beta.30",
+    "version": "1.0.1-beta.30",
     "description": "A http plugin for authup.",
     "exports": {
         "./package.json": "./package.json",
@@ -44,9 +44,9 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/server-adapter-kit": "^1.0.0-beta.30",
-        "@authup/core-kit": "^1.0.0-beta.30",
-        "@authup/core-http-kit": "^1.0.0-beta.30"
+        "@authup/server-adapter-kit": "^1.0.1-beta.30",
+        "@authup/core-kit": "^1.0.1-beta.30",
+        "@authup/core-http-kit": "^1.0.1-beta.30"
     },
     "devDependencies": {
         "vitest": "^4.0.18"
