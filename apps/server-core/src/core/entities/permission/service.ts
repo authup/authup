@@ -164,6 +164,8 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 }),
             });
 
+            await this.repository.checkUniqueness(validated, entity);
+
             entity = this.repository.merge(entity, validated);
 
             if (

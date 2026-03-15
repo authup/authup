@@ -147,6 +147,8 @@ export class ScopeService extends AbstractEntityService implements IScopeService
                 }),
             });
 
+            await this.repository.checkUniqueness(validated, entity);
+
             entity = this.repository.merge(entity, validated);
             await this.repository.save(entity);
 

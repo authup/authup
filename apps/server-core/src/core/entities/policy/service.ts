@@ -8,12 +8,17 @@
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { extendObject, isUUID, removeObjectProperty } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import {
+    PermissionName,
+    PolicyValidator,
+    ValidatorGroup,
+} from '@authup/core-kit';
 import type { Policy } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
 import type { IRealmRepository } from '../realm/types.ts';
 import { AbstractEntityService } from '../service.ts';
 import type { EntityRepositoryFindManyResult } from '../types.ts';
+import { PolicyAttributesValidator } from './attributes-validator.ts';
 import type { IPolicyRepository, IPolicyService } from './types.ts';
 
 export type PolicyServiceContext = {
@@ -26,10 +31,16 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
     protected realmRepository: IRealmRepository;
 
+    protected validator: PolicyValidator;
+
+    protected attributesValidator: PolicyAttributesValidator;
+
     constructor(ctx: PolicyServiceContext) {
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.validator = new PolicyValidator();
+        this.attributesValidator = new PolicyAttributesValidator({});
     }
 
     async getMany(
@@ -91,6 +102,8 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         actor: ActorContext,
         options: { updateOnly?: boolean } = {},
     ): Promise<{ entity: Policy, created: boolean }> {
+        let group: string;
+
         const realm = typeof data.realm_id === 'string' ?
             await this.realmRepository.resolve(data.realm_id) :
             undefined;
@@ -118,20 +131,24 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         if (entity) {
             await actor.permissionChecker.preCheck({ name: PermissionName.PERMISSION_UPDATE });
+            group = ValidatorGroup.UPDATE;
         } else {
             await actor.permissionChecker.preCheck({ name: PermissionName.PERMISSION_CREATE });
+            group = ValidatorGroup.CREATE;
         }
 
-        await this.repository.validateJoinColumns(data);
+        const validated = await this.validate(data, group);
+
+        await this.repository.validateJoinColumns(validated);
 
         if (
-            data.parent &&
-            data.parent.type !== BuiltInPolicyType.COMPOSITE
+            validated.parent &&
+            validated.parent.type !== BuiltInPolicyType.COMPOSITE
         ) {
             throw new BadRequestError('The parent policy must be of type group.');
         }
 
-        await this.repository.checkUniqueness(data, entity || undefined);
+        await this.repository.checkUniqueness(validated, entity || undefined);
 
         if (entity) {
             if (entity.built_in) {
@@ -143,35 +160,56 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
                         ...entity,
-                        ...data,
+                        ...validated,
                     },
                 }),
             });
 
-            extendObject(entity, data);
+            extendObject(entity, validated);
 
             await this.repository.saveWithEA(entity);
 
             return { entity, created: false };
         }
 
-        if (!data.realm_id && actor.identity) {
+        if (!validated.realm_id && actor.identity) {
             const isMasterRealmMember = this.isActorMasterRealmMember(actor);
             if (!isMasterRealmMember) {
-                data.realm_id = this.getActorRealmId(actor) || null;
+                validated.realm_id = this.getActorRealmId(actor) || null;
             }
         }
 
         await actor.permissionChecker.check({
             name: PermissionName.PERMISSION_CREATE,
             input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: data,
+                [BuiltInPolicyType.ATTRIBUTES]: validated,
             }),
         });
 
-        await this.repository.saveWithEA(data as Policy);
+        await this.repository.saveWithEA(validated as Policy);
 
-        return { entity: data as Policy, created: true };
+        return { entity: validated as Policy, created: true };
+    }
+
+    private async validate(
+        data: Record<string, any>,
+        group: string,
+    ): Promise<Record<string, any>> {
+        const validated = await this.validator.run(data, { group });
+
+        const attributes = await this.attributesValidator.run(data);
+        extendObject(validated, attributes);
+
+        if (Array.isArray(data.children)) {
+            if (data.type === BuiltInPolicyType.COMPOSITE) {
+                const promises = data.children.map(
+                    (child: Record<string, any>) => this.validate(child, group),
+                );
+                validated.children = await Promise.all(promises) as Policy['children'];
+            }
+        }
+
+        return validated;
     }
 
     async delete(
