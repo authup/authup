@@ -68,14 +68,19 @@ export class RegistrationService implements IRegistrationService {
         await this.repository.save(entity);
 
         if (this.options.emailVerificationEnabled) {
-            await this.mailClient.send({
-                to: entity.email,
-                subject: 'Registration - Activation code',
-                html: `
-                <p>Please use the code below to activate your account and start using the site.</p>
-                <p>${entity.activate_hash}</p>
-                `,
-            });
+            try {
+                await this.mailClient.send({
+                    to: entity.email,
+                    subject: 'Registration - Activation code',
+                    html: `
+                    <p>Please use the code below to activate your account and start using the site.</p>
+                    <p>${entity.activate_hash}</p>
+                    `,
+                });
+            } catch (e) {
+                await this.repository.remove(entity);
+                throw new BadRequestError('Registration failed. Could not send activation email.');
+            }
         }
 
         return {
