@@ -155,19 +155,19 @@ export type Config = {
      * Enable user registration?
      * default: false
      */
-    registration: boolean,
+    registrationEnabled: boolean,
 
     /**
      * Require email verification for registration or login?
      * default: false
      */
-    emailVerification: boolean,
+    emailVerificationEnabled: boolean,
 
     /**
      * Allow password reset via email?
      * default: false
      */
-    forgotPassword: boolean,
+    passwordRecoveryEnabled: boolean,
 
     // ----------------------------------------------------
 

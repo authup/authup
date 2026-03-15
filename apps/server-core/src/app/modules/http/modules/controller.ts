@@ -386,8 +386,8 @@ export class HTTPControllerModule {
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             options: {
-                passwordRecoveryEnabled: config.forgotPassword,
-                emailVerificationEnabled: config.emailVerification,
+                passwordRecoveryEnabled: config.passwordRecoveryEnabled,
+                emailVerificationEnabled: config.emailVerificationEnabled,
             },
         });
     }
@@ -413,8 +413,8 @@ export class HTTPControllerModule {
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             options: {
-                registrationEnabled: config.registration,
-                emailVerificationEnabled: config.emailVerification,
+                registrationEnabled: config.registrationEnabled,
+                emailVerificationEnabled: config.emailVerificationEnabled,
             },
         });
     }
