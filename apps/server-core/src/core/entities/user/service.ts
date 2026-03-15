@@ -255,10 +255,6 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             await this.repository.save(entity);
 
-            if (validated.password) {
-                entity.password = validated.password;
-            }
-
             return { entity, created: false };
         }
 
@@ -285,10 +281,6 @@ export class UserService extends AbstractEntityService implements IUserService {
         }
 
         await this.repository.save(entity);
-
-        if (validated.password) {
-            entity.password = validated.password;
-        }
 
         return { entity, created: true };
     }
