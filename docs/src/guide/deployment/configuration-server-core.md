@@ -63,19 +63,19 @@ export default {
      * Enable user registration?
      * default: false
      */
-    registration: false,
-    
+    registrationEnabled: false,
+
     /**
      * Require email verification for registration or login?
      * default: false
      */
-    emailVerification: false,
-    
+    emailVerificationEnabled: false,
+
     /**
      * Allow password reset via email?
      * default: false
      */
-    forgotPassword: false,
+    passwordRecoveryEnabled: false,
 
     // ----------------------------------------------------
 
@@ -133,9 +133,9 @@ export default {
 ```dotenv [authup.server.core.conf]
 port=3001
 publicUrl=http://localhost:3001
-registration=false
-emailVerification=false
-forgotPassword=false
+registrationEnabled=false
+emailVerificationEnabled=false
+passwordRecoveryEnabled=false
 userAdminPassword=start123
 userAdminPasswordReset=false
 robotAdminEnabled=false
@@ -148,9 +148,9 @@ permissionsDefaultPolicyAssignment=true
 ```dotenv [.env]
 PORT=3001
 PUBLIC_URL=http://localhost:3001
-REGISTRATION=false
-EMAIL_VERIFICATION=false
-FORGOT_PASSWORD=false
+REGISTRATION_ENABLED=false
+EMAIL_VERIFICATION_ENABLED=false
+PASSWORD_RECOVERY_ENABLED=false
 USER_ADMIN_PASSWORD=start123
 USER_ADMIN_PASSWORD_RESET=false
 ROBOT_ADMIN_ENABLED=false

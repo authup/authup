@@ -6,8 +6,17 @@
  */
 
 import type { RoleAttribute } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { ActorContext } from '../actor/types.ts';
+import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
 export interface IRoleAttributeRepository extends IEntityRepository<RoleAttribute> {
 
+}
+
+export interface IRoleAttributeService {
+    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<RoleAttribute>>;
+    getOne(id: string, actor: ActorContext): Promise<RoleAttribute>;
+    create(data: Record<string, any>, actor: ActorContext): Promise<RoleAttribute>;
+    update(id: string, data: Record<string, any>, actor: ActorContext): Promise<RoleAttribute>;
+    delete(id: string, actor: ActorContext): Promise<RoleAttribute>;
 }

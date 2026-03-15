@@ -17,6 +17,7 @@
 
 - **Validation**: `validup` framework with `@validup/adapter-zod` for Zod schema integration
 - **Errors**: `@authup/errors` provides HTTP-aware error classes via `@ebec/http`
+- **Validation location**: Validators from `@authup/core-kit` (e.g., `RoleValidator`, `UserValidator`) run inside core services, not in controllers. Services receive raw `Record<string, any>` data and call `validator.run(data, { group: ValidatorGroup.CREATE })` internally. Controllers use `useRequestBody(req)` to pass the raw body to the service.
 
 ## Workflow
 
@@ -29,6 +30,13 @@
 
 - Exported **types** (interfaces, type aliases) must live in a `types.ts` file in the same directory, not inline in the implementation module. Implementation files import from `types.ts`.
 - Barrel `index.ts` files re-export from `types.ts` and implementation modules.
+
+## Configuration Naming
+
+- Boolean feature toggles use the `Enabled` suffix: `registrationEnabled`, `passwordRecoveryEnabled`, `emailVerificationEnabled`
+- Config keys in `app/modules/config/types.ts` match the service option names
+- Environment variable names use `SCREAMING_SNAKE_CASE` with `_ENABLED` suffix: `REGISTRATION_ENABLED`, `PASSWORD_RECOVERY_ENABLED`, `EMAIL_VERIFICATION_ENABLED`
+- Config file keys (`.conf`) use `camelCase` matching the TypeScript property name
 
 ## Best Practices
 

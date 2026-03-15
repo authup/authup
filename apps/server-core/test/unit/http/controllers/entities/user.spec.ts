@@ -32,7 +32,7 @@ describe('src/http/controllers/user', () => {
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(details, response);
+        expectPropertiesEqualToSrc(details, response, ['password']);
 
         details.id = response.id;
     });
@@ -80,7 +80,7 @@ describe('src/http/controllers/user', () => {
             .update(details.id, details);
 
         expect(response).toBeDefined();
-        expectPropertiesEqualToSrc(details, response, ['realm']);
+        expectPropertiesEqualToSrc(details, response, ['password', 'realm']);
     });
 
     it('should delete resource', async () => {

@@ -12,7 +12,20 @@ Fetch all review comments on the current PR, investigate each one against the ac
 
 ## Step 1: Fetch PR comments
 
-Use the `/pr-comments` skill to fetch and display all comments from the current PR.
+Fetch comments directly using `gh api` and `node -e` for JSON parsing.
+
+**Important:** `jq` is NOT available on this system. Always use `node -e` for JSON parsing. Also, `gh api` paths must NOT start with `/` (MINGW rewrites them to filesystem paths).
+
+```bash
+# Get PR number
+gh pr view --json number,headRepository
+
+# Get PR-level comments (skip bot summaries)
+gh api repos/{owner}/{repo}/issues/{number}/comments | node -e "..."
+
+# Get review comments with file/line context
+gh api repos/{owner}/{repo}/pulls/{number}/comments | node -e "..."
+```
 
 ## Step 2: Investigate each comment
 

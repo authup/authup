@@ -6,5 +6,7 @@
  */
 
 export * from './entities/index.ts';
+export * from './password-recovery/index.ts';
 export * from './provider/index.ts';
+export * from './registration/index.ts';
 export * from './resolver/index.ts';

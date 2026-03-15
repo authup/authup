@@ -6,10 +6,25 @@
  */
 
 import type { Client } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { ActorContext } from '../actor/types.ts';
+import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
 export interface IClientRepository extends IEntityRepository<Client> {
     checkUniqueness(data: Partial<Client>, existing?: Client): Promise<void>;
 
     findOneWithSecret(where: Record<string, any>): Promise<Client | null>;
+}
+
+export interface IClientService {
+    getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<Client>>;
+    getOne(idOrName: string, actor: ActorContext, realmId?: string): Promise<Client>;
+    create(data: Record<string, any>, actor: ActorContext): Promise<Client>;
+    update(idOrName: string, data: Record<string, any>, actor: ActorContext): Promise<Client>;
+    save(
+        idOrName: string | undefined,
+        data: Record<string, any>,
+        actor: ActorContext,
+        options?: { updateOnly?: boolean },
+    ): Promise<{ entity: Client, created: boolean }>;
+    delete(id: string, actor: ActorContext): Promise<Client>;
 }
