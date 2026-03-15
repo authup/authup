@@ -274,6 +274,24 @@ Non-entity workflows live under `core/identity/`:
 
 These services own their own validation (inline validators, not from `@authup/core-kit`), and accept `Record<string, any>` raw data.
 
+Workflow services receive options via their context type:
+
+```typescript
+export type RegistrationServiceOptions = {
+    registrationEnabled?: boolean,
+    emailVerificationEnabled?: boolean,
+};
+
+export type PasswordRecoveryServiceOptions = {
+    passwordRecoveryEnabled?: boolean,
+    emailVerificationEnabled?: boolean,
+};
+```
+
+Feature gates check these options before proceeding (e.g. `if (!this.options.registrationEnabled) throw ...`). Options are wired from app config in `app/modules/http/modules/controller.ts`.
+
+**Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw — don't leave orphaned records.
+
 ### Thin Controller Pattern (HTTP Adapter)
 
 Controllers are thin HTTP adapters. They extract input from the request, build an `ActorContext`, delegate to the service, and format the HTTP response:

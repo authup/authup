@@ -31,6 +31,13 @@
 - Exported **types** (interfaces, type aliases) must live in a `types.ts` file in the same directory, not inline in the implementation module. Implementation files import from `types.ts`.
 - Barrel `index.ts` files re-export from `types.ts` and implementation modules.
 
+## Configuration Naming
+
+- Boolean feature toggles use the `Enabled` suffix: `registrationEnabled`, `passwordRecoveryEnabled`, `emailVerificationEnabled`
+- Config keys in `app/modules/config/types.ts` match the service option names
+- Environment variable names use `SCREAMING_SNAKE_CASE` with `_ENABLED` suffix: `REGISTRATION_ENABLED`, `PASSWORD_RECOVERY_ENABLED`, `EMAIL_VERIFICATION_ENABLED`
+- Config file keys (`.conf`) use `camelCase` matching the TypeScript property name
+
 ## Best Practices
 
 - Use **ESM** and modern TypeScript/JavaScript.
