@@ -36,6 +36,7 @@ function buildTestConfig(): Config {
 
     config.registrationEnabled = true;
     config.emailVerificationEnabled = true;
+    config.passwordRecoveryEnabled = true;
 
     return config;
 }
