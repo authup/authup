@@ -37,7 +37,7 @@ export class RegistrationService implements IRegistrationService {
     }
 
     async register(data: Record<string, any>): Promise<RegistrationResult> {
-        if (!this.options.registration) {
+        if (!this.options.registrationEnabled) {
             throw new BadRequestError('User registration is not enabled.');
         }
 
@@ -49,7 +49,7 @@ export class RegistrationService implements IRegistrationService {
 
         await this.repository.validateJoinColumns(validated);
 
-        if (this.options.emailVerification) {
+        if (this.options.emailVerificationEnabled) {
             validated.active = false;
             validated.activate_hash = randomBytes(32).toString('hex');
         } else {
@@ -67,7 +67,7 @@ export class RegistrationService implements IRegistrationService {
 
         await this.repository.save(entity);
 
-        if (this.options.emailVerification) {
+        if (this.options.emailVerificationEnabled) {
             await this.mailClient.send({
                 to: entity.email,
                 subject: 'Registration - Activation code',

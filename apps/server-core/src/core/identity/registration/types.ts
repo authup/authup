@@ -9,8 +9,8 @@ import type { IMailClient } from '../../mail/types.ts';
 import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
 
 export type RegistrationServiceOptions = {
-    registration?: boolean,
-    emailVerification?: boolean,
+    registrationEnabled?: boolean,
+    emailVerificationEnabled?: boolean,
 };
 
 export type RegistrationServiceContext = {

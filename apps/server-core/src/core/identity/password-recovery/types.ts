@@ -9,8 +9,8 @@ import type { IMailClient } from '../../mail/types.ts';
 import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
 
 export type PasswordRecoveryServiceOptions = {
-    registration?: boolean,
-    emailVerification?: boolean,
+    passwordRecoveryEnabled?: boolean,
+    emailVerificationEnabled?: boolean,
 };
 
 export type PasswordRecoveryServiceContext = {

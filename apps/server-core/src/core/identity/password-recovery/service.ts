@@ -37,11 +37,11 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
     }
 
     async forgotPassword(data: Record<string, any>): Promise<PasswordForgotResult> {
-        if (!this.options.registration) {
-            throw new BadRequestError('User registration is not enabled.');
+        if (!this.options.passwordRecoveryEnabled) {
+            throw new BadRequestError('Password recovery is not enabled.');
         }
 
-        if (!this.options.emailVerification) {
+        if (!this.options.emailVerificationEnabled) {
             throw new BadRequestError('Email verification is not enabled, but required to reset a password.');
         }
 
