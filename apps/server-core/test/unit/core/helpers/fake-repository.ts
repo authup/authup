@@ -94,8 +94,20 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
         this.store = [];
     }
 
-    seed(entities: Partial<T>[]) {
-        this.store.push(...entities.map((entity) => this.create(entity)));
+    seed(entities: Partial<T>[]): T[];
+
+    seed(entity: Partial<T>): T;
+
+    seed(input: Partial<T> | Partial<T>[]): T | T[] {
+        if (Array.isArray(input)) {
+            const created = input.map((entity) => this.create(entity));
+            this.store.push(...created);
+            return created;
+        }
+
+        const created = this.create(input);
+        this.store.push(created);
+        return created;
     }
 
     private matchesWhere(entity: T, where: Record<string, any>): boolean {

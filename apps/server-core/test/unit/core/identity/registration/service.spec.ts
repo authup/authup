@@ -16,6 +16,7 @@ import type { IMailClient } from '../../../../../src/core/mail/types.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import type { IUserRepository } from '../../../../../src/core/entities/user/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { createFakeUser } from '../../../../utils/domains/index.ts';
 
 class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepository {
     async checkUniqueness(): Promise<void> {
@@ -214,12 +215,11 @@ describe('core/identity/registration/service', () => {
     describe('activate', () => {
         it('should activate a user by token', async () => {
             const activateHash = 'test-token-123';
-            repository.seed([{
-                id: '1',
+            const entity = repository.seed(createFakeUser({
                 name: 'inactive-user',
                 active: false,
                 activate_hash: activateHash,
-            } as unknown as User]);
+            }));
 
             const service = new RegistrationService({
                 options: { registrationEnabled: true, emailVerificationEnabled: true },
@@ -230,7 +230,7 @@ describe('core/identity/registration/service', () => {
 
             await service.activate({ token: activateHash });
 
-            const user = await repository.findOneById('1');
+            const user = await repository.findOneById(entity.id);
             expect(user!.active).toBe(true);
             expect(user!.activate_hash).toBeNull();
         });

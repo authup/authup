@@ -22,6 +22,7 @@ import {
     createMasterRealmActor,
     createNonMasterRealmActor,
 } from '../../helpers/mock-actor.ts';
+import { createFakeScope } from '../../../../utils/domains/index.ts';
 
 class FakeScopeRepository extends FakeEntityRepository<Scope> implements IScopeRepository {
     async checkUniqueness(): Promise<void> {
@@ -43,7 +44,7 @@ describe('core/entities/scope/service', () => {
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
             repository.seed([
-                { id: randomUUID(), name: 'scope-a' } as Scope,
+                createFakeScope(),
             ]);
 
             const result = await service.getMany({}, createAllowAllActor());
@@ -72,16 +73,15 @@ describe('core/entities/scope/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'test-scope' } as Scope]);
+            const entity = repository.seed(createFakeScope({ name: 'test-scope' }));
 
-            const result = await service.getOne(id, createAllowAllActor());
+            const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.name).toBe('test-scope');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.getOne(randomUUID(), createAllowAllActor()),
+                service.getOne('non-existent-id', createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
     });
@@ -121,16 +121,15 @@ describe('core/entities/scope/service', () => {
 
     describe('update', () => {
         it('should update an existing scope', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'old-name' } as Scope]);
+            const entity = repository.seed(createFakeScope({ name: 'old-name' }));
 
-            const result = await service.update(id, { name: 'new-name' }, createAllowAllActor());
+            const result = await service.update(entity.id, { name: 'new-name' }, createAllowAllActor());
             expect(result.name).toBe('new-name');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update(randomUUID(), { name: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
     });
@@ -148,11 +147,10 @@ describe('core/entities/scope/service', () => {
         });
 
         it('should update when entity found', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'old-name' } as Scope]);
+            const entity = repository.seed(createFakeScope({ name: 'old-name' }));
 
             const { created } = await service.save(
-                id,
+                entity.id,
                 { name: 'updated-name' },
                 createAllowAllActor(),
             );
@@ -162,7 +160,7 @@ describe('core/entities/scope/service', () => {
 
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
-                service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
+                service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
             ).rejects.toThrow(NotFoundError);
         });
     });
@@ -184,28 +182,26 @@ describe('core/entities/scope/service', () => {
 
     describe('delete', () => {
         it('should delete an existing scope', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'deletable' } as Scope]);
+            const entity = repository.seed(createFakeScope());
 
-            const result = await service.delete(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const result = await service.delete(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
 
-            const found = await repository.findOneById(id);
+            const found = await repository.findOneById(entity.id);
             expect(found).toBeNull();
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.delete(randomUUID(), createAllowAllActor()),
+                service.delete('non-existent-id', createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
         it('should throw when actor lacks permission', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'test' } as Scope]);
+            const entity = repository.seed(createFakeScope());
 
             await expect(
-                service.delete(id, createDenyAllActor()),
+                service.delete(entity.id, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
     });

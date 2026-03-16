@@ -25,6 +25,7 @@ import {
     createNonMasterRealmActor,
 } from '../../helpers/mock-actor.ts';
 import type { ActorContext } from '../../../../../src/core/entities/actor/types.ts';
+import { createFakeUser } from '../../../../utils/domains/index.ts';
 
 class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepository {
     async checkUniqueness(): Promise<void> {
@@ -74,7 +75,7 @@ describe('core/entities/user/service', () => {
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
-            repository.seed([{ id: randomUUID(), name: 'user-a' } as User]);
+            repository.seed([createFakeUser()]);
             const result = await service.getMany({}, createAllowAllActor());
             expect(result.data).toHaveLength(1);
         });
@@ -96,25 +97,21 @@ describe('core/entities/user/service', () => {
         });
 
         it('should always include self in results without per-record check', async () => {
-            const userId = randomUUID();
-            const otherId = randomUUID();
-
-            repository.seed([
-                { id: userId, name: 'self' } as User,
-                { id: otherId, name: 'other' } as User,
+            const [selfUser] = repository.seed([
+                createFakeUser({ name: 'self' }),
+                createFakeUser({ name: 'other' }),
             ]);
 
-            const actor = createSelfActor(userId);
+            const actor = createSelfActor(selfUser.id);
             vi.mocked(actor.permissionChecker.checkOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
-            expect(result.data[0].id).toBe(userId);
+            expect(result.data[0].id).toBe(selfUser.id);
         });
 
         it('should filter out other users on per-record permission failure', async () => {
-            const otherId = randomUUID();
-            repository.seed([{ id: otherId, name: 'other' } as User]);
+            repository.seed([createFakeUser({ name: 'other' })]);
 
             const actor = createSelfActor(randomUUID());
             vi.mocked(actor.permissionChecker.checkOneOf).mockRejectedValue(new ForbiddenError());
@@ -127,48 +124,44 @@ describe('core/entities/user/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'test-user' } as User]);
-            const result = await service.getOne(id, createAllowAllActor());
+            const entity = repository.seed(createFakeUser({ name: 'test-user' }));
+            const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.name).toBe('test-user');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.getOne(randomUUID(), createAllowAllActor()),
+                service.getOne('non-existent-id', createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
         it('should allow self-access by id without permission check', async () => {
-            const userId = randomUUID();
-            repository.seed([{ id: userId, name: 'self-user' } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
-            const actor = createSelfActor(userId);
+            const actor = createSelfActor(entity.id);
             vi.mocked(actor.permissionChecker.preCheckOneOf).mockRejectedValue(new ForbiddenError());
 
-            const result = await service.getOne(userId, actor);
-            expect(result.id).toBe(userId);
+            const result = await service.getOne(entity.id, actor);
+            expect(result.id).toBe(entity.id);
             expect(actor.permissionChecker.preCheckOneOf).not.toHaveBeenCalled();
         });
 
         it('should allow self-access by name without permission check', async () => {
-            const userId = randomUUID();
             const userName = 'self-user';
-            repository.seed([{ id: userId, name: userName } as User]);
+            const entity = repository.seed(createFakeUser({ name: userName }));
 
-            const actor = createSelfActor(userId, userName);
+            const actor = createSelfActor(entity.id, userName);
             vi.mocked(actor.permissionChecker.preCheckOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getOne(userName, actor);
-            expect(result.id).toBe(userId);
+            expect(result.id).toBe(entity.id);
         });
 
         it('should require permission for non-self access', async () => {
-            const otherId = randomUUID();
-            repository.seed([{ id: otherId, name: 'other-user' } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'other-user' }));
 
             await expect(
-                service.getOne(otherId, createDenyAllActor()),
+                service.getOne(entity.id, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
     });
@@ -219,55 +212,50 @@ describe('core/entities/user/service', () => {
 
     describe('update', () => {
         it('should update an existing user', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'old-name' } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'old-name' }));
 
-            const result = await service.update(id, { display_name: 'New Display' }, createAllowAllActor());
+            const result = await service.update(entity.id, { display_name: 'New Display' }, createAllowAllActor());
             expect(result.display_name).toBe('New Display');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update(randomUUID(), { display_name: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', { display_name: 'x' }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
         it('should hash password on update', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'user' } as User]);
+            const entity = repository.seed(createFakeUser());
 
-            const result = await service.update(id, { password: 'new-pass-123' }, createAllowAllActor());
+            const result = await service.update(entity.id, { password: 'new-pass-123' }, createAllowAllActor());
             expect(result.password).toMatch(/^\$2[aby]\$/);
         });
     });
 
     describe('self-edit fallback', () => {
         it('should allow self-edit without USER_UPDATE permission', async () => {
-            const userId = randomUUID();
-            repository.seed([{ id: userId, name: 'self-user' } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
-            const actor = createSelfActor(userId);
+            const actor = createSelfActor(entity.id);
             vi.mocked(actor.permissionChecker.preCheck).mockRejectedValue(new ForbiddenError());
 
-            const result = await service.update(userId, { display_name: 'Updated' }, actor);
+            const result = await service.update(entity.id, { display_name: 'Updated' }, actor);
             expect(result.display_name).toBe('Updated');
         });
 
         it('should strip restricted fields on self-edit without USER_UPDATE', async () => {
-            const userId = randomUUID();
-            repository.seed([{
-                id: userId,
+            const entity = repository.seed(createFakeUser({
                 name: 'self-user',
                 active: true,
                 status: null,
                 status_message: null,
                 name_locked: false,
-            } as User]);
+            }));
 
-            const actor = createSelfActor(userId);
+            const actor = createSelfActor(entity.id);
             vi.mocked(actor.permissionChecker.preCheck).mockRejectedValue(new ForbiddenError());
 
-            const result = await service.update(userId, {
+            const result = await service.update(entity.id, {
                 display_name: 'Updated',
                 active: false,
                 status: 'banned',
@@ -283,28 +271,23 @@ describe('core/entities/user/service', () => {
         });
 
         it('should throw when non-self user lacks USER_UPDATE', async () => {
-            const userId = randomUUID();
-            const otherId = randomUUID();
-            repository.seed([{ id: otherId, name: 'other-user' } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'other-user' }));
 
-            const actor = createSelfActor(userId);
+            const actor = createSelfActor(randomUUID());
             vi.mocked(actor.permissionChecker.preCheck).mockRejectedValue(new ForbiddenError());
 
             await expect(
-                service.update(otherId, { display_name: 'x' }, actor),
+                service.update(entity.id, { display_name: 'x' }, actor),
             ).rejects.toThrow(ForbiddenError);
         });
     });
 
     describe('name-lock protection', () => {
         it('should prevent name change when name_locked is true and not unlocked', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'locked-name', name_locked: true,
-            } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'locked-name', name_locked: true }));
 
             const result = await service.update(
-                id,
+                entity.id,
                 { name: 'new-name' },
                 createAllowAllActor(),
             );
@@ -313,13 +296,10 @@ describe('core/entities/user/service', () => {
         });
 
         it('should allow name change when name_locked is explicitly set to false', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'locked-name', name_locked: true,
-            } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'locked-name', name_locked: true }));
 
             const result = await service.update(
-                id,
+                entity.id,
                 { name: 'new-name', name_locked: false },
                 createAllowAllActor(),
             );
@@ -329,13 +309,10 @@ describe('core/entities/user/service', () => {
         });
 
         it('should prevent name change when re-locking with name_locked: true', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'locked-name', name_locked: true,
-            } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'locked-name', name_locked: true }));
 
             const result = await service.update(
-                id,
+                entity.id,
                 { name: 'new-name', name_locked: true },
                 createAllowAllActor(),
             );
@@ -344,13 +321,10 @@ describe('core/entities/user/service', () => {
         });
 
         it('should allow name change when name was not locked', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'old-name', name_locked: false,
-            } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'old-name', name_locked: false }));
 
             const result = await service.update(
-                id,
+                entity.id,
                 { name: 'new-name' },
                 createAllowAllActor(),
             );
@@ -361,43 +335,39 @@ describe('core/entities/user/service', () => {
 
     describe('delete', () => {
         it('should delete an existing user', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'deletable' } as User]);
-            const result = await service.delete(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const entity = repository.seed(createFakeUser());
+            const result = await service.delete(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.delete(randomUUID(), createAllowAllActor()),
+                service.delete('non-existent-id', createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
         it('should prevent self-deletion', async () => {
-            const userId = randomUUID();
-            repository.seed([{ id: userId, name: 'self-user' } as User]);
+            const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
-            const actor = createSelfActor(userId);
+            const actor = createSelfActor(entity.id);
 
             await expect(
-                service.delete(userId, actor),
+                service.delete(entity.id, actor),
             ).rejects.toThrow(BadRequestError);
         });
 
         it('should call preCheck with USER_DELETE', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'test' } as User]);
+            const entity = repository.seed(createFakeUser());
             const actor = createAllowAllActor();
-            await service.delete(id, actor);
+            await service.delete(entity.id, actor);
             expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
                 name: PermissionName.USER_DELETE,
             });
         });
 
         it('should throw when actor lacks permission', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'test' } as User]);
-            await expect(service.delete(id, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            const entity = repository.seed(createFakeUser());
+            await expect(service.delete(entity.id, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -414,11 +384,10 @@ describe('core/entities/user/service', () => {
         });
 
         it('should update when entity found', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'old' } as User]);
+            const entity = repository.seed(createFakeUser());
 
             const { created } = await service.save(
-                id,
+                entity.id,
                 { display_name: 'updated' },
                 createAllowAllActor(),
             );
@@ -428,7 +397,7 @@ describe('core/entities/user/service', () => {
 
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
-                service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
+                service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
             ).rejects.toThrow(NotFoundError);
         });
     });

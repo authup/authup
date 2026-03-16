@@ -48,14 +48,13 @@ describe('core/entities/client-role/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const id = randomUUID();
-            repository.seed([{ id } as ClientRole]);
-            const result = await service.getOne(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const entity = repository.seed({} as ClientRole);
+            const result = await service.getOne(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -91,14 +90,22 @@ describe('core/entities/client-role/service', () => {
 
     describe('delete', () => {
         it('should delete an existing entity', async () => {
-            const id = randomUUID();
-            repository.seed([{ id } as ClientRole]);
-            const result = await service.delete(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const entity = repository.seed({} as ClientRole);
+            const result = await service.delete(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
+        });
+
+        it('should call preCheck with CLIENT_ROLE_DELETE', async () => {
+            const entity = repository.seed({} as ClientRole);
+            const actor = createAllowAllActor();
+            await service.delete(entity.id, actor);
+            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+                name: PermissionName.CLIENT_ROLE_DELETE,
+            });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
     });
 });

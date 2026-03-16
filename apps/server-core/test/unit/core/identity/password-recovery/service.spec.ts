@@ -6,7 +6,6 @@
  */
 
 import { faker } from '@faker-js/faker';
-import { randomUUID } from 'node:crypto';
 import {
     beforeEach, describe, expect, it, vi,
 } from 'vitest';
@@ -17,6 +16,7 @@ import type { IMailClient } from '../../../../../src/core/mail/types.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import type { IUserRepository } from '../../../../../src/core/entities/user/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { createFakeUser } from '../../../../utils/domains/index.ts';
 
 class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepository {
     async checkUniqueness(): Promise<void> {
@@ -92,12 +92,11 @@ describe('core/identity/password-recovery/service', () => {
         it('should set reset_hash and reset_expires and send email', async () => {
             const email = faker.internet.email();
             const masterRealm = realmRepository.getMasterRealm();
-            repository.seed([{
-                id: randomUUID(),
+            repository.seed([createFakeUser({
                 name: 'test-user',
                 email,
                 realm_id: masterRealm.id,
-            } as User]);
+            })]);
 
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
@@ -125,12 +124,10 @@ describe('core/identity/password-recovery/service', () => {
 
         it('should accept name instead of email for lookup', async () => {
             const masterRealm = realmRepository.getMasterRealm();
-            repository.seed([{
-                id: randomUUID(),
+            repository.seed([createFakeUser({
                 name: 'forgot-user',
-                email: faker.internet.email(),
                 realm_id: masterRealm.id,
-            } as User]);
+            })]);
 
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
@@ -146,12 +143,11 @@ describe('core/identity/password-recovery/service', () => {
         it('should set reset_expires to ~30 minutes from now', async () => {
             const email = faker.internet.email();
             const masterRealm = realmRepository.getMasterRealm();
-            repository.seed([{
-                id: randomUUID(),
+            repository.seed([createFakeUser({
                 name: 'timer-user',
                 email,
                 realm_id: masterRealm.id,
-            } as User]);
+            })]);
 
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
@@ -172,14 +168,12 @@ describe('core/identity/password-recovery/service', () => {
 
         it('should rollback reset fields on mail failure', async () => {
             const email = faker.internet.email();
-            const userId = randomUUID();
             const masterRealm = realmRepository.getMasterRealm();
-            repository.seed([{
-                id: userId,
+            const entity = repository.seed(createFakeUser({
                 name: 'mail-fail-user',
                 email,
                 realm_id: masterRealm.id,
-            } as User]);
+            }));
 
             vi.mocked(mailClient.send).mockRejectedValue(new Error('SMTP error'));
 
@@ -192,7 +186,7 @@ describe('core/identity/password-recovery/service', () => {
 
             await expect(service.forgotPassword({ email })).rejects.toThrow(BadRequestError);
 
-            const user = await repository.findOneById(userId);
+            const user = await repository.findOneById(entity.id);
             expect(user!.reset_hash).toBeNull();
             expect(user!.reset_expires).toBeNull();
         });
@@ -218,14 +212,13 @@ describe('core/identity/password-recovery/service', () => {
 
         it('should throw NotFoundError when token does not match', async () => {
             const masterRealm = realmRepository.getMasterRealm();
-            repository.seed([{
-                id: randomUUID(),
+            repository.seed([createFakeUser({
                 name: 'reset-user',
                 email: 'reset@example.com',
                 reset_hash: 'valid-token',
                 reset_expires: new Date(Date.now() + 60000).toISOString(),
                 realm_id: masterRealm.id,
-            } as User]);
+            })]);
 
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
@@ -245,14 +238,13 @@ describe('core/identity/password-recovery/service', () => {
 
         it('should throw BadRequestError when token has expired', async () => {
             const masterRealm = realmRepository.getMasterRealm();
-            repository.seed([{
-                id: randomUUID(),
+            repository.seed([createFakeUser({
                 name: 'expired-user',
                 email: 'expired@example.com',
                 reset_hash: 'expired-token',
                 reset_expires: new Date(Date.now() - 60000).toISOString(),
                 realm_id: masterRealm.id,
-            } as User]);
+            })]);
 
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
@@ -272,15 +264,13 @@ describe('core/identity/password-recovery/service', () => {
 
         it('should reset password, clear reset fields, and hash new password', async () => {
             const masterRealm = realmRepository.getMasterRealm();
-            const userId = randomUUID();
-            repository.seed([{
-                id: userId,
+            const entity = repository.seed(createFakeUser({
                 name: 'valid-user',
                 email: 'valid@example.com',
                 reset_hash: 'valid-token',
                 reset_expires: new Date(Date.now() + 60000).toISOString(),
                 realm_id: masterRealm.id,
-            } as User]);
+            }));
 
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
@@ -297,7 +287,7 @@ describe('core/identity/password-recovery/service', () => {
 
             expect(result.reset_at).toBeDefined();
 
-            const user = await repository.findOneById(userId);
+            const user = await repository.findOneById(entity.id);
             expect(user!.reset_hash).toBeNull();
             expect(user!.reset_expires).toBeNull();
             expect(user!.password).toMatch(/^\$2[aby]\$/);
@@ -306,15 +296,12 @@ describe('core/identity/password-recovery/service', () => {
 
         it('should reset password by name instead of email', async () => {
             const masterRealm = realmRepository.getMasterRealm();
-            const userId = randomUUID();
-            repository.seed([{
-                id: userId,
+            const entity = repository.seed(createFakeUser({
                 name: 'name-reset-user',
-                email: faker.internet.email(),
                 reset_hash: 'name-token',
                 reset_expires: new Date(Date.now() + 60000).toISOString(),
                 realm_id: masterRealm.id,
-            } as User]);
+            }));
 
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
@@ -331,7 +318,7 @@ describe('core/identity/password-recovery/service', () => {
 
             expect(result.reset_at).toBeDefined();
 
-            const user = await repository.findOneById(userId);
+            const user = await repository.findOneById(entity.id);
             expect(user!.reset_hash).toBeNull();
         });
     });

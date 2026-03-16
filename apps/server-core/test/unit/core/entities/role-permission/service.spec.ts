@@ -33,7 +33,7 @@ describe('core/entities/role-permission/service', () => {
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
-            repository.seed([{ id: randomUUID() } as RolePermission]);
+            repository.seed([{} as RolePermission]);
             const result = await service.getMany({}, createAllowAllActor());
             expect(result.data).toHaveLength(1);
         });
@@ -56,14 +56,13 @@ describe('core/entities/role-permission/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const id = randomUUID();
-            repository.seed([{ id } as RolePermission]);
-            const result = await service.getOne(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const entity = repository.seed({} as RolePermission);
+            const result = await service.getOne(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -126,22 +125,20 @@ describe('core/entities/role-permission/service', () => {
 
     describe('delete', () => {
         it('should delete an existing entity', async () => {
-            const id = randomUUID();
-            repository.seed([{ id } as RolePermission]);
+            const entity = repository.seed({} as RolePermission);
 
-            const result = await service.delete(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const result = await service.delete(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should call preCheck with ROLE_PERMISSION_DELETE', async () => {
-            const id = randomUUID();
-            repository.seed([{ id } as RolePermission]);
+            const entity = repository.seed({} as RolePermission);
             const actor = createAllowAllActor();
-            await service.delete(id, actor);
+            await service.delete(entity.id, actor);
             expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_PERMISSION_DELETE,
             });

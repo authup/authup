@@ -5,12 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { randomUUID } from 'node:crypto';
 import {
     PermissionName,
     REALM_MASTER_NAME,
 } from '@authup/core-kit';
-import type { Realm } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
@@ -21,6 +19,7 @@ import {
     createAllowAllActor,
     createDenyAllActor,
 } from '../../helpers/mock-actor.ts';
+import { createFakeRealm } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/realm/service', () => {
     let repository: FakeRealmRepository;
@@ -52,7 +51,7 @@ describe('core/entities/realm/service', () => {
 
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
-                service.getOne(randomUUID()),
+                service.getOne('non-existent-id'),
             ).rejects.toThrow(NotFoundError);
         });
     });
@@ -102,18 +101,15 @@ describe('core/entities/realm/service', () => {
 
     describe('update', () => {
         it('should update an existing realm', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'old-realm', built_in: false,
-            } as Realm]);
+            const entity = repository.seed(createFakeRealm({ name: 'old-realm', built_in: false }));
 
-            const result = await service.update(id, { name: 'new-realm' }, createAllowAllActor());
+            const result = await service.update(entity.id, { name: 'new-realm' }, createAllowAllActor());
             expect(result.name).toBe('new-realm');
         });
 
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
-                service.update(randomUUID(), { name: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
@@ -151,13 +147,10 @@ describe('core/entities/realm/service', () => {
         });
 
         it('should update when entity found', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'old-realm', built_in: false,
-            } as Realm]);
+            const entity = repository.seed(createFakeRealm({ name: 'old-realm', built_in: false }));
 
             const { created } = await service.save(
-                id,
+                entity.id,
                 { name: 'updated-realm' },
                 createAllowAllActor(),
             );
@@ -167,28 +160,25 @@ describe('core/entities/realm/service', () => {
 
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
-                service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
+                service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
             ).rejects.toThrow(NotFoundError);
         });
     });
 
     describe('delete', () => {
         it('should delete a non-built-in realm', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'deletable', built_in: false,
-            } as Realm]);
+            const entity = repository.seed(createFakeRealm({ built_in: false }));
 
-            const result = await service.delete(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const result = await service.delete(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
 
-            const found = await repository.findOneById(id);
+            const found = await repository.findOneById(entity.id);
             expect(found).toBeNull();
         });
 
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
-                service.delete(randomUUID(), createAllowAllActor()),
+                service.delete('non-existent-id', createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
@@ -201,13 +191,10 @@ describe('core/entities/realm/service', () => {
         });
 
         it('should call preCheck with REALM_DELETE permission', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'test', built_in: false,
-            } as Realm]);
+            const entity = repository.seed(createFakeRealm({ built_in: false }));
 
             const actor = createAllowAllActor();
-            await service.delete(id, actor);
+            await service.delete(entity.id, actor);
 
             expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
                 name: PermissionName.REALM_DELETE,
@@ -215,13 +202,10 @@ describe('core/entities/realm/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'test', built_in: false,
-            } as Realm]);
+            const entity = repository.seed(createFakeRealm({ built_in: false }));
 
             await expect(
-                service.delete(id, createDenyAllActor()),
+                service.delete(entity.id, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
     });

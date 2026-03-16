@@ -21,6 +21,7 @@ import {
     createDenyAllActor,
     createNonMasterRealmActor,
 } from '../../helpers/mock-actor.ts';
+import { createFakeClient } from '../../../../utils/domains/index.ts';
 
 class FakeClientRepository extends FakeEntityRepository<Client> implements IClientRepository {
     async checkUniqueness(): Promise<void> {
@@ -45,23 +46,20 @@ describe('core/entities/client/service', () => {
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
-            repository.seed([{ id: randomUUID(), name: 'client-a' } as Client]);
+            repository.seed([createFakeClient()]);
             const result = await service.getMany({}, createAllowAllActor());
             expect(result.data).toHaveLength(1);
         });
 
         it('should filter out entities with plaintext secrets on per-record permission failure', async () => {
             repository.seed([
-                {
-                    id: randomUUID(), name: 'safe', secret: null,
-                } as Client,
-                {
-                    id: randomUUID(),
+                createFakeClient({ name: 'safe', secret: null }),
+                createFakeClient({
                     name: 'secret-plain',
                     secret: 'mysecret',
                     secret_encrypted: false,
                     secret_hashed: false,
-                } as Client,
+                }),
             ]);
 
             const actor = createAllowAllActor();
@@ -75,13 +73,12 @@ describe('core/entities/client/service', () => {
 
         it('should not filter entities with hashed secrets', async () => {
             repository.seed([
-                {
-                    id: randomUUID(),
+                createFakeClient({
                     name: 'hashed-client',
                     secret: '$2b$10$hash',
                     secret_hashed: true,
                     secret_encrypted: false,
-                } as Client,
+                }),
             ]);
 
             const result = await service.getMany({}, createAllowAllActor());
@@ -95,14 +92,13 @@ describe('core/entities/client/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'test-client' } as Client]);
-            const result = await service.getOne(id, createAllowAllActor());
+            const entity = repository.seed(createFakeClient({ name: 'test-client' }));
+            const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.name).toBe('test-client');
         });
 
         it('should return entity by name', async () => {
-            repository.seed([{ id: randomUUID(), name: 'my-client' } as Client]);
+            repository.seed([createFakeClient({ name: 'my-client' })]);
             const result = await service.getOne('my-client', createAllowAllActor());
             expect(result.name).toBe('my-client');
         });
@@ -112,16 +108,14 @@ describe('core/entities/client/service', () => {
             realmRepository.seed([{
                 id: realmId, name: 'client-realm', built_in: false,
             } as any]);
-            repository.seed([{
-                name: 'scoped-client', realm_id: realmId,
-            } as Client]);
+            repository.seed([createFakeClient({ name: 'scoped-client', realm_id: realmId })]);
 
             const result = await service.getOne('scoped-client', createAllowAllActor(), realmId);
             expect(result.name).toBe('scoped-client');
         });
 
         it('should throw NotFoundError when realm does not exist for name lookup', async () => {
-            repository.seed([{ name: 'some-client' } as Client]);
+            repository.seed([createFakeClient({ name: 'some-client' })]);
 
             await expect(
                 service.getOne('some-client', createAllowAllActor(), randomUUID()),
@@ -129,21 +123,19 @@ describe('core/entities/client/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should perform per-record check for plaintext secret entities', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id,
+            const entity = repository.seed(createFakeClient({
                 name: 'secret-client',
                 secret: 'plain',
                 secret_encrypted: false,
                 secret_hashed: false,
-            } as Client]);
+            }));
 
             const actor = createAllowAllActor();
-            await service.getOne(id, actor);
+            await service.getOne(entity.id, actor);
 
             expect(actor.permissionChecker.checkOneOf).toHaveBeenCalled();
         });
@@ -204,37 +196,34 @@ describe('core/entities/client/service', () => {
 
     describe('update', () => {
         it('should update an existing client', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'old-name' } as Client]);
+            const entity = repository.seed(createFakeClient({ name: 'old-name' }));
 
-            const result = await service.update(id, { name: 'new-name' }, createAllowAllActor());
+            const result = await service.update(entity.id, { name: 'new-name' }, createAllowAllActor());
             expect(result.name).toBe('new-name');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update(randomUUID(), { name: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
         it('should generate secret when confidential client has no secret', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'client', is_confidential: true, secret: null,
-            } as Client]);
+            const entity = repository.seed(createFakeClient({
+                name: 'client', is_confidential: true, secret: null,
+            }));
 
-            const result = await service.update(id, { description: 'updated' }, createAllowAllActor());
+            const result = await service.update(entity.id, { description: 'updated' }, createAllowAllActor());
             expect(result.secret).toBeDefined();
             expect(result.secret).not.toBeNull();
         });
 
         it('should clear secret when client is set to non-confidential', async () => {
-            const id = randomUUID();
-            repository.seed([{
-                id, name: 'client', is_confidential: true, secret: 'old-secret',
-            } as Client]);
+            const entity = repository.seed(createFakeClient({
+                name: 'client', is_confidential: true, secret: 'old-secret',
+            }));
 
-            const result = await service.update(id, { is_confidential: false }, createAllowAllActor());
+            const result = await service.update(entity.id, { is_confidential: false }, createAllowAllActor());
             expect(result.secret).toBeNull();
         });
     });
@@ -252,46 +241,42 @@ describe('core/entities/client/service', () => {
         });
 
         it('should update when entity found', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'old' } as Client]);
+            const entity = repository.seed(createFakeClient({ name: 'old' }));
 
-            const { created } = await service.save(id, { name: 'updated' }, createAllowAllActor());
+            const { created } = await service.save(entity.id, { name: 'updated' }, createAllowAllActor());
             expect(created).toBe(false);
         });
 
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
-                service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
+                service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
             ).rejects.toThrow(NotFoundError);
         });
     });
 
     describe('delete', () => {
         it('should delete an existing client', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'deletable' } as Client]);
-            const result = await service.delete(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const entity = repository.seed(createFakeClient());
+            const result = await service.delete(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should call preCheck with CLIENT_DELETE', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'test' } as Client]);
+            const entity = repository.seed(createFakeClient());
             const actor = createAllowAllActor();
-            await service.delete(id, actor);
+            await service.delete(entity.id, actor);
             expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
                 name: PermissionName.CLIENT_DELETE,
             });
         });
 
         it('should throw when actor lacks permission', async () => {
-            const id = randomUUID();
-            repository.seed([{ id, name: 'test' } as Client]);
-            await expect(service.delete(id, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            const entity = repository.seed(createFakeClient());
+            await expect(service.delete(entity.id, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 });

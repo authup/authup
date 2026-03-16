@@ -48,14 +48,13 @@ describe('core/entities/client-scope/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const id = randomUUID();
-            repository.seed([{ id } as ClientScope]);
-            const result = await service.getOne(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const entity = repository.seed({} as ClientScope);
+            const result = await service.getOne(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -91,21 +90,19 @@ describe('core/entities/client-scope/service', () => {
 
     describe('delete', () => {
         it('should delete an existing entity', async () => {
-            const id = randomUUID();
-            repository.seed([{ id } as ClientScope]);
-            const result = await service.delete(id, createAllowAllActor());
-            expect(result.id).toBe(id);
+            const entity = repository.seed({} as ClientScope);
+            const result = await service.delete(entity.id, createAllowAllActor());
+            expect(result.id).toBe(entity.id);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should call preCheck with CLIENT_SCOPE_DELETE', async () => {
-            const id = randomUUID();
-            repository.seed([{ id } as ClientScope]);
+            const entity = repository.seed({} as ClientScope);
             const actor = createAllowAllActor();
-            await service.delete(id, actor);
+            await service.delete(entity.id, actor);
             expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
                 name: PermissionName.CLIENT_SCOPE_DELETE,
             });
