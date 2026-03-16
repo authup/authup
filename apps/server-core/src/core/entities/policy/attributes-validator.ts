@@ -65,9 +65,7 @@ export class PolicyAttributesValidator extends Container<Record<string, any>> {
                 break;
             }
             default: {
-                if (this.attributeNames.length > 0) {
-                    attributes = omitRecord(data, this.attributeNames);
-                }
+                attributes = omitRecord(data, this.attributeNames);
             }
         }
 
