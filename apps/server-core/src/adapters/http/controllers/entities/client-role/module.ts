@@ -8,25 +8,19 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
-import type { ClientRole } from '@authup/core-kit';
+import { ForbiddenError } from '@ebec/http';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import type { IClientRoleRepository } from '../../../../../core/entities/client-role/types.ts';
+import type { IClientRoleRepository, IClientRoleService } from '../../../../../core/index.ts';
 import type { IdentityPermissionService } from '../../../../../services/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
-    RequestHandlerOperation,
+    buildActorContext,
     useRequestIdentityOrFail,
-    useRequestParamID,
-    useRequestPermissionChecker,
 } from '../../../request/index.ts';
-import { ClientRoleRequestValidator } from './utils/index.ts';
 
 export type ClientRoleControllerContext = {
+    service: IClientRoleService,
     repository: IClientRoleRepository,
     identityPermissionService: IdentityPermissionService,
 };
@@ -34,11 +28,14 @@ export type ClientRoleControllerContext = {
 @DTags('client')
 @DController('/client-roles')
 export class ClientRoleController {
+    protected service: IClientRoleService;
+
     protected repository: IClientRoleRepository;
 
     protected identityPermissionService: IdentityPermissionService;
 
     constructor(ctx: ClientRoleControllerContext) {
+        this.service = ctx.service;
         this.repository = ctx.repository;
         this.identityPermissionService = ctx.identityPermissionService;
     }
@@ -48,68 +45,35 @@ export class ClientRoleController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
-            name: [
-                PermissionName.CLIENT_ROLE_READ,
-                PermissionName.CLIENT_ROLE_UPDATE,
-                PermissionName.CLIENT_ROLE_DELETE,
-            ],
-        });
+        const actor = buildActorContext(req);
+        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
 
-        const { data, meta } = await this.repository.findMany(useRequestQuery(req));
-
-        return send(res, {
-            data,
-            meta,
-        });
+        return send(res, { data, meta });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: Pick<ClientRole, 'role_id' | 'client_id'>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({ name: PermissionName.CLIENT_ROLE_CREATE });
+        const actor = buildActorContext(req);
 
-        const validator = new ClientRoleRequestValidator();
-        const validatorAdapter = new RoutupContainerAdapter(validator);
-        const validatedData = await validatorAdapter.run(req, {
-            group: RequestHandlerOperation.CREATE,
-        });
+        await this.repository.validateJoinColumns(data);
 
-        await this.repository.validateJoinColumns(validatedData);
-
-        const policyData = new PolicyData();
-        policyData.set(BuiltInPolicyType.ATTRIBUTES, validatedData);
-
-        if (validatedData.role) {
-            validatedData.role_realm_id = validatedData.role.realm_id;
-
+        if (data.role) {
             const identity = useRequestIdentityOrFail(req);
             const hasPermissions = await this.identityPermissionService.isSuperset(identity, {
                 type: 'role',
-                id: validatedData.role.id,
-                clientId: validatedData.role.client_id,
+                id: data.role.id,
+                clientId: data.role.client_id,
             });
             if (!hasPermissions) {
                 throw new ForbiddenError('You don\'t own the required permissions.');
             }
         }
 
-        if (validatedData.client) {
-            validatedData.client_realm_id = validatedData.client.realm_id;
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.CLIENT_ROLE_CREATE,
-            input: policyData,
-        });
-
-        let entity = this.repository.create(validatedData);
-        entity = await this.repository.save(entity);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -120,22 +84,8 @@ export class ClientRoleController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
-            name: [
-                PermissionName.CLIENT_ROLE_READ,
-                PermissionName.CLIENT_ROLE_UPDATE,
-                PermissionName.CLIENT_ROLE_DELETE,
-            ],
-        });
-
-        const paramId = useRequestParamID(req);
-
-        const entity = await this.repository.findOneBy({ id: paramId });
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
+        const actor = buildActorContext(req);
+        const entity = await this.service.getOne(id, actor);
 
         return send(res, entity);
     }
@@ -146,29 +96,8 @@ export class ClientRoleController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const paramId = useRequestParamID(req);
-
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({ name: PermissionName.CLIENT_ROLE_DELETE });
-
-        const entity = await this.repository.findOneBy({ id: paramId });
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.CLIENT_ROLE_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
-        });
-
-        const { id: entityId } = entity;
-
-        await this.repository.remove(entity);
-
-        entity.id = entityId;
+        const actor = buildActorContext(req);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }

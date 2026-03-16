@@ -171,6 +171,16 @@ export class UserRepositoryAdapter implements IUserRepository {
         return this.repository.findOneBy(translateWhereConditions(where));
     }
 
+    async findOneByWithEmail(where: Record<string, any>): Promise<User | null> {
+        const qb = this.repository.createQueryBuilder('user');
+        qb.addSelect('user.email');
+
+        const translated = translateWhereConditions(where);
+        qb.where(translated);
+
+        return qb.getOne();
+    }
+
     create(data: Partial<User>): User {
         return this.repository.create(data);
     }

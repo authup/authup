@@ -59,9 +59,9 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         middlewareSwagger: true,
         tokenRefreshMaxAge: 259_200,
         tokenAccessMaxAge: 3_600,
-        registration: false,
-        emailVerification: false,
-        forgotPassword: false,
+        registrationEnabled: false,
+        emailVerificationEnabled: false,
+        passwordRecoveryEnabled: false,
 
         clientAuthBasic: false,
         clientSystemEnabled: false,

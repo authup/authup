@@ -5,53 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { User } from '@authup/core-kit';
-import { NotFoundError } from '@ebec/http';
 import {
-    DController, DPost, DRequest, DResponse,
+    DBody, DController, DPost, DRequest, DResponse,
 } from '@routup/decorators';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import type { Repository } from 'typeorm';
+import type { IRegistrationService } from '../../../../../core/index.ts';
 import { ActivateRequestValidator } from './validator.ts';
 
 export type ActivateControllerContext = {
-    repository: Repository<User>
+    service: IRegistrationService,
 };
 
 @DController('/activate')
 export class ActivateController {
-    protected repository: Repository<User>;
-
-    protected validator : RoutupContainerAdapter<{ token: string }>;
+    protected service: IRegistrationService;
 
     constructor(ctx: ActivateControllerContext) {
-        this.repository = ctx.repository;
-
-        const validator = new ActivateRequestValidator();
-        this.validator = new RoutupContainerAdapter(validator);
+        this.service = ctx.service;
     }
 
     @DPost('', [])
     async execute(
-        @DRequest() req: Request,
+        @DBody() data: any,
+            @DRequest() req: Request,
             @DResponse() res: Response,
     ): Promise<any> {
-        const data = await this.validator.run(req);
+        const validator = new ActivateRequestValidator();
+        const validated = await validator.run(data);
 
-        const entity = await this.repository.findOneBy({
-            activate_hash: data.token,
-        });
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        entity.active = true;
-        entity.activate_hash = null;
-
-        await this.repository.save(entity);
+        await this.service.activate(validated);
 
         return sendAccepted(res);
     }

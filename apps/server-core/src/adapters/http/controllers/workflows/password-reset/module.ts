@@ -5,73 +5,36 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { PasswordResetResponse } from '@authup/core-http-kit';
-import { User } from '@authup/core-kit';
-import { NotFoundError } from '@ebec/http';
+import type { PasswordResetResponse } from '@authup/core-http-kit';
 import {
-    DController, DPost, DRequest, DResponse,
+    DBody, DController, DPost, DRequest, DResponse,
 } from '@routup/decorators';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import type { FindOptionsWhere } from 'typeorm';
-import type { IRealmRepository, IUserRepository } from '../../../../../core/index.ts';
-import { PasswordResetRequestValidator } from './validator.ts';
+import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
 
 export type PasswordResetControllerContext = {
-    repository: IUserRepository,
-    realmRepository: IRealmRepository,
+    service: IPasswordRecoveryService,
 };
 
 @DController('/password-reset')
 export class PasswordResetController {
-    protected repository: IUserRepository;
-
-    protected realmRepository: IRealmRepository;
-
-    protected validator : RoutupContainerAdapter<User & { token: string }>;
+    protected service: IPasswordRecoveryService;
 
     constructor(ctx: PasswordResetControllerContext) {
-        this.repository = ctx.repository;
-        this.realmRepository = ctx.realmRepository;
-
-        const validator = new PasswordResetRequestValidator();
-        this.validator = new RoutupContainerAdapter(validator);
+        this.service = ctx.service;
     }
 
     @DPost('', [])
     async execute(
-        @DRequest() req: Request,
+        @DBody() data: any,
+            @DRequest() req: Request,
             @DResponse() res: Response,
     ): Promise<PasswordResetResponse> {
-        const data = await this.validator.run(req);
-
-        await this.repository.validateJoinColumns(data);
-
-        const where : FindOptionsWhere<User> = {
-            ...(data.name ? { name: data.name } : {}),
-            ...(data.email ? { email: data.email } : {}),
-            reset_hash: data.token,
-        };
-
-        const realm = await this.realmRepository.resolve(data.realm_id, true);
-        where.realm_id = realm.id;
-
-        const entity = await this.repository.findOneBy(where);
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        entity.reset_at = new Date().toISOString();
-        entity.reset_hash = null;
-        entity.reset_expires = null;
-
-        await this.repository.save(entity);
+        const result = await this.service.resetPassword(data);
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        return sendAccepted(res, {
-            reset_at: entity.reset_at,
-        });
+        return sendAccepted(res, result);
     }
 }

@@ -34,8 +34,9 @@ function buildTestConfig(): Config {
     config.redis = false;
     config.vault = false;
 
-    config.registration = true;
-    config.emailVerification = true;
+    config.registrationEnabled = true;
+    config.emailVerificationEnabled = true;
+    config.passwordRecoveryEnabled = true;
 
     return config;
 }

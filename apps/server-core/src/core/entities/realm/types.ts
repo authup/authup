@@ -6,9 +6,24 @@
  */
 
 import type { Realm } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { ActorContext } from '../actor/types.ts';
+import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
 export interface IRealmRepository extends IEntityRepository<Realm> {
     resolve(id: string | undefined, withFallback: true): Promise<Realm>;
     resolve(id: string | undefined, withFallback?: boolean): Promise<Realm | null>;
+}
+
+export interface IRealmService {
+    getMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<Realm>>;
+    getOne(idOrName: string): Promise<Realm>;
+    create(data: Record<string, any>, actor: ActorContext): Promise<Realm>;
+    update(idOrName: string, data: Record<string, any>, actor: ActorContext): Promise<Realm>;
+    save(
+        idOrName: string | undefined,
+        data: Record<string, any>,
+        actor: ActorContext,
+        options?: { updateOnly?: boolean },
+    ): Promise<{ entity: Realm, created: boolean }>;
+    delete(id: string, actor: ActorContext): Promise<Realm>;
 }

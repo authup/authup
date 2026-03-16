@@ -5,43 +5,34 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { OAuth2SubKind } from '@authup/specs';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
-import {
-    PermissionName, REALM_MASTER_NAME, RobotValidator,
-    ValidatorGroup,
-} from '@authup/core-kit';
+import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { Realm, Robot } from '@authup/core-kit';
-import type { Request, Response } from 'routup';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import { isVaultClientUsable } from '@authup/server-kit';
 import type { DataSource } from 'typeorm';
-import type { IRealmRepository, IRobotRepository } from '../../../../../core/index.ts';
+import type { IRealmRepository, IRobotRepository, IRobotService } from '../../../../../core/index.ts';
 import { OAuth2ScopeAttributesResolver, RobotCredentialsService } from '../../../../../core/index.ts';
 import { RobotEntity, RobotRepository } from '../../../../database/domains/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../services/index.ts';
 import {
-    getRequestBodyRealmID,
-    getRequestParamID,
+    buildActorContext,
     useRequestIdentity,
-    useRequestIdentityOrFail,
-    useRequestParamID,
-    useRequestPermissionChecker,
     useRequestScopes,
 } from '../../../request/index.ts';
 
 export type RobotControllerContext = {
+    service: IRobotService,
     repository: IRobotRepository,
     realmRepository: IRealmRepository,
     dataSource: DataSource,
@@ -50,6 +41,8 @@ export type RobotControllerContext = {
 @DTags('robot')
 @DController('/robots')
 export class RobotController {
+    protected service: IRobotService;
+
     protected repository: IRobotRepository;
 
     protected realmRepository: IRealmRepository;
@@ -57,6 +50,7 @@ export class RobotController {
     protected dataSource: DataSource;
 
     constructor(ctx: RobotControllerContext) {
+        this.service = ctx.service;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.dataSource = ctx.dataSource;
@@ -67,65 +61,27 @@ export class RobotController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
-            name: [
-                PermissionName.ROBOT_READ,
-                PermissionName.ROBOT_UPDATE,
-                PermissionName.ROBOT_DELETE,
-            ],
-        });
+        const actor = buildActorContext(req);
+        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
 
-        const { data: entities, meta } = await this.repository.findMany(useRequestQuery(req));
-
-        const identity = useRequestIdentity(req);
-
-        const data: Robot[] = [];
-        let { total } = meta;
-        for (let i = 0; i < entities.length; i++) {
-            if (
-                identity &&
-                identity.type === 'robot' &&
-                identity.id === entities[i].id
-            ) {
-                data.push(entities[i]);
-                continue;
-            }
-
-            try {
-                await permissionChecker.checkOneOf({
-                    name: [
-                        PermissionName.ROBOT_READ,
-                        PermissionName.ROBOT_UPDATE,
-                        PermissionName.ROBOT_DELETE,
-                    ],
-                    input: new PolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entities[i],
-                    }),
-                });
-
-                data.push(entities[i]);
-            } catch (e) {
-                total -= 1;
-            }
-        }
-
-        return send(res, {
-            data,
-            meta: {
-                ...meta,
-                total,
-            },
-        });
+        return send(res, { data, meta });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: Robot,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        return this.write(req, res);
+        const actor = buildActorContext(req);
+        const { entity } = await this.service.save(undefined, data, actor);
+
+        if (isRobotSynchronizationServiceUsable()) {
+            const robotSynchronizationService = useRobotSynchronizationService();
+            await robotSynchronizationService.save(entity);
+        }
+
+        return sendCreated(res, entity);
     }
 
     @DGet('/:id/integrity', [])
@@ -134,7 +90,7 @@ export class RobotController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        return this.handleIntegrity(req, res);
+        return this.handleIntegrity(id, req, res);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -143,26 +99,20 @@ export class RobotController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-
-        const paramId = useRequestParamID(req, {
-            isUUID: false,
-        });
-
         const identity = useRequestIdentity(req);
         let isMe = false;
 
         if (
-            isSelfToken(paramId) &&
+            isSelfToken(id) &&
             identity &&
             identity.type === 'robot'
         ) {
             isMe = true;
-        } else if (isUUID(paramId)) {
+        } else if (isUUID(id)) {
             if (
                 identity &&
                 identity.type === 'robot' &&
-                paramId === identity.id
+                id === identity.id
             ) {
                 isMe = true;
             }
@@ -174,7 +124,7 @@ export class RobotController {
             if (
                 identity.realmId === realm.id &&
                 identity.data &&
-                identity.data.name === paramId
+                identity.data.name === id
             ) {
                 isMe = true;
             }
@@ -186,7 +136,7 @@ export class RobotController {
             const attributesResolver = new OAuth2ScopeAttributesResolver();
             const attributes = attributesResolver.resolveFor(OAuth2SubKind.ROBOT, useRequestScopes(req));
 
-            const resolvedId = isSelfToken(paramId) ? identity!.id : paramId;
+            const resolvedId = isSelfToken(id) ? identity!.id : id;
             entity = await this.repository.findOneByIdOrName(
                 resolvedId,
                 useRequestParam(req, 'realmId'),
@@ -208,40 +158,18 @@ export class RobotController {
                 }
             }
         } else {
-            await permissionChecker.preCheckOneOf({
-                name: [
-                    PermissionName.ROBOT_READ,
-                    PermissionName.ROBOT_UPDATE,
-                    PermissionName.ROBOT_DELETE,
-                ],
-            });
+            const actor = buildActorContext(req);
+            entity = await this.service.getOne(
+                id,
+                actor,
+                useRequestParam(req, 'realmId'),
+            );
 
-            if (isUUID(paramId)) {
-                entity = await this.repository.findOneById(paramId);
-            } else {
-                const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'), true);
-                entity = await this.repository.findOneBy({
-                    name: paramId,
-                    realm_id: realm.id,
-                });
-            }
+            return send(res, entity);
         }
 
         if (!entity) {
             throw new NotFoundError();
-        }
-
-        if (!isMe) {
-            await permissionChecker.check({
-                name: [
-                    PermissionName.ROBOT_READ,
-                    PermissionName.ROBOT_UPDATE,
-                    PermissionName.ROBOT_DELETE,
-                ],
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
-            });
         }
 
         return send(res, entity);
@@ -250,23 +178,54 @@ export class RobotController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: Pick<Robot, 'name'>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        return this.write(req, res, {
-            updateOnly: true,
-        });
+        const actor = buildActorContext(req);
+        const { entity } = await this.service.save(
+            id,
+            data,
+            actor,
+            { updateOnly: true },
+        );
+
+        if (data.secret) {
+            if (isRobotSynchronizationServiceUsable()) {
+                const robotSynchronizationService = useRobotSynchronizationService();
+                await robotSynchronizationService.save(entity);
+            }
+        }
+
+        return sendAccepted(res, entity);
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: Pick<Robot, 'name'>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        return this.write(req, res);
+        const actor = buildActorContext(req);
+        const { entity, created } = await this.service.save(
+            id || undefined,
+            data,
+            actor,
+        );
+
+        if (created || data.secret) {
+            if (isRobotSynchronizationServiceUsable()) {
+                const robotSynchronizationService = useRobotSynchronizationService();
+                await robotSynchronizationService.save(entity);
+            }
+        }
+
+        if (created) {
+            return sendCreated(res, entity);
+        }
+
+        return sendAccepted(res, entity);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -275,35 +234,8 @@ export class RobotController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const paramId = useRequestParamID(req);
-
-        const entity = await this.repository.findOneBy({ id: paramId });
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        const permissionChecker = useRequestPermissionChecker(req);
-        const identity = useRequestIdentity(req);
-        if (
-            !entity.user_id ||
-            !identity ||
-            identity.type !== 'user' ||
-            entity.user_id !== identity.id
-        ) {
-            await permissionChecker.check({
-                name: PermissionName.ROBOT_DELETE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
-            });
-        }
-
-        const { id: entityId } = entity;
-
-        await this.repository.remove(entity);
-
-        entity.id = entityId;
+        const actor = buildActorContext(req);
+        const entity = await this.service.delete(id, actor);
 
         if (isRobotSynchronizationServiceUsable()) {
             const robotSynchronizationService = useRobotSynchronizationService();
@@ -315,125 +247,7 @@ export class RobotController {
 
     // ------------------------------------------------------------------
 
-    private async write(req: Request, res: Response, options: {
-        updateOnly?: boolean
-    } = {}): Promise<any> {
-        let group: string;
-        const id = getRequestParamID(req, { isUUID: false });
-        const realmId = getRequestBodyRealmID(req);
-
-        let entity: Robot | null | undefined;
-        if (id) {
-            const where: Record<string, any> = {};
-            if (isUUID(id)) {
-                where.id = id;
-            } else {
-                where.name = id;
-            }
-
-            if (realmId) {
-                where.realm_id = realmId;
-            }
-
-            entity = await this.repository.findOneBy(where);
-            if (!entity && options.updateOnly) {
-                throw new NotFoundError();
-            }
-        } else if (options.updateOnly) {
-            throw new NotFoundError();
-        }
-
-        const permissionChecker = useRequestPermissionChecker(req);
-        if (entity) {
-            await permissionChecker.preCheck({ name: PermissionName.ROBOT_UPDATE });
-
-            group = ValidatorGroup.UPDATE;
-        } else {
-            await permissionChecker.preCheck({ name: PermissionName.ROBOT_CREATE });
-
-            group = ValidatorGroup.CREATE;
-        }
-
-        const validator = new RobotValidator();
-        const validatorAdapter = new RoutupContainerAdapter(validator);
-        const data = await validatorAdapter.run(req, {
-            group,
-        });
-
-        await this.repository.validateJoinColumns(data);
-
-        await this.repository.checkUniqueness(data, entity || undefined);
-
-        const credentialsService = new RobotCredentialsService();
-
-        if (entity) {
-            await permissionChecker.check({
-                name: PermissionName.ROBOT_UPDATE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: {
-                        ...entity,
-                        ...data,
-                    },
-                }),
-            });
-
-            entity = this.repository.merge(entity, data);
-            if (data.secret) {
-                entity.secret = await credentialsService.protect(data.secret);
-            }
-
-            await this.repository.save(entity);
-
-            if (data.secret) {
-                entity.secret = data.secret;
-
-                if (isRobotSynchronizationServiceUsable()) {
-                    const robotSynchronizationService = useRobotSynchronizationService();
-                    await robotSynchronizationService.save(entity);
-                }
-            }
-
-            return sendAccepted(res, entity);
-        }
-
-        if (!data.realm_id) {
-            const identity = useRequestIdentityOrFail(req);
-            data.realm_id = identity.realmId;
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.ROBOT_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: data,
-            }),
-        });
-
-        if (!data.secret) {
-            data.secret = credentialsService.generateSecret();
-        }
-
-        entity = this.repository.create(data);
-
-        entity.secret = await credentialsService.protect(data.secret);
-        await this.repository.save(entity);
-
-        entity.secret = data.secret;
-
-        if (isRobotSynchronizationServiceUsable()) {
-            const robotSynchronizationService = useRobotSynchronizationService();
-            await robotSynchronizationService.save(entity);
-        }
-
-        return sendCreated(res, entity);
-    }
-
-    // ------------------------------------------------------------------
-
-    private async handleIntegrity(req: Request, res: Response): Promise<any> {
-        const id = useRequestParamID(req, {
-            isUUID: false,
-        });
-
+    private async handleIntegrity(id: string, req: any, res: any): Promise<any> {
         const robotRepository = new RobotRepository(this.dataSource);
         const query = robotRepository.createQueryBuilder('robot');
 

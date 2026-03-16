@@ -94,19 +94,19 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.tokenRefreshMaxAge = tokenRefreshMaxAge;
     }
 
-    const registration = readBool(ConfigEnvironmentVariableName.REGISTRATION);
-    if (typeof registration !== 'undefined') {
-        options.registration = registration;
+    const registrationEnabled = readBool(ConfigEnvironmentVariableName.REGISTRATION_ENABLED);
+    if (typeof registrationEnabled !== 'undefined') {
+        options.registrationEnabled = registrationEnabled;
     }
 
-    const emailVerification = readBool(ConfigEnvironmentVariableName.EMAIL_VERIFICATION);
-    if (typeof registration !== 'undefined') {
-        options.emailVerification = emailVerification;
+    const emailVerificationEnabled = readBool(ConfigEnvironmentVariableName.EMAIL_VERIFICATION_ENABLED);
+    if (typeof emailVerificationEnabled !== 'undefined') {
+        options.emailVerificationEnabled = emailVerificationEnabled;
     }
 
-    const forgotPassword = readBool(ConfigEnvironmentVariableName.FORGOT_PASSWORD);
-    if (typeof forgotPassword !== 'undefined') {
-        options.forgotPassword = forgotPassword;
+    const passwordRecoveryEnabled = readBool(ConfigEnvironmentVariableName.PASSWORD_RECOVERY_ENABLED);
+    if (typeof passwordRecoveryEnabled !== 'undefined') {
+        options.passwordRecoveryEnabled = passwordRecoveryEnabled;
     }
 
     // ---------------------------------------------------------------

@@ -14,56 +14,44 @@ import {
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { isPropertySet, isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
-import {
-    PermissionName, PermissionValidator, ValidatorGroup,
-} from '@authup/core-kit';
-import type { Permission } from '@authup/core-kit';
-import type { Request, Response } from 'routup';
+import { isUUID } from '@authup/kit';
+import { NotFoundError } from '@ebec/http';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { DataSource } from 'typeorm';
-import type { IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
+import type { IPermissionRepository, IPermissionService, IRealmRepository } from '../../../../../core/index.ts';
 import { PermissionDatabaseRepository, PolicyEngine } from '../../../../../security/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
-    getRequestBodyRealmID,
-    getRequestParamID,
-    isRequestIdentityMasterRealmMember,
+    buildActorContext,
     useRequestIdentity,
-    useRequestIdentityOrFail,
-    useRequestParamID,
-    useRequestPermissionChecker,
 } from '../../../request/index.ts';
 
 export type PermissionControllerContext = {
+    service: IPermissionService,
     repository: IPermissionRepository,
     realmRepository: IRealmRepository,
     dataSource: DataSource,
-    defaultPolicyId?: string,
 };
 
 @DTags('permission')
 @DController('/permissions')
 export class PermissionController {
+    protected service: IPermissionService;
+
     protected repository: IPermissionRepository;
 
     protected realmRepository: IRealmRepository;
 
     protected dataSource: DataSource;
 
-    protected defaultPolicyId?: string;
-
     constructor(ctx: PermissionControllerContext) {
+        this.service = ctx.service;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.dataSource = ctx.dataSource;
-        this.defaultPolicyId = ctx.defaultPolicyId;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -71,35 +59,27 @@ export class PermissionController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
-            name: [
-                PermissionName.PERMISSION_READ,
-                PermissionName.PERMISSION_UPDATE,
-                PermissionName.PERMISSION_DELETE,
-            ],
-        });
+        const actor = buildActorContext(req);
+        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
 
-        const { data, meta } = await this.repository.findMany(useRequestQuery(req));
-
-        return send(res, {
-            data,
-            meta,
-        });
+        return send(res, { data, meta });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: NonNullable<Permission>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        return this.write(req, res);
+        const actor = buildActorContext(req);
+        const entity = await this.service.create(data, actor);
+
+        return sendCreated(res, entity);
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
     async check(
-        @DBody() body: NonNullable<Record<string, any>>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
@@ -121,7 +101,6 @@ export class PermissionController {
             throw new NotFoundError();
         }
 
-        const data = useRequestBody(req);
         if (typeof data[BuiltInPolicyType.IDENTITY] === 'undefined') {
             data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
         }
@@ -166,27 +145,12 @@ export class PermissionController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
-            name: [
-                PermissionName.PERMISSION_READ,
-                PermissionName.PERMISSION_UPDATE,
-                PermissionName.PERMISSION_DELETE,
-            ],
-        });
-
-        const paramId = useRequestParamID(req, {
-            isUUID: false,
-        });
-
-        const entity = await this.repository.findOneByIdOrName(
-            paramId,
+        const actor = buildActorContext(req);
+        const entity = await this.service.getOne(
+            id,
+            actor,
             useRequestParam(req, 'realmId'),
         );
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
 
         return send(res, entity);
     }
@@ -194,21 +158,39 @@ export class PermissionController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<Permission>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        return this.write(req, res, { updateOnly: true });
+        const actor = buildActorContext(req);
+        const entity = await this.service.update(
+            id,
+            data,
+            actor,
+        );
+
+        return sendAccepted(res, entity);
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<Permission>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        return this.write(req, res);
+        const actor = buildActorContext(req);
+        const { entity, created } = await this.service.save(
+            id || undefined,
+            data,
+            actor,
+        );
+
+        if (created) {
+            return sendCreated(res, entity);
+        }
+
+        return sendAccepted(res, entity);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -217,156 +199,9 @@ export class PermissionController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const paramId = useRequestParamID(req);
-
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({ name: PermissionName.PERMISSION_DELETE });
-
-        const entity = await this.repository.findOneBy({ id: paramId });
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        if (entity.built_in) {
-            throw new BadRequestError('A built-in permission can not be deleted.');
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.PERMISSION_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
-        });
-
-        const { id: entityId } = entity;
-
-        await this.repository.remove(entity);
-
-        entity.id = entityId;
+        const actor = buildActorContext(req);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
-    }
-
-    // ------------------------------------------------------------------
-
-    private async write(req: Request, res: Response, options: {
-        updateOnly?: boolean
-    } = {}): Promise<any> {
-        let group: string;
-        const id = getRequestParamID(req, { isUUID: false });
-        const realmId = getRequestBodyRealmID(req);
-
-        let entity: Permission | null | undefined;
-        if (id) {
-            const where: Record<string, any> = {};
-            if (isUUID(id)) {
-                where.id = id;
-            } else {
-                where.name = id;
-            }
-
-            if (realmId) {
-                where.realm_id = realmId;
-            }
-
-            entity = await this.repository.findOneBy(where);
-            if (!entity && options.updateOnly) {
-                throw new NotFoundError();
-            }
-        } else if (options.updateOnly) {
-            throw new NotFoundError();
-        }
-
-        const permissionChecker = useRequestPermissionChecker(req);
-        if (entity) {
-            await permissionChecker.preCheck({ name: PermissionName.PERMISSION_UPDATE });
-
-            group = ValidatorGroup.UPDATE;
-        } else {
-            await permissionChecker.preCheck({ name: PermissionName.PERMISSION_CREATE });
-
-            group = ValidatorGroup.CREATE;
-        }
-
-        const validator = new PermissionValidator();
-        const validatorAdapter = new RoutupContainerAdapter(validator);
-        const data = await validatorAdapter.run(req, {
-            group,
-        });
-
-        if (!entity && this.defaultPolicyId && typeof data.policy_id === 'undefined') {
-            data.policy_id = this.defaultPolicyId;
-        }
-
-        await this.repository.validateJoinColumns(data);
-
-        if (entity) {
-            if (
-                entity.built_in &&
-                isPropertySet(data, 'name') &&
-                entity.name !== data.name
-            ) {
-                throw new BadRequestError('The name of a built-in permission can not be changed.');
-            }
-
-            await permissionChecker.check({
-                name: PermissionName.PERMISSION_UPDATE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: {
-                        ...entity,
-                        ...data,
-                    },
-                }),
-            });
-        } else {
-            if (!data.realm_id) {
-                const identity = useRequestIdentityOrFail(req);
-                if (!isRequestIdentityMasterRealmMember(identity)) {
-                    data.realm_id = identity.realmId;
-                }
-            }
-
-            await permissionChecker.check({
-                name: PermissionName.PERMISSION_CREATE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: data,
-                }),
-            });
-        }
-
-        await this.repository.checkUniqueness(data, entity || undefined);
-
-        if (entity) {
-            entity = this.repository.merge(entity, data);
-
-            if (
-                data.policy &&
-                data.policy.realm_id &&
-                entity.realm_id &&
-                data.policy.realm_id !== entity.realm_id
-            ) {
-                throw new BadRequestError('Policy realm and permission realm must be equal.');
-            }
-
-            await this.repository.save(entity);
-
-            return sendAccepted(res, entity);
-        }
-
-        if (
-            data.policy &&
-            data.policy.realm_id &&
-            data.realm_id &&
-            data.policy.realm_id !== data.realm_id
-        ) {
-            throw new BadRequestError('Policy realm and permission realm must be equal.');
-        }
-
-        entity = this.repository.create(data);
-
-        await this.repository.saveWithAdminRoleAssignment(entity);
-
-        return sendCreated(res, entity);
     }
 }

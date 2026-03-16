@@ -8,33 +8,25 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
-import type { RoleAttribute } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import type { IRoleAttributeRepository } from '../../../../../core/index.ts';
+import type { IRoleAttributeService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { RoleAttributeRequestValidator } from './utils/index.ts';
 import {
-    RequestHandlerOperation,
-    useRequestParamID,
-    useRequestPermissionChecker,
+    buildActorContext,
 } from '../../../request/index.ts';
 
 export type RoleAttributeControllerContext = {
-    repository: IRoleAttributeRepository,
+    service: IRoleAttributeService,
 };
 
 @DTags('role')
 @DController('/role-attributes')
 export class RoleAttributeController {
-    protected repository: IRoleAttributeRepository;
+    protected service: IRoleAttributeService;
 
     constructor(ctx: RoleAttributeControllerContext) {
-        this.repository = ctx.repository;
+        this.service = ctx.service;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -42,76 +34,20 @@ export class RoleAttributeController {
         @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
-            name: [
-                PermissionName.ROLE_READ,
-                PermissionName.ROLE_UPDATE,
-                PermissionName.ROLE_DELETE,
-            ],
-        });
+        const actor = buildActorContext(req);
+        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
 
-        const { data: entities, meta } = await this.repository.findMany(useRequestQuery(req));
-
-        const data: RoleAttribute[] = [];
-        let { total } = meta;
-
-        for (let i = 0; i < entities.length; i++) {
-            try {
-                await permissionChecker.checkOneOf({
-                    name: [
-                        PermissionName.ROLE_READ,
-                        PermissionName.ROLE_UPDATE,
-                        PermissionName.ROLE_DELETE,
-                    ],
-                    input: new PolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entities[i],
-                    }),
-                });
-                data.push(entities[i]);
-            } catch (e) {
-                total--;
-            }
-        }
-
-        return send(res, {
-            data,
-            meta: {
-                ...meta,
-                total,
-            },
-        });
+        return send(res, { data, meta });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() user: NonNullable<RoleAttribute>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
-
-        const validator = new RoleAttributeRequestValidator();
-        const validatorAdapter = new RoutupContainerAdapter(validator);
-        const data = await validatorAdapter.run(req, {
-            group: RequestHandlerOperation.CREATE,
-        });
-
-        await this.repository.validateJoinColumns(data);
-
-        data.realm_id = data.role.realm_id;
-
-        const entity = this.repository.create(data);
-
-        await permissionChecker.check({
-            name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
-        });
-
-        await this.repository.save(entity);
+        const actor = buildActorContext(req);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -122,33 +58,8 @@ export class RoleAttributeController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
-            name: [
-                PermissionName.ROLE_READ,
-                PermissionName.ROLE_UPDATE,
-                PermissionName.ROLE_DELETE,
-            ],
-        });
-
-        const paramId = useRequestParamID(req);
-
-        const entity = await this.repository.findOneBy({ id: paramId });
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        await permissionChecker.checkOneOf({
-            name: [
-                PermissionName.ROLE_READ,
-                PermissionName.ROLE_UPDATE,
-                PermissionName.ROLE_DELETE,
-            ],
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
-        });
+        const actor = buildActorContext(req);
+        const entity = await this.service.getOne(id, actor);
 
         return send(res, entity);
     }
@@ -156,38 +67,12 @@ export class RoleAttributeController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<RoleAttribute>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
-
-        const paramId = useRequestParamID(req);
-
-        const validator = new RoleAttributeRequestValidator();
-        const validatorAdapter = new RoutupContainerAdapter(validator);
-        const data = await validatorAdapter.run(req, {
-            group: RequestHandlerOperation.UPDATE,
-        });
-
-        await this.repository.validateJoinColumns(data);
-
-        let entity = await this.repository.findOneBy({ id: paramId });
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        entity = this.repository.merge(entity, data);
-
-        await permissionChecker.check({
-            name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
-        });
-
-        await this.repository.save(entity);
+        const actor = buildActorContext(req);
+        const entity = await this.service.update(id, data, actor);
 
         return sendAccepted(res, entity);
     }
@@ -198,29 +83,8 @@ export class RoleAttributeController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
-
-        const paramId = useRequestParamID(req);
-
-        const entity = await this.repository.findOneBy({ id: paramId });
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        await permissionChecker.check({
-            name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
-        });
-
-        const { id: entityId } = entity;
-
-        await this.repository.remove(entity);
-
-        entity.id = entityId;
+        const actor = buildActorContext(req);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }

@@ -62,9 +62,9 @@ export function parseConfig(input: unknown = {}): ConfigInput {
             .nonnegative().optional(),
         tokenRefreshMaxAge: zod.number()
             .nonnegative().optional(),
-        registration: zod.boolean().optional(),
-        emailVerification: zod.boolean().optional(),
-        forgotPassword: zod.boolean().optional(),
+        registrationEnabled: zod.boolean().optional(),
+        emailVerificationEnabled: zod.boolean().optional(),
+        passwordRecoveryEnabled: zod.boolean().optional(),
 
         clientAuthBasic: zod.boolean().optional(),
         clientSystemEnabled: zod.boolean().optional(),
