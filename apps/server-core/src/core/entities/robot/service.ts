@@ -257,12 +257,14 @@ export class RobotService extends AbstractEntityService implements IRobotService
             throw new NotFoundError();
         }
 
-        if (
-            !entity.user_id ||
-            !actor.identity ||
-            actor.identity.type !== 'user' ||
-            actor.identity.data.id !== entity.user_id
-        ) {
+        const isOwner = entity.user_id &&
+            actor.identity &&
+            actor.identity.type === 'user' &&
+            actor.identity.data.id === entity.user_id;
+
+        if (!isOwner) {
+            await actor.permissionChecker.preCheck({ name: PermissionName.ROBOT_DELETE });
+
             await actor.permissionChecker.check({
                 name: PermissionName.ROBOT_DELETE,
                 input: new PolicyData({
