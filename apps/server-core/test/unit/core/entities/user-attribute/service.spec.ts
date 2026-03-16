@@ -84,7 +84,7 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -150,7 +150,7 @@ describe('core/entities/user-attribute/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'attr', value: 'val' }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 

@@ -11,7 +11,7 @@ import type { Permission } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
@@ -82,7 +82,7 @@ describe('core/entities/permission/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -125,7 +125,7 @@ describe('core/entities/permission/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-perm' }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
 
         it('should assign default policy_id when provided and no explicit policy_id', async () => {
@@ -371,7 +371,7 @@ describe('core/entities/permission/service', () => {
 
             await expect(
                 service.delete(id, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 });

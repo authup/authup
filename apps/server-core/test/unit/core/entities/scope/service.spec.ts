@@ -11,7 +11,7 @@ import type { Scope } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
-import { NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { ScopeService } from '../../../../../src/core/entities/scope/service.ts';
 import type { IScopeRepository } from '../../../../../src/core/entities/scope/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
@@ -66,7 +66,7 @@ describe('core/entities/scope/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -109,13 +109,13 @@ describe('core/entities/scope/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-scope' }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
 
         it('should reject invalid name (too short)', async () => {
             await expect(
                 service.create({ name: 'ab' }, createAllowAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(/name/i);
         });
     });
 
@@ -206,7 +206,7 @@ describe('core/entities/scope/service', () => {
 
             await expect(
                 service.delete(id, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 });

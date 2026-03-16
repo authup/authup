@@ -109,7 +109,7 @@ describe('core/entities/robot/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -182,7 +182,7 @@ describe('core/entities/robot/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-robot' }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
 
         it('should set realm_id from actor for non-master realm', async () => {

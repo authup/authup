@@ -14,7 +14,7 @@ import type { Role } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { RoleService } from '../../../../../src/core/entities/role/service.ts';
 import type { IRoleRepository } from '../../../../../src/core/entities/role/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
@@ -72,7 +72,7 @@ describe('core/entities/role/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -107,7 +107,7 @@ describe('core/entities/role/service', () => {
 
             await expect(
                 service.getOne('test-role', createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -146,13 +146,13 @@ describe('core/entities/role/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-role' }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
 
         it('should reject invalid name (too short)', async () => {
             await expect(
                 service.create({ name: 'ab' }, createAllowAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(/name/i);
         });
 
         it('should persist the entity in the repository', async () => {
@@ -303,7 +303,7 @@ describe('core/entities/role/service', () => {
 
             await expect(
                 service.delete(id, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
 
         it('should call preCheck with ROLE_DELETE permission', async () => {

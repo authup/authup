@@ -11,7 +11,7 @@ import type { ClientRole } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
-import { NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientRoleService } from '../../../../../src/core/entities/client-role/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -42,7 +42,7 @@ describe('core/entities/client-role/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -85,7 +85,7 @@ describe('core/entities/client-role/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ client_id: randomUUID(), role_id: randomUUID() }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 

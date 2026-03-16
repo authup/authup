@@ -38,17 +38,20 @@ describe('core/entities/role-attribute/service', () => {
         });
 
         it('should filter out entities that fail per-record permission check', async () => {
+            const allowedId = randomUUID();
+            const deniedId = randomUUID();
             repository.seed([
-                { id: randomUUID(), name: 'allowed', role_id: 'role-1' } as RoleAttribute,
-                { id: randomUUID(), name: 'denied', role_id: 'role-2' } as RoleAttribute,
+                { id: allowedId, name: 'allowed', role_id: 'role-1' } as RoleAttribute,
+                { id: deniedId, name: 'denied', role_id: 'role-2' } as RoleAttribute,
             ]);
 
             const actor = createAllowAllActor();
-            let callCount = 0;
-            vi.mocked(actor.permissionChecker.checkOneOf).mockImplementation(async () => {
-                callCount++;
-                if (callCount === 2) {
-                    throw new ForbiddenError();
+            vi.mocked(actor.permissionChecker.checkOneOf).mockImplementation(async (ctx: any) => {
+                if (ctx.input) {
+                    const entity = ctx.input.get('attributes');
+                    if (entity && entity.id === deniedId) {
+                        throw new ForbiddenError();
+                    }
                 }
             });
 
@@ -59,7 +62,7 @@ describe('core/entities/role-attribute/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -105,7 +108,7 @@ describe('core/entities/role-attribute/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'attr', role_id: randomUUID(), role: { realm_id: null } }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 

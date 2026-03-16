@@ -11,7 +11,7 @@ import type { RobotPermission } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
-import { NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RobotPermissionService } from '../../../../../src/core/entities/robot-permission/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -41,7 +41,7 @@ describe('core/entities/robot-permission/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -89,7 +89,7 @@ describe('core/entities/robot-permission/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ robot_id: randomUUID(), permission_id: randomUUID() }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 

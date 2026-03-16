@@ -65,13 +65,7 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
-            let callCount = 0;
-            vi.mocked(actor.permissionChecker.checkOneOf).mockImplementation(async () => {
-                callCount++;
-                if (callCount === 1) {
-                    throw new ForbiddenError();
-                }
-            });
+            vi.mocked(actor.permissionChecker.checkOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
@@ -95,7 +89,7 @@ describe('core/entities/client/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -175,7 +169,7 @@ describe('core/entities/client/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-client' }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
 
         it('should set realm_id from actor for non-master realm', async () => {
@@ -276,7 +270,7 @@ describe('core/entities/client/service', () => {
         it('should throw when actor lacks permission', async () => {
             const id = randomUUID();
             repository.seed([{ id, name: 'test' } as Client]);
-            await expect(service.delete(id, createDenyAllActor())).rejects.toThrow();
+            await expect(service.delete(id, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 });

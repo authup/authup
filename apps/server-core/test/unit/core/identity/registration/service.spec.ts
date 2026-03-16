@@ -201,7 +201,7 @@ describe('core/identity/registration/service', () => {
 
             await expect(
                 service.register({ name: faker.internet.username(), email: 'not-an-email', password: 'securepass123' }),
-            ).rejects.toThrow();
+            ).rejects.toThrow(/email/i);
         });
     });
 

@@ -92,7 +92,7 @@ describe('core/entities/user/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
 
         it('should always include self in results without per-record check', async () => {
@@ -169,7 +169,7 @@ describe('core/entities/user/service', () => {
 
             await expect(
                 service.getOne(otherId, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -205,7 +205,7 @@ describe('core/entities/user/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-user', email: 'test@example.com' }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
 
         it('should set realm_id from actor for non-master realm', async () => {
@@ -397,7 +397,7 @@ describe('core/entities/user/service', () => {
         it('should throw when actor lacks permission', async () => {
             const id = randomUUID();
             repository.seed([{ id, name: 'test' } as User]);
-            await expect(service.delete(id, createDenyAllActor())).rejects.toThrow();
+            await expect(service.delete(id, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 

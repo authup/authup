@@ -14,7 +14,7 @@ import type { Realm } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { RealmService } from '../../../../../src/core/entities/realm/service.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import {
@@ -80,13 +80,13 @@ describe('core/entities/realm/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-realm' }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
 
         it('should reject invalid name (too short)', async () => {
             await expect(
                 service.create({ name: 'ab' }, createAllowAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(/name/i);
         });
 
         it('should persist the entity', async () => {
@@ -222,7 +222,7 @@ describe('core/entities/realm/service', () => {
 
             await expect(
                 service.delete(id, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 });

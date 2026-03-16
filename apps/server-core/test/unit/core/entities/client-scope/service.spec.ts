@@ -11,7 +11,7 @@ import type { ClientScope } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
-import { NotFoundError } from '@ebec/http';
+import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientScopeService } from '../../../../../src/core/entities/client-scope/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -42,7 +42,7 @@ describe('core/entities/client-scope/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -85,7 +85,7 @@ describe('core/entities/client-scope/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ client_id: randomUUID(), scope_id: randomUUID() }, createDenyAllActor()),
-            ).rejects.toThrow();
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 
