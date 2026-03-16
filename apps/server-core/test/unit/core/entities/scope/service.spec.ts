@@ -66,7 +66,7 @@ describe('core/entities/scope/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -82,7 +82,7 @@ describe('core/entities/scope/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.getOne(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -109,13 +109,13 @@ describe('core/entities/scope/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-scope' }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should reject invalid name (too short)', async () => {
             await expect(
                 service.create({ name: 'ab' }, createAllowAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -131,7 +131,7 @@ describe('core/entities/scope/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -163,7 +163,7 @@ describe('core/entities/scope/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -197,7 +197,7 @@ describe('core/entities/scope/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.delete(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -206,7 +206,7 @@ describe('core/entities/scope/service', () => {
 
             await expect(
                 service.delete(id, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 });

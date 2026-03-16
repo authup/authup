@@ -117,7 +117,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionChecker.checkOneOf({
             name: [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,

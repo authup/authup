@@ -92,7 +92,7 @@ describe('core/entities/user/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrowError();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
         });
 
         it('should always include self in results without per-record check', async () => {
@@ -136,7 +136,7 @@ describe('core/entities/user/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.getOne(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should allow self-access by id without permission check', async () => {
@@ -169,7 +169,7 @@ describe('core/entities/user/service', () => {
 
             await expect(
                 service.getOne(otherId, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -205,7 +205,7 @@ describe('core/entities/user/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-user', email: 'test@example.com' }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should set realm_id from actor for non-master realm', async () => {
@@ -229,7 +229,7 @@ describe('core/entities/user/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { display_name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should hash password on update', async () => {
@@ -292,7 +292,7 @@ describe('core/entities/user/service', () => {
 
             await expect(
                 service.update(otherId, { display_name: 'x' }, actor),
-            ).rejects.toThrowError(ForbiddenError);
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -370,7 +370,7 @@ describe('core/entities/user/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.delete(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should prevent self-deletion', async () => {
@@ -381,7 +381,7 @@ describe('core/entities/user/service', () => {
 
             await expect(
                 service.delete(userId, actor),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should call preCheck with USER_DELETE', async () => {
@@ -397,7 +397,7 @@ describe('core/entities/user/service', () => {
         it('should throw when actor lacks permission', async () => {
             const id = randomUUID();
             repository.seed([{ id, name: 'test' } as User]);
-            await expect(service.delete(id, createDenyAllActor())).rejects.toThrowError();
+            await expect(service.delete(id, createDenyAllActor())).rejects.toThrow();
         });
     });
 
@@ -429,7 +429,7 @@ describe('core/entities/user/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 });

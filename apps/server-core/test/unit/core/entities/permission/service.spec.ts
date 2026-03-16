@@ -24,12 +24,24 @@ import {
 } from '../../helpers/mock-actor.ts';
 
 class FakePermissionRepository extends FakeEntityRepository<Permission> implements IPermissionRepository {
+    private policyMap: Record<string, { realm_id: string | null }> = {};
+
     async checkUniqueness(): Promise<void> {
         // no-op
     }
 
     async saveWithAdminRoleAssignment(entity: Permission): Promise<Permission> {
         return this.save(entity);
+    }
+
+    async validateJoinColumns(data: Partial<Permission>): Promise<void> {
+        if (data.policy_id && this.policyMap[data.policy_id]) {
+            (data as any).policy = this.policyMap[data.policy_id];
+        }
+    }
+
+    registerPolicy(id: string, realmId: string | null) {
+        this.policyMap[id] = { realm_id: realmId };
     }
 }
 
@@ -70,7 +82,7 @@ describe('core/entities/permission/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -86,7 +98,7 @@ describe('core/entities/permission/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.getOne(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -113,7 +125,7 @@ describe('core/entities/permission/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-perm' }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should assign default policy_id when provided and no explicit policy_id', async () => {
@@ -178,7 +190,7 @@ describe('core/entities/permission/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { description: 'x' }, createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should prevent renaming a built-in permission', async () => {
@@ -189,7 +201,7 @@ describe('core/entities/permission/service', () => {
 
             await expect(
                 service.update(id, { name: 'renamed-perm' }, createAllowAllActor()),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should allow updating built-in permission fields other than name', async () => {
@@ -205,6 +217,54 @@ describe('core/entities/permission/service', () => {
             );
 
             expect(result.description).toBe('updated description');
+        });
+    });
+
+    describe('policy realm mismatch', () => {
+        it('should throw on create when policy realm differs from permission realm', async () => {
+            const realmIdA = randomUUID();
+            const realmIdB = randomUUID();
+            const policyId = randomUUID();
+            repository.registerPolicy(policyId, realmIdB);
+
+            await expect(
+                service.create({
+                    name: 'mismatched-perm',
+                    realm_id: realmIdA,
+                    policy_id: policyId,
+                }, createAllowAllActor()),
+            ).rejects.toThrow(BadRequestError);
+        });
+
+        it('should throw on update when policy realm differs from permission realm', async () => {
+            const id = randomUUID();
+            const realmIdA = randomUUID();
+            const realmIdB = randomUUID();
+            const policyId = randomUUID();
+            repository.registerPolicy(policyId, realmIdB);
+            repository.seed([{
+                id, name: 'existing-perm', built_in: false, realm_id: realmIdA,
+            } as Permission]);
+
+            await expect(
+                service.update(id, {
+                    policy_id: policyId,
+                }, createAllowAllActor()),
+            ).rejects.toThrow(BadRequestError);
+        });
+
+        it('should allow matching policy and permission realm', async () => {
+            const realmId = randomUUID();
+            const policyId = randomUUID();
+            repository.registerPolicy(policyId, realmId);
+
+            const result = await service.create({
+                name: 'matched-perm',
+                realm_id: realmId,
+                policy_id: policyId,
+            }, createAllowAllActor());
+
+            expect(result.id).toBeDefined();
         });
     });
 
@@ -238,7 +298,7 @@ describe('core/entities/permission/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -275,7 +335,7 @@ describe('core/entities/permission/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.delete(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should prevent deletion of built-in permissions', async () => {
@@ -286,7 +346,7 @@ describe('core/entities/permission/service', () => {
 
             await expect(
                 service.delete(id, createAllowAllActor()),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should call preCheck with PERMISSION_DELETE', async () => {
@@ -311,7 +371,7 @@ describe('core/entities/permission/service', () => {
 
             await expect(
                 service.delete(id, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 });

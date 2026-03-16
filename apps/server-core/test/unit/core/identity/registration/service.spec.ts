@@ -67,7 +67,7 @@ describe('core/identity/registration/service', () => {
 
             await expect(
                 service.register(createValidRegistrationData()),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should create an active user when email verification is disabled', async () => {
@@ -122,6 +122,26 @@ describe('core/identity/registration/service', () => {
             expect(saved!.password).toMatch(/^\$2[aby]\$/);
         });
 
+        it('should auto-generate password when none provided', async () => {
+            const service = new RegistrationService({
+                options: { registrationEnabled: true },
+                mailClient,
+                repository,
+                realmRepository,
+            });
+
+            const data = {
+                name: faker.internet.username(),
+                email: faker.internet.email(),
+            };
+            await service.register(data);
+
+            const saved = await repository.findOneByName(data.name);
+            expect(saved).not.toBeNull();
+            expect(saved!.password).toBeDefined();
+            expect(saved!.password).toMatch(/^\$2[aby]\$/);
+        });
+
         it('should persist the user in the repository', async () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: true },
@@ -165,7 +185,7 @@ describe('core/identity/registration/service', () => {
 
             const data = createValidRegistrationData();
 
-            await expect(service.register(data)).rejects.toThrowError(BadRequestError);
+            await expect(service.register(data)).rejects.toThrow(BadRequestError);
 
             const saved = await repository.findOneByName(data.name);
             expect(saved).toBeNull();
@@ -181,7 +201,7 @@ describe('core/identity/registration/service', () => {
 
             await expect(
                 service.register({ name: faker.internet.username(), email: 'not-an-email', password: 'securepass123' }),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -219,7 +239,7 @@ describe('core/identity/registration/service', () => {
 
             await expect(
                 service.activate({ token: 'nonexistent-token' }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 });

@@ -53,7 +53,7 @@ describe('core/entities/realm/service', () => {
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
                 service.getOne(randomUUID()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -80,13 +80,13 @@ describe('core/entities/realm/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-realm' }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should reject invalid name (too short)', async () => {
             await expect(
                 service.create({ name: 'ab' }, createAllowAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should persist the entity', async () => {
@@ -114,7 +114,7 @@ describe('core/entities/realm/service', () => {
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should prevent renaming the master realm', async () => {
@@ -122,7 +122,7 @@ describe('core/entities/realm/service', () => {
 
             await expect(
                 service.update(masterRealm.id, { name: 'renamed-master' }, createAllowAllActor()),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should allow updating master realm fields other than name', async () => {
@@ -168,7 +168,7 @@ describe('core/entities/realm/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -189,7 +189,7 @@ describe('core/entities/realm/service', () => {
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
                 service.delete(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should prevent deletion of built-in realms', async () => {
@@ -197,7 +197,7 @@ describe('core/entities/realm/service', () => {
 
             await expect(
                 service.delete(masterRealm.id, createAllowAllActor()),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should call preCheck with REALM_DELETE permission', async () => {
@@ -222,7 +222,7 @@ describe('core/entities/realm/service', () => {
 
             await expect(
                 service.delete(id, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 });

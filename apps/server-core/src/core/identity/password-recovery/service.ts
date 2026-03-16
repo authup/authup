@@ -68,14 +68,24 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         await this.repository.save(merged);
 
-        await this.mailClient.send({
-            to: entity.email,
-            subject: 'Forgot Password - Reset code',
-            html: `
-            <p>Please use the code below to reset your account password.</p>
-            <p>${merged.reset_hash}</p>
-            `,
-        });
+        try {
+            await this.mailClient.send({
+                to: entity.email,
+                subject: 'Forgot Password - Reset code',
+                html: `
+                <p>Please use the code below to reset your account password.</p>
+                <p>${merged.reset_hash}</p>
+                `,
+            });
+        } catch (e) {
+            this.repository.merge(merged, {
+                reset_hash: null,
+                reset_expires: null,
+            });
+            await this.repository.save(merged);
+
+            throw new BadRequestError('Password recovery failed. Could not send reset email.');
+        }
 
         return {
             reset_expires: merged.reset_expires!,

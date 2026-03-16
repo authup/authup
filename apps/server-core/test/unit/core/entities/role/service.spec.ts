@@ -72,7 +72,7 @@ describe('core/entities/role/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -99,7 +99,7 @@ describe('core/entities/role/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.getOne(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -107,7 +107,7 @@ describe('core/entities/role/service', () => {
 
             await expect(
                 service.getOne('test-role', createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -131,16 +131,28 @@ describe('core/entities/role/service', () => {
             });
         });
 
+        it('should call check with ROLE_CREATE and PolicyData on create', async () => {
+            const actor = createAllowAllActor();
+            await service.create({ name: 'policy-role' }, actor);
+
+            expect(actor.permissionChecker.check).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    name: PermissionName.ROLE_CREATE,
+                    input: expect.anything(),
+                }),
+            );
+        });
+
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-role' }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should reject invalid name (too short)', async () => {
             await expect(
                 service.create({ name: 'ab' }, createAllowAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should persist the entity in the repository', async () => {
@@ -169,7 +181,7 @@ describe('core/entities/role/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { name: 'new-name' }, createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should call preCheck with ROLE_UPDATE permission', async () => {
@@ -214,13 +226,13 @@ describe('core/entities/role/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should throw NotFoundError with updateOnly and no idOrName', async () => {
             await expect(
                 service.save(undefined, { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -282,7 +294,7 @@ describe('core/entities/role/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.delete(randomUUID(), createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -291,7 +303,7 @@ describe('core/entities/role/service', () => {
 
             await expect(
                 service.delete(id, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should call preCheck with ROLE_DELETE permission', async () => {
@@ -312,7 +324,7 @@ describe('core/entities/role/service', () => {
 
             await expect(
                 service.delete(id, createAllowAllActor()),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should preserve entity id after removal', async () => {

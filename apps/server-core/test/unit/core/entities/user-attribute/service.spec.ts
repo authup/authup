@@ -84,7 +84,7 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrowError();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
         });
     });
 
@@ -104,11 +104,11 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(randomUUID());
             vi.mocked(actor.permissionChecker.check).mockRejectedValue(new ForbiddenError());
 
-            await expect(service.getOne(id, actor)).rejects.toThrowError(ForbiddenError);
+            await expect(service.getOne(id, actor)).rejects.toThrow(ForbiddenError);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrowError(NotFoundError);
+            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -144,13 +144,13 @@ describe('core/entities/user-attribute/service', () => {
 
             await expect(
                 service.create({ name: 'attr', value: 'val' }, actor),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'attr', value: 'val' }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -168,7 +168,7 @@ describe('core/entities/user-attribute/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { value: 'x' }, createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should throw ForbiddenError when actor cannot manage', async () => {
@@ -181,7 +181,7 @@ describe('core/entities/user-attribute/service', () => {
             vi.mocked(actor.permissionChecker.check).mockRejectedValue(new ForbiddenError());
             vi.mocked(actor.permissionChecker.checkOneOf).mockResolvedValue(undefined);
 
-            await expect(service.update(id, { value: 'new' }, actor)).rejects.toThrowError(ForbiddenError);
+            await expect(service.update(id, { value: 'new' }, actor)).rejects.toThrow(ForbiddenError);
         });
     });
 
@@ -195,7 +195,7 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrowError(NotFoundError);
+            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should allow self-manage for own attributes', async () => {
@@ -215,7 +215,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(randomUUID());
             vi.mocked(actor.permissionChecker.check).mockRejectedValue(new ForbiddenError());
 
-            await expect(service.delete(id, actor)).rejects.toThrowError(ForbiddenError);
+            await expect(service.delete(id, actor)).rejects.toThrow(ForbiddenError);
         });
     });
 });

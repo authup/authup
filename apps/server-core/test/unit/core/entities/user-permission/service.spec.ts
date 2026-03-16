@@ -42,7 +42,7 @@ describe('core/entities/user-permission/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrowError();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
         });
     });
 
@@ -55,7 +55,7 @@ describe('core/entities/user-permission/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrowError(NotFoundError);
+            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -90,7 +90,7 @@ describe('core/entities/user-permission/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ user_id: randomUUID(), permission_id: randomUUID() }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
     });
 
@@ -103,7 +103,7 @@ describe('core/entities/user-permission/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrowError(NotFoundError);
+            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should call preCheck with USER_PERMISSION_DELETE', async () => {

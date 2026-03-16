@@ -109,7 +109,7 @@ describe('core/entities/robot/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrowError();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
         });
     });
 
@@ -127,8 +127,16 @@ describe('core/entities/robot/service', () => {
             expect(result.name).toBe('my-robot');
         });
 
+        it('should call checkOneOf (not check) for per-record permission', async () => {
+            const id = randomUUID();
+            repository.seed([{ id, name: 'test-robot' } as Robot]);
+            const actor = createAllowAllActor();
+            await service.getOne(id, actor);
+            expect(actor.permissionChecker.checkOneOf).toHaveBeenCalled();
+        });
+
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrowError(NotFoundError);
+            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -174,7 +182,7 @@ describe('core/entities/robot/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-robot' }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should set realm_id from actor for non-master realm', async () => {
@@ -198,7 +206,7 @@ describe('core/entities/robot/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should return plaintext secret after update with new secret', async () => {
@@ -219,7 +227,7 @@ describe('core/entities/robot/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrowError(NotFoundError);
+            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should call preCheck with ROBOT_DELETE for non-owner', async () => {
@@ -262,7 +270,7 @@ describe('core/entities/robot/service', () => {
             const actor = createUserActorAsOwner(randomUUID());
             vi.mocked(actor.permissionChecker.check).mockRejectedValue(new ForbiddenError());
 
-            await expect(service.delete(robotId, actor)).rejects.toThrowError(ForbiddenError);
+            await expect(service.delete(robotId, actor)).rejects.toThrow(ForbiddenError);
         });
 
         it('should require permission check for robots with no user_id', async () => {
@@ -272,7 +280,7 @@ describe('core/entities/robot/service', () => {
             const actor = createUserActorAsOwner(randomUUID());
             vi.mocked(actor.permissionChecker.check).mockRejectedValue(new ForbiddenError());
 
-            await expect(service.delete(robotId, actor)).rejects.toThrowError(ForbiddenError);
+            await expect(service.delete(robotId, actor)).rejects.toThrow(ForbiddenError);
         });
     });
 });

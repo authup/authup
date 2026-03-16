@@ -60,7 +60,7 @@ describe('core/identity/password-recovery/service', () => {
 
             await expect(
                 service.forgotPassword({ email: faker.internet.email() }),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should throw when email verification is not enabled', async () => {
@@ -73,7 +73,7 @@ describe('core/identity/password-recovery/service', () => {
 
             await expect(
                 service.forgotPassword({ email: faker.internet.email() }),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should throw NotFoundError when user does not exist', async () => {
@@ -86,7 +86,7 @@ describe('core/identity/password-recovery/service', () => {
 
             await expect(
                 service.forgotPassword({ email: 'nonexistent@example.com' }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should set reset_hash and reset_expires and send email', async () => {
@@ -169,6 +169,33 @@ describe('core/identity/password-recovery/service', () => {
             expect(expires).toBeGreaterThanOrEqual(before + thirtyMinutes - 1000);
             expect(expires).toBeLessThanOrEqual(after + thirtyMinutes + 1000);
         });
+
+        it('should rollback reset fields on mail failure', async () => {
+            const email = faker.internet.email();
+            const userId = randomUUID();
+            const masterRealm = realmRepository.getMasterRealm();
+            repository.seed([{
+                id: userId,
+                name: 'mail-fail-user',
+                email,
+                realm_id: masterRealm.id,
+            } as User]);
+
+            vi.mocked(mailClient.send).mockRejectedValue(new Error('SMTP error'));
+
+            const service = new PasswordRecoveryService({
+                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                mailClient,
+                repository,
+                realmRepository,
+            });
+
+            await expect(service.forgotPassword({ email })).rejects.toThrow(BadRequestError);
+
+            const user = await repository.findOneById(userId);
+            expect(user!.reset_hash).toBeNull();
+            expect(user!.reset_expires).toBeNull();
+        });
     });
 
     describe('resetPassword', () => {
@@ -186,7 +213,7 @@ describe('core/identity/password-recovery/service', () => {
                     token: 'abc',
                     password: 'newpass123',
                 }),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should throw NotFoundError when token does not match', async () => {
@@ -213,7 +240,7 @@ describe('core/identity/password-recovery/service', () => {
                     token: 'wrong-token',
                     password: 'newpass123',
                 }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should throw BadRequestError when token has expired', async () => {
@@ -240,7 +267,7 @@ describe('core/identity/password-recovery/service', () => {
                     token: 'expired-token',
                     password: 'newpass123',
                 }),
-            ).rejects.toThrowError(BadRequestError);
+            ).rejects.toThrow(BadRequestError);
         });
 
         it('should reset password, clear reset fields, and hash new password', async () => {

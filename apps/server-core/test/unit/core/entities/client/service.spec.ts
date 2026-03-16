@@ -95,7 +95,7 @@ describe('core/entities/client/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrowError();
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow();
         });
     });
 
@@ -114,7 +114,7 @@ describe('core/entities/client/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrowError(NotFoundError);
+            await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should perform per-record check for plaintext secret entities', async () => {
@@ -175,7 +175,7 @@ describe('core/entities/client/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-client' }, createDenyAllActor()),
-            ).rejects.toThrowError();
+            ).rejects.toThrow();
         });
 
         it('should set realm_id from actor for non-master realm', async () => {
@@ -199,7 +199,7 @@ describe('core/entities/client/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
 
         it('should generate secret when confidential client has no secret', async () => {
@@ -247,7 +247,7 @@ describe('core/entities/client/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrowError(NotFoundError);
+            ).rejects.toThrow(NotFoundError);
         });
     });
 
@@ -260,7 +260,7 @@ describe('core/entities/client/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrowError(NotFoundError);
+            await expect(service.delete(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });
 
         it('should call preCheck with CLIENT_DELETE', async () => {
@@ -276,7 +276,7 @@ describe('core/entities/client/service', () => {
         it('should throw when actor lacks permission', async () => {
             const id = randomUUID();
             repository.seed([{ id, name: 'test' } as Client]);
-            await expect(service.delete(id, createDenyAllActor())).rejects.toThrowError();
+            await expect(service.delete(id, createDenyAllActor())).rejects.toThrow();
         });
     });
 });
