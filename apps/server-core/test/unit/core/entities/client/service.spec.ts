@@ -107,6 +107,27 @@ describe('core/entities/client/service', () => {
             expect(result.name).toBe('my-client');
         });
 
+        it('should return entity by name with realmId', async () => {
+            const realmId = randomUUID();
+            realmRepository.seed([{
+                id: realmId, name: 'client-realm', built_in: false,
+            } as any]);
+            repository.seed([{
+                name: 'scoped-client', realm_id: realmId,
+            } as Client]);
+
+            const result = await service.getOne('scoped-client', createAllowAllActor(), realmId);
+            expect(result.name).toBe('scoped-client');
+        });
+
+        it('should throw NotFoundError when realm does not exist for name lookup', async () => {
+            repository.seed([{ name: 'some-client' } as Client]);
+
+            await expect(
+                service.getOne('some-client', createAllowAllActor(), randomUUID()),
+            ).rejects.toThrow(NotFoundError);
+        });
+
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(service.getOne(randomUUID(), createAllowAllActor())).rejects.toThrow(NotFoundError);
         });

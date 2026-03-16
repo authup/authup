@@ -165,6 +165,23 @@ describe('core/entities/user-attribute/service', () => {
             expect(result.value).toBe('new-val');
         });
 
+        it('should use checkOneOf (not preCheckOneOf) for permission check', async () => {
+            const id = randomUUID();
+            repository.seed([{
+                id, name: 'attr', value: 'val', user_id: randomUUID(),
+            } as UserAttribute]);
+
+            const actor = createAllowAllActor();
+            await service.update(id, { value: 'new' }, actor);
+
+            expect(actor.permissionChecker.checkOneOf).toHaveBeenCalledWith({
+                name: [
+                    PermissionName.USER_UPDATE,
+                    PermissionName.USER_SELF_MANAGE,
+                ],
+            });
+        });
+
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update(randomUUID(), { value: 'x' }, createAllowAllActor()),

@@ -96,6 +96,12 @@ describe('core/identity/registration/service', () => {
             const result = await service.register(data);
 
             expect(result.active).toBe(false);
+
+            const saved = await repository.findOneByName(data.name);
+            expect(saved).not.toBeNull();
+            expect(saved!.activate_hash).toBeDefined();
+            expect(saved!.activate_hash).not.toBeNull();
+
             expect(mailClient.send).toHaveBeenCalledTimes(1);
             expect(mailClient.send).toHaveBeenCalledWith(
                 expect.objectContaining({

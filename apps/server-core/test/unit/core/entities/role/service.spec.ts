@@ -223,6 +223,19 @@ describe('core/entities/role/service', () => {
             expect(entity.name).toBe('updated-name');
         });
 
+        it('should update when entity found by name', async () => {
+            repository.seed([{ name: 'find-by-name' } as Role]);
+
+            const { entity, created } = await service.save(
+                'find-by-name',
+                { description: 'updated' },
+                createAllowAllActor(),
+            );
+
+            expect(created).toBe(false);
+            expect(entity.description).toBe('updated');
+        });
+
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save(randomUUID(), { name: 'test' }, createAllowAllActor(), { updateOnly: true }),

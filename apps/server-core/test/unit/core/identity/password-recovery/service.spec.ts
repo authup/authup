@@ -303,5 +303,36 @@ describe('core/identity/password-recovery/service', () => {
             expect(user!.password).toMatch(/^\$2[aby]\$/);
             expect(user!.password).not.toBe('newpass123');
         });
+
+        it('should reset password by name instead of email', async () => {
+            const masterRealm = realmRepository.getMasterRealm();
+            const userId = randomUUID();
+            repository.seed([{
+                id: userId,
+                name: 'name-reset-user',
+                email: faker.internet.email(),
+                reset_hash: 'name-token',
+                reset_expires: new Date(Date.now() + 60000).toISOString(),
+                realm_id: masterRealm.id,
+            } as User]);
+
+            const service = new PasswordRecoveryService({
+                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                mailClient,
+                repository,
+                realmRepository,
+            });
+
+            const result = await service.resetPassword({
+                name: 'name-reset-user',
+                token: 'name-token',
+                password: 'newpass456',
+            });
+
+            expect(result.reset_at).toBeDefined();
+
+            const user = await repository.findOneById(userId);
+            expect(user!.reset_hash).toBeNull();
+        });
     });
 });
