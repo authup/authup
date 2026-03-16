@@ -49,6 +49,43 @@ Location: `test/unit/http/controllers/entities/{entity}.spec.ts`
 
 Integration tests that spin up the full application (database, HTTP server). Test HTTP client compatibility (`core-http-kit`), request/response shaping, middleware pipeline, and end-to-end wiring. Require Docker services.
 
+## Code Coverage
+
+### Generate coverage report
+
+```bash
+npm run test:coverage --workspace=apps/server-core
+```
+
+This runs all tests with coverage collection and outputs:
+- Console summary table (truncated folder names, hard to read for specific files)
+- `apps/server-core/coverage/coverage-final.json` — detailed JSON report
+
+### Query coverage for specific modules
+
+After running `test:coverage`, use this from `apps/server-core/`:
+
+```bash
+node -e 'var cov=JSON.parse(require("fs").readFileSync("./coverage/coverage-final.json","utf8"));var files=Object.keys(cov).filter(function(f){return f.indexOf("PATTERN")>-1&&f.endsWith(".ts")});files.sort();files.forEach(function(f){var d=cov[f];var stmts=Object.values(d.s);var total=stmts.length;var covered=stmts.filter(function(v){return v>0}).length;var pct=total?Math.round(covered/total*100):0;var idx=f.lastIndexOf("core");var short=f.substring(idx);console.log(pct+"% ("+covered+"/"+total+") | "+short)})'
+```
+
+Replace `PATTERN` with a path fragment to filter files. Examples:
+- `core\\\\entities` — all entity service/type files
+- `core\\\\oauth2` — OAuth2 module
+- `core\\\\identity` — registration and password recovery
+- `core\\\\entities.*service` — only service implementation files
+
+**Note:** Windows paths use `\\\\` (double-escaped backslash) in the filter string.
+
+### Coverage targets
+
+| Layer | Current | Target |
+|---|---|---|
+| Core entity services (`core/entities/*/service.ts`) | 95-100% | Maintain |
+| Workflow services (`core/identity/*/service.ts`) | 94-100% | Maintain |
+| OAuth2 module (`core/oauth2/`) | Mixed (0-100%) | Improve with service-level tests |
+| HTTP controllers, adapters | Covered by HTTP integration tests | — |
+
 ## Docker Services
 
 Integration tests use Docker services defined in `docker-compose.yml`:
