@@ -18,6 +18,11 @@ export interface IScopeService {
     getOne(idOrName: string, actor: ActorContext): Promise<Scope>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Scope>;
     update(idOrName: string, data: Record<string, any>, actor: ActorContext): Promise<Scope>;
-    save(idOrName: string | undefined, data: Record<string, any>, actor: ActorContext): Promise<{ entity: Scope, created: boolean }>;
+    save(
+        idOrName: string | undefined,
+        data: Record<string, any>,
+        actor: ActorContext,
+        options?: { updateOnly?: boolean },
+    ): Promise<{ entity: Scope, created: boolean }>;
     delete(id: string, actor: ActorContext): Promise<Scope>;
 }

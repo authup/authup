@@ -19,6 +19,11 @@ export interface IRealmService {
     getOne(idOrName: string): Promise<Realm>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Realm>;
     update(idOrName: string, data: Record<string, any>, actor: ActorContext): Promise<Realm>;
-    save(idOrName: string | undefined, data: Record<string, any>, actor: ActorContext): Promise<{ entity: Realm, created: boolean }>;
+    save(
+        idOrName: string | undefined,
+        data: Record<string, any>,
+        actor: ActorContext,
+        options?: { updateOnly?: boolean },
+    ): Promise<{ entity: Realm, created: boolean }>;
     delete(id: string, actor: ActorContext): Promise<Realm>;
 }

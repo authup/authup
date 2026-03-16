@@ -83,6 +83,10 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
     }
 
     async resetPassword(data: Record<string, any>): Promise<PasswordResetResult> {
+        if (!this.options.passwordRecoveryEnabled) {
+            throw new BadRequestError('Password recovery is not enabled.');
+        }
+
         const validated = await this.runResetPasswordValidator(data);
 
         await this.repository.validateJoinColumns(validated);

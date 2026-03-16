@@ -22,6 +22,11 @@ export interface IPolicyService {
     getOne(idOrName: string, actor: ActorContext, realm?: string): Promise<Policy>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Policy>;
     update(idOrName: string, data: Record<string, any>, actor: ActorContext): Promise<Policy>;
-    save(idOrName: string | undefined, data: Record<string, any>, actor: ActorContext): Promise<{ entity: Policy, created: boolean }>;
+    save(
+        idOrName: string | undefined,
+        data: Record<string, any>,
+        actor: ActorContext,
+        options?: { updateOnly?: boolean },
+    ): Promise<{ entity: Policy, created: boolean }>;
     delete(id: string, actor: ActorContext): Promise<Policy>;
 }

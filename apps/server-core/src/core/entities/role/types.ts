@@ -18,6 +18,11 @@ export interface IRoleService {
     getOne(idOrName: string, actor: ActorContext): Promise<Role>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Role>;
     update(idOrName: string, data: Record<string, any>, actor: ActorContext): Promise<Role>;
-    save(idOrName: string | undefined, data: Record<string, any>, actor: ActorContext): Promise<{ entity: Role, created: boolean }>;
+    save(
+        idOrName: string | undefined,
+        data: Record<string, any>,
+        actor: ActorContext,
+        options?: { updateOnly?: boolean },
+    ): Promise<{ entity: Role, created: boolean }>;
     delete(id: string, actor: ActorContext): Promise<Role>;
 }

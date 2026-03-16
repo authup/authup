@@ -20,6 +20,11 @@ export interface IPermissionService {
     getOne(idOrName: string, actor: ActorContext, realm?: string): Promise<Permission>;
     create(data: Record<string, any>, actor: ActorContext): Promise<Permission>;
     update(idOrName: string, data: Record<string, any>, actor: ActorContext): Promise<Permission>;
-    save(idOrName: string | undefined, data: Record<string, any>, actor: ActorContext): Promise<{ entity: Permission, created: boolean }>;
+    save(
+        idOrName: string | undefined,
+        data: Record<string, any>,
+        actor: ActorContext,
+        options?: { updateOnly?: boolean },
+    ): Promise<{ entity: Permission, created: boolean }>;
     delete(id: string, actor: ActorContext): Promise<Permission>;
 }
