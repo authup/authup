@@ -16,7 +16,8 @@ import type {
 export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRepository<T> {
     protected store: T[] = [];
 
-    async findMany(): Promise<EntityRepositoryFindManyResult<T>> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<T>> {
         return {
             data: [...this.store],
             meta: {
@@ -80,7 +81,8 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
         }
     }
 
-    async validateJoinColumns(): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async validateJoinColumns(data: Partial<T>): Promise<void> {
         // no-op in fake
     }
 
