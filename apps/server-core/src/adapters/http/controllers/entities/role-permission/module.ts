@@ -8,15 +8,12 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { RolePermission } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
-import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IRolePermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type RolePermissionControllerContext = {
@@ -45,13 +42,13 @@ export class RolePermissionController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() body: Pick<RolePermission, 'role_id' | 'permission_id'>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -63,7 +60,7 @@ export class RolePermissionController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.getOne(useRequestParamID(req), actor);
+        const entity = await this.service.getOne(id, actor);
 
         return send(res, entity);
     }
@@ -75,7 +72,7 @@ export class RolePermissionController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }

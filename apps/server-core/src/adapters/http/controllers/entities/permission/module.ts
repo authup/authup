@@ -16,21 +16,17 @@ import {
 } from '@routup/decorators';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
-import type { Permission } from '@authup/core-kit';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
 import type { DataSource } from 'typeorm';
 import type { IPermissionRepository, IPermissionService, IRealmRepository } from '../../../../../core/index.ts';
 import { PermissionDatabaseRepository, PolicyEngine } from '../../../../../security/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    getRequestParamID,
     useRequestIdentity,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type PermissionControllerContext = {
@@ -71,19 +67,19 @@ export class PermissionController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: NonNullable<Permission>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
     async check(
-        @DBody() body: NonNullable<Record<string, any>>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
@@ -105,7 +101,6 @@ export class PermissionController {
             throw new NotFoundError();
         }
 
-        const data = useRequestBody(req);
         if (typeof data[BuiltInPolicyType.IDENTITY] === 'undefined') {
             data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
         }
@@ -152,7 +147,7 @@ export class PermissionController {
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.getOne(
-            useRequestParamID(req, { isUUID: false }),
+            id,
             actor,
             useRequestParam(req, 'realmId'),
         );
@@ -163,14 +158,14 @@ export class PermissionController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<Permission>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(
-            useRequestParamID(req, { isUUID: false }),
-            useRequestBody(req),
+            id,
+            data,
             actor,
         );
 
@@ -180,15 +175,14 @@ export class PermissionController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<Permission>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const paramId = getRequestParamID(req, { isUUID: false });
         const { entity, created } = await this.service.save(
-            paramId || undefined,
-            useRequestBody(req),
+            id || undefined,
+            data,
             actor,
         );
 
@@ -206,7 +200,7 @@ export class PermissionController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }

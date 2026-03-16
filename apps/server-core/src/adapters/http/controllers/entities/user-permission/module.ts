@@ -8,15 +8,12 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { UserPermission } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
-import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IUserPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type UserPermissionControllerContext = {
@@ -45,13 +42,13 @@ export class UserPermissionController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() body: Pick<UserPermission, 'user_id' | 'permission_id'>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -63,7 +60,7 @@ export class UserPermissionController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.getOne(useRequestParamID(req), actor);
+        const entity = await this.service.getOne(id, actor);
 
         return send(res, entity);
     }
@@ -75,7 +72,7 @@ export class UserPermissionController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }

@@ -15,16 +15,13 @@ import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
 import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import {
     buildActorContext,
-    getRequestParamID,
     useRequestIdentity,
-    useRequestParamID,
     useRequestScopes,
 } from '../../../request/index.ts';
 
@@ -62,10 +59,6 @@ export class ClientController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const paramId = useRequestParamID(req, {
-            isUUID: false,
-        });
-
         const identity = useRequestIdentity(req);
 
         let isMe = false;
@@ -73,7 +66,7 @@ export class ClientController {
             identity &&
             identity.type === 'client'
         ) {
-            isMe = isSelfToken(paramId) || identity.id === paramId;
+            isMe = isSelfToken(id) || identity.id === id;
         }
 
         if (isMe) {
@@ -103,19 +96,19 @@ export class ClientController {
         }
 
         const actor = buildActorContext(req);
-        const entity = await this.service.getOne(paramId, actor, useRequestParam(req, 'realmId'));
+        const entity = await this.service.getOne(id, actor, useRequestParam(req, 'realmId'));
 
         return send(res, entity);
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: NonNullable<Client>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -123,13 +116,12 @@ export class ClientController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<Client>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const paramId = getRequestParamID(req, { isUUID: false });
-        const entity = await this.service.update(paramId!, useRequestBody(req), actor);
+        const entity = await this.service.update(id, data, actor);
 
         return sendAccepted(res, entity);
     }
@@ -137,15 +129,14 @@ export class ClientController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<Client>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const paramId = getRequestParamID(req, { isUUID: false });
         const { entity, created } = await this.service.save(
-            paramId || undefined,
-            useRequestBody(req),
+            id || undefined,
+            data,
             actor,
         );
 
@@ -163,7 +154,7 @@ export class ClientController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }

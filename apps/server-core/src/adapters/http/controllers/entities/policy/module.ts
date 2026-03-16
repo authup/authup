@@ -10,13 +10,11 @@ import {
     BuiltInPolicyType, PolicyData, definePolicyEvaluationContext,
 } from '@authup/access';
 import { isUUID } from '@authup/kit';
-import type { Policy } from '@authup/core-kit';
 import { NotFoundError } from '@ebec/http';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
@@ -25,9 +23,7 @@ import { PolicyEngine } from '../../../../../security/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    getRequestParamID,
     useRequestIdentity,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type PolicyControllerContext = {
@@ -81,7 +77,7 @@ export class PolicyController {
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.getOne(
-            useRequestParamID(req, { isUUID: false }),
+            id,
             actor,
             useRequestParam(req, 'realmId'),
         );
@@ -92,7 +88,7 @@ export class PolicyController {
     @DPost('/:id/check', [ForceLoggedInMiddleware])
     async check(
         @DPath('id') id: string,
-            @DBody() body: Record<string, any>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
@@ -114,7 +110,6 @@ export class PolicyController {
             throw new NotFoundError();
         }
 
-        const data = useRequestBody(req);
         if (
             !data[BuiltInPolicyType.IDENTITY] &&
             data[BuiltInPolicyType.IDENTITY] !== null
@@ -146,14 +141,14 @@ export class PolicyController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async update(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<Policy>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(
-            useRequestParamID(req, { isUUID: false }),
-            useRequestBody(req),
+            id,
+            data,
             actor,
         );
 
@@ -163,16 +158,15 @@ export class PolicyController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async replace(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<Policy>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const paramId = getRequestParamID(req, { isUUID: false });
 
         const { entity, created } = await this.service.save(
-            paramId || undefined,
-            useRequestBody(req),
+            id || undefined,
+            data,
             actor,
         );
 
@@ -190,19 +184,19 @@ export class PolicyController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async create(
-        @DBody() data: NonNullable<Policy>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }

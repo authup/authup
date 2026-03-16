@@ -6,9 +6,8 @@
  */
 
 import {
-    DController, DPost, DRequest, DResponse,
+    DBody, DController, DPost, DRequest, DResponse,
 } from '@routup/decorators';
-import { useRequestBody } from '@routup/basic/body';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
 import type { IRegistrationService } from '../../../../../core/index.ts';
@@ -28,13 +27,14 @@ export class ActivateController {
 
     @DPost('', [])
     async execute(
-        @DRequest() req: Request,
+        @DBody() data: any,
+            @DRequest() req: Request,
             @DResponse() res: Response,
     ): Promise<any> {
         const validator = new ActivateRequestValidator();
-        const data = await validator.run(useRequestBody(req));
+        const validated = await validator.run(data);
 
-        await this.service.activate(data);
+        await this.service.activate(validated);
 
         return sendAccepted(res);
     }

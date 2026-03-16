@@ -13,12 +13,10 @@ import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { Realm, Robot } from '@authup/core-kit';
-import type { Request, Response } from 'routup';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
 import { isVaultClientUsable } from '@authup/server-kit';
 import type { DataSource } from 'typeorm';
 import type { IRealmRepository, IRobotRepository, IRobotService } from '../../../../../core/index.ts';
@@ -29,9 +27,7 @@ import { isSelfToken } from '../../../../../utils/index.ts';
 import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../services/index.ts';
 import {
     buildActorContext,
-    getRequestParamID,
     useRequestIdentity,
-    useRequestParamID,
     useRequestScopes,
 } from '../../../request/index.ts';
 
@@ -73,12 +69,12 @@ export class RobotController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: Robot,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { entity } = await this.service.save(undefined, useRequestBody(req), actor);
+        const { entity } = await this.service.save(undefined, data, actor);
 
         if (isRobotSynchronizationServiceUsable()) {
             const robotSynchronizationService = useRobotSynchronizationService();
@@ -94,7 +90,7 @@ export class RobotController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        return this.handleIntegrity(req, res);
+        return this.handleIntegrity(id, req, res);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -103,24 +99,20 @@ export class RobotController {
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
-        const paramId = useRequestParamID(req, {
-            isUUID: false,
-        });
-
         const identity = useRequestIdentity(req);
         let isMe = false;
 
         if (
-            isSelfToken(paramId) &&
+            isSelfToken(id) &&
             identity &&
             identity.type === 'robot'
         ) {
             isMe = true;
-        } else if (isUUID(paramId)) {
+        } else if (isUUID(id)) {
             if (
                 identity &&
                 identity.type === 'robot' &&
-                paramId === identity.id
+                id === identity.id
             ) {
                 isMe = true;
             }
@@ -132,7 +124,7 @@ export class RobotController {
             if (
                 identity.realmId === realm.id &&
                 identity.data &&
-                identity.data.name === paramId
+                identity.data.name === id
             ) {
                 isMe = true;
             }
@@ -144,7 +136,7 @@ export class RobotController {
             const attributesResolver = new OAuth2ScopeAttributesResolver();
             const attributes = attributesResolver.resolveFor(OAuth2SubKind.ROBOT, useRequestScopes(req));
 
-            const resolvedId = isSelfToken(paramId) ? identity!.id : paramId;
+            const resolvedId = isSelfToken(id) ? identity!.id : id;
             entity = await this.repository.findOneByIdOrName(
                 resolvedId,
                 useRequestParam(req, 'realmId'),
@@ -168,7 +160,7 @@ export class RobotController {
         } else {
             const actor = buildActorContext(req);
             entity = await this.service.getOne(
-                paramId,
+                id,
                 actor,
                 useRequestParam(req, 'realmId'),
             );
@@ -186,20 +178,19 @@ export class RobotController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: Pick<Robot, 'name'>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const body = useRequestBody(req);
         const { entity } = await this.service.save(
-            useRequestParamID(req, { isUUID: false }),
-            body,
+            id,
+            data,
             actor,
             { updateOnly: true },
         );
 
-        if (body.secret) {
+        if (data.secret) {
             if (isRobotSynchronizationServiceUsable()) {
                 const robotSynchronizationService = useRobotSynchronizationService();
                 await robotSynchronizationService.save(entity);
@@ -212,20 +203,18 @@ export class RobotController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: Pick<Robot, 'name'>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const body = useRequestBody(req);
-        const paramId = getRequestParamID(req, { isUUID: false });
         const { entity, created } = await this.service.save(
-            paramId || undefined,
-            body,
+            id || undefined,
+            data,
             actor,
         );
 
-        if (created || body.secret) {
+        if (created || data.secret) {
             if (isRobotSynchronizationServiceUsable()) {
                 const robotSynchronizationService = useRobotSynchronizationService();
                 await robotSynchronizationService.save(entity);
@@ -246,7 +235,7 @@ export class RobotController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         if (isRobotSynchronizationServiceUsable()) {
             const robotSynchronizationService = useRobotSynchronizationService();
@@ -258,11 +247,7 @@ export class RobotController {
 
     // ------------------------------------------------------------------
 
-    private async handleIntegrity(req: Request, res: Response): Promise<any> {
-        const id = useRequestParamID(req, {
-            isUUID: false,
-        });
-
+    private async handleIntegrity(id: string, req: any, res: any): Promise<any> {
         const robotRepository = new RobotRepository(this.dataSource);
         const query = robotRepository.createQueryBuilder('robot');
 

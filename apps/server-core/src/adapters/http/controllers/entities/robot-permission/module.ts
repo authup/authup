@@ -8,15 +8,12 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { RobotPermission } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
-import { useRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IRobotPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type RobotPermissionControllerContext = {
@@ -45,13 +42,13 @@ export class RobotPermissionController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: Pick<RobotPermission, 'robot_id' | 'permission_id'>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -63,7 +60,7 @@ export class RobotPermissionController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.getOne(useRequestParamID(req), actor);
+        const entity = await this.service.getOne(id, actor);
 
         return send(res, entity);
     }
@@ -76,7 +73,7 @@ export class RobotPermissionController {
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(
-            useRequestParamID(req, { isUUID: false }),
+            id,
             actor,
         );
 

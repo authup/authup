@@ -9,10 +9,8 @@ import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import { OAuth2AuthorizationResponseType, OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import type { Realm } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
 import type { Repository } from 'typeorm';
 import type { IRealmService } from '../../../../../core/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
@@ -20,8 +18,6 @@ import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.t
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    getRequestParamID,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type RealmControllerOptions = {
@@ -61,12 +57,12 @@ export class RealmController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() user: NonNullable<Realm>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -78,7 +74,7 @@ export class RealmController {
             @DResponse() res: any,
     ): Promise<any> {
         const entity = await this.service.getOne(
-            useRequestParamID(req, { isUUID: false }),
+            id,
         );
 
         return send(res, entity);
@@ -147,14 +143,14 @@ export class RealmController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<Realm>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(
-            useRequestParamID(req, { isUUID: false }),
-            useRequestBody(req),
+            id,
+            data,
             actor,
         );
 
@@ -164,15 +160,14 @@ export class RealmController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<Realm>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
-        const paramId = getRequestParamID(req, { isUUID: false });
         const { entity, created } = await this.service.save(
-            paramId || undefined,
-            useRequestBody(req),
+            id || undefined,
+            data,
             actor,
         );
 
@@ -190,7 +185,7 @@ export class RealmController {
             @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }

@@ -8,15 +8,12 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { RoleAttribute } from '@authup/core-kit';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
 import type { IRoleAttributeService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type RoleAttributeControllerContext = {
@@ -45,12 +42,12 @@ export class RoleAttributeController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() user: NonNullable<RoleAttribute>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -62,7 +59,7 @@ export class RoleAttributeController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.getOne(useRequestParamID(req), actor);
+        const entity = await this.service.getOne(id, actor);
 
         return send(res, entity);
     }
@@ -70,12 +67,12 @@ export class RoleAttributeController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<RoleAttribute>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.update(useRequestParamID(req), useRequestBody(req), actor);
+        const entity = await this.service.update(id, data, actor);
 
         return sendAccepted(res, entity);
     }
@@ -87,7 +84,7 @@ export class RoleAttributeController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }

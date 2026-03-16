@@ -8,19 +8,15 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import type { User } from '@authup/core-kit';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
 import type { IUserService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import {
     buildActorContext,
-    getRequestParamID,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type UserControllerContext = {
@@ -54,7 +50,7 @@ export class UserController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        let paramId = useRequestParamID(req, { isUUID: false });
+        let paramId = id;
 
         if (
             isSelfToken(paramId) &&
@@ -76,12 +72,12 @@ export class UserController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: NonNullable<User>,
+        @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -89,14 +85,14 @@ export class UserController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<User>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(
-            useRequestParamID(req, { isUUID: false }),
-            useRequestBody(req),
+            id,
+            data,
             actor,
         );
 
@@ -106,15 +102,14 @@ export class UserController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: NonNullable<User>,
+            @DBody() data: any,
             @DRequest() req: any,
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const paramId = getRequestParamID(req, { isUUID: false });
         const { entity, created } = await this.service.save(
-            paramId || undefined,
-            useRequestBody(req),
+            id || undefined,
+            data,
             actor,
         );
 
@@ -132,7 +127,7 @@ export class UserController {
             @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }
