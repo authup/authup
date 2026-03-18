@@ -44,6 +44,14 @@ export class UserService extends AbstractEntityService implements IUserService {
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<User>> {
+        await actor.permissionChecker.preCheckOneOf({
+            name: [
+                PermissionName.USER_READ,
+                PermissionName.USER_UPDATE,
+                PermissionName.USER_DELETE,
+            ],
+        });
+
         const { data: entities, meta } = await this.repository.findMany(query);
 
         const data: User[] = [];
@@ -232,7 +240,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                     entity.name_locked = validated.name_locked;
                 }
 
-                if (originalNameLocked && !validated.name_locked) {
+                if (originalNameLocked && validated.name_locked !== false) {
                     entity.name = originalName;
                 }
             }

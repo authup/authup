@@ -13,4 +13,5 @@ export * from './robot';
 export * from './role';
 export * from './scope';
 export * from './user';
+export * from './role-attribute.ts';
 export * from './user-attribute.ts';
