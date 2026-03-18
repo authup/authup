@@ -31,11 +31,11 @@ export class OAuth2OpenIDClaimsBuilder {
             'updated_at',
             (value: unknown) => {
                 if (typeof value === 'string') {
-                    return new Date(value).getTime();
+                    return Math.floor(new Date(value).getTime() / 1000);
                 }
 
                 if (value instanceof Date) {
-                    return value.getTime();
+                    return Math.floor(value.getTime() / 1000);
                 }
 
                 return value;
@@ -51,11 +51,11 @@ export class OAuth2OpenIDClaimsBuilder {
             'updated_at',
             (value: unknown) => {
                 if (typeof value === 'string') {
-                    return new Date(value).getTime();
+                    return Math.floor(new Date(value).getTime() / 1000);
                 }
 
                 if (value instanceof Date) {
-                    return value.getTime();
+                    return Math.floor(value.getTime() / 1000);
                 }
 
                 return value;
@@ -73,11 +73,11 @@ export class OAuth2OpenIDClaimsBuilder {
             'updated_at',
             (value: unknown) => {
                 if (typeof value === 'string') {
-                    return new Date(value).getTime();
+                    return Math.floor(new Date(value).getTime() / 1000);
                 }
 
                 if (value instanceof Date) {
-                    return value.getTime();
+                    return Math.floor(value.getTime() / 1000);
                 }
 
                 return value;

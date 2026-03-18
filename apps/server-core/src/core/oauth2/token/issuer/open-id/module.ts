@@ -73,6 +73,8 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             auth_time: utc,
             exp: this.buildExp(input),
             updated_at: utc,
+            ...(this.options.issuer ? { iss: this.options.issuer } : {}),
+            ...(input.client_id ? { aud: input.client_id } : {}),
         });
 
         const token = await this.signer.sign(data);
