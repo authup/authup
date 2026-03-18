@@ -46,14 +46,14 @@
         "eslint-plugin-vue": "10.6.2",
         "husky": "^9.1.7",
         "lint-staged": "^16.4.0",
-        "nx": "^22.5.4",
+        "nx": "^22.6.0",
         "rimraf": "^6.1.3",
         "rollup": "^4.59.0",
         "rollup-plugin-postcss": "^4.0.2",
         "typescript": "5.9.3",
         "unplugin-swc": "^1.5.9",
         "vitest": "^4.0.14",
-        "workspaces-publish": "^1.7.0"
+        "workspaces-publish": "^1.8.1"
     },
     "scripts": {
         "build": "npx nx run-many -t build",
