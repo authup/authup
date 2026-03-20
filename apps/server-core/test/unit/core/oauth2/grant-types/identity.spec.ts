@@ -75,8 +75,8 @@ describe('IdentityGrantType', () => {
         });
     });
 
-    it('should create a session with identity data', async () => {
-        await grant.runWith(identity);
+    it('should create session and issue both tokens with correct payload', async () => {
+        const result = await grant.runWith(identity);
 
         expect(sessionManager.create).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -85,6 +85,22 @@ describe('IdentityGrantType', () => {
                 sub_kind: OAuth2SubKind.USER,
             }),
         );
+
+        const expectedPayload = expect.objectContaining({
+            scope: ScopeName.GLOBAL,
+            realm_id: realmId,
+            realm_name: 'master',
+            sub: userId,
+            sub_kind: OAuth2SubKind.USER,
+            session_id: expect.any(String),
+        });
+        expect(accessTokenIssuer.issue).toHaveBeenCalledWith(expectedPayload);
+        expect(refreshTokenIssuer.issue).toHaveBeenCalledWith(expectedPayload);
+
+        expect(result).toHaveProperty('access_token');
+        expect(result).toHaveProperty('token_type', 'Bearer');
+        expect(result).toHaveProperty('expires_in');
+        expect(result).toHaveProperty('refresh_token');
     });
 
     it('should pass userAgent and ipAddress to session', async () => {
@@ -97,56 +113,6 @@ describe('IdentityGrantType', () => {
             expect.objectContaining({
                 user_agent: 'TestAgent',
                 ip_address: '10.0.0.1',
-            }),
-        );
-    });
-
-    it('should issue both access and refresh tokens', async () => {
-        await grant.runWith(identity);
-
-        expect(accessTokenIssuer.issue).toHaveBeenCalledWith(
-            expect.objectContaining({
-                scope: ScopeName.GLOBAL,
-                realm_id: realmId,
-                sub: userId,
-                sub_kind: OAuth2SubKind.USER,
-            }),
-        );
-        expect(refreshTokenIssuer.issue).toHaveBeenCalledWith(
-            expect.objectContaining({
-                scope: ScopeName.GLOBAL,
-                realm_id: realmId,
-                sub: userId,
-                sub_kind: OAuth2SubKind.USER,
-            }),
-        );
-    });
-
-    it('should include realm_name in token payload', async () => {
-        await grant.runWith(identity);
-
-        expect(accessTokenIssuer.issue).toHaveBeenCalledWith(
-            expect.objectContaining({
-                realm_name: 'master',
-            }),
-        );
-    });
-
-    it('should return a bearer token response', async () => {
-        const result = await grant.runWith(identity);
-
-        expect(result).toHaveProperty('access_token');
-        expect(result).toHaveProperty('token_type', 'Bearer');
-        expect(result).toHaveProperty('expires_in');
-        expect(result).toHaveProperty('refresh_token');
-    });
-
-    it('should include session_id in token payload', async () => {
-        await grant.runWith(identity);
-
-        expect(accessTokenIssuer.issue).toHaveBeenCalledWith(
-            expect.objectContaining({
-                session_id: expect.any(String),
             }),
         );
     });
