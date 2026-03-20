@@ -14,8 +14,4 @@ export type IOAuth2AuthorizationCodeVerifyOptions = {
 
 export interface IOAuth2AuthorizationCodeVerifier {
     verify(code: string, options: IOAuth2AuthorizationCodeVerifyOptions) : Promise<OAuth2AuthorizationCode>;
-
-    remove(entity: OAuth2AuthorizationCode) : Promise<void>;
-
-    removeById(code: string) : Promise<void>;
 }

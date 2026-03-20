@@ -21,6 +21,8 @@ export interface IOAuth2AuthorizationCodeRepository {
 
     findOneById(id: string) : Promise<OAuth2AuthorizationCode | null>;
 
+    popOneById(id: string) : Promise<OAuth2AuthorizationCode | null>;
+
     save(
         input: OAuth2AuthorizationCodeInput,
         options?: OAuth2AuthorizationCodeRepositorySaveOptions

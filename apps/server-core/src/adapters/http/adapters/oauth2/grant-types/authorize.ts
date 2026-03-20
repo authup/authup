@@ -37,14 +37,10 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             codeVerifier,
         });
 
-        const tokenGrantResponse = await this.runWith(entity, {
+        return this.runWith(entity, {
             ipAddress: getRequestIP(req, { trustProxy: true }),
             userAgent: getRequestHeader(req, 'user-agent'),
         });
-
-        await this.codeVerifier.remove(entity);
-
-        return tokenGrantResponse;
     }
 
     protected extractParam(req: Request, key: string) : string | undefined {

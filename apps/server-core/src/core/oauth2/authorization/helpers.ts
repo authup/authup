@@ -22,7 +22,7 @@ export function generateOAuth2CodeVerifier() {
     return codeVerifier;
 }
 
-function base64URLEncode(arrayBuffer: ArrayBuffer) {
+export function base64URLEncode(arrayBuffer: ArrayBuffer) {
     // Convert the ArrayBuffer to string using Uint8 array.
     // btoa takes chars from 0-255 and base64 encodes.
     // Then convert the base64 encoded to base64url encoded.
@@ -33,6 +33,15 @@ function base64URLEncode(arrayBuffer: ArrayBuffer) {
         .replace(/\+/g, '-')
         .replace(/\//g, '_')
         .replace(/=+$/, '');
+}
+
+export async function buildOAuth2TokenHash(value: string) : Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(value);
+    const hashBuffer = await subtle.digest('SHA-256', data);
+    const halfHash = hashBuffer.slice(0, 16);
+
+    return base64URLEncode(halfHash);
 }
 
 export async function buildOAuth2CodeChallenge(codeVerifier: string) {

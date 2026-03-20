@@ -120,7 +120,20 @@ describe('OAuth2OpenIDTokenIssuer', () => {
             expect(insertCall.auth_time).toBeLessThanOrEqual(Math.floor(Date.now() / 1000));
         });
 
-        it('should set iss from issuer option per OIDC §2', async () => {
+        it('should set realm-scoped iss from issuer option per OIDC §2', async () => {
+            const issuer = createIssuer({ options: { issuer: 'https://auth.example.com' } });
+
+            await issuer.issueWithIdentity(
+                { sub: userId, realm_id: realmId, realm_name: 'master', client_id: clientId } as OAuth2TokenPayload,
+                identity,
+            );
+
+            expect(repository.insert).toHaveBeenCalledWith(
+                expect.objectContaining({ iss: 'https://auth.example.com/realms/master' }),
+            );
+        });
+
+        it('should fall back to base issuer when realm_name is not present', async () => {
             const issuer = createIssuer({ options: { issuer: 'https://auth.example.com' } });
 
             await issuer.issueWithIdentity(

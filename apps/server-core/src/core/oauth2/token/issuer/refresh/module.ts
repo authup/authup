@@ -29,10 +29,13 @@ export class OAuth2RefreshTokenIssuer extends OAuth2BaseTokenIssuer implements I
     }
 
     async issue(input: OAuth2TokenPayload = {}) : Promise<OAuth2TokenIssuerResponse> {
+        const iss = this.buildIss(input);
+
         const data = await this.repository.insert({
             ...input,
             kind: OAuth2TokenKind.REFRESH,
             exp: this.buildExp(input),
+            ...(iss ? { iss } : {}),
         });
 
         const token = await this.signer.sign(data);

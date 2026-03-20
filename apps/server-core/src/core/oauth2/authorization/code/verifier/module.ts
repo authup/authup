@@ -20,7 +20,7 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
     }
 
     async verify(code: string, options: IOAuth2AuthorizationCodeVerifyOptions) : Promise<OAuth2AuthorizationCode> {
-        const entity = await this.repository.findOneById(code);
+        const entity = await this.repository.popOneById(code);
         if (!entity) {
             throw OAuth2Error.grantInvalid();
         }
@@ -49,13 +49,5 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
         }
 
         return entity;
-    }
-
-    async remove(entity: OAuth2AuthorizationCode): Promise<void> {
-        return this.removeById(entity.id);
-    }
-
-    async removeById(code: string): Promise<void> {
-        await this.repository.removeById(code);
     }
 }

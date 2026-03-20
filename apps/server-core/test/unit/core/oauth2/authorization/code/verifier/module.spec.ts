@@ -29,6 +29,14 @@ class FakeCodeRepository implements IOAuth2AuthorizationCodeRepository {
         return this.store.get(id) ?? null;
     }
 
+    async popOneById(id: string): Promise<OAuth2AuthorizationCode | null> {
+        const entity = this.store.get(id) ?? null;
+        if (entity) {
+            this.store.delete(id);
+        }
+        return entity;
+    }
+
     async removeById(id: string): Promise<void> {
         this.store.delete(id);
     }
@@ -155,19 +163,19 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
         });
     });
 
-    describe('remove', () => {
-        it('should remove code by entity', async () => {
+    describe('atomic consumption', () => {
+        it('should consume code on verify (single-use)', async () => {
             const code = repository.seed({ client_id: 'c' });
-            await verifier.remove(code);
+            await verifier.verify(code.id, {});
             expect(repository.has(code.id)).toBe(false);
         });
-    });
 
-    describe('removeById', () => {
-        it('should remove code by id', async () => {
+        it('should reject second verify of same code', async () => {
             const code = repository.seed({ client_id: 'c' });
-            await verifier.removeById(code.id);
-            expect(repository.has(code.id)).toBe(false);
+            await verifier.verify(code.id, {});
+            await expect(
+                verifier.verify(code.id, {}),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
         });
     });
 });
