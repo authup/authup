@@ -14,7 +14,7 @@ import path from 'node:path';
 import { URL } from 'node:url';
 import { send, useRequestParam } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import type { type Client, OAuth2AuthorizationCodeRequest, type Scope } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { CLIENT_WEB_SLIM_PACKAGE_PATH } from '../../../../../path.ts';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
