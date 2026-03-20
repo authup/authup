@@ -20,6 +20,16 @@ export class MemoryCache implements ICache {
         });
     }
 
+    async pop<T = unknown>(key: string): Promise<T | null> {
+        if (this.instance.has(key)) {
+            const output = this.instance.get(key);
+            this.instance.delete(key);
+            return output as T;
+        }
+
+        return null;
+    }
+
     async has(key: string) : Promise<boolean> {
         return this.instance.has(key);
     }

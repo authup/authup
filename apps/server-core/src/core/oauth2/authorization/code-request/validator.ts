@@ -75,6 +75,12 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
         );
 
         this.mount(
+            'nonce',
+            { optional: true },
+            createValidator(z.string().min(1).max(512).nullable()),
+        );
+
+        this.mount(
             'realm_id',
             { optional: true },
             createValidator(z.string().nonempty()),

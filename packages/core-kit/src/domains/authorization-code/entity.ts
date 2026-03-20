@@ -22,6 +22,8 @@ export interface OAuth2AuthorizationCode {
 
     id_token?: string | null,
 
+    nonce?: string | null,
+
     client_id?: Client['id'] | null,
 
     sub: string,
@@ -40,7 +42,7 @@ export type OAuth2AuthorizationCodeRequest = {
     redirect_uri: string,
     scope?: string,
     state?: string,
+    nonce?: string,
     code_challenge?: string,
     code_challenge_method?: string,
-
 };

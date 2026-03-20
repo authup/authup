@@ -30,6 +30,19 @@ export class RedisCache implements ICache {
         return null;
     }
 
+    async pop<T = unknown>(key: string): Promise<T | null> {
+        const raw = await this.client.getdel(key);
+        if (!raw) {
+            return null;
+        }
+
+        try {
+            return JSON.parse(raw) as T;
+        } catch {
+            return null;
+        }
+    }
+
     async has(key: string) : Promise<boolean> {
         const output = await this.get(key);
 

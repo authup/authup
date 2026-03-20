@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Identity, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     ScopeName,
 } from '@authup/core-kit';
@@ -17,6 +17,7 @@ import {
 } from '@authup/specs';
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
 import type { IOAuth2AuthorizationCodeIssuer } from './code/index.ts';
+import { buildOAuth2TokenHash } from './helpers.ts';
 import type {
     OAuth2AuthorizationManagerContext,
     OAuth2AuthorizationResult,
@@ -73,6 +74,10 @@ export class OAuth2Authorization {
             ...(data.state ? { state: data.state } : {}),
         };
 
+        if (!identity) {
+            throw OAuth2Error.identityInvalid();
+        }
+
         const payloadBaseNormalized : OAuth2TokenPayload = {
 
             sub: identity.data.id,
@@ -82,31 +87,10 @@ export class OAuth2Authorization {
 
             client_id: data.client_id,
             ...(data.scope ? { scope: data.scope } : {}),
+            ...(data.nonce ? { nonce: data.nonce } : {}),
         };
 
-        if (!identity) {
-            throw OAuth2Error.identityInvalid();
-        }
-
-        let idToken : string | undefined;
-        if (
-            enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
-            (
-                data.scope &&
-                hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID)
-            )
-        ) {
-            const [token] = await this.openIdTokenIssuer.issueWithIdentity(
-                payloadBaseNormalized,
-                identity,
-            );
-
-            idToken = token;
-
-            if (enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
-                output.idToken = token;
-            }
-        }
+        let codeEntity : OAuth2AuthorizationCode | undefined;
 
         if (enabledResponseTypes[OAuth2AuthorizationResponseType.TOKEN]) {
             const [token] = await this.accessTokenIssuer.issue(payloadBaseNormalized);
@@ -115,16 +99,38 @@ export class OAuth2Authorization {
         }
 
         if (enabledResponseTypes[OAuth2AuthorizationResponseType.CODE]) {
-            if (identity) {
-                const entity = await this.codeIssuer.issue(
-                    data,
-                    identity,
-                    {
-                        idToken,
-                    },
-                );
+            codeEntity = await this.codeIssuer.issue(
+                data,
+                identity,
+            );
 
-                output.authorizationCode = entity.id;
+            output.authorizationCode = codeEntity.id;
+        }
+
+        const needsIdToken = enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN] ||
+            (data.scope && hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID));
+
+        if (needsIdToken) {
+            const idTokenPayload = { ...payloadBaseNormalized };
+
+            if (output.accessToken) {
+                idTokenPayload.at_hash = await buildOAuth2TokenHash(output.accessToken);
+            }
+            if (output.authorizationCode) {
+                idTokenPayload.c_hash = await buildOAuth2TokenHash(output.authorizationCode);
+            }
+
+            const [token] = await this.openIdTokenIssuer.issueWithIdentity(
+                idTokenPayload,
+                identity,
+            );
+
+            if (enabledResponseTypes[OAuth2AuthorizationResponseType.ID_TOKEN]) {
+                output.idToken = token;
+            }
+
+            if (codeEntity) {
+                await this.codeIssuer.updateIdToken(codeEntity, token);
             }
         }
 

@@ -66,6 +66,8 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
 
         const utc = Math.floor(new Date().getTime() / 1000);
 
+        const iss = this.buildIss(input);
+
         const data = await this.repository.insert({
             ...input,
             ...claims,
@@ -73,7 +75,7 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             auth_time: utc,
             exp: this.buildExp(input),
             updated_at: utc,
-            ...(this.options.issuer ? { iss: this.options.issuer } : {}),
+            ...(iss ? { iss } : {}),
             ...(input.client_id ? { aud: input.client_id } : {}),
         });
 

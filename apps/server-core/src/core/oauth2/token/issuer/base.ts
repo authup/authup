@@ -23,6 +23,18 @@ export abstract class OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
 
     // ------------------------------------------------------------------
 
+    buildIss(input: OAuth2TokenPayload = {}) : string | undefined {
+        if (!this.options.issuer) {
+            return undefined;
+        }
+
+        if (input.realm_name) {
+            return `${this.options.issuer}/realms/${input.realm_name}`;
+        }
+
+        return this.options.issuer;
+    }
+
     /**
      * Build utc expire time (in seconds).
      *

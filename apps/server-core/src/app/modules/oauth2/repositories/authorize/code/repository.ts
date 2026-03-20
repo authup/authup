@@ -36,6 +36,13 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
         return null;
     }
 
+    async popOneById(id: string): Promise<OAuth2AuthorizationCode | null> {
+        return this.cache.pop<OAuth2AuthorizationCode>(buildCacheKey({
+            prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
+            key: id,
+        }));
+    }
+
     async save(
         input: OAuth2AuthorizationCodeInput,
         options: OAuth2AuthorizationCodeRepositorySaveOptions = {},

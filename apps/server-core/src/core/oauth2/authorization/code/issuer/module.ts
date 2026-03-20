@@ -31,6 +31,7 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
             redirect_uri: input.redirect_uri,
             client_id: input.client_id,
             scope: input.scope,
+            nonce: input.nonce,
             code_challenge: input.code_challenge,
             code_challenge_method: input.code_challenge_method,
 
@@ -46,6 +47,17 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
 
         return this.repository.save(entity, {
             maxAge: options.maxAge ?? this.options.maxAge,
+        });
+    }
+
+    async updateIdToken(
+        entity: OAuth2AuthorizationCode,
+        idToken: string,
+    ) : Promise<void> {
+        entity.id_token = idToken;
+
+        await this.repository.save(entity, {
+            maxAge: this.options.maxAge,
         });
     }
 }

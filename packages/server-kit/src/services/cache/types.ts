@@ -30,6 +30,8 @@ export interface ICache {
 
     get<T = unknown>(key: string): Promise<T | null>;
 
+    pop<T = unknown>(key: string): Promise<T | null>;
+
     drop(key: string): Promise<void>;
 
     dropMany(keys: string[]): Promise<void>;

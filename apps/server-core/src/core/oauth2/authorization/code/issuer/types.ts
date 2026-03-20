@@ -22,4 +22,9 @@ export interface IOAuth2AuthorizationCodeIssuer {
         identity: Identity,
         options?: OAuth2AuthorizationCodeIssuerOptions
     ) : Promise<OAuth2AuthorizationCode>;
+
+    updateIdToken(
+        entity: OAuth2AuthorizationCode,
+        idToken: string,
+    ) : Promise<void>;
 }
