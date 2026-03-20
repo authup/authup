@@ -57,13 +57,13 @@ export class RobotService extends AbstractEntityService implements IRobotService
         const data: Robot[] = [];
         let { total } = meta;
 
-        for (let i = 0; i < entities.length; i++) {
+        for (const entity of entities) {
             if (
                 actor.identity &&
                 actor.identity.type === 'robot' &&
-                actor.identity.data.id === entities[i].id
+                actor.identity.data.id === entity.id
             ) {
-                data.push(entities[i]);
+                data.push(entity);
                 continue;
             }
 
@@ -75,12 +75,12 @@ export class RobotService extends AbstractEntityService implements IRobotService
                         PermissionName.ROBOT_DELETE,
                     ],
                     input: new PolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entities[i],
+                        [BuiltInPolicyType.ATTRIBUTES]: entity,
                     }),
                 });
 
-                data.push(entities[i]);
-            } catch (e) {
+                data.push(entity);
+            } catch {
                 total -= 1;
             }
         }

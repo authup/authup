@@ -4,7 +4,6 @@ import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
-import type { Ref } from 'vue';
 import {
     definePageMeta,
     useToast,
@@ -32,13 +31,13 @@ export default defineComponent({
         const toast = useToast();
         const route = useRoute();
 
-        const entity: Ref<Realm> = ref(null) as any;
+        const entity = ref<Realm>(null!);
 
         try {
             entity.value = await injectHTTPClient()
                 .realm
                 .getOne(route.params.id as string);
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/realms' });
             throw createError({});
         }

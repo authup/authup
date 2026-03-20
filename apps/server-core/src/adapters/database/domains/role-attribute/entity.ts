@@ -24,10 +24,10 @@ import { RoleEntity } from '../role/entity.ts';
 @Entity({ name: 'auth_role_attributes' })
 export class RoleAttributeEntity implements RoleAttribute {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'varchar', length: 255 })
-        name: string;
+    name: string;
 
     @Column({
         type: 'text',
@@ -41,29 +41,29 @@ export class RoleAttributeEntity implements RoleAttribute {
             },
         },
     })
-        value: string | null;
+    value: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({ nullable: true })
-        realm_id: Realm['id'] | null;
+    realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
-        realm: RealmEntity | null;
+    realm: RealmEntity | null;
 
     @Column()
-        role_id: Role['id'];
+    role_id: Role['id'];
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
-        role: RoleEntity;
+    role: RoleEntity;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 }

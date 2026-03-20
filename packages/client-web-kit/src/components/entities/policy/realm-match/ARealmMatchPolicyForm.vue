@@ -42,6 +42,7 @@ export default defineComponent({
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
             const { attributeName, ...data } = input;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assignFormProperties(form, data as Record<string, any>);
             if (attributeName) {
                 form.attributeName = typeof attributeName === 'string' ? [attributeName] : attributeName;

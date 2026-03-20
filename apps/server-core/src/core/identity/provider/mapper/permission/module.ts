@@ -23,8 +23,7 @@ export class IdentityProviderPermissionMapper extends IdentityProviderAccountBas
         const entities = await this.repository.findByProviderId(identity.provider.id);
 
         const items : IdentityProviderMapperElement[] = [];
-        for (let i = 0; i < entities.length; i++) {
-            const entity = entities[i];
+        for (const entity of entities) {
 
             const [operation] = this.resolve(identity, entity);
 

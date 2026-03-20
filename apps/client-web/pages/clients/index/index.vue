@@ -5,7 +5,7 @@ import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
-    AClients, AEntityDelete, APagination, ASearch, ATitle, AUser, injectStore, usePermissionCheck,
+    AClients, AEntityDelete, APagination, ASearch, ATitle, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
 import type { BuildInput } from 'rapiq';
 import { defineComponent } from 'vue';
@@ -18,7 +18,6 @@ export default defineComponent({
         BTable,
         AEntityDelete,
         AClients,
-        AUser,
     },
     emits: ['deleted'],
     setup(props, { emit }) {

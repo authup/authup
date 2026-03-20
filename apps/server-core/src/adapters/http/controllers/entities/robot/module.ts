@@ -59,7 +59,7 @@ export class RobotController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
@@ -70,8 +70,8 @@ export class RobotController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { entity } = await this.service.save(undefined, data, actor);
@@ -87,8 +87,8 @@ export class RobotController {
     @DGet('/:id/integrity', [])
     async command(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         return this.handleIntegrity(id, req, res);
     }
@@ -96,8 +96,8 @@ export class RobotController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const identity = useRequestIdentity(req);
         let isMe = false;
@@ -147,9 +147,9 @@ export class RobotController {
                 const validAttributes = robotRepository.metadata.columns.map(
                     (column) => column.databaseName,
                 );
-                for (let i = 0; i < attributes.length; i++) {
-                    const isValid = validAttributes.includes(attributes[i]);
-                    if (isValid && attributes[i] === 'secret') {
+                for (const attribute of attributes) {
+                    const isValid = validAttributes.includes(attribute);
+                    if (isValid && attribute === 'secret') {
                         const withSecret = await this.repository.findOneWithSecret({ id: entity.id });
                         if (withSecret) {
                             entity.secret = withSecret.secret;
@@ -178,9 +178,9 @@ export class RobotController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { entity } = await this.service.save(
@@ -203,9 +203,9 @@ export class RobotController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { entity, created } = await this.service.save(
@@ -231,8 +231,8 @@ export class RobotController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(id, actor);

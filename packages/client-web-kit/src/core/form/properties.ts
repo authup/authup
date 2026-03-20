@@ -21,12 +21,12 @@ export function assignFormProperties<T extends Record<string, any>>(
     input: PartialRecordWithNull<T> = {},
 ) : T {
     const keys : (keyof T)[] = Object.keys(input);
-    for (let i = 0; i < keys.length; i++) {
-        const value = input[keys[i]];
+    for (const key of keys) {
+        const value = input[key];
         if (value === null) {
-            src[keys[i]] = '' as T[keyof T];
+            src[key] = '' as T[keyof T];
         } else {
-            src[keys[i]] = value as T[keyof T];
+            src[key] = value as T[keyof T];
         }
     }
 

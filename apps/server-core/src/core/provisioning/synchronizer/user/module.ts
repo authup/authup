@@ -78,7 +78,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
                 case ProvisioningEntityStrategyType.MERGE:
                     if (
                         strategy.attributes &&
-                        strategy.attributes.indexOf('email') !== -1
+                        strategy.attributes.includes('email')
                     ) {
                         input.attributes.email = input.attributes.email ||
                             attributes.email ||
@@ -126,15 +126,15 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
         if (input.relations && input.relations.clientPermissions) {
             const clientKeys = Object.keys(input.relations.clientPermissions);
-            for (let i = 0; i < clientKeys.length; i++) {
+            for (const clientKey of clientKeys) {
                 const client = await this.clientRepository.findOneBy({
-                    name: clientKeys[i],
+                    name: clientKey,
                     realm_id: attributes.realm_id,
                 });
 
                 if (client) {
                     const entities = await this.permissionResolver.resolveClient(
-                        input.relations.clientPermissions[clientKeys[i]],
+                        input.relations.clientPermissions[clientKey],
                         attributes.realm_id,
                         client.id,
                     );
@@ -167,15 +167,15 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
 
         if (input.relations && input.relations.clientRoles) {
             const clientKeys = Object.keys(input.relations.clientRoles);
-            for (let i = 0; i < clientKeys.length; i++) {
+            for (const clientKey of clientKeys) {
                 const client = await this.clientRepository.findOneBy({
-                    name: clientKeys[i],
+                    name: clientKey,
                     realm_id: attributes.realm_id,
                 });
 
                 if (client) {
                     const entities = await this.roleResolver.resolveClient(
-                        input.relations.clientRoles[clientKeys[i]],
+                        input.relations.clientRoles[clientKey],
                         attributes.realm_id,
                         client.id,
                     );

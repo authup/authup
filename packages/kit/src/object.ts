@@ -18,8 +18,8 @@ export function extendObject<T extends Record<string, any>>(
     source: Partial<T>,
 ) : T {
     const keys = Object.keys(source);
-    for (let i = 0; i < keys.length; i++) {
-        target[keys[i] as keyof T] = source[keys[i]] as T[keyof T];
+    for (const key of keys) {
+        target[key as keyof T] = source[key] as T[keyof T];
     }
 
     return target;
@@ -29,14 +29,13 @@ export function flattenObject(input: Record<string, any>) : Record<string, any> 
     const output : Record<string, any> = {};
 
     const keys = Object.keys(input);
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
+    for (const key of keys) {
         const value = input[key];
         if (isObject(value)) {
             const childAttributes = flattenObject(value);
             const childAttributeKeys = Object.keys(childAttributes);
-            for (let j = 0; j < childAttributeKeys.length; j++) {
-                output[`${key}.${childAttributeKeys[j]}`] = childAttributes[childAttributeKeys[j]];
+            for (const childAttributeKey of childAttributeKeys) {
+                output[`${key}.${childAttributeKey}`] = childAttributes[childAttributeKey];
             }
 
             continue;
@@ -58,9 +57,8 @@ export function omitObjectProperties<
     const output : T = {} as T;
     const keys = Object.keys(input);
 
-    for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
-        if (excludeKeys.indexOf(key) !== -1) {
+    for (const key of keys) {
+        if (excludeKeys.includes(key)) {
             continue;
         }
 

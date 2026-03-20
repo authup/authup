@@ -48,7 +48,7 @@ async function publishEvent(
 
 @EventSubscriber()
 export class ClientSubscriber implements EntitySubscriberInterface<ClientEntity> {
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return ClientEntity;
     }

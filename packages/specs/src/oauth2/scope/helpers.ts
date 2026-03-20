@@ -22,8 +22,7 @@ export function deserializeOAuth2Scope(scope: string) : string[] {
 export function unwrapOAuth2Scope(input: string | string[]) : string[] {
     if (Array.isArray(input)) {
         return input
-            .map((el) => unwrapOAuth2Scope(el))
-            .flat();
+            .flatMap((el) => unwrapOAuth2Scope(el));
     }
 
     return deserializeOAuth2Scope(input);
@@ -49,5 +48,5 @@ export function hasOAuth2Scopes(
         return true;
     }
 
-    return requiredNormalized.every((el) => grantedNormalized.indexOf(el) !== -1);
+    return requiredNormalized.every((el) => grantedNormalized.includes(el));
 }

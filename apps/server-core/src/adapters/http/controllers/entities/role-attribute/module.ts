@@ -32,7 +32,7 @@ export class RoleAttributeController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
@@ -43,8 +43,8 @@ export class RoleAttributeController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.create(data, actor);
@@ -55,8 +55,8 @@ export class RoleAttributeController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.getOne(id, actor);
@@ -67,9 +67,9 @@ export class RoleAttributeController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(id, data, actor);
@@ -80,8 +80,8 @@ export class RoleAttributeController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(id, actor);

@@ -30,11 +30,11 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
                         const availableResponseTypes = Object.values(OAuth2AuthorizationResponseType);
                         const responseTypes = ctx.value.split(' ') as OAuth2AuthorizationResponseType[];
 
-                        for (let i = 0; i < responseTypes.length; i++) {
-                            if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
+                        for (const responseType of responseTypes) {
+                            if (!availableResponseTypes.includes(responseType)) {
                                 const error = OAuth2Error.responseTypeUnsupported();
                                 ctx.issues.push({
-                                    input: responseTypes[i],
+                                    input: responseType,
                                     code: 'custom',
                                     message: error.message,
                                 });

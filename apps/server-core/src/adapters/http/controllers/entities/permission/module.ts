@@ -57,7 +57,7 @@ export class PermissionController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
@@ -68,8 +68,8 @@ export class PermissionController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.create(data, actor);
@@ -80,8 +80,8 @@ export class PermissionController {
     @DPost('/:id/check', [ForceLoggedInMiddleware])
     async check(
         @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const id = useRequestParam(req, 'id');
 
@@ -142,8 +142,8 @@ export class PermissionController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.getOne(
@@ -158,9 +158,9 @@ export class PermissionController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(
@@ -175,9 +175,9 @@ export class PermissionController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { entity, created } = await this.service.save(
@@ -196,8 +196,8 @@ export class PermissionController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(id, actor);

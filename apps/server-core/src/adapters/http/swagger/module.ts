@@ -46,7 +46,7 @@ export class Swagger {
             stats = await fs.promises.stat(this.entrypointPath);
 
             return stats.isDirectory();
-        } catch (e) {
+        } catch {
             return false;
         }
     }
@@ -106,7 +106,7 @@ export class Swagger {
             ), fs.constants.R_OK | fs.constants.F_OK);
 
             return true;
-        } catch (e) {
+        } catch {
             return false;
         }
     }

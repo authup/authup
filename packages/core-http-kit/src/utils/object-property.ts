@@ -8,9 +8,9 @@
 export function nullifyEmptyObjectProperties<T extends Record<string, any>>(data: T) : T {
     const keys : (keyof T)[] = Object.keys(data);
 
-    for (let i = 0; i < keys.length; i++) {
-        if (data[keys[i]] === '') {
-            data[keys[i]] = null as T[keyof T];
+    for (const key of keys) {
+        if (data[key] === '') {
+            data[key] = null as T[keyof T];
         }
     }
 

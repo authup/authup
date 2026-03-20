@@ -45,7 +45,7 @@ export class ClientController {
     @DGet('', [])
     async getMany(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
@@ -56,8 +56,8 @@ export class ClientController {
     @DGet('/:id', [])
     async get(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const identity = useRequestIdentity(req);
 
@@ -82,8 +82,8 @@ export class ClientController {
                 throw new NotFoundError();
             }
 
-            for (let i = 0; i < attributes.length; i++) {
-                const attr = attributes[i] as keyof Client;
+            for (const attribute of attributes) {
+                const attr = attribute as keyof Client;
                 if (attr === 'secret') {
                     const withSecret = await this.repository.findOneWithSecret({ id: entity.id });
                     if (withSecret) {
@@ -104,8 +104,8 @@ export class ClientController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.create(data, actor);
@@ -116,9 +116,9 @@ export class ClientController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(id, data, actor);
@@ -129,9 +129,9 @@ export class ClientController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { entity, created } = await this.service.save(
@@ -150,8 +150,8 @@ export class ClientController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(id, actor);

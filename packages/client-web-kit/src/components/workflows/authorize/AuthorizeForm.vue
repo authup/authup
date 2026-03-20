@@ -5,6 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
+/* global window */
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
@@ -63,7 +64,7 @@ export default defineComponent({
                 if (typeof window !== 'undefined') {
                     window.location.href = url;
                 }
-            } catch (e) {
+            } catch {
                 // todo: show toast :)
 
             }

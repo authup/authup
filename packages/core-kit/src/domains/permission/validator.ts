@@ -13,7 +13,7 @@ import type { Permission } from './entity.ts';
 import { isPermissionNameValid } from './helpers.ts';
 
 export class PermissionValidator extends Container<
-Permission
+    Permission
 > {
     protected initialize() {
         super.initialize();

@@ -8,7 +8,7 @@
 import type { IMailClient, MailSendOptions } from '../../../../core/index.ts';
 
 export class VoidMailClientAdapter implements IMailClient {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     send(_options: MailSendOptions): Promise<void> {
         return Promise.resolve(undefined);
     }

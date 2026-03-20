@@ -9,6 +9,7 @@ export default defineComponent({
         APolicyForm,
         APolicyTypePicker,
     },
+    emits: ['failed'],
     setup(props, { emit }) {
         const type = ref<string | null>(null);
         const handlePicked = (value: string) => {

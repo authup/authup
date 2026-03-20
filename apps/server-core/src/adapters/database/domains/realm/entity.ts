@@ -17,23 +17,23 @@ import type { Realm } from '@authup/core-kit';
 @Entity({ name: 'auth_realms' })
 export class RealmEntity implements Realm {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'varchar', length: 128, unique: true })
-        name: string;
+    name: string;
 
     @Column({ type: 'varchar', length: 256, nullable: true })
-        display_name: string | null;
+    display_name: string | null;
 
     @Column({ type: 'text', nullable: true, default: null })
-        description: string | null;
+    description: string | null;
 
     @Column({ type: 'boolean', default: false })
-        built_in: boolean;
+    built_in: boolean;
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 }

@@ -13,7 +13,8 @@ import {
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import { DomainEventDestinations, buildRedisKeyPath } from '@authup/server-kit';
+import type { DomainEventDestinations} from '@authup/server-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface,
     InsertEvent,
@@ -55,7 +56,7 @@ async function publishEvent(
 
 @EventSubscriber()
 export class ScopeSubscriber implements EntitySubscriberInterface<ScopeEntity> {
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return ScopeEntity;
     }

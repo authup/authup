@@ -11,7 +11,7 @@ import type { RoleAttribute } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class RoleAttributeRequestValidator extends Container<
-RoleAttribute
+    RoleAttribute
 > {
     protected initialize() {
         super.initialize();

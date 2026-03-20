@@ -22,35 +22,35 @@ import { RealmEntity } from '../realm/index.ts';
 @Unique(['name', 'realm_id'])
 export class ScopeEntity implements Scope {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'boolean', default: false })
-        built_in: boolean;
+    built_in: boolean;
 
     @Column({ type: 'varchar', length: 128 })
-        name: string;
+    name: string;
 
     @Column({ type: 'varchar', length: 256, nullable: true })
-        display_name: string | null;
+    display_name: string | null;
 
     @Column({ type: 'text', nullable: true })
-        description: string | null;
+    description: string | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column({ nullable: true })
-        realm_id: Realm['id'] | null;
+    realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
-        realm: Realm | null;
+    realm: Realm | null;
 }

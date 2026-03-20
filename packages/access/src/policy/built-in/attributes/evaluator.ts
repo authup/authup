@@ -71,8 +71,8 @@ export class AttributesPolicyEvaluator<
         query: unknown | unknown[],
     ) {
         if (Array.isArray(query)) {
-            for (let i = 0; i < query.length; i++) {
-                this.fixQuery(query[i]);
+            for (const element of query) {
+                this.fixQuery(element);
             }
 
             return;
@@ -80,8 +80,7 @@ export class AttributesPolicyEvaluator<
 
         if (isObject(query)) {
             const keys = Object.keys(query);
-            for (let i = 0; i < keys.length; i++) {
-                const key = keys[i];
+            for (const key of keys) {
                 const value = query[key];
 
                 if (isObject(value) || Array.isArray(value)) {

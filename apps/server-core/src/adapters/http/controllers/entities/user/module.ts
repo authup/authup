@@ -35,7 +35,7 @@ export class UserController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
@@ -46,8 +46,8 @@ export class UserController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         let paramId = id;
@@ -73,8 +73,8 @@ export class UserController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.create(data, actor);
@@ -85,9 +85,9 @@ export class UserController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(
@@ -102,9 +102,9 @@ export class UserController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const { entity, created } = await this.service.save(
@@ -123,8 +123,8 @@ export class UserController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(id, actor);

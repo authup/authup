@@ -25,10 +25,10 @@ const LanguageSwitcherDropdown = defineComponent({
 
         const elements = computed(() => {
             const output = [];
-            for (let i = 0; i < locales.length; i++) {
+            for (const locale_ of locales) {
                 output.push({
-                    value: locales[i],
-                    active: locale.value === locales[i],
+                    value: locale_,
+                    active: locale.value === locale_,
                 });
             }
 

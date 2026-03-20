@@ -55,8 +55,7 @@ export class OAuth2ScopeAttributesResolver {
         const attributes : string[] = [];
         const scopes = unwrapOAuth2Scope(scope);
 
-        for (let i = 0; i < scopes.length; i++) {
-            const scope = scopes[i];
+        for (const scope of scopes) {
             if (hasOwnProperty(this.clientAttributes, scope)) {
                 attributes.push(...this.clientAttributes[scope]);
             }
@@ -74,8 +73,7 @@ export class OAuth2ScopeAttributesResolver {
         const attributes : string[] = [];
         const scopes = unwrapOAuth2Scope(scope);
 
-        for (let i = 0; i < scopes.length; i++) {
-            const scope = scopes[i];
+        for (const scope of scopes) {
             if (hasOwnProperty(this.robotAttributes, scope)) {
                 attributes.push(...this.robotAttributes[scope]);
             }
@@ -93,8 +91,7 @@ export class OAuth2ScopeAttributesResolver {
         const attributes : string[] = [];
         const scopes = unwrapOAuth2Scope(scope);
 
-        for (let i = 0; i < scopes.length; i++) {
-            const scope = scopes[i];
+        for (const scope of scopes) {
             if (hasOwnProperty(this.userAttributes, scope)) {
                 attributes.push(...this.userAttributes[scope]);
             }

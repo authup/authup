@@ -58,9 +58,9 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
             }
         }
         const { columns } = this.repository.metadata;
-        for (let i = 0; i < columns.length; i++) {
-            if (!columns[i].isSelect) {
-                query.addSelect(`client.${columns[i].databaseName}`);
+        for (const column of columns) {
+            if (!column.isSelect) {
+                query.addSelect(`client.${column.databaseName}`);
             }
         }
 

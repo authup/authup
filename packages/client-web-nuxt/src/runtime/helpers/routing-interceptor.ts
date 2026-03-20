@@ -40,7 +40,7 @@ export class RoutingInterceptor {
     ) : Promise<RouteLocationAsPathGeneric | undefined> {
         try {
             await this.store.resolve();
-        } catch (e) {
+        } catch {
             await this.store.logout();
 
             if (to.fullPath.startsWith(this.loginRoute)) {
@@ -181,7 +181,7 @@ export class RoutingInterceptor {
                         [BuiltInPolicyType.IDENTITY]: identity,
                     }),
                 });
-            } catch (e) {
+            } catch {
                 return false;
             }
         }

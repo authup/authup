@@ -19,8 +19,8 @@ export function parseProcessOutputData(input: unknown) : string[] {
 
     const items : string[] = [];
 
-    for (let i = 0; i < lines.length; i++) {
-        const line = removeLineBreaks(lines[i]).trim();
+    for (const line_ of lines) {
+        const line = removeLineBreaks(line_).trim();
         if (line.length === 0) {
             continue;
         }
@@ -36,7 +36,7 @@ export function parseProcessOutputData(input: unknown) : string[] {
                 items.push(parsed.message);
                 continue;
             }
-        } catch (e) {
+        } catch {
             // no json :/
         }
 

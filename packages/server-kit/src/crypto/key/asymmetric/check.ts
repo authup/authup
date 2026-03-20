@@ -8,5 +8,5 @@
 import { CryptoAsymmetricAlgorithm } from './constants';
 
 export function isAsymmetricAlgorithm(input: string) : input is CryptoAsymmetricAlgorithm {
-    return (Object.values(CryptoAsymmetricAlgorithm) as string[]).indexOf(input) !== -1;
+    return (Object.values(CryptoAsymmetricAlgorithm) as string[]).includes(input);
 }

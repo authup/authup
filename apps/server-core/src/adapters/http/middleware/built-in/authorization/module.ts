@@ -189,7 +189,7 @@ export class AuthorizationMiddleware {
 
         try {
             await this.sessionManager.verify(session);
-        } catch (e) {
+        } catch {
             throw JWTError.expired();
         }
 

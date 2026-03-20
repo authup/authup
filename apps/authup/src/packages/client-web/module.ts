@@ -81,11 +81,11 @@ export class ClientWebPackage implements Package {
         const env : Record<string, any> = {};
 
         const keys = Object.keys(input);
-        for (let i = 0; i < keys.length; i++) {
-            env[keys[i]] = input[keys[i]];
+        for (const key of keys) {
+            env[key] = input[key];
 
-            if (!keys[i].match(/^(?:NUXT|NITRO)_.*$/)) {
-                env[`NUXT_PUBLIC_${keys[i]}`] = input[keys[i]];
+            if (!key.match(/^(?:NUXT|NITRO)_.*$/)) {
+                env[`NUXT_PUBLIC_${key}`] = input[key];
             }
         }
 

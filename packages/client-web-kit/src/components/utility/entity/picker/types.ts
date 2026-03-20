@@ -35,8 +35,8 @@ export type EntityPickerVProps<T> = {
 export type EntityPickerContext<T extends RecordWithID> = {
     props: EntityPickerVProps<T>,
     setup: SetupContext<
-    EntityPickerVEmitOptions<T>,
-    SlotsType<EntityPickerVSlots<T>>
+        EntityPickerVEmitOptions<T>,
+        SlotsType<EntityPickerVSlots<T>>
     >,
     /**
      * Resource collection component.

@@ -280,17 +280,16 @@ export class EATreeRepository<
                     }, {} as Record<string, string[]>);
 
                     // 5. Check if for each child a relation exists with each ancestor (create if not exist)
-                    for (let i = 0; i < descendantIds.length; i++) {
-                        const descendant = descendantIds[i];
+                    for (const descendant of descendantIds) {
                         const ancestorsOfDescendent = acc[descendant] ?? [];
 
-                        for (let j = 0; j < ancestorIds.length; j++) {
-                            const index = ancestorsOfDescendent.indexOf(ancestorIds[j]);
+                        for (const ancestorId of ancestorIds) {
+                            const index = ancestorsOfDescendent.indexOf(ancestorId);
                             if (index === -1) {
                                 await manager.query(`INSERT INTO
                                                         ${tableName}
                                                      (${ancestorColumn.databasePath}, ${descendantColumn.databasePath}) VALUES
-                                                       ('${ancestorIds[j]}','${descendant}');`);
+                                                       ('${ancestorId}','${descendant}');`);
                             }
                         }
                     }
@@ -301,12 +300,12 @@ export class EATreeRepository<
                     ...descendants.map((descendant) => descendant[descendantColumn.databasePath]),
                 ];
 
-                for (let i = 0; i < ancestorIds.length; i++) {
-                    for (let j = 0; j < descendantIds.length; j++) {
+                for (const ancestorId of ancestorIds) {
+                    for (const descendantId of descendantIds) {
                         await manager.query(`DELETE
                                                  FROM ${tableName}
-                                                 WHERE ${ancestorColumn.databasePath} = '${ancestorIds[i]}'
-                                                   AND ${descendantColumn.databasePath} = '${descendantIds[j]}';`);
+                                                 WHERE ${ancestorColumn.databasePath} = '${ancestorId}'
+                                                   AND ${descendantColumn.databasePath} = '${descendantId}';`);
                     }
                 }
             }

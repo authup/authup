@@ -13,7 +13,7 @@ import type { Realm } from './entity.ts';
 import { isRealmNameValid } from './helpers.ts';
 
 export class RealmValidator extends Container<
-Realm
+    Realm
 > {
     protected initialize() {
         super.initialize();

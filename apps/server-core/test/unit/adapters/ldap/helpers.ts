@@ -18,7 +18,7 @@ export async function createLdapTestUserAccount(client: ILdapClient) {
             objectClass: 'inetOrgPerson',
             userPassword: 'foo',
         });
-    } catch (e) {
+    } catch {
         // do nothing ;)
     }
 }
@@ -26,7 +26,7 @@ export async function createLdapTestUserAccount(client: ILdapClient) {
 export async function dropLdapTestUserAccount(client: ILdapClient) {
     try {
         await client.del('cn=foo,dc=example,dc=com');
-    } catch (e) {
+    } catch {
         // do nothing :)
     }
 }

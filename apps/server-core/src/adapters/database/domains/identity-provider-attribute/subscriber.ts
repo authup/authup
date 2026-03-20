@@ -47,7 +47,7 @@ async function publishEvent(
 
 @EventSubscriber()
 export class IdentityProviderAttributeSubscriber implements EntitySubscriberInterface<IdentityProviderAttributeEntity> {
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return IdentityProviderAttributeEntity;
     }

@@ -27,8 +27,8 @@ export function getJWTClaimByPattern(
     const output : unknown[] = [];
 
     const keys = expandPath(claims, pattern);
-    for (let i = 0; i < keys.length; i++) {
-        const info = getPathInfo(claims, keys[i]);
+    for (const key of keys) {
+        const info = getPathInfo(claims, key);
         if (!info.exists) {
             continue;
         }

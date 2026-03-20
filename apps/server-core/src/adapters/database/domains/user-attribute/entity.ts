@@ -21,10 +21,10 @@ import { UserEntity } from '../user/entity.ts';
 @Entity({ name: 'auth_user_attributes' })
 export class UserAttributeEntity implements UserAttribute {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'varchar', length: 255 })
-        name: string;
+    name: string;
 
     @Column({
         type: 'text',
@@ -38,29 +38,29 @@ export class UserAttributeEntity implements UserAttribute {
             },
         },
     })
-        value: string | null;
+    value: string | null;
 
     // ------------------------------------------------------------------
 
     @Column()
-        realm_id: Realm['id'];
+    realm_id: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
-        realm: RealmEntity;
+    realm: RealmEntity;
 
     @Column()
-        user_id: User['id'];
+    user_id: User['id'];
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'user_id' })
-        user: UserEntity;
+    user: UserEntity;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 }

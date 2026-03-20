@@ -181,8 +181,7 @@ export class DatabaseModule implements Module {
             return;
         }
 
-        for (let i = 0; i < entities.length; i++) {
-            const entity = entities[i];
+        for (const entity of entities) {
 
             if (InstanceChecker.isEntitySchema(entity)) {
                 continue;

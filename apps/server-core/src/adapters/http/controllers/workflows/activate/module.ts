@@ -28,8 +28,8 @@ export class ActivateController {
     @DPost('', [])
     async execute(
         @DBody() data: any,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const validator = new ActivateRequestValidator();
         const validated = await validator.run(data);

@@ -43,10 +43,10 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         const data: UserAttribute[] = [];
         let { total } = meta;
 
-        for (let i = 0; i < entities.length; i++) {
-            const canManage = await this.canManageUserAttribute(actor, entities[i]);
+        for (const entity of entities) {
+            const canManage = await this.canManageUserAttribute(actor, entity);
             if (canManage) {
-                data.push(entities[i]);
+                data.push(entity);
             } else {
                 total--;
             }

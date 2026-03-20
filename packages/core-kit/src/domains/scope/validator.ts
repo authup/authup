@@ -13,7 +13,7 @@ import type { Scope } from './entity.ts';
 import { isScopeNameValid } from './utils.ts';
 
 export class ScopeValidator extends Container<
-Scope
+    Scope
 > {
     protected initialize() {
         super.initialize();

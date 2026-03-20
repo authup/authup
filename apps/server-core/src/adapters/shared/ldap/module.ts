@@ -244,7 +244,7 @@ export class LdapClient implements ILdapClient {
             }
 
             return /^(?:(?:(?:[a-zA-Z0-9]+(?:[-._][a-zA-Z0-9]+)*)=(?:[\s]*[^,+\n=]+[\s]*)*)(?:[,][\s]*)?)+$/.test(input);
-        } catch (e) {
+        } catch {
             return false;
         }
     }

@@ -24,10 +24,10 @@ import { RealmEntity } from '../realm/index.ts';
 @Entity({ name: 'auth_policy_attributes' })
 export class PolicyAttributeEntity implements PolicyAttribute {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'varchar', length: 255 })
-        name: string;
+    name: string;
 
     @Column({
         type: 'text',
@@ -41,31 +41,31 @@ export class PolicyAttributeEntity implements PolicyAttribute {
             },
         },
     })
-        value: string | null;
+    value: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({ nullable: true })
-        realm_id: Realm['id'] | null;
+    realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
-        realm: RealmEntity | null;
+    realm: RealmEntity | null;
 
     // ------------------------------------------------------------------
 
     @Column()
-        policy_id: Policy['id'];
+    policy_id: Policy['id'];
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'policy_id' })
-        policy: PolicyEntity;
+    policy: PolicyEntity;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: Date;
+    created_at: Date;
 
     @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 }

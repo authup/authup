@@ -20,7 +20,7 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
             return [];
         }
 
-        const hasWildcard = names.some((el) => el === '*');
+        const hasWildcard = names.includes('*');
         if (hasWildcard) {
             return this.repository.findManyBy({
                 realm_id: null,
@@ -40,7 +40,7 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
             return [];
         }
 
-        const hasWildcard = names.some((el) => el === '*');
+        const hasWildcard = names.includes('*');
         if (hasWildcard) {
             return this.repository.findManyBy({
                 realm_id: realmId,
@@ -60,7 +60,7 @@ export class ProvisioningEntityResolver<T extends ObjectLiteral = ObjectLiteral>
             return [];
         }
 
-        const hasWildcard = names.some((el) => el === '*');
+        const hasWildcard = names.includes('*');
         if (hasWildcard) {
             return this.repository.findManyBy({
                 realm_id: realmId,

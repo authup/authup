@@ -47,7 +47,7 @@ export class OAuth2ProviderRoleController {
     @DGet('', [])
     async getProviders(
         @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DResponse() res: Response,
     ): Promise<any> {
         const permissionChecker = useRequestPermissionChecker(req);
         await permissionChecker.preCheckOneOf({
@@ -69,8 +69,8 @@ export class OAuth2ProviderRoleController {
     @DGet('/:id', [])
     async getProvider(
         @DPath('id') id: string,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const permissionChecker = useRequestPermissionChecker(req);
         await permissionChecker.preCheckOneOf({
@@ -95,9 +95,9 @@ export class OAuth2ProviderRoleController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<IdentityProviderRoleMapping>,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DBody() user: NonNullable<IdentityProviderRoleMapping>,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const paramId = useRequestParamID(req);
 
@@ -136,8 +136,8 @@ export class OAuth2ProviderRoleController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropProvider(
         @DPath('id') id: string,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const paramId = useRequestParamID(req);
 
@@ -170,8 +170,8 @@ export class OAuth2ProviderRoleController {
     @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
         @DBody() user: NonNullable<IdentityProviderRoleMapping>,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const permissionChecker = useRequestPermissionChecker(req);
         await permissionChecker.preCheck({

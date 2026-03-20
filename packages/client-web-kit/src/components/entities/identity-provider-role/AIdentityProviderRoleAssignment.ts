@@ -98,9 +98,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
         }
 
         const render = () => {
-            let displayButton : VNodeArrayChildren = [];
-
-            displayButton = [h('button', {
+            const displayButton : VNodeArrayChildren = [h('button', {
                 class: 'btn btn-xs btn-dark',
                 onClick($event: any) {
                     $event.preventDefault();

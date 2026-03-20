@@ -49,8 +49,8 @@ export class DatabaseUniqueEntriesComponent implements Component {
         }, {} as Record<string, RoleEntity[]>);
 
         const keys = Object.keys(aggregated);
-        for (let i = 0; i < keys.length; i++) {
-            const [, ...rest] = aggregated[keys[i]];
+        for (const key of keys) {
+            const [, ...rest] = aggregated[key];
             if (rest.length === 0) {
                 continue;
             }
@@ -83,8 +83,8 @@ export class DatabaseUniqueEntriesComponent implements Component {
         }, {} as Record<string, PermissionEntity[]>);
 
         const keys = Object.keys(aggregated);
-        for (let i = 0; i < keys.length; i++) {
-            const [, ...rest] = aggregated[keys[i]];
+        for (const key of keys) {
+            const [, ...rest] = aggregated[key];
             if (rest.length === 0) {
                 continue;
             }
