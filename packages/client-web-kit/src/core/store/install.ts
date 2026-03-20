@@ -73,13 +73,13 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         const keys = Object.values(CookieName);
 
         let value : any;
-        for (let i = 0; i < keys.length; i++) {
-            value = cookieGet(keys[i]);
+        for (const key of keys) {
+            value = cookieGet(key);
             if (!value) {
                 continue;
             }
 
-            switch (keys[i]) {
+            switch (key) {
                 case CookieName.ACCESS_TOKEN:
                     if (!store.accessToken) {
                         store.setAccessToken(value);

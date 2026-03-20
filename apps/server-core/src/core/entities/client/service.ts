@@ -56,8 +56,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         let { total } = meta;
 
         const data: Client[] = [];
-        for (let i = 0; i < entities.length; i++) {
-            const entity = entities[i];
+        for (const entity of entities) {
 
             if (
                 entity.secret &&
@@ -76,7 +75,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                         }),
                     });
                     data.push(entity);
-                } catch (e) {
+                } catch {
                     total -= 1;
                 }
 

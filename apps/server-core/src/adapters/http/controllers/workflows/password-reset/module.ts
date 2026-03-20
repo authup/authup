@@ -28,8 +28,8 @@ export class PasswordResetController {
     @DPost('', [])
     async execute(
         @DBody() data: any,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<PasswordResetResponse> {
         const result = await this.service.resetPassword(data);
 

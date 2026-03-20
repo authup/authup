@@ -70,7 +70,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
         try {
             identity.roles = await this.findUserGroups(entity);
-        } catch (e) {
+        } catch {
             // todo: log event
         }
 
@@ -202,8 +202,8 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
         const attributeKey = this.provider.group_name_attribute || 'cn';
         const names : string[] = [];
-        for (let i = 0; i < entities.length; i++) {
-            const attribute = entities[i][attributeKey];
+        for (const entity of entities) {
+            const attribute = entity[attributeKey];
             if (typeof attribute === 'undefined') {
                 continue;
             }

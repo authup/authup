@@ -64,9 +64,9 @@ export async function createCLIEntryPointCommand() {
             }
 
             const promises : Promise<ChildProcess>[] = [];
-            for (let i = 0; i < packages.length; i++) {
+            for (const package_ of packages) {
                 promises.push(executePackageCommand(
-                    packages[i],
+                    package_,
                     ctx.args.command,
                     {
                         configFile: ctx.args.configFile,

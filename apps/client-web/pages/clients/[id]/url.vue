@@ -87,7 +87,7 @@ export default defineNuxtComponent({
                 <VCFormInputCheckbox
                     :label="true"
                     :group-class="'form-switch'"
-                    :model-value="scopes.indexOf(props.data.scope.name) !== -1"
+                    :model-value="scopes.includes(props.data.scope.name)"
                     @update:model-value="toggleScope(props.data.scope.name)"
                 >
                     <template #label="iProps">

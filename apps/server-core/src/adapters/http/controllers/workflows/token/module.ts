@@ -5,12 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    OAuth2Error,
-    OAuth2TokenGrant,
-    OAuth2TokenGrantResponse,
-    type OAuth2TokenIntrospectionResponse, OAuth2TokenPermission,
-} from '@authup/specs';
+import type {
+    OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission} from '@authup/specs';
+import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
 import {
     DController, DGet, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
@@ -21,20 +18,22 @@ import { CookieName } from '@authup/core-http-kit';
 import { pickRecord } from '@authup/kit';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext, TokenControllerOptions } from './types.ts';
-import {
+import type {
     IIdentityResolver,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker,
-    IOAuth2TokenVerifier,
+    IOAuth2TokenVerifier} from '../../../../../core/index.ts';
+import {
     OAuth2OpenIDClaimsBuilder,
 } from '../../../../../core/index.ts';
+import type {
+    IHTTPOAuth2Grant} from '../../../adapters/index.ts';
 import {
     HTTPClientCredentialsGrant,
     HTTPOAuth2AuthorizeGrant,
     HTTPOAuth2RefreshTokenGrant,
     HTTPPasswordGrant,
     HTTPRobotCredentialsGrant,
-    IHTTPOAuth2Grant,
     guessOauth2GrantTypeByRequest,
 } from '../../../adapters/index.ts';
 import { extractTokenFromRequest } from './utils/index.ts';
@@ -167,7 +166,7 @@ export class TokenController {
 
     @DPost('/revoke', [])
     async revokeToken(
-    @DRequest() req: Request,
+        @DRequest() req: Request,
         @DResponse() res: Response,
     ) {
         try {
@@ -188,7 +187,7 @@ export class TokenController {
     @DPost('', [])
     async createToken(
         @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DResponse() res: Response,
     ): Promise<OAuth2TokenGrantResponse> {
         const grantType = guessOauth2GrantTypeByRequest(req);
         if (!grantType) {
@@ -214,8 +213,7 @@ export class TokenController {
 
         const domains = [...new Set(domainsRaw)];
 
-        for (let i = 0; i < domains.length; i++) {
-            const domain = domains[i];
+        for (const domain of domains) {
 
             setResponseCookie(
                 res,

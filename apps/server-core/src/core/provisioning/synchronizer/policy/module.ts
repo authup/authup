@@ -77,7 +77,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         });
 
         const staleChildren = existingChildren.filter(
-            (child) => declaredNames.indexOf(child.name) === -1,
+            (child) => !declaredNames.includes(child.name),
         );
 
         await staleChildren.reduce(async (prev, child) => {

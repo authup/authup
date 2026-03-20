@@ -27,34 +27,34 @@ import { RealmEntity } from '../realm/index.ts';
 @Entity({ name: 'auth_identity_providers' })
 export class IdentityProviderEntity implements IdentityProvider {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'varchar', length: 128 })
-        name: string;
+    name: string;
 
     @Column({ type: 'varchar', length: 256, nullable: true })
-        display_name: string | null;
+    display_name: string | null;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
-        protocol: `${IdentityProviderProtocol}` | null;
+    protocol: `${IdentityProviderProtocol}` | null;
 
     @Column({ type: 'varchar', length: 64, nullable: true })
-        preset: `${IdentityProviderPreset}` | null;
+    preset: `${IdentityProviderPreset}` | null;
 
     @Column({ type: 'boolean', default: true })
-        enabled: boolean;
+    enabled: boolean;
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 
     @Index()
     @Column()
-        realm_id: string;
+    realm_id: string;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
-        realm: Realm;
+    realm: Realm;
 }

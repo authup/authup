@@ -50,7 +50,7 @@ export default defineComponent({
             entity.value = await injectHTTPClient()
                 .client
                 .getOne(route.params.id as string, { fields: ['+secret'] });
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/clients' });
             throw createError({});
         }

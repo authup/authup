@@ -28,8 +28,8 @@ export class RegisterController {
     @DPost('', [])
     async execute(
         @DBody() data: any,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<RegisterResponse> {
         const result = await this.service.register(data);
 

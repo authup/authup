@@ -79,8 +79,8 @@ export type EntityManagerCreateContext<
 > = {
     type: A,
     setup?: Partial<SetupContext<
-    EntityVEmitOptions<T>,
-    SlotsType<EntityVSlots<T>>
+        EntityVEmitOptions<T>,
+        SlotsType<EntityVSlots<T>>
     >>,
     props?: EntityVProps<T>,
     realmId?: MaybeRef<string> | ((entity: T | undefined) => string | undefined),

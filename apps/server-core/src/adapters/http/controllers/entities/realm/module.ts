@@ -8,7 +8,8 @@
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
 } from '@routup/decorators';
-import { OAuth2AuthorizationResponseType, OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
+import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
+import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
@@ -48,7 +49,7 @@ export class RealmController {
     @DGet('', [])
     async getMany(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const { data, meta } = await this.service.getMany(useRequestQuery(req));
 
@@ -58,8 +59,8 @@ export class RealmController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.create(data, actor);
@@ -70,8 +71,8 @@ export class RealmController {
     @DGet('/:id', [])
     async get(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const entity = await this.service.getOne(
             id,
@@ -124,8 +125,8 @@ export class RealmController {
     @DGet('/:id/jwks', [])
     async getCerts(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey[]> {
         return getJwksRouteHandler(req, res, this.keyRepository, 'id');
     }
@@ -133,9 +134,9 @@ export class RealmController {
     @DGet('/:id/jwks/:keyId', [])
     async getCert(
         @DPath('id') id: string,
-            @DPath('keyId') keyId: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DPath('keyId') keyId: string,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey> {
         return getJwkRouteHandler(req, res, this.keyRepository, 'keyId');
     }
@@ -143,9 +144,9 @@ export class RealmController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(
@@ -160,9 +161,9 @@ export class RealmController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() data: any,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
         const { entity, created } = await this.service.save(
@@ -181,8 +182,8 @@ export class RealmController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(id, actor);

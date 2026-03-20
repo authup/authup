@@ -86,8 +86,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         );
 
         const entity : Record<string, any> = {};
-        for (let i = 0; i < attributes.length; i++) {
-            const attribute = attributes[i];
+        for (const attribute of attributes) {
             if (
                 attribute.key &&
                 attribute.operation === IdentityProviderMapperOperation.CREATE
@@ -114,13 +113,13 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         const attributesExtra : Record<string, any> = {};
 
         const entityKeys = Object.keys(entity);
-        for (let i = 0; i < entityKeys.length; i++) {
-            const index = attributesSelfKeys.indexOf(entityKeys[i]);
+        for (const entityKey of entityKeys) {
+            const index = attributesSelfKeys.indexOf(entityKey);
             if (index !== -1) {
                 continue;
             }
 
-            attributesExtra[entityKeys[i]] = entity[entityKeys[i]];
+            attributesExtra[entityKey] = entity[entityKey];
         }
 
         let output : User;
@@ -135,7 +134,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             try {
                 // todo: we also need to remove existing ones via idp login flow ( but not other attributes!)
                 return await this.userRepository.saveOneWithEA(output, attributesExtra);
-            } catch (e) {
+            } catch {
                 const names = identity.attributeCandidates?.name || [];
                 if (names.length > 0) {
                     while (names.length > 0) {
@@ -148,7 +147,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                                     ValidatorGroup.UPDATE,
                             });
                             break;
-                        } catch (e) {
+                        } catch {
                             // todo: do nothing.
                         }
                     }

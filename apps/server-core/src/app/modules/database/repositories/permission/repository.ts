@@ -63,8 +63,8 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
 
         const [entities, total] = await qb.getManyAndCount();
 
-        for (let i = 0; i < entities.length; i++) {
-            await this.loadPolicyTree(entities[i] as PermissionEntity);
+        for (const entity of entities) {
+            await this.loadPolicyTree(entity as PermissionEntity);
         }
 
         return {

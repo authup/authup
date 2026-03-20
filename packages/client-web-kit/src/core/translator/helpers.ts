@@ -15,9 +15,9 @@ export function useTranslationsForGroup<T extends Input>(
     elements: T[],
 ) : Record<`${T['key']}`, Ref<string>> {
     const output = {} as Record<string, Ref<string>>;
-    for (let i = 0; i < elements.length; i++) {
-        output[elements[i].key] = useTranslation({
-            ...elements[i],
+    for (const element of elements) {
+        output[element.key] = useTranslation({
+            ...element,
             group,
         });
     }

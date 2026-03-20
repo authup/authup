@@ -55,7 +55,7 @@ export function createApp(payload: HydrationPayload) : {app: App, router: Router
 
         try {
             await store.resolve();
-        } catch (e) {
+        } catch {
             await store.logout();
         }
     });

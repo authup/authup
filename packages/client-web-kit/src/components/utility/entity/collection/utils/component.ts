@@ -14,11 +14,11 @@ import type {
 
 export function defineEntityCollectionVEmitOptions<T>() : EntityCollectionVEmitOptions<T> {
     return {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         created: (_item: T) => true,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         deleted: (_item: T) => true,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         updated: (_item: T) => true,
     };
 }

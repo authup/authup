@@ -24,10 +24,10 @@ import { RealmEntity } from '../realm/index.ts';
 @Entity({ name: 'auth_identity_provider_attributes' })
 export class IdentityProviderAttributeEntity implements IdentityProviderAttribute {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'varchar', length: 255 })
-        name: string;
+    name: string;
 
     @Column({
         type: 'text',
@@ -41,30 +41,30 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
             },
         },
     })
-        value: string | null;
+    value: string | null;
 
     // ------------------------------------------------------------------
 
     @Column()
-        provider_id: IdentityProvider['id'];
+    provider_id: IdentityProvider['id'];
 
     @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'provider_id' })
-        provider: IdentityProviderEntity;
+    provider: IdentityProviderEntity;
 
     // ------------------------------------------------------------------
     @Column({ nullable: true })
-        realm_id: Realm['id'] | null;
+    realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
-        realm: RealmEntity | null;
+    realm: RealmEntity | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 }

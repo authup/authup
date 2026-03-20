@@ -36,8 +36,8 @@ export class PolicyEngine implements IPolicyEngine {
 
     public registerEvaluators(evaluators: PolicyEvaluators) {
         const keys = Object.keys(evaluators);
-        for (let i = 0; i < keys.length; i++) {
-            this.registerEvaluator(keys[i], evaluators[keys[i]]);
+        for (const key of keys) {
+            this.registerEvaluator(key, evaluators[key]);
         }
     }
 
@@ -49,7 +49,7 @@ export class PolicyEngine implements IPolicyEngine {
         if (
             ctx.exclude &&
             ctx.exclude.length > 0 &&
-            ctx.exclude.indexOf(policy.type) !== -1
+            ctx.exclude.includes(policy.type)
         ) {
             return {
                 success: maybeInvertPolicyOutcome(true, policy.invert),
@@ -59,7 +59,7 @@ export class PolicyEngine implements IPolicyEngine {
         if (
             ctx.include &&
             ctx.include.length > 0 &&
-            ctx.include.indexOf(policy.type) === -1
+            !ctx.include.includes(policy.type)
         ) {
             return {
                 success: maybeInvertPolicyOutcome(true, policy.invert),
@@ -91,7 +91,7 @@ export class PolicyEngine implements IPolicyEngine {
                     ...(ctx.evaluators || {}),
                 },
             });
-        } catch (e) {
+        } catch {
             issues.push(defineIssueItem({
                 path: [policy.type],
                 message: `The ${policy.type} evaluator can not process the policy specification.`,

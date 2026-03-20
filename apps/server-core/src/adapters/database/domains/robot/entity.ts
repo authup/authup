@@ -31,59 +31,59 @@ import { UserEntity } from '../user/index.ts';
 @Unique(['name', 'realm_id'])
 export class RobotEntity implements Robot {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'varchar', length: 256, select: false })
-        secret: string;
+    secret: string;
 
     @Column({ type: 'varchar', length: 128 })
-        name: string;
+    name: string;
 
     @Column({ type: 'varchar', length: 256, nullable: true })
-        display_name: string | null;
+    display_name: string | null;
 
     @Column({ type: 'text', nullable: true })
-        description: string;
+    description: string;
 
     @Column({ type: 'boolean', default: true })
-        active: boolean;
+    active: boolean;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: Date;
+    created_at: Date;
 
     @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 
     // ------------------------------------------------------------------
 
     @Column({ nullable: true, default: null })
-        user_id: User['id'] | null;
+    user_id: User['id'] | null;
 
     @ManyToOne(() => UserEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'user_id' })
-        user: User | null;
+    user: User | null;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column({ nullable: true })
-        client_id: Client['id'] | null;
+    client_id: Client['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_id' })
-        client: Client | null;
+    client: Client | null;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column()
-        realm_id: Realm['id'];
+    realm_id: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
-        realm: Realm;
+    realm: Realm;
 
     // ------------------------------------------------------------------
 

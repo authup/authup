@@ -38,9 +38,9 @@ export function extractVuelidateResultsFromChild(vuelidate: Ref<Validation>, chi
         .filter((key) => !key.startsWith('$'));
 
     const result : Record<string, any> = {};
-    for (let i = 0; i < childKeys.length; i++) {
-        if (hasOwnProperty(childResults, childKeys[i])) {
-            result[childKeys[i]] = (childResults[childKeys[i]] as { $model: Record<string, any> }).$model;
+    for (const childKey of childKeys) {
+        if (hasOwnProperty(childResults, childKey)) {
+            result[childKey] = (childResults[childKey] as { $model: Record<string, any> }).$model;
         }
     }
 

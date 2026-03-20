@@ -77,7 +77,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
                 <p>${merged.reset_hash}</p>
                 `,
             });
-        } catch (e) {
+        } catch {
             this.repository.merge(merged, {
                 reset_hash: null,
                 reset_expires: null,

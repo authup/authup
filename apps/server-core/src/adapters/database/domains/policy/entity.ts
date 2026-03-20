@@ -17,9 +17,8 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import type {
-    Policy,
+    Policy, Realm 
 } from '@authup/core-kit';
-import { Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'realm_id'])
@@ -31,47 +30,47 @@ import { RealmEntity } from '../realm/index.ts';
 })
 export class PolicyEntity implements Policy {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'boolean', default: false })
-        built_in: boolean;
+    built_in: boolean;
 
     @Column({ type: 'varchar', length: 64 })
-        type: string;
+    type: string;
 
     @Column({ type: 'varchar', length: 128 })
-        name: string;
+    name: string;
 
     @Column({ type: 'varchar', length: 256, nullable: true })
-        display_name: string | null;
+    display_name: string | null;
 
     @Column({ type: 'text', nullable: true })
-        description: string | null;
+    description: string | null;
 
     @Column({ type: 'boolean', default: false })
-        invert: boolean;
+    invert: boolean;
 
     @TreeChildren({ cascade: true })
-        children: PolicyEntity[];
+    children: PolicyEntity[];
 
     @Column({ nullable: true })
-        parent_id: Policy['id'] | null;
+    parent_id: Policy['id'] | null;
 
     @TreeParent({ onDelete: 'CASCADE' })
     @JoinColumn({ name: 'parent_id' })
-        parent: Policy | null;
+    parent: Policy | null;
 
     @Index()
     @Column({ nullable: true })
-        realm_id: Realm['id'] | null;
+    realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'realm_id' })
-        realm: Realm | null;
+    realm: Realm | null;
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 }

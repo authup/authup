@@ -14,7 +14,7 @@ import type {
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class UserRoleRequestValidator extends Container<
-UserRoleEntity
+    UserRoleEntity
 > {
     protected initialize() {
         super.initialize();

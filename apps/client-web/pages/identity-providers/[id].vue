@@ -42,7 +42,7 @@ export default defineComponent({
             entity.value = await injectHTTPClient()
                 .identityProvider
                 .getOne(route.params.id as string);
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/identity-providers' });
             throw createError({});
         }

@@ -43,7 +43,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         const data: RoleAttribute[] = [];
         let { total } = meta;
 
-        for (let i = 0; i < entities.length; i++) {
+        for (const entity of entities) {
             try {
                 await actor.permissionChecker.checkOneOf({
                     name: [
@@ -52,11 +52,11 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                         PermissionName.ROLE_DELETE,
                     ],
                     input: new PolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entities[i],
+                        [BuiltInPolicyType.ATTRIBUTES]: entity,
                     }),
                 });
-                data.push(entities[i]);
-            } catch (e) {
+                data.push(entity);
+            } catch {
                 total--;
             }
         }

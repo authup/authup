@@ -44,8 +44,8 @@ export class MemoryCache implements ICache {
     }
 
     async dropMany(keys: string[]) : Promise<void> {
-        for (let i = 0; i < keys.length; i++) {
-            this.instance.delete(keys[i]);
+        for (const key of keys) {
+            this.instance.delete(key);
         }
     }
 

@@ -26,43 +26,43 @@ import { RealmEntity } from '../realm/index.ts';
 @Index(['role_id', 'robot_id'], { unique: true })
 export class RobotRoleEntity implements RobotRole {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     // ------------------------------------------------------------------
 
     @Column()
-        role_id: string;
+    role_id: string;
 
     @ManyToOne(() => RoleEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'role_id' })
-        role: Role;
+    role: Role;
 
     @Column({ nullable: true })
-        role_realm_id: Realm['id'] | null;
+    role_realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'role_realm_id' })
-        role_realm: Realm | null;
+    role_realm: Realm | null;
 
     @Column()
-        robot_id: string;
+    robot_id: string;
 
     @ManyToOne(() => RobotEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
-        robot: Robot;
+    robot: Robot;
 
     @Column({ nullable: true })
-        robot_realm_id: Realm['id'] | null;
+    robot_realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'robot_realm_id' })
-        robot_realm: Realm | null;
+    robot_realm: Realm | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 }

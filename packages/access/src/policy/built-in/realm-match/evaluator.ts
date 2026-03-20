@@ -92,13 +92,13 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         if (!attributeNameStrict) {
             const resourceKeys = Object.keys(attributes);
             const keysToAdd : string[] = [];
-            for (let i = 0; i < resourceKeys.length; i++) {
+            for (const resourceKey of resourceKeys) {
                 let contains : boolean = false;
 
-                for (let j = 0; j < keys.length; j++) {
+                for (const key of keys) {
                     if (
-                        resourceKeys[i] !== keys[j] &&
-                        resourceKeys[i].includes(keys[j])
+                        resourceKey !== key &&
+                        resourceKey.includes(key)
                     ) {
                         contains = true;
                         break;
@@ -106,7 +106,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 }
 
                 if (contains) {
-                    keysToAdd.push(resourceKeys[i]);
+                    keysToAdd.push(resourceKey);
                 }
             }
 
@@ -117,14 +117,14 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
 
         let count = 0;
 
-        for (let i = 0; i < keys.length; i++) {
-            if (!hasOwnProperty(attributes, keys[i])) {
+        for (const key of keys) {
+            if (!hasOwnProperty(attributes, key)) {
                 continue;
             }
 
             let outcome : boolean = false;
 
-            const attributeValue = attributes[keys[i]];
+            const attributeValue = attributes[key];
 
             if (
                 attributeValue === null &&

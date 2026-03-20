@@ -18,7 +18,7 @@ type AttributeMapTuple<T> = {
 }[keyof T];
 
 type AttributeMap<T extends Record<string, any>> = Record<
-keyof OpenIDTokenPayload,
+    keyof OpenIDTokenPayload,
 keyof T | AttributeMapTuple<T>
 >;
 
@@ -124,17 +124,17 @@ export class OAuth2OpenIDClaimsBuilder {
         const result = {} as OpenIDTokenPayload;
 
         const keys = Object.keys(attributeMap);
-        for (let i = 0; i < keys.length; i++) {
-            const attribute = attributeMap[keys[i]];
+        for (const key_ of keys) {
+            const attribute = attributeMap[key_];
             if (typeof attribute === 'string') {
                 if (hasOwnProperty(attributes, attribute)) {
-                    result[keys[i]] = attributes[attribute];
+                    result[key_] = attributes[attribute];
                 }
             } else {
                 const [key, transformer] = attribute as AttributeMapTuple<T>;
 
                 if (hasOwnProperty(attributes, key)) {
-                    result[keys[i]] = transformer(attributes[key]);
+                    result[key_] = transformer(attributes[key]);
                 }
             }
         }

@@ -97,12 +97,12 @@ export class Application implements IApplication {
             sorted.push(this.modules.get(current)!);
 
             const neighbors = adjacency.get(current)!;
-            for (let i = 0; i < neighbors.length; i++) {
-                const newDegree = inDegree.get(neighbors[i])! - 1;
-                inDegree.set(neighbors[i], newDegree);
+            for (const neighbor of neighbors) {
+                const newDegree = inDegree.get(neighbor)! - 1;
+                inDegree.set(neighbor, newDegree);
 
                 if (newDegree === 0) {
-                    queue.push(neighbors[i]);
+                    queue.push(neighbor);
                 }
             }
         }

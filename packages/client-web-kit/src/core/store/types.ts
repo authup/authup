@@ -17,17 +17,17 @@ import type { StoreDispatcher } from './dispatcher';
 
 type StoreData = ReturnType<typeof createStore>;
 export type Store = BaseStore<
-string,
-_ExtractStateFromSetupStore<StoreData>,
-_ExtractGettersFromSetupStore<StoreData>,
-_ExtractActionsFromSetupStore<StoreData>
+    string,
+    _ExtractStateFromSetupStore<StoreData>,
+    _ExtractGettersFromSetupStore<StoreData>,
+    _ExtractActionsFromSetupStore<StoreData>
 >;
 
 export type StoreDefinition = BaseStoreDefinition<
-string,
-_ExtractStateFromSetupStore<StoreData>,
-_ExtractGettersFromSetupStore<StoreData>,
-_ExtractActionsFromSetupStore<StoreData>
+    string,
+    _ExtractStateFromSetupStore<StoreData>,
+    _ExtractGettersFromSetupStore<StoreData>,
+    _ExtractActionsFromSetupStore<StoreData>
 >;
 
 export type StoreCreateContext = {

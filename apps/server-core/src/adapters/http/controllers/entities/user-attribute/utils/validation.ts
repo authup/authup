@@ -11,7 +11,7 @@ import type { UserAttribute } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class UserAttributeRequestValidator extends Container<
-UserAttribute
+    UserAttribute
 > {
     protected initialize() {
         super.initialize();

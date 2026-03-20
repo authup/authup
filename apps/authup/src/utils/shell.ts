@@ -66,8 +66,8 @@ export async function execShellCommand(
                 }
 
                 const lines = parseProcessOutputData(data);
-                for (let i = 0; i < lines.length; i++) {
-                    ctx.logDataStream(lines[i]);
+                for (const line of lines) {
+                    ctx.logDataStream(line);
                 }
             });
         }

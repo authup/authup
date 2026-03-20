@@ -37,7 +37,7 @@ export class Navigation {
 
         try {
             await this.store.resolve();
-        } catch (e) {
+        } catch {
             // do nothing :)
         }
     }
@@ -116,7 +116,7 @@ export class Navigation {
                             identity,
                         },
                     });
-                } catch (e) {
+                } catch {
                     canPass = false;
                 }
             }

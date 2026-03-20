@@ -33,8 +33,7 @@ export class IdentityProviderLdapCollectionAuthenticator extends BaseCredentials
         let error : Error | undefined;
         const entities = await this.repository.findByProtocol(IdentityProviderProtocol.LDAP, realmId);
 
-        for (let i = 0; i < entities.length; i++) {
-            const provider = entities[i];
+        for (const provider of entities) {
 
             if (!isLdapIdentityProvider(provider)) {
                 continue;

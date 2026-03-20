@@ -47,7 +47,7 @@ export default defineComponent({
             entity.value = await injectHTTPClient()
                 .robot
                 .getOne(route.params.id as string, { fields: ['+secret'] });
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/robots' });
             createError({});
         }

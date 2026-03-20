@@ -8,7 +8,7 @@
 import {
     Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn,
 } from 'typeorm';
-import {
+import type {
     JWKType,
 } from '@authup/specs';
 import type {
@@ -25,7 +25,7 @@ import { RealmEntity } from '../realm/index.ts';
 @Entity({ name: 'auth_keys' })
 export class KeyEntity implements Key {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Index()
     @Column({
@@ -33,21 +33,21 @@ export class KeyEntity implements Key {
         length: 64,
         default: null,
     })
-        type: `${JWKType}`;
+    type: `${JWKType}`;
 
     @Column({
         type: 'int',
         unsigned: true,
         default: 0,
     })
-        priority: number;
+    priority: number;
 
     @Column({
         type: 'varchar',
         length: 64,
         default: null,
     })
-        signature_algorithm: Key['signature_algorithm'];
+    signature_algorithm: Key['signature_algorithm'];
 
     @Column({
         type: 'varchar',
@@ -55,30 +55,30 @@ export class KeyEntity implements Key {
         default: null,
         select: false,
     })
-        decryption_key?: string | null;
+    decryption_key?: string | null;
 
     @Column({
         type: 'varchar',
         length: 4096,
         default: null,
     })
-        encryption_key: string | null;
+    encryption_key: string | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: Date;
+    created_at: Date;
 
     @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column({ nullable: true, default: null })
-        realm_id: Realm['id'];
+    realm_id: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
-        realm: RealmEntity;
+    realm: RealmEntity;
 }

@@ -13,7 +13,7 @@ import type { Policy } from './entity.ts';
 import { isPolicyNameValid } from './helpers.ts';
 
 export class PolicyValidator extends Container<
-Policy
+    Policy
 > {
     protected initialize() {
         super.initialize();

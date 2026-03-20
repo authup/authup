@@ -50,7 +50,7 @@ export default defineComponent({
             entity.value = await injectHTTPClient()
                 .permission
                 .getOne(route.params.id as string);
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/permissions' });
             throw createError({});
         }

@@ -13,11 +13,11 @@ export function expectPropertiesEqualToSrc<T extends Record<string, any>>(
     ignore?: (keyof T)[],
 ) {
     const keys = Object.keys(src);
-    for (let i = 0; i < keys.length; i++) {
-        if (ignore && ignore.indexOf(keys[i]) !== -1) {
+    for (const key of keys) {
+        if (ignore && ignore.includes(key)) {
             continue;
         }
 
-        expect(dest[keys[i]]).toEqual(src[keys[i]]);
+        expect(dest[key]).toEqual(src[key]);
     }
 }

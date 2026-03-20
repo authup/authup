@@ -21,7 +21,7 @@ export default defineComponent({
         },
     },
     setup(props) {
-        const isEnabled = computed(() => props.requested.indexOf(props.entity.name) !== -1);
+        const isEnabled = computed(() => props.requested.includes(props.entity.name));
 
         return {
             isEnabled,

@@ -33,7 +33,7 @@ export async function canRequestManageUserAttribute(
 
             return true;
         }
-    } catch (e) {
+    } catch {
         if (!isMe) {
             return false;
         }
@@ -47,7 +47,7 @@ export async function canRequestManageUserAttribute(
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
                 }),
             });
-        } catch (e) {
+        } catch {
             return false;
         }
     }

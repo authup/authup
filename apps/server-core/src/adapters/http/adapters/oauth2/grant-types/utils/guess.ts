@@ -17,7 +17,7 @@ export function guessOauth2GrantTypeByRequest(
     const grantType = useRequestBody(request, 'grant_type') || useRequestQuery(request, 'grant_type');
 
     const validGrantTypes = Object.values(OAuth2TokenGrant);
-    if (validGrantTypes.indexOf(grantType) !== -1) {
+    if (validGrantTypes.includes(grantType)) {
         return grantType;
     }
 

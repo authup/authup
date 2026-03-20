@@ -46,7 +46,7 @@ export class HTTPMiddlewareModule {
         await this.mountAuthorization(router, container);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     async mountAfter(router: Router, _container: IDIContainer): Promise<void> {
         registerErrorMiddleware(router);
     }

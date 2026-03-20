@@ -67,7 +67,7 @@ export function createPermissionCheckerReactiveFn(
                     .catch(() => false);
 
                 outcome = await computePromise;
-            } catch (e) {
+            } catch {
                 outcome = false;
             } finally {
                 computePromise = undefined;

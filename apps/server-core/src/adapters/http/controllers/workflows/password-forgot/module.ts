@@ -28,8 +28,8 @@ export class PasswordForgotController {
     @DPost('', [])
     async execute(
         @DBody() data: any,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<PasswordForgotResponse> {
         const result = await this.service.forgotPassword(data);
 

@@ -24,7 +24,7 @@ import type { EntityPickerContext, EntityPickerVEmitOptions, RecordWithID } from
 
 export function defineEntityPickerVEmitOptions<T>() : EntityPickerVEmitOptions<T> {
     return {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         change: (_values: string[]) => true,
         ...defineEntityCollectionVEmitOptions<T>(),
     };
@@ -153,7 +153,7 @@ export function defineEntityPicker<T extends RecordWithID>({
                 }
 
                 return renderToggleButton({
-                    value: items.value.indexOf(slotProps.data.id) !== -1,
+                    value: items.value.includes(slotProps.data.id),
                     isBusy: slotProps.busy,
                     changed() {
                         toggle(slotProps.data.id);

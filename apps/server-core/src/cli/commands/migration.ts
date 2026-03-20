@@ -113,8 +113,8 @@ async function generateMigrations(): Promise<void> {
 
     const timestamp = Date.now();
 
-    for (let i = 0; i < connections.length; i++) {
-        const dataSourceOptions = optionsBuilder.buildWith(connections[i]);
+    for (const connection of connections) {
+        const dataSourceOptions = optionsBuilder.buildWith(connection);
         const directoryPath = path.join(baseDirectory, dataSourceOptions.type);
 
         await dropDatabase({ options: dataSourceOptions });

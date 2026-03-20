@@ -117,7 +117,7 @@ export class TokenVerifier implements ITokenVerifier {
                 key,
                 ...(jwk.alg ? { algorithms: [jwk.alg as JWTAlgorithm.RS256] } : {}),
             }) as OAuth2TokenPayload;
-        } catch (e) {
+        } catch {
             throw JWTError.payloadInvalid('The token could not be verified.');
         }
 

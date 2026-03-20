@@ -1,5 +1,6 @@
 {
     "name": "@authup/root",
+    "type": "module",
     "private": true,
     "author": {
         "name": "Peter Placzek",
@@ -37,13 +38,13 @@
         "@rollup/plugin-terser": "^1.0.0",
         "@swc/core": "^1.15.18",
         "@tada5hi/commitlint-config": "^1.3.1",
-        "@tada5hi/eslint-config-vue-typescript": "^1.3.18",
+        "@tada5hi/eslint-config": "^2.0.2",
         "@types/node": "^25.5.0",
         "@vitejs/plugin-vue": "^6.0.5",
         "@vitest/coverage-v8": "^4.1.0",
         "cross-env": "^10.1.0",
-        "eslint": "^8.57.1",
-        "eslint-plugin-vue": "10.6.2",
+        "eslint": "^10.0.3",
+        "eslint-plugin-vue": "^10.8.0",
         "husky": "^9.1.7",
         "lint-staged": "^16.4.0",
         "nx": "^22.6.0",

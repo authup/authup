@@ -43,7 +43,7 @@ export default defineComponent({
             entity.value = await injectHTTPClient()
                 .scope
                 .getOne(route.params.id as string);
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/scopes' });
             throw createError({});
         }

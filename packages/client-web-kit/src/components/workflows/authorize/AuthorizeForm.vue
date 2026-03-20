@@ -63,7 +63,7 @@ export default defineComponent({
                 if (typeof window !== 'undefined') {
                     window.location.href = url;
                 }
-            } catch (e) {
+            } catch {
                 // todo: show toast :)
 
             }

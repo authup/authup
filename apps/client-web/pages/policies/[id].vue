@@ -38,7 +38,7 @@ export default defineComponent({
             entity.value = await injectHTTPClient()
                 .policy
                 .getOne(route.params.id as string);
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/policies' });
             throw createError({});
         }

@@ -14,17 +14,9 @@ import type { Request, Response } from 'routup';
 import {
     getRequestHeader, getRequestHostName, getRequestIP, send, sendAccepted, sendCreated, sendRedirect, useRequestParam,
 } from 'routup';
-import {
-    IdentityProvider,
-    IdentityProviderAttributesValidator,
-    IdentityProviderValidator,
-    IdentityType,
-    type OAuth2AuthorizationCodeRequest,
-    PermissionName,
-    ValidatorGroup,
-    isOAuth2IdentityProvider,
-    isOpenIDIdentityProvider,
-} from '@authup/core-kit';
+import type {
+    IdentityProvider, OAuth2AuthorizationCodeRequest} from '@authup/core-kit';
+import { IdentityProviderAttributesValidator, IdentityProviderValidator, IdentityType, PermissionName, ValidatorGroup, isOAuth2IdentityProvider, isOpenIDIdentityProvider } from '@authup/core-kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
@@ -94,7 +86,7 @@ export class IdentityProviderController {
     @DGet('', [])
     async getProviders(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const { data, meta } = await this.repository.findMany(useRequestQuery(req));
 
@@ -102,19 +94,19 @@ export class IdentityProviderController {
             const permissionChecker = useRequestPermissionChecker(req);
             await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_READ });
 
-            for (let i = 0; i < data.length; i++) {
+            for (const datum of data) {
                 try {
                     await permissionChecker.check({
                         name: PermissionName.IDENTITY_PROVIDER_READ,
                         input: new PolicyData({
-                            [BuiltInPolicyType.ATTRIBUTES]: data[i],
+                            [BuiltInPolicyType.ATTRIBUTES]: datum,
                         }),
                     });
-                } catch (e) {
+                } catch {
                     // do nothing
                 }
             }
-        } catch (e) {
+        } catch {
             // do nothing
         }
 
@@ -127,8 +119,8 @@ export class IdentityProviderController {
     @DGet('/:id', [])
     async getProvider(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
         const paramId = useRequestParamID(req, {
             isUUID: false,
@@ -151,7 +143,7 @@ export class IdentityProviderController {
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
                 }),
             });
-        } catch (e) {
+        } catch {
             // do nothing
         }
 
@@ -161,9 +153,9 @@ export class IdentityProviderController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<IdentityProvider>,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() user: NonNullable<IdentityProvider>,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ) : Promise<any> {
         return this.write(req, res, { updateOnly: true });
     }
@@ -171,9 +163,9 @@ export class IdentityProviderController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-            @DBody() user: NonNullable<IdentityProvider>,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DBody() user: NonNullable<IdentityProvider>,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ) : Promise<any> {
         return this.write(req, res);
     }
@@ -181,8 +173,8 @@ export class IdentityProviderController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropProvider(
         @DPath('id') id: string,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ) : Promise<any> {
         const paramId = useRequestParamID(req);
 
@@ -214,8 +206,8 @@ export class IdentityProviderController {
     @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
         @DBody() user: NonNullable<IdentityProvider>,
-            @DRequest() req: any,
-            @DResponse() res: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ) : Promise<any> {
         return this.write(req, res);
     }
@@ -224,7 +216,7 @@ export class IdentityProviderController {
 
     @DGet('/:id/authorize-out', [])
     async authorizeOut(
-    @DPath('id') _id: string,
+        @DPath('id') _id: string,
         @DRequest() req: any,
         @DResponse() res: any,
     ) {
@@ -252,7 +244,7 @@ export class IdentityProviderController {
 
             try {
                 codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
-            } catch (e) {
+            } catch {
                 throw OAuth2Error.requestInvalid('The code request is malformed and can not be parsed.');
             }
 
@@ -277,7 +269,7 @@ export class IdentityProviderController {
 
     @DGet('/:id/authorize-in', [])
     async authorizeIn(
-    @DPath('id') _id: string,
+        @DPath('id') _id: string,
         @DRequest() req: Request,
         @DResponse() res: Response,
     ) {
@@ -339,13 +331,13 @@ export class IdentityProviderController {
 
         const domains = [...new Set(domainsRaw)];
 
-        for (let i = 0; i < domains.length; i++) {
+        for (const domain of domains) {
             setResponseCookie(
                 res,
                 CookieName.ACCESS_TOKEN,
                 token.access_token,
                 {
-                    domain: domains[i],
+                    domain,
                     maxAge: this.options.accessTokenMaxAge * 1000,
                 },
             );
@@ -356,7 +348,7 @@ export class IdentityProviderController {
                     CookieName.REFRESH_TOKEN,
                     token.refresh_token,
                     {
-                        domain: domains[i],
+                        domain,
                         maxAge: this.options.refreshTokenMaxAge * 1000,
                     },
                 );
@@ -367,8 +359,8 @@ export class IdentityProviderController {
             const codeRequestKeys = Object.keys(data.codeRequest);
 
             const url = new URL('/authorize', this.options.baseURL);
-            for (let i = 0; i < codeRequestKeys.length; i++) {
-                const codeRequestKey = codeRequestKeys[i] as keyof OAuth2AuthorizationCodeRequest;
+            for (const codeRequestKey_ of codeRequestKeys) {
+                const codeRequestKey = codeRequestKey_ as keyof OAuth2AuthorizationCodeRequest;
                 if (data.codeRequest[codeRequestKey]) {
                     url.searchParams.set(codeRequestKey, data.codeRequest[codeRequestKey]);
                 }

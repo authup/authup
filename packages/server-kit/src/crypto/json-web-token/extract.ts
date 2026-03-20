@@ -43,7 +43,7 @@ export function extractTokenHeader(
             'x5t#S256': header.x5TS256CertThumbprint,
         };
          */
-    } catch (e) {
+    } catch {
         throw JWTError.headerInvalid('The token header could not be extracted.');
     }
 }
@@ -67,7 +67,7 @@ export function extractTokenPayload(
         const payload = atob(payloadBase64);
 
         return JSON.parse(payload);
-    } catch (e) {
+    } catch {
         throw JWTError.payloadInvalid('The token payload could not be extracted.');
     }
 }

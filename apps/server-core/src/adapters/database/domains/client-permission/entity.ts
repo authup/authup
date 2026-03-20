@@ -30,50 +30,50 @@ import { RealmEntity } from '../realm/index.ts';
 @Index(['client_id', 'permission_id'], { unique: true })
 export class ClientPermissionEntity implements ClientPermission {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     // ------------------------------------------------------------------
 
     @Column({ nullable: true })
-        policy_id: string | null;
+    policy_id: string | null;
 
     @ManyToOne(() => PolicyEntity, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'policy_id' })
-        policy: Policy | null;
+    policy: Policy | null;
 
     @Column()
-        client_id: string;
+    client_id: string;
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
-        client: Client;
+    client: Client;
 
     @Column({ nullable: true })
-        client_realm_id: Client['id'] | null;
+    client_realm_id: Client['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_realm_id' })
-        client_realm: Realm | null;
+    client_realm: Realm | null;
 
     @Column({ type: 'varchar' })
-        permission_id: string;
+    permission_id: string;
 
     @ManyToOne(() => PermissionEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'permission_id' })
-        permission: Permission;
+    permission: Permission;
 
     @Column({ nullable: true })
-        permission_realm_id: Realm['id'] | null;
+    permission_realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'permission_realm_id' })
-        permission_realm: Realm | null;
+    permission_realm: Realm | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: Date;
+    created_at: Date;
 
     @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 }

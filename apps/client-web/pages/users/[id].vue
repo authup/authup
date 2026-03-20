@@ -48,7 +48,7 @@ export default defineComponent({
             entity.value = await injectHTTPClient()
                 .user
                 .getOne(route.params.id as string, { fields: ['+email'] });
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/users' });
             throw createError({});
         }

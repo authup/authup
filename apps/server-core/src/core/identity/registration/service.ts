@@ -77,7 +77,7 @@ export class RegistrationService implements IRegistrationService {
                     <p>${entity.activate_hash}</p>
                     `,
                 });
-            } catch (e) {
+            } catch {
                 await this.repository.remove(entity);
                 throw new BadRequestError('Registration failed. Could not send activation email.');
             }

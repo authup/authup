@@ -106,8 +106,8 @@ export class ExtraAttributesRepositoryAdapter<
         }
 
         const keys = Object.keys(input) as (keyof T)[];
-        for (let i = 0; i < keys.length; i++) {
-            const key = keys[i] as string;
+        for (const key_ of keys) {
+            const key = key_ as string;
             const index = columns.indexOf(key);
             if (index === -1) {
                 extra[key] = input[key];
@@ -124,8 +124,8 @@ export class ExtraAttributesRepositoryAdapter<
         );
 
         const extraKeys = Object.keys(extra);
-        for (let i = 0; i < extraKeys.length; i++) {
-            input[extraKeys[i] as keyof T] = extra[extraKeys[i]];
+        for (const extraKey of extraKeys) {
+            input[extraKey as keyof T] = extra[extraKey];
         }
 
         return input;
@@ -145,8 +145,7 @@ export class ExtraAttributesRepositoryAdapter<
     ) : Promise<T & E> {
         const attributes = await this.findOneWithEAByPrimaryColumn(entity[this.primaryColumn], extraOptions);
         const attributeKeys = Object.keys(attributes);
-        for (let i = 0; i < attributeKeys.length; i++) {
-            const attributeKey = attributeKeys[i];
+        for (const attributeKey of attributeKeys) {
             entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
         }
 
@@ -166,12 +165,12 @@ export class ExtraAttributesRepositoryAdapter<
         const attributes = await this.attributeRepository.find({ where });
         const output : Record<string, E> = {};
 
-        for (let i = 0; i < value.length; i++) {
+        for (const element of value) {
             const entityAttributes = attributes.filter(
-                (attribute) => attribute[this.attributeForeignColumn] === value[i] as unknown as A[keyof A],
+                (attribute) => attribute[this.attributeForeignColumn] === element as unknown as A[keyof A],
             );
 
-            output[value[i] as string] = entityAttributes
+            output[element as string] = entityAttributes
                 .reduce((acc, curr) => {
                     acc[curr.name as keyof E] = curr.value as E[keyof E];
 
@@ -191,16 +190,15 @@ export class ExtraAttributesRepositoryAdapter<
             extraOptions,
         );
 
-        for (let i = 0; i < entities.length; i++) {
-            const attributes = attributesByPrimaryKey[entities[i][this.primaryColumn] as string];
+        for (const entity of entities) {
+            const attributes = attributesByPrimaryKey[entity[this.primaryColumn] as string];
             if (!attributes) {
                 continue;
             }
 
             const attributeKeys = Object.keys(attributes);
-            for (let j = 0; j < attributeKeys.length; j++) {
-                const attributeKey = attributeKeys[j];
-                entities[i][attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
+            for (const attributeKey of attributeKeys) {
+                entity[attributeKey as keyof T] = attributes[attributeKey] as T[keyof T];
             }
         }
 
@@ -226,8 +224,7 @@ export class ExtraAttributesRepositoryAdapter<
         const itemsToUpdate : A[] = [];
 
         const keysProcessed : string[] = [];
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
+        for (const item of items) {
 
             if (hasOwnProperty(input, item.name)) {
                 item.value = input[item.name];
@@ -237,7 +234,7 @@ export class ExtraAttributesRepositoryAdapter<
 
                 keysProcessed.push(item.name);
             } else if (!options.keepAll) {
-                itemsToDelete.push(items[i]);
+                itemsToDelete.push(item);
             }
         }
 
@@ -254,12 +251,12 @@ export class ExtraAttributesRepositoryAdapter<
         const keys = Object.keys(input);
         let keyIndex : number;
 
-        for (let i = 0; i < keys.length; i++) {
-            keyIndex = keysProcessed.indexOf(keys[i]);
+        for (const key of keys) {
+            keyIndex = keysProcessed.indexOf(key);
             if (keyIndex === -1) {
                 itemsToAdd.push(this.extra({
-                    name: keys[i],
-                    value: input[keys[i]],
+                    name: key,
+                    value: input[key],
                     [foreignColumn]: foreignColumnValue,
                 } as A, parent));
             }

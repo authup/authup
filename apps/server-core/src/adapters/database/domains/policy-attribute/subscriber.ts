@@ -9,7 +9,8 @@ import type { PolicyAttribute } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
 } from '@authup/core-kit';
-import { DomainEventDestinations, buildRedisKeyPath } from '@authup/server-kit';
+import type { DomainEventDestinations} from '@authup/server-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
