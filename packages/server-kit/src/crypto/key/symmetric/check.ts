@@ -8,5 +8,5 @@
 import { SymmetricAlgorithm } from './constants';
 
 export function isSymmetricAlgorithm(input: string) : input is SymmetricAlgorithm {
-    return (Object.values(SymmetricAlgorithm) as string[]).indexOf(input) !== -1;
+    return (Object.values(SymmetricAlgorithm) as string[]).includes(input);
 }

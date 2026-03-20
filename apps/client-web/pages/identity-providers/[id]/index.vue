@@ -4,7 +4,6 @@ import { AIdentityProviderForm } from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';
-import { useRuntimeConfig } from '#app';
 import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '../../../config/layout';
 
@@ -36,7 +35,6 @@ export default defineNuxtComponent({
         };
 
         return {
-            entity: props.entity,
             handleUpdated,
             handleFailed,
         };

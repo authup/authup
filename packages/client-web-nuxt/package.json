@@ -31,8 +31,8 @@
     },
     "dependencies": {
         "@authup/access": "^1.0.0-beta.30",
-        "@authup/kit": "^1.0.0-beta.30",
         "@authup/client-web-kit": "^1.0.0-beta.30",
+        "@authup/kit": "^1.0.0-beta.30",
         "@nuxt/kit": "^4.0.0",
         "pathtrace": "^2.1.0",
         "smob": "^1.6.1"
@@ -42,6 +42,7 @@
         "@pinia/nuxt": "^0.11.3",
         "nuxt": "^4.4.2",
         "pinia": "^3.0.0",
+        "strip-literal": "^3.1.0",
         "vue-router": "^5.0.4"
     },
     "peerDependencies": {

@@ -53,7 +53,7 @@ function renderPreloadLinks(modules: string[], manifest: Record<string, string[]
                     seen.add(file);
                     const filename = basename(file);
                     if (manifest[filename]) {
-                        // eslint-disable-next-line no-restricted-syntax
+                         
                         for (const depFile of manifest[filename]) {
                             links += renderPreloadLink(depFile);
                             seen.add(depFile);

@@ -24,7 +24,7 @@ export async function extractTokenFromRequest(req: Request) : Promise<string> {
         });
 
         token = data.token;
-    } catch (e) {
+    } catch {
         token = useRequestToken(req);
     }
 

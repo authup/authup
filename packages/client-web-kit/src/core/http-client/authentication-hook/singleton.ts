@@ -24,7 +24,7 @@ export function injectHTTPClientAuthenticationHook(app?: App) : ClientAuthentica
 export function hasHTTPClientAuthenticationHook(app?: App) : boolean {
     try {
         return !!injectHTTPClientAuthenticationHook(app);
-    } catch (e) {
+    } catch {
         return false;
     }
 }

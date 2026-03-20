@@ -9,8 +9,8 @@ export function stringifyObjectArgs(ob: Record<string, any>) {
     const parts : string[] = [];
 
     const keys = Object.keys(ob);
-    for (let i = 0; i < keys.length; i++) {
-        parts.push(`--${keys[i]} ${ob[keys[i]]}`);
+    for (const key of keys) {
+        parts.push(`--${key} ${ob[key]}`);
     }
 
     return parts.join(' ');

@@ -67,6 +67,7 @@ export default defineComponent({
         });
 
         function assign(data: Partial<TimePolicy> = {}) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assignFormProperties(form, data as Record<string, any>);
         }
 

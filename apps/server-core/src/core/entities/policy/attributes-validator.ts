@@ -45,30 +45,22 @@ export class PolicyAttributesValidator extends Container<Record<string, any>> {
     override async run(
         data: Record<string, any>,
     ) : Promise<Record<string, any>> {
-        let attributes : Record<string, any> = {};
-
         switch (data.type) {
             case BuiltInPolicyType.ATTRIBUTES: {
-                attributes = await this.attributesOptionsValidator.run(data);
-                break;
+                return this.attributesOptionsValidator.run(data);
             }
             case BuiltInPolicyType.ATTRIBUTE_NAMES: {
-                attributes = await this.attributeNamesOptionsValidator.run(data);
-                break;
+                return this.attributeNamesOptionsValidator.run(data);
             }
             case BuiltInPolicyType.DATE: {
-                attributes = await this.dateOptionsValidator.run(data);
-                break;
+                return this.dateOptionsValidator.run(data);
             }
             case BuiltInPolicyType.TIME: {
-                attributes = await this.timeOptionsValidator.run(data);
-                break;
+                return this.timeOptionsValidator.run(data);
             }
             default: {
-                attributes = omitRecord(data, this.attributeNames);
+                return omitRecord(data, this.attributeNames);
             }
         }
-
-        return attributes;
     }
 }

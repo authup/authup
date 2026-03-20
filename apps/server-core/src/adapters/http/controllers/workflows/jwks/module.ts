@@ -33,7 +33,7 @@ export class JwkController {
     @DGet('/jwks', [])
     async getManyJwks(
         @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DResponse() res: Response,
     ): Promise<any> {
         const realmId = getRequestStringParam(req, 'realmId');
 
@@ -74,8 +74,8 @@ export class JwkController {
     @DGet('/jwks/:id', [])
     async getOneJwks(
         @DPath('id') id: string,
-            @DRequest() req: Request,
-            @DResponse() res: Response,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const entity = await this.repository.findOne({
             where: {

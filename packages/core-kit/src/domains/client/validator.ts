@@ -104,12 +104,12 @@ export class ClientValidator extends Container<Client> {
                     .check((ctx) => {
                         const validator = z.url();
                         const urls = ctx.value.split(',');
-                        for (let i = 0; i < urls.length; i++) {
+                        for (const url of urls) {
                             try {
-                                validator.parse(urls[i]);
+                                validator.parse(url);
                             } catch (e) {
                                 ctx.issues.push({
-                                    input: urls[i],
+                                    input: url,
                                     code: 'custom',
                                     message: e instanceof Error ? e.message : 'The redirect_uri is not valid.',
                                 });

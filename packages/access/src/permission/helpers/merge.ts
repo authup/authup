@@ -26,8 +26,8 @@ export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[]
 
     const output : PermissionItem[] = [];
     const keys = Object.keys(grouped);
-    for (let i = 0; i < keys.length; i++) {
-        const [permission, ...permissions] = grouped[keys[i]];
+    for (const key of keys) {
+        const [permission, ...permissions] = grouped[key];
 
         if (permissions.length > 0) {
             const policy: PolicyWithType<CompositePolicy> = {

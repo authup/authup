@@ -11,7 +11,7 @@ import type { RobotRole } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class RobotRoleRequestValidator extends Container<
-RobotRole
+    RobotRole
 > {
     protected initialize() {
         super.initialize();

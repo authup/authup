@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineNuxtComponent, definePageMeta, h } from '#imports';
+import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '~/config/layout';
 
 export default defineNuxtComponent({

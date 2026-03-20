@@ -9,7 +9,8 @@ import type { RoleAttribute } from '@authup/core-kit';
 import {
     EntityDefaultEventName, EntityType, buildEntityChannelName, buildEntityNamespaceName,
 } from '@authup/core-kit';
-import { DomainEventDestinations, buildRedisKeyPath } from '@authup/server-kit';
+import type { DomainEventDestinations} from '@authup/server-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -50,7 +51,7 @@ async function publishEvent(
 
 @EventSubscriber()
 export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAttributeEntity> {
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return RoleAttributeEntity;
     }

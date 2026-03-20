@@ -60,11 +60,11 @@ export class OAuth2Authorization {
 
         const enabledResponseTypes : Record<string, boolean> = {};
 
-        for (let i = 0; i < responseTypes.length; i++) {
-            if (availableResponseTypes.indexOf(responseTypes[i]) === -1) {
+        for (const responseType of responseTypes) {
+            if (!availableResponseTypes.includes(responseType)) {
                 throw OAuth2Error.responseTypeUnsupported();
             } else {
-                enabledResponseTypes[responseTypes[i]] = true;
+                enabledResponseTypes[responseType] = true;
             }
         }
 

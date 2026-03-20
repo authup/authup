@@ -23,7 +23,7 @@ import { RealmEntity } from '../realm/index.ts';
 @Unique(['name', 'realm_id'])
 export class ClientEntity implements Client {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     // ------------------------------------------------------------------
 
@@ -31,19 +31,19 @@ export class ClientEntity implements Client {
         type: 'boolean',
         default: true,
     })
-        active: boolean;
+    active: boolean;
 
     @Column({
         type: 'boolean',
         default: false,
     })
-        built_in: boolean;
+    built_in: boolean;
 
     @Column({
         type: 'boolean',
         default: false,
     })
-        is_confidential: boolean;
+    is_confidential: boolean;
 
     // ------------------------------------------------------------------
 
@@ -51,16 +51,16 @@ export class ClientEntity implements Client {
         type: 'varchar',
         length: 256,
     })
-        name: string;
+    name: string;
 
     @Column({ type: 'varchar', length: 256, nullable: true })
-        display_name: string | null;
+    display_name: string | null;
 
     @Column({
         type: 'text',
         nullable: true,
     })
-        description: string | null;
+    description: string | null;
 
     // ------------------------------------------------------------------
 
@@ -70,19 +70,19 @@ export class ClientEntity implements Client {
         select: false,
         nullable: true,
     })
-        secret: string | null;
+    secret: string | null;
 
     @Column({
         type: 'boolean',
         default: false,
     })
-        secret_hashed: boolean;
+    secret_hashed: boolean;
 
     @Column({
         type: 'boolean',
         default: false,
     })
-        secret_encrypted: boolean;
+    secret_encrypted: boolean;
 
     // ------------------------------------------------------------------
 
@@ -90,14 +90,14 @@ export class ClientEntity implements Client {
         type: 'text',
         nullable: true,
     })
-        redirect_uri: string | null;
+    redirect_uri: string | null;
 
     @Column({
         type: 'varchar',
         length: 512,
         nullable: true,
     })
-        grant_types: string | null;
+    grant_types: string | null;
 
     @Column({
         type: 'varchar',
@@ -105,38 +105,38 @@ export class ClientEntity implements Client {
         nullable: true,
         default: null,
     })
-        scope: string | null;
+    scope: string | null;
 
     @Column({
         type: 'varchar',
         length: 2000,
         nullable: true,
     })
-        base_url: string | null;
+    base_url: string | null;
 
     @Column({
         type: 'varchar',
         length: 2000,
         nullable: true,
     })
-        root_url: string | null;
+    root_url: string | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: string;
+    created_at: string;
 
     @UpdateDateColumn()
-        updated_at: string;
+    updated_at: string;
 
     // ------------------------------------------------------------------
 
     @Column()
-        realm_id: Realm['id'];
+    realm_id: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
-        realm: RealmEntity;
+    realm: RealmEntity;
 
     // ------------------------------------------------------------------
 

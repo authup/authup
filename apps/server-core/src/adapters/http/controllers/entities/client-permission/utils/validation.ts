@@ -13,7 +13,7 @@ import type {
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class ClientPermissionRequestValidator extends Container<
-ClientPermissionEntity
+    ClientPermissionEntity
 > {
     protected initialize() {
         super.initialize();

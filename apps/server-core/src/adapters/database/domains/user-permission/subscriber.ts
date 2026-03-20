@@ -13,7 +13,8 @@ import {
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import { DomainEventDestination, buildRedisKeyPath } from '@authup/server-kit';
+import type { DomainEventDestination} from '@authup/server-kit';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, InsertEvent,
     RemoveEvent,
@@ -61,7 +62,7 @@ async function publishEvent(
 
 @EventSubscriber()
 export class UserPermissionSubscriber implements EntitySubscriberInterface<UserPermissionEntity> {
-    // eslint-disable-next-line @typescript-eslint/ban-types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return UserPermissionEntity;
     }

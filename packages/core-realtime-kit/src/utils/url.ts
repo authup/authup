@@ -6,7 +6,7 @@
  */
 
 export function cleanDoubleSlashes(input = ''): string {
-    if (input.indexOf('://') !== -1) {
+    if (input.includes('://')) {
         return input.split('://')
             .map((str) => cleanDoubleSlashes(str))
             .join('://');

@@ -74,9 +74,9 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         }
 
         const { columns } = this.repository.metadata;
-        for (let i = 0; i < columns.length; i++) {
-            if (!columns[i].isSelect) {
-                query.addSelect(`user.${columns[i].databaseName}`);
+        for (const column of columns) {
+            if (!column.isSelect) {
+                query.addSelect(`user.${column.databaseName}`);
             }
         }
 
@@ -118,13 +118,13 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         });
 
         const entitiesToDelete : UserPermission[] = [];
-        for (let i = 0; i < entities.length; i++) {
-            const index = idsToDelete.indexOf(entities[i].permission_id);
+        for (const entity of entities) {
+            const index = idsToDelete.indexOf(entity.permission_id);
             if (index === -1) {
                 continue;
             }
 
-            entitiesToDelete.push(entities[i]);
+            entitiesToDelete.push(entity);
         }
 
         if (entitiesToDelete.length > 0) {
@@ -132,8 +132,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         }
 
         const entitiesToCreate : UserPermission[] = [];
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
+        for (const item of items) {
 
             if (item.operation !== IdentityProviderMapperOperation.CREATE) {
                 continue;
@@ -176,13 +175,13 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         });
 
         const entitiesToDelete : UserRole[] = [];
-        for (let i = 0; i < entities.length; i++) {
-            const index = idsToDelete.indexOf(entities[i].role_id);
+        for (const entity of entities) {
+            const index = idsToDelete.indexOf(entity.role_id);
             if (index === -1) {
                 continue;
             }
 
-            entitiesToDelete.push(entities[i]);
+            entitiesToDelete.push(entity);
         }
 
         if (entitiesToDelete.length > 0) {
@@ -190,8 +189,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
         }
 
         const entitiesToCreate : UserRole[] = [];
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
+        for (const item of items) {
             if (item.operation !== IdentityProviderMapperOperation.CREATE) {
                 continue;
             }

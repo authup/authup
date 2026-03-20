@@ -14,13 +14,14 @@ import path from 'node:path';
 import { URL } from 'node:url';
 import { send, useRequestParam } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { type Client, OAuth2AuthorizationCodeRequest, type Scope } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { CLIENT_WEB_SLIM_PACKAGE_PATH } from '../../../../../path.ts';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
+import type {
+    IOAuth2AuthorizationCodeRequestVerifier} from '../../../../../core/index.ts';
 import {
-    IOAuth2AuthorizationCodeRequestVerifier,
     OAuth2AuthorizationCodeRequestValidator,
 } from '../../../../../core/index.ts';
 import { sanitizeError } from '../../../../../utils/index.ts';
@@ -63,7 +64,7 @@ export class AuthorizeController {
     @DPost('', [ForceUserLoggedInMiddleware])
     async confirm(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<void> {
         const result = await this.authorizer.authorizeWithRequest(req);
 
@@ -90,7 +91,7 @@ export class AuthorizeController {
     @DGet('', [])
     async serve(
         @DRequest() req: any,
-            @DResponse() res: any,
+        @DResponse() res: any,
     ): Promise<void> {
         let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
 

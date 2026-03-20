@@ -27,8 +27,7 @@ export class ProvisioningJunctionSynchronizer<T extends ObjectLiteral = ObjectLi
         targetKey: string,
         targetRealmKey: string,
     ): Promise<void> {
-        for (let i = 0; i < targets.length; i++) {
-            const target = targets[i];
+        for (const target of targets) {
 
             const existing = await this.ctx.repository.findOneBy({
                 [this.ctx.ownerKey]: owner.id,

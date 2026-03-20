@@ -29,48 +29,48 @@ import { ScopeEntity } from '../scope/index.ts';
 @Unique(['client_id', 'scope_id'])
 export class ClientScopeEntity implements ClientScope {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Column({ type: 'boolean', default: false })
-        default: boolean;
+    default: boolean;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: Date;
+    created_at: Date;
 
     @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 
     // ------------------------------------------------------------------
 
     @Column()
-        client_id: Client['id'];
+    client_id: Client['id'];
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'client_id' })
-        client: Client;
+    client: Client;
 
     @Column({ nullable: true })
-        client_realm_id: Realm['id'] | null;
+    client_realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_realm_id' })
-        client_realm: RealmEntity | null;
+    client_realm: RealmEntity | null;
 
     // ------------------------------------------------------------------
 
     @Column()
-        scope_id: Scope['id'];
+    scope_id: Scope['id'];
 
     @ManyToOne(() => ScopeEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'scope_id' })
-        scope: Scope;
+    scope: Scope;
 
     @Column({ nullable: true })
-        scope_realm_id: Realm['id'] | null;
+    scope_realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'scope_realm_id' })
-        scope_realm: RealmEntity | null;
+    scope_realm: RealmEntity | null;
 }

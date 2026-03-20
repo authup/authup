@@ -13,7 +13,7 @@ import type { Robot } from './entity.ts';
 import { isRobotNameValid } from './helpers.ts';
 
 export class RobotValidator extends Container<
-Robot
+    Robot
 > {
     protected initialize() {
         super.initialize();

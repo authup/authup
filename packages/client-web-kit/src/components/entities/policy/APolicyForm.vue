@@ -28,6 +28,7 @@ export default defineComponent({
         },
     },
     setup(props, ctx) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const typeComponents : Record<string, any> = {
             [BuiltInPolicyType.IDENTITY]: AIdentityPolicyForm,
             [BuiltInPolicyType.REALM_MATCH]: ARealmMatchPolicyForm,
@@ -78,8 +79,8 @@ export default defineComponent({
 
             if (manager.data.value) {
                 if (items.length > 0) {
-                    for (let i = 0; i < items.length; i++) {
-                        await httpClient.policy.update(items[i], {
+                    for (const item of items) {
+                        await httpClient.policy.update(item, {
                             parent_id: manager.data.value.id,
                         });
                     }

@@ -28,8 +28,7 @@ export class DatabaseLogger extends AdvancedConsoleLogger {
     ) {
         const messages = this.prepareLogMessages(logMessage);
 
-        for (let i = 0; i < messages.length; i++) {
-            const message = messages[i];
+        for (const message of messages) {
 
             switch (message.type ?? level) {
                 case 'log':

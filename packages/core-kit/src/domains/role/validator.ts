@@ -13,7 +13,7 @@ import type { Role } from './entity.ts';
 import { isRoleNameValid } from './utils.ts';
 
 export class RoleValidator extends Container<
-Role
+    Role
 > {
     protected initialize() {
         super.initialize();

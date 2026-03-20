@@ -51,7 +51,7 @@ export default defineNuxtModule<ModuleOptions>({
                 runtimeOptions,
             );
         } else {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+             
             nuxt.options.runtimeConfig.public.authup = runtimeOptions;
         }
 

@@ -6,7 +6,8 @@
  */
 
 import { type Store } from '@authup/client-web-kit';
-import type { PolicyIdentity } from '@authup/access';
+import type { IdentityPolicyData } from '@authup/access';
+import { PolicyData } from '@authup/access';
 import type {
     NavigationItem,
     NavigationItemNormalized,
@@ -37,7 +38,7 @@ export class Navigation {
 
         try {
             await this.store.resolve();
-        } catch (e) {
+        } catch {
             // do nothing :)
         }
     }
@@ -74,7 +75,7 @@ export class Navigation {
         }
 
         const { loggedIn } = this.store;
-        let identity: PolicyIdentity | undefined;
+        let identity: IdentityPolicyData | undefined;
         if (this.store.userId) {
             identity = {
                 type: 'user',
@@ -101,22 +102,19 @@ export class Navigation {
         let canPass = true;
 
         if (item.meta.requirePermissions) {
-            let permissions : string[] = [];
-            if (Array.isArray(item.meta.requirePermissions)) {
-                permissions = item.meta.requirePermissions;
-            } else {
-                permissions = [item.meta.requirePermissions];
-            }
+            const permissions : string[] = Array.isArray(item.meta.requirePermissions) ?
+                item.meta.requirePermissions :
+                [item.meta.requirePermissions];
 
             if (permissions.length > 0) {
                 try {
                     await this.store.permissionChecker.preCheckOneOf({
                         name: permissions,
-                        input: {
+                        input: new PolicyData({
                             identity,
-                        },
+                        }),
                     });
-                } catch (e) {
+                } catch {
                     canPass = false;
                 }
             }

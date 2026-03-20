@@ -52,8 +52,8 @@ export class ExtraAttributesTreeRepositoryAdapter<
             children
         ) {
             if (Array.isArray(children)) {
-                for (let i = 0; i < children.length; i++) {
-                    await this.saveWithEA(children[i], undefined, {
+                for (const child of children) {
+                    await this.saveWithEA(child, undefined, {
                         ...(options || {}),
                         parent: input,
                     });
@@ -91,8 +91,8 @@ export class ExtraAttributesTreeRepositoryAdapter<
             }
 
             const keys = Object.keys(value);
-            for (let i = 0; i < keys.length; i++) {
-                entity[keys[i] as keyof T] = value[keys[i]] as T[keyof T];
+            for (const key of keys) {
+                entity[key as keyof T] = value[key] as T[keyof T];
             }
 
             return entity;
@@ -119,14 +119,14 @@ export class ExtraAttributesTreeRepositoryAdapter<
         const data : T[] = Array.isArray(entities) ? entities : [entities];
 
         const childColumnName = this.repository.metadata.treeChildrenRelation?.propertyName;
-        for (let i = 0; i < data.length; i++) {
-            fn(data[i]);
+        for (const datum of data) {
+            fn(datum);
 
-            if (childColumnName && data[i][childColumnName]) {
-                if (Array.isArray(data[i][childColumnName])) {
-                    this.traverse(data[i][childColumnName], fn);
+            if (childColumnName && datum[childColumnName]) {
+                if (Array.isArray(datum[childColumnName])) {
+                    this.traverse(datum[childColumnName], fn);
                 } else {
-                    this.traverse([data[i][childColumnName]], fn);
+                    this.traverse([datum[childColumnName]], fn);
                 }
             }
         }

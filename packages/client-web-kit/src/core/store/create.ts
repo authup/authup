@@ -184,7 +184,7 @@ export function createStore(context: StoreCreateContext) {
                     token: tempAccessToken,
                 });
             }
-        } catch (e) {
+        } catch {
             // ...
         }
 
@@ -194,7 +194,7 @@ export function createStore(context: StoreCreateContext) {
                     token: tempRefreshToken,
                 });
             }
-        } catch (e) {
+        } catch {
             // ...
         }
     };

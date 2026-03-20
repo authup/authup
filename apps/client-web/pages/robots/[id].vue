@@ -4,7 +4,6 @@ import type { Robot } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
-import type { Ref } from 'vue';
 import {
     definePageMeta,
     useToast,
@@ -41,13 +40,13 @@ export default defineComponent({
         const toast = useToast();
         const route = useRoute();
 
-        const entity: Ref<Robot> = ref(null) as any;
+        const entity = ref<Robot>(null!);
 
         try {
             entity.value = await injectHTTPClient()
                 .robot
                 .getOne(route.params.id as string, { fields: ['+secret'] });
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/robots' });
             createError({});
         }

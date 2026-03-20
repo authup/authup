@@ -39,8 +39,8 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
     ) : Promise<Permission[]> {
         const promises : Promise<Permission[]>[] = [];
 
-        for (let i = 0; i < ids.length; i++) {
-            promises.push(this.getBoundPermissions(ids[i]));
+        for (const id of ids) {
+            promises.push(this.getBoundPermissions(id));
         }
 
         const abilities = await Promise.all(promises);

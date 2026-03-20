@@ -36,7 +36,7 @@ export function installComponents(app: App, input?: boolean | string[]) {
 
     Object.entries(components)
         .forEach(([componentName, component]) => {
-            if (input.indexOf(componentName) !== -1) {
+            if (input.includes(componentName)) {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 app.component(componentName, component as Component);

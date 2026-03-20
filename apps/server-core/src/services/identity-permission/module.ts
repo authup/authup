@@ -40,11 +40,11 @@ export class IdentityPermissionService {
         const parentPermissions = await this.getFor(parent);
         const childPermissions = await this.getFor(child);
 
-        for (let i = 0; i < childPermissions.length; i++) {
+        for (const childPermission of childPermissions) {
             const index = parentPermissions.findIndex(
                 (permission) => isPermissionItemEqual(
                     this.toPermissionItem(permission),
-                    this.toPermissionItem(childPermissions[i]),
+                    this.toPermissionItem(childPermission),
                 ),
             );
             if (index === -1) {

@@ -17,5 +17,5 @@ export function isBCryptHash(input: string): boolean {
         '$2x$',
         '$2y$',
         '$2b$',
-    ].indexOf(input.substring(0, 4)) !== -1;
+    ].includes(input.substring(0, 4));
 }

@@ -45,13 +45,13 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
         const keys = Object.keys(attributes);
 
         const issues : PolicyIssue[] = [];
-        for (let i = 0; i < keys.length; i++) {
-            const index = policy.names.indexOf(keys[i]);
+        for (const key of keys) {
+            const index = policy.names.indexOf(key);
             if (index === -1) {
                 issues.push(definePolicyIssueItem({
                     code: PolicyIssueCode.EVALUATION_DENIED,
-                    message: `The attribute ${keys[i]} is not included`,
-                    path: [...ctx.path, keys[i]],
+                    message: `The attribute ${key} is not included`,
+                    path: [...ctx.path, key],
                 }));
             }
         }

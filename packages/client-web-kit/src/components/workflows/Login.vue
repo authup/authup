@@ -91,6 +91,7 @@ export default defineComponent({
 
         resetIdentityProviderQuery();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const identityProviderRef = ref<null | { load:() => any, [key: string]: any}>(null);
         const updateIdentityProviderList = () => {
             if (identityProviderRef.value) {
@@ -118,7 +119,7 @@ export default defineComponent({
                 });
 
                 emit('done');
-            } catch (e: any) {
+            } catch (e: unknown) {
                 emit('failed', e instanceof Error ? e.message : 'The login operation failed');
             }
         };

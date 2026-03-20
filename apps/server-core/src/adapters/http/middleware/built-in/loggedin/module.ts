@@ -12,7 +12,7 @@ import type {
 import { useRequestIdentityOrFail } from '../../../request/index.ts';
 
 export class ForceLoggedInMiddleware implements HandlerInterface {
-    // eslint-disable-next-line class-methods-use-this
+     
     public run(request: Request, response: Response, next: Next) {
         useRequestIdentityOrFail(request);
         next();

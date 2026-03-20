@@ -11,7 +11,7 @@ import type { ClientRole } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class ClientRoleRequestValidator extends Container<
-ClientRole
+    ClientRole
 > {
     protected initialize() {
         super.initialize();

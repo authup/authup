@@ -15,8 +15,8 @@ import { IdentityProviderEntity } from './entity.ts';
 import { IdentityProviderAttributeEntity } from '../identity-provider-attribute/index.ts';
 
 export class IdentityProviderRepository extends EARepository<
-IdentityProviderEntity,
-IdentityProviderAttributeEntity
+    IdentityProviderEntity,
+    IdentityProviderAttributeEntity
 > {
     constructor(instance: DataSource | EntityManager) {
         super(

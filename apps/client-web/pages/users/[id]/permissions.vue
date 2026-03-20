@@ -3,7 +3,6 @@ import { APagination, ASearch, AUserPermissionAssignments } from '@authup/client
 import type { User } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent } from '#app';
-import { resolveComponent } from '#imports';
 
 export default defineNuxtComponent({
     components: {
@@ -16,11 +15,6 @@ export default defineNuxtComponent({
             type: Object as PropType<User>,
             required: true,
         },
-    },
-    setup(props) {
-        return {
-            entity: props.entity,
-        };
     },
 });
 </script>

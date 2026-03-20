@@ -49,8 +49,8 @@ export class RedisCache implements ICache {
     async dropMany(keys: string[]) : Promise<void> {
         const pipeline = this.client.pipeline();
 
-        for (let i = 0; i < keys.length; i++) {
-            pipeline.del(keys[i]);
+        for (const key of keys) {
+            pipeline.del(key);
         }
 
         await pipeline.exec();
@@ -61,8 +61,8 @@ export class RedisCache implements ICache {
             const pipeline = this.client.pipeline();
 
             const keys = await this.client.keys(`${options.prefix}*`);
-            for (let i = 0; i < keys.length; i++) {
-                pipeline.del(keys[i]);
+            for (const key of keys) {
+                pipeline.del(key);
             }
 
             await pipeline.exec();

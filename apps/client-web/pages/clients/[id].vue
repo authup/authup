@@ -3,8 +3,7 @@ import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
-import { type Ref, defineComponent } from 'vue';
-import { ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 import {
     createError,
     definePageMeta,
@@ -44,13 +43,13 @@ export default defineComponent({
         const toast = useToast();
         const route = useRoute();
 
-        const entity: Ref<Client> = ref(null) as any;
+        const entity = ref<Client>(null!);
 
         try {
             entity.value = await injectHTTPClient()
                 .client
                 .getOne(route.params.id as string, { fields: ['+secret'] });
-        } catch (e) {
+        } catch {
             await navigateTo({ path: '/clients' });
             throw createError({});
         }

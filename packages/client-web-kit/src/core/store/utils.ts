@@ -19,10 +19,10 @@ export function storeToRefs<SS extends StoreGeneric>(
 
     const refs = {} as StoreToRefs<SS>;
     const keys = Object.keys(store);
-    for (let i = 0; i < keys.length; i++) {
-        const value = store[keys[i]];
+    for (const key of keys) {
+        const value = store[key];
         if (isRef(value) || isReactive(value)) {
-            refs[keys[i] as (keyof StoreToRefs<SS>)] = toRef(store, keys[i]) as any;
+            refs[key as (keyof StoreToRefs<SS>)] = toRef(store, key) as any;
         }
     }
 

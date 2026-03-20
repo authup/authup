@@ -117,7 +117,7 @@ export class ClientManager<
     async reconnectAll() : Promise<Socket<ListenEvents, EmitEvents>[]> {
         const keys = this.sockets.keys();
         const promises : Promise<Socket<ListenEvents, EmitEvents>>[] = [];
-        // eslint-disable-next-line no-constant-condition
+         
         while (true) {
             const key = keys.next();
             if (key.done) {

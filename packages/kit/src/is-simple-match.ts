@@ -10,8 +10,8 @@ export function isSimpleMatch(
     pattern: string | string[],
 ) {
     if (Array.isArray(pattern)) {
-        for (let i = 0; i < pattern.length; i++) {
-            if (isSimpleMatch(value, pattern[i])) {
+        for (const element of pattern) {
+            if (isSimpleMatch(value, element)) {
                 return true;
             }
         }

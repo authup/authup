@@ -26,111 +26,111 @@ import { RealmEntity } from '../realm/index.ts';
 @Unique(['name', 'realm_id'])
 export class UserEntity implements User {
     @PrimaryGeneratedColumn('uuid')
-        id: string;
+    id: string;
 
     @Index()
     @Column({ type: 'varchar', length: 128 })
-        name: string;
+    name: string;
 
     @Column({ type: 'boolean', default: true })
-        name_locked: boolean;
+    name_locked: boolean;
 
     @Column({ type: 'varchar', length: 128, nullable: true })
-        first_name: string | null;
+    first_name: string | null;
 
     @Column({ type: 'varchar', length: 128, nullable: true })
-        last_name: string | null;
+    last_name: string | null;
 
     @Column({ type: 'varchar', length: 256, nullable: true })
-        display_name: string | null;
+    display_name: string | null;
 
     @Index()
     @Column({
         type: 'varchar', length: 256, select: false,
     })
-        email: string;
+    email: string;
 
     @Column({
         type: 'varchar', length: 512, default: null, nullable: true, select: false,
     })
-        password: string | null;
+    password: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-        avatar: string | null;
+    avatar: string | null;
 
     @Column({ type: 'varchar', length: 255, nullable: true })
-        cover: string | null;
+    cover: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({
         type: 'varchar', length: 256, nullable: true, default: null, select: false,
     })
-        reset_hash: string | null;
+    reset_hash: string | null;
 
     @Column({
         type: 'varchar', length: 28, nullable: true, default: null, select: false,
     })
-        reset_at: string | null;
+    reset_at: string | null;
 
     @Column({
         type: 'varchar', length: 28, nullable: true, default: null, select: false,
     })
-        reset_expires: string | null;
+    reset_expires: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({
         type: 'varchar', length: 256, nullable: true, default: null,
     })
-        status: string | null;
+    status: string | null;
 
     @Column({
         type: 'varchar', length: 256, nullable: true, default: null,
     })
-        status_message: string | null;
+    status_message: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({
         type: 'boolean', default: true,
     })
-        active: boolean;
+    active: boolean;
 
     @Column({
         type: 'varchar', length: 256, nullable: true, default: null, select: false,
     })
-        activate_hash: string | null;
+    activate_hash: string | null;
 
     // ------------------------------------------------------------------
 
     @CreateDateColumn()
-        created_at: Date;
+    created_at: Date;
 
     @UpdateDateColumn()
-        updated_at: Date;
+    updated_at: Date;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column()
-        realm_id: Realm['id'];
+    realm_id: Realm['id'];
 
     @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'realm_id' })
-        realm: Realm;
+    realm: Realm;
 
     // ------------------------------------------------------------------
 
     @Index()
     @Column({ nullable: true })
-        client_id: Client['id'] | null;
+    client_id: Client['id'] | null;
 
     @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE', nullable: true })
     @JoinColumn({ name: 'client_id' })
-        client: Client | null;
+    client: Client | null;
 
     // ------------------------------------------------------------------
 
