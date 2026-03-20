@@ -11,14 +11,20 @@ export default eslintConfig(
     { typescript: true, vue: true },
     {
         rules: {
-            'class-methods-use-this': 'off',
-            'no-shadow': 'off',
-            'no-use-before-define': 'off',
             '@typescript-eslint/no-unused-vars': ['error', {
                 argsIgnorePattern: '^_',
             }],
-            'import-x/extensions': 'off',
-            'import-x/no-extraneous-dependencies': 'off',
+            '@typescript-eslint/no-use-before-define': 'off',
+            '@typescript-eslint/no-this-alias': 'off',
+            '@typescript-eslint/only-throw-error': 'off'
+        },
+    },
+    {
+        files: ['**/*.vue'],
+        languageOptions: {
+            globals: {
+                NodeJS: 'readonly',
+            },
         },
     },
     {
