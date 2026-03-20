@@ -21,8 +21,8 @@ export class MemoryCache implements ICache {
     }
 
     async pop<T = unknown>(key: string): Promise<T | null> {
-        const output = this.instance.get(key);
-        if (output) {
+        if (this.instance.has(key)) {
+            const output = this.instance.get(key);
             this.instance.delete(key);
             return output as T;
         }

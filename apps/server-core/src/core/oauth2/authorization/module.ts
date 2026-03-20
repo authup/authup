@@ -74,6 +74,10 @@ export class OAuth2Authorization {
             ...(data.state ? { state: data.state } : {}),
         };
 
+        if (!identity) {
+            throw OAuth2Error.identityInvalid();
+        }
+
         const payloadBaseNormalized : OAuth2TokenPayload = {
 
             sub: identity.data.id,
@@ -85,10 +89,6 @@ export class OAuth2Authorization {
             ...(data.scope ? { scope: data.scope } : {}),
             ...(data.nonce ? { nonce: data.nonce } : {}),
         };
-
-        if (!identity) {
-            throw OAuth2Error.identityInvalid();
-        }
 
         let codeEntity : OAuth2AuthorizationCode | undefined;
 
