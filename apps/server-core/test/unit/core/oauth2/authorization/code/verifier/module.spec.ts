@@ -7,7 +7,8 @@
 
 import { randomUUID } from 'node:crypto';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
-import { OAuth2AuthorizationCodeChallengeMethod, OAuth2Error } from '@authup/specs';
+import { OAuth2AuthorizationCodeChallengeMethod } from '@authup/specs';
+import { ErrorCode } from '@authup/errors';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
@@ -64,10 +65,10 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
             expect(result.id).toBe(code.id);
         });
 
-        it('should throw for non-existent code', async () => {
+        it('should throw grantInvalid for non-existent code', async () => {
             await expect(
                 verifier.verify('non-existent', {}),
-            ).rejects.toThrow(OAuth2Error);
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
         });
 
         it('should verify redirect_uri when code has one', async () => {
@@ -80,7 +81,7 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
             expect(result.id).toBe(code.id);
         });
 
-        it('should throw when redirect_uri does not match', async () => {
+        it('should throw redirectUriMismatch when redirect_uri does not match', async () => {
             const code = repository.seed({
                 redirect_uri: 'https://example.com/callback',
             });
@@ -88,16 +89,16 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
                 verifier.verify(code.id, {
                     redirectUri: 'https://other.com/callback',
                 }),
-            ).rejects.toThrow(OAuth2Error);
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
         });
 
-        it('should throw when redirect_uri missing but code has one', async () => {
+        it('should throw redirectUriMismatch when redirect_uri missing but code has one', async () => {
             const code = repository.seed({
                 redirect_uri: 'https://example.com/callback',
             });
             await expect(
                 verifier.verify(code.id, {}),
-            ).rejects.toThrow(OAuth2Error);
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH }));
         });
 
         it('should verify PKCE plain challenge', async () => {
@@ -110,14 +111,14 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
             expect(result.id).toBe(code.id);
         });
 
-        it('should throw when PKCE plain verifier does not match', async () => {
+        it('should throw grantInvalid when PKCE plain verifier does not match', async () => {
             const code = repository.seed({
                 code_challenge: 'correct-verifier',
                 code_challenge_method: OAuth2AuthorizationCodeChallengeMethod.PLAIN,
             });
             await expect(
                 verifier.verify(code.id, { codeVerifier: 'wrong-verifier' }),
-            ).rejects.toThrow(OAuth2Error);
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
         });
 
         it('should verify PKCE S256 challenge', async () => {
@@ -131,7 +132,7 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
             expect(result.id).toBe(code.id);
         });
 
-        it('should throw when PKCE S256 verifier does not match', async () => {
+        it('should throw grantInvalid when PKCE S256 verifier does not match', async () => {
             const challenge = await buildOAuth2CodeChallenge('correct-verifier');
             const code = repository.seed({
                 code_challenge: challenge,
@@ -139,10 +140,10 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
             });
             await expect(
                 verifier.verify(code.id, { codeVerifier: 'wrong-verifier' }),
-            ).rejects.toThrow(OAuth2Error);
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
         });
 
-        it('should throw when code_verifier missing for S256 challenge', async () => {
+        it('should throw grantInvalid when code_verifier missing for S256 challenge', async () => {
             const challenge = await buildOAuth2CodeChallenge('verifier');
             const code = repository.seed({
                 code_challenge: challenge,
@@ -150,7 +151,7 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
             });
             await expect(
                 verifier.verify(code.id, {}),
-            ).rejects.toThrow(OAuth2Error);
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
         });
     });
 
