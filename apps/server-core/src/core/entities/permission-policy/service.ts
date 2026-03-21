@@ -67,6 +67,14 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
 
         await this.repository.validateJoinColumns(data);
 
+        if (data.permission) {
+            data.permission_realm_id = data.permission.realm_id;
+        }
+
+        if (data.policy) {
+            data.policy_realm_id = data.policy.realm_id;
+        }
+
         await actor.permissionChecker.check({
             name: PermissionName.PERMISSION_UPDATE,
             input: new PolicyData({
