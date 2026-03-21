@@ -46,6 +46,8 @@ export default defineComponent({
             assignFormProperties(form, data as Record<string, any>);
             if (attribute_name) {
                 form.attribute_name = typeof attribute_name === 'string' ? [attribute_name] : attribute_name;
+            } else {
+                form.attribute_name = [];
             }
         }
 

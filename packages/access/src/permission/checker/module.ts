@@ -45,11 +45,11 @@ export class PermissionChecker implements IPermissionChecker {
             this.provider = new PermissionMemoryRepository();
         }
 
-        if (options.client_id) {
+        if (typeof options.client_id !== 'undefined') {
             this.client_id = options.client_id;
         }
 
-        if (options.realm_id) {
+        if (typeof options.realm_id !== 'undefined') {
             this.realm_id = options.realm_id;
         }
 
@@ -72,11 +72,11 @@ export class PermissionChecker implements IPermissionChecker {
             name: input,
         };
 
-        if (this.client_id) {
+        if (typeof this.client_id !== 'undefined') {
             options.client_id = this.client_id;
         }
 
-        if (this.realm_id) {
+        if (typeof this.realm_id !== 'undefined') {
             options.realm_id = this.realm_id;
         }
 
