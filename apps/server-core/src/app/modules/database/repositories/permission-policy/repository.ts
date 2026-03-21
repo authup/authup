@@ -64,8 +64,8 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
         return this.findOneBy({ id });
     }
 
-    async findOneByName(name: string): Promise<PermissionPolicy | null> {
-        return this.repository.findOneBy({ name } as any);
+    async findOneByName(): Promise<PermissionPolicy | null> {
+        return null;
     }
 
     findOneByIdOrName(idOrName: string): Promise<PermissionPolicy | null> {
