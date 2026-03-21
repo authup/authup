@@ -41,10 +41,11 @@ export function createTestDatabaseModuleForSetup(): DatabaseModule {
     return new DatabaseModule({
         prepareBuild: prepareTestBuild,
         async setup(_container, options) {
-            await dropDatabase({ options, ifExist: true });
-
             if (typeof options.database === 'string') {
+                fs.rmSync(options.database, { force: true });
                 fs.mkdirSync(path.dirname(options.database), { recursive: true });
+            } else {
+                await dropDatabase({ options, ifExist: true });
             }
 
             await createDatabase({ options, synchronize: false, ifNotExist: true });

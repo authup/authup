@@ -3,6 +3,28 @@
 Authup implements the OAuth2 (including PKCE) protocol as well as the OpenID specification. The following examples and explanations demonstrate how these flows can be mapped using the Authup API.
 For the examples, it is assumed that the backend application is running at `http://localhost:3001`.
 
+## Redirect URIs
+
+When registering a client, you can specify one or more allowed redirect URIs (comma-separated).
+During authorization, the requested `redirect_uri` is validated against the registered values.
+
+Authup supports wildcard patterns in registered redirect URIs as a convenience feature:
+
+- `*` matches any characters within a single path segment (does not cross `/`)
+- `**` matches any characters across path segments
+
+**Examples:**
+
+| Registered URI | Matches |
+|---|---|
+| `https://example.com/callback` | Exact match only |
+| `https://example.com/*` | `https://example.com/callback`, `https://example.com/auth` |
+| `https://example.com/**` | `https://example.com/callback`, `https://example.com/auth/done` |
+
+::: warning
+Wildcard redirect URIs deviate from [RFC 6749 §3.1.2.3](https://datatracker.ietf.org/doc/html/rfc6749#section-3.1.2.3), which requires exact string matching. This is acceptable when client registration is restricted to administrators. For production deployments, prefer exact redirect URIs to minimize open-redirect risk.
+:::
+
 ## Flows
 
 ### 1. Password Flow
