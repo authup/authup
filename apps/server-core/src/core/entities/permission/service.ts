@@ -23,7 +23,6 @@ import type { IPermissionRepository, IPermissionService } from './types.ts';
 export type PermissionServiceContext = {
     repository: IPermissionRepository;
     realmRepository: IRealmRepository;
-    defaultPolicyId?: string;
 };
 
 export class PermissionService extends AbstractEntityService implements IPermissionService {
@@ -33,14 +32,11 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
     protected validator: PermissionValidator;
 
-    protected defaultPolicyId?: string;
-
     constructor(ctx: PermissionServiceContext) {
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.validator = new PermissionValidator();
-        this.defaultPolicyId = ctx.defaultPolicyId;
     }
 
     async getMany(
@@ -139,10 +135,6 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         const validated = await this.validator.run(data, { group });
 
-        if (!entity && this.defaultPolicyId && typeof validated.policy_id === 'undefined') {
-            validated.policy_id = this.defaultPolicyId;
-        }
-
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
@@ -168,15 +160,6 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
             entity = this.repository.merge(entity, validated);
 
-            if (
-                validated.policy &&
-                validated.policy.realm_id &&
-                entity.realm_id &&
-                validated.policy.realm_id !== entity.realm_id
-            ) {
-                throw new BadRequestError('Policy realm and permission realm must be equal.');
-            }
-
             await this.repository.save(entity);
 
             return { entity, created: false };
@@ -197,15 +180,6 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         });
 
         await this.repository.checkUniqueness(validated);
-
-        if (
-            validated.policy &&
-            validated.policy.realm_id &&
-            validated.realm_id &&
-            validated.policy.realm_id !== validated.realm_id
-        ) {
-            throw new BadRequestError('Policy realm and permission realm must be equal.');
-        }
 
         entity = this.repository.create(validated);
 

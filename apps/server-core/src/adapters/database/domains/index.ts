@@ -18,6 +18,7 @@ export * from './identity-provider-permission-mapping/index.ts';
 export * from './identity-provider-role-mapping/index.ts';
 export * from './session/index.ts';
 export * from './permission/index.ts';
+export * from './permission-policy/index.ts';
 export * from './policy/index.ts';
 export * from './policy-attribute/index.ts';
 export * from './realm/index.ts';

@@ -111,7 +111,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                 name: raw.name,
                 realm_id: raw.realm_id,
                 client_id: raw.client_id,
-                policyId: raw.policy,
+                policy: (raw as any).policy || undefined,
             })),
         );
         if (permissionsMerged.length === 0) {

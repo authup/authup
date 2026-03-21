@@ -63,9 +63,12 @@ export class PermissionValidator extends Container<
         );
 
         this.mount(
-            'policy_id',
+            'decision_strategy',
             { optional: true },
-            createValidator(z.uuid()),
+            createValidator(
+                z.enum(['affirmative', 'unanimous', 'consensus'] as const)
+                    .nullable(),
+            ),
         );
     }
 }

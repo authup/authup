@@ -16,15 +16,14 @@ import {
     UpdateDateColumn,
 } from 'typeorm';
 import type {
-    Client, Permission, Policy, Realm,
+    Client, Realm,
 } from '@authup/core-kit';
-import { PolicyEntity } from '../policy/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 import { ClientEntity } from '../client/entity.ts';
 
 @Unique(['name', 'client_id', 'realm_id'])
 @Entity({ name: 'auth_permissions' })
-export class PermissionEntity implements Permission {
+export class PermissionEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
@@ -40,14 +39,8 @@ export class PermissionEntity implements Permission {
     @Column({ type: 'text', nullable: true })
     description: string | null;
 
-    // ------------------------------------------------------------------
-
-    @Column({ type: 'varchar', nullable: true })
-    policy_id: Policy['id'] | null;
-
-    @ManyToOne(() => PolicyEntity, { onDelete: 'SET NULL', nullable: true })
-    @JoinColumn({ name: 'policy_id' })
-    policy: Policy | null;
+    @Column({ type: 'varchar', length: 50, nullable: true, default: null })
+    decision_strategy: string | null;
 
     // ------------------------------------------------------------------
 

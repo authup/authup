@@ -4,12 +4,10 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { SystemPolicyName } from '@authup/access';
 import type {
     Client,
     ClientPermission,
     ClientRole,
-    Permission,
     Realm,
     Robot,
     RobotPermission,
@@ -20,7 +18,6 @@ import type {
     UserPermission,
     UserRole,
 } from '@authup/core-kit';
-import { useLogger } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
 import {
     ClientEntity,
@@ -74,8 +71,6 @@ import {
     UserRoleRepositoryAdapter,
 } from '../database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
-import type { Config } from '../config/index.ts';
-import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 import { CompositeProvisioningSource } from './sources/index.ts';
@@ -97,12 +92,11 @@ export class ProvisionerModule implements Module {
         const composite = new CompositeProvisioningSource(this.sources);
         const data = await composite.load(container);
 
-        const config = container.resolve<Config>(ConfigInjectionKey);
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
         const permissionRepository = new PermissionRepositoryAdapter({
-            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            repository: container.resolve<Repository<PermissionEntity>>(PermissionEntity),
             realmRepository,
         });
 
@@ -110,25 +104,6 @@ export class ProvisionerModule implements Module {
             repository: new PolicyRepository(dataSource),
             realmRepository,
         });
-
-        // ---------------------------------------------------------------
-        // Resolve defaultPolicyId from DB (exists from previous runs)
-        // ---------------------------------------------------------------
-
-        let defaultPolicyId: string | undefined;
-        if (config.permissionsDefaultPolicyAssignment) {
-            const existingPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
-            if (existingPolicy) {
-                defaultPolicyId = existingPolicy.id;
-            }
-
-            useLogger().warn(
-                'DEPRECATED: permissionsDefaultPolicyAssignment is enabled. ' +
-                'New permissions without policy_id will be auto-assigned the system.default policy. ' +
-                'This option will be removed in the next major release. ' +
-                'Set PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=false to opt into the allow-by-default model.',
-            );
-        }
 
         // ---------------------------------------------------------------
         // Synchronize all entities (policies → permissions → roles → ...)
@@ -150,7 +125,6 @@ export class ProvisionerModule implements Module {
 
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
             repository: permissionRepository,
-            defaultPolicyId,
         });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
@@ -238,20 +212,5 @@ export class ProvisionerModule implements Module {
 
         await rootSynchronizer.synchronize(data);
 
-        // ---------------------------------------------------------------
-        // Backfill: assign system.default to permissions without policy_id
-        // ---------------------------------------------------------------
-
-        if (config.permissionsDefaultPolicyAssignment) {
-            const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
-            if (defaultPolicy) {
-                await dataSource
-                    .createQueryBuilder()
-                    .update(PermissionEntity)
-                    .set({ policy_id: defaultPolicy.id })
-                    .where('policy_id IS NULL')
-                    .execute();
-            }
-        }
     }
 }

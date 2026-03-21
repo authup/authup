@@ -145,7 +145,7 @@ export class IdentityPermissionService {
             name: input.name,
             client_id: input.client_id,
             realm_id: input.realm_id,
-            policy: input.policy || undefined,
+            policy: (input as any).policy || undefined,
         };
     }
 }

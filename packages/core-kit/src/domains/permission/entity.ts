@@ -34,11 +34,7 @@ export interface Permission {
 
     description: string | null;
 
-    // ------------------------------------------------------------------
-
-    policy_id: Policy['id'] | null;
-
-    policy: Policy | null;
+    decision_strategy: string | null;
 
     // ------------------------------------------------------------------
 

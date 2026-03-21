@@ -22,10 +22,12 @@ import {
 const abilities : PermissionItem[] = [
     {
         name: 'user_edit',
-        policy: {
-            type: BuiltInPolicyType.ATTRIBUTE_NAMES,
-            names: ['name'],
-        } satisfies PolicyWithType<AttributeNamesPolicy>,
+        policies: [
+            {
+                type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                names: ['name'],
+            } satisfies PolicyWithType<AttributeNamesPolicy>,
+        ],
     },
     {
         name: 'user_add',

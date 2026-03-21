@@ -9,7 +9,7 @@ import { ErrorCode } from '@authup/errors';
 import type { Issue } from 'validup';
 import { defineIssueItem } from 'validup';
 import { DecisionStrategy } from '../../constants.ts';
-import type { IPolicyEngine } from '../../policy';
+import type { CompositePolicy, IPolicyEngine, PolicyWithType } from '../../policy';
 import {
     BuiltInPolicyType,
     PolicyData,
@@ -132,7 +132,8 @@ export class PermissionChecker implements IPermissionChecker {
                 continue;
             }
 
-            if (!entity.policy) {
+            const policies = entity.policies ?? [];
+            if (policies.length === 0) {
                 if (decision_strategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
@@ -145,8 +146,17 @@ export class PermissionChecker implements IPermissionChecker {
             const data = dataBase.clone();
             data.set(BuiltInPolicyType.PERMISSION_BINDING, entity);
 
+            const policyDecisionStrategy = entity.decision_strategy ??
+                DecisionStrategy.UNANIMOUS;
+
+            const compositePolicy : PolicyWithType<CompositePolicy> = {
+                type: BuiltInPolicyType.COMPOSITE,
+                decision_strategy: policyDecisionStrategy,
+                children: policies,
+            };
+
             const evaluationResult = await this.policyEngine.evaluate(
-                entity.policy,
+                compositePolicy,
                 definePolicyEvaluationContext({
                     include: options.policiesIncluded,
                     exclude: options.policiesExcluded,

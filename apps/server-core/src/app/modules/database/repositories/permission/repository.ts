@@ -16,19 +16,18 @@ import { DatabaseConflictError } from '../../../../../adapters/database/index.ts
 import { translateWhereConditions } from '../helpers.ts';
 import {
     PermissionEntity,
-    PolicyRepository,
     RolePermissionEntity,
     RoleRepository,
 } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type PermissionRepositoryAdapterContext = {
-    repository: Repository<Permission>,
+    repository: Repository<PermissionEntity>,
     realmRepository: Repository<Realm>,
 };
 
 export class PermissionRepositoryAdapter implements IPermissionRepository {
-    private readonly repository: Repository<Permission>;
+    private readonly repository: Repository<PermissionEntity>;
 
     private readonly realmRepository: IRealmRepository;
 
@@ -50,11 +49,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
                 maxLimit: 50,
             },
             relations: {
-                // @ts-expect-error onJoin is not in the type definition
-                allowed: ['policy'],
-                onJoin: (_property: string, key: string, q: any) => {
-                    q.addGroupBy(`${key}.id`);
-                },
+                allowed: [],
             },
             sort: {
                 allowed: ['id', 'name', 'created_at', 'updated_at'],
@@ -62,10 +57,6 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
         });
 
         const [entities, total] = await qb.getManyAndCount();
-
-        for (const entity of entities) {
-            await this.loadPolicyTree(entity as PermissionEntity);
-        }
 
         return {
             data: entities,
@@ -99,10 +90,6 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
             await this.findOneById(idOrName) :
             await this.findOneByName(idOrName, realm);
 
-        if (result) {
-            await this.loadPolicyTree(result as PermissionEntity);
-        }
-
         return result;
     }
 
@@ -115,19 +102,19 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
     }
 
     create(data: Partial<Permission>): Permission {
-        return this.repository.create(data);
+        return this.repository.create(data as Partial<PermissionEntity>);
     }
 
     merge(entity: Permission, data: Partial<Permission>): Permission {
-        return this.repository.merge(entity, data);
+        return this.repository.merge(entity as PermissionEntity, data as Partial<PermissionEntity>);
     }
 
     async save(entity: Permission): Promise<Permission> {
-        return this.repository.save(entity);
+        return this.repository.save(entity as PermissionEntity);
     }
 
     async remove(entity: Permission): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity as PermissionEntity);
     }
 
     async validateJoinColumns(data: Partial<Permission>): Promise<void> {
@@ -135,13 +122,6 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
             dataSource: this.repository.manager.connection,
             entityTarget: PermissionEntity,
         });
-    }
-
-    private async loadPolicyTree(entity: PermissionEntity): Promise<void> {
-        if (entity.policy) {
-            const policyRepository = new PolicyRepository(this.repository.manager.connection);
-            await policyRepository.findDescendantsTree(entity.policy);
-        }
     }
 
     async checkUniqueness(data: Partial<Permission>, existing?: Permission): Promise<void> {
@@ -160,7 +140,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
     async saveWithAdminRoleAssignment(entity: Permission): Promise<Permission> {
         await this.repository.manager.connection.transaction(async (entityManager) => {
             const transactionRepository = entityManager.getRepository(PermissionEntity);
-            await transactionRepository.save(entity);
+            await transactionRepository.save(entity as PermissionEntity);
 
             const roleRepository = new RoleRepository(entityManager);
             const role = await roleRepository.findOneBy({

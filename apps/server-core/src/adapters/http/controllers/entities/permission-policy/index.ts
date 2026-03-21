@@ -5,8 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionRepository } from '../../../entities/index.ts';
-
-export type PermissionProvisioningSynchronizerContext = {
-    repository: IPermissionRepository,
-};
+export * from './module.ts';

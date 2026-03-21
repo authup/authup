@@ -57,7 +57,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Permission);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity as unknown as Permission);
     }
 
     async afterUpdate(event: UpdateEvent<PermissionEntity>): Promise<any> {
@@ -82,7 +82,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Permission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as unknown as Permission);
     }
 
     async afterRemove(event: RemoveEvent<PermissionEntity>): Promise<any> {
@@ -104,6 +104,6 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Permission);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity as unknown as Permission);
     }
 }

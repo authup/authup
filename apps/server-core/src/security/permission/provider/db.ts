@@ -6,48 +6,53 @@
  */
 
 import type {
+    DecisionStrategy,
     IPermissionRepository,
     PermissionGetOptions,
-    PermissionItem,
-    PolicyWithType,
+    PermissionItem, PolicyWithType 
 } from '@authup/access';
 import { buildPermissionItemKey } from '@authup/access';
-import type { Permission } from '@authup/core-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
-import { CachePrefix, PermissionEntity, PolicyRepository } from '../../../adapters/database/domains/index.ts';
+import { IsNull } from 'typeorm';
+import {
+    CachePrefix,
+    PermissionEntity,
+    PermissionPolicyEntity,
+    PolicyRepository,
+} from '../../../adapters/database/domains/index.ts';
 
 export class PermissionDatabaseRepository implements IPermissionRepository {
     protected dataSource: DataSource;
 
     protected repository : Repository<PermissionEntity>;
 
+    protected permissionPolicyRepository : Repository<PermissionPolicyEntity>;
+
     protected policyRepository: PolicyRepository;
 
     constructor(dataSource: DataSource) {
         this.dataSource = dataSource;
         this.repository = this.dataSource.getRepository(PermissionEntity);
+        this.permissionPolicyRepository = this.dataSource.getRepository(PermissionPolicyEntity);
         this.policyRepository = new PolicyRepository(this.dataSource);
     }
 
     async findOne(options: PermissionGetOptions) : Promise<PermissionItem | null> {
-        const where : FindOptionsWhere<Permission> = {
+        const where : FindOptionsWhere<PermissionEntity> = {
             name: options.name,
         };
 
-        if (options.client_id) {
-            where.client_id = options.client_id;
+        if (typeof options.client_id !== 'undefined') {
+            where.client_id = options.client_id === null ? IsNull() : options.client_id;
         }
 
-        if (options.realm_id) {
-            where.realm_id = options.realm_id;
+        if (typeof options.realm_id !== 'undefined') {
+            where.realm_id = options.realm_id === null ? IsNull() : options.realm_id;
         }
 
         const entity = await this.repository.findOne({
             where,
-            relations: [
-                'policy',
-            ],
             cache: {
                 id: buildCacheKey({
                     prefix: CachePrefix.PERMISSION,
@@ -62,16 +67,27 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
         });
 
         if (entity) {
-            let policy : PolicyWithType | undefined;
-            if (entity.policy) {
-                policy = await this.policyRepository.findDescendantsTree(entity.policy);
+            const junctions = await this.permissionPolicyRepository.find({
+                where: { permission_id: entity.id },
+                relations: ['policy'],
+            });
+
+            const policies : PolicyWithType[] = [];
+            for (const junction of junctions) {
+                if (junction.policy) {
+                    const tree = await this.policyRepository.findDescendantsTree(junction.policy);
+                    if (tree) {
+                        policies.push(tree);
+                    }
+                }
             }
 
             return {
                 name: entity.name,
                 realm_id: entity.realm_id,
                 client_id: entity.client_id,
-                policy,
+                policies,
+                decision_strategy: entity.decision_strategy as `${DecisionStrategy}` || undefined,
             };
         }
 
