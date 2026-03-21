@@ -542,11 +542,13 @@ export class HTTPControllerModule {
     }
 
     createClientPermissionController(container: IDIContainer) {
+        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const repository = new ClientPermissionRepositoryAdapter(
             container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
         );
         const service = new ClientPermissionService({ repository });
-        return new ClientPermissionController({ service });
+        const identityPermissionService = new IdentityPermissionService(dataSource);
+        return new ClientPermissionController({ service, identityPermissionService });
     }
 
     createClientRoleController(container: IDIContainer) {
@@ -568,11 +570,13 @@ export class HTTPControllerModule {
     }
 
     createRobotPermissionController(container: IDIContainer) {
+        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const repository = new RobotPermissionRepositoryAdapter(
             container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
         );
         const service = new RobotPermissionService({ repository });
-        return new RobotPermissionController({ service });
+        const identityPermissionService = new IdentityPermissionService(dataSource);
+        return new RobotPermissionController({ service, identityPermissionService });
     }
 
     createRobotRoleController(container: IDIContainer) {
@@ -594,11 +598,13 @@ export class HTTPControllerModule {
     }
 
     createRolePermissionController(container: IDIContainer) {
+        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const repository = new RolePermissionRepositoryAdapter(
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
         const service = new RolePermissionService({ repository });
-        return new RolePermissionController({ service });
+        const identityPermissionService = new IdentityPermissionService(dataSource);
+        return new RolePermissionController({ service, identityPermissionService });
     }
 
     createPermissionPolicyController(container: IDIContainer) {
@@ -642,11 +648,13 @@ export class HTTPControllerModule {
     }
 
     createUserPermissionController(container: IDIContainer) {
+        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const repository = new UserPermissionRepositoryAdapter(
             container.resolve<Repository<UserPermission>>(UserPermissionEntity),
         );
         const service = new UserPermissionService({ repository });
-        return new UserPermissionController({ service });
+        const identityPermissionService = new IdentityPermissionService(dataSource);
+        return new UserPermissionController({ service, identityPermissionService });
     }
 
     createUserRoleController(container: IDIContainer) {

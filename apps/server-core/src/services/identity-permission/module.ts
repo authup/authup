@@ -7,7 +7,7 @@
 
 import type { Permission } from '@authup/core-kit';
 import type { IdentityPolicyData, PermissionItem } from '@authup/access';
-import { isPermissionItemEqual } from '@authup/access';
+import { isPermissionItemEqual, mergePermissionItems } from '@authup/access';
 import type { DataSource } from 'typeorm';
 import {
     ClientRepository,
@@ -40,14 +40,23 @@ export class IdentityPermissionService {
         const parentPermissions = await this.getFor(parent);
         const childPermissions = await this.getFor(child);
 
-        for (const childPermission of childPermissions) {
-            const index = parentPermissions.findIndex(
-                (permission) => isPermissionItemEqual(
-                    this.toPermissionItem(permission),
-                    this.toPermissionItem(childPermission),
-                ),
+        const parentItems = mergePermissionItems(
+            parentPermissions.map((p) => this.toPermissionItem(p)),
+        );
+        const childItems = mergePermissionItems(
+            childPermissions.map((p) => this.toPermissionItem(p)),
+        );
+
+        for (const childItem of childItems) {
+            const parentItem = parentItems.find(
+                (p) => isPermissionItemEqual(p, childItem),
             );
-            if (index === -1) {
+
+            if (!parentItem) {
+                return false;
+            }
+
+            if (parentItem.policy && !childItem.policy) {
                 return false;
             }
         }

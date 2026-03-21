@@ -11,6 +11,7 @@ import {
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IClientPermissionService } from '../../../../../core/index.ts';
+import type { IdentityPermissionService } from '../../../../../services/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -18,6 +19,7 @@ import {
 
 export type ClientPermissionControllerContext = {
     service: IClientPermissionService,
+    identityPermissionService: IdentityPermissionService,
 };
 
 @DTags('client')
@@ -25,8 +27,11 @@ export type ClientPermissionControllerContext = {
 export class ClientPermissionController {
     protected service: IClientPermissionService;
 
+    protected identityPermissionService: IdentityPermissionService;
+
     constructor(ctx: ClientPermissionControllerContext) {
         this.service = ctx.service;
+        this.identityPermissionService = ctx.identityPermissionService;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -46,7 +51,7 @@ export class ClientPermissionController {
         @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(req, this.identityPermissionService);
 
         const entity = await this.service.create(data, actor);
 

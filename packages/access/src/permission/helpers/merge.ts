@@ -30,20 +30,23 @@ export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[]
         const [permission, ...permissions] = grouped[key];
 
         if (permissions.length > 0) {
-            const policy: PolicyWithType<CompositePolicy> = {
-                type: BuiltInPolicyType.COMPOSITE,
-                decision_strategy: DecisionStrategy.AFFIRMATIVE,
-                children: permissions
-                    .map((el) => el.policy)
-                    .filter((el) => typeof el !== 'undefined'),
-            };
+            const allItems = [permission, ...permissions];
+            const hasUnrestricted = allItems.some((el) => typeof el.policy === 'undefined');
 
-            if (permission.policy) {
-                policy.children.push(permission.policy);
-            }
+            if (hasUnrestricted) {
+                permission.policy = undefined;
+            } else {
+                const policy: PolicyWithType<CompositePolicy> = {
+                    type: BuiltInPolicyType.COMPOSITE,
+                    decision_strategy: DecisionStrategy.AFFIRMATIVE,
+                    children: allItems
+                        .map((el) => el.policy)
+                        .filter((el) => typeof el !== 'undefined'),
+                };
 
-            if (policy.children.length > 0) {
-                permission.policy = policy;
+                if (policy.children.length > 0) {
+                    permission.policy = policy;
+                }
             }
         }
 
