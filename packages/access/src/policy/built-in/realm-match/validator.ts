@@ -16,7 +16,7 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
         super.initialize();
 
         this.mount(
-            'decisionStrategy',
+            'decision_strategy',
             createValidator(
                 z.enum(DecisionStrategy)
                     .or(z.null())
@@ -26,7 +26,7 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
         );
 
         this.mount(
-            'attributeName',
+            'attribute_name',
             createValidator(
                 z.string()
                     .min(3)
@@ -37,7 +37,7 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
             ),
         );
         this.mount(
-            'attributeNameStrict',
+            'attribute_name_strict',
             createValidator(
                 z.boolean()
                     .or(z.null())
@@ -46,7 +46,7 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
             ),
         );
         this.mount(
-            'attributeNullMatchAll',
+            'attribute_null_match_all',
             createValidator(
                 z.boolean()
                     .or(z.null())
@@ -56,7 +56,7 @@ export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
         );
 
         this.mount(
-            'identityMasterMatchAll',
+            'identity_master_match_all',
             createValidator(
                 z.boolean()
                     .or(z.null())

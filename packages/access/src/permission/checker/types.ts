@@ -22,12 +22,12 @@ export interface IPermissionChecker {
 export type PermissionCheckerOptions = {
     repository?: IPermissionRepository,
     policyEngine?: IPolicyEngine,
-    realmId?: string | null,
-    clientId?: string | null
+    realm_id?: string | null,
+    client_id?: string | null
 };
 
 export type PermissionCheckerCheckOptions = {
-    decisionStrategy?: `${DecisionStrategy}`,
+    decision_strategy?: `${DecisionStrategy}`,
     policiesIncluded?: string[],
     policiesExcluded?: string[],
 };

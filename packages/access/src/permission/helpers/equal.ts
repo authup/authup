@@ -12,13 +12,13 @@ export function isPermissionItemEqual(a: PermissionItem, b: PermissionItem): boo
         return false;
     }
 
-    if (typeof a.realmId === 'string' || typeof b.realmId === 'string') {
-        return a.realmId === b.realmId;
+    if (typeof a.realm_id === 'string' || typeof b.realm_id === 'string') {
+        return a.realm_id === b.realm_id;
     }
 
-    if (typeof a.clientId === 'string' || typeof b.clientId === 'string') {
-        return a.clientId === b.clientId;
+    if (typeof a.client_id === 'string' || typeof b.client_id === 'string') {
+        return a.client_id === b.client_id;
     }
 
-    return !!a.realmId === !!b.realmId && !!a.clientId === !!b.clientId;
+    return !!a.realm_id === !!b.realm_id && !!a.client_id === !!b.client_id;
 }

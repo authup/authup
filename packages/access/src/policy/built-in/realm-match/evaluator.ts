@@ -59,9 +59,9 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             };
         }
 
-        const identityMasterMatchAll = policy.identityMasterMatchAll ?? true;
+        const identity_master_match_all = policy.identity_master_match_all ?? true;
         if (
-            identityMasterMatchAll &&
+            identity_master_match_all &&
             identity.realmName &&
             identity.realmName === 'master'
         ) {
@@ -71,11 +71,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         let keys : string[];
-        if (policy.attributeName) {
-            if (Array.isArray(policy.attributeName)) {
-                keys = policy.attributeName;
+        if (policy.attribute_name) {
+            if (Array.isArray(policy.attribute_name)) {
+                keys = policy.attribute_name;
             } else {
-                keys = [policy.attributeName];
+                keys = [policy.attribute_name];
             }
         } else {
             keys = [
@@ -85,11 +85,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
                 'realmName',
             ];
 
-            policy.decisionStrategy = DecisionStrategy.CONSENSUS;
+            policy.decision_strategy = DecisionStrategy.CONSENSUS;
         }
 
-        const attributeNameStrict = policy.attributeNameStrict ?? true;
-        if (!attributeNameStrict) {
+        const attribute_name_strict = policy.attribute_name_strict ?? true;
+        if (!attribute_name_strict) {
             const resourceKeys = Object.keys(attributes);
             const keysToAdd : string[] = [];
             for (const resourceKey of resourceKeys) {
@@ -128,7 +128,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
 
             if (
                 attributeValue === null &&
-                policy.attributeNullMatchAll
+                policy.attribute_null_match_all
             ) {
                 outcome = true;
             } else if (
@@ -139,7 +139,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             }
 
             if (outcome) {
-                if (policy.decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                if (policy.decision_strategy === DecisionStrategy.AFFIRMATIVE) {
                     return {
                         success: maybeInvertPolicyOutcome(true, policy.invert),
                     };
@@ -147,7 +147,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
 
                 count++;
             } else {
-                if (policy.decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                if (policy.decision_strategy === DecisionStrategy.UNANIMOUS) {
                     return {
                         success: maybeInvertPolicyOutcome(false, policy.invert),
                     };

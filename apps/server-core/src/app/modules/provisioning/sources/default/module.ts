@@ -41,7 +41,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     realm_id: null,
                 },
                 extraAttributes: {
-                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    decision_strategy: DecisionStrategy.UNANIMOUS,
                 },
                 children: [
                     {
@@ -68,9 +68,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                             realm_id: null,
                         },
                         extraAttributes: {
-                            attributeName: ['realm_id'],
-                            attributeNameStrict: false,
-                            identityMasterMatchAll: true,
+                            attribute_name: ['realm_id'],
+                            attribute_name_strict: false,
+                            identity_master_match_all: true,
                         },
                     },
                 ],

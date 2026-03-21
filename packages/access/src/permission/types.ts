@@ -9,7 +9,7 @@ import type { PolicyWithType } from '../policy';
 
 export type PermissionItem = {
     name: string,
-    clientId?: string | null,
-    realmId?: string | null,
+    client_id?: string | null,
+    realm_id?: string | null,
     policy?: PolicyWithType,
 };

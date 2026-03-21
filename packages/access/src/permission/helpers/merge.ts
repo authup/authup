@@ -32,7 +32,7 @@ export function mergePermissionItems(input: PermissionItem[]) : PermissionItem[]
         if (permissions.length > 0) {
             const policy: PolicyWithType<CompositePolicy> = {
                 type: BuiltInPolicyType.COMPOSITE,
-                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                decision_strategy: DecisionStrategy.AFFIRMATIVE,
                 children: permissions
                     .map((el) => el.policy)
                     .filter((el) => typeof el !== 'undefined'),

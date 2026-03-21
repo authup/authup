@@ -143,8 +143,8 @@ export class IdentityPermissionService {
     private toPermissionItem(input: Permission) : PermissionItem {
         return {
             name: input.name,
-            clientId: input.client_id,
-            realmId: input.realm_id,
+            client_id: input.client_id,
+            realm_id: input.realm_id,
             policy: input.policy || undefined,
         };
     }

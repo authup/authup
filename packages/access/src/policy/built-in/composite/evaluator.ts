@@ -28,7 +28,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
 
         let count = 0;
 
-        const decisionStrategy = policy.decisionStrategy ??
+        const decision_strategy = policy.decision_strategy ??
             DecisionStrategy.UNANIMOUS;
 
         const engine = new PolicyEngine(ctx.evaluators);
@@ -44,7 +44,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             });
 
             if (outcome.success) {
-                if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                if (decision_strategy === DecisionStrategy.AFFIRMATIVE) {
                     return {
                         success: maybeInvertPolicyOutcome(true, policy.invert),
                         issues: [],
@@ -61,7 +61,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
                     }));
                 }
 
-                if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                if (decision_strategy === DecisionStrategy.UNANIMOUS) {
                     return {
                         success: maybeInvertPolicyOutcome(false, policy.invert),
                         issues: [

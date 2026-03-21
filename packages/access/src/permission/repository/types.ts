@@ -9,8 +9,8 @@ import type { PermissionItem } from '../types';
 
 export type PermissionGetOptions = {
     name: string,
-    clientId?: string | null,
-    realmId?: string | null
+    client_id?: string | null,
+    realm_id?: string | null
 };
 
 export interface IPermissionRepository {

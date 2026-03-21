@@ -96,8 +96,8 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                 }
 
                 // we are comparing only string with null (db resources always null or string)
-                return (permission?.realmId ?? null) === item.realm_id &&
-                    (permission?.clientId ?? null) === item.client_id;
+                return (permission?.realm_id ?? null) === item.realm_id &&
+                    (permission?.client_id ?? null) === item.client_id;
             }));
 
         if (identityPermissions.length === 0) {
@@ -109,8 +109,8 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         const permissionsMerged = mergePermissionItems(
             identityPermissions.map((raw) => ({
                 name: raw.name,
-                realmId: raw.realm_id,
-                clientId: raw.client_id,
+                realm_id: raw.realm_id,
+                client_id: raw.client_id,
                 policyId: raw.policy,
             })),
         );

@@ -35,12 +35,12 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
             name: options.name,
         };
 
-        if (options.clientId) {
-            where.client_id = options.clientId;
+        if (options.client_id) {
+            where.client_id = options.client_id;
         }
 
-        if (options.realmId) {
-            where.realm_id = options.realmId;
+        if (options.realm_id) {
+            where.realm_id = options.realm_id;
         }
 
         const entity = await this.repository.findOne({
@@ -53,8 +53,8 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
                     prefix: CachePrefix.PERMISSION,
                     key: buildPermissionItemKey({
                         name: options.name,
-                        clientId: options.clientId,
-                        realmId: options.realmId,
+                        client_id: options.client_id,
+                        realm_id: options.realm_id,
                     }),
                 }),
                 milliseconds: 60_000,
@@ -69,8 +69,8 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
 
             return {
                 name: entity.name,
-                realmId: entity.realm_id,
-                clientId: entity.client_id,
+                realm_id: entity.realm_id,
+                client_id: entity.client_id,
                 policy,
             };
         }

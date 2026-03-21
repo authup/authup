@@ -25,27 +25,27 @@ export default defineComponent({
     emits: ['updated'],
     setup(props, setup) {
         const form = reactive({
-            attributeNameStrict: false,
-            attributeNullMatchAll: false,
-            identityMasterMatchAll: false,
-            attributeName: [],
+            attribute_name_strict: false,
+            attribute_null_match_all: false,
+            identity_master_match_all: false,
+            attribute_name: [],
         });
 
         const vuelidate = useVuelidate({
-            attributeNameStrict: {},
-            attributeNullMatchAll: {},
-            identityMasterMatchAll: {},
-            attributeName: {},
+            attribute_name_strict: {},
+            attribute_null_match_all: {},
+            identity_master_match_all: {},
+            attribute_name: {},
         }, form, {
             $registerAs: 'type',
         });
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
-            const { attributeName, ...data } = input;
+            const { attribute_name, ...data } = input;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assignFormProperties(form, data as Record<string, any>);
-            if (attributeName) {
-                form.attributeName = typeof attributeName === 'string' ? [attributeName] : attributeName;
+            if (attribute_name) {
+                form.attribute_name = typeof attribute_name === 'string' ? [attribute_name] : attribute_name;
             }
         }
 
@@ -66,7 +66,7 @@ export default defineComponent({
         };
 
         const handleAttributeNameChanged = (data: string[]) => {
-            form.attributeName = data;
+            form.attribute_name = data;
             handleUpdated();
         };
 
@@ -82,14 +82,14 @@ export default defineComponent({
 <template>
     <div class="row">
         <div class="col-7">
-            <IVuelidate :validation="vuelidate.attributeName">
+            <IVuelidate :validation="vuelidate.attribute_name">
                 <template #default="props">
                     <VCFormGroup
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
                         <AFormInputList
-                            :names="vuelidate.attributeName.$model"
+                            :names="vuelidate.attribute_name.$model"
                             @changed="handleAttributeNameChanged"
                         />
                     </VCFormGroup>
@@ -97,14 +97,14 @@ export default defineComponent({
             </IVuelidate>
         </div>
         <div class="col-5">
-            <IVuelidate :validation="vuelidate.attributeNameStrict">
+            <IVuelidate :validation="vuelidate.attribute_name_strict">
                 <template #default="props">
                     <VCFormGroup
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
                         <VCFormInputCheckbox
-                            v-model="vuelidate.attributeNameStrict.$model"
+                            v-model="vuelidate.attribute_name_strict.$model"
                             :group-class="'form-switch'"
                             :label="true"
                             @change="handleUpdated"
@@ -118,14 +118,14 @@ export default defineComponent({
                     </VCFormGroup>
                 </template>
             </IVuelidate>
-            <IVuelidate :validation="vuelidate.attributeNullMatchAll">
+            <IVuelidate :validation="vuelidate.attribute_null_match_all">
                 <template #default="props">
                     <VCFormGroup
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
                         <VCFormInputCheckbox
-                            v-model="vuelidate.attributeNullMatchAll.$model"
+                            v-model="vuelidate.attribute_null_match_all.$model"
                             :group-class="'form-switch'"
                             :label="true"
                             @change="handleUpdated"
@@ -140,14 +140,14 @@ export default defineComponent({
                     </VCFormGroup>
                 </template>
             </IVuelidate>
-            <IVuelidate :validation="vuelidate.identityMasterMatchAll">
+            <IVuelidate :validation="vuelidate.identity_master_match_all">
                 <template #default="props">
                     <VCFormGroup
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
                         <VCFormInputCheckbox
-                            v-model="vuelidate.identityMasterMatchAll.$model"
+                            v-model="vuelidate.identity_master_match_all.$model"
                             :group-class="'form-switch'"
                             :label="true"
                             @change="handleUpdated"

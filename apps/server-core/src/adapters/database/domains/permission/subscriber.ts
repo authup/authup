@@ -75,8 +75,8 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
                     prefix: CachePrefix.PERMISSION,
                     key: buildPermissionItemKey({
                         name: event.entity.name,
-                        clientId: event.entity.client_id,
-                        realmId: event.entity.realm_id,
+                        client_id: event.entity.client_id,
+                        realm_id: event.entity.realm_id,
                     }),
                 }),
             ]);
@@ -98,8 +98,8 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
                 }),
                 buildPermissionItemKey({
                     name: event.entity.name,
-                    clientId: event.entity.client_id,
-                    realmId: event.entity.realm_id,
+                    client_id: event.entity.client_id,
+                    realm_id: event.entity.realm_id,
                 }),
             ]);
         }

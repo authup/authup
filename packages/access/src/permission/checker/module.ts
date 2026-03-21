@@ -32,9 +32,9 @@ export class PermissionChecker implements IPermissionChecker {
 
     protected policyEngine : IPolicyEngine;
 
-    protected clientId?: string | null;
+    protected client_id?: string | null;
 
-    protected realmId?: string | null;
+    protected realm_id?: string | null;
 
     // ----------------------------------------------
 
@@ -45,12 +45,12 @@ export class PermissionChecker implements IPermissionChecker {
             this.provider = new PermissionMemoryRepository();
         }
 
-        if (options.clientId) {
-            this.clientId = options.clientId;
+        if (options.client_id) {
+            this.client_id = options.client_id;
         }
 
-        if (options.realmId) {
-            this.realmId = options.realmId;
+        if (options.realm_id) {
+            this.realm_id = options.realm_id;
         }
 
         if (options.policyEngine) {
@@ -72,12 +72,12 @@ export class PermissionChecker implements IPermissionChecker {
             name: input,
         };
 
-        if (this.clientId) {
-            options.clientId = this.clientId;
+        if (this.client_id) {
+            options.client_id = this.client_id;
         }
 
-        if (this.realmId) {
-            options.realmId = this.realmId;
+        if (this.realm_id) {
+            options.realm_id = this.realm_id;
         }
 
         return this.provider.findOne(options);
@@ -105,7 +105,7 @@ export class PermissionChecker implements IPermissionChecker {
             options = {},
         } = ctx;
 
-        const decisionStrategy = options.decisionStrategy ??
+        const decision_strategy = options.decision_strategy ??
             DecisionStrategy.UNANIMOUS;
 
         const issues : Issue[] = [];
@@ -123,7 +123,7 @@ export class PermissionChecker implements IPermissionChecker {
                     path: [ctx.name[i]],
                 }));
 
-                if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                if (decision_strategy === DecisionStrategy.UNANIMOUS) {
                     const error = PermissionError.evaluationFailed(ctx.name);
                     error.addIssues(issues);
                     throw error;
@@ -133,7 +133,7 @@ export class PermissionChecker implements IPermissionChecker {
             }
 
             if (!entity.policy) {
-                if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                if (decision_strategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
@@ -155,7 +155,7 @@ export class PermissionChecker implements IPermissionChecker {
             );
 
             if (evaluationResult.success) {
-                if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
+                if (decision_strategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
@@ -168,7 +168,7 @@ export class PermissionChecker implements IPermissionChecker {
                     path: [entity.name],
                 }));
 
-                if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
+                if (decision_strategy === DecisionStrategy.UNANIMOUS) {
                     const error = PermissionError.evaluationFailed(entity.name);
                     error.addIssues(issues);
                     throw error;
@@ -203,7 +203,7 @@ export class PermissionChecker implements IPermissionChecker {
             ...ctx,
             options: {
                 ...(ctx.options || {}),
-                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                decision_strategy: DecisionStrategy.AFFIRMATIVE,
             },
         });
     }
@@ -229,7 +229,7 @@ export class PermissionChecker implements IPermissionChecker {
             ...ctx,
             options: {
                 ...(ctx.options || {}),
-                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
+                decision_strategy: DecisionStrategy.AFFIRMATIVE,
             },
         });
     }

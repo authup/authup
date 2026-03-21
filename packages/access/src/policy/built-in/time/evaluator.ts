@@ -90,9 +90,9 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
         if (policy.interval) {
             if (
                 isIntervalForDayOfWeek(policy.interval) &&
-                policy.dayOfWeek
+                policy.day_of_week
             ) {
-                if (now.getDay() !== policy.dayOfWeek) {
+                if (now.getDay() !== policy.day_of_week) {
                     return {
                         success: maybeInvertPolicyOutcome(false, policy.invert),
                     };
@@ -101,9 +101,9 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
 
             if (
                 isIntervalForDayOfMonth(policy.interval) &&
-                policy.dayOfMonth
+                policy.day_of_month
             ) {
-                if (now.getDate() !== policy.dayOfMonth) {
+                if (now.getDate() !== policy.day_of_month) {
                     return {
                         success: maybeInvertPolicyOutcome(false, policy.invert),
                     };
@@ -112,7 +112,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
 
             if (
                 isIntervalForDayOfYear(policy.interval) &&
-                policy.dayOfYear
+                policy.day_of_year
             ) {
                 const start = new Date(now.getFullYear(), 0, 0);
                 const diff = (now.getTime() - start.getTime()) +
@@ -121,7 +121,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
                 const oneDay = 1000 * 60 * 60 * 24;
                 const dayOfYear = Math.floor(diff / oneDay);
 
-                if (dayOfYear !== policy.dayOfYear) {
+                if (dayOfYear !== policy.day_of_year) {
                     return {
                         success: maybeInvertPolicyOutcome(false, policy.invert),
                     };

@@ -8,5 +8,5 @@
 import type { PermissionItem } from '../types';
 
 export function buildPermissionItemKey(input: PermissionItem) {
-    return `${input.realmId || '_'}/${input.clientId || '_'}/${input.name}`;
+    return `${input.realm_id || '_'}/${input.client_id || '_'}/${input.name}`;
 }
