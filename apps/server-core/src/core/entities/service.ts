@@ -6,6 +6,7 @@
  */
 
 import { REALM_MASTER_NAME } from '@authup/core-kit';
+import { isObject } from '@authup/kit';
 import type { ActorContext } from './actor/types.ts';
 
 export abstract class AbstractEntityService {
@@ -32,7 +33,7 @@ export abstract class AbstractEntityService {
             return data.realm_id;
         }
 
-        if ('realm' in data && data.realm && typeof data.realm === 'object' && 'id' in data.realm) {
+        if ('realm' in data && isObject(data.realm) && 'id' in data.realm) {
             return data.realm.id;
         }
 

@@ -10,7 +10,7 @@ import type {
     Client, Permission, Robot, Role, Scope, User,
 } from '@authup/core-kit';
 import {
-    PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ScopeName, buildUserFakeEmail,
+    PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ROLE_REALM_ADMIN_NAME, ScopeName, buildUserFakeEmail,
 } from '@authup/core-kit';
 import type { IDIContainer } from '../../../../../core/index.ts';
 import {
@@ -70,10 +70,22 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         extraAttributes: {
                             attribute_name: ['realm_id'],
                             attribute_name_strict: false,
-                            identity_master_match_all: true,
+                            identity_master_match_all: false,
+                            attribute_null_match_all: true,
                         },
                     },
                 ],
+            },
+            {
+                attributes: {
+                    name: SystemPolicyName.REALM_BOUND,
+                    type: BuiltInPolicyType.ATTRIBUTES,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    query: { realm_id: { $ne: null } },
+                },
             },
         ];
     }
@@ -119,6 +131,25 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 },
                 relations: {
                     globalPermissions: ['*'],
+                },
+            },
+            {
+                strategy: {
+                    type: ProvisioningEntityStrategyType.MERGE,
+                    attributes: ['built_in'] as (keyof Role)[],
+                },
+                attributes: {
+                    name: ROLE_REALM_ADMIN_NAME,
+                    built_in: true,
+                },
+                relations: {
+                    globalPermissions: ['*'],
+                    globalPermissionsExclude: [
+                        PermissionName.REALM_CREATE,
+                        PermissionName.REALM_UPDATE,
+                        PermissionName.REALM_DELETE,
+                    ],
+                    globalPermissionsPolicyName: SystemPolicyName.REALM_BOUND,
                 },
             },
         ];

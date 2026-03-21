@@ -14,6 +14,16 @@ export type RoleProvisioningRelations = {
     globalPermissions?: string[],
 
     /**
+     * Exclude these permission names from globalPermissions wildcard resolution.
+     */
+    globalPermissionsExclude?: string[],
+
+    /**
+     * Policy ID to set on each role-permission junction entry.
+     */
+    globalPermissionsPolicyName?: string,
+
+    /**
      * Assign role to realm permissions.
      */
     realmPermissions?: string[],

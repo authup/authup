@@ -130,6 +130,7 @@ export class ProvisionerModule implements Module {
         const roleSynchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
             permissionRepository,
+            policyRepository,
             rolePermissionRepository: new RolePermissionRepositoryAdapter(
                 container.resolve<Repository<RolePermission>>(RolePermissionEntity),
             ),

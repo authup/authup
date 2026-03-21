@@ -9,7 +9,7 @@ import { pickRecord } from '@authup/kit';
 import type {
     Permission, RolePermission,
 } from '@authup/core-kit';
-import type { IRoleRepository } from '../../../entities/index.ts';
+import type { IPolicyRepository, IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
@@ -20,6 +20,8 @@ import type { RoleProvisioningSynchronizerContext } from './types.ts';
 export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<RoleProvisioningEntity> {
     protected repository : IRoleRepository;
 
+    protected policyRepository?: IPolicyRepository;
+
     protected permissionResolver : ProvisioningEntityResolver<Permission>;
 
     protected permissionJunction: ProvisioningJunctionSynchronizer<RolePermission>;
@@ -28,6 +30,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         super();
 
         this.repository = ctx.repository;
+        this.policyRepository = ctx.policyRepository;
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.rolePermissionRepository,
@@ -79,19 +82,34 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             };
         }
 
-        const permissions = [
+        let permissions = [
             ...await this.permissionResolver.resolveGlobal(input.relations.globalPermissions),
             ...(attributes.realm_id ?
                 await this.permissionResolver.resolveRealm(input.relations.realmPermissions, attributes.realm_id) :
                 []),
         ];
 
+        if (input.relations.globalPermissionsExclude && input.relations.globalPermissionsExclude.length > 0) {
+            const excludeSet = new Set(input.relations.globalPermissionsExclude);
+            permissions = permissions.filter((p) => !excludeSet.has(p.name));
+        }
+
         if (permissions.length > 0) {
+            let extraAttributes: Record<string, unknown> | undefined;
+
+            if (input.relations.globalPermissionsPolicyName && this.policyRepository) {
+                const policy = await this.policyRepository.findOneByName(input.relations.globalPermissionsPolicyName);
+                if (policy) {
+                    extraAttributes = { policy_id: policy.id };
+                }
+            }
+
             await this.permissionJunction.synchronize(
                 attributes,
                 permissions,
                 'permission_id',
                 'permission_realm_id',
+                extraAttributes,
             );
         }
 

@@ -255,12 +255,13 @@ describe('core/entities/role/service', () => {
             expect(result.realm_id).toBe(realmId);
         });
 
-        it('should not set realm_id for master realm actor on create', async () => {
+        it('should set realm_id to master realm for master realm actor on create', async () => {
             const actor = createMasterRealmActor();
+            const masterRealmId = actor.identity!.data.realm_id;
 
             const result = await service.create({ name: 'global-role' }, actor);
 
-            expect(result.realm_id).toBeUndefined();
+            expect(result.realm_id).toBe(masterRealmId);
         });
 
         it('should not override explicit realm_id', async () => {

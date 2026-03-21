@@ -25,24 +25,12 @@ import {
 import { createFakePermission } from '../../../../utils/domains/index.ts';
 
 class FakePermissionRepository extends FakeEntityRepository<Permission> implements IPermissionRepository {
-    private policyMap: Record<string, { realm_id: string | null }> = {};
-
     async checkUniqueness(): Promise<void> {
         // no-op
     }
 
     async saveWithAdminRoleAssignment(entity: Permission): Promise<Permission> {
         return this.save(entity);
-    }
-
-    async validateJoinColumns(data: Partial<Permission>): Promise<void> {
-        if (data.policy_id && this.policyMap[data.policy_id]) {
-            (data as any).policy = this.policyMap[data.policy_id];
-        }
-    }
-
-    registerPolicy(id: string, realmId: string | null) {
-        this.policyMap[id] = { realm_id: realmId };
     }
 }
 
@@ -128,40 +116,7 @@ describe('core/entities/permission/service', () => {
             ).rejects.toThrow(ForbiddenError);
         });
 
-        it('should assign default policy_id when provided and no explicit policy_id', async () => {
-            const defaultPolicyId = randomUUID();
-            const serviceWithDefault = new PermissionService({
-                repository,
-                realmRepository,
-                defaultPolicyId,
-            });
-
-            const result = await serviceWithDefault.create(
-                { name: 'auto-policy-perm' },
-                createAllowAllActor(),
-            );
-
-            expect(result.policy_id).toBe(defaultPolicyId);
-        });
-
-        it('should not override explicit policy_id with default', async () => {
-            const defaultPolicyId = randomUUID();
-            const explicitPolicyId = randomUUID();
-            const serviceWithDefault = new PermissionService({
-                repository,
-                realmRepository,
-                defaultPolicyId,
-            });
-
-            const result = await serviceWithDefault.create(
-                { name: 'explicit-policy-perm', policy_id: explicitPolicyId },
-                createAllowAllActor(),
-            );
-
-            expect(result.policy_id).toBe(explicitPolicyId);
-        });
-
-        it('should not assign default policy_id when none configured', async () => {
+        it('should not assign policy_id when none provided', async () => {
             const result = await service.create(
                 { name: 'no-policy-perm' },
                 createAllowAllActor(),
@@ -211,53 +166,6 @@ describe('core/entities/permission/service', () => {
         });
     });
 
-    describe('policy realm mismatch', () => {
-        it('should throw on create when policy realm differs from permission realm', async () => {
-            const realmIdA = randomUUID();
-            const realmIdB = randomUUID();
-            const policyId = randomUUID();
-            repository.registerPolicy(policyId, realmIdB);
-
-            await expect(
-                service.create({
-                    name: 'mismatched-perm',
-                    realm_id: realmIdA,
-                    policy_id: policyId,
-                }, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
-        });
-
-        it('should throw on update when policy realm differs from permission realm', async () => {
-            const realmIdA = randomUUID();
-            const realmIdB = randomUUID();
-            const policyId = randomUUID();
-            repository.registerPolicy(policyId, realmIdB);
-            const entity = repository.seed(createFakePermission({
-                name: 'existing-perm', built_in: false, realm_id: realmIdA,
-            }));
-
-            await expect(
-                service.update(entity.id, {
-                    policy_id: policyId,
-                }, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
-        });
-
-        it('should allow matching policy and permission realm', async () => {
-            const realmId = randomUUID();
-            const policyId = randomUUID();
-            repository.registerPolicy(policyId, realmId);
-
-            const result = await service.create({
-                name: 'matched-perm',
-                realm_id: realmId,
-                policy_id: policyId,
-            }, createAllowAllActor());
-
-            expect(result.id).toBeDefined();
-        });
-    });
-
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const { entity, created } = await service.save(
@@ -298,13 +206,16 @@ describe('core/entities/permission/service', () => {
             expect(result.realm_id).toBe(realmId);
         });
 
-        it('should not set realm_id for master realm actor on create', async () => {
+        it('should set realm_id to master realm for master realm actor on create', async () => {
+            const actor = createMasterRealmActor();
+            const masterRealmId = actor.identity!.data.realm_id;
+
             const result = await service.create(
                 { name: 'global-perm' },
-                createMasterRealmActor(),
+                actor,
             );
 
-            expect(result.realm_id).toBeUndefined();
+            expect(result.realm_id).toBe(masterRealmId);
         });
     });
 

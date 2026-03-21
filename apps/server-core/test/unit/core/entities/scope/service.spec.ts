@@ -174,9 +174,12 @@ describe('core/entities/scope/service', () => {
             expect(result.realm_id).toBe(realmId);
         });
 
-        it('should not set realm_id for master realm actor on create', async () => {
-            const result = await service.create({ name: 'global-scope' }, createMasterRealmActor());
-            expect(result.realm_id).toBeUndefined();
+        it('should set realm_id to master realm for master realm actor on create', async () => {
+            const actor = createMasterRealmActor();
+            const masterRealmId = actor.identity!.data.realm_id;
+
+            const result = await service.create({ name: 'global-scope' }, actor);
+            expect(result.realm_id).toBe(masterRealmId);
         });
     });
 

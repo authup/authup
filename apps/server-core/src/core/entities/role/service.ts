@@ -156,10 +156,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         }
 
         if (!validated.realm_id && actor.identity) {
-            const isMasterRealmMember = this.isActorMasterRealmMember(actor);
-            if (!isMasterRealmMember) {
-                validated.realm_id = this.getActorRealmId(actor) || null;
-            }
+            validated.realm_id = this.getActorRealmId(actor) || null;
         }
 
         await actor.permissionChecker.check({
