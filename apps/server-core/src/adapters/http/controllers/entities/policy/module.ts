@@ -19,7 +19,7 @@ import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import type { IIdentityPermissionProvider, IPolicyRepository, IPolicyService, IRealmRepository } from '../../../../../core/index.ts';
-import { PolicyEngine } from '../../../../../security/index.ts';
+import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,

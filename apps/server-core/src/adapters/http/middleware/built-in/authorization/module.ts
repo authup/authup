@@ -26,16 +26,14 @@ import {
     parseAuthorizationHeader,
     stringifyAuthorizationHeader,
 } from 'hapic';
-import { PolicyEngine } from '../../../../../security/index.ts';
+import { ClientAuthenticator,
+    PolicyEngine,
+    RobotAuthenticator,
+
+    UserAuthenticator } from '../../../../../core/index.ts';
 import type {
     ICredentialsAuthenticator, IIdentityResolver,
     IOAuth2TokenVerifier, ISessionManager,
-} from '../../../../../core/index.ts';
-import {
-    ClientAuthenticator,
-    RobotAuthenticator,
-
-    UserAuthenticator,
 } from '../../../../../core/index.ts';
 import {
     RequestPermissionChecker,

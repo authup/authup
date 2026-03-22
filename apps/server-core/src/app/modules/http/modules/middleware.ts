@@ -31,14 +31,13 @@ import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
-import { PermissionDatabaseRepository } from '../../../../security/index.ts';
+import { DatabaseInjectionKey, PermissionDatabaseRepository  } from '../../database/index.ts';
 import {
     ClientRepository,
     RobotRepository,
     RoleRepository,
     UserRepository,
 } from '../../../../adapters/database/domains/index.ts';
-import { DatabaseInjectionKey } from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
     async mountBefore(router: Router, container: IDIContainer): Promise<void> {

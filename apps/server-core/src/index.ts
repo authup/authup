@@ -11,5 +11,4 @@ export * from './app/index.ts';
 export * from './cli/commands/index.ts';
 export * from './adapters/database/index.ts';
 export * from './adapters/http/index.ts';
-export * from './security/index.ts';
 export * from './services/index.ts';

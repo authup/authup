@@ -20,7 +20,7 @@ import {
     maybeInvertPolicyOutcome,
     mergePermissionItems,
 } from '@authup/access';
-import type { IIdentityPermissionProvider } from '../../../../core/index.ts';
+import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
 export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     protected validator : PermissionBindingPolicyValidator;

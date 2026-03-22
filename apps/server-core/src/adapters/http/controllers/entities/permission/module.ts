@@ -6,7 +6,7 @@
  */
 
 import type { PermissionAPICheckResponse } from '@authup/core-http-kit';
-import type { PermissionCheckerCheckContext } from '@authup/access';
+import type { IPermissionRepository as IPermissionLookupRepository, PermissionCheckerCheckContext } from '@authup/access';
 import {
     BuiltInPolicyType,
     PermissionChecker, PolicyData,
@@ -20,9 +20,8 @@ import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { DataSource } from 'typeorm';
 import type { IIdentityPermissionProvider, IPermissionRepository, IPermissionService, IRealmRepository } from '../../../../../core/index.ts';
-import { PermissionDatabaseRepository, PolicyEngine } from '../../../../../security/index.ts';
+import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -34,7 +33,7 @@ export type PermissionControllerContext = {
     repository: IPermissionRepository,
     realmRepository: IRealmRepository,
     identityPermissionProvider: IIdentityPermissionProvider,
-    dataSource: DataSource,
+    permissionProvider: IPermissionLookupRepository,
 };
 
 @DTags('permission')
@@ -48,14 +47,14 @@ export class PermissionController {
 
     protected identityPermissionProvider: IIdentityPermissionProvider;
 
-    protected dataSource: DataSource;
+    protected permissionProvider: IPermissionLookupRepository;
 
     constructor(ctx: PermissionControllerContext) {
         this.service = ctx.service;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
-        this.dataSource = ctx.dataSource;
+        this.permissionProvider = ctx.permissionProvider;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -115,7 +114,7 @@ export class PermissionController {
         };
 
         const permissionChecker = new PermissionChecker({
-            repository: new PermissionDatabaseRepository(this.dataSource),
+            repository: this.permissionProvider,
             policyEngine: new PolicyEngine(this.identityPermissionProvider),
         });
 

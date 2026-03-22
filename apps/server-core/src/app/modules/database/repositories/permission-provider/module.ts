@@ -9,7 +9,7 @@ import type {
     DecisionStrategy,
     IPermissionRepository,
     PermissionGetOptions,
-    PermissionItem, PolicyWithType 
+    PermissionItem, PolicyWithType,
 } from '@authup/access';
 import { buildPermissionItemKey } from '@authup/access';
 import { buildCacheKey } from '@authup/server-kit';
@@ -20,7 +20,7 @@ import {
     PermissionEntity,
     PermissionPolicyEntity,
     PolicyRepository,
-} from '../../../adapters/database/domains/index.ts';
+} from '../../../../../adapters/database/domains/index.ts';
 
 export class PermissionDatabaseRepository implements IPermissionRepository {
     protected dataSource: DataSource;

@@ -12,6 +12,7 @@ export * from './client-scope/index.ts';
 export * from './identity-provider/index.ts';
 export * from './permission/index.ts';
 export * from './permission-policy/index.ts';
+export * from './permission-provider/index.ts';
 export * from './policy/index.ts';
 export * from './realm/index.ts';
 export * from './robot/index.ts';
