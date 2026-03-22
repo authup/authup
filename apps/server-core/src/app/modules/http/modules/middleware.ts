@@ -13,6 +13,7 @@ import type {
     IIdentityResolver,
     IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../core/index.ts';
+import { IdentityPermissionProvider } from '../../../../core/index.ts';
 import {
     createAuthorizationMiddleware,
     createLoggerMiddleware,
@@ -31,6 +32,12 @@ import { ConfigInjectionKey } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
 import { PermissionDatabaseRepository } from '../../../../security/index.ts';
+import {
+    ClientRepository,
+    RobotRepository,
+    RoleRepository,
+    UserRepository,
+} from '../../../../adapters/database/domains/index.ts';
 import { DatabaseInjectionKey } from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
@@ -135,9 +142,16 @@ export class HTTPMiddlewareModule {
         );
 
         const permissionProvider = new PermissionDatabaseRepository(dataSource);
+        const identityPermissionProvider = new IdentityPermissionProvider({
+            clientRepository: new ClientRepository(dataSource),
+            userRepository: new UserRepository(dataSource),
+            robotRepository: new RobotRepository(dataSource),
+            roleRepository: new RoleRepository(dataSource),
+        });
 
         const middleware = createAuthorizationMiddleware({
             identityResolver,
+            identityPermissionProvider,
             permissionProvider,
             oauth2TokenVerifier,
             sessionManager,

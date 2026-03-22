@@ -9,11 +9,31 @@ Your custom provisioning files are merged on top.
 
 ## File-Based Provisioning
 
-Place one or more provisioning files in a directory and point the server to it.
+Place one or more provisioning files in the `provisioning/` subdirectory of the writable directory.
+The writable directory defaults to `./writable` (relative to the application root) and can be configured
+via the `WRITABLE_DIRECTORY_PATH` environment variable.
+
 Supported formats: `.json`, `.yaml`, `.yml`, `.ts`, `.mts`, `.mjs`, `.js`.
 
 When multiple files exist in the directory, they are loaded alphabetically and merged.
 If two files define the same entity (same `name` + scope), the later file wins.
+
+### Docker / Kubernetes
+
+Mount your provisioning files into the container's writable directory:
+
+```bash
+docker run -v /path/to/provisioning:/opt/authup/writable/provisioning authup/authup
+```
+
+Or set the writable directory explicitly:
+
+```bash
+docker run \
+  -e WRITABLE_DIRECTORY_PATH=/data \
+  -v /path/to/provisioning:/data/provisioning \
+  authup/authup
+```
 
 ### Example (TypeScript)
 
@@ -110,7 +130,7 @@ The top-level object has five optional arrays. Items at this level are **global*
 | Field              | Type                     | Description                          |
 |--------------------|--------------------------|--------------------------------------|
 | `attributes`       | object                   | `name` (required), `type`, `built_in`, `realm_id` |
-| `extraAttributes`  | object                   | Policy-specific configuration (e.g. `decisionStrategy`, `attributeName`) |
+| `extraAttributes`  | object                   | Policy-specific configuration (e.g. `decision_strategy`, `attribute_name`) |
 | `children`         | `PolicyProvisioning[]`   | Child policies (for composite policies) |
 
 ### Permission
@@ -137,10 +157,12 @@ The top-level object has five optional arrays. Items at this level are **global*
 
 **Role relations:**
 
-| Field               | Type       | Description                                              |
-|---------------------|------------|----------------------------------------------------------|
-| `globalPermissions` | `string[]` | Permission names to assign (global scope). `'*'` = all. |
-| `realmPermissions`  | `string[]` | Permission names to assign (realm scope). `'*'` = all.  |
+| Field                          | Type       | Description                                                                          |
+|--------------------------------|------------|--------------------------------------------------------------------------------------|
+| `globalPermissions`            | `string[]` | Permission names to assign (global scope). `'*'` = all.                             |
+| `globalPermissionsExclude`     | `string[]` | Permission names to exclude when using `'*'` wildcard in `globalPermissions`.        |
+| `globalPermissionsPolicyName`  | `string`   | Policy name to set as junction policy on each `globalPermissions` assignment entry.   |
+| `realmPermissions`             | `string[]` | Permission names to assign (realm scope). `'*'` = all.                              |
 
 ### Realm
 
@@ -287,6 +309,26 @@ roles:
       realmPermissions:
         - '*'       # assigns every permission in the same realm
 ```
+
+Use `globalPermissionsExclude` to exclude specific permissions from a wildcard,
+and `globalPermissionsPolicyName` to attach a junction policy to each assignment:
+
+```typescript
+roles: [
+    {
+        attributes: { name: 'realm_admin', built_in: true },
+        relations: {
+            globalPermissions: ['*'],
+            globalPermissionsExclude: ['realm_create', 'realm_update', 'realm_delete'],
+            globalPermissionsPolicyName: 'system.realm-bound',
+        },
+    },
+],
+```
+
+This creates a `realm_admin` role that has all permissions except realm management,
+with each permission assignment restricted by the `system.realm-bound` junction policy
+(limiting operations to realm-scoped entities only).
 
 ## Merging Behavior
 

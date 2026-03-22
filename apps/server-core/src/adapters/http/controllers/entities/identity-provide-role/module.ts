@@ -16,8 +16,7 @@ import type { Request, Response } from 'routup';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import type { IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
-import type { IdentityPermissionService } from '../../../../../services/index.ts';
+import type { IIdentityPermissionProvider, IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { IdentityProviderRoleMappingRequestValidator } from './utils/index.ts';
 import {
@@ -29,7 +28,7 @@ import {
 
 export type OAuth2ProviderRoleControllerContext = {
     repository: IIdentityProviderRoleMappingRepository,
-    identityPermissionService: IdentityPermissionService,
+    identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('identity-provider')
@@ -37,11 +36,11 @@ export type OAuth2ProviderRoleControllerContext = {
 export class OAuth2ProviderRoleController {
     protected repository: IIdentityProviderRoleMappingRepository;
 
-    protected identityPermissionService: IdentityPermissionService;
+    protected identityPermissionProvider: IIdentityPermissionProvider;
 
     constructor(ctx: OAuth2ProviderRoleControllerContext) {
         this.repository = ctx.repository;
-        this.identityPermissionService = ctx.identityPermissionService;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     @DGet('', [])
@@ -211,7 +210,7 @@ export class OAuth2ProviderRoleController {
         });
 
         const identity = useRequestIdentityOrFail(req);
-        const hasPermissions = await this.identityPermissionService.isSuperset(identity, {
+        const hasPermissions = await this.identityPermissionProvider.isSuperset(identity, {
             type: 'role',
             id: data.role_id,
             clientId: data.role.client_id,

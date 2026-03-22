@@ -85,7 +85,7 @@ export class AuthorizationMiddleware {
 
         this.permissionChecker = new PermissionChecker({
             repository: ctx.permissionProvider,
-            policyEngine: new PolicyEngine(),
+            policyEngine: new PolicyEngine(ctx.identityPermissionProvider),
         });
     }
 

@@ -21,7 +21,7 @@ import {
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { DataSource } from 'typeorm';
-import type { IPermissionRepository, IPermissionService, IRealmRepository } from '../../../../../core/index.ts';
+import type { IIdentityPermissionProvider, IPermissionRepository, IPermissionService, IRealmRepository } from '../../../../../core/index.ts';
 import { PermissionDatabaseRepository, PolicyEngine } from '../../../../../security/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
@@ -33,6 +33,7 @@ export type PermissionControllerContext = {
     service: IPermissionService,
     repository: IPermissionRepository,
     realmRepository: IRealmRepository,
+    identityPermissionProvider: IIdentityPermissionProvider,
     dataSource: DataSource,
 };
 
@@ -45,12 +46,15 @@ export class PermissionController {
 
     protected realmRepository: IRealmRepository;
 
+    protected identityPermissionProvider: IIdentityPermissionProvider;
+
     protected dataSource: DataSource;
 
     constructor(ctx: PermissionControllerContext) {
         this.service = ctx.service;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.dataSource = ctx.dataSource;
     }
 
@@ -112,7 +116,7 @@ export class PermissionController {
 
         const permissionChecker = new PermissionChecker({
             repository: new PermissionDatabaseRepository(this.dataSource),
-            policyEngine: new PolicyEngine(),
+            policyEngine: new PolicyEngine(this.identityPermissionProvider),
         });
 
         let output: PermissionAPICheckResponse;

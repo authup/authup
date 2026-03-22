@@ -13,6 +13,7 @@ export * from './identity-provider';
 export * from './identity-provider-role-mapping';
 export * from './policy';
 export * from './permission';
+export * from './permission-policy';
 export * from './realm';
 export * from './robot';
 export * from './robot-permission';

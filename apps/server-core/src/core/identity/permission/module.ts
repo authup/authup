@@ -8,32 +8,27 @@
 import type { Permission } from '@authup/core-kit';
 import type { IdentityPolicyData, PermissionItem } from '@authup/access';
 import { isPermissionItemEqual, mergePermissionItems } from '@authup/access';
-import type { DataSource } from 'typeorm';
-import {
-    ClientRepository,
-    RobotRepository,
-    RoleRepository,
-    UserRepository,
-} from '../../adapters/database/index.ts';
+import type {
+    IIdentityBindingRepository,
+    IIdentityPermissionProvider,
+    IRoleBindingRepository,
+    IdentityPermissionProviderContext,
+} from './types.ts';
 
-export class IdentityPermissionService {
-    protected dataSource: DataSource;
+export class IdentityPermissionProvider implements IIdentityPermissionProvider {
+    protected clientRepository: IIdentityBindingRepository;
 
-    protected clientRepository: ClientRepository;
+    protected userRepository: IIdentityBindingRepository;
 
-    protected userRepository : UserRepository;
+    protected roleRepository: IRoleBindingRepository;
 
-    protected roleRepository : RoleRepository;
+    protected robotRepository: IIdentityBindingRepository;
 
-    protected robotRepository : RobotRepository;
-
-    constructor(dataSource: DataSource) {
-        this.dataSource = dataSource;
-
-        this.clientRepository = new ClientRepository(dataSource);
-        this.userRepository = new UserRepository(dataSource);
-        this.roleRepository = new RoleRepository(dataSource);
-        this.robotRepository = new RobotRepository(dataSource);
+    constructor(ctx: IdentityPermissionProviderContext) {
+        this.clientRepository = ctx.clientRepository;
+        this.userRepository = ctx.userRepository;
+        this.roleRepository = ctx.roleRepository;
+        this.robotRepository = ctx.robotRepository;
     }
 
     async isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData) : Promise<boolean> {

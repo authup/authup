@@ -8,23 +8,22 @@
 import type { PolicyWithType } from '@authup/access';
 import { mergePermissionItems } from '@authup/access';
 import type { Request } from 'routup';
-import type { ActorContext } from '../../../../core/index.ts';
-import type { IdentityPermissionService } from '../../../../services/index.ts';
+import type { ActorContext, IIdentityPermissionProvider } from '../../../../core/index.ts';
 import { useRequestPermissionChecker } from '../permission/helper.ts';
 import { useRequestIdentity } from './identity.ts';
 
 export function buildActorContext(
     req: Request,
-    identityPermissionService?: IdentityPermissionService,
+    identityPermissionProvider?: IIdentityPermissionProvider,
 ): ActorContext {
     const permissionChecker = useRequestPermissionChecker(req);
     const identity = useRequestIdentity(req);
 
     let resolveJunctionPolicy: ((permissionName: string) => Promise<PolicyWithType | undefined>) | undefined;
 
-    if (identityPermissionService && identity) {
+    if (identityPermissionProvider && identity) {
         resolveJunctionPolicy = async (permissionName: string): Promise<PolicyWithType | undefined> => {
-            const bindings = await identityPermissionService.getFor(identity);
+            const bindings = await identityPermissionProvider.getFor(identity);
             const matching = bindings.filter((b) => b.name === permissionName);
             if (matching.length === 0) {
                 return undefined;

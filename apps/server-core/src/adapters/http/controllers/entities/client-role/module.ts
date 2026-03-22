@@ -11,8 +11,7 @@ import {
 import { ForbiddenError } from '@ebec/http';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { IClientRoleRepository, IClientRoleService } from '../../../../../core/index.ts';
-import type { IdentityPermissionService } from '../../../../../services/index.ts';
+import type { IClientRoleRepository, IClientRoleService, IIdentityPermissionProvider } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -22,7 +21,7 @@ import {
 export type ClientRoleControllerContext = {
     service: IClientRoleService,
     repository: IClientRoleRepository,
-    identityPermissionService: IdentityPermissionService,
+    identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('client')
@@ -32,12 +31,12 @@ export class ClientRoleController {
 
     protected repository: IClientRoleRepository;
 
-    protected identityPermissionService: IdentityPermissionService;
+    protected identityPermissionProvider: IIdentityPermissionProvider;
 
     constructor(ctx: ClientRoleControllerContext) {
         this.service = ctx.service;
         this.repository = ctx.repository;
-        this.identityPermissionService = ctx.identityPermissionService;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -63,7 +62,7 @@ export class ClientRoleController {
 
         if (data.role) {
             const identity = useRequestIdentityOrFail(req);
-            const hasPermissions = await this.identityPermissionService.isSuperset(identity, {
+            const hasPermissions = await this.identityPermissionProvider.isSuperset(identity, {
                 type: 'role',
                 id: data.role.id,
                 clientId: data.role.client_id,

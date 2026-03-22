@@ -251,11 +251,11 @@ export type Config = {
     permissions: string | string[],
 
     /**
-     * Auto-assign system.default policy to new permissions without policy_id.
-     * Transitional option — will be removed in next major release.
+     * Auto-assign system.default policy to new permissions without policies.
+     * Creates an entry in the permission-policy junction table.
      * default: true
      *
-     * @deprecated
+     * @deprecated Will be removed in v2.0.0. External systems should assign policies explicitly.
      */
     permissionsDefaultPolicyAssignment: boolean,
 };

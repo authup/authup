@@ -20,8 +20,7 @@ import {
     maybeInvertPolicyOutcome,
     mergePermissionItems,
 } from '@authup/access';
-import { useDataSource } from 'typeorm-extension';
-import { IdentityPermissionService } from '../../../../services/index.ts';
+import type { IIdentityPermissionProvider } from '../../../../core/index.ts';
 
 export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     protected validator : PermissionBindingPolicyValidator;
@@ -30,10 +29,13 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
 
     protected attributesEvaluator : AttributesPolicyEvaluator;
 
-    constructor() {
+    protected identityPermissionProvider: IIdentityPermissionProvider;
+
+    constructor(identityPermissionProvider: IIdentityPermissionProvider) {
         this.validator = new PermissionBindingPolicyValidator();
         this.identityEvaluator = new IdentityPolicyEvaluator();
         this.attributesEvaluator = new AttributesPolicyEvaluator();
+        this.identityPermissionProvider = identityPermissionProvider;
     }
 
     async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionItem | null> {
@@ -85,11 +87,8 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             };
         }
 
-        const dataSource = await useDataSource();
-        const identityPermissionService = new IdentityPermissionService(dataSource);
-
         // get all identity permissions with applicable client(_id) restriction
-        const identityPermissions = await identityPermissionService.getFor(identity)
+        const identityPermissions = await this.identityPermissionProvider.getFor(identity)
             .then((permissions) => permissions.filter((item) => {
                 if (item.name !== permission?.name) {
                     return false;

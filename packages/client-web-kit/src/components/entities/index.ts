@@ -14,6 +14,7 @@ export * from './identity-provider-role';
 export * from './policy';
 export * from './permission';
 export * from './permission-client';
+export * from './permission-policy';
 export * from './permission-robot';
 export * from './permission-role';
 export * from './permission-user';

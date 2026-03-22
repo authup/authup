@@ -10,8 +10,7 @@ import {
 } from '@routup/decorators';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { IRolePermissionService } from '../../../../../core/index.ts';
-import type { IdentityPermissionService } from '../../../../../services/index.ts';
+import type { IIdentityPermissionProvider, IRolePermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -19,7 +18,7 @@ import {
 
 export type RolePermissionControllerContext = {
     service: IRolePermissionService,
-    identityPermissionService: IdentityPermissionService,
+    identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('role')
@@ -27,11 +26,11 @@ export type RolePermissionControllerContext = {
 export class RolePermissionController {
     protected service: IRolePermissionService;
 
-    protected identityPermissionService: IdentityPermissionService;
+    protected identityPermissionProvider: IIdentityPermissionProvider;
 
     constructor(ctx: RolePermissionControllerContext) {
         this.service = ctx.service;
-        this.identityPermissionService = ctx.identityPermissionService;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -51,7 +50,7 @@ export class RolePermissionController {
         @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<any> {
-        const actor = buildActorContext(req, this.identityPermissionService);
+        const actor = buildActorContext(req, this.identityPermissionProvider);
 
         const entity = await this.service.create(data, actor);
 

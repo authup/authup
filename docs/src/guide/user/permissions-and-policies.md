@@ -9,8 +9,8 @@ Authup implements an **allow-by-default** authorization model:
 
 - A **permission** represents the ability to perform an action.
 - Permissions are **not restricted by default**.
-- **Policies** restrict permissions.
-- If no policy is assigned to a permission (`policy_id = null`), the permission is **publicly executable**.
+- **Policies** restrict permissions. Permissions can have **multiple policies** attached (n:m), combined using a `decision_strategy`.
+- If no policies are attached to a permission, the permission is **publicly executable**.
 
 This applies to authenticated users, anonymous users, and machine clients alike.
 Access restrictions must always be expressed through explicit policies.
@@ -25,8 +25,8 @@ Examples:
 - `user_update`
 
 A permission may be:
-- **unrestricted** (`policy_id = null`) — globally executable by anyone
-- **restricted** (`policy_id` references a policy) — only executable when the policy conditions are satisfied
+- **unrestricted** (no policies attached) — globally executable by anyone
+- **restricted** (one or more policies attached via the `auth_permission_policies` junction table) — only executable when the policy conditions are satisfied
 
 However, these permissions alone are not sufficient to enable context-dependent access controls.
 This is where policies come into play.
@@ -60,25 +60,56 @@ These are created and maintained automatically on startup:
 - `system.identity` — requires a valid identity (user, robot, or client)
 - `system.permission-binding` — checks that the identity has the permission assigned
 - `system.realm-match` — ensures realm-level isolation
+- `system.realm-bound` — restricts operations to realm-scoped entities only (entities with `realm_id` not null)
 
 System policies:
 - Are marked as `built_in` and cannot be modified or deleted via the API
 - Are synchronized to the database on every startup
 
-### Per-Permission Policy Assignment
+### Policy Assignment
 
-Permissions may reference:
-- `system.default` — the standard restriction (most built-in permissions)
-- A **custom policy** — for permissions needing different restrictions
-- `null` — unrestricted (publicly executable)
+Permissions reference policies through the `auth_permission_policies` junction table.
+Multiple policies can be attached to a single permission, and the `decision_strategy` on the permission controls how they are combined:
+
+- **UNANIMOUS** (default) — all attached policies must pass
+- **AFFIRMATIVE** — at least one attached policy must pass
+
+Typical configurations:
+- **Most built-in permissions** have `system.default` attached — the standard restriction
+- **Custom permissions** can have any combination of built-in and custom policies
+- **No policies attached** — unrestricted (publicly executable)
 
 The system only manages built-in policies. Users can create and assign custom policies via the API.
+
+## Realm Scoping
+
+Authup distinguishes between **global** and **realm-scoped** entities.
+Global entities (e.g. permissions, policies) have `realm_id = null` and exist outside any realm.
+Realm-scoped entities (e.g. users, clients, robots) belong to a specific realm.
+
+Two built-in admin roles control the scope of access:
+
+- **`admin`** — full access to all entities, including global ones
+- **`realm_admin`** — access restricted to realm-scoped entities only. This role has the `system.realm-bound` policy attached as a junction policy on its permission assignments, preventing operations on global entities.
+
+There is no special "master realm" privilege. Access control is entirely policy-driven:
+the `system.realm-bound` policy evaluates whether an entity has a `realm_id`, and denies the operation if it does not.
 
 ## Permission Evaluation
 
 When a permission is checked, the following flow applies:
 
 1. Look up the requested permission
-2. If the permission has no policy (`policy_id = null`) → **allow** (unrestricted)
-3. If the permission has a policy → evaluate the policy tree against the request context
-4. Policy passes → **allow**, policy fails → **deny**
+2. If the permission has no policies attached → **allow** (unrestricted)
+3. If the permission has policies attached → evaluate all policies, combining results with the permission's `decision_strategy`
+4. If the permission was obtained through a role or user assignment that carries a **junction policy**, evaluate that policy as an additional restriction
+5. All applicable policies pass → **allow**, any required policy fails → **deny**
+
+## Junction Policies
+
+Permission assignments (role-permission, user-permission) can carry their own policy via the junction table.
+This **junction policy** adds an additional restriction on top of the permission's own policies.
+
+For example, the `realm_admin` role assigns all permissions with the `system.realm-bound` junction policy.
+Even though the underlying permissions use `system.default` as their policy, the junction policy further restricts
+the `realm_admin` to only operate on entities that have a `realm_id`.

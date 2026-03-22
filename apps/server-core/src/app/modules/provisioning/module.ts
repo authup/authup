@@ -34,7 +34,9 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
 } from '../../../adapters/database/index.ts';
+import { SystemPolicyName } from '@authup/access';
 import {
+    PermissionPolicyEntity,
     PolicyRepository,
     UserRepository,
 } from '../../../adapters/database/domains/index.ts';
@@ -73,7 +75,11 @@ import {
 import { DatabaseInjectionKey } from '../database/index.ts';
 import type { Module } from '../types.ts';
 import { ModuleName } from '../constants.ts';
-import { CompositeProvisioningSource } from './sources/index.ts';
+import fs from 'node:fs';
+import path from 'node:path';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
 export class ProvisionerModule implements Module {
     readonly name: string;
@@ -89,7 +95,15 @@ export class ProvisionerModule implements Module {
     }
 
     async start(container: IDIContainer): Promise<void> {
-        const composite = new CompositeProvisioningSource(this.sources);
+        const sources = [...this.sources];
+
+        const config = container.resolve<Config>(ConfigInjectionKey);
+        const provisioningDir = path.join(config.writableDirectoryPath, 'provisioning');
+        if (fs.existsSync(provisioningDir)) {
+            sources.push(new FileProvisioningSource({ cwd: provisioningDir }));
+        }
+
+        const composite = new CompositeProvisioningSource(sources);
         const data = await composite.load(container);
 
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
@@ -213,5 +227,38 @@ export class ProvisionerModule implements Module {
 
         await rootSynchronizer.synchronize(data);
 
+        if (config.permissionsDefaultPolicyAssignment) {
+            await this.assignDefaultPolicy(dataSource, policyRepository);
+        }
+    }
+
+    protected async assignDefaultPolicy(
+        dataSource: DataSource,
+        policyRepository: PolicyRepositoryAdapter,
+    ): Promise<void> {
+        const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+        if (!defaultPolicy) {
+            return;
+        }
+
+        const permissionRepo = dataSource.getRepository(PermissionEntity);
+        const junctionRepo = dataSource.getRepository(PermissionPolicyEntity);
+
+        const permissions = await permissionRepo.find();
+        for (const permission of permissions) {
+            const existing = await junctionRepo.findOneBy({
+                permission_id: permission.id,
+                policy_id: defaultPolicy.id,
+            });
+
+            if (!existing) {
+                await junctionRepo.save(junctionRepo.create({
+                    permission_id: permission.id,
+                    permission_realm_id: permission.realm_id,
+                    policy_id: defaultPolicy.id,
+                    policy_realm_id: defaultPolicy.realm_id,
+                }));
+            }
+        }
     }
 }
