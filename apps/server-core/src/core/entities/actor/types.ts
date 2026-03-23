@@ -8,8 +8,14 @@
 import type { IPermissionChecker, PolicyWithType } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
+export type ResolveJunctionPolicyOptions = {
+    name: string;
+    realm_id?: string | null;
+    client_id?: string | null;
+};
+
 export type ActorContext = {
     permissionChecker: IPermissionChecker;
     identity?: Identity;
-    resolveJunctionPolicy?: (permissionName: string) => Promise<PolicyWithType | undefined>;
+    resolveJunctionPolicy?: (options: ResolveJunctionPolicyOptions) => Promise<PolicyWithType | undefined>;
 };

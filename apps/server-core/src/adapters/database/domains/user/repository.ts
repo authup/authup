@@ -85,6 +85,9 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
             relations: {
                 permission: true,
+                policy: {
+                    children: true,
+                },
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -95,6 +98,10 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
         });
 
-        return entities.map((relation) => relation.permission);
+        return entities.map((relation) => {
+            const {permission} = relation;
+            permission.policy = relation.policy || undefined;
+            return permission;
+        });
     }
 }

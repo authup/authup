@@ -118,7 +118,7 @@ The decision strategy is set per permission. Most built-in permissions use `unan
 
 ## Junction Policies
 
-Permission assignments (role-permission, user-permission) can carry their own policy via the junction table.
+Permission assignments (role-permission, user-permission, client-permission, robot-permission) can carry their own policy via the junction table.
 This **junction policy** adds an additional restriction on top of the permission's own policies.
 
 For example, the `realm_admin` role assigns all permissions with the `system.realm-bound` junction policy.

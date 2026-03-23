@@ -8,7 +8,7 @@
 import type { PolicyWithType } from '@authup/access';
 import { mergePermissionItems } from '@authup/access';
 import type { Request } from 'routup';
-import type { ActorContext, IIdentityPermissionProvider } from '../../../../core/index.ts';
+import type { ActorContext, IIdentityPermissionProvider, ResolveJunctionPolicyOptions } from '../../../../core/index.ts';
 import { useRequestPermissionChecker } from '../permission/helper.ts';
 import { useRequestIdentity } from './identity.ts';
 
@@ -19,12 +19,31 @@ export function buildActorContext(
     const permissionChecker = useRequestPermissionChecker(req);
     const identity = useRequestIdentity(req);
 
-    let resolveJunctionPolicy: ((permissionName: string) => Promise<PolicyWithType | undefined>) | undefined;
+    let resolveJunctionPolicy: ((options: ResolveJunctionPolicyOptions) => Promise<PolicyWithType | undefined>) | undefined;
 
     if (identityPermissionProvider && identity) {
-        resolveJunctionPolicy = async (permissionName: string): Promise<PolicyWithType | undefined> => {
+        resolveJunctionPolicy = async (options: ResolveJunctionPolicyOptions): Promise<PolicyWithType | undefined> => {
             const bindings = await identityPermissionProvider.getFor(identity);
-            const matching = bindings.filter((b) => b.name === permissionName);
+            const matching = bindings.filter((b) => {
+                if (b.name !== options.name) {
+                    return false;
+                }
+
+                if (typeof options.realm_id !== 'undefined') {
+                    if ((b.realm_id ?? null) !== (options.realm_id ?? null)) {
+                        return false;
+                    }
+                }
+
+                if (typeof options.client_id !== 'undefined') {
+                    if ((b.client_id ?? null) !== (options.client_id ?? null)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
             if (matching.length === 0) {
                 return undefined;
             }

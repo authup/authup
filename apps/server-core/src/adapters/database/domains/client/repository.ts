@@ -68,6 +68,9 @@ export class ClientRepository extends Repository<ClientEntity> {
             },
             relations: {
                 permission: true,
+                policy: {
+                    children: true,
+                },
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -78,6 +81,10 @@ export class ClientRepository extends Repository<ClientEntity> {
             },
         });
 
-        return entities.map((entity) => entity.permission);
+        return entities.map((entity) => {
+            const {permission} = entity;
+            permission.policy = entity.policy || undefined;
+            return permission;
+        });
     }
 }

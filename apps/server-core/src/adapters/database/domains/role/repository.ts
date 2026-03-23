@@ -96,6 +96,10 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
             },
         });
 
-        return entities.map((entity) => entity.permission);
+        return entities.map((entity) => {
+            const {permission} = entity;
+            permission.policy = entity.policy || undefined;
+            return permission;
+        });
     }
 }

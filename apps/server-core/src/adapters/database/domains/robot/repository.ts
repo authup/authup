@@ -73,6 +73,9 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
             relations: {
                 permission: true,
+                policy: {
+                    children: true,
+                },
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -84,6 +87,10 @@ export class RobotRepository extends Repository<RobotEntity> {
         });
 
         return entities
-            .map((entity) => entity.permission);
+            .map((entity) => {
+                const {permission} = entity;
+                permission.policy = entity.policy || undefined;
+                return permission;
+            });
     }
 }

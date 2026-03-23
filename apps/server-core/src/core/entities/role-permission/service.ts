@@ -86,7 +86,11 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             actor.resolveJunctionPolicy &&
             typeof data.policy_id === 'undefined'
         ) {
-            const junctionPolicy = await actor.resolveJunctionPolicy(data.permission.name);
+            const junctionPolicy = await actor.resolveJunctionPolicy({
+                name: data.permission.name,
+                realm_id: data.permission.realm_id,
+                client_id: data.permission.client_id,
+            });
             if (junctionPolicy) {
                 data.policy_id = junctionPolicy.id;
             }

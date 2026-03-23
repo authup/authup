@@ -82,26 +82,33 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             };
         }
 
-        let permissions = [
-            ...await this.permissionResolver.resolveGlobal(input.relations.globalPermissions),
-            ...(attributes.realm_id ?
-                await this.permissionResolver.resolveRealm(input.relations.realmPermissions, attributes.realm_id) :
-                []),
-        ];
+        let globalPermissions = await this.permissionResolver.resolveGlobal(input.relations.globalPermissions);
 
         if (input.relations.globalPermissionsExclude && input.relations.globalPermissionsExclude.length > 0) {
             const excludeSet = new Set(input.relations.globalPermissionsExclude);
-            permissions = permissions.filter((p) => !excludeSet.has(p.name));
+            globalPermissions = globalPermissions.filter((p) => !excludeSet.has(p.name));
         }
+
+        const realmPermissions = attributes.realm_id ?
+            await this.permissionResolver.resolveRealm(input.relations.realmPermissions, attributes.realm_id) :
+            [];
+
+        const permissions = [
+            ...globalPermissions,
+            ...realmPermissions,
+        ];
 
         if (permissions.length > 0) {
             let extraAttributes: Record<string, unknown> | undefined;
 
             if (input.relations.globalPermissionsPolicyName && this.policyRepository) {
                 const policy = await this.policyRepository.findOneByName(input.relations.globalPermissionsPolicyName);
-                if (policy) {
-                    extraAttributes = { policy_id: policy.id };
+                if (!policy) {
+                    throw new Error(
+                        `Provisioning: policy '${input.relations.globalPermissionsPolicyName}' not found for role '${attributes.name}'.`,
+                    );
                 }
+                extraAttributes = { policy_id: policy.id };
             }
 
             await this.permissionJunction.synchronize(
