@@ -105,6 +105,17 @@ When a permission is checked, the following flow applies:
 4. If the permission was obtained through a role or user assignment that carries a **junction policy**, evaluate that policy as an additional restriction
 5. All applicable policies pass → **allow**, any required policy fails → **deny**
 
+## Decision Strategy
+
+When a permission has multiple policies attached, the `decision_strategy` on the permission controls how results are combined:
+
+| Strategy | Behavior |
+|---|---|
+| **unanimous** (default) | All attached policies must pass |
+| **affirmative** | At least one attached policy must pass |
+
+The decision strategy is set per permission. Most built-in permissions use `unanimous` — all policies in `system.default` must pass.
+
 ## Junction Policies
 
 Permission assignments (role-permission, user-permission) can carry their own policy via the junction table.
@@ -113,3 +124,28 @@ This **junction policy** adds an additional restriction on top of the permission
 For example, the `realm_admin` role assigns all permissions with the `system.realm-bound` junction policy.
 Even though the underlying permissions use `system.default` as their policy, the junction policy further restricts
 the `realm_admin` to only operate on entities that have a `realm_id`.
+
+## Privilege Escalation Prevention
+
+Authup prevents privilege escalation through two mechanisms:
+
+### Superset Check
+
+When assigning a role to an identity (user, client, or robot), the system verifies that the assigning actor
+owns **all** permissions contained in the target role. This check is policy-aware:
+
+- If the actor has a restricted binding (junction policy) for a permission, but the target role has an unrestricted
+  binding for the same permission, the assignment is denied.
+- If the actor has multiple bindings for a permission (e.g. through different roles), the least restrictive
+  binding wins (affirmative merge).
+
+This means an `admin` (unrestricted) can assign any role, but a `realm_admin` (restricted by `system.realm-bound`)
+cannot assign the `admin` role — because the admin role contains unrestricted bindings that the realm_admin does not own.
+
+### Junction Policy Propagation
+
+When creating any permission binding (role-permission, user-permission, client-permission, robot-permission),
+the system automatically propagates the actor's own junction policy to the new binding.
+
+If a `realm_admin` assigns a permission to a role, the new role-permission entry inherits the
+`system.realm-bound` junction policy. This prevents restricted actors from creating unrestricted permission bindings.

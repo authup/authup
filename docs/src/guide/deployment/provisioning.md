@@ -133,6 +133,37 @@ The top-level object has five optional arrays. Items at this level are **global*
 | `extraAttributes`  | object                   | Policy-specific configuration (e.g. `decision_strategy`, `attribute_name`) |
 | `children`         | `PolicyProvisioning[]`   | Child policies (for composite policies) |
 
+### Policy Extra Attributes
+
+Policies use `extraAttributes` for their type-specific configuration. All attribute keys use **snake_case**.
+
+| Policy Type | Attribute | Type | Description |
+|---|---|---|---|
+| `composite` | `decision_strategy` | `string` | `unanimous` or `affirmative` |
+| `realm_match` | `attribute_name` | `string[]` | Entity attributes to match against identity realm |
+| `realm_match` | `attribute_name_strict` | `boolean` | Require all listed attributes to match |
+| `realm_match` | `identity_master_match_all` | `boolean` | Whether master realm identities bypass realm checks |
+| `realm_match` | `attribute_null_match_all` | `boolean` | Whether `null` attribute values match any realm |
+| `attributes` | `query` | `object` | MongoDB-style query (e.g. `{ realm_id: { $ne: null } }`) |
+| `time` | `start` | `string` | ISO 8601 start datetime |
+| `time` | `end` | `string` | ISO 8601 end datetime |
+
+Example — defining a realm-match policy with custom settings:
+
+```yaml
+policies:
+  - attributes:
+      name: system.realm-match
+      type: realm_match
+      built_in: true
+    extraAttributes:
+      attribute_name:
+        - realm_id
+      attribute_name_strict: false
+      identity_master_match_all: false
+      attribute_null_match_all: true
+```
+
 ### Permission
 
 | Field        | Type               | Description                          |
