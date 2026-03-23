@@ -15,6 +15,7 @@ import {
     PrimaryGeneratedColumn, Unique,
     UpdateDateColumn,
 } from 'typeorm';
+import type { DecisionStrategy } from '@authup/kit';
 import type {
     Client, Realm,
 } from '@authup/core-kit';
@@ -40,7 +41,7 @@ export class PermissionEntity {
     description: string | null;
 
     @Column({ type: 'varchar', length: 50, nullable: true, default: null })
-    decision_strategy: string | null;
+    decision_strategy: `${DecisionStrategy}` | null;
 
     // ------------------------------------------------------------------
 

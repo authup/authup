@@ -200,7 +200,7 @@ export default defineComponent({
                             </template>
                             <VCFormInput
                                 v-model="vuelidate.day_of_week.$model"
-                                placeholder="0-7"
+                                placeholder="0-6"
                                 type="number"
                                 @change="handleUpdated"
                             />

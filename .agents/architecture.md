@@ -150,39 +150,32 @@ Services receive an `ActorContext` instead of a raw HTTP request. This decouples
 
 ```typescript
 // core/entities/actor/types.ts
-import type { IPermissionChecker, PolicyWithType } from '@authup/access';
+import type { IPermissionEvaluator } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
 export type ActorContext = {
-    permissionChecker: IPermissionChecker;
+    permissionEvaluator: IPermissionEvaluator;
     identity?: Identity;
-    resolveJunctionPolicy?: (permissionName: string) => Promise<PolicyWithType | undefined>;
 };
 ```
 
-- `permissionChecker` — evaluates permission-level and junction-level policies
+- `permissionEvaluator` — evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`)
 - `identity` — the actor's identity (user, client, robot)
-- `resolveJunctionPolicy` — resolves the actor's merged junction policy for a given permission name (used for junction policy propagation)
 
-The HTTP adapter builds this from the request:
+#### RequestPermissionEvaluator
+
+The HTTP adapter provides `RequestPermissionEvaluator` — the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. Set on each request by the authorization middleware.
 
 ```typescript
 // adapters/http/request/helpers/actor.ts
-export function buildActorContext(
-    req: Request,
-    identityPermissionService?: IdentityPermissionService,
-): ActorContext {
-    const permissionChecker = useRequestPermissionChecker(req);
+export function buildActorContext(req: Request): ActorContext {
     const identity = useRequestIdentity(req);
     return {
-        permissionChecker,
+        permissionEvaluator: useRequestPermissionEvaluator(req),
         identity: identity ? identity.raw : undefined,
-        resolveJunctionPolicy: /* merges actor's bindings for the permission */,
     };
 }
 ```
-
-The `identityPermissionService` parameter is optional — only junction controllers that create permission bindings pass it.
 
 #### Service Interface
 
@@ -223,7 +216,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
     }
 
     async create(data: Record<string, any>, actor: ActorContext): Promise<Role> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_CREATE });
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
         await this.repository.validateJoinColumns(validated);
@@ -233,7 +226,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             validated.realm_id = this.getActorRealmId(actor) || null;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_CREATE,
             input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
@@ -265,7 +258,7 @@ Service responsibility:
 |---|---|---|
 | **Simple CRUD** | role, scope, realm, permission | Validator + validateJoinColumns + checkUniqueness + permission checks |
 | **Junction** | client-permission, robot-permission, user-permission, client-scope, role-permission | No validator (just UUID fields), validateJoinColumns populates join entities, realm_id extraction from joins |
-| **Junction with superset check** | client-role, robot-role, user-role | Service does permission checks + save; controller additionally calls `validateJoinColumns` + `identityPermissionService.isSuperset()` before delegating to service (superset check requires adapter-level `RequestIdentity`) |
+| **Junction with superset check** | client-role, robot-role, user-role | Service does permission checks + save; controller additionally calls `validateJoinColumns` + `identityPermissionProvider.isSuperset()` before delegating to service (superset check requires adapter-level `RequestIdentity`) |
 | **Attribute** | role-attribute, user-attribute | Per-record permission filtering in `getMany`, managed under parent entity's UPDATE permission |
 | **Complex with secrets** | client, robot | Uses `{Entity}CredentialsService` for secret handling, per-record secret filtering in `getMany` |
 | **Complex with self-access** | user | Self-edit fallback (strips restricted fields), self-access detection in `getOne`, name-lock protection |
@@ -350,7 +343,7 @@ Controller conventions:
 - Format response with `send()`, `sendCreated()`, `sendAccepted()` from `routup`
 
 Exceptions where controllers retain some logic:
-- **Superset junction controllers** (client-role, robot-role, user-role): Call `repository.validateJoinColumns()` and `identityPermissionService.isSuperset()` before delegating to service, because the superset check requires adapter-specific `RequestIdentity`
+- **Superset junction controllers** (client-role, robot-role, user-role): Call `repository.validateJoinColumns()` and `identityPermissionProvider.isSuperset()` before delegating to service, because the superset check requires adapter-specific `RequestIdentity`
 - **Self-access resolution** (client, robot, user): Resolve `@me`/`@self` tokens to actual IDs before delegating
 - **Infrastructure concerns** (robot): Robot synchronization after save/delete uses infrastructure-level singletons
 
@@ -512,23 +505,26 @@ Layer 2: Junction-level policy (from role-permission.policy_id, user-permission.
   └── e.g. system.realm-bound
 ```
 
-Both layers must pass for access to be granted. Layer 1 is evaluated by the `PermissionChecker` in `@authup/access`. Layer 2 is evaluated by the server-core `PermissionBindingPolicyEvaluator`.
+Both layers must pass for access to be granted. Layer 1 is evaluated by the `PermissionEvaluator` in `@authup/access`. Layer 2 is evaluated by the server-core `PermissionBindingPolicyEvaluator`.
 
-### PermissionItem Type
+### PermissionBinding Type
 
 ```typescript
 // packages/access/src/permission/types.ts
-export type PermissionItem = {
-    name: string,
-    client_id?: string | null,
-    realm_id?: string | null,
-    policies?: PolicyWithType[],        // permission-level (n:m)
-    decision_strategy?: DecisionStrategy,
-    policy?: PolicyWithType,            // junction-level (single, for merge)
+export type PermissionBinding = {
+    permission: {
+        name: string,
+        client_id?: string | null,
+        realm_id?: string | null,
+        decision_strategy?: string | null,
+    },
+    policies?: PolicyWithType[],
 };
 ```
 
-A permission is uniquely identified by `name + client_id + realm_id`.
+A permission binding wraps a permission entity with its associated policies. The permission is uniquely identified by `name + client_id + realm_id`. The `policies` array contains:
+- **Permission-level** (Layer 1): n:m policies from `auth_permission_policies` (loaded by `PermissionDatabaseProvider`)
+- **Junction-level** (Layer 2): the single junction policy from `role_permission.policy_id` etc. (loaded by `getBoundPermissions()`)
 
 ## Security: Permission Assignment
 
@@ -536,9 +532,9 @@ A permission is uniquely identified by `name + client_id + realm_id`.
 
 When assigning a role to an identity (user-role, client-role, robot-role), the system verifies the actor owns all permissions in the target role. The check is **policy-aware**:
 
-1. Merge actor's bindings per permission (using `mergePermissionItems` with AFFIRMATIVE strategy)
+1. Merge actor's bindings per permission (using `mergePermissionBindings` with AFFIRMATIVE strategy)
 2. Merge target's bindings per permission
-3. For each target permission: if actor's merged binding has a junction policy but target's doesn't → fail (actor is more restricted)
+3. For each target permission: if actor's merged binding has policies but target's doesn't → fail (actor is more restricted)
 
 An actor with both `admin` (unrestricted) and `realm_admin` (restricted) roles gets unrestricted access — the merge uses AFFIRMATIVE (least restrictive wins).
 
@@ -546,16 +542,16 @@ An actor with both `admin` (unrestricted) and `realm_admin` (restricted) roles g
 
 When creating any permission-binding junction (role-permission, user-permission, client-permission, robot-permission):
 
-1. The service checks `actor.resolveJunctionPolicy(permissionName)`
-2. This merges the actor's bindings for that permission
-3. If the merged result has a policy, it's set as `policy_id` on the new junction entry
+1. The service calls `this.identityPermissionProvider.resolveJunctionPolicy(identity, { name, realm_id, client_id })`
+2. This loads and merges the actor's bindings for that permission
+3. If the merged result has policies, the first policy is set as `policy_id` on the new junction entry
 4. If `data.policy_id` is already set explicitly, propagation is skipped
 
 This prevents privilege escalation: a `realm_admin` cannot create unrestricted permission bindings.
 
-### mergePermissionItems
+### mergePermissionBindings
 
 When merging duplicate permission bindings (same `name + client_id + realm_id`):
 
-- If **any** binding has no policy → merged result has **no policy** (unrestricted)
-- If all bindings have policies → combined in a composite with AFFIRMATIVE strategy (any-one-passes)
+- If **any** binding has no policies → merged result has **no policies** (unrestricted)
+- If all bindings have policies → each binding's policies are wrapped in a composite with that binding's `decision_strategy`, then all composites are combined under an outer AFFIRMATIVE composite (any-one-passes)

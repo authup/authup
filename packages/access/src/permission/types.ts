@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { DecisionStrategy } from '../constants';
 import type { PolicyWithType } from '../policy';
 
 export type PermissionBinding = {
@@ -12,7 +13,7 @@ export type PermissionBinding = {
         name: string,
         client_id?: string | null,
         realm_id?: string | null,
-        decision_strategy?: string | null,
+        decision_strategy?: `${DecisionStrategy}` | null,
     },
     policies?: PolicyWithType[],
 };

@@ -5,6 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export enum DecisionStrategy {
+    /**
+     * One or more positive
+     */
+    AFFIRMATIVE = 'affirmative',
+    /**
+     * All positive
+     */
+    UNANIMOUS = 'unanimous',
+    /**
+     * More positive than negative
+     */
+    CONSENSUS = 'consensus',
+}
+
 export enum EnvironmentName {
     PRODUCTION = 'production',
     TEST = 'test',

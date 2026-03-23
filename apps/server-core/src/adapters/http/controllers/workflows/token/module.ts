@@ -16,6 +16,7 @@ import { getRequestHostName, sendAccepted } from 'routup';
 import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { pickRecord } from '@authup/kit';
+import { buildPermissionBindingKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext, TokenControllerOptions } from './types.ts';
 import type {
@@ -151,8 +152,15 @@ export class TokenController {
             return {
                 active,
                 // todo: permissions property should be removed.
-                permissions: permissions
-                    .map((binding) => pickRecord(binding.permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission),
+                permissions: Object.values(
+                    permissions.reduce((acc, binding) => {
+                        const key = buildPermissionBindingKey(binding.permission);
+                        if (!acc[key]) {
+                            acc[key] = pickRecord(binding.permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission;
+                        }
+                        return acc;
+                    }, {} as Record<string, OAuth2TokenPermission>),
+                ),
                 ...payload,
                 ...claims,
             };

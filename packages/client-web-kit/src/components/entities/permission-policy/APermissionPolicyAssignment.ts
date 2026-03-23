@@ -16,8 +16,14 @@ import {
 
 export const APermissionPolicyAssignment = defineComponent({
     props: {
-        permissionId: String,
-        policyId: String,
+        permissionId: {
+            type: String,
+            required: true,
+        },
+        policyId: {
+            type: String,
+            required: true,
+        },
     },
     emits: defineEntityVEmitOptions<PermissionPolicy>(),
     async setup(props, setup) {

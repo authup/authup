@@ -28,44 +28,51 @@ export function mergePermissionBindings(input: PermissionBinding[]) : Permission
     const keys = Object.keys(grouped);
     for (const key of keys) {
         const group = grouped[key];
+        const [first] = group;
 
-        const [binding, ...bindings] = group;
-
-        if (bindings.length > 0) {
-            const children : PolicyWithType[] = [];
-
-            for(const element of group) {
-                if(!element.policies || element.policies.length === 0) {
-                    continue;
-                }
-
-                const policy: PolicyWithType<CompositePolicy> = {
-                    type: BuiltInPolicyType.COMPOSITE,
-                    decision_strategy: element.permission.decision_strategy as `${DecisionStrategy}`,
-                    children: element.policies,
-                };
-
-                children.push(policy)
-            }
-
-            if (
-                children.length > 0 &&
-                children.length === group.length
-            ) {
-                const policy: PolicyWithType<CompositePolicy> = {
-                    type: BuiltInPolicyType.COMPOSITE,
-                    decision_strategy: DecisionStrategy.AFFIRMATIVE,
-                    children,
-                };
-
-                binding.permission.decision_strategy = DecisionStrategy.AFFIRMATIVE;
-                binding.policies = [policy];
-            } else {
-                binding.policies = undefined;
-            }
+        if (group.length === 1) {
+            output.push(first);
+            continue;
         }
 
-        output.push(binding);
+        const children : PolicyWithType[] = [];
+
+        for (const element of group) {
+            if (!element.policies || element.policies.length === 0) {
+                continue;
+            }
+
+            const policy: PolicyWithType<CompositePolicy> = {
+                type: BuiltInPolicyType.COMPOSITE,
+                decision_strategy: element.permission.decision_strategy || DecisionStrategy.UNANIMOUS,
+                children: element.policies,
+            };
+
+            children.push(policy);
+        }
+
+        let mergedPolicies: PolicyWithType[] | undefined;
+
+        if (
+            children.length > 0 &&
+            children.length === group.length
+        ) {
+            const policy: PolicyWithType<CompositePolicy> = {
+                type: BuiltInPolicyType.COMPOSITE,
+                decision_strategy: DecisionStrategy.AFFIRMATIVE,
+                children,
+            };
+
+            mergedPolicies = [policy];
+        }
+
+        output.push({
+            permission: {
+                ...first.permission,
+                decision_strategy: DecisionStrategy.AFFIRMATIVE,
+            },
+            policies: mergedPolicies,
+        });
     }
 
     return output;

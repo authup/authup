@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DecisionStrategy } from '@authup/kit';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
@@ -66,7 +67,7 @@ export class PermissionValidator extends Container<
             'decision_strategy',
             { optional: true },
             createValidator(
-                z.enum(['affirmative', 'unanimous', 'consensus'] as const)
+                z.enum(DecisionStrategy)
                     .nullable(),
             ),
         );

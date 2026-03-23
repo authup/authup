@@ -134,7 +134,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             const data = dataBase.clone();
             data.set(BuiltInPolicyType.PERMISSION_BINDING, binding);
 
-            const policyDecisionStrategy = (binding.permission.decision_strategy as `${DecisionStrategy}` | undefined | null) ??
+            const policyDecisionStrategy = binding.permission.decision_strategy ??
                 DecisionStrategy.UNANIMOUS;
 
             const compositePolicy : PolicyWithType<CompositePolicy> = {
