@@ -531,7 +531,25 @@ export class HTTPControllerModule {
         });
 
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
-        const service = new PermissionService({ repository, realmRepository: realmRepositoryAdapter });
+        const roleRepository = new RoleRepositoryAdapter({
+            repository: container.resolve<Repository<Role>>(RoleEntity),
+            realmRepository,
+        });
+        const rolePermissionRepository = new RolePermissionRepositoryAdapter(
+            container.resolve<Repository<RolePermission>>(RolePermissionEntity),
+        );
+        const policyRepository = new PolicyRepositoryAdapter({
+            repository: new PolicyRepository(dataSource),
+            realmRepository,
+        });
+
+        const service = new PermissionService({
+            repository,
+            realmRepository: realmRepositoryAdapter,
+            roleRepository,
+            rolePermissionRepository,
+            policyRepository,
+        });
 
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
         const permissionProvider = new PermissionDatabaseProvider(dataSource);

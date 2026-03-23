@@ -5,24 +5,38 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
+import { BuiltInPolicyType, PolicyData, SystemPolicyName } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
     PermissionValidator,
+    ROLE_ADMIN_NAME,
+    ROLE_REALM_ADMIN_NAME,
     ValidatorGroup,
 } from '@authup/core-kit';
 import type { Permission } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
+import type { IPolicyRepository } from '../policy/types.ts';
 import type { IRealmRepository } from '../realm/types.ts';
+import type { IRoleRepository } from '../role/types.ts';
+import type { IRolePermissionRepository } from '../role-permission/types.ts';
 import { AbstractEntityService } from '../service.ts';
 import type { EntityRepositoryFindManyResult } from '../types.ts';
 import type { IPermissionRepository, IPermissionService } from './types.ts';
 
+const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
+    PermissionName.REALM_CREATE,
+    PermissionName.REALM_UPDATE,
+    PermissionName.REALM_DELETE,
+];
+
 export type PermissionServiceContext = {
     repository: IPermissionRepository;
     realmRepository: IRealmRepository;
+    roleRepository: IRoleRepository;
+    rolePermissionRepository: IRolePermissionRepository;
+    policyRepository: IPolicyRepository;
 };
 
 export class PermissionService extends AbstractEntityService implements IPermissionService {
@@ -30,12 +44,21 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
     protected realmRepository: IRealmRepository;
 
+    protected roleRepository: IRoleRepository;
+
+    protected rolePermissionRepository: IRolePermissionRepository;
+
+    protected policyRepository: IPolicyRepository;
+
     protected validator: PermissionValidator;
 
     constructor(ctx: PermissionServiceContext) {
         super();
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.roleRepository = ctx.roleRepository;
+        this.rolePermissionRepository = ctx.rolePermissionRepository;
+        this.policyRepository = ctx.policyRepository;
         this.validator = new PermissionValidator();
     }
 
@@ -179,8 +202,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         await this.repository.checkUniqueness(validated);
 
         entity = this.repository.create(validated);
+        entity = await this.repository.save(entity);
 
-        await this.repository.saveWithAdminRoleAssignment(entity);
+        await this.assignToAdminRole(entity);
+        await this.assignToRealmAdminRoles(entity);
 
         return { entity, created: true };
     }
@@ -212,5 +237,68 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         entity.id = entityId;
 
         return entity;
+    }
+
+    /**
+     * Assign a newly created permission to the global admin role.
+     * The admin role receives every permission without policy restrictions.
+     */
+    private async assignToAdminRole(permission: Permission): Promise<void> {
+        const adminRole = await this.roleRepository.findOneByName(ROLE_ADMIN_NAME);
+        if (!adminRole) {
+            return;
+        }
+
+        const entry = this.rolePermissionRepository.create({
+            role_id: adminRole.id,
+            role_realm_id: adminRole.realm_id,
+            permission_id: permission.id,
+            permission_realm_id: permission.realm_id,
+        });
+        await this.rolePermissionRepository.save(entry);
+    }
+
+    /**
+     * Assign a newly created permission to all matching realm_admin roles
+     * with the system.realm-bound policy.
+     *
+     * Eligible permissions:
+     * - Built-in authup permissions (global) — assigned to all realm_admin roles
+     * - Realm-scoped permissions — assigned to the realm_admin in the matching realm
+     *
+     * Excluded:
+     * - Realm CRUD permissions (realm_create, realm_update, realm_delete)
+     * - Custom global permissions (non-built-in with realm_id: null)
+     */
+    private async assignToRealmAdminRoles(permission: Permission): Promise<void> {
+        if (REALM_ADMIN_EXCLUDED_PERMISSIONS.includes(permission.name as PermissionName)) {
+            return;
+        }
+
+        const isBuiltIn = (Object.values(PermissionName) as string[]).includes(permission.name);
+        if (!permission.realm_id && !isBuiltIn) {
+            return;
+        }
+
+        const realmBoundPolicy = await this.policyRepository.findOneByName(SystemPolicyName.REALM_BOUND);
+
+        const realmAdminRoles = await this.roleRepository.findManyBy({
+            name: ROLE_REALM_ADMIN_NAME,
+        });
+
+        for (const role of realmAdminRoles) {
+            if (permission.realm_id && permission.realm_id !== role.realm_id) {
+                continue;
+            }
+
+            const entry = this.rolePermissionRepository.create({
+                role_id: role.id,
+                role_realm_id: role.realm_id,
+                permission_id: permission.id,
+                permission_realm_id: permission.realm_id,
+                ...(realmBoundPolicy ? { policy_id: realmBoundPolicy.id } : {}),
+            });
+            await this.rolePermissionRepository.save(entry);
+        }
     }
 }

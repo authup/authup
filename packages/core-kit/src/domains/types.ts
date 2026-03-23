@@ -15,6 +15,7 @@ import type { IdentityProviderAccount } from './identity-provider-account';
 import type { IdentityProviderAttribute } from './identity-provider-attribute';
 import type { IdentityProviderRoleMapping } from './identity-provider-role-mapping';
 import type { Permission } from './permission';
+import type { PermissionPolicy } from './permission-policy';
 import type { Policy } from './policy';
 import type { PolicyAttribute } from './policy-attribute';
 import type { Realm } from './realm';
@@ -42,6 +43,7 @@ type EntityTypeMapRaw = {
     [EntityType.POLICY]: Policy,
     [EntityType.POLICY_ATTRIBUTE]: PolicyAttribute,
     [EntityType.PERMISSION]: Permission,
+    [EntityType.PERMISSION_POLICY]: PermissionPolicy,
     [EntityType.REALM]: Realm,
     [EntityType.ROBOT]: Robot,
     [EntityType.ROBOT_PERMISSION]: RobotPermission,

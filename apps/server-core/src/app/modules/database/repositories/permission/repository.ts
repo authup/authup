@@ -6,18 +6,14 @@
  */
 
 import type { Permission, Realm } from '@authup/core-kit';
-import { ROLE_ADMIN_NAME } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
-import { IsNull } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
 import {
     PermissionEntity,
-    RolePermissionEntity,
-    RoleRepository,
 } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
@@ -137,30 +133,4 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
         }
     }
 
-    async saveWithAdminRoleAssignment(entity: Permission): Promise<Permission> {
-        await this.repository.manager.connection.transaction(async (entityManager) => {
-            const transactionRepository = entityManager.getRepository(PermissionEntity);
-            await transactionRepository.save(entity as PermissionEntity);
-
-            const roleRepository = new RoleRepository(entityManager);
-            const role = await roleRepository.findOneBy({
-                name: ROLE_ADMIN_NAME,
-                realm_id: IsNull(),
-            });
-
-            if (role) {
-                const rolePermissionRepository = entityManager.getRepository(RolePermissionEntity);
-                await rolePermissionRepository.insert({
-                    role_id: role.id,
-                    role_realm_id: role.realm_id,
-                    permission_id: entity.id,
-                    permission_realm_id: entity.realm_id,
-                });
-
-                await roleRepository.clearBoundPermissionsCache(role);
-            }
-        });
-
-        return entity;
-    }
 }

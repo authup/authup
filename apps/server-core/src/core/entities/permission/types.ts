@@ -11,8 +11,6 @@ import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types
 
 export interface IPermissionRepository extends IEntityRepository<Permission> {
     checkUniqueness(data: Partial<Permission>, existing?: Permission): Promise<void>;
-
-    saveWithAdminRoleAssignment(entity: Permission): Promise<Permission>;
 }
 
 export interface IPermissionService {

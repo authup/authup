@@ -14,6 +14,9 @@ import {
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
+import type { IRoleRepository } from '../../../../../src/core/entities/role/types.ts';
+import type { IRolePermissionRepository } from '../../../../../src/core/entities/role-permission/types.ts';
+import type { IPolicyRepository } from '../../../../../src/core/entities/policy/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import {
@@ -28,21 +31,31 @@ class FakePermissionRepository extends FakeEntityRepository<Permission> implemen
     async checkUniqueness(): Promise<void> {
         // no-op
     }
-
-    async saveWithAdminRoleAssignment(entity: Permission): Promise<Permission> {
-        return this.save(entity);
-    }
 }
 
 describe('core/entities/permission/service', () => {
     let repository: FakePermissionRepository;
     let realmRepository: FakeRealmRepository;
+    let roleRepository: FakeEntityRepository<any> & IRoleRepository;
+    let rolePermissionRepository: FakeEntityRepository<any> & IRolePermissionRepository;
+    let policyRepository: FakeEntityRepository<any> & IPolicyRepository;
     let service: PermissionService;
 
     beforeEach(() => {
         repository = new FakePermissionRepository();
         realmRepository = new FakeRealmRepository();
-        service = new PermissionService({ repository, realmRepository });
+        roleRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IRoleRepository;
+        roleRepository.checkUniqueness = async () => {};
+        rolePermissionRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IRolePermissionRepository;
+        policyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPolicyRepository;
+        policyRepository.checkUniqueness = async () => {};
+        service = new PermissionService({
+            repository,
+            realmRepository,
+            roleRepository,
+            rolePermissionRepository,
+            policyRepository,
+        });
     });
 
     describe('getMany', () => {
