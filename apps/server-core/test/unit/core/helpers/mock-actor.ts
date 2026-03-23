@@ -21,7 +21,6 @@ function createMockPermissionEvaluator(
         evaluateOneOf: vi.fn().mockImplementation(async (ctx: PermissionEvaluationContext) => handler(ctx)),
         preEvaluate: vi.fn().mockImplementation(async (ctx: PermissionEvaluationContext) => handler(ctx)),
         preEvaluateOneOf: vi.fn().mockImplementation(async (ctx: PermissionEvaluationContext) => handler(ctx)),
-        resolveJunctionPolicy: vi.fn().mockResolvedValue(undefined),
     };
 }
 

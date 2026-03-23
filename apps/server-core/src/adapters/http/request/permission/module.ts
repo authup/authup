@@ -9,32 +9,21 @@ import { ScopeName } from '@authup/core-kit';
 import type {
     IPermissionEvaluator,
     PermissionEvaluationContext,
-    PolicyWithType,
-    ResolveJunctionPolicyOptions,
 } from '@authup/access';
 import {
-    BuiltInPolicyType, PolicyData, mergePermissionBindings,
+    BuiltInPolicyType, PolicyData,
 } from '@authup/access';
 import type { Request } from 'routup';
-import type { IIdentityPermissionProvider } from '../../../../core/index.ts';
 import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
-export type RequestAccessContextOptions = {
-    evaluator: IPermissionEvaluator;
-    identityPermissionProvider?: IIdentityPermissionProvider;
-};
-
-export class RequestAccessContext implements IPermissionEvaluator {
+export class RequestPermissionEvaluator implements IPermissionEvaluator {
     protected req: Request;
 
     protected evaluator: IPermissionEvaluator;
 
-    protected identityPermissionProvider?: IIdentityPermissionProvider;
-
-    constructor(req: Request, options: RequestAccessContextOptions) {
+    constructor(req: Request, evaluator: IPermissionEvaluator) {
         this.req = req;
-        this.evaluator = options.evaluator;
-        this.identityPermissionProvider = options.identityPermissionProvider;
+        this.evaluator = evaluator;
     }
 
     // --------------------------------------------------------------
@@ -55,48 +44,6 @@ export class RequestAccessContext implements IPermissionEvaluator {
 
     async evaluateOneOf(ctx: PermissionEvaluationContext) : Promise<void> {
         return this.evaluator.evaluateOneOf(this.extendContext(ctx));
-    }
-
-    // --------------------------------------------------------------
-
-    async resolveJunctionPolicy(options: ResolveJunctionPolicyOptions): Promise<PolicyWithType | undefined> {
-        const identity = useRequestIdentity(this.req);
-        if (!this.identityPermissionProvider || !identity) {
-            return undefined;
-        }
-
-        const bindings = await this.identityPermissionProvider.getFor(identity);
-        const matching = bindings.filter((b) => {
-            if (b.permission.name !== options.name) {
-                return false;
-            }
-
-            if (typeof options.realm_id !== 'undefined') {
-                if ((b.permission.realm_id ?? null) !== (options.realm_id ?? null)) {
-                    return false;
-                }
-            }
-
-            if (typeof options.client_id !== 'undefined') {
-                if ((b.permission.client_id ?? null) !== (options.client_id ?? null)) {
-                    return false;
-                }
-            }
-
-            return true;
-        });
-
-        if (matching.length === 0) {
-            return undefined;
-        }
-
-        const merged = mergePermissionBindings(matching);
-
-        if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {
-            return merged[0].policies[0];
-        }
-
-        return undefined;
     }
 
     // --------------------------------------------------------------

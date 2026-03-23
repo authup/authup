@@ -27,27 +27,41 @@ export function mergePermissionBindings(input: PermissionBinding[]) : Permission
     const output : PermissionBinding[] = [];
     const keys = Object.keys(grouped);
     for (const key of keys) {
-        const [binding, ...bindings] = grouped[key];
+        const group = grouped[key];
+
+        const [binding, ...bindings] = group;
 
         if (bindings.length > 0) {
-            const allBindings = [binding, ...bindings];
-            const hasUnrestricted = allBindings.some((el) => !el.policies || el.policies.length === 0);
+            const children : PolicyWithType[] = [];
 
-            if (hasUnrestricted) {
-                binding.policies = undefined;
-            } else {
-                const children = allBindings
-                    .flatMap((el) => el.policies || []);
-
-                if (children.length > 0) {
-                    const policy: PolicyWithType<CompositePolicy> = {
-                        type: BuiltInPolicyType.COMPOSITE,
-                        decision_strategy: DecisionStrategy.AFFIRMATIVE,
-                        children,
-                    };
-
-                    binding.policies = [policy];
+            for(const element of group) {
+                if(!element.policies || element.policies.length === 0) {
+                    continue;
                 }
+
+                const policy: PolicyWithType<CompositePolicy> = {
+                    type: BuiltInPolicyType.COMPOSITE,
+                    decision_strategy: element.permission.decision_strategy as `${DecisionStrategy}`,
+                    children: element.policies,
+                };
+
+                children.push(policy)
+            }
+
+            if (
+                children.length > 0 &&
+                children.length === group.length
+            ) {
+                const policy: PolicyWithType<CompositePolicy> = {
+                    type: BuiltInPolicyType.COMPOSITE,
+                    decision_strategy: DecisionStrategy.AFFIRMATIVE,
+                    children,
+                };
+
+                binding.permission.decision_strategy = DecisionStrategy.AFFIRMATIVE;
+                binding.policies = [policy];
+            } else {
+                binding.policies = undefined;
             }
         }
 

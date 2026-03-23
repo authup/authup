@@ -7,19 +7,19 @@
 
 import type { Request } from 'routup';
 import { setRequestEnv, useRequestEnv } from 'routup';
-import type { RequestAccessContext } from './module.ts';
+import type { RequestPermissionEvaluator } from './module.ts';
 
-const sym = Symbol('RequestAccessContext');
+const sym = Symbol('RequestPermissionEvaluator');
 
-export function useRequestPermissionEvaluator(req: Request) : RequestAccessContext {
+export function useRequestPermissionEvaluator(req: Request) : RequestPermissionEvaluator {
     const instance = useRequestEnv(req, sym);
     if (!instance) {
         throw new Error('The request permission evaluator is not initialised.');
     }
 
-    return instance as RequestAccessContext;
+    return instance as RequestPermissionEvaluator;
 }
 
-export function setRequestPermissionEvaluator(req: Request, ctx: RequestAccessContext) {
+export function setRequestPermissionEvaluator(req: Request, ctx: RequestPermissionEvaluator) {
     setRequestEnv(req, sym, ctx);
 }

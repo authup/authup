@@ -32,11 +32,11 @@ import { ClientAuthenticator,
 
     UserAuthenticator } from '../../../../../core/index.ts';
 import type {
-    ICredentialsAuthenticator, IIdentityPermissionProvider, IIdentityResolver,
+    ICredentialsAuthenticator, IIdentityResolver,
     IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../../core/index.ts';
 import {
-    RequestAccessContext,
+    RequestPermissionEvaluator,
     setRequestIdentity,
     setRequestPermissionEvaluator,
     setRequestScopes,
@@ -52,8 +52,6 @@ export class AuthorizationMiddleware {
     protected oauth2TokenVerifier: IOAuth2TokenVerifier;
 
     protected permissionEvaluator: IPermissionEvaluator;
-
-    protected identityPermissionProvider: IIdentityPermissionProvider;
 
     // --------------------------------------
 
@@ -83,8 +81,6 @@ export class AuthorizationMiddleware {
 
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
-        this.identityPermissionProvider = ctx.identityPermissionProvider;
-
         this.permissionEvaluator = new PermissionEvaluator({
             repository: ctx.permissionProvider,
             policyEngine: new PolicyEngine(ctx.identityPermissionProvider),
@@ -94,10 +90,10 @@ export class AuthorizationMiddleware {
     // --------------------------------------
 
     async run(request: Request, response: Response, next: Next) {
-        const requestAccessContext = new RequestAccessContext(request, {
-            evaluator: this.permissionEvaluator,
-            identityPermissionProvider: this.identityPermissionProvider,
-        });
+        const requestAccessContext = new RequestPermissionEvaluator(
+            request,
+            this.permissionEvaluator,
+        );
         setRequestPermissionEvaluator(request, requestAccessContext);
 
         let { authorization: headerValue } = request.headers;

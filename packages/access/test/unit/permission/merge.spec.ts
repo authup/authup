@@ -80,6 +80,37 @@ describe('src/permission/helpers/merge', () => {
         expect(result[0].policies).toBeUndefined();
     });
 
+    it('should preserve per-binding decision_strategy in composite tree', () => {
+        const items: PermissionBinding[] = [
+            {
+                permission: { name: 'user_read', decision_strategy: DecisionStrategy.UNANIMOUS },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }, { type: BuiltInPolicyType.REALM_MATCH }],
+            },
+            {
+                permission: { name: 'user_read', decision_strategy: DecisionStrategy.AFFIRMATIVE },
+                policies: [{ type: BuiltInPolicyType.ATTRIBUTES }],
+            },
+        ];
+
+        const result = mergePermissionBindings(items);
+        expect(result).toHaveLength(1);
+
+        const outer = result[0].policies![0] as any;
+        expect(outer.type).toBe(BuiltInPolicyType.COMPOSITE);
+        expect(outer.decision_strategy).toBe(DecisionStrategy.AFFIRMATIVE);
+        expect(outer.children).toHaveLength(2);
+
+        const firstChild = outer.children[0];
+        expect(firstChild.type).toBe(BuiltInPolicyType.COMPOSITE);
+        expect(firstChild.decision_strategy).toBe(DecisionStrategy.UNANIMOUS);
+        expect(firstChild.children).toHaveLength(2);
+
+        const secondChild = outer.children[1];
+        expect(secondChild.type).toBe(BuiltInPolicyType.COMPOSITE);
+        expect(secondChild.decision_strategy).toBe(DecisionStrategy.AFFIRMATIVE);
+        expect(secondChild.children).toHaveLength(1);
+    });
+
     it('should handle all unrestricted bindings', () => {
         const items: PermissionBinding[] = [
             { permission: { name: 'user_read' } },

@@ -25,7 +25,7 @@ import { PermissionMemoryProvider } from '../repository';
 import type {
     PermissionBinding,
 } from '../types.ts';
-import type { IPermissionEvaluator, PermissionEvaluationContext, PermissionEvaluatorOptions, ResolveJunctionPolicyOptions } from './types.ts';
+import type { IPermissionEvaluator, PermissionEvaluationContext, PermissionEvaluatorOptions } from './types.ts';
 
 export class PermissionEvaluator implements IPermissionEvaluator {
     protected provider : IPermissionProvider;
@@ -223,10 +223,5 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                 decision_strategy: DecisionStrategy.AFFIRMATIVE,
             },
         });
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async resolveJunctionPolicy(options: ResolveJunctionPolicyOptions): Promise<PolicyWithType | undefined> {
-        return undefined;
     }
 }

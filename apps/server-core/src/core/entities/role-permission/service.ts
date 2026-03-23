@@ -9,6 +9,7 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { NotFoundError } from '@ebec/http';
 import { PermissionName, ROLE_ADMIN_NAME } from '@authup/core-kit';
 import type { RolePermission } from '@authup/core-kit';
+import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { ActorContext } from '../actor/types.ts';
 import { AbstractEntityService } from '../service.ts';
 import type { EntityRepositoryFindManyResult } from '../types.ts';
@@ -16,14 +17,18 @@ import type { IRolePermissionRepository, IRolePermissionService } from './types.
 
 export type RolePermissionServiceContext = {
     repository: IRolePermissionRepository;
+    identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export class RolePermissionService extends AbstractEntityService implements IRolePermissionService {
     protected repository: IRolePermissionRepository;
 
+    protected identityPermissionProvider: IIdentityPermissionProvider;
+
     constructor(ctx: RolePermissionServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     async getMany(
@@ -83,14 +88,17 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         if (
             data.permission &&
-            actor.permissionEvaluator.resolveJunctionPolicy &&
+            actor.identity &&
             typeof data.policy_id === 'undefined'
         ) {
-            const junctionPolicy = await actor.permissionEvaluator.resolveJunctionPolicy({
-                name: data.permission.name,
-                realm_id: data.permission.realm_id,
-                client_id: data.permission.client_id,
-            });
+            const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
+                { type: actor.identity.type, id: actor.identity.data.id },
+                {
+                    name: data.permission.name,
+                    realm_id: data.permission.realm_id,
+                    client_id: data.permission.client_id,
+                },
+            );
             if (junctionPolicy) {
                 data.policy_id = junctionPolicy.id;
             }

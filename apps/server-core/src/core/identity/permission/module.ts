@@ -5,13 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData, PermissionBinding } from '@authup/access';
+import type { IdentityPolicyData, PermissionBinding, PolicyWithType } from '@authup/access';
 import { isPermissionBindingEqual, mergePermissionBindings } from '@authup/access';
 import type {
     IIdentityBindingRepository,
     IIdentityPermissionProvider,
     IRoleBindingRepository,
     IdentityPermissionProviderContext,
+    ResolveJunctionPolicyOptions,
 } from './types.ts';
 
 export class IdentityPermissionProvider implements IIdentityPermissionProvider {
@@ -55,6 +56,44 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         }
 
         return true;
+    }
+
+    async resolveJunctionPolicy(
+        identity: IdentityPolicyData,
+        options: ResolveJunctionPolicyOptions,
+    ): Promise<PolicyWithType | undefined> {
+        const bindings = await this.getFor(identity);
+        const matching = bindings.filter((b) => {
+            if (b.permission.name !== options.name) {
+                return false;
+            }
+
+            if (typeof options.realm_id !== 'undefined') {
+                if ((b.permission.realm_id ?? null) !== (options.realm_id ?? null)) {
+                    return false;
+                }
+            }
+
+            if (typeof options.client_id !== 'undefined') {
+                if ((b.permission.client_id ?? null) !== (options.client_id ?? null)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        if (matching.length === 0) {
+            return undefined;
+        }
+
+        const merged = mergePermissionBindings(matching);
+
+        if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {
+            return merged[0].policies[0];
+        }
+
+        return undefined;
     }
 
     async getFor(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {

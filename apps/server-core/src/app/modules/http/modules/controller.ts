@@ -561,7 +561,8 @@ export class HTTPControllerModule {
         const repository = new ClientPermissionRepositoryAdapter(
             container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
         );
-        const service = new ClientPermissionService({ repository });
+        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const service = new ClientPermissionService({ repository, identityPermissionProvider });
         return new ClientPermissionController({ service });
     }
 
@@ -586,7 +587,8 @@ export class HTTPControllerModule {
         const repository = new RobotPermissionRepositoryAdapter(
             container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
         );
-        const service = new RobotPermissionService({ repository });
+        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const service = new RobotPermissionService({ repository, identityPermissionProvider });
         return new RobotPermissionController({ service });
     }
 
@@ -611,7 +613,8 @@ export class HTTPControllerModule {
         const repository = new RolePermissionRepositoryAdapter(
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
-        const service = new RolePermissionService({ repository });
+        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const service = new RolePermissionService({ repository, identityPermissionProvider });
         return new RolePermissionController({ service });
     }
 
@@ -659,7 +662,8 @@ export class HTTPControllerModule {
         const repository = new UserPermissionRepositoryAdapter(
             container.resolve<Repository<UserPermission>>(UserPermissionEntity),
         );
-        const service = new UserPermissionService({ repository });
+        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const service = new UserPermissionService({ repository, identityPermissionProvider });
         return new UserPermissionController({ service });
     }
 

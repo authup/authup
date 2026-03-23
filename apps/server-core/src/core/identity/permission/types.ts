@@ -6,11 +6,18 @@
  */
 
 import type { Role } from '@authup/core-kit';
-import type { IdentityPolicyData, PermissionBinding } from '@authup/access';
+import type { IdentityPolicyData, PermissionBinding, PolicyWithType } from '@authup/access';
+
+export type ResolveJunctionPolicyOptions = {
+    name: string;
+    realm_id?: string | null;
+    client_id?: string | null;
+};
 
 export interface IIdentityPermissionProvider {
     getFor(identity: IdentityPolicyData): Promise<PermissionBinding[]>;
     isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData): Promise<boolean>;
+    resolveJunctionPolicy(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<PolicyWithType | undefined>;
 }
 
 export interface IIdentityBindingRepository {
