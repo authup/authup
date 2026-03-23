@@ -6,10 +6,10 @@
  */
 
 import type { PermissionAPICheckResponse } from '@authup/core-http-kit';
-import type { IPermissionRepository as IPermissionLookupRepository, PermissionCheckerCheckContext } from '@authup/access';
+import type { IPermissionProvider, PermissionEvaluationContext } from '@authup/access';
 import {
     BuiltInPolicyType,
-    PermissionChecker, PolicyData,
+    PermissionEvaluator, PolicyData,
 } from '@authup/access';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
@@ -33,7 +33,7 @@ export type PermissionControllerContext = {
     repository: IPermissionRepository,
     realmRepository: IRealmRepository,
     identityPermissionProvider: IIdentityPermissionProvider,
-    permissionProvider: IPermissionLookupRepository,
+    permissionProvider: IPermissionProvider,
 };
 
 @DTags('permission')
@@ -47,7 +47,7 @@ export class PermissionController {
 
     protected identityPermissionProvider: IIdentityPermissionProvider;
 
-    protected permissionProvider: IPermissionLookupRepository;
+    protected permissionProvider: IPermissionProvider;
 
     constructor(ctx: PermissionControllerContext) {
         this.service = ctx.service;
@@ -108,12 +108,12 @@ export class PermissionController {
             data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
         }
 
-        const ctx: PermissionCheckerCheckContext = {
+        const ctx: PermissionEvaluationContext = {
             name: entity.name,
             input: new PolicyData(data),
         };
 
-        const permissionChecker = new PermissionChecker({
+        const permissionEvaluator = new PermissionEvaluator({
             repository: this.permissionProvider,
             policyEngine: new PolicyEngine(this.identityPermissionProvider),
         });
@@ -124,9 +124,9 @@ export class PermissionController {
                 ctx.input &&
                 ctx.input.has(BuiltInPolicyType.ATTRIBUTES)
             ) {
-                await permissionChecker.check(ctx);
+                await permissionEvaluator.evaluate(ctx);
             } else {
-                await permissionChecker.preCheck(ctx);
+                await permissionEvaluator.preEvaluate(ctx);
             }
 
             output = {

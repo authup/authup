@@ -65,7 +65,7 @@ import {
     DatabaseInjectionKey,
     IdentityProviderRepositoryAdapter,
     IdentityProviderRoleMappingRepositoryAdapter,
-    PermissionDatabaseRepository,
+    PermissionDatabaseProvider,
     PermissionPolicyRepositoryAdapter,
     PermissionRepositoryAdapter,
     PolicyRepositoryAdapter,
@@ -534,7 +534,7 @@ export class HTTPControllerModule {
         const service = new PermissionService({ repository, realmRepository: realmRepositoryAdapter });
 
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        const permissionProvider = new PermissionDatabaseRepository(dataSource);
+        const permissionProvider = new PermissionDatabaseProvider(dataSource);
 
         return new PermissionController({
             service,

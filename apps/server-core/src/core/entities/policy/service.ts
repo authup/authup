@@ -47,7 +47,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Policy>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.PERMISSION_READ,
                 PermissionName.PERMISSION_UPDATE,
@@ -63,7 +63,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         actor: ActorContext,
         realm?: string,
     ): Promise<Policy> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.PERMISSION_READ,
                 PermissionName.PERMISSION_UPDATE,
@@ -130,10 +130,10 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         }
 
         if (entity) {
-            await actor.permissionChecker.preCheck({ name: PermissionName.PERMISSION_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionChecker.preCheck({ name: PermissionName.PERMISSION_CREATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
@@ -155,7 +155,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 throw new BadRequestError('A built-in policy can not be updated.');
             }
 
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.PERMISSION_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
@@ -176,7 +176,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             validated.realm_id = this.getActorRealmId(actor) || null;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: validated,
@@ -213,7 +213,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         id: string,
         actor: ActorContext,
     ): Promise<Policy> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
@@ -224,7 +224,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             throw new BadRequestError('A built-in policy can not be deleted.');
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

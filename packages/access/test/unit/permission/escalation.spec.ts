@@ -6,28 +6,28 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { PermissionItem } from '../../../src';
+import type { PermissionBinding } from '../../../src';
 import {
     BuiltInPolicyType,
-    isPermissionItemEqual,
-    mergePermissionItems,
+    isPermissionBindingEqual,
+    mergePermissionBindings,
 } from '../../../src';
 
 function isSupersetPolicyAware(
-    parentBindings: PermissionItem[],
-    childBindings: PermissionItem[],
+    parentBindings: PermissionBinding[],
+    childBindings: PermissionBinding[],
 ): boolean {
-    const parentMerged = mergePermissionItems(parentBindings);
-    const childMerged = mergePermissionItems(childBindings);
+    const parentMerged = mergePermissionBindings(parentBindings);
+    const childMerged = mergePermissionBindings(childBindings);
 
     for (const childItem of childMerged) {
-        const parentItem = parentMerged.find((p) => isPermissionItemEqual(p, childItem));
+        const parentItem = parentMerged.find((p) => isPermissionBindingEqual(p, childItem));
 
         if (!parentItem) {
             return false;
         }
 
-        if (parentItem.policy && !childItem.policy) {
+        if (parentItem.policies && parentItem.policies.length > 0 && (!childItem.policies || childItem.policies.length === 0)) {
             return false;
         }
     }
@@ -39,118 +39,118 @@ describe('escalation prevention', () => {
     const realmBoundPolicy = { type: BuiltInPolicyType.ATTRIBUTES, id: 'realm-bound-id' };
 
     it('should allow: unrestricted actor assigning unrestricted role', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read' },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read' },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(true);
     });
 
     it('should allow: unrestricted actor assigning restricted role', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read' },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read', policy: realmBoundPolicy },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [realmBoundPolicy] },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(true);
     });
 
     it('should block: restricted actor assigning unrestricted role', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read', policy: realmBoundPolicy },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [realmBoundPolicy] },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read' },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);
     });
 
     it('should allow: restricted actor assigning equally restricted role', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read', policy: realmBoundPolicy },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [realmBoundPolicy] },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read', policy: realmBoundPolicy },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [realmBoundPolicy] },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(true);
     });
 
     it('should block: actor missing a permission the role has', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read' },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read' },
-            { name: 'user_write' },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
+            { permission: { name: 'user_write' } },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);
     });
 
     it('should allow: actor with both restricted and unrestricted bindings (merge = unrestricted)', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read', policy: realmBoundPolicy },
-            { name: 'user_read' }, // unrestricted via another role
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [realmBoundPolicy] },
+            { permission: { name: 'user_read' } }, // unrestricted via another role
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read' },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(true);
     });
 
     it('should block: actor has restricted binding, target has unrestricted (even with multiple actor bindings)', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read', policy: realmBoundPolicy },
-            { name: 'user_read', policy: { type: BuiltInPolicyType.IDENTITY, id: 'other' } },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [realmBoundPolicy] },
+            { permission: { name: 'user_read' }, policies: [{ type: BuiltInPolicyType.IDENTITY, id: 'other' }] },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read' },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);
     });
 
     it('should handle multiple permissions correctly', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read' },
-            { name: 'user_write', policy: realmBoundPolicy },
-            { name: 'role_read' },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
+            { permission: { name: 'user_write' }, policies: [realmBoundPolicy] },
+            { permission: { name: 'role_read' } },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read' },
-            { name: 'user_write', policy: realmBoundPolicy },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
+            { permission: { name: 'user_write' }, policies: [realmBoundPolicy] },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(true);
     });
 
     it('should block: one permission restricted in parent but unrestricted in child', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read' },
-            { name: 'user_write', policy: realmBoundPolicy },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
+            { permission: { name: 'user_write' }, policies: [realmBoundPolicy] },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read' },
-            { name: 'user_write' }, // unrestricted in target
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
+            { permission: { name: 'user_write' } }, // unrestricted in target
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);
     });
 
     it('should respect permission identity: same name, different realm_id', () => {
-        const parent: PermissionItem[] = [
-            { name: 'user_read', realm_id: 'realm-a' },
+        const parent: PermissionBinding[] = [
+            { permission: { name: 'user_read', realm_id: 'realm-a' } },
         ];
-        const child: PermissionItem[] = [
-            { name: 'user_read', realm_id: 'realm-b' },
+        const child: PermissionBinding[] = [
+            { permission: { name: 'user_read', realm_id: 'realm-b' } },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);

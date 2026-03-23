@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionChecker, PolicyWithType } from '@authup/access';
+import type { IPermissionEvaluator, PolicyWithType } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
 export type ResolveJunctionPolicyOptions = {
@@ -15,7 +15,7 @@ export type ResolveJunctionPolicyOptions = {
 };
 
 export type ActorContext = {
-    permissionChecker: IPermissionChecker;
+    permissionEvaluator: IPermissionEvaluator;
     identity?: Identity;
     resolveJunctionPolicy?: (options: ResolveJunctionPolicyOptions) => Promise<PolicyWithType | undefined>;
 };

@@ -31,7 +31,7 @@ import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
-import { DatabaseInjectionKey, PermissionDatabaseRepository  } from '../../database/index.ts';
+import { DatabaseInjectionKey, PermissionDatabaseProvider  } from '../../database/index.ts';
 import {
     ClientRepository,
     RobotRepository,
@@ -140,7 +140,7 @@ export class HTTPMiddlewareModule {
             OAuth2InjectionToken.TokenVerifier,
         );
 
-        const permissionProvider = new PermissionDatabaseRepository(dataSource);
+        const permissionProvider = new PermissionDatabaseProvider(dataSource);
         const identityPermissionProvider = new IdentityPermissionProvider({
             clientRepository: new ClientRepository(dataSource),
             userRepository: new UserRepository(dataSource),

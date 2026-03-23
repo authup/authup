@@ -44,7 +44,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Role>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,
@@ -59,7 +59,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         idOrName: string,
         actor: ActorContext,
     ): Promise<Role> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,
@@ -126,10 +126,10 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         }
 
         if (entity) {
-            await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_CREATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
@@ -138,7 +138,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROLE_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
@@ -159,7 +159,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             validated.realm_id = this.getActorRealmId(actor) || null;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: validated,
@@ -178,7 +178,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         id: string,
         actor: ActorContext,
     ): Promise<Role> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
@@ -189,7 +189,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
             throw new BadRequestError('The default admin role can not be deleted.');
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

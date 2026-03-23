@@ -32,7 +32,7 @@ describe('core/entities/user-role/service', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionChecker.preCheckOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
                 name: [
                     PermissionName.USER_ROLE_READ,
                     PermissionName.USER_ROLE_CREATE,
@@ -76,7 +76,7 @@ describe('core/entities/user-role/service', () => {
         it('should call preCheck with USER_ROLE_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({ user_id: randomUUID(), role_id: randomUUID() }, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.USER_ROLE_CREATE,
             });
         });
@@ -99,7 +99,7 @@ describe('core/entities/user-role/service', () => {
             const entity = repository.seed({} as UserRole);
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.USER_ROLE_DELETE,
             });
         });

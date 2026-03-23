@@ -30,7 +30,7 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<PermissionPolicy>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.PERMISSION_READ,
                 PermissionName.PERMISSION_UPDATE,
@@ -44,7 +44,7 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
         id: string,
         actor: ActorContext,
     ): Promise<PermissionPolicy> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.PERMISSION_READ,
                 PermissionName.PERMISSION_UPDATE,
@@ -63,7 +63,7 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<PermissionPolicy> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.PERMISSION_UPDATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -75,7 +75,7 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
             data.policy_realm_id = data.policy.realm_id;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -92,14 +92,14 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
         id: string,
         actor: ActorContext,
     ): Promise<PermissionPolicy> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.PERMISSION_UPDATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

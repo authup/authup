@@ -30,7 +30,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<UserRole>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_ROLE_READ,
                 PermissionName.USER_ROLE_CREATE,
@@ -45,7 +45,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
         id: string,
         actor: ActorContext,
     ): Promise<UserRole> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_ROLE_READ,
                 PermissionName.USER_ROLE_CREATE,
@@ -65,7 +65,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserRole> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.USER_ROLE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_ROLE_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -77,7 +77,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
             data.user_realm_id = data.user.realm_id;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_ROLE_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -94,14 +94,14 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
         id: string,
         actor: ActorContext,
     ): Promise<UserRole> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.USER_ROLE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_ROLE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_ROLE_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

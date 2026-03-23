@@ -6,86 +6,88 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { PermissionItem } from '../../../src';
-import { BuiltInPolicyType, DecisionStrategy, mergePermissionItems } from '../../../src';
+import type { PermissionBinding } from '../../../src';
+import { BuiltInPolicyType, DecisionStrategy, mergePermissionBindings } from '../../../src';
 
 describe('src/permission/helpers/merge', () => {
     it('should return single item unchanged', () => {
-        const items: PermissionItem[] = [
-            { name: 'user_read', policy: { type: BuiltInPolicyType.IDENTITY } },
+        const items: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
         ];
 
-        const result = mergePermissionItems(items);
+        const result = mergePermissionBindings(items);
         expect(result).toHaveLength(1);
-        expect(result[0].policy).toBeDefined();
-        expect(result[0].policy!.type).toBe(BuiltInPolicyType.IDENTITY);
+        expect(result[0].policies).toBeDefined();
+        expect(result[0].policies).toHaveLength(1);
+        expect(result[0].policies![0].type).toBe(BuiltInPolicyType.IDENTITY);
     });
 
     it('should produce unrestricted result when any binding has no policy', () => {
-        const items: PermissionItem[] = [
-            { name: 'user_read', policy: { type: BuiltInPolicyType.IDENTITY } },
-            { name: 'user_read' }, // no policy = unrestricted
+        const items: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
+            { permission: { name: 'user_read' } }, // no policy = unrestricted
         ];
 
-        const result = mergePermissionItems(items);
+        const result = mergePermissionBindings(items);
         expect(result).toHaveLength(1);
-        expect(result[0].policy).toBeUndefined();
+        expect(result[0].policies).toBeUndefined();
     });
 
     it('should produce composite with AFFIRMATIVE when all bindings have policies', () => {
-        const items: PermissionItem[] = [
-            { name: 'user_read', policy: { type: BuiltInPolicyType.IDENTITY } },
-            { name: 'user_read', policy: { type: BuiltInPolicyType.REALM_MATCH } },
+        const items: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
+            { permission: { name: 'user_read' }, policies: [{ type: BuiltInPolicyType.REALM_MATCH }] },
         ];
 
-        const result = mergePermissionItems(items);
+        const result = mergePermissionBindings(items);
         expect(result).toHaveLength(1);
-        expect(result[0].policy).toBeDefined();
-        expect(result[0].policy!.type).toBe(BuiltInPolicyType.COMPOSITE);
-        expect((result[0].policy as any).decision_strategy).toBe(DecisionStrategy.AFFIRMATIVE);
-        expect((result[0].policy as any).children).toHaveLength(2);
+        expect(result[0].policies).toBeDefined();
+        expect(result[0].policies).toHaveLength(1);
+        expect(result[0].policies![0].type).toBe(BuiltInPolicyType.COMPOSITE);
+        expect((result[0].policies![0] as any).decision_strategy).toBe(DecisionStrategy.AFFIRMATIVE);
+        expect((result[0].policies![0] as any).children).toHaveLength(2);
     });
 
     it('should not merge items with different names', () => {
-        const items: PermissionItem[] = [
-            { name: 'user_read', policy: { type: BuiltInPolicyType.IDENTITY } },
-            { name: 'user_write', policy: { type: BuiltInPolicyType.IDENTITY } },
+        const items: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
+            { permission: { name: 'user_write' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
         ];
 
-        const result = mergePermissionItems(items);
+        const result = mergePermissionBindings(items);
         expect(result).toHaveLength(2);
     });
 
     it('should not merge items with different realm_id', () => {
-        const items: PermissionItem[] = [
-            { name: 'user_read', realm_id: 'realm-a', policy: { type: BuiltInPolicyType.IDENTITY } },
-            { name: 'user_read', realm_id: 'realm-b', policy: { type: BuiltInPolicyType.IDENTITY } },
+        const items: PermissionBinding[] = [
+            { permission: { name: 'user_read', realm_id: 'realm-a' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
+            { permission: { name: 'user_read', realm_id: 'realm-b' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
         ];
 
-        const result = mergePermissionItems(items);
+        const result = mergePermissionBindings(items);
         expect(result).toHaveLength(2);
     });
 
     it('should handle unrestricted with three bindings where one has no policy', () => {
-        const items: PermissionItem[] = [
-            { name: 'user_read', policy: { type: BuiltInPolicyType.IDENTITY } },
-            { name: 'user_read', policy: { type: BuiltInPolicyType.REALM_MATCH } },
-            { name: 'user_read' }, // unrestricted
+        const items: PermissionBinding[] = [
+            { permission: { name: 'user_read' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
+            { permission: { name: 'user_read' }, policies: [{ type: BuiltInPolicyType.REALM_MATCH }] },
+            { permission: { name: 'user_read' } }, // unrestricted
         ];
 
-        const result = mergePermissionItems(items);
+        const result = mergePermissionBindings(items);
         expect(result).toHaveLength(1);
-        expect(result[0].policy).toBeUndefined();
+        expect(result[0].policies).toBeUndefined();
     });
 
     it('should handle all unrestricted bindings', () => {
-        const items: PermissionItem[] = [
-            { name: 'user_read' },
-            { name: 'user_read' },
+        const items: PermissionBinding[] = [
+            { permission: { name: 'user_read' } },
+            { permission: { name: 'user_read' } },
         ];
 
-        const result = mergePermissionItems(items);
+        const result = mergePermissionBindings(items);
         expect(result).toHaveLength(1);
-        expect(result[0].policy).toBeUndefined();
+        expect(result[0].policies).toBeUndefined();
     });
 });

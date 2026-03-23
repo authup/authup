@@ -1,44 +1,47 @@
 # System
 
-## `PermissionCheckerCheckContext`
+## `PermissionEvaluationContext`
 
 **Type**
 ```typescript
-import { PermissionCheckerCheckOptions, PolicyData } from '@authup/access';
+import { PermissionEvaluationOptions, PolicyData } from '@authup/access';
 
-export type PermissionCheckerCheckContext = {
+export type PermissionEvaluationContext = {
     name: string | string[],
     input?: PolicyData,
-    options?: PermissionCheckerCheckOptions
+    options?: PermissionEvaluationOptions
 };
 ```
 
 **References**
 - [PolicyData](#policydata)
-- [PermissionCheckerCheckOptions](#permissioncheckercheckoptions)
+- [PermissionEvaluationOptions](#permissionevaluationoptions)
 
-## `PermissionCheckerCheckOptions`
+## `PermissionEvaluationOptions`
 
 **Type**
 ```typescript
-export type PermissionCheckerCheckOptions = {
+export type PermissionEvaluationOptions = {
     decisionStrategy?: 'affirmative' | 'unanimous' | 'consensus',
     policiesIncluded?: string[],
     policiesExcluded?: string[],
 };
 ```
 
-## `PermissionItem`
+## `PermissionBinding`
 
 **Type**
 ```typescript
 import type { PolicyWithType } from '@authup/access';
 
-export type PermissionItem = {
-    name: string,
-    clientId?: string | null,
-    realmId?: string | null,
-    policy?: PolicyWithType,
+export type PermissionBinding = {
+    permission: {
+        name: string,
+        client_id?: string | null,
+        realm_id?: string | null,
+        decision_strategy?: string | null,
+    },
+    policies?: PolicyWithType[],
 };
 ```
 
@@ -68,7 +71,7 @@ Each built-in policy type uses a specific key to look up its data:
 | `time`              | `Date \| string \| number`                            | Time               |
 | `identity`          | [IdentityPolicyData](#identitypolicydata)             | Identity           |
 | `realmMatch`        | `Record<string, any>`                                 | RealmMatch         |
-| `permissionBinding` | [PermissionItem](#permissionitem)                     | PermissionBinding  |
+| `permissionBinding` | [PermissionBinding](#permissionbinding)               | PermissionBinding  |
 
 ## `IdentityPolicyData`
 

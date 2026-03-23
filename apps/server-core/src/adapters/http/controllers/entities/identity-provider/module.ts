@@ -42,7 +42,7 @@ import {
     getRequestParamID,
     useRequestIdentityOrFail,
     useRequestParamID,
-    useRequestPermissionChecker,
+    useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
@@ -91,12 +91,12 @@ export class IdentityProviderController {
         const { data, meta } = await this.repository.findMany(useRequestQuery(req));
 
         try {
-            const permissionChecker = useRequestPermissionChecker(req);
-            await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_READ });
+            const permissionEvaluator = useRequestPermissionEvaluator(req);
+            await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_READ });
 
             for (const datum of data) {
                 try {
-                    await permissionChecker.check({
+                    await permissionEvaluator.evaluate({
                         name: PermissionName.IDENTITY_PROVIDER_READ,
                         input: new PolicyData({
                             [BuiltInPolicyType.ATTRIBUTES]: datum,
@@ -136,8 +136,8 @@ export class IdentityProviderController {
         }
 
         try {
-            const permissionChecker = useRequestPermissionChecker(req);
-            await permissionChecker.check({
+            const permissionEvaluator = useRequestPermissionEvaluator(req);
+            await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_READ,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -178,8 +178,8 @@ export class IdentityProviderController {
     ) : Promise<any> {
         const paramId = useRequestParamID(req);
 
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
+        const permissionEvaluator = useRequestPermissionEvaluator(req);
+        await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
 
         const entity = await this.repository.findOneBy({ id: paramId });
 
@@ -187,7 +187,7 @@ export class IdentityProviderController {
             throw new NotFoundError();
         }
 
-        await permissionChecker.check({
+        await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -402,13 +402,13 @@ export class IdentityProviderController {
             throw new NotFoundError();
         }
 
-        const permissionChecker = useRequestPermissionChecker(req);
+        const permissionEvaluator = useRequestPermissionEvaluator(req);
         if (entity) {
-            await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
+            await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
 
             group = ValidatorGroup.UPDATE;
         } else {
-            await permissionChecker.preCheck({ name: PermissionName.IDENTITY_PROVIDER_CREATE });
+            await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_CREATE });
 
             group = ValidatorGroup.CREATE;
         }
@@ -424,7 +424,7 @@ export class IdentityProviderController {
         await this.repository.validateJoinColumns(data);
 
         if (entity) {
-            await permissionChecker.check({
+            await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
@@ -439,7 +439,7 @@ export class IdentityProviderController {
                 data.realm_id = identity.realmId;
             }
 
-            await permissionChecker.check({
+            await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_CREATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: data,

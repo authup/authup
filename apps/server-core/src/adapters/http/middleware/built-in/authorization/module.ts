@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionChecker } from '@authup/access';
-import { PermissionChecker } from '@authup/access';
+import type { IPermissionEvaluator } from '@authup/access';
+import { PermissionEvaluator } from '@authup/access';
 import { CookieName } from '@authup/core-http-kit';
 import type { Client, Robot, User } from '@authup/core-kit';
 import {
@@ -36,9 +36,9 @@ import type {
     IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../../core/index.ts';
 import {
-    RequestPermissionChecker,
+    RequestPermissionEvaluator,
     setRequestIdentity,
-    setRequestPermissionChecker,
+    setRequestPermissionEvaluator,
     setRequestScopes,
     setRequestToken,
 } from '../../../request/index.ts';
@@ -51,7 +51,7 @@ export class AuthorizationMiddleware {
 
     protected oauth2TokenVerifier: IOAuth2TokenVerifier;
 
-    protected permissionChecker: IPermissionChecker;
+    protected permissionEvaluator: IPermissionEvaluator;
 
     // --------------------------------------
 
@@ -81,7 +81,7 @@ export class AuthorizationMiddleware {
 
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
-        this.permissionChecker = new PermissionChecker({
+        this.permissionEvaluator = new PermissionEvaluator({
             repository: ctx.permissionProvider,
             policyEngine: new PolicyEngine(ctx.identityPermissionProvider),
         });
@@ -90,11 +90,11 @@ export class AuthorizationMiddleware {
     // --------------------------------------
 
     async run(request: Request, response: Response, next: Next) {
-        const requestPermissionChecker = new RequestPermissionChecker(
+        const requestPermissionEvaluator = new RequestPermissionEvaluator(
             request,
-            this.permissionChecker,
+            this.permissionEvaluator,
         );
-        setRequestPermissionChecker(request, requestPermissionChecker);
+        setRequestPermissionEvaluator(request, requestPermissionEvaluator);
 
         let { authorization: headerValue } = request.headers;
 

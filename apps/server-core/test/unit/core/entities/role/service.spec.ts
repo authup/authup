@@ -61,7 +61,7 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
 
-            expect(actor.permissionChecker.preCheckOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
                 name: [
                     PermissionName.ROLE_READ,
                     PermissionName.ROLE_UPDATE,
@@ -125,7 +125,7 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'new-role' }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_CREATE,
             });
         });
@@ -134,7 +134,7 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'policy-role' }, actor);
 
-            expect(actor.permissionChecker.check).toHaveBeenCalledWith(
+            expect(actor.permissionEvaluator.evaluate).toHaveBeenCalledWith(
                 expect.objectContaining({
                     name: PermissionName.ROLE_CREATE,
                     input: expect.anything(),
@@ -188,7 +188,7 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.update(entity.id, { name: 'new-name' }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_UPDATE,
             });
         });
@@ -320,7 +320,7 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_DELETE,
             });
         });

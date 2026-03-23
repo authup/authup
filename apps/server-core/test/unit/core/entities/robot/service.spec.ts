@@ -40,11 +40,11 @@ class FakeRobotRepository extends FakeEntityRepository<Robot> implements IRobotR
 function createUserActorAsOwner(userId: string): ActorContext {
     const realmId = randomUUID();
     return {
-        permissionChecker: {
-            check: vi.fn().mockResolvedValue(undefined),
-            checkOneOf: vi.fn().mockResolvedValue(undefined),
-            preCheck: vi.fn().mockResolvedValue(undefined),
-            preCheckOneOf: vi.fn().mockResolvedValue(undefined),
+        permissionEvaluator: {
+            evaluate: vi.fn().mockResolvedValue(undefined),
+            evaluateOneOf: vi.fn().mockResolvedValue(undefined),
+            preEvaluate: vi.fn().mockResolvedValue(undefined),
+            preEvaluateOneOf: vi.fn().mockResolvedValue(undefined),
         },
         identity: {
             type: IdentityType.USER,
@@ -84,11 +84,11 @@ describe('core/entities/robot/service', () => {
             ]);
 
             const actor: ActorContext = {
-                permissionChecker: {
-                    check: vi.fn().mockResolvedValue(undefined),
-                    checkOneOf: vi.fn().mockResolvedValue(undefined),
-                    preCheck: vi.fn().mockResolvedValue(undefined),
-                    preCheckOneOf: vi.fn().mockResolvedValue(undefined),
+                permissionEvaluator: {
+                    evaluate: vi.fn().mockResolvedValue(undefined),
+                    evaluateOneOf: vi.fn().mockResolvedValue(undefined),
+                    preEvaluate: vi.fn().mockResolvedValue(undefined),
+                    preEvaluateOneOf: vi.fn().mockResolvedValue(undefined),
                 },
                 identity: {
                     type: IdentityType.ROBOT,
@@ -100,7 +100,7 @@ describe('core/entities/robot/service', () => {
                 },
             };
 
-            vi.mocked(actor.permissionChecker.checkOneOf).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
@@ -129,7 +129,7 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot());
             const actor = createAllowAllActor();
             await service.getOne(entity.id, actor);
-            expect(actor.permissionChecker.checkOneOf).toHaveBeenCalled();
+            expect(actor.permissionEvaluator.evaluateOneOf).toHaveBeenCalled();
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
@@ -171,7 +171,7 @@ describe('core/entities/robot/service', () => {
         it('should call preCheck with ROBOT_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-robot' }, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROBOT_CREATE,
             });
         });
@@ -228,7 +228,7 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot({ user_id: null }));
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROBOT_DELETE,
             });
         });
@@ -239,7 +239,7 @@ describe('core/entities/robot/service', () => {
 
             const actor = createUserActorAsOwner(userId);
             await service.delete(entity.id, actor);
-            expect(actor.permissionChecker.preCheck).not.toHaveBeenCalled();
+            expect(actor.permissionEvaluator.preEvaluate).not.toHaveBeenCalled();
         });
 
         it('should allow owner to delete without permission check', async () => {
@@ -247,8 +247,8 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot({ user_id: userId }));
 
             const actor = createUserActorAsOwner(userId);
-            vi.mocked(actor.permissionChecker.check).mockRejectedValue(new ForbiddenError());
-            vi.mocked(actor.permissionChecker.preCheck).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.preEvaluate).mockRejectedValue(new ForbiddenError());
 
             const result = await service.delete(entity.id, actor);
             expect(result.id).toBe(entity.id);
@@ -258,7 +258,7 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot({ user_id: randomUUID() }));
 
             const actor = createUserActorAsOwner(randomUUID());
-            vi.mocked(actor.permissionChecker.check).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
 
             await expect(service.delete(entity.id, actor)).rejects.toThrow(ForbiddenError);
         });
@@ -267,7 +267,7 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot({ user_id: null }));
 
             const actor = createUserActorAsOwner(randomUUID());
-            vi.mocked(actor.permissionChecker.check).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
 
             await expect(service.delete(entity.id, actor)).rejects.toThrow(ForbiddenError);
         });

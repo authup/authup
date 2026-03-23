@@ -5,22 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission, Role } from '@authup/core-kit';
-import type { IdentityPolicyData } from '@authup/access';
+import type { Role } from '@authup/core-kit';
+import type { IdentityPolicyData, PermissionBinding } from '@authup/access';
 
 export interface IIdentityPermissionProvider {
-    getFor(identity: IdentityPolicyData): Promise<Permission[]>;
+    getFor(identity: IdentityPolicyData): Promise<PermissionBinding[]>;
     isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData): Promise<boolean>;
 }
 
 export interface IIdentityBindingRepository {
-    getBoundPermissions(entity: string): Promise<Permission[]>;
+    getBoundPermissions(entity: string): Promise<PermissionBinding[]>;
     getBoundRoles(entity: string): Promise<Role[]>;
 }
 
 export interface IRoleBindingRepository {
-    getBoundPermissions(entity: string | Role): Promise<Permission[]>;
-    getBoundPermissionsForMany(entities: (string | Role)[]): Promise<Permission[]>;
+    getBoundPermissions(entity: string | Role): Promise<PermissionBinding[]>;
+    getBoundPermissionsForMany(entities: (string | Role)[]): Promise<PermissionBinding[]>;
 }
 
 export type IdentityPermissionProviderContext = {

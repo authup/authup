@@ -71,7 +71,7 @@ describe('core/entities/realm/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-realm' }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.REALM_CREATE,
             });
         });
@@ -196,7 +196,7 @@ describe('core/entities/realm/service', () => {
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.REALM_DELETE,
             });
         });

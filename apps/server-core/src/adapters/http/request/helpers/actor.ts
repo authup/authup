@@ -6,17 +6,17 @@
  */
 
 import type { PolicyWithType } from '@authup/access';
-import { mergePermissionItems } from '@authup/access';
+import { mergePermissionBindings } from '@authup/access';
 import type { Request } from 'routup';
 import type { ActorContext, IIdentityPermissionProvider, ResolveJunctionPolicyOptions } from '../../../../core/index.ts';
-import { useRequestPermissionChecker } from '../permission/helper.ts';
+import { useRequestPermissionEvaluator } from '../permission/helper.ts';
 import { useRequestIdentity } from './identity.ts';
 
 export function buildActorContext(
     req: Request,
     identityPermissionProvider?: IIdentityPermissionProvider,
 ): ActorContext {
-    const permissionChecker = useRequestPermissionChecker(req);
+    const permissionEvaluator = useRequestPermissionEvaluator(req);
     const identity = useRequestIdentity(req);
 
     let resolveJunctionPolicy: ((options: ResolveJunctionPolicyOptions) => Promise<PolicyWithType | undefined>) | undefined;
@@ -25,18 +25,18 @@ export function buildActorContext(
         resolveJunctionPolicy = async (options: ResolveJunctionPolicyOptions): Promise<PolicyWithType | undefined> => {
             const bindings = await identityPermissionProvider.getFor(identity);
             const matching = bindings.filter((b) => {
-                if (b.name !== options.name) {
+                if (b.permission.name !== options.name) {
                     return false;
                 }
 
                 if (typeof options.realm_id !== 'undefined') {
-                    if ((b.realm_id ?? null) !== (options.realm_id ?? null)) {
+                    if ((b.permission.realm_id ?? null) !== (options.realm_id ?? null)) {
                         return false;
                     }
                 }
 
                 if (typeof options.client_id !== 'undefined') {
-                    if ((b.client_id ?? null) !== (options.client_id ?? null)) {
+                    if ((b.permission.client_id ?? null) !== (options.client_id ?? null)) {
                         return false;
                     }
                 }
@@ -48,17 +48,10 @@ export function buildActorContext(
                 return undefined;
             }
 
-            const merged = mergePermissionItems(
-                matching.map((b) => ({
-                    name: b.name,
-                    client_id: b.client_id,
-                    realm_id: b.realm_id,
-                    policy: (b as any).policy || undefined,
-                })),
-            );
+            const merged = mergePermissionBindings(matching);
 
-            if (merged.length > 0 && merged[0].policy) {
-                return merged[0].policy;
+            if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {
+                return merged[0].policies[0];
             }
 
             return undefined;
@@ -66,7 +59,7 @@ export function buildActorContext(
     }
 
     return {
-        permissionChecker,
+        permissionEvaluator,
         identity: identity ? identity.raw : undefined,
         resolveJunctionPolicy,
     };

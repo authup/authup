@@ -19,16 +19,16 @@ import {
     definePolicyIssueGroup,
 } from '../../policy';
 import { PermissionError } from '../error';
-import type { IPermissionRepository, PermissionGetOptions } from '../repository';
-import { PermissionMemoryRepository } from '../repository';
+import type { IPermissionProvider, PermissionGetOptions } from '../repository';
+import { PermissionMemoryProvider } from '../repository';
 
 import type {
-    PermissionItem,
+    PermissionBinding,
 } from '../types.ts';
-import type { IPermissionChecker, PermissionCheckerCheckContext, PermissionCheckerOptions } from './types.ts';
+import type { IPermissionEvaluator, PermissionEvaluationContext, PermissionEvaluatorOptions } from './types.ts';
 
-export class PermissionChecker implements IPermissionChecker {
-    protected provider : IPermissionRepository;
+export class PermissionEvaluator implements IPermissionEvaluator {
+    protected provider : IPermissionProvider;
 
     protected policyEngine : IPolicyEngine;
 
@@ -38,11 +38,11 @@ export class PermissionChecker implements IPermissionChecker {
 
     // ----------------------------------------------
 
-    constructor(options: PermissionCheckerOptions = {}) {
+    constructor(options: PermissionEvaluatorOptions = {}) {
         if (options.repository) {
             this.provider = options.repository;
         } else {
-            this.provider = new PermissionMemoryRepository();
+            this.provider = new PermissionMemoryProvider();
         }
 
         if (typeof options.client_id !== 'undefined') {
@@ -62,12 +62,7 @@ export class PermissionChecker implements IPermissionChecker {
 
     // ----------------------------------------------
 
-    /**
-     * Get a permission.
-     *
-     * @param input
-     */
-    protected async findOne(input: string) : Promise<PermissionItem | null> {
+    protected async findOne(input: string) : Promise<PermissionBinding | null> {
         const options : PermissionGetOptions = {
             name: input,
         };
@@ -85,16 +80,9 @@ export class PermissionChecker implements IPermissionChecker {
 
     // ----------------------------------------------
 
-    /**
-     * Verify if one or more possible owned permissions satisfy their conditions.
-     *
-     * @throws PermissionError
-     *
-     * @param ctx
-     */
-    async check(ctx: PermissionCheckerCheckContext) : Promise<void> {
+    async evaluate(ctx: PermissionEvaluationContext) : Promise<void> {
         if (!Array.isArray(ctx.name)) {
-            await this.check({
+            await this.evaluate({
                 ...ctx,
                 name: [ctx.name],
             });
@@ -115,8 +103,8 @@ export class PermissionChecker implements IPermissionChecker {
         const dataBase = ctx.input || new PolicyData();
 
         for (let i = 0; i < ctx.name.length; i++) {
-            const entity = await this.findOne(ctx.name[i]);
-            if (!entity) {
+            const binding = await this.findOne(ctx.name[i]);
+            if (!binding) {
                 issues.push(defineIssueItem({
                     code: ErrorCode.PERMISSION_NOT_FOUND,
                     message: `The ${ctx.name[i]} permission could not be resolved`,
@@ -132,7 +120,7 @@ export class PermissionChecker implements IPermissionChecker {
                 continue;
             }
 
-            const policies = entity.policies ?? [];
+            const policies = binding.policies ?? [];
             if (policies.length === 0) {
                 if (decision_strategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
@@ -144,9 +132,9 @@ export class PermissionChecker implements IPermissionChecker {
             }
 
             const data = dataBase.clone();
-            data.set(BuiltInPolicyType.PERMISSION_BINDING, entity);
+            data.set(BuiltInPolicyType.PERMISSION_BINDING, binding);
 
-            const policyDecisionStrategy = entity.decision_strategy ??
+            const policyDecisionStrategy = (binding.permission.decision_strategy as `${DecisionStrategy}` | undefined | null) ??
                 DecisionStrategy.UNANIMOUS;
 
             const compositePolicy : PolicyWithType<CompositePolicy> = {
@@ -174,12 +162,12 @@ export class PermissionChecker implements IPermissionChecker {
                 issues.push(definePolicyIssueGroup({
                     code: ErrorCode.PERMISSION_EVALUATION_FAILED,
                     issues: evaluationResult.issues || [],
-                    message: `The ${entity.name} permissions policy evaluation failed`,
-                    path: [entity.name],
+                    message: `The ${binding.permission.name} permissions policy evaluation failed`,
+                    path: [binding.permission.name],
                 }));
 
                 if (decision_strategy === DecisionStrategy.UNANIMOUS) {
-                    const error = PermissionError.evaluationFailed(entity.name);
+                    const error = PermissionError.evaluationFailed(binding.permission.name);
                     error.addIssues(issues);
                     throw error;
                 }
@@ -201,15 +189,8 @@ export class PermissionChecker implements IPermissionChecker {
         }
     }
 
-    /**
-     * Verify if one of the permissions evaluates to true.
-     *
-     * @throws PermissionError
-     *
-     * @param ctx
-     */
-    async checkOneOf(ctx: PermissionCheckerCheckContext) : Promise<void> {
-        return this.check({
+    async evaluateOneOf(ctx: PermissionEvaluationContext) : Promise<void> {
+        return this.evaluate({
             ...ctx,
             options: {
                 ...(ctx.options || {}),
@@ -220,8 +201,8 @@ export class PermissionChecker implements IPermissionChecker {
 
     // ----------------------------------------------
 
-    async preCheck(ctx: PermissionCheckerCheckContext) : Promise<void> {
-        return this.check({
+    async preEvaluate(ctx: PermissionEvaluationContext) : Promise<void> {
+        return this.evaluate({
             ...ctx,
             options: {
                 ...(ctx.options || {}),
@@ -234,8 +215,8 @@ export class PermissionChecker implements IPermissionChecker {
         });
     }
 
-    async preCheckOneOf(ctx: PermissionCheckerCheckContext) : Promise<void> {
-        return this.preCheck({
+    async preEvaluateOneOf(ctx: PermissionEvaluationContext) : Promise<void> {
+        return this.preEvaluate({
             ...ctx,
             options: {
                 ...(ctx.options || {}),

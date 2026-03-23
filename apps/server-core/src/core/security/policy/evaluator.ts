@@ -6,7 +6,7 @@
  */
 
 import type {
-    CompositePolicy, IPolicyEvaluator, PermissionItem, PolicyEvaluationContext, PolicyEvaluationResult,
+    CompositePolicy, IPolicyEvaluator, PermissionBinding, PolicyEvaluationContext, PolicyEvaluationResult,
     PolicyWithType,
 } from '@authup/access';
 import {
@@ -18,7 +18,7 @@ import {
     PolicyIssueCode,
     definePolicyIssueItem,
     maybeInvertPolicyOutcome,
-    mergePermissionItems,
+    mergePermissionBindings,
 } from '@authup/access';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
@@ -38,7 +38,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         this.identityPermissionProvider = identityPermissionProvider;
     }
 
-    async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionItem | null> {
+    async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionBinding | null> {
         if (!ctx.data.has(BuiltInPolicyType.PERMISSION_BINDING)) {
             return null;
         }
@@ -47,8 +47,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return ctx.data.get(BuiltInPolicyType.PERMISSION_BINDING);
         }
 
-        // todo: run validator on attributes (isObject ...)
-        const data = ctx.data.get<PermissionItem>(BuiltInPolicyType.PERMISSION_BINDING);
+        const data = ctx.data.get<PermissionBinding>(BuiltInPolicyType.PERMISSION_BINDING);
 
         ctx.data.set(BuiltInPolicyType.PERMISSION_BINDING, data);
         ctx.data.setValidated(BuiltInPolicyType.PERMISSION_BINDING);
@@ -57,7 +56,6 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
     }
 
     async evaluate(value: Record<string, any>, ctx: PolicyEvaluationContext): Promise<PolicyEvaluationResult> {
-        // todo: catch errors + transform to issue(s)
         const policy = await this.validator.run(value);
 
         const identity = await this.identityEvaluator.accessData(ctx);
@@ -73,8 +71,8 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                 ],
             };
         }
-        const permission = await this.accessData(ctx);
-        if (!permission) {
+        const binding = await this.accessData(ctx);
+        if (!binding) {
             return {
                 success: false,
                 issues: [
@@ -87,41 +85,31 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             };
         }
 
-        // get all identity permissions with applicable client(_id) restriction
-        const identityPermissions = await this.identityPermissionProvider.getFor(identity)
-            .then((permissions) => permissions.filter((item) => {
-                if (item.name !== permission?.name) {
+        const identityBindings = await this.identityPermissionProvider.getFor(identity)
+            .then((bindings) => bindings.filter((item) => {
+                if (item.permission.name !== binding.permission.name) {
                     return false;
                 }
 
-                // we are comparing only string with null (db resources always null or string)
-                return (permission?.realm_id ?? null) === item.realm_id &&
-                    (permission?.client_id ?? null) === item.client_id;
+                return (binding.permission.realm_id ?? null) === (item.permission.realm_id ?? null) &&
+                    (binding.permission.client_id ?? null) === (item.permission.client_id ?? null);
             }));
 
-        if (identityPermissions.length === 0) {
+        if (identityBindings.length === 0) {
             return {
                 success: maybeInvertPolicyOutcome(false, policy.invert),
             };
         }
 
-        const permissionsMerged = mergePermissionItems(
-            identityPermissions.map((raw) => ({
-                name: raw.name,
-                realm_id: raw.realm_id,
-                client_id: raw.client_id,
-                policy: (raw as any).policy || undefined,
-            })),
-        );
-        if (permissionsMerged.length === 0) {
+        const bindingsMerged = mergePermissionBindings(identityBindings);
+        if (bindingsMerged.length === 0) {
             return {
                 success: maybeInvertPolicyOutcome(false, policy.invert),
             };
         }
 
-        const policies : PolicyWithType[] = permissionsMerged
-            .map((permission) => permission.policy)
-            .filter((policy) => !!policy);
+        const policies : PolicyWithType[] = bindingsMerged
+            .flatMap((b) => b.policies || []);
 
         if (policies.length === 0) {
             return {

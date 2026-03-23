@@ -175,7 +175,7 @@ export class RoutingInterceptor {
             }
 
             try {
-                await this.store.permissionChecker.preCheckOneOf({
+                await this.store.permissionEvaluator.preEvaluateOneOf({
                     name: permissions,
                     input: new PolicyData({
                         [BuiltInPolicyType.IDENTITY]: identity,

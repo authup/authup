@@ -30,7 +30,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<UserPermission>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_PERMISSION_CREATE,
                 PermissionName.USER_PERMISSION_DELETE,
@@ -45,7 +45,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
         id: string,
         actor: ActorContext,
     ): Promise<UserPermission> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_PERMISSION_CREATE,
                 PermissionName.USER_PERMISSION_DELETE,
@@ -65,14 +65,14 @@ export class UserPermissionService extends AbstractEntityService implements IUse
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserPermission> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.USER_PERMISSION_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_PERMISSION_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
         if (data.permission) {
             data.permission_realm_id = data.permission.realm_id;
 
-            await actor.permissionChecker.preCheck({
+            await actor.permissionEvaluator.preEvaluate({
                 name: data.permission.name,
             });
         }
@@ -96,7 +96,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
             }
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -113,14 +113,14 @@ export class UserPermissionService extends AbstractEntityService implements IUse
         id: string,
         actor: ActorContext,
     ): Promise<UserPermission> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.USER_PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_PERMISSION_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

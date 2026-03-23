@@ -30,7 +30,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<ClientPermission>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.CLIENT_PERMISSION_CREATE,
                 PermissionName.CLIENT_PERMISSION_DELETE,
@@ -44,7 +44,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         id: string,
         actor: ActorContext,
     ): Promise<ClientPermission> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.CLIENT_PERMISSION_CREATE,
                 PermissionName.CLIENT_PERMISSION_DELETE,
@@ -63,14 +63,14 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<ClientPermission> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_PERMISSION_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_PERMISSION_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
         if (data.permission) {
             data.permission_realm_id = data.permission.realm_id;
 
-            await actor.permissionChecker.preCheck({
+            await actor.permissionEvaluator.preEvaluate({
                 name: data.permission.name,
             });
         }
@@ -94,7 +94,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             }
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -111,14 +111,14 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         id: string,
         actor: ActorContext,
     ): Promise<ClientPermission> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

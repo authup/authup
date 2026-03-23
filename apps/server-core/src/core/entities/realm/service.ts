@@ -95,10 +95,10 @@ export class RealmService extends AbstractEntityService implements IRealmService
         }
 
         if (entity) {
-            await actor.permissionChecker.preCheck({ name: PermissionName.REALM_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.REALM_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionChecker.preCheck({ name: PermissionName.REALM_CREATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.REALM_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
@@ -107,7 +107,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.REALM_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
@@ -127,7 +127,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
             return { entity, created: false };
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.REALM_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: validated,
@@ -144,7 +144,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         id: string,
         actor: ActorContext,
     ): Promise<Realm> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.REALM_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.REALM_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
@@ -155,7 +155,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
             throw new BadRequestError('A built-in realm can not be deleted.');
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.REALM_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

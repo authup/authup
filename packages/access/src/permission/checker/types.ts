@@ -7,33 +7,33 @@
 
 import type { DecisionStrategy } from '../../constants.ts';
 import type { IPolicyEngine, PolicyData } from '../../policy';
-import type { IPermissionRepository } from '../repository';
+import type { IPermissionProvider } from '../repository';
 
-export interface IPermissionChecker {
-    check(ctx: PermissionCheckerCheckContext): Promise<void>;
+export interface IPermissionEvaluator {
+    evaluate(ctx: PermissionEvaluationContext): Promise<void>;
 
-    checkOneOf(ctx: PermissionCheckerCheckContext): Promise<void>;
+    evaluateOneOf(ctx: PermissionEvaluationContext): Promise<void>;
 
-    preCheck(ctx: PermissionCheckerCheckContext): Promise<void>;
+    preEvaluate(ctx: PermissionEvaluationContext): Promise<void>;
 
-    preCheckOneOf(ctx: PermissionCheckerCheckContext): Promise<void>
+    preEvaluateOneOf(ctx: PermissionEvaluationContext): Promise<void>
 }
 
-export type PermissionCheckerOptions = {
-    repository?: IPermissionRepository,
+export type PermissionEvaluatorOptions = {
+    repository?: IPermissionProvider,
     policyEngine?: IPolicyEngine,
     realm_id?: string | null,
     client_id?: string | null
 };
 
-export type PermissionCheckerCheckOptions = {
+export type PermissionEvaluationOptions = {
     decision_strategy?: `${DecisionStrategy}`,
     policiesIncluded?: string[],
     policiesExcluded?: string[],
 };
 
-export type PermissionCheckerCheckContext = {
+export type PermissionEvaluationContext = {
     name: string | string[],
     input?: PolicyData,
-    options?: PermissionCheckerCheckOptions
+    options?: PermissionEvaluationOptions
 };

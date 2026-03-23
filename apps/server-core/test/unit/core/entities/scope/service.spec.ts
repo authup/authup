@@ -55,7 +55,7 @@ describe('core/entities/scope/service', () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
 
-            expect(actor.permissionChecker.preCheckOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
                 name: [
                     PermissionName.SCOPE_READ,
                     PermissionName.SCOPE_UPDATE,
@@ -101,7 +101,7 @@ describe('core/entities/scope/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'new-scope' }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.SCOPE_CREATE,
             });
         });

@@ -1,52 +1,54 @@
-# PermissionChecker
+# PermissionEvaluator
 
 This package is shipped with a framework for evaluating and checking permissions.
 
-The PermissionChecker can be initialized with various repositories.
-In the following, the PermissionChecker is initialized with the help of the PermissionMemoryRepository.
+The PermissionEvaluator can be initialized with various providers.
+In the following, the PermissionEvaluator is initialized with the help of the PermissionMemoryProvider.
 
-## Repository
+## Provider
 
-For demonstration purposes, the PermissionMemoryRepository is only initialized with three permissions,
+For demonstration purposes, the PermissionMemoryProvider is only initialized with three permissions,
 whereby only the first permission is defined with a [policy](./policies.md).
 
 
 ```typescript
-import { PermissionMemoryRepository } from '@authup/access';
+import { PermissionMemoryProvider } from '@authup/access';
 
 const items = [
     {
-        name: 'user_update',
-        policy: {
-            type: 'attributeNames',
-            names: ['name'],
-        },
+        permission: { name: 'user_update' },
+        policies: [
+            {
+                type: 'attributeNames',
+                names: ['name'],
+            },
+        ],
     },
     {
-        name: 'user_create',
+        permission: { name: 'user_create' },
     },
     {
-        name: 'user_delete',
+        permission: { name: 'user_delete' },
     },
 ]
 
-const repository = new PermissionMemoryRepository(items);
+const provider = new PermissionMemoryProvider(items);
 ```
 
 
-## Check
+## Evaluate
 
-To check if a permission will be granted use the `check` method.
-The `check` method accepts an object of type [PermissionCheckerCheckContext](./api-reference.md#permissioncheckercheckontext).
+To evaluate if a permission will be granted use the `evaluate` method.
+The `evaluate` method accepts an object of type [PermissionEvaluationContext](./api-reference.md#permissionevaluationcontext).
 
 ```typescript
-import { PermissionChecker, PermissionMemoryRepository, PolicyData } from '@authup/access';
+import { PermissionEvaluator, PermissionMemoryProvider, PolicyData } from '@authup/access';
 
-const checker = new PermissionChecker({
-    repository: new PermissionMemoryRepository([])
+const evaluator = new PermissionEvaluator({
+    repository: new PermissionMemoryProvider([])
 });
 
-checker.check({
+evaluator.evaluate({
     name: 'user_create',
 });
 // success (always) - no restrictions/policies
@@ -54,7 +56,7 @@ checker.check({
 const input = new PolicyData();
 input.set('attributes', { name: 'admin' });
 
-checker.check({
+evaluator.evaluate({
     name: 'user_update',
     input,
 });
@@ -63,7 +65,7 @@ checker.check({
 const input2 = new PolicyData();
 input2.set('attributes', { name: 'admin', foo: 'bar' });
 
-checker.check({
+evaluator.evaluate({
     name: 'user_update',
     input: input2,
 });

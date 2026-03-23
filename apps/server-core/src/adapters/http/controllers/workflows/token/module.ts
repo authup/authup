@@ -152,7 +152,7 @@ export class TokenController {
                 active,
                 // todo: permissions property should be removed.
                 permissions: permissions
-                    .map((permission) => pickRecord(permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission),
+                    .map((binding) => pickRecord(binding.permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission),
                 ...payload,
                 ...claims,
             };

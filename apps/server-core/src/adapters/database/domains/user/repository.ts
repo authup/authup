@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission, Role, User } from '@authup/core-kit';
+import type { Role, User } from '@authup/core-kit';
+import type { PermissionBinding, PolicyWithType } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     DataSource, EntityManager,
@@ -15,6 +16,7 @@ import { EARepository } from '../../extra-attribute-repository/index.ts';
 import { UserAttributeEntity } from '../user-attribute/index.ts';
 import { UserPermissionEntity } from '../user-permission/index.ts';
 import { UserRoleEntity } from '../user-role/index.ts';
+import { PolicyRepository } from '../policy/index.ts';
 import { UserEntity } from './entity.ts';
 
 export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
@@ -69,7 +71,7 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
 
     async getBoundPermissions(
         entity: string | User,
-    ) : Promise<Permission[]> {
+    ) : Promise<PermissionBinding[]> {
         let id : string;
         if (typeof entity === 'string') {
             id = entity;
@@ -85,9 +87,6 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
             relations: {
                 permission: true,
-                policy: {
-                    children: true,
-                },
             },
             cache: {
                 id: buildRedisKeyPath({
@@ -98,10 +97,43 @@ export class UserRepository extends EARepository<UserEntity, UserAttributeEntity
             },
         });
 
-        return entities.map((relation) => {
-            const {permission} = relation;
-            permission.policy = relation.policy || undefined;
-            return permission;
+        const policyIds = new Set<string>();
+        for (const entry of entities) {
+            if (entry.policy_id) {
+                policyIds.add(entry.policy_id);
+            }
+        }
+
+        const policyTrees = await this.loadPolicyTrees([...policyIds]);
+
+        return entities.map((entry) => {
+            const policies: PolicyWithType[] = [];
+            if (entry.policy_id && policyTrees[entry.policy_id]) {
+                policies.push(policyTrees[entry.policy_id]);
+            }
+
+            return {
+                permission: entry.permission,
+                policies: policies.length > 0 ? policies : undefined,
+            };
         });
+    }
+
+    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, PolicyWithType>> {
+        if (policyIds.length === 0) {
+            return {};
+        }
+
+        const policyRepository = new PolicyRepository(this.manager);
+        const result: Record<string, PolicyWithType> = {};
+
+        for (const id of policyIds) {
+            const tree = await policyRepository.findDescendantsTreeById(id);
+            if (tree) {
+                result[id] = tree;
+            }
+        }
+
+        return result;
     }
 }

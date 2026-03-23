@@ -44,7 +44,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Robot>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,
@@ -68,7 +68,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
             }
 
             try {
-                await actor.permissionChecker.checkOneOf({
+                await actor.permissionEvaluator.evaluateOneOf({
                     name: [
                         PermissionName.ROBOT_READ,
                         PermissionName.ROBOT_UPDATE,
@@ -93,7 +93,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
         actor: ActorContext,
         realmId?: string,
     ): Promise<Robot> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,
@@ -117,7 +117,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.checkOneOf({
+        await actor.permissionEvaluator.evaluateOneOf({
             name: [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_UPDATE,
@@ -182,10 +182,10 @@ export class RobotService extends AbstractEntityService implements IRobotService
         }
 
         if (entity) {
-            await actor.permissionChecker.preCheck({ name: PermissionName.ROBOT_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionChecker.preCheck({ name: PermissionName.ROBOT_CREATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
@@ -198,7 +198,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
         const credentialsService = new RobotCredentialsService();
 
         if (entity) {
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROBOT_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
@@ -229,7 +229,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
             }
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: validated,
@@ -263,9 +263,9 @@ export class RobotService extends AbstractEntityService implements IRobotService
             actor.identity.data.id === entity.user_id;
 
         if (!isOwner) {
-            await actor.permissionChecker.preCheck({ name: PermissionName.ROBOT_DELETE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_DELETE });
 
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROBOT_DELETE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entity,

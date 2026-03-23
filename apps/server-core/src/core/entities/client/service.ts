@@ -44,7 +44,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Client>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.CLIENT_READ,
                 PermissionName.CLIENT_UPDATE,
@@ -64,7 +64,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 !entity.secret_hashed
             ) {
                 try {
-                    await actor.permissionChecker.checkOneOf({
+                    await actor.permissionEvaluator.evaluateOneOf({
                         name: [
                             PermissionName.CLIENT_READ,
                             PermissionName.CLIENT_UPDATE,
@@ -93,7 +93,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         actor: ActorContext,
         realmId?: string,
     ): Promise<Client> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.CLIENT_READ,
                 PermissionName.CLIENT_UPDATE,
@@ -128,7 +128,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             !entity.secret_encrypted &&
             !entity.secret_hashed
         ) {
-            await actor.permissionChecker.checkOneOf({
+            await actor.permissionEvaluator.evaluateOneOf({
                 name: [
                     PermissionName.CLIENT_READ,
                     PermissionName.CLIENT_UPDATE,
@@ -194,10 +194,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
         }
 
         if (entity) {
-            await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_CREATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
@@ -221,7 +221,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
             entity = this.repository.merge(entity, validated);
 
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.CLIENT_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -252,7 +252,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: validated,
@@ -280,14 +280,14 @@ export class ClientService extends AbstractEntityService implements IClientServi
         id: string,
         actor: ActorContext,
     ): Promise<Client> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

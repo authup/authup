@@ -30,7 +30,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<RolePermission>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROLE_PERMISSION_DELETE,
                 PermissionName.ROLE_PERMISSION_READ,
@@ -44,7 +44,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         id: string,
         actor: ActorContext,
     ): Promise<RolePermission> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROLE_PERMISSION_DELETE,
                 PermissionName.ROLE_PERMISSION_READ,
@@ -63,7 +63,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RolePermission> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_PERMISSION_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_PERMISSION_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -71,7 +71,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             data.permission_realm_id = data.permission.realm_id;
 
             if (!data.role || data.role.name !== ROLE_ADMIN_NAME) {
-                await actor.permissionChecker.preCheck({
+                await actor.permissionEvaluator.preEvaluate({
                     name: data.permission.name,
                 });
             }
@@ -96,7 +96,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             }
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -113,14 +113,14 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         id: string,
         actor: ActorContext,
     ): Promise<RolePermission> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

@@ -6,12 +6,11 @@
  */
 
 import type {
-    DecisionStrategy,
-    IPermissionRepository,
-    PermissionGetOptions,
-    PermissionItem, PolicyWithType,
+    IPermissionProvider,
+    PermissionBinding,
+    PermissionGetOptions, PolicyWithType,
 } from '@authup/access';
-import { buildPermissionItemKey } from '@authup/access';
+import { buildPermissionBindingKey } from '@authup/access';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
@@ -22,7 +21,7 @@ import {
     PolicyRepository,
 } from '../../../../../adapters/database/domains/index.ts';
 
-export class PermissionDatabaseRepository implements IPermissionRepository {
+export class PermissionDatabaseProvider implements IPermissionProvider {
     protected dataSource: DataSource;
 
     protected repository : Repository<PermissionEntity>;
@@ -38,7 +37,7 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
         this.policyRepository = new PolicyRepository(this.dataSource);
     }
 
-    async findOne(options: PermissionGetOptions) : Promise<PermissionItem | null> {
+    async findOne(options: PermissionGetOptions) : Promise<PermissionBinding | null> {
         const where : FindOptionsWhere<PermissionEntity> = {
             name: options.name,
         };
@@ -56,7 +55,7 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
             cache: {
                 id: buildCacheKey({
                     prefix: CachePrefix.PERMISSION,
-                    key: buildPermissionItemKey({
+                    key: buildPermissionBindingKey({
                         name: options.name,
                         client_id: options.client_id,
                         realm_id: options.realm_id,
@@ -83,11 +82,8 @@ export class PermissionDatabaseRepository implements IPermissionRepository {
             }
 
             return {
-                name: entity.name,
-                realm_id: entity.realm_id,
-                client_id: entity.client_id,
-                policies,
-                decision_strategy: entity.decision_strategy as `${DecisionStrategy}` || undefined,
+                permission: entity,
+                policies: policies.length > 0 ? policies : undefined,
             };
         }
 

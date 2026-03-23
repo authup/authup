@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionCheckerCheckContext } from '@authup/access';
+import type { PermissionEvaluationContext } from '@authup/access';
 import type { Pinia } from 'pinia';
 import type { App, Ref } from 'vue';
 import type { Store } from '../store';
@@ -16,4 +16,4 @@ export type PermissionCheckerReactiveFnCreateContext = {
     app?: App
 };
 
-export type PermissionCheckerReactiveFn = (ctx: PermissionCheckerCheckContext) => Ref<boolean>;
+export type PermissionCheckerReactiveFn = (ctx: PermissionEvaluationContext) => Ref<boolean>;

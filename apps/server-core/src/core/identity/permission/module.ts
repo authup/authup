@@ -5,9 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Permission } from '@authup/core-kit';
-import type { IdentityPolicyData, PermissionItem } from '@authup/access';
-import { isPermissionItemEqual, mergePermissionItems } from '@authup/access';
+import type { IdentityPolicyData, PermissionBinding } from '@authup/access';
+import { isPermissionBindingEqual, mergePermissionBindings } from '@authup/access';
 import type {
     IIdentityBindingRepository,
     IIdentityPermissionProvider,
@@ -32,26 +31,25 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
     }
 
     async isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData) : Promise<boolean> {
-        const parentPermissions = await this.getFor(parent);
-        const childPermissions = await this.getFor(child);
+        const parentBindings = await this.getFor(parent);
+        const childBindings = await this.getFor(child);
 
-        const parentItems = mergePermissionItems(
-            parentPermissions.map((p) => this.toPermissionItem(p)),
-        );
-        const childItems = mergePermissionItems(
-            childPermissions.map((p) => this.toPermissionItem(p)),
-        );
+        const parentMerged = mergePermissionBindings(parentBindings);
+        const childMerged = mergePermissionBindings(childBindings);
 
-        for (const childItem of childItems) {
-            const parentItem = parentItems.find(
-                (p) => isPermissionItemEqual(p, childItem),
+        for (const childItem of childMerged) {
+            const parentItem = parentMerged.find(
+                (p) => isPermissionBindingEqual(p, childItem),
             );
 
             if (!parentItem) {
                 return false;
             }
 
-            if (parentItem.policy && !childItem.policy) {
+            if (
+                parentItem.policies && parentItem.policies.length > 0 &&
+                (!childItem.policies || childItem.policies.length === 0)
+            ) {
                 return false;
             }
         }
@@ -59,7 +57,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         return true;
     }
 
-    async getFor(identity: IdentityPolicyData) : Promise<Permission[]> {
+    async getFor(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
         switch (identity.type) {
             case 'client': {
                 return this.getForClient(identity);
@@ -78,59 +76,70 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         return [];
     }
 
-    async getForClient(identity: IdentityPolicyData) : Promise<Permission[]> {
-        const permissions = await this.clientRepository.getBoundPermissions(identity.id);
+    async getForClient(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
+        const bindings = await this.clientRepository.getBoundPermissions(identity.id);
         const roles = await this.clientRepository.getBoundRoles(identity.id);
-        const rolePermissions = await this.roleRepository.getBoundPermissionsForMany(roles);
-        if (rolePermissions.length === 0) {
-            return permissions;
+        const roleBindings = await this.roleRepository.getBoundPermissionsForMany(roles);
+        if (roleBindings.length === 0) {
+            return bindings;
         }
 
         return [
-            ...permissions,
-            ...rolePermissions,
+            ...bindings,
+            ...roleBindings,
         ];
     }
 
-    async getForUser(identity: IdentityPolicyData) : Promise<Permission[]> {
-        const permissions = await this.userRepository.getBoundPermissions(identity.id)
-            .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
+    async getForUser(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
+        const bindings = await this.userRepository.getBoundPermissions(identity.id)
+            .then((data) => this.reduceBindingsByIdentityClient(data, identity));
 
         const roles = await this.userRepository.getBoundRoles(identity.id)
             .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
 
-        const rolePermissions = await this.roleRepository.getBoundPermissionsForMany(roles);
-        if (rolePermissions.length === 0) {
-            return permissions;
+        const roleBindings = await this.roleRepository.getBoundPermissionsForMany(roles);
+        if (roleBindings.length === 0) {
+            return bindings;
         }
 
         return [
-            ...permissions,
-            ...rolePermissions,
+            ...bindings,
+            ...roleBindings,
         ];
     }
 
-    async getForRobot(identity: IdentityPolicyData) : Promise<Permission[]> {
-        const permissions = await this.robotRepository.getBoundPermissions(identity.id)
-            .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
+    async getForRobot(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
+        const bindings = await this.robotRepository.getBoundPermissions(identity.id)
+            .then((data) => this.reduceBindingsByIdentityClient(data, identity));
 
         const roles = await this.robotRepository.getBoundRoles(identity.id)
             .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
 
-        const rolePermissions = await this.roleRepository.getBoundPermissionsForMany(roles);
-        if (rolePermissions.length === 0) {
-            return permissions;
+        const roleBindings = await this.roleRepository.getBoundPermissionsForMany(roles);
+        if (roleBindings.length === 0) {
+            return bindings;
         }
 
         return [
-            ...permissions,
-            ...rolePermissions,
+            ...bindings,
+            ...roleBindings,
         ];
     }
 
-    async getForRole(identity: IdentityPolicyData) : Promise<Permission[]> {
+    async getForRole(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
         return this.roleRepository.getBoundPermissions(identity.id)
-            .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
+            .then((data) => this.reduceBindingsByIdentityClient(data, identity));
+    }
+
+    private reduceBindingsByIdentityClient(
+        bindings: PermissionBinding[],
+        identity: IdentityPolicyData,
+    ): PermissionBinding[] {
+        if (!identity.clientId) {
+            return bindings;
+        }
+
+        return bindings.filter((binding) => binding.permission.client_id === identity.clientId);
     }
 
     private reduceEntitiesByIdentityClient<T extends { client_id?: string | null }>(
@@ -142,14 +151,5 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         }
 
         return entities.filter((entity) => entity.client_id === identity.clientId);
-    }
-
-    private toPermissionItem(input: Permission) : PermissionItem {
-        return {
-            name: input.name,
-            client_id: input.client_id,
-            realm_id: input.realm_id,
-            policy: (input as any).policy || undefined,
-        };
     }
 }

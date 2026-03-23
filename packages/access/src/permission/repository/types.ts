@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '../types';
+import type { PermissionBinding } from '../types';
 
 export type PermissionGetOptions = {
     name: string,
@@ -13,6 +13,6 @@ export type PermissionGetOptions = {
     realm_id?: string | null
 };
 
-export interface IPermissionRepository {
-    findOne(criteria: PermissionGetOptions) : Promise<PermissionItem | null>;
+export interface IPermissionProvider {
+    findOne(criteria: PermissionGetOptions) : Promise<PermissionBinding | null>;
 }

@@ -8,20 +8,20 @@
 import { describe, expect, it } from 'vitest';
 
 import { ErrorCode } from '@authup/errors';
-import type { AttributeNamesPolicy, PermissionItem, PolicyWithType } from '../../../src';
+import type { AttributeNamesPolicy, PermissionBinding, PolicyWithType } from '../../../src';
 import {
-    BuiltInPolicyType, PermissionChecker,
+    BuiltInPolicyType, PermissionError,
 
-    PermissionError,
-    PermissionMemoryRepository,
+    PermissionEvaluator,
+    PermissionMemoryProvider,
     PolicyData,
     PolicyDefaultEvaluators,
     PolicyEngine,
 } from '../../../src';
 
-const abilities : PermissionItem[] = [
+const abilities : PermissionBinding[] = [
     {
-        name: 'user_edit',
+        permission: { name: 'user_edit' },
         policies: [
             {
                 type: BuiltInPolicyType.ATTRIBUTE_NAMES,
@@ -30,22 +30,22 @@ const abilities : PermissionItem[] = [
         ],
     },
     {
-        name: 'user_add',
+        permission: { name: 'user_add' },
     },
     {
-        name: 'user_drop',
+        permission: { name: 'user_drop' },
     },
 ];
 
-const provider = new PermissionMemoryRepository(abilities);
-const checker = new PermissionChecker({
+const provider = new PermissionMemoryProvider(abilities);
+const evaluator = new PermissionEvaluator({
     repository: provider,
     policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
 });
 
 describe('src/ability/manager.ts', () => {
     it('should work with policy', async () => {
-        await checker.check({
+        await evaluator.evaluate({
             name: 'user_edit',
             input: new PolicyData({ attributes: { name: 'admin' } }),
         });
@@ -55,7 +55,7 @@ describe('src/ability/manager.ts', () => {
         expect.assertions(2);
 
         try {
-            await checker.check({
+            await evaluator.evaluate({
                 name: 'user_edit',
                 input: new PolicyData({ attributes: { id: '123' } }),
             });

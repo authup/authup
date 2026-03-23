@@ -41,7 +41,7 @@ describe('core/entities/role-permission/service', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionChecker.preCheckOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
                 name: [
                     PermissionName.ROLE_PERMISSION_DELETE,
                     PermissionName.ROLE_PERMISSION_READ,
@@ -84,7 +84,7 @@ describe('core/entities/role-permission/service', () => {
         it('should call preCheck with ROLE_PERMISSION_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({ role_id: randomUUID(), permission_id: randomUUID() }, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_PERMISSION_CREATE,
             });
         });
@@ -97,7 +97,7 @@ describe('core/entities/role-permission/service', () => {
                 permission: { name: 'custom-perm', realm_id: null },
             }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: 'custom-perm',
             });
         });
@@ -111,7 +111,7 @@ describe('core/entities/role-permission/service', () => {
                 permission: { name: 'custom-perm', realm_id: null },
             }, actor);
 
-            expect(actor.permissionChecker.preCheck).not.toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).not.toHaveBeenCalledWith({
                 name: 'custom-perm',
             });
         });
@@ -139,7 +139,7 @@ describe('core/entities/role-permission/service', () => {
             const entity = repository.seed({} as RolePermission);
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_PERMISSION_DELETE,
             });
         });

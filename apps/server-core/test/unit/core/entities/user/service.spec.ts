@@ -44,11 +44,11 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
 function createSelfActor(userId: string, userName?: string, realmId?: string): ActorContext {
     const rId = realmId || randomUUID();
     return {
-        permissionChecker: {
-            check: vi.fn().mockResolvedValue(undefined),
-            checkOneOf: vi.fn().mockResolvedValue(undefined),
-            preCheck: vi.fn().mockResolvedValue(undefined),
-            preCheckOneOf: vi.fn().mockResolvedValue(undefined),
+        permissionEvaluator: {
+            evaluate: vi.fn().mockResolvedValue(undefined),
+            evaluateOneOf: vi.fn().mockResolvedValue(undefined),
+            preEvaluate: vi.fn().mockResolvedValue(undefined),
+            preEvaluateOneOf: vi.fn().mockResolvedValue(undefined),
         },
         identity: {
             type: IdentityType.USER,
@@ -83,7 +83,7 @@ describe('core/entities/user/service', () => {
         it('should call preCheckOneOf with read/update/delete permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionChecker.preCheckOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
                 name: [
                     PermissionName.USER_READ,
                     PermissionName.USER_UPDATE,
@@ -103,7 +103,7 @@ describe('core/entities/user/service', () => {
             ]);
 
             const actor = createSelfActor(selfUser.id);
-            vi.mocked(actor.permissionChecker.checkOneOf).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
@@ -114,7 +114,7 @@ describe('core/entities/user/service', () => {
             repository.seed([createFakeUser({ name: 'other' })]);
 
             const actor = createSelfActor(randomUUID());
-            vi.mocked(actor.permissionChecker.checkOneOf).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(0);
@@ -139,11 +139,11 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
-            vi.mocked(actor.permissionChecker.preCheckOneOf).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.preEvaluateOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getOne(entity.id, actor);
             expect(result.id).toBe(entity.id);
-            expect(actor.permissionChecker.preCheckOneOf).not.toHaveBeenCalled();
+            expect(actor.permissionEvaluator.preEvaluateOneOf).not.toHaveBeenCalled();
         });
 
         it('should allow self-access by name without permission check', async () => {
@@ -151,7 +151,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: userName }));
 
             const actor = createSelfActor(entity.id, userName);
-            vi.mocked(actor.permissionChecker.preCheckOneOf).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.preEvaluateOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getOne(userName, actor);
             expect(result.id).toBe(entity.id);
@@ -190,7 +190,7 @@ describe('core/entities/user/service', () => {
         it('should call preCheck with USER_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-user', email: 'test@example.com' }, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.USER_CREATE,
             });
         });
@@ -237,7 +237,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
-            vi.mocked(actor.permissionChecker.preCheck).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.preEvaluate).mockRejectedValue(new ForbiddenError());
 
             const result = await service.update(entity.id, { display_name: 'Updated' }, actor);
             expect(result.display_name).toBe('Updated');
@@ -253,7 +253,7 @@ describe('core/entities/user/service', () => {
             }));
 
             const actor = createSelfActor(entity.id);
-            vi.mocked(actor.permissionChecker.preCheck).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.preEvaluate).mockRejectedValue(new ForbiddenError());
 
             const result = await service.update(entity.id, {
                 display_name: 'Updated',
@@ -274,7 +274,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'other-user' }));
 
             const actor = createSelfActor(randomUUID());
-            vi.mocked(actor.permissionChecker.preCheck).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.preEvaluate).mockRejectedValue(new ForbiddenError());
 
             await expect(
                 service.update(entity.id, { display_name: 'x' }, actor),
@@ -360,7 +360,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser());
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.USER_DELETE,
             });
         });

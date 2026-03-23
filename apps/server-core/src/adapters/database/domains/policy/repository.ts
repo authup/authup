@@ -30,6 +30,17 @@ export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttri
         });
     }
 
+    async findDescendantsTreeById(id: string): Promise<PolicyWithType | null> {
+        const entity = this.create();
+        entity.id = id;
+
+        try {
+            return await this.findDescendantsTree(entity);
+        } catch {
+            return null;
+        }
+    }
+
     createByType<
         K extends keyof BuiltInPolicyTypeMap,
         D extends BuiltInPolicyTypeMap<any>[K] & Partial<Omit<PolicyEntity, 'type'>>,

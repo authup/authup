@@ -31,7 +31,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<UserAttribute>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_SELF_MANAGE,
@@ -59,7 +59,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         id: string,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_SELF_MANAGE,
@@ -83,7 +83,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_SELF_MANAGE,
@@ -121,7 +121,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionChecker.checkOneOf({
+        await actor.permissionEvaluator.evaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_SELF_MANAGE,
@@ -151,7 +151,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         id: string,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
                 PermissionName.USER_SELF_MANAGE,
@@ -185,7 +185,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         if (isMe) {
             try {
-                await actor.permissionChecker.check({
+                await actor.permissionEvaluator.evaluate({
                     name: PermissionName.USER_SELF_MANAGE,
                     input: new PolicyData({
                         [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -199,7 +199,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         }
 
         try {
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entity,

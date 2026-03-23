@@ -43,7 +43,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<Scope>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.SCOPE_READ,
                 PermissionName.SCOPE_UPDATE,
@@ -58,7 +58,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         idOrName: string,
         actor: ActorContext,
     ): Promise<Scope> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.SCOPE_READ,
                 PermissionName.SCOPE_UPDATE,
@@ -125,10 +125,10 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         }
 
         if (entity) {
-            await actor.permissionChecker.preCheck({ name: PermissionName.SCOPE_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SCOPE_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionChecker.preCheck({ name: PermissionName.SCOPE_CREATE });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SCOPE_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
@@ -137,7 +137,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         await this.repository.validateJoinColumns(validated);
 
         if (entity) {
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.SCOPE_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: {
@@ -159,7 +159,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             validated.realm_id = this.getActorRealmId(actor) || null;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.SCOPE_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: validated,
@@ -178,14 +178,14 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         id: string,
         actor: ActorContext,
     ): Promise<Scope> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.SCOPE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SCOPE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.SCOPE_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,
