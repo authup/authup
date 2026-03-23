@@ -252,12 +252,11 @@ export class ProvisionerModule implements Module {
 
         const permissions = await permissionRepo.find();
         for (const permission of permissions) {
-            const existing = await junctionRepo.findOneBy({
+            const hasAnyPolicy = await junctionRepo.findOneBy({
                 permission_id: permission.id,
-                policy_id: defaultPolicy.id,
             });
 
-            if (!existing) {
+            if (!hasAnyPolicy) {
                 await junctionRepo.save(junctionRepo.create({
                     permission_id: permission.id,
                     permission_realm_id: permission.realm_id,

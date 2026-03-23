@@ -7,6 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData, SystemPolicyName } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
+import { AuthupError } from '@authup/errors';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
@@ -253,7 +254,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     private async assignDefaultPolicy(permission: Permission): Promise<void> {
         const defaultPolicy = await this.policyRepository.findOneByName(SystemPolicyName.DEFAULT);
         if (!defaultPolicy) {
-            return;
+            throw new AuthupError(`The ${SystemPolicyName.DEFAULT} policy is not provisioned. Cannot create permissions without the default security policy.`);
         }
 
         const entry = this.permissionPolicyRepository.create({

@@ -11,6 +11,7 @@ import type { Permission } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
+import { SystemPolicyName } from '@authup/access';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
@@ -51,6 +52,13 @@ describe('core/entities/permission/service', () => {
         rolePermissionRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IRolePermissionRepository;
         policyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPolicyRepository;
         policyRepository.checkUniqueness = async () => {};
+        (policyRepository as FakeEntityRepository<any>).seed([{
+            id: 'default-policy-id',
+            name: SystemPolicyName.DEFAULT,
+            type: 'composite',
+            built_in: true,
+            realm_id: null,
+        }]);
         permissionPolicyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPermissionPolicyRepository;
         service = new PermissionService({
             repository,
