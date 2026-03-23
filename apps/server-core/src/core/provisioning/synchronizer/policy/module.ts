@@ -6,7 +6,8 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { IPermissionRepository, IPolicyRepository } from '../../../entities/index.ts';
+import type { IPermissionPolicyRepository } from '../../../entities/permission-policy/types.ts';
+import type { IPolicyRepository } from '../../../entities/index.ts';
 import type { PolicyProvisioningEntity } from '../../entities/policy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { PolicyProvisioningSynchronizerContext } from './types.ts';
@@ -14,13 +15,13 @@ import type { PolicyProvisioningSynchronizerContext } from './types.ts';
 export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer<PolicyProvisioningEntity> {
     protected repository: IPolicyRepository;
 
-    protected permissionRepository: IPermissionRepository;
+    protected permissionPolicyRepository: IPermissionPolicyRepository;
 
     constructor(ctx: PolicyProvisioningSynchronizerContext) {
         super();
 
         this.repository = ctx.repository;
-        this.permissionRepository = ctx.permissionRepository;
+        this.permissionPolicyRepository = ctx.permissionPolicyRepository;
     }
 
     async synchronize(input: PolicyProvisioningEntity): Promise<PolicyProvisioningEntity> {
@@ -87,11 +88,11 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
     }
 
     private async cleanupStaleChild(child: Policy): Promise<void> {
-        const referencingPermissions = await this.permissionRepository.findManyBy({
+        const referencingJunctions = await this.permissionPolicyRepository.findManyBy({
             policy_id: child.id,
         });
 
-        if (referencingPermissions.length === 0) {
+        if (referencingJunctions.length === 0) {
             await this.repository.deleteFromTree(child);
         } else {
             const detached = this.repository.merge(child, {

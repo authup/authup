@@ -116,11 +116,14 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         let count = 0;
+        let evaluated = false;
 
         for (const key of keys) {
             if (!hasOwnProperty(attributes, key)) {
                 continue;
             }
+
+            evaluated = true;
 
             let outcome : boolean = false;
 
@@ -155,6 +158,12 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
 
                 count--;
             }
+        }
+
+        if (!evaluated) {
+            return {
+                success: maybeInvertPolicyOutcome(true, policy.invert),
+            };
         }
 
         return {

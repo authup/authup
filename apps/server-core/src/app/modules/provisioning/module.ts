@@ -8,6 +8,7 @@ import type {
     Client,
     ClientPermission,
     ClientRole,
+    PermissionPolicy,
     Realm,
     Robot,
     RobotPermission,
@@ -59,6 +60,7 @@ import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
+    PermissionPolicyRepositoryAdapter,
     PermissionRepositoryAdapter,
     PolicyRepositoryAdapter,
     RealmRepositoryAdapter,
@@ -123,9 +125,13 @@ export class ProvisionerModule implements Module {
         // Synchronize all entities (policies → permissions → roles → ...)
         // ---------------------------------------------------------------
 
+        const permissionPolicyRepository = new PermissionPolicyRepositoryAdapter(
+            container.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity),
+        );
+
         const policySynchronizer = new PolicyProvisioningSynchronizer({
             repository: policyRepository,
-            permissionRepository,
+            permissionPolicyRepository,
         });
 
         const roleRepository = new RoleRepositoryAdapter({

@@ -15,7 +15,7 @@ import {
 import { isClientError } from 'hapic';
 import type { UserEntity } from '../../../../../../src';
 import {
-    PermissionEntity,
+    PermissionEntity, PermissionPolicyEntity,
     PolicyRepository, UserPermissionEntity, UserRepository,
 } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
@@ -101,9 +101,13 @@ describe('src/security/permission/checker', () => {
             built_in: true,
         });
 
-        permission.policy = policy;
-
         await permissionRepository.save(permission);
+
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        await permissionPolicyRepository.save(permissionPolicyRepository.create({
+            permission_id: permission.id,
+            policy_id: policy.id,
+        }));
 
         const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
         const userPermission = userPermissionRepository.create({
@@ -138,9 +142,13 @@ describe('src/security/permission/checker', () => {
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permission = permissionRepository.create({ name });
 
-        permission.policy = policy;
-
         await permissionRepository.save(permission);
+
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        await permissionPolicyRepository.save(permissionPolicyRepository.create({
+            permission_id: permission.id,
+            policy_id: policy.id,
+        }));
 
         const response = await suite.client
             .permission

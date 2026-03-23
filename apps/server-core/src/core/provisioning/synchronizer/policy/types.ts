@@ -5,9 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionRepository, IPolicyRepository } from '../../../entities/index.ts';
+import type { IPermissionPolicyRepository } from '../../../entities/permission-policy/types.ts';
+import type { IPolicyRepository } from '../../../entities/index.ts';
 
 export type PolicyProvisioningSynchronizerContext = {
     repository: IPolicyRepository,
-    permissionRepository: IPermissionRepository,
+    permissionPolicyRepository: IPermissionPolicyRepository,
 };
