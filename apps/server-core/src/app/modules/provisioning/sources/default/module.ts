@@ -79,12 +79,15 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             {
                 attributes: {
                     name: SystemPolicyName.REALM_BOUND,
-                    type: BuiltInPolicyType.ATTRIBUTES,
+                    type: BuiltInPolicyType.REALM_MATCH,
                     built_in: true,
                     realm_id: null,
                 },
                 extraAttributes: {
-                    query: { realm_id: { $ne: null } },
+                    attribute_name: ['realm_id'],
+                    attribute_name_strict: false,
+                    attribute_null_match_all: false,
+                    identity_master_match_all: false,
                 },
             },
         ];
