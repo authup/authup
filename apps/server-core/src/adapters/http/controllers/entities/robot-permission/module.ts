@@ -10,7 +10,7 @@ import {
 } from '@routup/decorators';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { IIdentityPermissionProvider, IRobotPermissionService } from '../../../../../core/index.ts';
+import type { IRobotPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -18,7 +18,6 @@ import {
 
 export type RobotPermissionControllerContext = {
     service: IRobotPermissionService,
-    identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('robot')
@@ -26,11 +25,8 @@ export type RobotPermissionControllerContext = {
 export class RobotPermissionController {
     protected service: IRobotPermissionService;
 
-    protected identityPermissionProvider: IIdentityPermissionProvider;
-
     constructor(ctx: RobotPermissionControllerContext) {
         this.service = ctx.service;
-        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -50,7 +46,7 @@ export class RobotPermissionController {
         @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<any> {
-        const actor = buildActorContext(req, this.identityPermissionProvider);
+        const actor = buildActorContext(req);
 
         const entity = await this.service.create(data, actor);
 

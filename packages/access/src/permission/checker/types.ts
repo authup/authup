@@ -6,8 +6,14 @@
  */
 
 import type { DecisionStrategy } from '../../constants.ts';
-import type { IPolicyEngine, PolicyData } from '../../policy';
+import type { IPolicyEngine, PolicyData, PolicyWithType } from '../../policy';
 import type { IPermissionProvider } from '../repository';
+
+export type ResolveJunctionPolicyOptions = {
+    name: string;
+    realm_id?: string | null;
+    client_id?: string | null;
+};
 
 export interface IPermissionEvaluator {
     evaluate(ctx: PermissionEvaluationContext): Promise<void>;
@@ -16,7 +22,9 @@ export interface IPermissionEvaluator {
 
     preEvaluate(ctx: PermissionEvaluationContext): Promise<void>;
 
-    preEvaluateOneOf(ctx: PermissionEvaluationContext): Promise<void>
+    preEvaluateOneOf(ctx: PermissionEvaluationContext): Promise<void>;
+
+    resolveJunctionPolicy(options: ResolveJunctionPolicyOptions): Promise<PolicyWithType | undefined>;
 }
 
 export type PermissionEvaluatorOptions = {

@@ -81,10 +81,10 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         if (
             data.permission &&
-            actor.resolveJunctionPolicy &&
+            actor.permissionEvaluator.resolveJunctionPolicy &&
             typeof data.policy_id === 'undefined'
         ) {
-            const junctionPolicy = await actor.resolveJunctionPolicy({
+            const junctionPolicy = await actor.permissionEvaluator.resolveJunctionPolicy({
                 name: data.permission.name,
                 realm_id: data.permission.realm_id,
                 client_id: data.permission.client_id,

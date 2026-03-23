@@ -562,8 +562,7 @@ export class HTTPControllerModule {
             container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
         );
         const service = new ClientPermissionService({ repository });
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new ClientPermissionController({ service, identityPermissionProvider });
+        return new ClientPermissionController({ service });
     }
 
     createClientRoleController(container: IDIContainer) {
@@ -588,8 +587,7 @@ export class HTTPControllerModule {
             container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
         );
         const service = new RobotPermissionService({ repository });
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new RobotPermissionController({ service, identityPermissionProvider });
+        return new RobotPermissionController({ service });
     }
 
     createRobotRoleController(container: IDIContainer) {
@@ -614,8 +612,7 @@ export class HTTPControllerModule {
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
         const service = new RolePermissionService({ repository });
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new RolePermissionController({ service, identityPermissionProvider });
+        return new RolePermissionController({ service });
     }
 
     createPermissionPolicyController(container: IDIContainer) {
@@ -663,8 +660,7 @@ export class HTTPControllerModule {
             container.resolve<Repository<UserPermission>>(UserPermissionEntity),
         );
         const service = new UserPermissionService({ repository });
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new UserPermissionController({ service, identityPermissionProvider });
+        return new UserPermissionController({ service });
     }
 
     createUserRoleController(container: IDIContainer) {
