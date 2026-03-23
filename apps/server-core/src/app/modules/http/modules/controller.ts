@@ -543,12 +543,17 @@ export class HTTPControllerModule {
             realmRepository,
         });
 
+        const permissionPolicyRepository = new PermissionPolicyRepositoryAdapter(
+            container.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity),
+        );
+
         const service = new PermissionService({
             repository,
             realmRepository: realmRepositoryAdapter,
             roleRepository,
             rolePermissionRepository,
             policyRepository,
+            permissionPolicyRepository,
         });
 
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);

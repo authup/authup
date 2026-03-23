@@ -17,6 +17,7 @@ import {
 } from '@authup/core-kit';
 import type { Permission } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
+import type { IPermissionPolicyRepository } from '../permission-policy/types.ts';
 import type { IPolicyRepository } from '../policy/types.ts';
 import type { IRealmRepository } from '../realm/types.ts';
 import type { IRoleRepository } from '../role/types.ts';
@@ -37,6 +38,7 @@ export type PermissionServiceContext = {
     roleRepository: IRoleRepository;
     rolePermissionRepository: IRolePermissionRepository;
     policyRepository: IPolicyRepository;
+    permissionPolicyRepository: IPermissionPolicyRepository;
 };
 
 export class PermissionService extends AbstractEntityService implements IPermissionService {
@@ -50,6 +52,8 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
     protected policyRepository: IPolicyRepository;
 
+    protected permissionPolicyRepository: IPermissionPolicyRepository;
+
     protected validator: PermissionValidator;
 
     constructor(ctx: PermissionServiceContext) {
@@ -59,6 +63,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         this.roleRepository = ctx.roleRepository;
         this.rolePermissionRepository = ctx.rolePermissionRepository;
         this.policyRepository = ctx.policyRepository;
+        this.permissionPolicyRepository = ctx.permissionPolicyRepository;
         this.validator = new PermissionValidator();
     }
 
@@ -204,6 +209,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         entity = this.repository.create(validated);
         entity = await this.repository.save(entity);
 
+        await this.assignDefaultPolicy(entity);
         await this.assignToAdminRole(entity);
         await this.assignToRealmAdminRoles(entity);
 
@@ -237,6 +243,26 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         entity.id = entityId;
 
         return entity;
+    }
+
+    /**
+     * Assign the system.default policy to a newly created permission.
+     * This ensures all permissions are evaluated with the baseline security
+     * policy (identity, permission-binding, realm-match) by default.
+     */
+    private async assignDefaultPolicy(permission: Permission): Promise<void> {
+        const defaultPolicy = await this.policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+        if (!defaultPolicy) {
+            return;
+        }
+
+        const entry = this.permissionPolicyRepository.create({
+            permission_id: permission.id,
+            permission_realm_id: permission.realm_id,
+            policy_id: defaultPolicy.id,
+            policy_realm_id: defaultPolicy.realm_id,
+        });
+        await this.permissionPolicyRepository.save(entry);
     }
 
     /**

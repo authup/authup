@@ -16,6 +16,7 @@ import { PermissionService } from '../../../../../src/core/entities/permission/s
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
 import type { IRoleRepository } from '../../../../../src/core/entities/role/types.ts';
 import type { IRolePermissionRepository } from '../../../../../src/core/entities/role-permission/types.ts';
+import type { IPermissionPolicyRepository } from '../../../../../src/core/entities/permission-policy/types.ts';
 import type { IPolicyRepository } from '../../../../../src/core/entities/policy/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
@@ -39,6 +40,7 @@ describe('core/entities/permission/service', () => {
     let roleRepository: FakeEntityRepository<any> & IRoleRepository;
     let rolePermissionRepository: FakeEntityRepository<any> & IRolePermissionRepository;
     let policyRepository: FakeEntityRepository<any> & IPolicyRepository;
+    let permissionPolicyRepository: FakeEntityRepository<any> & IPermissionPolicyRepository;
     let service: PermissionService;
 
     beforeEach(() => {
@@ -49,12 +51,14 @@ describe('core/entities/permission/service', () => {
         rolePermissionRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IRolePermissionRepository;
         policyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPolicyRepository;
         policyRepository.checkUniqueness = async () => {};
+        permissionPolicyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPermissionPolicyRepository;
         service = new PermissionService({
             repository,
             realmRepository,
             roleRepository,
             rolePermissionRepository,
             policyRepository,
+            permissionPolicyRepository,
         });
     });
 
