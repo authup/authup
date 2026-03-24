@@ -47,7 +47,7 @@ export default defineComponent({
                 toast.show({ variant: 'success', body: 'The policy was successfully updated.' });
             }
 
-            extendObject(entity, e);
+            extendObject(entity.value, e);
         };
 
         const handleFailed = (e: Error) => {

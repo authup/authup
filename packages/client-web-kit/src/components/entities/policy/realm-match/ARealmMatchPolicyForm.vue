@@ -28,7 +28,7 @@ export default defineComponent({
             attribute_name_strict: false,
             attribute_null_match_all: false,
             identity_master_match_all: false,
-            attribute_name: [],
+            attribute_name: [] as string[],
         });
 
         const vuelidate = useVuelidate({

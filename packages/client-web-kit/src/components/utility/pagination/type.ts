@@ -9,6 +9,6 @@ export type PaginationLoadFn = (data?: any) => Promise<void> | void;
 export type PaginationOptions = {
     busy: boolean,
     meta?: Record<string, any>,
-    load: PaginationLoadFn,
+    load?: PaginationLoadFn,
     total?: number
 };

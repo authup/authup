@@ -52,7 +52,7 @@ export default defineComponent({
                 toast.show({ variant: 'success', body: 'The scope was successfully updated.' });
             }
 
-            extendObject(entity, e);
+            extendObject(entity.value, e);
         };
 
         const handleFailed = (e: Error) => {

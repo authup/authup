@@ -187,8 +187,8 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                     });
                 } else {
                     headerNode = h(AIdentityProviderProtocol, {
-                        key: protocol.value,
-                        id: protocol.value,
+                        key: protocol.value!,
+                        id: protocol.value!,
                     }, {
                         default: (element: IdentityProviderProtocolElement) => h('div', [
                             h('h4', { class: 'mb-3' }, [

@@ -39,7 +39,7 @@ export default defineComponent({
                 deserializeOAuth2Scope(props.scopesRequested);
         });
 
-        const scopesAvailableNormalized = ref([]);
+        const scopesAvailableNormalized = ref<Scope[]>([]);
 
         const resolveScopesAvailable = async () => {
             if (props.scopesAvailable) {

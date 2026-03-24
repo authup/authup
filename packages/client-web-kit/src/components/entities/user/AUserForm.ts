@@ -37,11 +37,11 @@ import { ARealms } from '../realm';
 export const AUserForm = defineComponent({
     props: {
         entity: {
-            type: Object as PropType<User>,
+            type: Object as PropType<User | null>,
             default: undefined,
         },
         realmId: {
-            type: String,
+            type: String as PropType<string | null>,
             default: undefined,
         },
         canManage: {
@@ -119,7 +119,7 @@ export const AUserForm = defineComponent({
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
-                manager.data.value = props.entity;
+                manager.data.value = props.entity ?? undefined;
                 initForm();
             }
         });

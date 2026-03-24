@@ -19,7 +19,7 @@ export class IdentityProviderAttributesValidator extends Container<ObjectLiteral
         });
     }
 
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         this.mount(new IdentityProviderLDAPAttributesValidator());

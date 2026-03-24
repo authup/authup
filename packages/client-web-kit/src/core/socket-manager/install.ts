@@ -24,7 +24,7 @@ export function installSocketManager(app: App, options : SocketManagerInstallOpt
 
     const manager = new ClientManager({
         url: options.baseURL,
-        token: () => accessToken.value,
+        token: () => accessToken.value ?? undefined,
     });
 
     const oldValue = ref<string | undefined>();
@@ -34,7 +34,7 @@ export function installSocketManager(app: App, options : SocketManagerInstallOpt
         state,
     ) => {
         if (state.accessToken !== oldValue.value) {
-            oldValue.value = state.accessToken;
+            oldValue.value = state.accessToken ?? undefined;
 
             Promise.resolve()
                 .then(() => manager.reconnect());

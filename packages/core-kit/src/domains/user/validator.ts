@@ -13,7 +13,7 @@ import type { User } from './entity';
 import { isUserNameValid } from './utils';
 
 export class UserValidator extends Container<User> {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         const nameValidator = createValidator(

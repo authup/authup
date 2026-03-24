@@ -15,7 +15,7 @@ import { isRoleNameValid } from './utils.ts';
 export class RoleValidator extends Container<
     Role
 > {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         const nameValidator = createValidator(

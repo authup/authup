@@ -6,35 +6,36 @@
  */
 
 import { isObject } from '@authup/kit';
-import type { OrchestratedToast } from 'bootstrap-vue-next';
-import { useToastController } from 'bootstrap-vue-next';
+import type { ToastOrchestratorParam } from 'bootstrap-vue-next';
+import { useToast as useBaseToast } from 'bootstrap-vue-next';
 
 export function useToast() {
-    const toast = useToastController();
+    const toast = useBaseToast();
 
     return {
         hide(el: symbol) {
-            if (typeof toast.remove !== 'undefined') {
-                toast.remove(el);
+            const item = toast.store.value.find((i) => i._self === el);
+            if (item) {
+                item.promise.resolve(new Event('hide') as any);
             }
         },
         show(
-            el: string | OrchestratedToast,
-            options: OrchestratedToast = {},
+            el: string | ToastOrchestratorParam,
+            options: ToastOrchestratorParam = {},
         ) {
             if (typeof toast.show === 'undefined') {
                 return Symbol('');
             }
 
             if (isObject(el)) {
-                el.pos = el.pos || 'top-center';
+                el.position = el.position || 'top-center';
                 return toast.show({
                     props: el,
                 });
             }
 
             if (options) {
-                options.pos = options.pos || 'top-center';
+                options.position = options.position || 'top-center';
             }
 
             return toast.show({

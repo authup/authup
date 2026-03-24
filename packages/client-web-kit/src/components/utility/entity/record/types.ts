@@ -48,7 +48,7 @@ export type EntityManager<T> = {
 };
 
 export type EntityVProps<T> = {
-    entity?: T,
+    entity?: T | null,
     entityId?: EntityID<T>,
     queryFilters?: T extends Record<string, any> ? FiltersBuildInput<T> : never,
     queryFields?: T extends Record<string, any> ? FieldsBuildInput<T> : never

@@ -8,6 +8,7 @@ import {
     AClients, AEntityDelete, APagination, ASearch, ATitle, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
 import type { BuildInput } from 'rapiq';
+import type { Component } from 'vue';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -15,12 +16,12 @@ export default defineComponent({
         APagination,
         ASearch,
         ATitle,
-        BTable,
+        BTable: BTable as Component,
         AEntityDelete,
         AClients,
     },
     emits: ['deleted'],
-    setup(props, { emit }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: Client) => {
             emit('deleted', e);
         };
@@ -30,7 +31,7 @@ export default defineComponent({
 
         const query : BuildInput<Client> = {
             filters: {
-                realm_id: [realmManagementId.value, null],
+                realm_id: [realmManagementId.value ?? null, null],
             },
         };
 
@@ -93,7 +94,7 @@ export default defineComponent({
                 :items="props.data"
                 :fields="fields"
                 :busy="props.busy"
-                head-variant="'dark'"
+                head-variant="dark"
                 outlined
             >
                 <template #cell(active)="data">

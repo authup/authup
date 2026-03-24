@@ -12,7 +12,7 @@ export function buildPagination(
     ctx: PaginationOptions,
 ) {
     return _buildPagination({
-        load: (pagination) => ctx.load({
+        load: (pagination) => ctx.load?.({
             ...ctx.meta,
             pagination: {
                 limit: pagination.limit,

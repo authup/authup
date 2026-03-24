@@ -31,7 +31,7 @@ export default defineComponent({
         });
 
         function assign(data: Partial<AttributeNamesPolicy> = {}) {
-            form.names = data.names;
+            form.names = data.names || [];
         }
 
         setup.expose({

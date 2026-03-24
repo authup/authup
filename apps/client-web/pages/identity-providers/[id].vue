@@ -49,7 +49,7 @@ export default defineComponent({
         const handleUpdated = (e: IdentityProvider) => {
             toast.show({ variant: 'success', body: 'The identity-provider was successfully updated.' });
 
-            extendObject(entity, e);
+            extendObject(entity.value, e);
         };
 
         const handleFailed = (e: Error) => {

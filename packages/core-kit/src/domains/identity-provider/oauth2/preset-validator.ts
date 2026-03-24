@@ -12,7 +12,7 @@ import { getIdentityProviderProtocolForPreset } from '../preset';
 import type { OAuth2IdentityProvider } from './types';
 
 export class IdentityProviderOAuth2PresetAttributesValidator extends Container<OAuth2IdentityProvider> {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         this.mount(
