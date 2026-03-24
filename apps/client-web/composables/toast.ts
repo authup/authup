@@ -13,18 +13,12 @@ export function useToast() {
     const toast = useBaseToast();
 
     return {
-        hide(el: symbol) {
-            const item = toast.store.value.find((i) => i._self === el);
-            if (item) {
-                item.promise.resolve(new Event('hide') as any);
-            }
-        },
         show(
             el: string | ToastOrchestratorParam,
             options: ToastOrchestratorParam = {},
         ) {
             if (typeof toast.show === 'undefined') {
-                return Symbol('');
+                return undefined;
             }
 
             if (isObject(el)) {
