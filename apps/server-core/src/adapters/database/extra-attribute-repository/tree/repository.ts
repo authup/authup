@@ -227,11 +227,12 @@ export class EATreeRepository<
 
         // 1. Get All ancestors of current entity
         const ancestors = await manager.query<Record<string, any>[]>(
-            `Select *
+            `SELECT *
                  FROM ${tableName}
                  WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                       ${descendantColumn.databasePath} = '${primaryKeyValue}' AND
-                       ${ancestorColumn.databasePath} != '${primaryKeyValue}';`,
+                       ${descendantColumn.databasePath} = ? AND
+                       ${ancestorColumn.databasePath} != ?`,
+            [primaryKeyValue, primaryKeyValue],
         );
 
         if (!this.metadata.treeParentRelation) {
@@ -258,11 +259,12 @@ export class EATreeRepository<
 
         // 2. Get All descendants of current entity.
         const descendants = await manager.query<Record<string, any>[]>(
-            `Select *
+            `SELECT *
                      FROM ${tableName}
                      WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                           ${ancestorColumn.databasePath} = '${primaryKeyValue}' AND
-                           ${descendantColumn.databasePath} != '${primaryKeyValue}';`,
+                           ${ancestorColumn.databasePath} = ? AND
+                           ${descendantColumn.databasePath} != ?`,
+            [primaryKeyValue, primaryKeyValue],
         );
 
         if (parentId) {
@@ -271,14 +273,16 @@ export class EATreeRepository<
                 .map((descendant) => descendant[descendantColumn.databasePath]);
 
             if (descendantIds.length > 0) {
-                // 4. get all ancestors of each descendant :)
+                // 4. get all ancestors of each descendant
+                const placeholders = descendantIds.map(() => '?').join(',');
                 const ancestorsOfDescendants = await manager.query<Record<string, any>[]>(
-                    `Select *
+                    `SELECT *
                          FROM ${tableName}
                          WHERE
-                             ${ancestorColumn.databasePath} != '${primaryKeyValue}' AND
+                             ${ancestorColumn.databasePath} != ? AND
                              ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                             ${descendantColumn.databasePath} IN (${descendantIds.map((descendantId) => `'${descendantId}'`).join(',')});`,
+                             ${descendantColumn.databasePath} IN (${placeholders})`,
+                    [primaryKeyValue, ...descendantIds],
                 );
 
                 const acc = ancestorsOfDescendants.reduce((acc, curr) => {
@@ -297,10 +301,12 @@ export class EATreeRepository<
                     for (const ancestorId of ancestorIds) {
                         const index = ancestorsOfDescendent.indexOf(ancestorId);
                         if (index === -1) {
-                            await manager.query(`INSERT INTO
-                                                    ${tableName}
-                                                 (${ancestorColumn.databasePath}, ${descendantColumn.databasePath}) VALUES
-                                                   ('${ancestorId}','${descendant}');`);
+                            await manager.query(
+                                `INSERT INTO ${tableName}
+                                    (${ancestorColumn.databasePath}, ${descendantColumn.databasePath})
+                                    VALUES (?, ?)`,
+                                [ancestorId, descendant],
+                            );
                         }
                     }
                 }
@@ -313,10 +319,12 @@ export class EATreeRepository<
 
             for (const ancestorId of ancestorIds) {
                 for (const descendantId of descendantIds) {
-                    await manager.query(`DELETE
-                                             FROM ${tableName}
-                                             WHERE ${ancestorColumn.databasePath} = '${ancestorId}'
-                                               AND ${descendantColumn.databasePath} = '${descendantId}';`);
+                    await manager.query(
+                        `DELETE FROM ${tableName}
+                            WHERE ${ancestorColumn.databasePath} = ?
+                              AND ${descendantColumn.databasePath} = ?`,
+                        [ancestorId, descendantId],
+                    );
                 }
             }
         }

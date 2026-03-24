@@ -148,8 +148,6 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             throw new BadRequestError('The parent policy must be of type group.');
         }
 
-        await this.repository.checkUniqueness(validated, entity || undefined);
-
         if (entity) {
             if (entity.built_in) {
                 throw new BadRequestError('A built-in policy can not be updated.');
@@ -164,6 +162,8 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                     },
                 }),
             });
+
+            await this.repository.checkUniqueness(validated, entity);
 
             extendObject(entity, validated);
 
@@ -182,6 +182,8 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
                 [BuiltInPolicyType.ATTRIBUTES]: validated,
             }),
         });
+
+        await this.repository.checkUniqueness(validated);
 
         await this.repository.saveWithEA(validated as Policy);
 
