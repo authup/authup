@@ -7,19 +7,20 @@ import {
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import { defineNuxtComponent } from '#app';
+import type { Component } from 'vue';
+import { defineComponent } from 'vue';
 
-export default defineNuxtComponent({
+export default defineComponent({
     components: {
         ATitle,
         APagination,
         ASearch,
-        BTable,
+        BTable: BTable as Component,
         ARobots,
         AEntityDelete,
     },
     emits: ['deleted'],
-    setup(props, { emit }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: Robot) => {
             emit('deleted', e);
         };
@@ -29,7 +30,7 @@ export default defineNuxtComponent({
 
         const query : BuildInput<Robot> = {
             filter: {
-                realm_id: [realmManagementId.value, null],
+                realm_id: [realmManagementId.value ?? null, null],
             },
         };
 
@@ -83,7 +84,7 @@ export default defineNuxtComponent({
                 :items="props.data"
                 :fields="fields"
                 :busy="props.busy"
-                head-variant="'dark'"
+                head-variant="dark"
                 outlined
             >
                 <template #cell(created_at)="data">

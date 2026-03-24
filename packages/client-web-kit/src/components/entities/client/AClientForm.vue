@@ -383,7 +383,7 @@ export default defineComponent({
                                     :value="vuelidate.realm_id.$model"
                                     @change="(input: string[]) => {
 
-                                        vuelidate.realm_id.$model = input.length > 0 ? input[0] : '';
+                                        vuelidate.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
                                     }"
                                 />
                             </template>

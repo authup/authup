@@ -2,10 +2,10 @@
 import { storeToRefs } from 'pinia';
 import { AUserPasswordForm, injectStore } from '@authup/client-web-kit';
 import { definePageMeta, useToast } from '#imports';
-import { defineNuxtComponent } from '#app';
+import { defineComponent } from 'vue';
 import { LayoutKey } from '~/config/layout';
 
-export default defineNuxtComponent({
+export default defineComponent({
     components: {
         AUserPasswordForm,
     },

@@ -50,9 +50,12 @@ export function buildEntityCollectionUpdatedHandler<T>(
         const index = items.value.findIndex((el: T) => (el as Record<string, any>).id === (item as Record<string, any>).id);
 
         if (index !== -1) {
-            const keys = Object.keys(item) as (keyof T)[];
-            for (const key of keys) {
-                items.value[index][key] = item[key];
+            const el = items.value[index];
+            if (el) {
+                const keys = Object.keys(item) as (keyof T)[];
+                for (const key of keys) {
+                    el[key] = item[key];
+                }
             }
 
             if (cb) {
@@ -73,8 +76,9 @@ export function buildEntityCollectionDeletedHandler<T>(
 
         const index = items.value.findIndex((el: T) => (el as Record<string, any>).id === (item as Record<string, any>).id);
         if (index !== -1) {
-            if (cb) {
-                cb(items.value[index]);
+            const el = items.value[index];
+            if (cb && el) {
+                cb(el);
             }
 
             return items.value.splice(index, 1).pop();

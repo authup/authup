@@ -6,40 +6,31 @@
  */
 
 import { isObject } from '@authup/kit';
-import type { OrchestratedToast } from 'bootstrap-vue-next';
-import { useToastController } from 'bootstrap-vue-next';
+import type { ToastOrchestratorParam } from 'bootstrap-vue-next';
+import { useToast as useBaseToast } from 'bootstrap-vue-next';
 
 export function useToast() {
-    const toast = useToastController();
+    const toast = useBaseToast();
 
     return {
-        hide(el: symbol) {
-            if (typeof toast.remove !== 'undefined') {
-                toast.remove(el);
-            }
-        },
         show(
-            el: string | OrchestratedToast,
-            options: OrchestratedToast = {},
+            el: string | ToastOrchestratorParam,
+            options: ToastOrchestratorParam = {},
         ) {
             if (typeof toast.show === 'undefined') {
-                return Symbol('');
+                return undefined;
             }
 
             if (isObject(el)) {
-                el.pos = el.pos || 'top-center';
                 return toast.show({
-                    props: el,
+                    props: { position: 'top-center', ...el },
                 });
-            }
-
-            if (options) {
-                options.pos = options.pos || 'top-center';
             }
 
             return toast.show({
                 props: {
-                    ...(options || {}),
+                    position: 'top-center',
+                    ...options,
                     body: el,
                 },
             });

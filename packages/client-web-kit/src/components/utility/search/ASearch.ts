@@ -28,7 +28,7 @@ export const ASearch = defineComponent({
             type: Boolean,
         },
         load: {
-            type: Function as PropType<ListLoadFn<ListMeta<any>>>,
+            type: Function as PropType<ListLoadFn>,
         },
         meta: {
             type: Object as PropType<ListMeta<any>>,

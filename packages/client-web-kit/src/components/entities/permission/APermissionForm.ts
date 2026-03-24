@@ -206,7 +206,7 @@ export const APermissionForm = defineComponent({
                         value: $v.value.realm_id.$model,
                         multiple: false,
                         onChange(input: string[]) {
-                            $v.value.realm_id.$model = input.length > 0 ? input[0] : '';
+                            $v.value.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
                             $v.value.policy_id.$model = '';
 
                             nextTick(() => {
@@ -228,7 +228,7 @@ export const APermissionForm = defineComponent({
                     ref: policyPickerVNode,
                     value: $v.value.policy_id.$model,
                     onChange: (input: string[]) => {
-                        $v.value.policy_id.$model = input.length > 0 ? input[0] : '';
+                        $v.value.policy_id.$model = input.length > 0 ? input[0] ?? '' : '';
                     },
                     query: {
                         filters: {

@@ -15,7 +15,7 @@ import { isRealmNameValid } from './helpers.ts';
 export class RealmValidator extends Container<
     Realm
 > {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         const nameValidator = createValidator(

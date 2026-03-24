@@ -15,7 +15,7 @@ import { isPolicyNameValid } from './helpers.ts';
 export class PolicyValidator extends Container<
     Policy
 > {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         const nameValidator = createValidator(

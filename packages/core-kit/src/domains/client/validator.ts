@@ -13,7 +13,7 @@ import type { Client } from './entity';
 import { isClientNameValid } from './helpers';
 
 export class ClientValidator extends Container<Client> {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         // ----------------------------------------------

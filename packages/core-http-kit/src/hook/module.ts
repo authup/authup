@@ -71,7 +71,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         this.authorizationHeader = value;
 
         for (let i = 0; i < this.clients.length; i++) {
-            this.clients[i].setAuthorizationHeader(value);
+            this.clients[i]!.setAuthorizationHeader(value);
         }
 
         this.emit(ClientAuthenticationHookEventName.HEADER_SET);
@@ -81,7 +81,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         this.authorizationHeader = undefined;
 
         for (let i = 0; i < this.clients.length; i++) {
-            this.clients[i].unsetAuthorizationHeader();
+            this.clients[i]!.unsetAuthorizationHeader();
         }
 
         this.emit(ClientAuthenticationHookEventName.HEADER_UNSET);

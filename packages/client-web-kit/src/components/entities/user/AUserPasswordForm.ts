@@ -9,6 +9,7 @@ import useVuelidate from '@vuelidate/core';
 import {
     maxLength, minLength, required, sameAs,
 } from '@vuelidate/validators';
+import type { PropType } from 'vue';
 import {
     defineComponent, h, reactive, ref, toRef,
 } from 'vue';
@@ -26,8 +27,8 @@ import {
 export const AUserPasswordForm = defineComponent({
     props: {
         id: {
-            type: String,
-            required: true,
+            type: String as PropType<string | null>,
+            default: undefined,
         },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
@@ -56,6 +57,10 @@ export const AUserPasswordForm = defineComponent({
         }, form);
 
         const submit = wrapFnWithBusyState(busy, async () => {
+            if (!props.id) {
+                return;
+            }
+
             try {
                 const user = await apiClient.user.update(props.id, {
                     password: form.password,

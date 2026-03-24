@@ -13,7 +13,7 @@
         "directory": "packages/client-web"
     },
     "scripts": {
-        "build": "nuxt prepare && nuxt build && node postbuild.mjs",
+        "build": "nuxt prepare && nuxi typecheck && nuxt build && node postbuild.mjs",
         "dev": "nuxi dev",
         "generate": "nuxi generate",
         "preview": "nuxi preview",

@@ -10,19 +10,20 @@ import type { Policy } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
+import type { Component } from 'vue';
 
 export default defineComponent({
     components: {
         ATitle,
         APagination,
         ASearch,
-        BTable,
+        BTable: BTable as Component,
         AEntityDelete,
         APolicies,
         VCTimeago,
     },
     emits: ['deleted'],
-    setup(props, { emit }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: Policy) => {
             emit('deleted', e);
         };
@@ -32,7 +33,7 @@ export default defineComponent({
 
         const query : BuildInput<Policy> = {
             filters: {
-                realm_id: [realmManagementId.value, null],
+                realm_id: [realmManagementId.value ?? null, null],
             },
         };
 

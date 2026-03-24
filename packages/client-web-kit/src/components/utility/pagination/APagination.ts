@@ -23,7 +23,6 @@ export const APagination = defineComponent({
         },
         load: {
             type: Function as PropType<PaginationLoadFn>,
-            required: true,
         },
     },
     setup(props) {

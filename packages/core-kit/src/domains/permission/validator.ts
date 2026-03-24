@@ -16,7 +16,7 @@ import { isPermissionNameValid } from './helpers.ts';
 export class PermissionValidator extends Container<
     Permission
 > {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         const nameValidator = createValidator(

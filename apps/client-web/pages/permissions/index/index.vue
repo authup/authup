@@ -8,20 +8,21 @@ import type { Permission } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import { defineNuxtComponent } from '#app';
+import type { Component } from 'vue';
+import { defineComponent } from 'vue';
 
-export default defineNuxtComponent({
+export default defineComponent({
     components: {
         ATitle,
         APagination,
         ASearch,
-        BTable,
+        BTable: BTable as Component,
         AEntityDelete,
         APermissions,
         VCTimeago,
     },
     emits: ['deleted'],
-    setup(props, { emit }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: Permission) => {
             emit('deleted', e);
         };
@@ -31,7 +32,7 @@ export default defineNuxtComponent({
 
         const query : BuildInput<Permission> = {
             filters: {
-                realm_id: [realmManagementId.value, null],
+                realm_id: [realmManagementId.value ?? null, null],
             },
         };
 

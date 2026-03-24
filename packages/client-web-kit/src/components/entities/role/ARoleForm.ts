@@ -190,7 +190,7 @@ export const ARoleForm = defineComponent({
                         content: h(ARealmPicker, {
                             value: $v.value.realm_id.$model,
                             onChange: (input: string[]) => {
-                                $v.value.realm_id.$model = input.length > 0 ? input[0] : '';
+                                $v.value.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
                             },
                         }),
                     }),

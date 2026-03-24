@@ -15,7 +15,7 @@ import { IdentityProviderPreset } from './preset';
 import { isIdentityProviderNameValid } from './utils';
 
 export class IdentityProviderValidator extends Container<IdentityProvider> {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         const nameValidator = createValidator(

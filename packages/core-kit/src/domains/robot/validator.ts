@@ -15,7 +15,7 @@ import { isRobotNameValid } from './helpers.ts';
 export class RobotValidator extends Container<
     Robot
 > {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         this.mount(

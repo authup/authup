@@ -15,7 +15,7 @@ import { isScopeNameValid } from './utils.ts';
 export class ScopeValidator extends Container<
     Scope
 > {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         const nameValidator = createValidator(

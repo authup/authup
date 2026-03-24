@@ -52,8 +52,8 @@ export const AIdentityProviderForm = defineComponent({
         const renderPicker = () : VNodeChild => h(
             AIdentityProviderPicker,
             {
-                protocol: protocol.value,
-                preset: preset.value,
+                protocol: protocol.value ?? undefined,
+                preset: preset.value ?? undefined,
                 onPick(type: 'protocol' | 'preset', value: string) {
                     if (type === 'preset') {
                         preset.value = value;

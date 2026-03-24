@@ -295,7 +295,7 @@ function create<
 
         let query : BuildInput<RECORD> | undefined;
         if (rctx.query) {
-            query = rctx.query;
+            query = rctx.query as BuildInput<RECORD>;
         }
 
         let { id } = rctx;
@@ -319,12 +319,12 @@ function create<
 
             if (ctx.props.queryFilters) {
                 query = query || {} as BuildInput<RECORD>;
-                query.filters = ctx.props.queryFilters;
+                (query as any).filters = ctx.props.queryFilters;
             }
 
             if (ctx.props.queryFields) {
                 query = query || {} as BuildInput<RECORD>;
-                query.fields = ctx.props.queryFields;
+                (query as any).fields = ctx.props.queryFields;
             }
 
             if (ctx.props.entityId) {

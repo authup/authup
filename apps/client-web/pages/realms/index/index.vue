@@ -7,20 +7,21 @@ import {
     AEntityDelete, APagination, ARealms, ASearch, ATitle, injectStore, usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
-import { defineNuxtComponent } from '#imports';
+import type { Component } from 'vue';
+import { defineComponent } from 'vue';
 
-export default defineNuxtComponent({
+export default defineComponent({
     components: {
         ATitle,
         APagination,
         ASearch,
-        BTable,
+        BTable: BTable as Component,
         AEntityDelete,
         ARealms,
         VCTimeago,
     },
     emits: ['deleted'],
-    setup(props, { emit }) {
+    setup(_props, { emit }) {
         const store = injectStore();
         const {
             realmManagementId,
@@ -80,7 +81,7 @@ export default defineNuxtComponent({
                 :items="props.data"
                 :fields="fields"
                 :busy="props.busy"
-                head-variant="'dark'"
+                head-variant="dark"
                 outlined
             >
                 <template #cell(created_at)="data">

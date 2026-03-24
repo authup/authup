@@ -78,7 +78,7 @@ export default defineComponent({
 
         const handleUpdated = (id: number, value: string) => {
             const index = items.value.findIndex((el) => el.id === id);
-            if (index > -1) {
+            if (index > -1 && items.value[index]) {
                 items.value[index].value = value;
             }
 

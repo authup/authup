@@ -199,7 +199,7 @@ export default defineComponent({
                         </template>
                         <ARealmPicker
                             :value="vuelidate.realm_id.$model"
-                            @change="(value) => { vuelidate.realm_id.$model = value.length > 0 ? value[0] : ''; }"
+                            @change="(value: string[]) => { vuelidate.realm_id.$model = value.length > 0 ? value[0] ?? '' : ''; }"
                         />
                     </VCFormGroup>
                 </template>

@@ -12,7 +12,7 @@ import { IdentityProviderProtocol } from '../constants';
 import type { LdapIdentityProvider } from './types';
 
 export class IdentityProviderLDAPAttributesValidator extends Container<LdapIdentityProvider> {
-    protected initialize() {
+    protected override initialize() {
         super.initialize();
 
         this.mount(

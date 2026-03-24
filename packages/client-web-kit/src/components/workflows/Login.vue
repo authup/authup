@@ -100,7 +100,7 @@ export default defineComponent({
         };
 
         const updateRealmId = (realmId: string | string[]) => {
-            form.realm_id = Array.isArray(realmId) ? realmId[0] : realmId;
+            form.realm_id = Array.isArray(realmId) ? realmId[0] ?? '' : realmId;
 
             resetIdentityProviderQuery();
 
@@ -230,7 +230,7 @@ export default defineComponent({
                     <APagination
                         :busy="props.busy"
                         :meta="props.meta"
-                        :load="props.load"
+                        :load="(data?: any) => props.load?.(data)"
                         :total="props.total"
                     />
                 </template>
