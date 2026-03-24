@@ -61,8 +61,8 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
         return this.findOneBy({ id });
     }
 
-    async findOneByName(name: string): Promise<RobotRole | null> {
-        return this.findOneBy({ name });
+    async findOneByName(_name: string): Promise<RobotRole | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<RobotRole | null> {

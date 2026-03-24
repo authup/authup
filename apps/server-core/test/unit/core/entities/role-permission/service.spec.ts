@@ -33,7 +33,7 @@ describe('core/entities/role-permission/service', () => {
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
-            repository.seed([{} as RolePermission]);
+            repository.seed([{}]);
             const result = await service.getMany({}, createAllowAllActor());
             expect(result.data).toHaveLength(1);
         });
@@ -56,7 +56,7 @@ describe('core/entities/role-permission/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const entity = repository.seed({} as RolePermission);
+            const entity = repository.seed({});
             const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
         });
@@ -125,7 +125,7 @@ describe('core/entities/role-permission/service', () => {
 
     describe('delete', () => {
         it('should delete an existing entity', async () => {
-            const entity = repository.seed({} as RolePermission);
+            const entity = repository.seed({});
 
             const result = await service.delete(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
@@ -136,7 +136,7 @@ describe('core/entities/role-permission/service', () => {
         });
 
         it('should call preCheck with ROLE_PERMISSION_DELETE', async () => {
-            const entity = repository.seed({} as RolePermission);
+            const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({

@@ -55,8 +55,8 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
         return this.findOneBy({ id });
     }
 
-    findOneByName(name: string): Promise<ClientScope | null> {
-        return this.findOneBy({ name });
+    findOneByName(_name: string): Promise<ClientScope | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<ClientScope | null> {

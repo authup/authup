@@ -67,8 +67,8 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
         return this.findOneBy({ id });
     }
 
-    async findOneByName(name: string): Promise<UserPermission | null> {
-        return this.findOneBy({ name });
+    async findOneByName(_name: string): Promise<UserPermission | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<UserPermission | null> {

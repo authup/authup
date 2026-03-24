@@ -64,8 +64,8 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
         return this.findOneBy({ id });
     }
 
-    async findOneByName(name: string): Promise<RolePermission | null> {
-        return this.findOneBy({ name });
+    async findOneByName(_name: string): Promise<RolePermission | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<RolePermission | null> {

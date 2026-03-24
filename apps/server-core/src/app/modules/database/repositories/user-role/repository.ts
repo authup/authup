@@ -61,8 +61,8 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
         return this.findOneBy({ id });
     }
 
-    async findOneByName(name: string): Promise<UserRole | null> {
-        return this.findOneBy({ name });
+    async findOneByName(_name: string): Promise<UserRole | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<UserRole | null> {

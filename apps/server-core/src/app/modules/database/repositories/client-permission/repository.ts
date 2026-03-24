@@ -65,8 +65,8 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
         return this.findOneBy({ id });
     }
 
-    findOneByName(name: string): Promise<ClientPermission | null> {
-        return this.findOneBy({ name });
+    findOneByName(_name: string): Promise<ClientPermission | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<ClientPermission | null> {

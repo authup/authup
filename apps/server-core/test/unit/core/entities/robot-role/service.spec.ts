@@ -48,7 +48,7 @@ describe('core/entities/robot-role/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const entity = repository.seed({} as RobotRole);
+            const entity = repository.seed({});
             const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
         });
@@ -90,13 +90,13 @@ describe('core/entities/robot-role/service', () => {
 
     describe('delete', () => {
         it('should delete an existing entity', async () => {
-            const entity = repository.seed({} as RobotRole);
+            const entity = repository.seed({});
             const result = await service.delete(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
         });
 
         it('should call preCheck with ROBOT_ROLE_DELETE', async () => {
-            const entity = repository.seed({} as RobotRole);
+            const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({

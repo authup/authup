@@ -107,7 +107,7 @@ describe('core/entities/client/service', () => {
             const realmId = randomUUID();
             realmRepository.seed([{
                 id: realmId, name: 'client-realm', built_in: false,
-            } as any]);
+            }]);
             repository.seed([createFakeClient({ name: 'scoped-client', realm_id: realmId })]);
 
             const result = await service.getOne('scoped-client', createAllowAllActor(), realmId);

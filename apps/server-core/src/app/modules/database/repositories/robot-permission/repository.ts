@@ -65,8 +65,8 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
         return this.findOneBy({ id });
     }
 
-    findOneByName(name: string): Promise<RobotPermission | null> {
-        return this.findOneBy({ name });
+    findOneByName(_name: string): Promise<RobotPermission | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<RobotPermission | null> {

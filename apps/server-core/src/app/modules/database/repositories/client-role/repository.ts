@@ -62,8 +62,8 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
         return this.findOneBy({ id });
     }
 
-    findOneByName(name: string): Promise<ClientRole | null> {
-        return this.findOneBy({ name });
+    findOneByName(_name: string): Promise<ClientRole | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<ClientRole | null> {
