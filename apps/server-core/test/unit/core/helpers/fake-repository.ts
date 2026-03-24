@@ -90,6 +90,10 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
         // no-op in fake
     }
 
+    getAll(): T[] {
+        return [...this.store];
+    }
+
     clear() {
         this.store = [];
     }

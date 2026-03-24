@@ -30,6 +30,8 @@ class FakePermissionRepository extends FakeEntityRepository<Permission> implemen
     }
 }
 
+const defaultPolicyId = randomUUID();
+
 describe('core/entities/permission/service', () => {
     let repository: FakePermissionRepository;
     let realmRepository: FakeRealmRepository;
@@ -46,7 +48,7 @@ describe('core/entities/permission/service', () => {
         rolePermissionRepository = new FakeEntityRepository<RolePermission>();
         policyRepository = new FakePolicyRepository();
         policyRepository.seed([{
-            id: 'default-policy-id',
+            id: defaultPolicyId,
             name: SystemPolicyName.DEFAULT,
             type: 'composite',
             built_in: true,
@@ -134,13 +136,15 @@ describe('core/entities/permission/service', () => {
             ).rejects.toThrow(ForbiddenError);
         });
 
-        it('should not assign policy_id when none provided', async () => {
-            const result = await service.create(
-                { name: 'no-policy-perm' },
+        it('should assign default policy via junction on create', async () => {
+            await service.create(
+                { name: 'new-perm' },
                 createAllowAllActor(),
             );
 
-            expect(result.policy_id).toBeUndefined();
+            const junctions = permissionPolicyRepository.getAll();
+            expect(junctions).toHaveLength(1);
+            expect(junctions[0].policy_id).toBe(defaultPolicyId);
         });
     });
 
