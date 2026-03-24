@@ -26,6 +26,7 @@ export class ProvisioningJunctionSynchronizer<T extends ObjectLiteral = ObjectLi
         targets: Array<{ id: string, realm_id?: string | null }>,
         targetKey: string,
         targetRealmKey: string,
+        extraAttributes?: Record<string, unknown>,
     ): Promise<void> {
         for (const target of targets) {
 
@@ -40,6 +41,7 @@ export class ProvisioningJunctionSynchronizer<T extends ObjectLiteral = ObjectLi
                     [this.ctx.ownerRealmKey]: owner.realm_id,
                     [targetKey]: target.id,
                     [targetRealmKey]: target.realm_id,
+                    ...(extraAttributes || {}),
                 } as Partial<T>);
 
                 await this.ctx.repository.save(entity);

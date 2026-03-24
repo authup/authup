@@ -7,19 +7,19 @@
 
 import type { Request } from 'routup';
 import { setRequestEnv, useRequestEnv } from 'routup';
-import type { RequestPermissionChecker } from './module.ts';
+import type { RequestPermissionEvaluator } from './module.ts';
 
-const sym = Symbol('RequestPermissionChecker');
+const sym = Symbol('RequestPermissionEvaluator');
 
-export function useRequestPermissionChecker(req: Request) : RequestPermissionChecker {
+export function useRequestPermissionEvaluator(req: Request) : RequestPermissionEvaluator {
     const instance = useRequestEnv(req, sym);
     if (!instance) {
-        throw new Error('The request permission checker instance is not initialised.');
+        throw new Error('The request permission evaluator is not initialised.');
     }
 
-    return instance as RequestPermissionChecker;
+    return instance as RequestPermissionEvaluator;
 }
 
-export function setRequestPermissionChecker(req: Request, checker: RequestPermissionChecker) {
-    setRequestEnv(req, sym, checker);
+export function setRequestPermissionEvaluator(req: Request, ctx: RequestPermissionEvaluator) {
+    setRequestEnv(req, sym, ctx);
 }

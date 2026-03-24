@@ -5,20 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '../types';
+import type { PermissionBinding } from '../types';
 
-export function isPermissionItemEqual(a: PermissionItem, b: PermissionItem): boolean {
-    if (a.name !== b.name) {
+export function isPermissionBindingEqual(a: PermissionBinding, b: PermissionBinding): boolean {
+    if (a.permission.name !== b.permission.name) {
         return false;
     }
 
-    if (typeof a.realmId === 'string' || typeof b.realmId === 'string') {
-        return a.realmId === b.realmId;
+    if ((a.permission.realm_id ?? null) !== (b.permission.realm_id ?? null)) {
+        return false;
     }
 
-    if (typeof a.clientId === 'string' || typeof b.clientId === 'string') {
-        return a.clientId === b.clientId;
+    if ((a.permission.client_id ?? null) !== (b.permission.client_id ?? null)) {
+        return false;
     }
 
-    return !!a.realmId === !!b.realmId && !!a.clientId === !!b.clientId;
+    return true;
 }

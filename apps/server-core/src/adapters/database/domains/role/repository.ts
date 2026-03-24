@@ -8,14 +8,15 @@
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import type {
-    Permission,
     Role,
 } from '@authup/core-kit';
+import type { PermissionBinding, PolicyWithType } from '@authup/access';
 import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';
 import { RoleAttributeEntity } from '../role-attribute/entity.ts';
 import { RoleEntity } from './entity.ts';
 import { RolePermissionEntity } from '../role-permission/index.ts';
+import { PolicyRepository } from '../policy/index.ts';
 
 export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity> {
     constructor(instance: DataSource | EntityManager) {
@@ -36,8 +37,8 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
     async getBoundPermissionsForMany(
         ids: (string | Role)[],
-    ) : Promise<Permission[]> {
-        const promises : Promise<Permission[]>[] = [];
+    ) : Promise<PermissionBinding[]> {
+        const promises : Promise<PermissionBinding[]>[] = [];
 
         for (const id of ids) {
             promises.push(this.getBoundPermissions(id));
@@ -68,7 +69,7 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
     async getBoundPermissions(
         entity: string | Role,
-    ) : Promise<Permission[]> {
+    ) : Promise<PermissionBinding[]> {
         let id : string;
         if (typeof entity === 'string') {
             id = entity;
@@ -82,9 +83,6 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
                 role_id: id,
             },
             relations: {
-                policy: {
-                    children: true,
-                },
                 permission: true,
             },
             cache: {
@@ -96,6 +94,43 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
             },
         });
 
-        return entities.map((entity) => entity.permission);
+        const policyIds = new Set<string>();
+        for (const entry of entities) {
+            if (entry.policy_id) {
+                policyIds.add(entry.policy_id);
+            }
+        }
+
+        const policyTrees = await this.loadPolicyTrees([...policyIds]);
+
+        return entities.map((entry) => {
+            const policies: PolicyWithType[] = [];
+            if (entry.policy_id && policyTrees[entry.policy_id]) {
+                policies.push(policyTrees[entry.policy_id]);
+            }
+
+            return {
+                permission: entry.permission,
+                policies: policies.length > 0 ? policies : undefined,
+            };
+        });
+    }
+
+    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, PolicyWithType>> {
+        if (policyIds.length === 0) {
+            return {};
+        }
+
+        const policyRepository = new PolicyRepository(this.manager);
+        const result: Record<string, PolicyWithType> = {};
+
+        for (const id of policyIds) {
+            const tree = await policyRepository.findDescendantsTreeById(id);
+            if (tree) {
+                result[id] = tree;
+            }
+        }
+
+        return result;
     }
 }

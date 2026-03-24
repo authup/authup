@@ -9,7 +9,7 @@ import { pickRecord } from '@authup/kit';
 import type {
     Permission, RolePermission,
 } from '@authup/core-kit';
-import type { IRoleRepository } from '../../../entities/index.ts';
+import type { IPolicyRepository, IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
@@ -20,6 +20,8 @@ import type { RoleProvisioningSynchronizerContext } from './types.ts';
 export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<RoleProvisioningEntity> {
     protected repository : IRoleRepository;
 
+    protected policyRepository?: IPolicyRepository;
+
     protected permissionResolver : ProvisioningEntityResolver<Permission>;
 
     protected permissionJunction: ProvisioningJunctionSynchronizer<RolePermission>;
@@ -28,6 +30,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         super();
 
         this.repository = ctx.repository;
+        this.policyRepository = ctx.policyRepository;
         this.permissionResolver = new ProvisioningEntityResolver(ctx.permissionRepository);
         this.permissionJunction = new ProvisioningJunctionSynchronizer({
             repository: ctx.rolePermissionRepository,
@@ -79,25 +82,86 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             };
         }
 
+        let globalPermissions = await this.permissionResolver.resolveGlobal(input.relations.globalPermissions);
+
+        if (input.relations.globalPermissionsExclude && input.relations.globalPermissionsExclude.length > 0) {
+            const excludeSet = new Set(input.relations.globalPermissionsExclude);
+            globalPermissions = globalPermissions.filter((p) => !excludeSet.has(p.name));
+        }
+
+        const realmPermissions = attributes.realm_id ?
+            await this.permissionResolver.resolveRealm(input.relations.realmPermissions, attributes.realm_id) :
+            [];
+
         const permissions = [
-            ...await this.permissionResolver.resolveGlobal(input.relations.globalPermissions),
-            ...(attributes.realm_id ?
-                await this.permissionResolver.resolveRealm(input.relations.realmPermissions, attributes.realm_id) :
-                []),
+            ...globalPermissions,
+            ...realmPermissions,
         ];
 
         if (permissions.length > 0) {
-            await this.permissionJunction.synchronize(
-                attributes,
-                permissions,
-                'permission_id',
-                'permission_realm_id',
-            );
+            const policyMap = await this.resolvePolicyMap(input, attributes.name);
+
+            if (policyMap) {
+                for (const permission of permissions) {
+                    const policyId = policyMap.overrides.get(permission.name) ?? policyMap.defaultPolicyId;
+                    await this.permissionJunction.synchronize(
+                        attributes,
+                        [permission],
+                        'permission_id',
+                        'permission_realm_id',
+                        policyId ? { policy_id: policyId } : undefined,
+                    );
+                }
+            } else {
+                await this.permissionJunction.synchronize(
+                    attributes,
+                    permissions,
+                    'permission_id',
+                    'permission_realm_id',
+                );
+            }
         }
 
         return {
             ...input,
             attributes,
+        };
+    }
+
+    private async resolvePolicyMap(
+        input: RoleProvisioningEntity,
+        roleName: string | undefined,
+    ): Promise<{ defaultPolicyId: string | undefined, overrides: Map<string, string> } | undefined> {
+        if (!input.relations?.globalPermissionsPolicyName || !this.policyRepository) {
+            return undefined;
+        }
+
+        const defaultPolicy = await this.policyRepository.findOneByName(input.relations.globalPermissionsPolicyName);
+        if (!defaultPolicy) {
+            throw new Error(
+                `Provisioning: policy '${input.relations.globalPermissionsPolicyName}' not found for role '${roleName}'.`,
+            );
+        }
+
+        const overrides = new Map<string, string>();
+
+        if (input.relations.globalPermissionsPolicyOverrides) {
+            for (const [policyName, permissionNames] of Object.entries(input.relations.globalPermissionsPolicyOverrides)) {
+                const policy = await this.policyRepository.findOneByName(policyName);
+                if (!policy) {
+                    throw new Error(
+                        `Provisioning: override policy '${policyName}' not found for role '${roleName}'.`,
+                    );
+                }
+                for (const permName of permissionNames) {
+                    overrides.set(permName, policy.id);
+                }
+            }
+        }
+
+        return {
+            defaultPolicyId: defaultPolicy.id,
+            overrides,
         };
     }
 }

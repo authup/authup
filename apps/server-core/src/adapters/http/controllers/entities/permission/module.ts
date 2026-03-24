@@ -6,10 +6,10 @@
  */
 
 import type { PermissionAPICheckResponse } from '@authup/core-http-kit';
-import type { PermissionCheckerCheckContext } from '@authup/access';
+import type { IPermissionProvider, PermissionEvaluationContext } from '@authup/access';
 import {
     BuiltInPolicyType,
-    PermissionChecker, PolicyData,
+    PermissionEvaluator, PolicyData,
 } from '@authup/access';
 import {
     DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
@@ -20,9 +20,8 @@ import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { DataSource } from 'typeorm';
-import type { IPermissionRepository, IPermissionService, IRealmRepository } from '../../../../../core/index.ts';
-import { PermissionDatabaseRepository, PolicyEngine } from '../../../../../security/index.ts';
+import type { IIdentityPermissionProvider, IPermissionRepository, IPermissionService, IRealmRepository } from '../../../../../core/index.ts';
+import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -33,7 +32,8 @@ export type PermissionControllerContext = {
     service: IPermissionService,
     repository: IPermissionRepository,
     realmRepository: IRealmRepository,
-    dataSource: DataSource,
+    identityPermissionProvider: IIdentityPermissionProvider,
+    permissionProvider: IPermissionProvider,
 };
 
 @DTags('permission')
@@ -45,13 +45,16 @@ export class PermissionController {
 
     protected realmRepository: IRealmRepository;
 
-    protected dataSource: DataSource;
+    protected identityPermissionProvider: IIdentityPermissionProvider;
+
+    protected permissionProvider: IPermissionProvider;
 
     constructor(ctx: PermissionControllerContext) {
         this.service = ctx.service;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
-        this.dataSource = ctx.dataSource;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
+        this.permissionProvider = ctx.permissionProvider;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -105,14 +108,14 @@ export class PermissionController {
             data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
         }
 
-        const ctx: PermissionCheckerCheckContext = {
+        const ctx: PermissionEvaluationContext = {
             name: entity.name,
             input: new PolicyData(data),
         };
 
-        const permissionChecker = new PermissionChecker({
-            repository: new PermissionDatabaseRepository(this.dataSource),
-            policyEngine: new PolicyEngine(),
+        const permissionEvaluator = new PermissionEvaluator({
+            repository: this.permissionProvider,
+            policyEngine: new PolicyEngine(this.identityPermissionProvider),
         });
 
         let output: PermissionAPICheckResponse;
@@ -121,9 +124,9 @@ export class PermissionController {
                 ctx.input &&
                 ctx.input.has(BuiltInPolicyType.ATTRIBUTES)
             ) {
-                await permissionChecker.check(ctx);
+                await permissionEvaluator.evaluate(ctx);
             } else {
-                await permissionChecker.preCheck(ctx);
+                await permissionEvaluator.preEvaluate(ctx);
             }
 
             output = {

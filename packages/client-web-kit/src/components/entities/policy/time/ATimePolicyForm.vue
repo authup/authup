@@ -35,9 +35,9 @@ export default defineComponent({
             start: '',
             end: '',
             interval: '',
-            dayOfWeek: '',
-            dayOfMonth: '',
-            dayOfYear: '',
+            day_of_week: '',
+            day_of_month: '',
+            day_of_year: '',
         });
 
         const intervalOptions : FormSelectOption[] = Object.values(TimePolicyInterval)
@@ -50,15 +50,15 @@ export default defineComponent({
             start: {},
             end: {},
             interval: {},
-            dayOfWeek: {
+            day_of_week: {
                 minValue: minValue(0),
                 maxValue: maxValue(6),
             },
-            dayOfMonth: {
+            day_of_month: {
                 minValue: minValue(1),
                 maxValue: maxValue(31),
             },
-            dayOfYear: {
+            day_of_year: {
                 minValue: minValue(1),
                 maxValue: maxValue(365),
             },
@@ -101,15 +101,15 @@ export default defineComponent({
 
         const handleIntervalUpdated = (value: string) => {
             if (!isIntervalForDayOfWeek(value)) {
-                vuelidate.value.dayOfWeek.$model = '';
+                vuelidate.value.day_of_week.$model = '';
             }
 
             if (!isIntervalForDayOfMonth(value)) {
-                vuelidate.value.dayOfMonth.$model = '';
+                vuelidate.value.day_of_month.$model = '';
             }
 
             if (!isIntervalForDayOfYear(value)) {
-                vuelidate.value.dayOfYear.$model = '';
+                vuelidate.value.day_of_year.$model = '';
             }
 
             handleUpdated();
@@ -189,7 +189,7 @@ export default defineComponent({
                 v-if="displayIntervalForDayOfWeek"
                 class="col"
             >
-                <IVuelidate :validation="vuelidate.dayOfWeek">
+                <IVuelidate :validation="vuelidate.day_of_week">
                     <template #default="props">
                         <VCFormGroup
                             :validation-messages="props.data"
@@ -199,8 +199,8 @@ export default defineComponent({
                                 Day of Week
                             </template>
                             <VCFormInput
-                                v-model="vuelidate.dayOfWeek.$model"
-                                placeholder="0-7"
+                                v-model="vuelidate.day_of_week.$model"
+                                placeholder="0-6"
                                 type="number"
                                 @change="handleUpdated"
                             />
@@ -212,7 +212,7 @@ export default defineComponent({
                 v-if="displayIntervalForDayOfMonth"
                 class="col"
             >
-                <IVuelidate :validation="vuelidate.dayOfMonth">
+                <IVuelidate :validation="vuelidate.day_of_month">
                     <template #default="props">
                         <VCFormGroup
                             :validation-messages="props.data"
@@ -222,7 +222,7 @@ export default defineComponent({
                                 Day of Month
                             </template>
                             <VCFormInput
-                                v-model="vuelidate.dayOfMonth.$model"
+                                v-model="vuelidate.day_of_month.$model"
                                 placeholder="1-31"
                                 type="number"
                                 @change="handleUpdated"
@@ -235,7 +235,7 @@ export default defineComponent({
                 v-if="displayIntervalForDayOfYear"
                 class="col"
             >
-                <IVuelidate :validation="vuelidate.dayOfYear">
+                <IVuelidate :validation="vuelidate.day_of_year">
                     <template #default="props">
                         <VCFormGroup
                             :validation-messages="props.data"
@@ -245,7 +245,7 @@ export default defineComponent({
                                 Day of Year
                             </template>
                             <VCFormInput
-                                v-model="vuelidate.dayOfYear.$model"
+                                v-model="vuelidate.day_of_year.$model"
                                 type="number"
                                 placeholder="1-365"
                                 @change="handleUpdated"

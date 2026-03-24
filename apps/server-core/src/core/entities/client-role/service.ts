@@ -30,7 +30,7 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<ClientRole>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.CLIENT_ROLE_READ,
                 PermissionName.CLIENT_ROLE_UPDATE,
@@ -45,7 +45,7 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
         id: string,
         actor: ActorContext,
     ): Promise<ClientRole> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.CLIENT_ROLE_READ,
                 PermissionName.CLIENT_ROLE_UPDATE,
@@ -65,7 +65,7 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<ClientRole> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_ROLE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_ROLE_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -77,7 +77,7 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
             data.client_realm_id = data.client.realm_id;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_ROLE_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -94,14 +94,14 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
         id: string,
         actor: ActorContext,
     ): Promise<ClientRole> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_ROLE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_ROLE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_ROLE_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

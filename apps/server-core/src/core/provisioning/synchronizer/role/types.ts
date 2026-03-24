@@ -6,11 +6,12 @@
  */
 
 import type {
-    IPermissionRepository, IRolePermissionRepository, IRoleRepository,
+    IPermissionRepository, IPolicyRepository, IRolePermissionRepository, IRoleRepository,
 } from '../../../entities/index.ts';
 
 export type RoleProvisioningSynchronizerContext = {
     repository: IRoleRepository,
     permissionRepository: IPermissionRepository,
     rolePermissionRepository: IRolePermissionRepository,
+    policyRepository?: IPolicyRepository,
 };

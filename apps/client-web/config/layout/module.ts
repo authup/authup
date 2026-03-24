@@ -108,7 +108,7 @@ export class Navigation {
 
             if (permissions.length > 0) {
                 try {
-                    await this.store.permissionChecker.preCheckOneOf({
+                    await this.store.permissionEvaluator.preEvaluateOneOf({
                         name: permissions,
                         input: new PolicyData({
                             identity,

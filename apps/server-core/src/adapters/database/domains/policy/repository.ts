@@ -8,6 +8,7 @@
 import { definePolicyWithType } from '@authup/access';
 import type { BuiltInPolicyTypeMap, PolicyWithType } from '@authup/access';
 import type { DataSource, EntityManager } from 'typeorm';
+import { EntityNotFoundError } from 'typeorm';
 import { CachePrefix } from '../constants.ts';
 import { EATreeRepository } from '../../extra-attribute-repository/index.ts';
 import { PolicyAttributeEntity } from '../policy-attribute/index.ts';
@@ -28,6 +29,21 @@ export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttri
             attributeForeignColumn: 'policy_id',
             cachePrefix: CachePrefix.POLICY_OWNED_ATTRIBUTES,
         });
+    }
+
+    async findDescendantsTreeById(id: string): Promise<PolicyWithType | null> {
+        const entity = this.create();
+        entity.id = id;
+
+        try {
+            return await this.findDescendantsTree(entity);
+        } catch (e) {
+            if (e instanceof EntityNotFoundError) {
+                return null;
+            }
+
+            throw e;
+        }
     }
 
     createByType<

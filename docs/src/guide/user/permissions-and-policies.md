@@ -9,8 +9,8 @@ Authup implements an **allow-by-default** authorization model:
 
 - A **permission** represents the ability to perform an action.
 - Permissions are **not restricted by default**.
-- **Policies** restrict permissions.
-- If no policy is assigned to a permission (`policy_id = null`), the permission is **publicly executable**.
+- **Policies** restrict permissions. Permissions can have **multiple policies** attached (n:m), combined using a `decision_strategy`.
+- If no policies are attached to a permission, the permission is **publicly executable**.
 
 This applies to authenticated users, anonymous users, and machine clients alike.
 Access restrictions must always be expressed through explicit policies.
@@ -25,8 +25,8 @@ Examples:
 - `user_update`
 
 A permission may be:
-- **unrestricted** (`policy_id = null`) — globally executable by anyone
-- **restricted** (`policy_id` references a policy) — only executable when the policy conditions are satisfied
+- **unrestricted** (no policies attached) — globally executable by anyone
+- **restricted** (one or more policies attached via the `auth_permission_policies` junction table) — only executable when the policy conditions are satisfied
 
 However, these permissions alone are not sufficient to enable context-dependent access controls.
 This is where policies come into play.
@@ -59,26 +59,98 @@ These are created and maintained automatically on startup:
 - `system.default` — a composite policy (UNANIMOUS) that bundles the standard restrictions
 - `system.identity` — requires a valid identity (user, robot, or client)
 - `system.permission-binding` — checks that the identity has the permission assigned
-- `system.realm-match` — ensures realm-level isolation
+- `system.realm-match` — ensures realm-level isolation; global entities (`realm_id: null`) match any realm
+- `system.realm-bound` — strict realm matching; rejects global entities (`realm_id: null`)
+- `system.realm-or-global` — realm matching that allows both own-realm and global entities
 
 System policies:
 - Are marked as `built_in` and cannot be modified or deleted via the API
 - Are synchronized to the database on every startup
 
-### Per-Permission Policy Assignment
+### Policy Assignment
 
-Permissions may reference:
-- `system.default` — the standard restriction (most built-in permissions)
-- A **custom policy** — for permissions needing different restrictions
-- `null` — unrestricted (publicly executable)
+Permissions reference policies through the `auth_permission_policies` junction table.
+Multiple policies can be attached to a single permission, and the `decision_strategy` on the permission controls how they are combined:
+
+- **UNANIMOUS** (default) — all attached policies must pass
+- **AFFIRMATIVE** — at least one attached policy must pass
+
+Typical configurations:
+- **Most built-in permissions** have `system.default` attached — the standard restriction
+- **Custom permissions** can have any combination of built-in and custom policies
+- **No policies attached** — unrestricted (publicly executable)
 
 The system only manages built-in policies. Users can create and assign custom policies via the API.
+
+## Realm Scoping
+
+Authup distinguishes between **global** and **realm-scoped** entities:
+
+- **Global entities** (permissions, roles, scopes, policies) can have `realm_id = null` — they exist outside any realm and are reusable across all realms.
+- **Realm-scoped entities** (users, clients, robots) always belong to a specific realm.
+
+To create a global entity via the API, explicitly pass `realm_id: null`. If omitted, `realm_id` defaults to the actor's realm.
+
+Two built-in admin roles control the scope of access:
+
+- **`admin`** — full unrestricted access to all entities, including global ones.
+- **`realm_admin`** — uses differentiated junction policies:
+  - **Entity CUD** (create/update/delete roles, permissions, scopes): `system.realm-bound` — cannot create or modify global entities.
+  - **Everything else** (reads, junction/assignment operations, identity CRUD): `system.realm-or-global` — can read global entities and assign global roles/permissions/scopes to entities within their own realm.
+
+There is no special "master realm" privilege. Access control is entirely policy-driven.
 
 ## Permission Evaluation
 
 When a permission is checked, the following flow applies:
 
 1. Look up the requested permission
-2. If the permission has no policy (`policy_id = null`) → **allow** (unrestricted)
-3. If the permission has a policy → evaluate the policy tree against the request context
-4. Policy passes → **allow**, policy fails → **deny**
+2. If the permission has no policies attached → **allow** (unrestricted)
+3. If the permission has policies attached → evaluate all policies, combining results with the permission's `decision_strategy`
+4. If the permission was obtained through a role or user assignment that carries a **junction policy**, evaluate that policy as an additional restriction
+5. All applicable policies pass → **allow**, any required policy fails → **deny**
+
+## Decision Strategy
+
+When a permission has multiple policies attached, the `decision_strategy` on the permission controls how results are combined:
+
+| Strategy | Behavior |
+|---|---|
+| **unanimous** (default) | All attached policies must pass |
+| **affirmative** | At least one attached policy must pass |
+
+The decision strategy is set per permission. Most built-in permissions use `unanimous` — all policies in `system.default` must pass.
+
+## Junction Policies
+
+Permission assignments (role-permission, user-permission, client-permission, robot-permission) can carry their own policy via the junction table.
+This **junction policy** adds an additional restriction on top of the permission's own policies.
+
+For example, the `realm_admin` role assigns entity CUD permissions with the `system.realm-bound` junction policy
+(preventing creation of global entities), while read and assignment permissions use `system.realm-or-global`
+(allowing interaction with global entities within the actor's realm).
+
+## Privilege Escalation Prevention
+
+Authup prevents privilege escalation through two mechanisms:
+
+### Superset Check
+
+When assigning a role to an identity (user, client, or robot), the system verifies that the assigning actor
+owns **all** permissions contained in the target role. This check is policy-aware:
+
+- If the actor has a restricted binding (junction policy) for a permission, but the target role has an unrestricted
+  binding for the same permission, the assignment is denied.
+- If the actor has multiple bindings for a permission (e.g. through different roles), the least restrictive
+  binding wins (affirmative merge).
+
+This means an `admin` (unrestricted) can assign any role, but a `realm_admin` (restricted by `system.realm-bound`)
+cannot assign the `admin` role — because the admin role contains unrestricted bindings that the realm_admin does not own.
+
+### Junction Policy Propagation
+
+When creating any permission binding (role-permission, user-permission, client-permission, robot-permission),
+the system automatically propagates the actor's own junction policy to the new binding.
+
+If a `realm_admin` assigns a permission to a role, the new role-permission entry inherits the
+`system.realm-bound` junction policy. This prevents restricted actors from creating unrestricted permission bindings.

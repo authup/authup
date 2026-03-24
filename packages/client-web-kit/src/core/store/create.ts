@@ -6,8 +6,8 @@
  */
 
 import {
-    PermissionChecker,
-    PermissionMemoryRepository,
+    PermissionEvaluator,
+    PermissionMemoryProvider,
     PolicyEngine,
 } from '@authup/access';
 import {
@@ -154,8 +154,8 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    const permissionRepository = new PermissionMemoryRepository();
-    const permissionChecker = new PermissionChecker({
+    const permissionRepository = new PermissionMemoryProvider();
+    const permissionEvaluator = new PermissionEvaluator({
         repository: permissionRepository,
         policyEngine: new PolicyEngine(),
     });
@@ -255,9 +255,11 @@ export function createStore(context: StoreCreateContext) {
 
                 if (response.permissions) {
                     permissionRepository.setMany(response.permissions.map((permission) => ({
-                        name: permission.name,
-                        realmId: permission.realm_id,
-                        clientId: permission.client_id,
+                        permission: {
+                            name: permission.name,
+                            realm_id: permission.realm_id,
+                            client_id: permission.client_id,
+                        },
                     })));
                 }
             });
@@ -371,7 +373,7 @@ export function createStore(context: StoreCreateContext) {
         cookiesRead,
         setCookiesRead,
 
-        permissionChecker,
+        permissionEvaluator,
 
         login,
         logout,

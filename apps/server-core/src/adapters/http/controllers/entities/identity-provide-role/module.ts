@@ -16,20 +16,19 @@ import type { Request, Response } from 'routup';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import type { IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
-import type { IdentityPermissionService } from '../../../../../services/index.ts';
+import type { IIdentityPermissionProvider, IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { IdentityProviderRoleMappingRequestValidator } from './utils/index.ts';
 import {
     RequestHandlerOperation,
     useRequestIdentityOrFail,
     useRequestParamID,
-    useRequestPermissionChecker,
+    useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 
 export type OAuth2ProviderRoleControllerContext = {
     repository: IIdentityProviderRoleMappingRepository,
-    identityPermissionService: IdentityPermissionService,
+    identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('identity-provider')
@@ -37,11 +36,11 @@ export type OAuth2ProviderRoleControllerContext = {
 export class OAuth2ProviderRoleController {
     protected repository: IIdentityProviderRoleMappingRepository;
 
-    protected identityPermissionService: IdentityPermissionService;
+    protected identityPermissionProvider: IIdentityPermissionProvider;
 
     constructor(ctx: OAuth2ProviderRoleControllerContext) {
         this.repository = ctx.repository;
-        this.identityPermissionService = ctx.identityPermissionService;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     @DGet('', [])
@@ -49,8 +48,8 @@ export class OAuth2ProviderRoleController {
         @DRequest() req: Request,
         @DResponse() res: Response,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
+        const permissionEvaluator = useRequestPermissionEvaluator(req);
+        await permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.IDENTITY_PROVIDER_READ,
                 PermissionName.IDENTITY_PROVIDER_UPDATE,
@@ -72,8 +71,8 @@ export class OAuth2ProviderRoleController {
         @DRequest() req: Request,
         @DResponse() res: Response,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheckOneOf({
+        const permissionEvaluator = useRequestPermissionEvaluator(req);
+        await permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.IDENTITY_PROVIDER_READ,
                 PermissionName.IDENTITY_PROVIDER_UPDATE,
@@ -101,8 +100,8 @@ export class OAuth2ProviderRoleController {
     ): Promise<any> {
         const paramId = useRequestParamID(req);
 
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({
+        const permissionEvaluator = useRequestPermissionEvaluator(req);
+        await permissionEvaluator.preEvaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
         });
 
@@ -121,7 +120,7 @@ export class OAuth2ProviderRoleController {
 
         entity = this.repository.merge(entity, data);
 
-        await permissionChecker.check({
+        await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -141,8 +140,8 @@ export class OAuth2ProviderRoleController {
     ): Promise<any> {
         const paramId = useRequestParamID(req);
 
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({
+        const permissionEvaluator = useRequestPermissionEvaluator(req);
+        await permissionEvaluator.preEvaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
         });
 
@@ -151,7 +150,7 @@ export class OAuth2ProviderRoleController {
             throw new NotFoundError();
         }
 
-        await permissionChecker.check({
+        await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -173,8 +172,8 @@ export class OAuth2ProviderRoleController {
         @DRequest() req: Request,
         @DResponse() res: Response,
     ): Promise<any> {
-        const permissionChecker = useRequestPermissionChecker(req);
-        await permissionChecker.preCheck({
+        const permissionEvaluator = useRequestPermissionEvaluator(req);
+        await permissionEvaluator.preEvaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
         });
 
@@ -203,7 +202,7 @@ export class OAuth2ProviderRoleController {
             throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
         }
 
-        await permissionChecker.check({
+        await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -211,7 +210,7 @@ export class OAuth2ProviderRoleController {
         });
 
         const identity = useRequestIdentityOrFail(req);
-        const hasPermissions = await this.identityPermissionService.isSuperset(identity, {
+        const hasPermissions = await this.identityPermissionProvider.isSuperset(identity, {
             type: 'role',
             id: data.role_id,
             clientId: data.role.client_id,

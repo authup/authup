@@ -10,7 +10,7 @@ import type {
     Client, Permission, Robot, Role, Scope, User,
 } from '@authup/core-kit';
 import {
-    PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ScopeName, buildUserFakeEmail,
+    PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ROLE_REALM_ADMIN_NAME, ScopeName, buildUserFakeEmail,
 } from '@authup/core-kit';
 import type { IDIContainer } from '../../../../../core/index.ts';
 import {
@@ -41,7 +41,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     realm_id: null,
                 },
                 extraAttributes: {
-                    decisionStrategy: DecisionStrategy.UNANIMOUS,
+                    decision_strategy: DecisionStrategy.UNANIMOUS,
                 },
                 children: [
                     {
@@ -68,12 +68,41 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                             realm_id: null,
                         },
                         extraAttributes: {
-                            attributeName: ['realm_id'],
-                            attributeNameStrict: false,
-                            identityMasterMatchAll: true,
+                            attribute_name: ['realm_id'],
+                            attribute_name_strict: false,
+                            identity_master_match_all: false,
+                            attribute_null_match_all: true,
                         },
                     },
                 ],
+            },
+            {
+                attributes: {
+                    name: SystemPolicyName.REALM_BOUND,
+                    type: BuiltInPolicyType.REALM_MATCH,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    attribute_name: ['realm_id'],
+                    attribute_name_strict: false,
+                    attribute_null_match_all: false,
+                    identity_master_match_all: false,
+                },
+            },
+            {
+                attributes: {
+                    name: SystemPolicyName.REALM_OR_GLOBAL,
+                    type: BuiltInPolicyType.REALM_MATCH,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    attribute_name: ['realm_id'],
+                    attribute_name_strict: false,
+                    attribute_null_match_all: true,
+                    identity_master_match_all: false,
+                },
             },
         ];
     }
@@ -119,6 +148,38 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 },
                 relations: {
                     globalPermissions: ['*'],
+                },
+            },
+            {
+                strategy: {
+                    type: ProvisioningEntityStrategyType.MERGE,
+                    attributes: ['built_in'] as (keyof Role)[],
+                },
+                attributes: {
+                    name: ROLE_REALM_ADMIN_NAME,
+                    built_in: true,
+                },
+                relations: {
+                    globalPermissions: ['*'],
+                    globalPermissionsExclude: [
+                        PermissionName.REALM_CREATE,
+                        PermissionName.REALM_UPDATE,
+                        PermissionName.REALM_DELETE,
+                    ],
+                    globalPermissionsPolicyName: SystemPolicyName.REALM_OR_GLOBAL,
+                    globalPermissionsPolicyOverrides: {
+                        [SystemPolicyName.REALM_BOUND]: [
+                            PermissionName.ROLE_CREATE,
+                            PermissionName.ROLE_UPDATE,
+                            PermissionName.ROLE_DELETE,
+                            PermissionName.PERMISSION_CREATE,
+                            PermissionName.PERMISSION_UPDATE,
+                            PermissionName.PERMISSION_DELETE,
+                            PermissionName.SCOPE_CREATE,
+                            PermissionName.SCOPE_UPDATE,
+                            PermissionName.SCOPE_DELETE,
+                        ],
+                    },
                 },
             },
         ];

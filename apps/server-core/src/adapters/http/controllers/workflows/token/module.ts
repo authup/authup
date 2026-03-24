@@ -16,13 +16,14 @@ import { getRequestHostName, sendAccepted } from 'routup';
 import { setResponseCookie } from '@routup/basic/cookie';
 import { CookieName } from '@authup/core-http-kit';
 import { pickRecord } from '@authup/kit';
+import { buildPermissionBindingKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext, TokenControllerOptions } from './types.ts';
 import type {
+    IIdentityPermissionProvider,
     IIdentityResolver,
     IOAuth2TokenIssuer,
-    IOAuth2TokenRevoker,
-    IOAuth2TokenVerifier} from '../../../../../core/index.ts';
+    IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../../../../../core/index.ts';
 import {
     OAuth2OpenIDClaimsBuilder,
 } from '../../../../../core/index.ts';
@@ -37,7 +38,6 @@ import {
     guessOauth2GrantTypeByRequest,
 } from '../../../adapters/index.ts';
 import { extractTokenFromRequest } from './utils/index.ts';
-import type { IdentityPermissionService } from '../../../../../services/index.ts';
 
 @DTags('auth')
 @DController('/token')
@@ -54,7 +54,7 @@ export class TokenController {
 
     protected identityResolver : IIdentityResolver;
 
-    protected identityPermissionService : IdentityPermissionService;
+    protected identityPermissionProvider : IIdentityPermissionProvider;
 
     protected tokenGrants : Record<`${OAuth2TokenGrant}`, IHTTPOAuth2Grant>;
 
@@ -67,7 +67,7 @@ export class TokenController {
         this.tokenVerifier = ctx.tokenVerifier;
         this.tokenRevoker = ctx.tokenRevoker;
         this.identityResolver = ctx.identityResolver;
-        this.identityPermissionService = ctx.identityPermissionService;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
 
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
@@ -125,7 +125,7 @@ export class TokenController {
             }
 
             // todo: only receive client specific permissions
-            const permissions = await this.identityPermissionService.getFor({
+            const permissions = await this.identityPermissionProvider.getFor({
                 id: payload.sub,
                 type: payload.sub_kind,
                 clientId: payload.client_id,
@@ -152,8 +152,15 @@ export class TokenController {
             return {
                 active,
                 // todo: permissions property should be removed.
-                permissions: permissions
-                    .map((permission) => pickRecord(permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission),
+                permissions: Object.values(
+                    permissions.reduce((acc, binding) => {
+                        const key = buildPermissionBindingKey(binding.permission);
+                        if (!acc[key]) {
+                            acc[key] = pickRecord(binding.permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission;
+                        }
+                        return acc;
+                    }, {} as Record<string, OAuth2TokenPermission>),
+                ),
                 ...payload,
                 ...claims,
             };

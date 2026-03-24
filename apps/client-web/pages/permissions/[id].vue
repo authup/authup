@@ -27,6 +27,9 @@ export default defineComponent({
                 name: 'General', icon: 'fas fa-bars', urlSuffix: '',
             },
             {
+                name: 'Policies', icon: 'fas fa-shield-halved', urlSuffix: 'policies',
+            },
+            {
                 name: 'Users', icon: 'fas fa-user', urlSuffix: 'users',
             },
             {

@@ -5,14 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '../types';
+import type { PermissionBinding } from '../types';
 
 export type PermissionGetOptions = {
     name: string,
-    clientId?: string | null,
-    realmId?: string | null
+    client_id?: string | null,
+    realm_id?: string | null
 };
 
-export interface IPermissionRepository {
-    findOne(criteria: PermissionGetOptions) : Promise<PermissionItem | null>;
+export interface IPermissionProvider {
+    findOne(criteria: PermissionGetOptions) : Promise<PermissionBinding | null>;
 }

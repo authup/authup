@@ -6,33 +6,33 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { IPermissionChecker, PermissionCheckerCheckContext } from '@authup/access';
+import type { IPermissionEvaluator, PermissionEvaluationContext } from '@authup/access';
 import type { Realm, User } from '@authup/core-kit';
 import { IdentityType, REALM_MASTER_NAME } from '@authup/core-kit';
 import { vi } from 'vitest';
 import { ForbiddenError } from '@ebec/http';
 import type { ActorContext } from '../../../../src/core/entities/actor/types.ts';
 
-function createMockPermissionChecker(
-    handler: (ctx: PermissionCheckerCheckContext) => void = () => {},
-): IPermissionChecker {
+function createMockPermissionEvaluator(
+    handler: (ctx: PermissionEvaluationContext) => void = () => {},
+): IPermissionEvaluator {
     return {
-        check: vi.fn().mockImplementation(async (ctx: PermissionCheckerCheckContext) => handler(ctx)),
-        checkOneOf: vi.fn().mockImplementation(async (ctx: PermissionCheckerCheckContext) => handler(ctx)),
-        preCheck: vi.fn().mockImplementation(async (ctx: PermissionCheckerCheckContext) => handler(ctx)),
-        preCheckOneOf: vi.fn().mockImplementation(async (ctx: PermissionCheckerCheckContext) => handler(ctx)),
+        evaluate: vi.fn().mockImplementation(async (ctx: PermissionEvaluationContext) => handler(ctx)),
+        evaluateOneOf: vi.fn().mockImplementation(async (ctx: PermissionEvaluationContext) => handler(ctx)),
+        preEvaluate: vi.fn().mockImplementation(async (ctx: PermissionEvaluationContext) => handler(ctx)),
+        preEvaluateOneOf: vi.fn().mockImplementation(async (ctx: PermissionEvaluationContext) => handler(ctx)),
     };
 }
 
 export function createAllowAllActor(): ActorContext {
     return {
-        permissionChecker: createMockPermissionChecker(),
+        permissionEvaluator: createMockPermissionEvaluator(),
     };
 }
 
 export function createDenyAllActor(): ActorContext {
     return {
-        permissionChecker: createMockPermissionChecker(() => {
+        permissionEvaluator: createMockPermissionEvaluator(() => {
             throw new ForbiddenError();
         }),
     };
@@ -41,7 +41,7 @@ export function createDenyAllActor(): ActorContext {
 export function createMasterRealmActor(realmId?: string): ActorContext {
     const id = realmId || randomUUID();
     return {
-        permissionChecker: createMockPermissionChecker(),
+        permissionEvaluator: createMockPermissionEvaluator(),
         identity: {
             type: IdentityType.USER,
             data: {
@@ -55,7 +55,7 @@ export function createMasterRealmActor(realmId?: string): ActorContext {
 export function createNonMasterRealmActor(realmId?: string): ActorContext {
     const id = realmId || randomUUID();
     return {
-        permissionChecker: createMockPermissionChecker(),
+        permissionEvaluator: createMockPermissionEvaluator(),
         identity: {
             type: IdentityType.USER,
             data: {

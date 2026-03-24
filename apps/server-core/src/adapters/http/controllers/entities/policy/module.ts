@@ -18,8 +18,8 @@ import { useRequestQuery } from '@routup/basic/query';
 import {
     send, sendAccepted, sendCreated, useRequestParam,
 } from 'routup';
-import type { IPolicyRepository, IPolicyService, IRealmRepository } from '../../../../../core/index.ts';
-import { PolicyEngine } from '../../../../../security/index.ts';
+import type { IIdentityPermissionProvider, IPolicyRepository, IPolicyService, IRealmRepository } from '../../../../../core/index.ts';
+import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
@@ -30,6 +30,7 @@ export type PolicyControllerContext = {
     service: IPolicyService,
     repository: IPolicyRepository,
     realmRepository: IRealmRepository,
+    identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('policy')
@@ -41,10 +42,13 @@ export class PolicyController {
 
     protected realmRepository: IRealmRepository;
 
+    protected identityPermissionProvider: IIdentityPermissionProvider;
+
     constructor(ctx: PolicyControllerContext) {
         this.service = ctx.service;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     @DGet('', [])
@@ -117,7 +121,7 @@ export class PolicyController {
             data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
         }
 
-        const policyEngine = new PolicyEngine();
+        const policyEngine = new PolicyEngine(this.identityPermissionProvider);
 
         let output: PolicyAPICheckResponse;
         try {

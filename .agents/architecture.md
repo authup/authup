@@ -150,24 +150,28 @@ Services receive an `ActorContext` instead of a raw HTTP request. This decouples
 
 ```typescript
 // core/entities/actor/types.ts
-import type { IPermissionChecker } from '@authup/access';
+import type { IPermissionEvaluator } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
 export type ActorContext = {
-    permissionChecker: IPermissionChecker;
+    permissionEvaluator: IPermissionEvaluator;
     identity?: Identity;
 };
 ```
 
-The HTTP adapter builds this from the request:
+- `permissionEvaluator` — evaluates permissions (`evaluate`, `preEvaluate`, `evaluateOneOf`, `preEvaluateOneOf`)
+- `identity` — the actor's identity (user, client, robot)
+
+#### RequestPermissionEvaluator
+
+The HTTP adapter provides `RequestPermissionEvaluator` — the concrete `IPermissionEvaluator` implementation for HTTP requests. It wraps the base `PermissionEvaluator` with request-scoped identity/scope enrichment. Set on each request by the authorization middleware.
 
 ```typescript
 // adapters/http/request/helpers/actor.ts
 export function buildActorContext(req: Request): ActorContext {
-    const permissionChecker = useRequestPermissionChecker(req);
     const identity = useRequestIdentity(req);
     return {
-        permissionChecker,
+        permissionEvaluator: useRequestPermissionEvaluator(req),
         identity: identity ? identity.raw : undefined,
     };
 }
@@ -212,19 +216,17 @@ export class RoleService extends AbstractEntityService implements IRoleService {
     }
 
     async create(data: Record<string, any>, actor: ActorContext): Promise<Role> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_CREATE });
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
         await this.repository.validateJoinColumns(validated);
 
-        // Realm defaulting for non-master realm members
+        // Realm defaulting — always default to actor's realm
         if (!validated.realm_id && actor.identity) {
-            if (!this.isActorMasterRealmMember(actor)) {
-                validated.realm_id = this.getActorRealmId(actor) || null;
-            }
+            validated.realm_id = this.getActorRealmId(actor) || null;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_CREATE,
             input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
@@ -239,7 +241,6 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 ```
 
 `AbstractEntityService` provides shared helpers:
-- `isActorMasterRealmMember(actor)` — checks if the actor belongs to the master realm
 - `getActorRealmId(actor)` — extracts the actor's realm ID from their identity
 
 Service responsibility:
@@ -257,7 +258,7 @@ Service responsibility:
 |---|---|---|
 | **Simple CRUD** | role, scope, realm, permission | Validator + validateJoinColumns + checkUniqueness + permission checks |
 | **Junction** | client-permission, robot-permission, user-permission, client-scope, role-permission | No validator (just UUID fields), validateJoinColumns populates join entities, realm_id extraction from joins |
-| **Junction with superset check** | client-role, robot-role, user-role | Service does permission checks + save; controller additionally calls `validateJoinColumns` + `identityPermissionService.isSuperset()` before delegating to service (superset check requires adapter-level `RequestIdentity`) |
+| **Junction with superset check** | client-role, robot-role, user-role | Service does permission checks + save; controller additionally calls `validateJoinColumns` + `identityPermissionProvider.isSuperset()` before delegating to service (superset check requires adapter-level `RequestIdentity`) |
 | **Attribute** | role-attribute, user-attribute | Per-record permission filtering in `getMany`, managed under parent entity's UPDATE permission |
 | **Complex with secrets** | client, robot | Uses `{Entity}CredentialsService` for secret handling, per-record secret filtering in `getMany` |
 | **Complex with self-access** | user | Self-edit fallback (strips restricted fields), self-access detection in `getOne`, name-lock protection |
@@ -342,7 +343,7 @@ Controller conventions:
 - Format response with `send()`, `sendCreated()`, `sendAccepted()` from `routup`
 
 Exceptions where controllers retain some logic:
-- **Superset junction controllers** (client-role, robot-role, user-role): Call `repository.validateJoinColumns()` and `identityPermissionService.isSuperset()` before delegating to service, because the superset check requires adapter-specific `RequestIdentity`
+- **Superset junction controllers** (client-role, robot-role, user-role): Call `repository.validateJoinColumns()` and `identityPermissionProvider.isSuperset()` before delegating to service, because the superset check requires adapter-specific `RequestIdentity`
 - **Self-access resolution** (client, robot, user): Resolve `@me`/`@self` tokens to actual IDs before delegating
 - **Infrastructure concerns** (robot): Robot synchronization after save/delete uses infrastructure-level singletons
 
@@ -449,3 +450,108 @@ app/modules/provisioning/
   sources/file/module.ts            — FileProvisioningSource
   sources/composite/module.ts       — CompositeProvisioningSource (merge + dedup)
 ```
+
+## Realm Scoping Model
+
+### Entity Categories
+
+| Category | Entities | `realm_id: null` allowed |
+|----------|----------|--------------------------|
+| **Global** | permission, role, scope, policy | Yes — system-level building blocks reusable across realms |
+| **Realm-bound** | client, robot, user | No — always belong to a specific realm |
+| **Junction** | role-permission, user-role, etc. | Inherit realm from parent entities |
+
+### Realm Defaulting
+
+All entity services default `realm_id` to the actor's realm when not provided:
+
+```typescript
+if (!validated.realm_id && actor.identity) {
+    validated.realm_id = this.getActorRealmId(actor) || null;
+}
+```
+
+To create a global entity (`realm_id: null`), the caller must explicitly pass `realm_id: null`. The policy engine controls whether the actor is authorized to do so.
+
+### Policy-Based Access Control
+
+There is no special "master realm" bypass. Access control is entirely policy-driven:
+
+- `system.realm-match` policy with `attribute_null_match_all: true` allows any realm to access global entities (`realm_id: null`)
+- `system.realm-match` policy with `identity_master_match_all: false` — no special master realm privileges
+- `system.realm-bound` policy (ATTRIBUTES type: `{ realm_id: { $ne: null } }`) restricts actors to realm-scoped entities only
+
+### Admin Roles
+
+| Role | Scope | Junction Policy |
+|------|-------|-----------------|
+| `admin` | All permissions, no restrictions | None |
+| `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `system.realm-bound` on each role-permission entry |
+
+## Policy-Permission Model (n:m)
+
+Permissions reference policies through a junction table (`auth_permission_policies`), not a direct FK. Each permission has a `decision_strategy` (default: `unanimous`) controlling how multiple policies are combined.
+
+### Evaluation Layers
+
+```
+Layer 1: Permission-level policies (from auth_permission_policies)
+  └── system.default (composite, UNANIMOUS)
+        ├── system.identity
+        ├── system.permission-binding
+        └── system.realm-match
+
+Layer 2: Junction-level policy (from role-permission.policy_id, user-permission.policy_id, etc.)
+  └── e.g. system.realm-bound
+```
+
+Both layers must pass for access to be granted. Layer 1 is evaluated by the `PermissionEvaluator` in `@authup/access`. Layer 2 is evaluated by the server-core `PermissionBindingPolicyEvaluator`.
+
+### PermissionBinding Type
+
+```typescript
+// packages/access/src/permission/types.ts
+export type PermissionBinding = {
+    permission: {
+        name: string,
+        client_id?: string | null,
+        realm_id?: string | null,
+        decision_strategy?: string | null,
+    },
+    policies?: PolicyWithType[],
+};
+```
+
+A permission binding wraps a permission entity with its associated policies. The permission is uniquely identified by `name + client_id + realm_id`. The `policies` array contains:
+- **Permission-level** (Layer 1): n:m policies from `auth_permission_policies` (loaded by `PermissionDatabaseProvider`)
+- **Junction-level** (Layer 2): the single junction policy from `role_permission.policy_id` etc. (loaded by `getBoundPermissions()`)
+
+## Security: Permission Assignment
+
+### Superset Check
+
+When assigning a role to an identity (user-role, client-role, robot-role), the system verifies the actor owns all permissions in the target role. The check is **policy-aware**:
+
+1. Merge actor's bindings per permission (using `mergePermissionBindings` with AFFIRMATIVE strategy)
+2. Merge target's bindings per permission
+3. For each target permission: if actor's merged binding has policies but target's doesn't → fail (actor is more restricted)
+
+An actor with both `admin` (unrestricted) and `realm_admin` (restricted) roles gets unrestricted access — the merge uses AFFIRMATIVE (least restrictive wins).
+
+### Junction Policy Propagation
+
+When creating any permission-binding junction (role-permission, user-permission, client-permission, robot-permission):
+
+1. The service calls `this.identityPermissionProvider.resolveJunctionPolicy(identity, { name, realm_id, client_id })`
+2. This loads and merges the actor's bindings for that permission
+3. If the merged result has policies, the first policy is set as `policy_id` on the new junction entry
+4. If `data.policy_id` is already set explicitly, propagation is skipped
+
+This prevents privilege escalation: a `realm_admin` cannot create unrestricted permission bindings.
+
+### mergePermissionBindings
+
+When merging duplicate permission bindings (same `name + client_id + realm_id`):
+
+- If **any** binding has no policies → merged result has **no policies** (unrestricted)
+- If all bindings have policies → each binding's policies are wrapped in a composite with that binding's `decision_strategy`, then all composites are combined under an outer AFFIRMATIVE composite (any-one-passes)

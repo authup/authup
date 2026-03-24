@@ -31,6 +31,7 @@ import {
     IdentityProviderSubscriber,
     KeyEntity,
     PermissionEntity,
+    PermissionPolicyEntity,
     PermissionSubscriber,
     PolicyAttributeEntity,
     PolicyAttributeSubscriber,
@@ -111,6 +112,7 @@ export class DataSourceOptionsBuilder {
                 IdentityProviderAttributeMappingEntity,
 
                 PermissionEntity,
+                PermissionPolicyEntity,
 
                 PolicyEntity,
                 PolicyAttributeEntity,

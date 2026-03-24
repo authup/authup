@@ -9,13 +9,13 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { PermissionName } from '@authup/core-kit';
 import type { Request } from 'routup';
 import type { UserAttribute } from '@authup/core-kit';
-import { useRequestIdentity, useRequestPermissionChecker } from '../../../../request/index.ts';
+import { useRequestIdentity, useRequestPermissionEvaluator } from '../../../../request/index.ts';
 
 export async function canRequestManageUserAttribute(
     req: Request,
     entity: UserAttribute,
 ) : Promise<boolean> {
-    const permissionChecker = useRequestPermissionChecker(req);
+    const permissionEvaluator = useRequestPermissionEvaluator(req);
     const identity = useRequestIdentity(req);
 
     const isMe = identity &&
@@ -24,7 +24,7 @@ export async function canRequestManageUserAttribute(
 
     try {
         if (isMe) {
-            await permissionChecker.check({
+            await permissionEvaluator.evaluate({
                 name: PermissionName.USER_SELF_MANAGE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -41,7 +41,7 @@ export async function canRequestManageUserAttribute(
 
     if (!isMe) {
         try {
-            await permissionChecker.check({
+            await permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entity,

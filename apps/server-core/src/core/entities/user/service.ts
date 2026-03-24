@@ -44,7 +44,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<User>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_READ,
                 PermissionName.USER_UPDATE,
@@ -68,7 +68,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
 
             try {
-                await actor.permissionChecker.checkOneOf({
+                await actor.permissionEvaluator.evaluateOneOf({
                     name: [
                         PermissionName.USER_READ,
                         PermissionName.USER_UPDATE,
@@ -105,7 +105,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         }
 
         if (!isMe) {
-            await actor.permissionChecker.preCheckOneOf({
+            await actor.permissionEvaluator.preEvaluateOneOf({
                 name: [
                     PermissionName.USER_READ,
                     PermissionName.USER_UPDATE,
@@ -121,7 +121,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         }
 
         if (!isMe) {
-            await actor.permissionChecker.checkOneOf({
+            await actor.permissionEvaluator.evaluateOneOf({
                 name: [
                     PermissionName.USER_READ,
                     PermissionName.USER_UPDATE,
@@ -189,7 +189,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         let hasAbility: boolean | undefined;
         if (entity) {
             try {
-                await actor.permissionChecker.preCheck({
+                await actor.permissionEvaluator.preEvaluate({
                     name: PermissionName.USER_UPDATE,
                 });
                 hasAbility = true;
@@ -205,7 +205,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionChecker.preCheck({
+            await actor.permissionEvaluator.preEvaluate({
                 name: PermissionName.USER_CREATE,
             });
             hasAbility = true;
@@ -246,7 +246,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
 
             if (hasAbility) {
-                await actor.permissionChecker.check({
+                await actor.permissionEvaluator.evaluate({
                     name: PermissionName.USER_UPDATE,
                     input: new PolicyData({
                         [BuiltInPolicyType.ATTRIBUTES]: {
@@ -276,7 +276,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         entity = this.repository.create(validated);
 
         if (hasAbility) {
-            await actor.permissionChecker.check({
+            await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_CREATE,
                 input: new PolicyData({
                     [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -297,7 +297,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         id: string,
         actor: ActorContext,
     ): Promise<User> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.USER_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_DELETE });
 
         if (
             actor.identity &&
@@ -312,7 +312,7 @@ export class UserService extends AbstractEntityService implements IUserService {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

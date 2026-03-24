@@ -21,6 +21,7 @@ import {
     OAuth2TokenAPI,
     OAuth2UserInfoAPI,
     PermissionAPI,
+    PermissionPolicyAPI,
     PolicyAPI,
     RealmAPI,
     RobotAPI,
@@ -57,6 +58,8 @@ export class Client extends BaseClient {
     public readonly policy: PolicyAPI;
 
     public readonly permission : PermissionAPI;
+
+    public readonly permissionPolicy : PermissionPolicyAPI;
 
     public readonly realm : RealmAPI;
 
@@ -119,6 +122,7 @@ export class Client extends BaseClient {
 
         this.policy = new PolicyAPI({ client: this });
         this.permission = new PermissionAPI({ client: this });
+        this.permissionPolicy = new PermissionPolicyAPI({ client: this });
 
         this.realm = new RealmAPI({ client: this });
 

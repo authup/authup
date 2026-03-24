@@ -8,13 +8,12 @@
 import type { Client, Robot, User } from '@authup/core-kit';
 import type {
     ICredentialsAuthenticator,
+    IIdentityPermissionProvider,
     IIdentityResolver,
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2TokenIssuer,
-    IOAuth2TokenRevoker,
-    IOAuth2TokenVerifier, ISessionManager,
+    IOAuth2TokenRevoker, IOAuth2TokenVerifier, ISessionManager 
 } from '../../../../../core/index.ts';
-import type { IdentityPermissionService } from '../../../../../services/index.ts';
 
 export type TokenControllerOptions = {
     cookieDomains: string[]
@@ -34,7 +33,7 @@ export type TokenControllerContext = {
     sessionManager: ISessionManager,
 
     identityResolver: IIdentityResolver,
-    identityPermissionService: IdentityPermissionService,
+    identityPermissionProvider: IIdentityPermissionProvider,
 
     clientAuthenticator: ICredentialsAuthenticator<Client>
     robotAuthenticator: ICredentialsAuthenticator<Robot>

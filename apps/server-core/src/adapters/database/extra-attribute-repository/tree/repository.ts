@@ -198,7 +198,7 @@ export class EATreeRepository<
 
     // -------------------------------------------------------------------------------
 
-    async updateClosureTable(entity: T) {
+    async updateClosureTable(entity: T, manager?: EntityManager) {
         const primaryKeyValue = this.metadata.primaryColumns[0].getEntityValue(entity);
         if (!primaryKeyValue) {
             return;
@@ -209,106 +209,126 @@ export class EATreeRepository<
             return;
         }
 
+        if (manager) {
+            await this.executeClosureTableUpdate(entity, manager);
+        } else {
+            await this.manager.connection.transaction(async (manager) => {
+                await this.executeClosureTableUpdate(entity, manager);
+            });
+        }
+    }
+
+    private async executeClosureTableUpdate(entity: T, manager: EntityManager) {
+        const primaryKeyValue = this.metadata.primaryColumns[0].getEntityValue(entity);
+
         const { tableName } = this.metadata.closureJunctionTable;
         const ancestorColumn = this.metadata.closureJunctionTable.ancestorColumns[0];
         const descendantColumn = this.metadata.closureJunctionTable.descendantColumns[0];
 
-        await this.manager.connection.transaction(async (manager) => {
-            // 1. Get All ancestors of current entity
-            const ancestors = await manager.query<Record<string, any>[]>(
-                `Select *
+        const param = (index: number) => manager.connection.driver.createParameter(`p${index}`, index);
+
+        // 1. Get All ancestors of current entity
+        const ancestors = await manager.query<Record<string, any>[]>(
+            `SELECT *
+                 FROM ${tableName}
+                 WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
+                       ${descendantColumn.databasePath} = ${param(0)} AND
+                       ${ancestorColumn.databasePath} != ${param(1)}`,
+            [primaryKeyValue, primaryKeyValue],
+        );
+
+        if (!this.metadata.treeParentRelation) {
+            return;
+        }
+
+        const parentId = this.metadata.treeParentRelation.joinColumns[0].getEntityValue(entity);
+
+        let ancestorIds : string[];
+        if (parentId) {
+            ancestorIds = [
+                parentId,
+                ...ancestors
+                    .filter((ancestor) => ancestor[ancestorColumn.databasePath] !== parentId)
+                    .map((ancestor) => ancestor[ancestorColumn.databasePath]),
+            ];
+        } else {
+            ancestorIds = ancestors.map((ancestor) => ancestor[ancestorColumn.databasePath]);
+        }
+
+        if (ancestorIds.length === 0) {
+            return;
+        }
+
+        // 2. Get All descendants of current entity.
+        const descendants = await manager.query<Record<string, any>[]>(
+            `SELECT *
                      FROM ${tableName}
                      WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                           ${descendantColumn.databasePath} = '${primaryKeyValue}' AND
-                           ${ancestorColumn.databasePath} != '${primaryKeyValue}';`,
-            );
+                           ${ancestorColumn.databasePath} = ${param(0)} AND
+                           ${descendantColumn.databasePath} != ${param(1)}`,
+            [primaryKeyValue, primaryKeyValue],
+        );
 
-            if (!this.metadata.treeParentRelation) {
-                return;
-            }
+        if (parentId) {
+            // 3. get all descendant
+            const descendantIds = descendants
+                .map((descendant) => descendant[descendantColumn.databasePath]);
 
-            const parentId = this.metadata.treeParentRelation.joinColumns[0].getEntityValue(entity);
-
-            let ancestorIds : string[];
-            if (parentId) {
-                ancestorIds = [
-                    parentId,
-                    ...ancestors
-                        .filter((ancestor) => ancestor[ancestorColumn.databasePath] !== parentId)
-                        .map((ancestor) => ancestor[ancestorColumn.databasePath]),
-                ];
-            } else {
-                ancestorIds = ancestors.map((ancestor) => ancestor[ancestorColumn.databasePath]);
-            }
-
-            if (ancestorIds.length === 0) {
-                return;
-            }
-
-            // 2. Get All descendants of current entity.
-            const descendants = await manager.query<Record<string, any>[]>(
-                `Select *
+            if (descendantIds.length > 0) {
+                // 4. get all ancestors of each descendant
+                const placeholders = descendantIds.map((_, i) => param(i + 1)).join(',');
+                const ancestorsOfDescendants = await manager.query<Record<string, any>[]>(
+                    `SELECT *
                          FROM ${tableName}
-                         WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                               ${ancestorColumn.databasePath} = '${primaryKeyValue}' AND
-                               ${descendantColumn.databasePath} != '${primaryKeyValue}';`,
-            );
+                         WHERE
+                             ${ancestorColumn.databasePath} != ${param(0)} AND
+                             ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
+                             ${descendantColumn.databasePath} IN (${placeholders})`,
+                    [primaryKeyValue, ...descendantIds],
+                );
 
-            if (parentId) {
-                // 3. get all descendant
-                const descendantIds = descendants
-                    .map((descendant) => descendant[descendantColumn.databasePath]);
-
-                if (descendantIds.length > 0) {
-                    // 4. get all ancestors of each descendant :)
-                    const ancestorsOfDescendants = await manager.query<Record<string, any>[]>(
-                        `Select *
-                             FROM ${tableName}
-                             WHERE
-                                 ${ancestorColumn.databasePath} != '${primaryKeyValue}' AND
-                                 ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                                 ${descendantColumn.databasePath} IN (${descendantIds.map((descendantId) => `'${descendantId}'`).join(',')});`,
-                    );
-
-                    const acc = ancestorsOfDescendants.reduce((acc, curr) => {
-                        if (!acc[curr[descendantColumn.databasePath]]) {
-                            acc[curr[descendantColumn.databasePath]] = [];
-                        }
-
-                        acc[curr[descendantColumn.databasePath]].push(curr[ancestorColumn.databasePath]);
-                        return acc;
-                    }, {} as Record<string, string[]>);
-
-                    // 5. Check if for each child a relation exists with each ancestor (create if not exist)
-                    for (const descendant of descendantIds) {
-                        const ancestorsOfDescendent = acc[descendant] ?? [];
-
-                        for (const ancestorId of ancestorIds) {
-                            const index = ancestorsOfDescendent.indexOf(ancestorId);
-                            if (index === -1) {
-                                await manager.query(`INSERT INTO
-                                                        ${tableName}
-                                                     (${ancestorColumn.databasePath}, ${descendantColumn.databasePath}) VALUES
-                                                       ('${ancestorId}','${descendant}');`);
-                            }
-                        }
+                const acc = ancestorsOfDescendants.reduce((acc, curr) => {
+                    if (!acc[curr[descendantColumn.databasePath]]) {
+                        acc[curr[descendantColumn.databasePath]] = [];
                     }
-                }
-            } else {
-                const descendantIds = [
-                    primaryKeyValue,
-                    ...descendants.map((descendant) => descendant[descendantColumn.databasePath]),
-                ];
 
-                for (const ancestorId of ancestorIds) {
-                    for (const descendantId of descendantIds) {
-                        await manager.query(`DELETE
-                                                 FROM ${tableName}
-                                                 WHERE ${ancestorColumn.databasePath} = '${ancestorId}'
-                                                   AND ${descendantColumn.databasePath} = '${descendantId}';`);
+                    acc[curr[descendantColumn.databasePath]].push(curr[ancestorColumn.databasePath]);
+                    return acc;
+                }, {} as Record<string, string[]>);
+
+                // 5. Check if for each child a relation exists with each ancestor (create if not exist)
+                for (const descendant of descendantIds) {
+                    const ancestorsOfDescendent = acc[descendant] ?? [];
+
+                    for (const ancestorId of ancestorIds) {
+                        const index = ancestorsOfDescendent.indexOf(ancestorId);
+                        if (index === -1) {
+                            await manager.query(
+                                `INSERT INTO ${tableName}
+                                    (${ancestorColumn.databasePath}, ${descendantColumn.databasePath})
+                                    VALUES (${param(0)}, ${param(1)})`,
+                                [ancestorId, descendant],
+                            );
+                        }
                     }
                 }
             }
-        });
+        } else {
+            const descendantIds = [
+                primaryKeyValue,
+                ...descendants.map((descendant) => descendant[descendantColumn.databasePath]),
+            ];
+
+            for (const ancestorId of ancestorIds) {
+                for (const descendantId of descendantIds) {
+                    await manager.query(
+                        `DELETE FROM ${tableName}
+                            WHERE ${ancestorColumn.databasePath} = ${param(0)}
+                              AND ${descendantColumn.databasePath} = ${param(1)}`,
+                        [ancestorId, descendantId],
+                    );
+                }
+            }
+        }
     }
 }

@@ -5,8 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionItem } from '../types';
-
-export function buildPermissionItemKey(input: PermissionItem) {
-    return `${input.realmId || '_'}/${input.clientId || '_'}/${input.name}`;
+export function buildPermissionBindingKey(input: { name: string, client_id?: string | null, realm_id?: string | null }) {
+    return `${input.realm_id || '_'}/${input.client_id || '_'}/${input.name}`;
 }

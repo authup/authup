@@ -30,7 +30,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<RoleAttribute>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,
@@ -45,7 +45,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         for (const entity of entities) {
             try {
-                await actor.permissionChecker.checkOneOf({
+                await actor.permissionEvaluator.evaluateOneOf({
                     name: [
                         PermissionName.ROLE_READ,
                         PermissionName.ROLE_UPDATE,
@@ -68,7 +68,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         id: string,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,
@@ -81,7 +81,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.checkOneOf({
+        await actor.permissionEvaluator.evaluateOneOf({
             name: [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_UPDATE,
@@ -99,7 +99,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -107,7 +107,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         const entity = this.repository.create(data);
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -124,7 +124,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -135,7 +135,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         entity = this.repository.merge(entity, data);
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,
@@ -151,14 +151,14 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         id: string,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROLE_UPDATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

@@ -6,3 +6,4 @@
  */
 
 export const ROLE_ADMIN_NAME = 'admin';
+export const ROLE_REALM_ADMIN_NAME = 'realm_admin';

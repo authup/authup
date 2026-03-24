@@ -7,8 +7,8 @@
 
 import { ScopeName } from '@authup/core-kit';
 import type {
-    IPermissionChecker,
-    PermissionCheckerCheckContext,
+    IPermissionEvaluator,
+    PermissionEvaluationContext,
 } from '@authup/access';
 import {
     BuiltInPolicyType, PolicyData,
@@ -16,39 +16,39 @@ import {
 import type { Request } from 'routup';
 import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
-export class RequestPermissionChecker {
+export class RequestPermissionEvaluator implements IPermissionEvaluator {
     protected req: Request;
 
-    protected checker: IPermissionChecker;
+    protected evaluator: IPermissionEvaluator;
 
-    constructor(req: Request, checker: IPermissionChecker) {
+    constructor(req: Request, evaluator: IPermissionEvaluator) {
         this.req = req;
-        this.checker = checker;
+        this.evaluator = evaluator;
     }
 
     // --------------------------------------------------------------
 
-    async check(ctx: PermissionCheckerCheckContext) : Promise<void> {
-        return this.checker.check(this.extendCheckContext(ctx));
+    async evaluate(ctx: PermissionEvaluationContext) : Promise<void> {
+        return this.evaluator.evaluate(this.extendContext(ctx));
     }
 
-    async preCheck(ctx: PermissionCheckerCheckContext) : Promise<void> {
-        return this.checker.preCheck(this.extendCheckContext(ctx));
-    }
-
-    // --------------------------------------------------------------
-
-    async preCheckOneOf(ctx: PermissionCheckerCheckContext) : Promise<void> {
-        return this.checker.preCheckOneOf(this.extendCheckContext(ctx));
-    }
-
-    async checkOneOf(ctx: PermissionCheckerCheckContext) : Promise<void> {
-        return this.checker.checkOneOf(this.extendCheckContext(ctx));
+    async preEvaluate(ctx: PermissionEvaluationContext) : Promise<void> {
+        return this.evaluator.preEvaluate(this.extendContext(ctx));
     }
 
     // --------------------------------------------------------------
 
-    protected extendCheckContext(ctx: PermissionCheckerCheckContext) {
+    async preEvaluateOneOf(ctx: PermissionEvaluationContext) : Promise<void> {
+        return this.evaluator.preEvaluateOneOf(this.extendContext(ctx));
+    }
+
+    async evaluateOneOf(ctx: PermissionEvaluationContext) : Promise<void> {
+        return this.evaluator.evaluateOneOf(this.extendContext(ctx));
+    }
+
+    // --------------------------------------------------------------
+
+    protected extendContext(ctx: PermissionEvaluationContext) {
         const scopes = useRequestScopes(this.req);
         if (scopes.includes(ScopeName.GLOBAL)) {
             ctx.input = ctx.input || new PolicyData();

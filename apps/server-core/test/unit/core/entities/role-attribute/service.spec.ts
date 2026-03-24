@@ -45,7 +45,7 @@ describe('core/entities/role-attribute/service', () => {
             ]);
 
             const actor = createAllowAllActor();
-            vi.mocked(actor.permissionChecker.checkOneOf).mockImplementation(async (ctx: any) => {
+            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockImplementation(async (ctx: any) => {
                 if (ctx.input) {
                     const entity = ctx.input.get('attributes');
                     if (entity && entity.id === denied.id) {
@@ -98,7 +98,7 @@ describe('core/entities/role-attribute/service', () => {
                 name: 'attr', value: 'val', role_id: randomUUID(), role: { realm_id: null },
             }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_UPDATE,
             });
         });
@@ -138,7 +138,7 @@ describe('core/entities/role-attribute/service', () => {
 
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_UPDATE,
             });
         });

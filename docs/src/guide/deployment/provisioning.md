@@ -9,11 +9,31 @@ Your custom provisioning files are merged on top.
 
 ## File-Based Provisioning
 
-Place one or more provisioning files in a directory and point the server to it.
+Place one or more provisioning files in the `provisioning/` subdirectory of the writable directory.
+The writable directory defaults to `./writable` (relative to the application root) and can be configured
+via the `WRITABLE_DIRECTORY_PATH` environment variable.
+
 Supported formats: `.json`, `.yaml`, `.yml`, `.ts`, `.mts`, `.mjs`, `.js`.
 
 When multiple files exist in the directory, they are loaded alphabetically and merged.
 If two files define the same entity (same `name` + scope), the later file wins.
+
+### Docker / Kubernetes
+
+Mount your provisioning files into the container's writable directory:
+
+```bash
+docker run -v /path/to/provisioning:/opt/authup/writable/provisioning authup/authup
+```
+
+Or set the writable directory explicitly:
+
+```bash
+docker run \
+  -e WRITABLE_DIRECTORY_PATH=/data \
+  -v /path/to/provisioning:/data/provisioning \
+  authup/authup
+```
 
 ### Example (TypeScript)
 
@@ -110,8 +130,39 @@ The top-level object has five optional arrays. Items at this level are **global*
 | Field              | Type                     | Description                          |
 |--------------------|--------------------------|--------------------------------------|
 | `attributes`       | object                   | `name` (required), `type`, `built_in`, `realm_id` |
-| `extraAttributes`  | object                   | Policy-specific configuration (e.g. `decisionStrategy`, `attributeName`) |
+| `extraAttributes`  | object                   | Policy-specific configuration (e.g. `decision_strategy`, `attribute_name`) |
 | `children`         | `PolicyProvisioning[]`   | Child policies (for composite policies) |
+
+### Policy Extra Attributes
+
+Policies use `extraAttributes` for their type-specific configuration. All attribute keys use **snake_case**.
+
+| Policy Type | Attribute | Type | Description |
+|---|---|---|---|
+| `composite` | `decision_strategy` | `string` | `unanimous` or `affirmative` |
+| `realm_match` | `attribute_name` | `string[]` | Entity attributes to match against identity realm |
+| `realm_match` | `attribute_name_strict` | `boolean` | Require all listed attributes to match |
+| `realm_match` | `identity_master_match_all` | `boolean` | Whether master realm identities bypass realm checks |
+| `realm_match` | `attribute_null_match_all` | `boolean` | Whether `null` attribute values match any realm |
+| `attributes` | `query` | `object` | MongoDB-style query (e.g. `{ realm_id: { $ne: null } }`) |
+| `time` | `start` | `string` | ISO 8601 start datetime |
+| `time` | `end` | `string` | ISO 8601 end datetime |
+
+Example — defining a realm-match policy with custom settings:
+
+```yaml
+policies:
+  - attributes:
+      name: system.realm-match
+      type: realm_match
+      built_in: true
+    extraAttributes:
+      attribute_name:
+        - realm_id
+      attribute_name_strict: false
+      identity_master_match_all: false
+      attribute_null_match_all: true
+```
 
 ### Permission
 
@@ -137,10 +188,13 @@ The top-level object has five optional arrays. Items at this level are **global*
 
 **Role relations:**
 
-| Field               | Type       | Description                                              |
-|---------------------|------------|----------------------------------------------------------|
-| `globalPermissions` | `string[]` | Permission names to assign (global scope). `'*'` = all. |
-| `realmPermissions`  | `string[]` | Permission names to assign (realm scope). `'*'` = all.  |
+| Field                          | Type       | Description                                                                          |
+|--------------------------------|------------|--------------------------------------------------------------------------------------|
+| `globalPermissions`                | `string[]`              | Permission names to assign (global scope). `'*'` = all.                             |
+| `globalPermissionsExclude`         | `string[]`              | Permission names to exclude when using `'*'` wildcard in `globalPermissions`.        |
+| `globalPermissionsPolicyName`      | `string`                | Default policy name for each `globalPermissions` assignment entry.                    |
+| `globalPermissionsPolicyOverrides` | `Record<string, string[]>` | Per-permission policy overrides. Key = policy name, value = permission names.      |
+| `realmPermissions`                 | `string[]`              | Permission names to assign (realm scope). `'*'` = all.                              |
 
 ### Realm
 
@@ -287,6 +341,35 @@ roles:
       realmPermissions:
         - '*'       # assigns every permission in the same realm
 ```
+
+Use `globalPermissionsExclude` to exclude specific permissions from a wildcard,
+`globalPermissionsPolicyName` to set a default junction policy,
+and `globalPermissionsPolicyOverrides` to override the policy for specific permissions:
+
+```typescript
+roles: [
+    {
+        attributes: { name: 'realm_admin', built_in: true },
+        relations: {
+            globalPermissions: ['*'],
+            globalPermissionsExclude: ['realm_create', 'realm_update', 'realm_delete'],
+            globalPermissionsPolicyName: 'system.realm-or-global',
+            globalPermissionsPolicyOverrides: {
+                'system.realm-bound': [
+                    'role_create', 'role_update', 'role_delete',
+                    'permission_create', 'permission_update', 'permission_delete',
+                    'scope_create', 'scope_update', 'scope_delete',
+                ],
+            },
+        },
+    },
+],
+```
+
+This creates a `realm_admin` role that:
+- Has all permissions except realm management
+- Defaults to `system.realm-or-global` — can read global entities and assign them to own-realm entities
+- Overrides to `system.realm-bound` for entity CUD — cannot create/modify/delete global roles, permissions, or scopes
 
 ## Merging Behavior
 

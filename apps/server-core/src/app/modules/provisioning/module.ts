@@ -4,12 +4,11 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import { SystemPolicyName } from '@authup/access';
 import type {
     Client,
     ClientPermission,
     ClientRole,
-    Permission,
+    PermissionPolicy,
     Realm,
     Robot,
     RobotPermission,
@@ -20,7 +19,6 @@ import type {
     UserPermission,
     UserRole,
 } from '@authup/core-kit';
-import { useLogger } from '@authup/server-kit';
 import type { DataSource, Repository } from 'typeorm';
 import {
     ClientEntity,
@@ -37,7 +35,9 @@ import {
     UserPermissionEntity,
     UserRoleEntity,
 } from '../../../adapters/database/index.ts';
+import { SystemPolicyName } from '@authup/access';
 import {
+    PermissionPolicyEntity,
     PolicyRepository,
     UserRepository,
 } from '../../../adapters/database/domains/index.ts';
@@ -60,6 +60,7 @@ import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
     ClientRoleRepositoryAdapter,
+    PermissionPolicyRepositoryAdapter,
     PermissionRepositoryAdapter,
     PolicyRepositoryAdapter,
     RealmRepositoryAdapter,
@@ -74,11 +75,13 @@ import {
     UserRoleRepositoryAdapter,
 } from '../database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
-import type { Config } from '../config/index.ts';
-import { ConfigInjectionKey } from '../config/index.ts';
 import type { Module } from '../types.ts';
 import { ModuleName } from '../constants.ts';
-import { CompositeProvisioningSource } from './sources/index.ts';
+import fs from 'node:fs';
+import path from 'node:path';
+import type { Config } from '../config/index.ts';
+import { ConfigInjectionKey } from '../config/index.ts';
+import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
 export class ProvisionerModule implements Module {
     readonly name: string;
@@ -94,15 +97,22 @@ export class ProvisionerModule implements Module {
     }
 
     async start(container: IDIContainer): Promise<void> {
-        const composite = new CompositeProvisioningSource(this.sources);
-        const data = await composite.load(container);
+        const sources = [...this.sources];
 
         const config = container.resolve<Config>(ConfigInjectionKey);
+        const provisioningDir = path.join(config.writableDirectoryPath, 'provisioning');
+        if (fs.existsSync(provisioningDir)) {
+            sources.push(new FileProvisioningSource({ cwd: provisioningDir }));
+        }
+
+        const composite = new CompositeProvisioningSource(sources);
+        const data = await composite.load(container);
+
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
         const permissionRepository = new PermissionRepositoryAdapter({
-            repository: container.resolve<Repository<Permission>>(PermissionEntity),
+            repository: container.resolve<Repository<PermissionEntity>>(PermissionEntity),
             realmRepository,
         });
 
@@ -112,31 +122,16 @@ export class ProvisionerModule implements Module {
         });
 
         // ---------------------------------------------------------------
-        // Resolve defaultPolicyId from DB (exists from previous runs)
-        // ---------------------------------------------------------------
-
-        let defaultPolicyId: string | undefined;
-        if (config.permissionsDefaultPolicyAssignment) {
-            const existingPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
-            if (existingPolicy) {
-                defaultPolicyId = existingPolicy.id;
-            }
-
-            useLogger().warn(
-                'DEPRECATED: permissionsDefaultPolicyAssignment is enabled. ' +
-                'New permissions without policy_id will be auto-assigned the system.default policy. ' +
-                'This option will be removed in the next major release. ' +
-                'Set PERMISSIONS_DEFAULT_POLICY_ASSIGNMENT=false to opt into the allow-by-default model.',
-            );
-        }
-
-        // ---------------------------------------------------------------
         // Synchronize all entities (policies → permissions → roles → ...)
         // ---------------------------------------------------------------
 
+        const permissionPolicyRepository = new PermissionPolicyRepositoryAdapter(
+            container.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity),
+        );
+
         const policySynchronizer = new PolicyProvisioningSynchronizer({
             repository: policyRepository,
-            permissionRepository,
+            permissionPolicyRepository,
         });
 
         const roleRepository = new RoleRepositoryAdapter({
@@ -150,12 +145,12 @@ export class ProvisionerModule implements Module {
 
         const permissionSynchronizer = new PermissionProvisioningSynchronizer({
             repository: permissionRepository,
-            defaultPolicyId,
         });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
             permissionRepository,
+            policyRepository,
             rolePermissionRepository: new RolePermissionRepositoryAdapter(
                 container.resolve<Repository<RolePermission>>(RolePermissionEntity),
             ),
@@ -238,19 +233,36 @@ export class ProvisionerModule implements Module {
 
         await rootSynchronizer.synchronize(data);
 
-        // ---------------------------------------------------------------
-        // Backfill: assign system.default to permissions without policy_id
-        // ---------------------------------------------------------------
-
         if (config.permissionsDefaultPolicyAssignment) {
-            const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
-            if (defaultPolicy) {
-                await dataSource
-                    .createQueryBuilder()
-                    .update(PermissionEntity)
-                    .set({ policy_id: defaultPolicy.id })
-                    .where('policy_id IS NULL')
-                    .execute();
+            await this.assignDefaultPolicy(dataSource, policyRepository);
+        }
+    }
+
+    protected async assignDefaultPolicy(
+        dataSource: DataSource,
+        policyRepository: PolicyRepositoryAdapter,
+    ): Promise<void> {
+        const defaultPolicy = await policyRepository.findOneByName(SystemPolicyName.DEFAULT);
+        if (!defaultPolicy) {
+            return;
+        }
+
+        const permissionRepo = dataSource.getRepository(PermissionEntity);
+        const junctionRepo = dataSource.getRepository(PermissionPolicyEntity);
+
+        const permissions = await permissionRepo.find();
+        for (const permission of permissions) {
+            const hasAnyPolicy = await junctionRepo.findOneBy({
+                permission_id: permission.id,
+            });
+
+            if (!hasAnyPolicy) {
+                await junctionRepo.save(junctionRepo.create({
+                    permission_id: permission.id,
+                    permission_realm_id: permission.realm_id,
+                    policy_id: defaultPolicy.id,
+                    policy_realm_id: defaultPolicy.realm_id,
+                }));
             }
         }
     }

@@ -55,7 +55,7 @@ describe('core/entities/scope/service', () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
 
-            expect(actor.permissionChecker.preCheckOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
                 name: [
                     PermissionName.SCOPE_READ,
                     PermissionName.SCOPE_UPDATE,
@@ -101,7 +101,7 @@ describe('core/entities/scope/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'new-scope' }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.SCOPE_CREATE,
             });
         });
@@ -174,9 +174,23 @@ describe('core/entities/scope/service', () => {
             expect(result.realm_id).toBe(realmId);
         });
 
-        it('should not set realm_id for master realm actor on create', async () => {
-            const result = await service.create({ name: 'global-scope' }, createMasterRealmActor());
-            expect(result.realm_id).toBeUndefined();
+        it('should set realm_id to master realm for master realm actor on create', async () => {
+            const actor = createMasterRealmActor();
+            const masterRealmId = actor.identity!.data.realm_id;
+
+            const result = await service.create({ name: 'global-scope' }, actor);
+            expect(result.realm_id).toBe(masterRealmId);
+        });
+
+        it('should preserve realm_id: null when explicitly provided on create', async () => {
+            const actor = createNonMasterRealmActor();
+
+            const result = await service.create(
+                { name: 'global-scope', realm_id: null },
+                actor,
+            );
+
+            expect(result.realm_id).toBeNull();
         });
     });
 

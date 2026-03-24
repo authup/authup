@@ -30,7 +30,7 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<RobotRole>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROBOT_ROLE_READ,
                 PermissionName.ROBOT_ROLE_UPDATE,
@@ -45,7 +45,7 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         id: string,
         actor: ActorContext,
     ): Promise<RobotRole> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROBOT_ROLE_READ,
                 PermissionName.ROBOT_ROLE_UPDATE,
@@ -65,7 +65,7 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RobotRole> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROBOT_ROLE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_ROLE_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -77,7 +77,7 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
             data.robot_realm_id = data.robot.realm_id;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -94,14 +94,14 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         id: string,
         actor: ActorContext,
     ): Promise<RobotRole> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROBOT_ROLE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_ROLE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

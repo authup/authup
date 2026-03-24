@@ -32,7 +32,7 @@ describe('core/entities/robot-permission/service', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionChecker.preCheckOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
                 name: [
                     PermissionName.ROBOT_PERMISSION_CREATE,
                     PermissionName.ROBOT_PERMISSION_DELETE,
@@ -80,7 +80,7 @@ describe('core/entities/robot-permission/service', () => {
                 permission: { name: 'custom-perm', realm_id: null },
             }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: 'custom-perm',
             });
         });
@@ -107,7 +107,7 @@ describe('core/entities/robot-permission/service', () => {
             const entity = repository.seed({} as RobotPermission);
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROBOT_PERMISSION_DELETE,
             });
         });

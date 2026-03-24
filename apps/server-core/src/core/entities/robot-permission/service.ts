@@ -9,6 +9,7 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { RobotPermission } from '@authup/core-kit';
+import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { ActorContext } from '../actor/types.ts';
 import { AbstractEntityService } from '../service.ts';
 import type { EntityRepositoryFindManyResult } from '../types.ts';
@@ -16,21 +17,25 @@ import type { IRobotPermissionRepository, IRobotPermissionService } from './type
 
 export type RobotPermissionServiceContext = {
     repository: IRobotPermissionRepository;
+    identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export class RobotPermissionService extends AbstractEntityService implements IRobotPermissionService {
     protected repository: IRobotPermissionRepository;
 
+    protected identityPermissionProvider: IIdentityPermissionProvider;
+
     constructor(ctx: RobotPermissionServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     async getMany(
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<RobotPermission>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROBOT_PERMISSION_CREATE,
                 PermissionName.ROBOT_PERMISSION_DELETE,
@@ -44,7 +49,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         id: string,
         actor: ActorContext,
     ): Promise<RobotPermission> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.ROBOT_PERMISSION_CREATE,
                 PermissionName.ROBOT_PERMISSION_DELETE,
@@ -63,14 +68,14 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RobotPermission> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROBOT_PERMISSION_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_PERMISSION_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
         if (data.permission) {
             data.permission_realm_id = data.permission.realm_id;
 
-            await actor.permissionChecker.preCheck({
+            await actor.permissionEvaluator.preEvaluate({
                 name: data.permission.name,
             });
         }
@@ -79,7 +84,25 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             data.robot_realm_id = data.robot.realm_id;
         }
 
-        await actor.permissionChecker.check({
+        if (
+            data.permission &&
+            actor.identity &&
+            typeof data.policy_id === 'undefined'
+        ) {
+            const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
+                { type: actor.identity.type, id: actor.identity.data.id },
+                {
+                    name: data.permission.name,
+                    realm_id: data.permission.realm_id,
+                    client_id: data.permission.client_id,
+                },
+            );
+            if (junctionPolicy) {
+                data.policy_id = junctionPolicy.id;
+            }
+        }
+
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -96,14 +119,14 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         id: string,
         actor: ActorContext,
     ): Promise<RobotPermission> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.ROBOT_PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_PERMISSION_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

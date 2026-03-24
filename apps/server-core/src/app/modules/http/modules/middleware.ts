@@ -13,6 +13,7 @@ import type {
     IIdentityResolver,
     IOAuth2TokenVerifier, ISessionManager,
 } from '../../../../core/index.ts';
+import { IdentityPermissionProvider } from '../../../../core/index.ts';
 import {
     createAuthorizationMiddleware,
     createLoggerMiddleware,
@@ -30,8 +31,13 @@ import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
-import { PermissionDatabaseRepository } from '../../../../security/index.ts';
-import { DatabaseInjectionKey } from '../../database/index.ts';
+import { DatabaseInjectionKey, PermissionDatabaseProvider  } from '../../database/index.ts';
+import {
+    ClientRepository,
+    RobotRepository,
+    RoleRepository,
+    UserRepository,
+} from '../../../../adapters/database/domains/index.ts';
 
 export class HTTPMiddlewareModule {
     async mountBefore(router: Router, container: IDIContainer): Promise<void> {
@@ -134,10 +140,17 @@ export class HTTPMiddlewareModule {
             OAuth2InjectionToken.TokenVerifier,
         );
 
-        const permissionProvider = new PermissionDatabaseRepository(dataSource);
+        const permissionProvider = new PermissionDatabaseProvider(dataSource);
+        const identityPermissionProvider = new IdentityPermissionProvider({
+            clientRepository: new ClientRepository(dataSource),
+            userRepository: new UserRepository(dataSource),
+            robotRepository: new RobotRepository(dataSource),
+            roleRepository: new RoleRepository(dataSource),
+        });
 
         const middleware = createAuthorizationMiddleware({
             identityResolver,
+            identityPermissionProvider,
             permissionProvider,
             oauth2TokenVerifier,
             sessionManager,

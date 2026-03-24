@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IPermissionChecker } from '@authup/access';
+import type { IPermissionEvaluator } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
 export type ActorContext = {
-    permissionChecker: IPermissionChecker;
+    permissionEvaluator: IPermissionEvaluator;
     identity?: Identity;
 };

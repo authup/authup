@@ -20,6 +20,7 @@ export enum EntityType {
     POLICY = 'policy',
     POLICY_ATTRIBUTE = 'policyAttribute',
     PERMISSION = 'permission',
+    PERMISSION_POLICY = 'permissionPolicy',
     REALM = 'realm',
     ROBOT = 'robot',
     ROBOT_PERMISSION = 'robotPermission',

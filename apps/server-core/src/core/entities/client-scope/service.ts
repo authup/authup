@@ -30,7 +30,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         query: Record<string, any>,
         actor: ActorContext,
     ): Promise<EntityRepositoryFindManyResult<ClientScope>> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.CLIENT_READ,
                 PermissionName.CLIENT_UPDATE,
@@ -45,7 +45,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         id: string,
         actor: ActorContext,
     ): Promise<ClientScope> {
-        await actor.permissionChecker.preCheckOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.CLIENT_READ,
                 PermissionName.CLIENT_UPDATE,
@@ -65,7 +65,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<ClientScope> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_SCOPE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SCOPE_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -77,7 +77,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
             data.scope_realm_id = data.scope.realm_id;
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_CREATE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: data,
@@ -94,14 +94,14 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         id: string,
         actor: ActorContext,
     ): Promise<ClientScope> {
-        await actor.permissionChecker.preCheck({ name: PermissionName.CLIENT_SCOPE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SCOPE_DELETE });
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionChecker.check({
+        await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_SCOPE_DELETE,
             input: new PolicyData({
                 [BuiltInPolicyType.ATTRIBUTES]: entity,

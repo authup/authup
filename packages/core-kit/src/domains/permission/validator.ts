@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { DecisionStrategy } from '@authup/kit';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
@@ -63,9 +64,12 @@ export class PermissionValidator extends Container<
         );
 
         this.mount(
-            'policy_id',
+            'decision_strategy',
             { optional: true },
-            createValidator(z.uuid()),
+            createValidator(
+                z.enum(DecisionStrategy)
+                    .nullable(),
+            ),
         );
     }
 }

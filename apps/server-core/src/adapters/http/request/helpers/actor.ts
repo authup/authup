@@ -7,15 +7,14 @@
 
 import type { Request } from 'routup';
 import type { ActorContext } from '../../../../core/index.ts';
-import { useRequestPermissionChecker } from '../permission/helper.ts';
+import { useRequestPermissionEvaluator } from '../permission/helper.ts';
 import { useRequestIdentity } from './identity.ts';
 
 export function buildActorContext(req: Request): ActorContext {
-    const permissionChecker = useRequestPermissionChecker(req);
     const identity = useRequestIdentity(req);
 
     return {
-        permissionChecker,
+        permissionEvaluator: useRequestPermissionEvaluator(req),
         identity: identity ? identity.raw : undefined,
     };
 }

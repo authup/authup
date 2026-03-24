@@ -11,9 +11,14 @@ import type { Permission } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
+import { SystemPolicyName } from '@authup/access';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
+import type { IRoleRepository } from '../../../../../src/core/entities/role/types.ts';
+import type { IRolePermissionRepository } from '../../../../../src/core/entities/role-permission/types.ts';
+import type { IPermissionPolicyRepository } from '../../../../../src/core/entities/permission-policy/types.ts';
+import type { IPolicyRepository } from '../../../../../src/core/entities/policy/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import {
@@ -25,36 +30,44 @@ import {
 import { createFakePermission } from '../../../../utils/domains/index.ts';
 
 class FakePermissionRepository extends FakeEntityRepository<Permission> implements IPermissionRepository {
-    private policyMap: Record<string, { realm_id: string | null }> = {};
-
     async checkUniqueness(): Promise<void> {
         // no-op
-    }
-
-    async saveWithAdminRoleAssignment(entity: Permission): Promise<Permission> {
-        return this.save(entity);
-    }
-
-    async validateJoinColumns(data: Partial<Permission>): Promise<void> {
-        if (data.policy_id && this.policyMap[data.policy_id]) {
-            (data as any).policy = this.policyMap[data.policy_id];
-        }
-    }
-
-    registerPolicy(id: string, realmId: string | null) {
-        this.policyMap[id] = { realm_id: realmId };
     }
 }
 
 describe('core/entities/permission/service', () => {
     let repository: FakePermissionRepository;
     let realmRepository: FakeRealmRepository;
+    let roleRepository: FakeEntityRepository<any> & IRoleRepository;
+    let rolePermissionRepository: FakeEntityRepository<any> & IRolePermissionRepository;
+    let policyRepository: FakeEntityRepository<any> & IPolicyRepository;
+    let permissionPolicyRepository: FakeEntityRepository<any> & IPermissionPolicyRepository;
     let service: PermissionService;
 
     beforeEach(() => {
         repository = new FakePermissionRepository();
         realmRepository = new FakeRealmRepository();
-        service = new PermissionService({ repository, realmRepository });
+        roleRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IRoleRepository;
+        roleRepository.checkUniqueness = async () => {};
+        rolePermissionRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IRolePermissionRepository;
+        policyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPolicyRepository;
+        policyRepository.checkUniqueness = async () => {};
+        (policyRepository as FakeEntityRepository<any>).seed([{
+            id: 'default-policy-id',
+            name: SystemPolicyName.DEFAULT,
+            type: 'composite',
+            built_in: true,
+            realm_id: null,
+        }]);
+        permissionPolicyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPermissionPolicyRepository;
+        service = new PermissionService({
+            repository,
+            realmRepository,
+            roleRepository,
+            rolePermissionRepository,
+            policyRepository,
+            permissionPolicyRepository,
+        });
     });
 
     describe('getMany', () => {
@@ -71,7 +84,7 @@ describe('core/entities/permission/service', () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
 
-            expect(actor.permissionChecker.preCheckOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
                 name: [
                     PermissionName.PERMISSION_READ,
                     PermissionName.PERMISSION_UPDATE,
@@ -117,7 +130,7 @@ describe('core/entities/permission/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-perm' }, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.PERMISSION_CREATE,
             });
         });
@@ -128,40 +141,7 @@ describe('core/entities/permission/service', () => {
             ).rejects.toThrow(ForbiddenError);
         });
 
-        it('should assign default policy_id when provided and no explicit policy_id', async () => {
-            const defaultPolicyId = randomUUID();
-            const serviceWithDefault = new PermissionService({
-                repository,
-                realmRepository,
-                defaultPolicyId,
-            });
-
-            const result = await serviceWithDefault.create(
-                { name: 'auto-policy-perm' },
-                createAllowAllActor(),
-            );
-
-            expect(result.policy_id).toBe(defaultPolicyId);
-        });
-
-        it('should not override explicit policy_id with default', async () => {
-            const defaultPolicyId = randomUUID();
-            const explicitPolicyId = randomUUID();
-            const serviceWithDefault = new PermissionService({
-                repository,
-                realmRepository,
-                defaultPolicyId,
-            });
-
-            const result = await serviceWithDefault.create(
-                { name: 'explicit-policy-perm', policy_id: explicitPolicyId },
-                createAllowAllActor(),
-            );
-
-            expect(result.policy_id).toBe(explicitPolicyId);
-        });
-
-        it('should not assign default policy_id when none configured', async () => {
+        it('should not assign policy_id when none provided', async () => {
             const result = await service.create(
                 { name: 'no-policy-perm' },
                 createAllowAllActor(),
@@ -211,53 +191,6 @@ describe('core/entities/permission/service', () => {
         });
     });
 
-    describe('policy realm mismatch', () => {
-        it('should throw on create when policy realm differs from permission realm', async () => {
-            const realmIdA = randomUUID();
-            const realmIdB = randomUUID();
-            const policyId = randomUUID();
-            repository.registerPolicy(policyId, realmIdB);
-
-            await expect(
-                service.create({
-                    name: 'mismatched-perm',
-                    realm_id: realmIdA,
-                    policy_id: policyId,
-                }, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
-        });
-
-        it('should throw on update when policy realm differs from permission realm', async () => {
-            const realmIdA = randomUUID();
-            const realmIdB = randomUUID();
-            const policyId = randomUUID();
-            repository.registerPolicy(policyId, realmIdB);
-            const entity = repository.seed(createFakePermission({
-                name: 'existing-perm', built_in: false, realm_id: realmIdA,
-            }));
-
-            await expect(
-                service.update(entity.id, {
-                    policy_id: policyId,
-                }, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
-        });
-
-        it('should allow matching policy and permission realm', async () => {
-            const realmId = randomUUID();
-            const policyId = randomUUID();
-            repository.registerPolicy(policyId, realmId);
-
-            const result = await service.create({
-                name: 'matched-perm',
-                realm_id: realmId,
-                policy_id: policyId,
-            }, createAllowAllActor());
-
-            expect(result.id).toBeDefined();
-        });
-    });
-
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
             const { entity, created } = await service.save(
@@ -298,13 +231,27 @@ describe('core/entities/permission/service', () => {
             expect(result.realm_id).toBe(realmId);
         });
 
-        it('should not set realm_id for master realm actor on create', async () => {
+        it('should set realm_id to master realm for master realm actor on create', async () => {
+            const actor = createMasterRealmActor();
+            const masterRealmId = actor.identity!.data.realm_id;
+
             const result = await service.create(
                 { name: 'global-perm' },
-                createMasterRealmActor(),
+                actor,
             );
 
-            expect(result.realm_id).toBeUndefined();
+            expect(result.realm_id).toBe(masterRealmId);
+        });
+
+        it('should preserve realm_id: null when explicitly provided on create', async () => {
+            const actor = createNonMasterRealmActor();
+
+            const result = await service.create(
+                { name: 'global-perm', realm_id: null },
+                actor,
+            );
+
+            expect(result.realm_id).toBeNull();
         });
     });
 
@@ -336,7 +283,7 @@ describe('core/entities/permission/service', () => {
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
 
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.PERMISSION_DELETE,
             });
         });

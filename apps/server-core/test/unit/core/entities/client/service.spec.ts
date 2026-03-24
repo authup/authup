@@ -63,7 +63,7 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
-            vi.mocked(actor.permissionChecker.checkOneOf).mockRejectedValue(new ForbiddenError());
+            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockRejectedValue(new ForbiddenError());
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
@@ -137,7 +137,7 @@ describe('core/entities/client/service', () => {
             const actor = createAllowAllActor();
             await service.getOne(entity.id, actor);
 
-            expect(actor.permissionChecker.checkOneOf).toHaveBeenCalled();
+            expect(actor.permissionEvaluator.evaluateOneOf).toHaveBeenCalled();
         });
     });
 
@@ -174,7 +174,7 @@ describe('core/entities/client/service', () => {
         it('should call preCheck with CLIENT_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-client' }, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.CLIENT_CREATE,
             });
         });
@@ -269,7 +269,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient());
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionChecker.preCheck).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.CLIENT_DELETE,
             });
         });

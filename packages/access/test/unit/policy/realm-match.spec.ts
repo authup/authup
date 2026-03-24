@@ -36,8 +36,8 @@ describe('src/policy/attribute-realm', () => {
 
     it('should permit by lazy attribute name matching', async () => {
         const config : RealmMatchPolicy = {
-            attributeNameStrict: true,
-            identityMasterMatchAll: true,
+            attribute_name_strict: true,
+            identity_master_match_all: true,
         };
 
         const evaluator = new RealmMatchPolicyEvaluator();
@@ -61,7 +61,7 @@ describe('src/policy/attribute-realm', () => {
 
     it('should permit by matching master realm', async () => {
         const config : RealmMatchPolicy = {
-            identityMasterMatchAll: true,
+            identity_master_match_all: true,
         };
 
         const evaluator = new RealmMatchPolicyEvaluator();
@@ -103,7 +103,7 @@ describe('src/policy/attribute-realm', () => {
 
     it('should restrict due non matching realm and master full scope disabled', async () => {
         const policy : RealmMatchPolicy = {
-            identityMasterMatchAll: false,
+            identity_master_match_all: false,
         };
 
         const evaluator = new RealmMatchPolicyEvaluator();

@@ -6,10 +6,10 @@
  */
 
 import type {
-    Permission,
     Robot,
     Role,
 } from '@authup/core-kit';
+import type { PermissionBinding, PolicyWithType } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
@@ -17,10 +17,14 @@ import { CachePrefix } from '../constants.ts';
 import { RobotEntity } from './entity.ts';
 import { RobotRoleEntity } from '../robot-role/index.ts';
 import { RobotPermissionEntity } from '../robot-permission/index.ts';
+import { PolicyRepository } from '../policy/index.ts';
 
 export class RobotRepository extends Repository<RobotEntity> {
+    #manager: EntityManager;
+
     constructor(instance: DataSource | EntityManager) {
         super(RobotEntity, InstanceChecker.isDataSource(instance) ? instance.manager : instance);
+        this.#manager = InstanceChecker.isDataSource(instance) ? instance.manager : instance;
     }
 
     async getBoundRoles(
@@ -57,7 +61,7 @@ export class RobotRepository extends Repository<RobotEntity> {
 
     async getBoundPermissions(
         entity: string | Robot,
-    ) : Promise<Permission[]> {
+    ) : Promise<PermissionBinding[]> {
         let id : string;
         if (typeof entity === 'string') {
             id = entity;
@@ -83,7 +87,44 @@ export class RobotRepository extends Repository<RobotEntity> {
             },
         });
 
+        const policyIds = new Set<string>();
+        for (const entry of entities) {
+            if (entry.policy_id) {
+                policyIds.add(entry.policy_id);
+            }
+        }
+
+        const policyTrees = await this.loadPolicyTrees([...policyIds]);
+
         return entities
-            .map((entity) => entity.permission);
+            .map((entry) => {
+                const policies: PolicyWithType[] = [];
+                if (entry.policy_id && policyTrees[entry.policy_id]) {
+                    policies.push(policyTrees[entry.policy_id]);
+                }
+
+                return {
+                    permission: entry.permission,
+                    policies: policies.length > 0 ? policies : undefined,
+                };
+            });
+    }
+
+    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, PolicyWithType>> {
+        if (policyIds.length === 0) {
+            return {};
+        }
+
+        const policyRepository = new PolicyRepository(this.#manager);
+        const result: Record<string, PolicyWithType> = {};
+
+        for (const id of policyIds) {
+            const tree = await policyRepository.findDescendantsTreeById(id);
+            if (tree) {
+                result[id] = tree;
+            }
+        }
+
+        return result;
     }
 }
