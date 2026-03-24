@@ -33,6 +33,24 @@ const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
     PermissionName.REALM_DELETE,
 ];
 
+/**
+ * CUD permissions for global-capable entity types.
+ * These get system.realm-bound to prevent realm_admin from
+ * creating/modifying/deleting global entities.
+ * All other permissions get system.realm-or-global.
+ */
+const REALM_ADMIN_BOUND_PERMISSIONS = [
+    PermissionName.ROLE_CREATE,
+    PermissionName.ROLE_UPDATE,
+    PermissionName.ROLE_DELETE,
+    PermissionName.PERMISSION_CREATE,
+    PermissionName.PERMISSION_UPDATE,
+    PermissionName.PERMISSION_DELETE,
+    PermissionName.SCOPE_CREATE,
+    PermissionName.SCOPE_UPDATE,
+    PermissionName.SCOPE_DELETE,
+];
+
 export type PermissionServiceContext = {
     repository: IPermissionRepository;
     realmRepository: IRealmRepository;
@@ -194,7 +212,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             return { entity, created: false };
         }
 
-        if (!validated.realm_id && actor.identity) {
+        if (!isPropertySet(validated, 'realm_id') && actor.identity) {
             validated.realm_id = this.getActorRealmId(actor) || null;
         }
 
@@ -286,8 +304,11 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     }
 
     /**
-     * Assign a newly created permission to all matching realm_admin roles
-     * with the system.realm-bound policy.
+     * Assign a newly created permission to all matching realm_admin roles.
+     *
+     * Uses differentiated junction policies:
+     * - CUD on global-capable entity types → system.realm-bound
+     * - Everything else → system.realm-or-global
      *
      * Eligible permissions:
      * - Built-in authup permissions (global) — assigned to all realm_admin roles
@@ -297,8 +318,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
      * - Realm CRUD permissions (realm_create, realm_update, realm_delete)
      * - Custom global permissions (non-built-in with realm_id: null)
      *
-     * Fails closed: skips assignment entirely if system.realm-bound policy
-     * is not found, to prevent creating unrestricted bindings.
+     * Fails closed: skips assignment entirely if required policies are not found.
      */
     private async assignToRealmAdminRoles(permission: Permission): Promise<void> {
         if (REALM_ADMIN_EXCLUDED_PERMISSIONS.includes(permission.name as PermissionName)) {
@@ -310,8 +330,12 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             return;
         }
 
-        const realmBoundPolicy = await this.policyRepository.findOneByName(SystemPolicyName.REALM_BOUND);
-        if (!realmBoundPolicy) {
+        const policyName = REALM_ADMIN_BOUND_PERMISSIONS.includes(permission.name as PermissionName) ?
+            SystemPolicyName.REALM_BOUND :
+            SystemPolicyName.REALM_OR_GLOBAL;
+
+        const policy = await this.policyRepository.findOneByName(policyName);
+        if (!policy) {
             return;
         }
 
@@ -329,7 +353,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
                 role_realm_id: role.realm_id,
                 permission_id: permission.id,
                 permission_realm_id: permission.realm_id,
-                policy_id: realmBoundPolicy.id,
+                policy_id: policy.id,
             });
             await this.rolePermissionRepository.save(entry);
         }

@@ -90,6 +90,20 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     identity_master_match_all: false,
                 },
             },
+            {
+                attributes: {
+                    name: SystemPolicyName.REALM_OR_GLOBAL,
+                    type: BuiltInPolicyType.REALM_MATCH,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    attribute_name: ['realm_id'],
+                    attribute_name_strict: false,
+                    attribute_null_match_all: true,
+                    identity_master_match_all: false,
+                },
+            },
         ];
     }
 
@@ -152,7 +166,20 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                         PermissionName.REALM_UPDATE,
                         PermissionName.REALM_DELETE,
                     ],
-                    globalPermissionsPolicyName: SystemPolicyName.REALM_BOUND,
+                    globalPermissionsPolicyName: SystemPolicyName.REALM_OR_GLOBAL,
+                    globalPermissionsPolicyOverrides: {
+                        [SystemPolicyName.REALM_BOUND]: [
+                            PermissionName.ROLE_CREATE,
+                            PermissionName.ROLE_UPDATE,
+                            PermissionName.ROLE_DELETE,
+                            PermissionName.PERMISSION_CREATE,
+                            PermissionName.PERMISSION_UPDATE,
+                            PermissionName.PERMISSION_DELETE,
+                            PermissionName.SCOPE_CREATE,
+                            PermissionName.SCOPE_UPDATE,
+                            PermissionName.SCOPE_DELETE,
+                        ],
+                    },
                 },
             },
         ];

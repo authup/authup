@@ -51,4 +51,5 @@ export const SystemPolicyName = {
     PERMISSION_BINDING: 'system.permission-binding',
     REALM_MATCH: 'system.realm-match',
     REALM_BOUND: 'system.realm-bound',
+    REALM_OR_GLOBAL: 'system.realm-or-global',
 } as const;

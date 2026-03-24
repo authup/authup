@@ -62,7 +62,7 @@ export class ScopeValidator extends Container<
         this.mount(
             'realm_id',
             { group: ValidatorGroup.CREATE, optional: true },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().nullable()),
         );
     }
 }

@@ -181,6 +181,17 @@ describe('core/entities/scope/service', () => {
             const result = await service.create({ name: 'global-scope' }, actor);
             expect(result.realm_id).toBe(masterRealmId);
         });
+
+        it('should preserve realm_id: null when explicitly provided on create', async () => {
+            const actor = createNonMasterRealmActor();
+
+            const result = await service.create(
+                { name: 'global-scope', realm_id: null },
+                actor,
+            );
+
+            expect(result.realm_id).toBeNull();
+        });
     });
 
     describe('delete', () => {

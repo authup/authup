@@ -59,8 +59,9 @@ These are created and maintained automatically on startup:
 - `system.default` — a composite policy (UNANIMOUS) that bundles the standard restrictions
 - `system.identity` — requires a valid identity (user, robot, or client)
 - `system.permission-binding` — checks that the identity has the permission assigned
-- `system.realm-match` — ensures realm-level isolation
-- `system.realm-bound` — restricts operations to realm-scoped entities only (entities with `realm_id` not null)
+- `system.realm-match` — ensures realm-level isolation; global entities (`realm_id: null`) match any realm
+- `system.realm-bound` — strict realm matching; rejects global entities (`realm_id: null`)
+- `system.realm-or-global` — realm matching that allows both own-realm and global entities
 
 System policies:
 - Are marked as `built_in` and cannot be modified or deleted via the API
@@ -83,17 +84,21 @@ The system only manages built-in policies. Users can create and assign custom po
 
 ## Realm Scoping
 
-Authup distinguishes between **global** and **realm-scoped** entities.
-Global entities (e.g. permissions, policies) have `realm_id = null` and exist outside any realm.
-Realm-scoped entities (e.g. users, clients, robots) belong to a specific realm.
+Authup distinguishes between **global** and **realm-scoped** entities:
+
+- **Global entities** (permissions, roles, scopes, policies) can have `realm_id = null` — they exist outside any realm and are reusable across all realms.
+- **Realm-scoped entities** (users, clients, robots) always belong to a specific realm.
+
+To create a global entity via the API, explicitly pass `realm_id: null`. If omitted, `realm_id` defaults to the actor's realm.
 
 Two built-in admin roles control the scope of access:
 
-- **`admin`** — full access to all entities, including global ones
-- **`realm_admin`** — access restricted to realm-scoped entities only. This role has the `system.realm-bound` policy attached as a junction policy on its permission assignments, preventing operations on global entities.
+- **`admin`** — full unrestricted access to all entities, including global ones.
+- **`realm_admin`** — uses differentiated junction policies:
+  - **Entity CUD** (create/update/delete roles, permissions, scopes): `system.realm-bound` — cannot create or modify global entities.
+  - **Everything else** (reads, junction/assignment operations, identity CRUD): `system.realm-or-global` — can read global entities and assign global roles/permissions/scopes to entities within their own realm.
 
-There is no special "master realm" privilege. Access control is entirely policy-driven:
-the `system.realm-bound` policy evaluates whether an entity has a `realm_id`, and denies the operation if it does not.
+There is no special "master realm" privilege. Access control is entirely policy-driven.
 
 ## Permission Evaluation
 
@@ -121,9 +126,9 @@ The decision strategy is set per permission. Most built-in permissions use `unan
 Permission assignments (role-permission, user-permission, client-permission, robot-permission) can carry their own policy via the junction table.
 This **junction policy** adds an additional restriction on top of the permission's own policies.
 
-For example, the `realm_admin` role assigns all permissions with the `system.realm-bound` junction policy.
-Even though the underlying permissions use `system.default` as their policy, the junction policy further restricts
-the `realm_admin` to only operate on entities that have a `realm_id`.
+For example, the `realm_admin` role assigns entity CUD permissions with the `system.realm-bound` junction policy
+(preventing creation of global entities), while read and assignment permissions use `system.realm-or-global`
+(allowing interaction with global entities within the actor's realm).
 
 ## Privilege Escalation Prevention
 

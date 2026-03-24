@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { isUUID } from '@authup/kit';
+import { isPropertySet, isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import {
     PermissionName,
@@ -155,7 +155,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             return { entity, created: false };
         }
 
-        if (!validated.realm_id && actor.identity) {
+        if (!isPropertySet(validated, 'realm_id') && actor.identity) {
             validated.realm_id = this.getActorRealmId(actor) || null;
         }
 

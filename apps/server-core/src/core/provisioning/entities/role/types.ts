@@ -19,9 +19,15 @@ export type RoleProvisioningRelations = {
     globalPermissionsExclude?: string[],
 
     /**
-     * Policy ID to set on each role-permission junction entry.
+     * Default policy name to set on each role-permission junction entry.
      */
     globalPermissionsPolicyName?: string,
+
+    /**
+     * Per-permission policy overrides. Maps policy name to permission names
+     * that should use that policy instead of the default.
+     */
+    globalPermissionsPolicyOverrides?: Record<string, string[]>,
 
     /**
      * Assign role to realm permissions.

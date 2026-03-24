@@ -99,30 +99,69 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
         ];
 
         if (permissions.length > 0) {
-            let extraAttributes: Record<string, unknown> | undefined;
+            const policyMap = await this.resolvePolicyMap(input, attributes.name);
 
-            if (input.relations.globalPermissionsPolicyName && this.policyRepository) {
-                const policy = await this.policyRepository.findOneByName(input.relations.globalPermissionsPolicyName);
-                if (!policy) {
-                    throw new Error(
-                        `Provisioning: policy '${input.relations.globalPermissionsPolicyName}' not found for role '${attributes.name}'.`,
+            if (policyMap) {
+                for (const permission of permissions) {
+                    const policyId = policyMap.overrides.get(permission.name) ?? policyMap.defaultPolicyId;
+                    await this.permissionJunction.synchronize(
+                        attributes,
+                        [permission],
+                        'permission_id',
+                        'permission_realm_id',
+                        policyId ? { policy_id: policyId } : undefined,
                     );
                 }
-                extraAttributes = { policy_id: policy.id };
+            } else {
+                await this.permissionJunction.synchronize(
+                    attributes,
+                    permissions,
+                    'permission_id',
+                    'permission_realm_id',
+                );
             }
-
-            await this.permissionJunction.synchronize(
-                attributes,
-                permissions,
-                'permission_id',
-                'permission_realm_id',
-                extraAttributes,
-            );
         }
 
         return {
             ...input,
             attributes,
+        };
+    }
+
+    private async resolvePolicyMap(
+        input: RoleProvisioningEntity,
+        roleName: string | undefined,
+    ): Promise<{ defaultPolicyId: string | undefined, overrides: Map<string, string> } | undefined> {
+        if (!input.relations?.globalPermissionsPolicyName || !this.policyRepository) {
+            return undefined;
+        }
+
+        const defaultPolicy = await this.policyRepository.findOneByName(input.relations.globalPermissionsPolicyName);
+        if (!defaultPolicy) {
+            throw new Error(
+                `Provisioning: policy '${input.relations.globalPermissionsPolicyName}' not found for role '${roleName}'.`,
+            );
+        }
+
+        const overrides = new Map<string, string>();
+
+        if (input.relations.globalPermissionsPolicyOverrides) {
+            for (const [policyName, permissionNames] of Object.entries(input.relations.globalPermissionsPolicyOverrides)) {
+                const policy = await this.policyRepository.findOneByName(policyName);
+                if (!policy) {
+                    throw new Error(
+                        `Provisioning: override policy '${policyName}' not found for role '${roleName}'.`,
+                    );
+                }
+                for (const permName of permissionNames) {
+                    overrides.set(permName, policy.id);
+                }
+            }
+        }
+
+        return {
+            defaultPolicyId: defaultPolicy.id,
+            overrides,
         };
     }
 }

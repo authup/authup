@@ -190,10 +190,11 @@ policies:
 
 | Field                          | Type       | Description                                                                          |
 |--------------------------------|------------|--------------------------------------------------------------------------------------|
-| `globalPermissions`            | `string[]` | Permission names to assign (global scope). `'*'` = all.                             |
-| `globalPermissionsExclude`     | `string[]` | Permission names to exclude when using `'*'` wildcard in `globalPermissions`.        |
-| `globalPermissionsPolicyName`  | `string`   | Policy name to set as junction policy on each `globalPermissions` assignment entry.   |
-| `realmPermissions`             | `string[]` | Permission names to assign (realm scope). `'*'` = all.                              |
+| `globalPermissions`                | `string[]`              | Permission names to assign (global scope). `'*'` = all.                             |
+| `globalPermissionsExclude`         | `string[]`              | Permission names to exclude when using `'*'` wildcard in `globalPermissions`.        |
+| `globalPermissionsPolicyName`      | `string`                | Default policy name for each `globalPermissions` assignment entry.                    |
+| `globalPermissionsPolicyOverrides` | `Record<string, string[]>` | Per-permission policy overrides. Key = policy name, value = permission names.      |
+| `realmPermissions`                 | `string[]`              | Permission names to assign (realm scope). `'*'` = all.                              |
 
 ### Realm
 
@@ -342,7 +343,8 @@ roles:
 ```
 
 Use `globalPermissionsExclude` to exclude specific permissions from a wildcard,
-and `globalPermissionsPolicyName` to attach a junction policy to each assignment:
+`globalPermissionsPolicyName` to set a default junction policy,
+and `globalPermissionsPolicyOverrides` to override the policy for specific permissions:
 
 ```typescript
 roles: [
@@ -351,15 +353,23 @@ roles: [
         relations: {
             globalPermissions: ['*'],
             globalPermissionsExclude: ['realm_create', 'realm_update', 'realm_delete'],
-            globalPermissionsPolicyName: 'system.realm-bound',
+            globalPermissionsPolicyName: 'system.realm-or-global',
+            globalPermissionsPolicyOverrides: {
+                'system.realm-bound': [
+                    'role_create', 'role_update', 'role_delete',
+                    'permission_create', 'permission_update', 'permission_delete',
+                    'scope_create', 'scope_update', 'scope_delete',
+                ],
+            },
         },
     },
 ],
 ```
 
-This creates a `realm_admin` role that has all permissions except realm management,
-with each permission assignment restricted by the `system.realm-bound` junction policy
-(limiting operations to realm-scoped entities only).
+This creates a `realm_admin` role that:
+- Has all permissions except realm management
+- Defaults to `system.realm-or-global` — can read global entities and assign them to own-realm entities
+- Overrides to `system.realm-bound` for entity CUD — cannot create/modify/delete global roles, permissions, or scopes
 
 ## Merging Behavior
 
