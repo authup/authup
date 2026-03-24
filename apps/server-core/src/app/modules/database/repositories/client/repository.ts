@@ -143,7 +143,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
     }
 
     async remove(entity: Client): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<Client>): Promise<void> {

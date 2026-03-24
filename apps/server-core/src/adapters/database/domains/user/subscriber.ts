@@ -50,13 +50,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
+export class UserSubscriber implements EntitySubscriberInterface<User> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return UserEntity;
     }
 
-    async afterInsert(event: InsertEvent<UserEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<User>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -64,7 +64,7 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<UserEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<User>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -78,10 +78,10 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as User);
     }
 
-    async afterRemove(event: RemoveEvent<UserEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<User>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -95,6 +95,6 @@ export class UserSubscriber implements EntitySubscriberInterface<UserEntity> {
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as UserEntity);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

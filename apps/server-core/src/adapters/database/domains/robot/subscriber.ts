@@ -49,21 +49,21 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
+export class RobotSubscriber implements EntitySubscriberInterface<Robot> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return RobotEntity;
     }
 
-    async afterInsert(event: InsertEvent<RobotEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<Robot>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Robot);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<RobotEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<Robot>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -80,7 +80,7 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Robot);
     }
 
-    async afterRemove(event: RemoveEvent<RobotEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<Robot>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -94,6 +94,6 @@ export class RobotSubscriber implements EntitySubscriberInterface<RobotEntity> {
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Robot);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

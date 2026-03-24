@@ -80,7 +80,7 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
     }
 
     async remove(entity: UserAttribute): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<UserAttribute>): Promise<void> {

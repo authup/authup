@@ -63,7 +63,7 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
     }
 
     findOneByName(name: string): Promise<ClientRole | null> {
-        return this.repository.findOneBy({ name } as any);
+        return this.findOneBy({ name });
     }
 
     findOneByIdOrName(idOrName: string): Promise<ClientRole | null> {
@@ -91,7 +91,7 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
     }
 
     async remove(entity: ClientRole): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<ClientRole>): Promise<void> {

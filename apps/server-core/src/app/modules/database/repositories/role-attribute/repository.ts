@@ -80,7 +80,7 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
     }
 
     async remove(entity: RoleAttribute): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<RoleAttribute>): Promise<void> {

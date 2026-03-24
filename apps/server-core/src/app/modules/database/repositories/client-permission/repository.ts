@@ -66,7 +66,7 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
     }
 
     findOneByName(name: string): Promise<ClientPermission | null> {
-        return this.repository.findOneBy({ name } as any);
+        return this.findOneBy({ name });
     }
 
     findOneByIdOrName(idOrName: string): Promise<ClientPermission | null> {
@@ -94,7 +94,7 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
     }
 
     async remove(entity: ClientPermission): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<ClientPermission>): Promise<void> {

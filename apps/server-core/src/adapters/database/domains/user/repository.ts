@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Role, User } from '@authup/core-kit';
+import type { Role, User, UserAttribute } from '@authup/core-kit';
 import type { PermissionBinding, PolicyWithType } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
@@ -19,7 +19,7 @@ import { UserRoleEntity } from '../user-role/index.ts';
 import { PolicyRepository } from '../policy/index.ts';
 import { UserEntity } from './entity.ts';
 
-export class UserRepository extends EARepository<UserEntity, UserAttributeEntity> {
+export class UserRepository extends EARepository<User, UserAttribute> {
     constructor(instance: DataSource | EntityManager) {
         super(instance, {
             attributeProperties: (input, parent) => {

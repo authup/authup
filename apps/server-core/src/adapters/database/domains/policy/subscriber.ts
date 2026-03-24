@@ -45,21 +45,21 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity> {
+export class PolicySubscriber implements EntitySubscriberInterface<Policy> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return PolicyEntity;
     }
 
-    async afterInsert(event: InsertEvent<PolicyEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<Policy>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Policy);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<PolicyEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<Policy>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -76,7 +76,7 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Policy);
     }
 
-    async afterRemove(event: RemoveEvent<PolicyEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<Policy>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -90,6 +90,6 @@ export class PolicySubscriber implements EntitySubscriberInterface<PolicyEntity>
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Policy);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

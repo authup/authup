@@ -7,6 +7,7 @@
 
 import { definePolicyWithType } from '@authup/access';
 import type { BuiltInPolicyTypeMap, PolicyWithType } from '@authup/access';
+import type { Policy, PolicyAttribute } from '@authup/core-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { EntityNotFoundError } from 'typeorm';
 import { CachePrefix } from '../constants.ts';
@@ -14,7 +15,7 @@ import { EATreeRepository } from '../../extra-attribute-repository/index.ts';
 import { PolicyAttributeEntity } from '../policy-attribute/index.ts';
 import { PolicyEntity } from './entity.ts';
 
-export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttributeEntity> {
+export class PolicyRepository extends EATreeRepository<Policy, PolicyAttribute> {
     constructor(instance: DataSource | EntityManager) {
         super(instance, {
             attributeProperties: (input, parent) => {
@@ -48,7 +49,7 @@ export class PolicyRepository extends EATreeRepository<PolicyEntity, PolicyAttri
 
     createByType<
         K extends keyof BuiltInPolicyTypeMap,
-        D extends BuiltInPolicyTypeMap<any>[K] & Partial<Omit<PolicyEntity, 'type'>>,
+        D extends BuiltInPolicyTypeMap<any>[K] & Partial<Omit<Policy, 'type'>>,
     >(type: K, data: D) : PolicyWithType<D, K> {
         return definePolicyWithType(type, {
             ...this.create(),

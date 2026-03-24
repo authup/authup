@@ -115,7 +115,7 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
     }
 
     async remove(entity: Scope): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<Scope>): Promise<void> {

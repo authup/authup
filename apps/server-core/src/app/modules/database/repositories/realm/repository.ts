@@ -90,7 +90,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
     }
 
     async remove(entity: Realm): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<Realm>): Promise<void> {

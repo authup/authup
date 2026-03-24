@@ -61,21 +61,21 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface<IdentityProviderRoleMappingEntity> {
+export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface<IdentityProviderRoleMapping> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return IdentityProviderRoleMappingEntity;
     }
 
-    async afterInsert(event: InsertEvent<IdentityProviderRoleMappingEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<IdentityProviderRoleMapping>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as IdentityProviderRoleMapping);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<IdentityProviderRoleMappingEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<IdentityProviderRoleMapping>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -92,7 +92,7 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProviderRoleMapping);
     }
 
-    async afterRemove(event: RemoveEvent<IdentityProviderRoleMappingEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<IdentityProviderRoleMapping>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -106,6 +106,6 @@ export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as IdentityProviderRoleMapping);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

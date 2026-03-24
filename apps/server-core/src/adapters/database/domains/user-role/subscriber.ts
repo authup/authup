@@ -58,13 +58,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEntity> {
+export class UserRoleSubscriber implements EntitySubscriberInterface<UserRole> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return UserRoleEntity;
     }
 
-    async afterInsert(event: InsertEvent<UserRoleEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<UserRole>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -81,7 +81,7 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<UserRoleEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<UserRole>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -95,10 +95,10 @@ export class UserRoleSubscriber implements EntitySubscriberInterface<UserRoleEnt
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserRoleEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserRole);
     }
 
-    async afterRemove(event: RemoveEvent<UserRoleEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<UserRole>): Promise<any> {
         if (!event.entity) {
             return;
         }

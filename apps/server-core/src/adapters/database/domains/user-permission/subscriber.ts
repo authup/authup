@@ -61,13 +61,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class UserPermissionSubscriber implements EntitySubscriberInterface<UserPermissionEntity> {
+export class UserPermissionSubscriber implements EntitySubscriberInterface<UserPermission> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return UserPermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<UserPermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<UserPermission>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
@@ -82,7 +82,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
         return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<UserPermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<UserPermission>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -99,7 +99,7 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserPermission);
     }
 
-    async afterRemove(event: RemoveEvent<UserPermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<UserPermission>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -113,6 +113,6 @@ export class UserPermissionSubscriber implements EntitySubscriberInterface<UserP
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as UserPermission);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

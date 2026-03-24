@@ -93,7 +93,7 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
     }
 
     async remove(entity: PermissionPolicy): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<PermissionPolicy>): Promise<void> {

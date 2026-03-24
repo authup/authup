@@ -185,15 +185,16 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         await this.repository.checkUniqueness(validated);
 
-        await this.repository.saveWithEA(validated as Policy);
+        entity = this.repository.create(validated);
+        await this.repository.saveWithEA(entity);
 
-        return { entity: validated as Policy, created: true };
+        return { entity, created: true };
     }
 
     private async validate(
         data: Record<string, any>,
         group: string,
-    ): Promise<Record<string, any>> {
+    ): Promise<Policy> {
         const validated = await this.validator.run(data, { group });
 
         const attributes = await this.attributesValidator.run(data);
@@ -202,9 +203,9 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         if (Array.isArray(data.children)) {
             if (data.type === BuiltInPolicyType.COMPOSITE) {
                 const promises = data.children.map(
-                    (child: Record<string, any>) => this.validate(child, group),
+                    (child) => this.validate(child, group),
                 );
-                validated.children = await Promise.all(promises) as Policy['children'];
+                validated.children = await Promise.all(promises);
             }
         }
 

@@ -58,13 +58,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class ClientPermissionSubscriber implements EntitySubscriberInterface<ClientPermissionEntity> {
+export class ClientPermissionSubscriber implements EntitySubscriberInterface<ClientPermission> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return ClientPermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<ClientPermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<ClientPermission>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
@@ -79,7 +79,7 @@ export class ClientPermissionSubscriber implements EntitySubscriberInterface<Cli
         return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<ClientPermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<ClientPermission>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -96,7 +96,7 @@ export class ClientPermissionSubscriber implements EntitySubscriberInterface<Cli
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientPermission);
     }
 
-    async afterRemove(event: RemoveEvent<ClientPermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<ClientPermission>): Promise<any> {
         if (!event.entity) {
             return;
         }

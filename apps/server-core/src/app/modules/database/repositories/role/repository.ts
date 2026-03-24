@@ -115,7 +115,7 @@ export class RoleRepositoryAdapter implements IRoleRepository {
     }
 
     async remove(entity: Role): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<Role>): Promise<void> {

@@ -62,7 +62,7 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
     }
 
     async findOneByName(name: string): Promise<RobotRole | null> {
-        return this.repository.findOneBy({ name } as any);
+        return this.findOneBy({ name });
     }
 
     findOneByIdOrName(idOrName: string): Promise<RobotRole | null> {
@@ -90,7 +90,7 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
     }
 
     async remove(entity: RobotRole): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<RobotRole>): Promise<void> {

@@ -138,7 +138,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
     }
 
     async remove(entity: Robot): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<Robot>): Promise<void> {

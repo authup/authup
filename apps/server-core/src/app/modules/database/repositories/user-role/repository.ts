@@ -62,7 +62,7 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
     }
 
     async findOneByName(name: string): Promise<UserRole | null> {
-        return this.repository.findOneBy({ name } as any);
+        return this.findOneBy({ name });
     }
 
     findOneByIdOrName(idOrName: string): Promise<UserRole | null> {
@@ -90,7 +90,7 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
     }
 
     async remove(entity: UserRole): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<UserRole>): Promise<void> {

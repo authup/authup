@@ -41,21 +41,21 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientScopeEntity> {
+export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientScope> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return ClientScopeEntity;
     }
 
-    async afterInsert(event: InsertEvent<ClientScopeEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<ClientScope>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as ClientScope);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<ClientScopeEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<ClientScope>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -72,7 +72,7 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientScope);
     }
 
-    async afterRemove(event: RemoveEvent<ClientScopeEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<ClientScope>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -86,6 +86,6 @@ export class ClientScopeSubscriber implements EntitySubscriberInterface<ClientSc
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as ClientScope);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }
