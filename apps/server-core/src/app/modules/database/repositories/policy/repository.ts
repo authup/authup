@@ -161,10 +161,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
 
     async saveWithEA(entity: Policy, data?: Record<string, any>): Promise<Policy> {
         await this.repository.saveOneWithEA(entity as PolicyEntity, data);
-
-        if (entity.parent_id) {
-            await this.repository.updateClosureTable(entity as PolicyEntity);
-        }
+        await this.repository.updateClosureTable(entity as PolicyEntity, this.repository.manager);
 
         return entity;
     }
