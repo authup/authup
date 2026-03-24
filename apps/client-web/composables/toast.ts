@@ -22,19 +22,15 @@ export function useToast() {
             }
 
             if (isObject(el)) {
-                el.position = el.position || 'top-center';
                 return toast.show({
-                    props: el,
+                    props: { position: 'top-center', ...el },
                 });
-            }
-
-            if (options) {
-                options.position = options.position || 'top-center';
             }
 
             return toast.show({
                 props: {
-                    ...(options || {}),
+                    position: 'top-center',
+                    ...options,
                     body: el,
                 },
             });
