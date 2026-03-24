@@ -46,21 +46,21 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class PermissionSubscriber implements EntitySubscriberInterface<PermissionEntity> {
+export class PermissionSubscriber implements EntitySubscriberInterface<Permission> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return PermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<PermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<Permission>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as unknown as Permission);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<PermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<Permission>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -82,10 +82,10 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as unknown as Permission);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Permission);
     }
 
-    async afterRemove(event: RemoveEvent<PermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<Permission>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -104,6 +104,6 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as unknown as Permission);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

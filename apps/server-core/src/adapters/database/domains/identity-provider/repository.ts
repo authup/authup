@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IdentityProvider, IdentityProviderAttribute } from '@authup/core-kit';
 import type {
     DataSource, EntityManager,
 } from 'typeorm';
@@ -15,8 +16,8 @@ import { IdentityProviderEntity } from './entity.ts';
 import { IdentityProviderAttributeEntity } from '../identity-provider-attribute/index.ts';
 
 export class IdentityProviderRepository extends EARepository<
-    IdentityProviderEntity,
-    IdentityProviderAttributeEntity
+    IdentityProvider,
+    IdentityProviderAttribute
 > {
     constructor(instance: DataSource | EntityManager) {
         super(

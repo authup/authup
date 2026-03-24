@@ -7,7 +7,7 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { Permission } from '@authup/core-kit';
+import type { Permission, PermissionPolicy, Role, RolePermission } from '@authup/core-kit';
 import {
     beforeEach, describe, expect, it,
 } from 'vitest';
@@ -15,12 +15,7 @@ import { SystemPolicyName } from '@authup/access';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
-import type { IRoleRepository } from '../../../../../src/core/entities/role/types.ts';
-import type { IRolePermissionRepository } from '../../../../../src/core/entities/role-permission/types.ts';
-import type { IPermissionPolicyRepository } from '../../../../../src/core/entities/permission-policy/types.ts';
-import type { IPolicyRepository } from '../../../../../src/core/entities/policy/types.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
+import { FakeEntityRepository, FakePolicyRepository, FakeRealmRepository } from '../../helpers/index.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
@@ -38,28 +33,26 @@ class FakePermissionRepository extends FakeEntityRepository<Permission> implemen
 describe('core/entities/permission/service', () => {
     let repository: FakePermissionRepository;
     let realmRepository: FakeRealmRepository;
-    let roleRepository: FakeEntityRepository<any> & IRoleRepository;
-    let rolePermissionRepository: FakeEntityRepository<any> & IRolePermissionRepository;
-    let policyRepository: FakeEntityRepository<any> & IPolicyRepository;
-    let permissionPolicyRepository: FakeEntityRepository<any> & IPermissionPolicyRepository;
+    let roleRepository: FakeEntityRepository<Role>;
+    let rolePermissionRepository: FakeEntityRepository<RolePermission>;
+    let policyRepository: FakePolicyRepository;
+    let permissionPolicyRepository: FakeEntityRepository<PermissionPolicy>;
     let service: PermissionService;
 
     beforeEach(() => {
         repository = new FakePermissionRepository();
         realmRepository = new FakeRealmRepository();
-        roleRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IRoleRepository;
-        roleRepository.checkUniqueness = async () => {};
-        rolePermissionRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IRolePermissionRepository;
-        policyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPolicyRepository;
-        policyRepository.checkUniqueness = async () => {};
-        (policyRepository as FakeEntityRepository<any>).seed([{
+        roleRepository = new FakeEntityRepository<Role>();
+        rolePermissionRepository = new FakeEntityRepository<RolePermission>();
+        policyRepository = new FakePolicyRepository();
+        policyRepository.seed([{
             id: 'default-policy-id',
             name: SystemPolicyName.DEFAULT,
             type: 'composite',
             built_in: true,
             realm_id: null,
         }]);
-        permissionPolicyRepository = new FakeEntityRepository() as FakeEntityRepository<any> & IPermissionPolicyRepository;
+        permissionPolicyRepository = new FakeEntityRepository<PermissionPolicy>();
         service = new PermissionService({
             repository,
             realmRepository,

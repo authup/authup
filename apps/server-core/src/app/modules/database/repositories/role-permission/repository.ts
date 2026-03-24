@@ -64,8 +64,8 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
         return this.findOneBy({ id });
     }
 
-    async findOneByName(name: string): Promise<RolePermission | null> {
-        return this.repository.findOneBy({ name } as any);
+    async findOneByName(_name: string): Promise<RolePermission | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<RolePermission | null> {
@@ -93,7 +93,7 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
     }
 
     async remove(entity: RolePermission): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<RolePermission>): Promise<void> {

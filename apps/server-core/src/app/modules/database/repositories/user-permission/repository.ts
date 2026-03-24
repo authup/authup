@@ -67,8 +67,8 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
         return this.findOneBy({ id });
     }
 
-    async findOneByName(name: string): Promise<UserPermission | null> {
-        return this.repository.findOneBy({ name } as any);
+    async findOneByName(_name: string): Promise<UserPermission | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<UserPermission | null> {
@@ -96,7 +96,7 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
     }
 
     async remove(entity: UserPermission): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<UserPermission>): Promise<void> {

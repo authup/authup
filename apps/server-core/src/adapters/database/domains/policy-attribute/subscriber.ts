@@ -49,13 +49,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class PolicyAttributeSubscriber implements EntitySubscriberInterface<PolicyAttributeEntity> {
+export class PolicyAttributeSubscriber implements EntitySubscriberInterface<PolicyAttribute> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return PolicyAttributeEntity;
     }
 
-    async afterInsert(event: InsertEvent<PolicyAttributeEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<PolicyAttribute>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -72,7 +72,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<PolicyAttributeEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<PolicyAttribute>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -89,7 +89,7 @@ export class PolicyAttributeSubscriber implements EntitySubscriberInterface<Poli
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as PolicyAttribute);
     }
 
-    async afterRemove(event: RemoveEvent<PolicyAttributeEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<PolicyAttribute>): Promise<any> {
         if (!event.entity) {
             return;
         }

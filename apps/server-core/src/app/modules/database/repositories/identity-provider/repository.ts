@@ -81,7 +81,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
     async findOneById(id: string): Promise<IdentityProvider | null> {
         const entity = await this.findOneBy({ id });
         if (entity) {
-            await this.repository.extendOneWithEA(entity as IdentityProviderEntity);
+            await this.repository.extendOneWithEA(entity);
         }
         return entity;
     }
@@ -99,7 +99,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
 
         const entity = await qb.getOne();
         if (entity) {
-            await this.repository.extendOneWithEA(entity as IdentityProviderEntity);
+            await this.repository.extendOneWithEA(entity);
         }
         return entity;
     }
@@ -123,24 +123,24 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
     }
 
     merge(entity: IdentityProvider, data: Partial<IdentityProvider>): IdentityProvider {
-        return this.repository.merge(entity as IdentityProviderEntity, data);
+        return this.repository.merge(entity, data);
     }
 
     async save(entity: IdentityProvider): Promise<IdentityProvider> {
-        return this.repository.save(entity as IdentityProviderEntity);
+        return this.repository.save(entity);
     }
 
     async saveWithEA(entity: IdentityProvider, attributes?: Record<string, any>): Promise<IdentityProvider> {
-        await this.repository.saveOneWithEA(entity as IdentityProviderEntity, attributes);
+        await this.repository.saveOneWithEA(entity, attributes);
         return entity;
     }
 
     async extendOneWithEA(entity: IdentityProvider): Promise<void> {
-        await this.repository.extendOneWithEA(entity as IdentityProviderEntity);
+        await this.repository.extendOneWithEA(entity);
     }
 
     async remove(entity: IdentityProvider): Promise<void> {
-        await this.repository.remove(entity as IdentityProviderEntity);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<IdentityProvider>): Promise<void> {
@@ -175,7 +175,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         }
 
         const entities = await qb.getMany();
-        await this.repository.extendManyWithEA(entities as IdentityProviderEntity[]);
+        await this.repository.extendManyWithEA(entities);
         return entities;
     }
 }

@@ -6,7 +6,7 @@
  */
 
 import type {
-    DataSource, EntityManager, FindManyOptions, FindOneOptions, FindTreeOptions,
+    DataSource, DeepPartial, EntityManager, FindManyOptions, FindOneOptions, FindTreeOptions,
     SelectQueryBuilder,
 } from 'typeorm';
 import {
@@ -53,6 +53,47 @@ export class EATreeRepository<
             repository: this,
             attributeRepository: this.manager.getRepository(attributeEntity),
         });
+    }
+
+    // ------------------------------------------------------------------------------
+
+    override create(): T;
+
+    override create(entityLikeArray: DeepPartial<T>[]): T[];
+
+    override create(entityLike: DeepPartial<T>): T;
+
+    override create(entityLike?: DeepPartial<T> | DeepPartial<T>[]): T | T[] {
+        if (!entityLike) {
+            return super.create();
+        }
+
+        if (Array.isArray(entityLike)) {
+            return super.create(entityLike).map((entity, i) => {
+                this.preserveExtraAttributes(entity, entityLike[i]);
+                return entity;
+            });
+        }
+
+        const entity = super.create(entityLike);
+        this.preserveExtraAttributes(entity, entityLike);
+        return entity;
+    }
+
+    private preserveExtraAttributes(entity: T, source: DeepPartial<T>): void {
+        const columns = new Set<string>();
+        for (const col of this.metadata.columns) {
+            columns.add(col.propertyName);
+        }
+        for (const rel of this.metadata.relations) {
+            columns.add(rel.propertyName);
+        }
+
+        for (const key of Object.keys(source)) {
+            if (!columns.has(key) && !(key in entity)) {
+                (entity as Record<string, any>)[key] = (source as Record<string, any>)[key];
+            }
+        }
     }
 
     // ------------------------------------------------------------------------------

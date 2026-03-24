@@ -87,7 +87,7 @@ export class UserRepositoryAdapter implements IUserRepository {
     async findOneById(id: string): Promise<User | null> {
         const entity = await this.findOneBy({ id });
         if (entity) {
-            await this.repository.extendOneWithEA(entity as UserEntity);
+            await this.repository.extendOneWithEA(entity);
         }
         return entity;
     }
@@ -186,15 +186,15 @@ export class UserRepositoryAdapter implements IUserRepository {
     }
 
     merge(entity: User, data: Partial<User>): User {
-        return this.repository.merge(entity as UserEntity, data);
+        return this.repository.merge(entity, data);
     }
 
     async save(entity: User): Promise<User> {
-        return this.repository.save(entity as UserEntity);
+        return this.repository.save(entity);
     }
 
     async remove(entity: User): Promise<void> {
-        await this.repository.remove(entity as UserEntity);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<User>): Promise<void> {

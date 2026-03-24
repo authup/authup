@@ -6,6 +6,7 @@
  */
 
 import { BuiltInPolicyType, DecisionStrategy, SystemPolicyName } from '@authup/access';
+import type { CompositePolicy, RealmMatchPolicy } from '@authup/access';
 import type { Permission, PermissionPolicy, Realm, Role } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
 import {
@@ -223,7 +224,8 @@ describe('app/modules/provisioning', () => {
             expect(defaultPolicy!.type).toBe(BuiltInPolicyType.COMPOSITE);
             expect(defaultPolicy!.built_in).toBe(true);
             expect(defaultPolicy!.realm_id).toBeNull();
-            expect((defaultPolicy as any).decision_strategy).toBe(DecisionStrategy.UNANIMOUS);
+            const defaultPolicyEA: Partial<CompositePolicy> = defaultPolicy!;
+            expect(defaultPolicyEA.decision_strategy).toBe(DecisionStrategy.UNANIMOUS);
 
             const children = await policyRepositoryAdapter.findManyBy({
                 parent_id: defaultPolicy!.id,
@@ -271,9 +273,10 @@ describe('app/modules/provisioning', () => {
         it('should set system.realm-match EA attributes correctly', async () => {
             const realmMatch = await policyRepositoryAdapter.findOneByName(SystemPolicyName.REALM_MATCH);
             expect(realmMatch).toBeDefined();
-            expect((realmMatch as any).attribute_name).toEqual(['realm_id']);
-            expect((realmMatch as any).attribute_name_strict).toBe(false);
-            expect((realmMatch as any).identity_master_match_all).toBe(false);
+            const realmMatchEA: Partial<RealmMatchPolicy> = realmMatch!;
+            expect(realmMatchEA.attribute_name).toEqual(['realm_id']);
+            expect(realmMatchEA.attribute_name_strict).toBe(false);
+            expect(realmMatchEA.identity_master_match_all).toBe(false);
         });
 
         it('should delete stale child without permission references', async () => {

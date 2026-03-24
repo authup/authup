@@ -97,10 +97,10 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
         }
 
         if (!user) {
-            (entity as User).realm_id = identity.provider.realm_id;
-            (entity as User).active = true;
-            (entity as User).name_locked = true;
-            (entity as User).client_id = identity.clientId || null;
+            entity.realm_id = identity.provider.realm_id;
+            entity.active = true;
+            entity.name_locked = true;
+            entity.client_id = identity.clientId || null;
         }
 
         const attributesSelf = await this.validateAttributes(entity, identity, 10);

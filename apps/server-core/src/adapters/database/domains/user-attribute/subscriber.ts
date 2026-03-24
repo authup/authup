@@ -50,13 +50,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAttributeEntity> {
+export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAttribute> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return UserAttributeEntity;
     }
 
-    async afterInsert(event: InsertEvent<UserAttributeEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<UserAttribute>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
@@ -71,7 +71,7 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
         return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<UserAttributeEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<UserAttribute>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -85,10 +85,10 @@ export class UserAttributeSubscriber implements EntitySubscriberInterface<UserAt
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserAttributeEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserAttribute);
     }
 
-    async afterRemove(event: RemoveEvent<UserAttributeEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<UserAttribute>): Promise<any> {
         if (!event.entity) {
             return;
         }

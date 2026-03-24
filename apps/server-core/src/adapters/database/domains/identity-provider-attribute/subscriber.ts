@@ -46,21 +46,21 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class IdentityProviderAttributeSubscriber implements EntitySubscriberInterface<IdentityProviderAttributeEntity> {
+export class IdentityProviderAttributeSubscriber implements EntitySubscriberInterface<IdentityProviderAttribute> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return IdentityProviderAttributeEntity;
     }
 
-    async afterInsert(event: InsertEvent<IdentityProviderAttributeEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<IdentityProviderAttribute>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as IdentityProviderAttribute);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<IdentityProviderAttributeEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<IdentityProviderAttribute>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -77,7 +77,7 @@ export class IdentityProviderAttributeSubscriber implements EntitySubscriberInte
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProviderAttribute);
     }
 
-    async afterRemove(event: RemoveEvent<IdentityProviderAttributeEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<IdentityProviderAttribute>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -91,6 +91,6 @@ export class IdentityProviderAttributeSubscriber implements EntitySubscriberInte
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as IdentityProviderAttribute);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

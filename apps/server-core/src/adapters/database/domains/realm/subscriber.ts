@@ -45,21 +45,21 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
+export class RealmSubscriber implements EntitySubscriberInterface<Realm> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return RealmEntity;
     }
 
-    async afterInsert(event: InsertEvent<RealmEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<Realm>): Promise<any> {
         if (!event.entity) {
             return;
         }
 
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity as Realm);
+        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<RealmEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<Realm>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -76,7 +76,7 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Realm);
     }
 
-    async afterRemove(event: RemoveEvent<RealmEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<Realm>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -90,6 +90,6 @@ export class RealmSubscriber implements EntitySubscriberInterface<RealmEntity> {
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity as Realm);
+        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
     }
 }

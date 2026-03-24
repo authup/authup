@@ -15,6 +15,7 @@ import type {
     ClientPermission,
     ClientRole,
     ClientScope,
+    Permission,
     PermissionPolicy,
     Realm,
     Robot,
@@ -526,7 +527,7 @@ export class HTTPControllerModule {
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new PermissionRepositoryAdapter({
-            repository: container.resolve<Repository<PermissionEntity>>(PermissionEntity),
+            repository: container.resolve<Repository<Permission>>(PermissionEntity),
             realmRepository,
         });
 

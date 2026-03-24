@@ -18,12 +18,12 @@ import {
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type PermissionRepositoryAdapterContext = {
-    repository: Repository<PermissionEntity>,
+    repository: Repository<Permission>,
     realmRepository: Repository<Realm>,
 };
 
 export class PermissionRepositoryAdapter implements IPermissionRepository {
-    private readonly repository: Repository<PermissionEntity>;
+    private readonly repository: Repository<Permission>;
 
     private readonly realmRepository: IRealmRepository;
 
@@ -98,19 +98,19 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
     }
 
     create(data: Partial<Permission>): Permission {
-        return this.repository.create(data as Partial<PermissionEntity>);
+        return this.repository.create(data);
     }
 
     merge(entity: Permission, data: Partial<Permission>): Permission {
-        return this.repository.merge(entity as PermissionEntity, data as Partial<PermissionEntity>);
+        return this.repository.merge(entity, data);
     }
 
     async save(entity: Permission): Promise<Permission> {
-        return this.repository.save(entity as PermissionEntity);
+        return this.repository.save(entity);
     }
 
     async remove(entity: Permission): Promise<void> {
-        await this.repository.remove(entity as PermissionEntity);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<Permission>): Promise<void> {

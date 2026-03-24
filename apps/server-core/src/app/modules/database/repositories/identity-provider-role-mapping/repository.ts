@@ -96,7 +96,7 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
     }
 
     async remove(entity: IdentityProviderRoleMapping): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<IdentityProviderRoleMapping>): Promise<void> {

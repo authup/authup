@@ -58,13 +58,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRoleEntity> {
+export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRole> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return ClientRoleEntity;
     }
 
-    async afterInsert(event: InsertEvent<ClientRoleEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<ClientRole>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -81,7 +81,7 @@ export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRol
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<ClientRoleEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<ClientRole>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -95,10 +95,10 @@ export class ClientRoleSubscriber implements EntitySubscriberInterface<ClientRol
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientRoleEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as ClientRole);
     }
 
-    async afterRemove(event: RemoveEvent<ClientRoleEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<ClientRole>): Promise<any> {
         if (!event.entity) {
             return;
         }

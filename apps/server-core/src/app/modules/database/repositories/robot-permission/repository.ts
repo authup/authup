@@ -65,8 +65,8 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
         return this.findOneBy({ id });
     }
 
-    findOneByName(name: string): Promise<RobotPermission | null> {
-        return this.repository.findOneBy({ name } as any);
+    findOneByName(_name: string): Promise<RobotPermission | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<RobotPermission | null> {
@@ -94,7 +94,7 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
     }
 
     async remove(entity: RobotPermission): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<RobotPermission>): Promise<void> {

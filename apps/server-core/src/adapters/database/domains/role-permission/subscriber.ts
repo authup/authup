@@ -58,13 +58,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class RolePermissionSubscriber implements EntitySubscriberInterface<RolePermissionEntity> {
+export class RolePermissionSubscriber implements EntitySubscriberInterface<RolePermission> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return RolePermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<RolePermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RolePermission>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -81,7 +81,7 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<RolePermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RolePermission>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -98,7 +98,7 @@ export class RolePermissionSubscriber implements EntitySubscriberInterface<RoleP
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RolePermission);
     }
 
-    async afterRemove(event: RemoveEvent<RolePermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<RolePermission>): Promise<any> {
         if (!event.entity) {
             return;
         }

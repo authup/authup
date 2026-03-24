@@ -58,13 +58,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class RobotPermissionSubscriber implements EntitySubscriberInterface<RobotPermissionEntity> {
+export class RobotPermissionSubscriber implements EntitySubscriberInterface<RobotPermission> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return RobotPermissionEntity;
     }
 
-    async afterInsert(event: InsertEvent<RobotPermissionEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RobotPermission>): Promise<any> {
         if (event.connection.queryResultCache) {
             await event.connection.queryResultCache.remove([
                 buildRedisKeyPath({
@@ -79,7 +79,7 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
         return Promise.resolve(undefined);
     }
 
-    async afterUpdate(event: UpdateEvent<RobotPermissionEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RobotPermission>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -96,7 +96,7 @@ export class RobotPermissionSubscriber implements EntitySubscriberInterface<Robo
         await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RobotPermission);
     }
 
-    async afterRemove(event: RemoveEvent<RobotPermissionEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<RobotPermission>): Promise<any> {
         if (!event.entity) {
             return;
         }

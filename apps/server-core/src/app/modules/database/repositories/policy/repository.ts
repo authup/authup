@@ -86,7 +86,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
     async findOneById(id: string): Promise<Policy | null> {
         const entity = await this.findOneBy({ id });
         if (entity) {
-            await this.repository.extendOneWithEA(entity as PolicyEntity);
+            await this.repository.extendOneWithEA(entity);
         }
         return entity;
     }
@@ -104,7 +104,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
 
         const entity = await qb.getOne();
         if (entity) {
-            await this.repository.extendOneWithEA(entity as PolicyEntity);
+            await this.repository.extendOneWithEA(entity);
         }
         return entity;
     }
@@ -128,15 +128,15 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
     }
 
     merge(entity: Policy, data: Partial<Policy>): Policy {
-        return this.repository.merge(entity as PolicyEntity, data);
+        return this.repository.merge(entity, data);
     }
 
     async save(entity: Policy): Promise<Policy> {
-        return this.repository.save(entity as PolicyEntity);
+        return this.repository.save(entity);
     }
 
     async remove(entity: Policy): Promise<void> {
-        await this.repository.remove(entity as PolicyEntity);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<Policy>): Promise<void> {
@@ -160,14 +160,14 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
     }
 
     async saveWithEA(entity: Policy, data?: Record<string, any>): Promise<Policy> {
-        await this.repository.saveOneWithEA(entity as PolicyEntity, data);
-        await this.repository.updateClosureTable(entity as PolicyEntity, this.repository.manager);
+        await this.repository.saveOneWithEA(entity, data);
+        await this.repository.updateClosureTable(entity, this.repository.manager);
 
         return entity;
     }
 
     async deleteFromTree(entity: Policy): Promise<void> {
         const treeRepository = this.repository.manager.connection.getTreeRepository(PolicyEntity);
-        await treeRepository.remove(entity as PolicyEntity);
+        await treeRepository.remove(entity);
     }
 }

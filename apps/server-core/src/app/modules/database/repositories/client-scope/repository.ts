@@ -55,8 +55,8 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
         return this.findOneBy({ id });
     }
 
-    findOneByName(name: string): Promise<ClientScope | null> {
-        return this.repository.findOneBy({ name } as any);
+    findOneByName(_name: string): Promise<ClientScope | null> {
+        return Promise.resolve(null);
     }
 
     findOneByIdOrName(idOrName: string): Promise<ClientScope | null> {
@@ -84,7 +84,7 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
     }
 
     async remove(entity: ClientScope): Promise<void> {
-        await this.repository.remove(entity as any);
+        await this.repository.remove(entity);
     }
 
     async validateJoinColumns(data: Partial<ClientScope>): Promise<void> {

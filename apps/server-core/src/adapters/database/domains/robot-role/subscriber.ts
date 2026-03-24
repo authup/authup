@@ -58,13 +58,13 @@ async function publishEvent(
 }
 
 @EventSubscriber()
-export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleEntity> {
+export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRole> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     listenTo(): Function | string {
         return RobotRoleEntity;
     }
 
-    async afterInsert(event: InsertEvent<RobotRoleEntity>): Promise<any> {
+    async afterInsert(event: InsertEvent<RobotRole>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -81,7 +81,7 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
         await publishEvent(EntityDefaultEventName.CREATED, event.entity);
     }
 
-    async afterUpdate(event: UpdateEvent<RobotRoleEntity>): Promise<any> {
+    async afterUpdate(event: UpdateEvent<RobotRole>): Promise<any> {
         if (!event.entity) {
             return;
         }
@@ -95,10 +95,10 @@ export class RobotRoleSubscriber implements EntitySubscriberInterface<RobotRoleE
             ]);
         }
 
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RobotRoleEntity);
+        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RobotRole);
     }
 
-    async afterRemove(event: RemoveEvent<RobotRoleEntity>): Promise<any> {
+    async afterRemove(event: RemoveEvent<RobotRole>): Promise<any> {
         if (!event.entity) {
             return;
         }
