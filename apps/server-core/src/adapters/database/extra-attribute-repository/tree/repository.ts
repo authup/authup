@@ -225,13 +225,15 @@ export class EATreeRepository<
         const ancestorColumn = this.metadata.closureJunctionTable.ancestorColumns[0];
         const descendantColumn = this.metadata.closureJunctionTable.descendantColumns[0];
 
+        const param = (index: number) => manager.connection.driver.createParameter(`p${index}`, index);
+
         // 1. Get All ancestors of current entity
         const ancestors = await manager.query<Record<string, any>[]>(
             `SELECT *
                  FROM ${tableName}
                  WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                       ${descendantColumn.databasePath} = ? AND
-                       ${ancestorColumn.databasePath} != ?`,
+                       ${descendantColumn.databasePath} = ${param(0)} AND
+                       ${ancestorColumn.databasePath} != ${param(1)}`,
             [primaryKeyValue, primaryKeyValue],
         );
 
@@ -262,8 +264,8 @@ export class EATreeRepository<
             `SELECT *
                      FROM ${tableName}
                      WHERE ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
-                           ${ancestorColumn.databasePath} = ? AND
-                           ${descendantColumn.databasePath} != ?`,
+                           ${ancestorColumn.databasePath} = ${param(0)} AND
+                           ${descendantColumn.databasePath} != ${param(1)}`,
             [primaryKeyValue, primaryKeyValue],
         );
 
@@ -274,12 +276,12 @@ export class EATreeRepository<
 
             if (descendantIds.length > 0) {
                 // 4. get all ancestors of each descendant
-                const placeholders = descendantIds.map(() => '?').join(',');
+                const placeholders = descendantIds.map((_, i) => param(i + 1)).join(',');
                 const ancestorsOfDescendants = await manager.query<Record<string, any>[]>(
                     `SELECT *
                          FROM ${tableName}
                          WHERE
-                             ${ancestorColumn.databasePath} != ? AND
+                             ${ancestorColumn.databasePath} != ${param(0)} AND
                              ${ancestorColumn.databasePath} != ${descendantColumn.databasePath} AND
                              ${descendantColumn.databasePath} IN (${placeholders})`,
                     [primaryKeyValue, ...descendantIds],
@@ -304,7 +306,7 @@ export class EATreeRepository<
                             await manager.query(
                                 `INSERT INTO ${tableName}
                                     (${ancestorColumn.databasePath}, ${descendantColumn.databasePath})
-                                    VALUES (?, ?)`,
+                                    VALUES (${param(0)}, ${param(1)})`,
                                 [ancestorId, descendant],
                             );
                         }
@@ -321,8 +323,8 @@ export class EATreeRepository<
                 for (const descendantId of descendantIds) {
                     await manager.query(
                         `DELETE FROM ${tableName}
-                            WHERE ${ancestorColumn.databasePath} = ?
-                              AND ${descendantColumn.databasePath} = ?`,
+                            WHERE ${ancestorColumn.databasePath} = ${param(0)}
+                              AND ${descendantColumn.databasePath} = ${param(1)}`,
                         [ancestorId, descendantId],
                     );
                 }
