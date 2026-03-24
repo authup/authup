@@ -16,7 +16,11 @@ export function template(
             match,
         ) => {
             const key = match[1];
-            if (key && typeof data[key] !== 'undefined') {
+            if (
+                key &&
+                Object.prototype.hasOwnProperty.call(data, key) &&
+                typeof data[key] !== 'undefined'
+            ) {
                 return acc.replace(match[0], data[key]);
             }
 

@@ -33,8 +33,9 @@ export function installSocketManager(app: App, options : SocketManagerInstallOpt
         mutation,
         state,
     ) => {
-        if (state.accessToken !== oldValue.value) {
-            oldValue.value = state.accessToken ?? undefined;
+        const normalizedToken = state.accessToken ?? undefined;
+        if (normalizedToken !== oldValue.value) {
+            oldValue.value = normalizedToken;
 
             Promise.resolve()
                 .then(() => manager.reconnect());
