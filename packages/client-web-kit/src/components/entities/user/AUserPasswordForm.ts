@@ -57,8 +57,12 @@ export const AUserPasswordForm = defineComponent({
         }, form);
 
         const submit = wrapFnWithBusyState(busy, async () => {
+            if (!props.id) {
+                return;
+            }
+
             try {
-                const user = await apiClient.user.update(props.id!, {
+                const user = await apiClient.user.update(props.id, {
                     password: form.password,
                     password_repeat: form.password_repeat,
                 });
