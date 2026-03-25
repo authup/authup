@@ -29,6 +29,7 @@ import type {
     IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
+    IRealmRepository,
     OAuth2AuthorizationState,
 } from '../../../../../core/index.ts';
 import {
@@ -52,6 +53,8 @@ export class IdentityProviderController {
 
     protected repository: IIdentityProviderRepository;
 
+    protected realmRepository: IRealmRepository;
+
     protected accountManager: IIdentityProviderAccountManager;
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
@@ -67,6 +70,7 @@ export class IdentityProviderController {
     constructor(ctx: IdentityProviderControllerContext) {
         this.options = ctx.options;
         this.repository = ctx.repository;
+        this.realmRepository = ctx.realmRepository;
         this.accountManager = ctx.accountManager;
         this.codeIssuer = ctx.codeIssuer;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
@@ -297,7 +301,7 @@ export class IdentityProviderController {
 
         const user = await authenticator.authenticate(code);
 
-        const realm = await this.repository.findRealm(entity.realm_id);
+        const realm = await this.realmRepository.resolve(entity.realm_id, true);
 
         const authorizationCode = await this.codeIssuer.issue(
             {

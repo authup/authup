@@ -163,14 +163,6 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         }
     }
 
-    async findRealm(realmId: string): Promise<Realm> {
-        const realm = await this.realmRepository.resolve(realmId);
-        if (!realm) {
-            throw new Error('The associated realm could not be found.');
-        }
-        return realm;
-    }
-
     async findByProtocol(protocol: IdentityProviderProtocol, realmKey?: string): Promise<IdentityProvider[]> {
         const qb = this.repository.createQueryBuilder('provider');
         qb.where('provider.protocol = :protocol', { protocol });

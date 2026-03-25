@@ -443,9 +443,11 @@ export class HTTPControllerModule {
             OAuth2InjectionToken.AuthorizationStateManager,
         );
 
+        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
+
         const repository = new IdentityProviderRepositoryAdapter({
             repository: new IdentityProviderRepository(dataSource),
-            realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
+            realmRepository,
         });
 
         return new IdentityProviderController({
@@ -454,6 +456,7 @@ export class HTTPControllerModule {
             },
 
             repository,
+            realmRepository: new RealmRepositoryAdapter(realmRepository),
 
             accountManager,
 
