@@ -8,7 +8,7 @@
 import {
     type Store, type StoreToRefs, injectStore, storeToRefs,
 } from '@authup/client-web-kit';
-import { hasOwnProperty } from '@authup/kit';
+import { hasOwnProperty, omitRecord } from '@authup/kit';
 import type { RouteLocationAsPathGeneric, RouteLocationNormalized } from 'vue-router';
 import { BuiltInPolicyType, type IdentityPolicyData, PolicyData } from '@authup/access';
 import type { NuxtApp } from '#app';
@@ -42,6 +42,12 @@ export class RoutingInterceptor {
         if (code) {
             try {
                 await this.store.exchangeAuthorizationCode(code);
+
+                return {
+                    path: to.path,
+                    query: omitRecord(to.query, ['code']),
+                    hash: to.hash,
+                };
             } catch {
                 // code exchange failed — continue without authentication
             }
