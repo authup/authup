@@ -366,6 +366,8 @@ export function createStore(context: StoreCreateContext) {
             code,
         });
 
+        await cleanup();
+
         applyTokenGrantResponse(response);
 
         await resolveToken();
