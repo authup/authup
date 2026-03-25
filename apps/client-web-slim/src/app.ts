@@ -6,6 +6,7 @@
  */
 
 import { injectStore, install } from '@authup/client-web-kit';
+import { omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
 import { createSSRApp } from 'vue';
@@ -50,14 +51,31 @@ export function createApp(payload: HydrationPayload) : {app: App, router: Router
         ],
     });
 
-    router.beforeEach(async () => {
+    router.beforeEach(async (to) => {
         const store = injectStore(pinia);
+
+        const code = typeof to.query.code === 'string' ? to.query.code : undefined;
+        if (code) {
+            try {
+                await store.exchangeAuthorizationCode(code);
+
+                return {
+                    path: to.path,
+                    query: omitRecord(to.query, ['code']),
+                    hash: to.hash,
+                };
+            } catch {
+                // code exchange failed
+            }
+        }
 
         try {
             await store.resolve();
         } catch {
             await store.logout();
         }
+
+        return undefined;
     });
 
     app.use(router);

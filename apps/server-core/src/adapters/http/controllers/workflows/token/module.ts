@@ -12,13 +12,11 @@ import {
     DController, DGet, DPost, DRequest, DResponse, DTags,
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
-import { getRequestHostName, sendAccepted } from 'routup';
-import { setResponseCookie } from '@routup/basic/cookie';
-import { CookieName } from '@authup/core-http-kit';
+import { sendAccepted } from 'routup';
 import { pickRecord } from '@authup/kit';
 import { buildPermissionBindingKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
-import type { TokenControllerContext, TokenControllerOptions } from './types.ts';
+import type { TokenControllerContext } from './types.ts';
 import type {
     IIdentityPermissionProvider,
     IIdentityResolver,
@@ -42,8 +40,6 @@ import { extractTokenFromRequest } from './utils/index.ts';
 @DTags('auth')
 @DController('/token')
 export class TokenController {
-    protected options: TokenControllerOptions;
-
     protected refreshTokenIssuer: IOAuth2TokenIssuer;
 
     protected accessTokenIssuer: IOAuth2TokenIssuer;
@@ -61,7 +57,6 @@ export class TokenController {
     // -------------------------------------------
 
     constructor(ctx: TokenControllerContext) {
-        this.options = ctx.options;
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
         this.accessTokenIssuer = ctx.accessTokenIssuer;
         this.tokenVerifier = ctx.tokenVerifier;
@@ -194,7 +189,6 @@ export class TokenController {
     @DPost('', [])
     async createToken(
         @DRequest() req: Request,
-        @DResponse() res: Response,
     ): Promise<OAuth2TokenGrantResponse> {
         const grantType = guessOauth2GrantTypeByRequest(req);
         if (!grantType) {
@@ -206,48 +200,6 @@ export class TokenController {
             throw OAuth2Error.grantInvalid();
         }
 
-        const grantResponse = await grant.runWithRequest(req);
-
-        const domainsRaw = [
-            ...this.options.cookieDomains,
-        ];
-        const requestHostName = getRequestHostName(req, {
-            trustProxy: true,
-        });
-        if (requestHostName) {
-            domainsRaw.push(requestHostName);
-        }
-
-        const domains = [...new Set(domainsRaw)];
-
-        for (const domain of domains) {
-
-            setResponseCookie(
-                res,
-                CookieName.ACCESS_TOKEN,
-                grantResponse.access_token,
-                {
-                    domain,
-                    maxAge: grantResponse.expires_in * 1_000,
-                },
-            );
-
-            if (
-                grantResponse.refresh_token &&
-                grantResponse.refresh_token_expires_in
-            ) {
-                setResponseCookie(
-                    res,
-                    CookieName.REFRESH_TOKEN,
-                    grantResponse.refresh_token,
-                    {
-                        domain,
-                        maxAge: grantResponse.refresh_token_expires_in * 1_000,
-                    },
-                );
-            }
-        }
-
-        return grantResponse;
+        return grant.runWithRequest(req);
     }
 }

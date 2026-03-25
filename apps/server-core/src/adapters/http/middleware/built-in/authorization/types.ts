@@ -9,7 +9,6 @@ import type { IPermissionProvider } from '@authup/access';
 import type { IIdentityPermissionProvider, IIdentityResolver, IOAuth2TokenVerifier, ISessionManager } from '../../../../../core/index.ts';
 
 export type HTTPAuthorizationMiddlewareOptions = {
-    cookieDomain?: string;
     clientAuthBasic?: boolean,
     robotAuthBasic?: boolean,
     userAuthBasic?: boolean,

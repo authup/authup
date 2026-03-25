@@ -79,11 +79,6 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.publicUrl = publicURL;
     }
 
-    const cookieDomain = read(ConfigEnvironmentVariableName.COOKIE_DOMAIN);
-    if (cookieDomain) {
-        options.cookieDomain = cookieDomain;
-    }
-
     const tokenAccessMaxAge = readInt(ConfigEnvironmentVariableName.TOKEN_ACCESS_MAX_AGE);
     if (typeof tokenAccessMaxAge !== 'undefined') {
         options.tokenAccessMaxAge = tokenAccessMaxAge;

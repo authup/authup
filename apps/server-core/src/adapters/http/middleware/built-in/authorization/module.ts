@@ -7,7 +7,6 @@
 
 import type { IPermissionEvaluator } from '@authup/access';
 import { PermissionEvaluator } from '@authup/access';
-import { CookieName } from '@authup/core-http-kit';
 import type { Client, Robot, User } from '@authup/core-kit';
 import {
     IdentityType,
@@ -15,16 +14,12 @@ import {
 } from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
 import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
-import type { SerializeOptions } from '@routup/basic/cookie';
-import { unsetResponseCookie, useRequestCookie } from '@routup/basic/cookie';
-import { getRequestHostName } from 'routup';
 import type { Next, Request, Response } from 'routup';
 import {
     AuthorizationHeaderType,
     type BasicAuthorizationHeader,
     type BearerAuthorizationHeader,
     parseAuthorizationHeader,
-    stringifyAuthorizationHeader,
 } from 'hapic';
 import { ClientAuthenticator,
     PolicyEngine,
@@ -96,19 +91,9 @@ export class AuthorizationMiddleware {
         );
         setRequestPermissionEvaluator(request, requestAccessContext);
 
-        let { authorization: headerValue } = request.headers;
+        const { authorization: headerValue } = request.headers;
 
         try {
-            if (typeof headerValue === 'undefined') {
-                const cookie = useRequestCookie(request, CookieName.ACCESS_TOKEN);
-                if (cookie) {
-                    headerValue = stringifyAuthorizationHeader({
-                        type: 'Bearer',
-                        token: cookie,
-                    });
-                }
-            }
-
             if (typeof headerValue !== 'string') {
                 next();
                 return;
@@ -128,20 +113,6 @@ export class AuthorizationMiddleware {
 
             next(HTTPError.unsupportedHeaderType(header.type));
         } catch (e) {
-            const cookieOptions : SerializeOptions = {};
-
-            if (this.options.cookieDomain) {
-                cookieOptions.domain = this.options.cookieDomain;
-            } else {
-                cookieOptions.domain = getRequestHostName(response.req, {
-                    trustProxy: true,
-                });
-            }
-
-            unsetResponseCookie(response, CookieName.ACCESS_TOKEN, cookieOptions);
-            unsetResponseCookie(response, CookieName.REFRESH_TOKEN, cookieOptions);
-            unsetResponseCookie(response, CookieName.ACCESS_TOKEN_EXPIRE_DATE, cookieOptions);
-
             next(e as Error);
         }
     }

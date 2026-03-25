@@ -82,14 +82,6 @@ export type Config = {
      */
     publicUrl: string,
 
-    /**
-     * Domain for setting cookies after authorization.
-     * default: undefined
-     *
-     * @deprecated
-     */
-    cookieDomain?: string,
-
     // ----------------------------------------------------
 
     /**

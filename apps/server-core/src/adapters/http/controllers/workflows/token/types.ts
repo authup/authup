@@ -15,14 +15,7 @@ import type {
     IOAuth2TokenRevoker, IOAuth2TokenVerifier, ISessionManager 
 } from '../../../../../core/index.ts';
 
-export type TokenControllerOptions = {
-    cookieDomains: string[]
-};
-
 export type TokenControllerContext = {
-    options: TokenControllerOptions,
-    cookieDomain?: string,
-
     codeVerifier: IOAuth2AuthorizationCodeVerifier,
 
     accessTokenIssuer: IOAuth2TokenIssuer,
