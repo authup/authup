@@ -34,6 +34,8 @@ export type PermissionEvaluationOptions = {
 
 export type PermissionEvaluationContext = {
     name: string | string[],
+    realm_id?: string | null,
+    client_id?: string | null,
     input?: PolicyData,
     options?: PermissionEvaluationOptions
 };

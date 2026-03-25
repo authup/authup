@@ -77,6 +77,8 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
             await actor.permissionEvaluator.preEvaluate({
                 name: data.permission.name,
+                realm_id: data.permission.realm_id,
+                client_id: data.permission.client_id,
             });
         }
 

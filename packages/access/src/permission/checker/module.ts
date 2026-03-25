@@ -62,16 +62,23 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
     // ----------------------------------------------
 
-    protected async findOne(input: string) : Promise<PermissionBinding | null> {
+    protected async findOne(
+        input: string,
+        overrides?: { realm_id?: string | null, client_id?: string | null },
+    ) : Promise<PermissionBinding | null> {
         const options : PermissionGetOptions = {
             name: input,
         };
 
-        if (typeof this.client_id !== 'undefined') {
+        if (typeof overrides?.client_id !== 'undefined') {
+            options.client_id = overrides.client_id;
+        } else if (typeof this.client_id !== 'undefined') {
             options.client_id = this.client_id;
         }
 
-        if (typeof this.realm_id !== 'undefined') {
+        if (typeof overrides?.realm_id !== 'undefined') {
+            options.realm_id = overrides.realm_id;
+        } else if (typeof this.realm_id !== 'undefined') {
             options.realm_id = this.realm_id;
         }
 
@@ -103,7 +110,10 @@ export class PermissionEvaluator implements IPermissionEvaluator {
         const dataBase = ctx.input || new PolicyData();
 
         for (let i = 0; i < ctx.name.length; i++) {
-            const binding = await this.findOne(ctx.name[i]);
+            const binding = await this.findOne(ctx.name[i], {
+                realm_id: ctx.realm_id,
+                client_id: ctx.client_id,
+            });
             if (!binding) {
                 issues.push(defineIssueItem({
                     code: ErrorCode.PERMISSION_NOT_FOUND,

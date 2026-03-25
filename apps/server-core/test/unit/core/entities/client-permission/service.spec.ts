@@ -82,6 +82,8 @@ describe('core/entities/client-permission/service', () => {
 
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: 'custom-perm',
+                realm_id: null,
+                client_id: undefined,
             });
         });
 

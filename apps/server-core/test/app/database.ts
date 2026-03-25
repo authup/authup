@@ -9,13 +9,14 @@ import { EnvironmentName } from '@authup/kit';
 import { createDatabase, dropDatabase, readDataSourceOptionsFromEnv } from 'typeorm-extension';
 import fs from 'node:fs';
 import path from 'node:path';
+import { inject } from 'vitest';
 import {
     type Config, ConfigInjectionKey, DatabaseModule,
 } from '../../src';
 import type { IDIContainer } from '../../src/core';
 import { PACKAGE_PATH } from '../../src/path.ts';
 
-async function prepareTestBuild(container: IDIContainer): Promise<void> {
+async function resolveDataSourceOptions(container: IDIContainer) {
     const config = container.resolve<Config>(ConfigInjectionKey);
 
     if (config.env !== EnvironmentName.TEST) {
@@ -39,7 +40,7 @@ async function prepareTestBuild(container: IDIContainer): Promise<void> {
 
 export function createTestDatabaseModuleForSetup(): DatabaseModule {
     return new DatabaseModule({
-        prepareBuild: prepareTestBuild,
+        prepareBuild: resolveDataSourceOptions,
         async setup(_container, options) {
             if (typeof options.database === 'string') {
                 fs.rmSync(options.database, { force: true });
@@ -58,7 +59,19 @@ export function createTestDatabaseModuleForSetup(): DatabaseModule {
 
 export function createTestDatabaseModuleForSuite(): DatabaseModule {
     return new DatabaseModule({
-        prepareBuild: prepareTestBuild,
+        async prepareBuild(container: IDIContainer) {
+            const connection = inject('DATABASE_CONNECTION');
+            if (connection) {
+                process.env.DB_TYPE = connection.type;
+                process.env.DB_HOST = connection.host;
+                process.env.DB_PORT = connection.port;
+                process.env.DB_USERNAME = connection.username;
+                process.env.DB_PASSWORD = connection.password;
+                process.env.DB_DATABASE = connection.database;
+            }
+
+            await resolveDataSourceOptions(container);
+        },
         async setup() {
             // do nothing — DB already exists from global setup
         },

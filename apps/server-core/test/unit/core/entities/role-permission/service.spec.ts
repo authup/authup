@@ -99,6 +99,8 @@ describe('core/entities/role-permission/service', () => {
 
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: 'custom-perm',
+                realm_id: null,
+                client_id: undefined,
             });
         });
 
@@ -113,6 +115,8 @@ describe('core/entities/role-permission/service', () => {
 
             expect(actor.permissionEvaluator.preEvaluate).not.toHaveBeenCalledWith({
                 name: 'custom-perm',
+                realm_id: null,
+                client_id: undefined,
             });
         });
 
