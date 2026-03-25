@@ -1,0 +1,21 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "lib": [
+            "ESNext",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "jsx": "preserve",
+        "paths": {
+            "@authup/client-web-kit": ["./packages/client-web-kit/src"],
+            "@authup/kit": ["./packages/kit/src"],
+            "@authup/core-kit": ["./packages/core-kit/src"],
+            "@authup/core-http-kit": ["./packages/core-http-kit/src"]
+        }
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.vue"
+    ]
+}
