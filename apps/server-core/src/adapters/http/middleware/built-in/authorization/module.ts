@@ -79,6 +79,8 @@ export class AuthorizationMiddleware {
         this.permissionEvaluator = new PermissionEvaluator({
             repository: ctx.permissionProvider,
             policyEngine: new PolicyEngine(ctx.identityPermissionProvider),
+            realm_id: null,
+            client_id: null,
         });
     }
 
