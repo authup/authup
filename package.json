@@ -54,8 +54,7 @@
         "typescript": "5.9.3",
         "typescript-eslint": "^8.57.2",
         "unplugin-swc": "^1.5.9",
-        "vitest": "^4.0.14",
-        "workspaces-publish": "^1.8.1"
+        "vitest": "^4.0.14"
     },
     "scripts": {
         "build": "npx nx run-many -t build",
