@@ -38,11 +38,6 @@ export default {
      */
     publicUrl: 'http://localhost:3001',
 
-    /**
-     * Domain for setting cookies after authorization.
-     */
-    cookieDomain: undefined,
-    
     // ----------------------------------------------------
 
     /**

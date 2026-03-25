@@ -34,6 +34,10 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
     async verify(
         data: OAuth2AuthorizationCodeRequest,
     ) : Promise<OAuth2AuthorizationCodeRequestVerificationResult> {
+        if (!data.client_id) {
+            throw OAuth2Error.clientInvalid();
+        }
+
         const client = await this.clientRepository.findOneByIdOrName(data.client_id, data.realm_id);
         if (!client) {
             throw OAuth2Error.clientInvalid();
@@ -59,10 +63,9 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             data.scope = scopeNames.join(' ');
         }
 
-        if (client.redirect_uri) {
+        if (client.redirect_uri && data.redirect_uri) {
             const redirectUris = client.redirect_uri.split(',');
 
-            // verifying scopes
             if (!isSimpleMatch(data.redirect_uri, redirectUris)) {
                 throw OAuth2Error.redirectUriMismatch();
             }

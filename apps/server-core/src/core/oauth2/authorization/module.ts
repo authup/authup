@@ -69,6 +69,10 @@ export class OAuth2Authorization {
             }
         }
 
+        if (!data.redirect_uri) {
+            throw OAuth2Error.redirectUriMismatch();
+        }
+
         const output : OAuth2AuthorizationResult = {
             redirectUri: data.redirect_uri,
             ...(data.state ? { state: data.state } : {}),

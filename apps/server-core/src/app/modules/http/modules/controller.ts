@@ -290,16 +290,6 @@ export class HTTPControllerModule {
     }
 
     createToken(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-
-        const cookieDomains : string[] = [
-            new URL(config.publicUrl).hostname,
-        ];
-
-        if (config.cookieDomain) {
-            cookieDomains.push(config.cookieDomain);
-        }
-
         const sessionManager = container.resolve<ISessionManager>(
             AuthenticationInjectionKey.SessionManager,
         );
@@ -340,10 +330,6 @@ export class HTTPControllerModule {
         ]);
 
         return new TokenController({
-            options: {
-                cookieDomains,
-            },
-
             codeVerifier,
 
             accessTokenIssuer,
@@ -441,20 +427,12 @@ export class HTTPControllerModule {
         const config = container.resolve<Config>(ConfigInjectionKey);
         const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
 
-        const cookieDomains : string[] = [
-            new URL(config.publicUrl).hostname,
-        ];
-
-        if (config.cookieDomain) {
-            cookieDomains.push(config.cookieDomain);
-        }
-
-        const sessionManager = container.resolve<ISessionManager>(
-            AuthenticationInjectionKey.SessionManager,
-        );
-
         const accountManager = container.resolve<IIdentityProviderAccountManager>(
             IdentityInjectionKey.ProviderAccountManager,
+        );
+
+        const codeIssuer = container.resolve<IOAuth2AuthorizationCodeIssuer>(
+            OAuth2InjectionToken.AuthorizationCodeIssuer,
         );
 
         const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
@@ -465,13 +443,6 @@ export class HTTPControllerModule {
             OAuth2InjectionToken.AuthorizationStateManager,
         );
 
-        const accessTokenIssuer = container.resolve<IOAuth2TokenIssuer>(
-            OAuth2InjectionToken.AccessTokenIssuer,
-        );
-        const refreshTokenIssuer = container.resolve<IOAuth2TokenIssuer>(
-            OAuth2InjectionToken.RefreshTokenIssuer,
-        );
-
         const repository = new IdentityProviderRepositoryAdapter({
             repository: new IdentityProviderRepository(dataSource),
             realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
@@ -480,21 +451,15 @@ export class HTTPControllerModule {
         return new IdentityProviderController({
             options: {
                 baseURL: config.publicUrl,
-                cookieDomains,
-                accessTokenMaxAge: config.tokenAccessMaxAge,
-                refreshTokenMaxAge: config.tokenRefreshMaxAge,
             },
 
             repository,
 
             accountManager,
 
+            codeIssuer,
             codeRequestVerifier,
             stateManager,
-
-            accessTokenIssuer,
-            refreshTokenIssuer,
-            sessionManager,
         });
     }
 

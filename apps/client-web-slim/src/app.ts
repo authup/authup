@@ -50,8 +50,17 @@ export function createApp(payload: HydrationPayload) : {app: App, router: Router
         ],
     });
 
-    router.beforeEach(async () => {
+    router.beforeEach(async (to) => {
         const store = injectStore(pinia);
+
+        const code = typeof to.query.code === 'string' ? to.query.code : undefined;
+        if (code) {
+            try {
+                await store.exchangeAuthorizationCode(code);
+            } catch {
+                // code exchange failed
+            }
+        }
 
         try {
             await store.resolve();

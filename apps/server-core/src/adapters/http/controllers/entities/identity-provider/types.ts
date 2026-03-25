@@ -8,18 +8,13 @@
 import type {
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
+    IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
-    IOAuth2TokenIssuer,
-    ISessionManager,
 } from '../../../../../core/index.ts';
 
 export type IdentityProviderControllerOptions = {
     baseURL: string,
-    cookieDomains: string[],
-
-    accessTokenMaxAge: number,
-    refreshTokenMaxAge: number,
 };
 
 export type IdentityProviderControllerContext = {
@@ -28,11 +23,7 @@ export type IdentityProviderControllerContext = {
     repository: IIdentityProviderRepository,
 
     accountManager: IIdentityProviderAccountManager,
+    codeIssuer: IOAuth2AuthorizationCodeIssuer,
     codeRequestVerifier: IOAuth2AuthorizationCodeRequestVerifier,
     stateManager: IOAuth2AuthorizationStateManager,
-
-    accessTokenIssuer: IOAuth2TokenIssuer,
-    refreshTokenIssuer: IOAuth2TokenIssuer,
-
-    sessionManager: ISessionManager,
 };

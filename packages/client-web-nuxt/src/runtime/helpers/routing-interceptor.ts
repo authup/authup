@@ -38,6 +38,15 @@ export class RoutingInterceptor {
         to: RouteLocationNormalized,
         from: RouteLocationNormalized,
     ) : Promise<RouteLocationAsPathGeneric | undefined> {
+        const code = typeof to.query.code === 'string' ? to.query.code : undefined;
+        if (code) {
+            try {
+                await this.store.exchangeAuthorizationCode(code);
+            } catch {
+                // code exchange failed — continue without authentication
+            }
+        }
+
         try {
             await this.store.resolve();
         } catch {

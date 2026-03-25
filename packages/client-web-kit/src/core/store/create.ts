@@ -361,6 +361,17 @@ export function createStore(context: StoreCreateContext) {
         context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
     };
 
+    const exchangeAuthorizationCode = async (code: string) => {
+        const response = await client.token.createWithAuthorizationCode({
+            code,
+        });
+
+        applyTokenGrantResponse(response);
+
+        await resolveToken();
+        await resolveUser();
+    };
+
     const logout = async () => {
         context.dispatcher.emit(StoreDispatcherEventName.LOGGING_OUT);
 
@@ -379,6 +390,7 @@ export function createStore(context: StoreCreateContext) {
         logout,
         loggedIn,
         resolve,
+        exchangeAuthorizationCode,
 
         applyTokenGrantResponse,
         accessToken,

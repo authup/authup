@@ -12,7 +12,7 @@ import {
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import {
-    getRequestHeader, getRequestHostName, getRequestIP, send, sendAccepted, sendCreated, sendRedirect, useRequestParam,
+    getRequestHeader, getRequestIP, send, sendAccepted, sendCreated, sendRedirect, useRequestParam,
 } from 'routup';
 import type {
     IdentityProvider, OAuth2AuthorizationCodeRequest} from '@authup/core-kit';
@@ -22,18 +22,16 @@ import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import { OAuth2Error } from '@authup/specs';
 import { URL } from 'node:url';
-import { setResponseCookie } from '@routup/basic/cookie';
-import { CookieName } from '@authup/core-http-kit';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type {
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
+    IOAuth2AuthorizationCodeIssuer,
     IOAuth2AuthorizationCodeRequestVerifier,
     IOAuth2AuthorizationStateManager,
     OAuth2AuthorizationState,
 } from '../../../../../core/index.ts';
 import {
-    IdentityGrantType,
     OAuth2AuthorizationCodeRequestValidator,
     createIdentityProviderOAuth2Authenticator,
 } from '../../../../../core/index.ts';
@@ -62,7 +60,7 @@ export class IdentityProviderController {
 
     protected stateManager : IOAuth2AuthorizationStateManager;
 
-    protected identityGrant : IdentityGrantType;
+    protected codeIssuer : IOAuth2AuthorizationCodeIssuer;
 
     // ---------------------------------------------------------
 
@@ -70,15 +68,10 @@ export class IdentityProviderController {
         this.options = ctx.options;
         this.repository = ctx.repository;
         this.accountManager = ctx.accountManager;
+        this.codeIssuer = ctx.codeIssuer;
         this.codeRequestVerifier = ctx.codeRequestVerifier;
         this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
         this.stateManager = ctx.stateManager;
-
-        this.identityGrant = new IdentityGrantType({
-            accessTokenIssuer: ctx.accessTokenIssuer,
-            refreshTokenIssuer: ctx.refreshTokenIssuer,
-            sessionManager: ctx.sessionManager,
-        });
     }
 
     // ---------------------------------------------------------
@@ -304,56 +297,23 @@ export class IdentityProviderController {
 
         const user = await authenticator.authenticate(code);
 
-        const token = await this.identityGrant.runWith(
+        const realm = await this.repository.findRealm(entity.realm_id);
+
+        const authorizationCode = await this.codeIssuer.issue(
+            {
+                response_type: 'code',
+                client_id: data.codeRequest?.client_id,
+                redirect_uri: data.codeRequest?.redirect_uri,
+                scope: data.codeRequest?.scope,
+            },
             {
                 type: IdentityType.USER,
                 data: {
                     ...user,
-                    realm: entity.realm,
+                    realm,
                 },
-            },
-            {
-                ipAddress: getRequestIP(req, { trustProxy: true }),
-                userAgent: getRequestHeader(req, 'user-agent'),
             },
         );
-
-        const domainsRaw : string[] = [
-            ...this.options.cookieDomains,
-        ];
-
-        const requestHostName = getRequestHostName(req, {
-            trustProxy: true,
-        });
-        if (requestHostName) {
-            domainsRaw.push(requestHostName);
-        }
-
-        const domains = [...new Set(domainsRaw)];
-
-        for (const domain of domains) {
-            setResponseCookie(
-                res,
-                CookieName.ACCESS_TOKEN,
-                token.access_token,
-                {
-                    domain,
-                    maxAge: this.options.accessTokenMaxAge * 1000,
-                },
-            );
-
-            if (token.refresh_token) {
-                setResponseCookie(
-                    res,
-                    CookieName.REFRESH_TOKEN,
-                    token.refresh_token,
-                    {
-                        domain,
-                        maxAge: this.options.refreshTokenMaxAge * 1000,
-                    },
-                );
-            }
-        }
 
         if (data.codeRequest) {
             const codeRequestKeys = Object.keys(data.codeRequest);
@@ -366,10 +326,15 @@ export class IdentityProviderController {
                 }
             }
 
+            url.searchParams.set('code', authorizationCode.id);
+
             return sendRedirect(res, url.href);
         }
 
-        return sendRedirect(res, this.options.baseURL);
+        const url = new URL(this.options.baseURL);
+        url.searchParams.set('code', authorizationCode.id);
+
+        return sendRedirect(res, url.href);
     }
 
     // ---------------------------------------------------------
