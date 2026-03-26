@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { TypedToken } from 'eldin';
+import type { ISessionManager, ISessionRepository } from '../../../core/index.ts';
+
 export const AuthenticationInjectionKey = {
-    SessionManager: Symbol('SessionManager'),
-    SessionRepository: Symbol('SessionRepository'),
+    SessionManager: new TypedToken<ISessionManager>('SessionManager'),
+    SessionRepository: new TypedToken<ISessionRepository>('SessionRepository'),
 } as const;

@@ -11,13 +11,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { inject } from 'vitest';
 import {
-    type Config, ConfigInjectionKey, DatabaseModule,
+    ConfigInjectionKey, DatabaseModule,
 } from '../../src';
-import type { IDIContainer } from '../../src/core';
+import type { IContainer } from 'eldin';
 import { PACKAGE_PATH } from '../../src/path.ts';
 
-async function resolveDataSourceOptions(container: IDIContainer) {
-    const config = container.resolve<Config>(ConfigInjectionKey);
+async function resolveDataSourceOptions(container: IContainer) {
+    const config = container.resolve(ConfigInjectionKey);
 
     if (config.env !== EnvironmentName.TEST) {
         throw new Error('Test database module can only run with EnvironmentName.TEST');
@@ -59,7 +59,7 @@ export function createTestDatabaseModuleForSetup(): DatabaseModule {
 
 export function createTestDatabaseModuleForSuite(): DatabaseModule {
     return new DatabaseModule({
-        async prepareBuild(container: IDIContainer) {
+        async prepareBuild(container: IContainer) {
             const connection = inject('DATABASE_CONNECTION');
             if (connection) {
                 process.env.DB_TYPE = connection.type;

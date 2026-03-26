@@ -5,20 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ICache } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import { CacheInjectionKey } from '../cache/index.ts';
-import type { Config } from '../config/index.ts';
-import type {
-    IDIContainer,
-    IIdentityResolver,
-    IOAuth2AuthorizationCodeRepository,
-    IOAuth2ClientRepository,
-    IOAuth2KeyRepository,
-    IOAuth2ScopeRepository, IOAuth2TokenRepository,
-    IOAuth2TokenSigner,
-} from '../../../core/index.ts';
-import type { Module } from '../types.ts';
+import type { IContainer } from 'eldin';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 
 import {
@@ -45,7 +35,7 @@ import { IdentityInjectionKey } from '../identity/index.ts';
 import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/domains/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
-export class OAuth2Module implements Module {
+export class OAuth2Module implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -55,8 +45,8 @@ export class OAuth2Module implements Module {
         this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG, ModuleName.IDENTITY];
     }
 
-    async start(container: IDIContainer) : Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    async start(container: IContainer) : Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
 
         container.register(OAuth2InjectionToken.ClientRepository, {
             useFactory: (c) => {
@@ -74,21 +64,21 @@ export class OAuth2Module implements Module {
 
         container.register(OAuth2InjectionToken.AuthorizationCodeRepository, {
             useFactory: (c) => {
-                const cache = c.resolve<ICache>(CacheInjectionKey);
+                const cache = c.resolve(CacheInjectionKey);
                 return new OAuth2AuthorizationCodeRepository(cache);
             },
         });
 
         container.register(OAuth2InjectionToken.AuthorizationStateRepository, {
             useFactory: (c) => {
-                const cache = c.resolve<ICache>(CacheInjectionKey);
+                const cache = c.resolve(CacheInjectionKey);
                 return new OAuth2AuthorizationStateRepository(cache);
             },
         });
 
         container.register(OAuth2InjectionToken.TokenRepository, {
             useFactory: (c) => {
-                const cache = c.resolve<ICache>(CacheInjectionKey);
+                const cache = c.resolve(CacheInjectionKey);
                 return new OAuth2TokenRepository(cache);
             },
         });
@@ -100,7 +90,7 @@ export class OAuth2Module implements Module {
 
         container.register(OAuth2InjectionToken.TokenSigner, {
             useFactory: (c) => {
-                const keyRepository = c.resolve<IOAuth2KeyRepository>(OAuth2InjectionToken.KeyRepository);
+                const keyRepository = c.resolve(OAuth2InjectionToken.KeyRepository);
                 return new OAuth2TokenSigner(keyRepository);
             },
         });
@@ -108,9 +98,7 @@ export class OAuth2Module implements Module {
         // authorization code issuer
         container.register(OAuth2InjectionToken.AuthorizationCodeIssuer, {
             useFactory: (c) => {
-                const codeRepository = c.resolve<IOAuth2AuthorizationCodeRepository>(
-                    OAuth2InjectionToken.AuthorizationCodeRepository,
-                );
+                const codeRepository = c.resolve(OAuth2InjectionToken.AuthorizationCodeRepository);
 
                 return new OAuth2AuthorizationCodeIssuer(
                     codeRepository,
@@ -123,9 +111,7 @@ export class OAuth2Module implements Module {
         });
         container.register(OAuth2InjectionToken.AuthorizationCodeVerifier, {
             useFactory: (c) => {
-                const codeRepository = c.resolve<IOAuth2AuthorizationCodeRepository>(
-                    OAuth2InjectionToken.AuthorizationCodeRepository,
-                );
+                const codeRepository = c.resolve(OAuth2InjectionToken.AuthorizationCodeRepository);
 
                 return new OAuth2AuthorizationCodeVerifier(codeRepository);
             },
@@ -134,12 +120,8 @@ export class OAuth2Module implements Module {
         // authorization code request verifier
         container.register(OAuth2InjectionToken.AuthorizationCodeRequestVerifier, {
             useFactory: (c) => {
-                const clientRepository = c.resolve<IOAuth2ClientRepository>(
-                    OAuth2InjectionToken.ClientRepository,
-                );
-                const clientScopeRepository = c.resolve<IOAuth2ScopeRepository>(
-                    OAuth2InjectionToken.ScopeRepository,
-                );
+                const clientRepository = c.resolve(OAuth2InjectionToken.ClientRepository);
+                const clientScopeRepository = c.resolve(OAuth2InjectionToken.ScopeRepository);
 
                 return new OAuth2AuthorizationCodeRequestVerifier({
                     clientRepository,
@@ -150,9 +132,7 @@ export class OAuth2Module implements Module {
 
         container.register(OAuth2InjectionToken.AuthorizationStateManager, {
             useFactory: (c) => {
-                const stateRepository = c.resolve<OAuth2AuthorizationStateRepository>(
-                    OAuth2InjectionToken.AuthorizationStateRepository,
-                );
+                const stateRepository = c.resolve(OAuth2InjectionToken.AuthorizationStateRepository);
 
                 return new OAuth2AuthorizationStateManager(stateRepository);
             },
@@ -161,7 +141,7 @@ export class OAuth2Module implements Module {
         // token revoker
         container.register(OAuth2InjectionToken.TokenRevoker, {
             useFactory: (c) => {
-                const tokenRepository = c.resolve<IOAuth2TokenRepository>(OAuth2InjectionToken.TokenRepository);
+                const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
                 return new OAuth2TokenRevoker(tokenRepository);
             },
         });
@@ -169,8 +149,8 @@ export class OAuth2Module implements Module {
         // token verifier
         container.register(OAuth2InjectionToken.TokenVerifier, {
             useFactory: (c) => {
-                const keyRepository = c.resolve<IOAuth2KeyRepository>(OAuth2InjectionToken.KeyRepository);
-                const tokenRepository = c.resolve<IOAuth2TokenRepository>(OAuth2InjectionToken.TokenRepository);
+                const keyRepository = c.resolve(OAuth2InjectionToken.KeyRepository);
+                const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
 
                 return new OAuth2TokenVerifier(keyRepository, tokenRepository);
             },
@@ -179,8 +159,8 @@ export class OAuth2Module implements Module {
         // access token issuer
         container.register(OAuth2InjectionToken.AccessTokenIssuer, {
             useFactory: (c) => {
-                const tokenRepository = c.resolve<IOAuth2TokenRepository>(OAuth2InjectionToken.TokenRepository);
-                const tokenSigner = c.resolve<IOAuth2TokenSigner>(OAuth2InjectionToken.TokenSigner);
+                const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
+                const tokenSigner = c.resolve(OAuth2InjectionToken.TokenSigner);
                 return new OAuth2AccessTokenIssuer(
                     tokenRepository,
                     tokenSigner,
@@ -195,8 +175,8 @@ export class OAuth2Module implements Module {
         // refresh token issuer
         container.register(OAuth2InjectionToken.RefreshTokenIssuer, {
             useFactory: (c) => {
-                const tokenRepository = c.resolve<IOAuth2TokenRepository>(OAuth2InjectionToken.TokenRepository);
-                const tokenSigner = c.resolve<IOAuth2TokenSigner>(OAuth2InjectionToken.TokenSigner);
+                const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
+                const tokenSigner = c.resolve(OAuth2InjectionToken.TokenSigner);
 
                 return new OAuth2RefreshTokenIssuer(
                     tokenRepository,
@@ -212,13 +192,9 @@ export class OAuth2Module implements Module {
         // open-id token issuer
         container.register(OAuth2InjectionToken.OpenIDTokenIssuer, {
             useFactory: (c) => {
-                const repository = c.resolve<IOAuth2TokenRepository>(
-                    OAuth2InjectionToken.TokenRepository,
-                );
-                const signer = c.resolve<IOAuth2TokenSigner>(OAuth2InjectionToken.TokenSigner);
-                const identityResolver = c.resolve<IIdentityResolver>(
-                    IdentityInjectionKey.Resolver,
-                );
+                const repository = c.resolve(OAuth2InjectionToken.TokenRepository);
+                const signer = c.resolve(OAuth2InjectionToken.TokenSigner);
+                const identityResolver = c.resolve(IdentityInjectionKey.Resolver);
 
                 return new OAuth2OpenIDTokenIssuer({
                     repository,

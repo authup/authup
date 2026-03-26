@@ -5,4 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const VaultInjectionKey = Symbol('Redis');
+import type { VaultClient } from '@authup/server-kit';
+import { TypedToken } from 'eldin';
+
+export const VaultInjectionKey = new TypedToken<VaultClient>('Vault');

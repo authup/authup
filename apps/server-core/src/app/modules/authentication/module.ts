@@ -6,25 +6,21 @@
  */
 
 import type { Session } from '@authup/core-kit';
-import type { ICache } from '@authup/server-kit';
 import type { Repository } from 'typeorm';
 import { SessionEntity } from '../../../adapters/database/domains/index.ts';
-import type {
-    IDIContainer, ISessionRepository,
-} from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import {
     SessionManager,
 } from '../../../core/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
-import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 import { AuthenticationInjectionKey } from './constants.ts';
 import { SessionRepository } from './repositories/index.ts';
 
-export class AuthenticationModule implements Module {
+export class AuthenticationModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -34,10 +30,10 @@ export class AuthenticationModule implements Module {
         this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE];
     }
 
-    async start(container: IDIContainer): Promise<void> {
+    async start(container: IContainer): Promise<void> {
         container.register(AuthenticationInjectionKey.SessionRepository, {
             useFactory: (c) => {
-                const cache = c.resolve<ICache>(CacheInjectionKey);
+                const cache = c.resolve(CacheInjectionKey);
                 const repository = c.resolve<Repository<Session>>(SessionEntity);
                 return new SessionRepository({
                     cache,
@@ -48,8 +44,8 @@ export class AuthenticationModule implements Module {
 
         container.register(AuthenticationInjectionKey.SessionManager, {
             useFactory: (c) => {
-                const config = c.resolve<Config>(ConfigInjectionKey);
-                const repository = c.resolve<ISessionRepository>(AuthenticationInjectionKey.SessionRepository);
+                const config = c.resolve(ConfigInjectionKey);
+                const repository = c.resolve(AuthenticationInjectionKey.SessionRepository);
                 return new SessionManager({
                     repository,
                     options: {

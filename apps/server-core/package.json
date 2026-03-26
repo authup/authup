@@ -62,6 +62,7 @@
         "@authup/access": "^1.0.0-beta.30",
         "@authup/core-http-kit": "^1.0.0-beta.30",
         "@authup/core-kit": "^1.0.0-beta.30",
+        "eldin": "^1.1.0",
         "@authup/errors": "^1.0.0-beta.30",
         "@authup/kit": "^1.0.0-beta.30",
         "@authup/server-kit": "^1.0.0-beta.30",

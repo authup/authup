@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Logger } from '@authup/server-kit';
 import { defineCommand } from 'citty';
 import path from 'node:path';
 import process from 'node:process';
@@ -18,8 +17,7 @@ import { DataSourceOptionsBuilder } from '../../adapters/database/index.ts';
 import {
     ApplicationBuilder, ConfigInjectionKey, LoggerInjectionKey, ModuleName,
 } from '../../app/index.ts';
-import type { IDIContainer } from '../../core/index.ts';
-import type { Config } from '../../app/index.ts';
+import type { IContainer } from 'eldin';
 import { CODE_PATH } from '../../path.ts';
 
 enum MigrationOperation {
@@ -30,11 +28,11 @@ enum MigrationOperation {
 }
 
 async function runMigrationOperation(
-    container: IDIContainer,
+    container: IContainer,
     operation: string,
 ): Promise<void> {
-    const config = container.resolve<Config>(ConfigInjectionKey);
-    const logger = container.resolve<Logger>(LoggerInjectionKey);
+    const config = container.resolve(ConfigInjectionKey);
+    const logger = container.resolve(LoggerInjectionKey);
 
     const optionsBuilder = new DataSourceOptionsBuilder();
 
@@ -165,7 +163,7 @@ export function defineCLIMigrationCommand() {
                     app.addModule({
                         name: ModuleName.DATABASE,
                         dependsOn: [ModuleName.CONFIG, ModuleName.LOGGER],
-                        async start(container: IDIContainer): Promise<void> {
+                        async start(container: IContainer): Promise<void> {
                             await runMigrationOperation(container, context.args.operation);
                         },
                     });

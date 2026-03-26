@@ -5,15 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 import { SMTPMailClientAdapter, VoidMailClientAdapter } from './adapter/index.ts';
 import { MailInjectionKey } from './constants.ts';
-import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
-import type { IDIContainer } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 
-export class MailModule implements Module {
+export class MailModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -23,8 +22,8 @@ export class MailModule implements Module {
         this.dependsOn = [ModuleName.CONFIG];
     }
 
-    async start(container: IDIContainer): Promise<void> {
-        const result = container.safeResolve<Config>(ConfigInjectionKey);
+    async start(container: IContainer): Promise<void> {
+        const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.smtp) {
             container.register(MailInjectionKey, {
                 useFactory: () => new VoidMailClientAdapter(),

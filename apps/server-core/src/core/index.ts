@@ -6,7 +6,6 @@
  */
 
 export * from './authentication/index.ts';
-export * from './di/index.ts';
 export * from './entities/index.ts';
 export * from './mail/index.ts';
 export * from './oauth2/index.ts';

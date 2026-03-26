@@ -6,7 +6,7 @@
  */
 
 import type { Realm, UserPermission, UserRole } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import {
     ClientIdentityRepository,
     IdentityProviderAccountRepository,
@@ -26,7 +26,7 @@ import {
     UserRepository,
     UserRoleEntity,
 } from '../../../adapters/database/domains/index.ts';
-import type { IDIContainer, IIdentityProviderAccountManager, ILdapClientFactory } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import {
     IdentityProviderAccountManager,
     IdentityProviderAttributeMapper,
@@ -37,11 +37,11 @@ import {
 } from '../../../core/index.ts';
 import { LDAPInjectionKey } from '../ldap/index.ts';
 
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 import { IdentityInjectionKey } from './constants.ts';
 
-export class IdentityModule implements Module {
+export class IdentityModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -51,8 +51,8 @@ export class IdentityModule implements Module {
         this.dependsOn = [ModuleName.DATABASE];
     }
 
-    async start(container: IDIContainer): Promise<void> {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    async start(container: IContainer): Promise<void> {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const clientRepository = new ClientIdentityRepository(
             new ClientRepository(dataSource),
@@ -106,8 +106,8 @@ export class IdentityModule implements Module {
         container.register(IdentityInjectionKey.ProviderLdapCollectionAuthenticator, {
             useFactory: (c) => new IdentityProviderLdapCollectionAuthenticator({
                 repository: identityProviderRepository,
-                accountManager: c.resolve<IIdentityProviderAccountManager>(IdentityInjectionKey.ProviderAccountManager),
-                clientFactory: c.resolve<ILdapClientFactory>(LDAPInjectionKey.ClientFactory),
+                accountManager: c.resolve(IdentityInjectionKey.ProviderAccountManager),
+                clientFactory: c.resolve(LDAPInjectionKey.ClientFactory),
             }),
         });
     }

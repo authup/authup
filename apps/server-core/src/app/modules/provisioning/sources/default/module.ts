@@ -12,7 +12,7 @@ import type {
 import {
     PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ROLE_REALM_ADMIN_NAME, ScopeName, buildUserFakeEmail,
 } from '@authup/core-kit';
-import type { IDIContainer } from '../../../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import {
     ClientCredentialsService,
     RobotCredentialsService,
@@ -287,8 +287,8 @@ export class DefaultProvisioningSource implements IProvisioningSource {
         return [masterRealm];
     }
 
-    async load(container: IDIContainer): Promise<RootProvisioningEntity> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    async load(container: IContainer): Promise<RootProvisioningEntity> {
+        const config = container.resolve(ConfigInjectionKey);
 
         return {
             policies: this.buildPolicies(),

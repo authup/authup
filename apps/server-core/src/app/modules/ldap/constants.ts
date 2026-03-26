@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { TypedToken } from 'eldin';
+import type { ILdapClientFactory } from '../../../core/index.ts';
+
 export const LDAPInjectionKey = {
-    ClientFactory: Symbol('ClientFactory'),
+    ClientFactory: new TypedToken<ILdapClientFactory>('ClientFactory'),
 } as const;

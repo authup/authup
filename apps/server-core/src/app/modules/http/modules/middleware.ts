@@ -7,12 +7,7 @@
 
 import type { Router } from 'routup';
 import path from 'node:path';
-import type { DataSource } from 'typeorm';
-import type {
-    IDIContainer,
-    IIdentityResolver,
-    IOAuth2TokenVerifier, ISessionManager,
-} from '../../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import { IdentityPermissionProvider } from '../../../../core/index.ts';
 import {
     createAuthorizationMiddleware,
@@ -27,7 +22,6 @@ import {
 } from '../../../../adapters/http/index.ts';
 import { DIST_PATH } from '../../../../path.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
-import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
@@ -40,7 +34,7 @@ import {
 } from '../../../../adapters/database/domains/index.ts';
 
 export class HTTPMiddlewareModule {
-    async mountBefore(router: Router, container: IDIContainer): Promise<void> {
+    async mountBefore(router: Router, container: IContainer): Promise<void> {
         await this.mountLogger(router, container);
         await this.mountCors(router, container);
         await this.mountAssets(router);
@@ -53,13 +47,13 @@ export class HTTPMiddlewareModule {
     }
 
      
-    async mountAfter(router: Router, _container: IDIContainer): Promise<void> {
+    async mountAfter(router: Router, _container: IContainer): Promise<void> {
         registerErrorMiddleware(router);
     }
 
     // ----------------------------------------------------
-    async mountCors(router: Router, container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    async mountCors(router: Router, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewareCors)) {
             return;
@@ -68,8 +62,8 @@ export class HTTPMiddlewareModule {
         registerCorsMiddleware(router, this.transformBoolToEmptyObject(config.middlewareCors));
     }
 
-    async mountLogger(router: Router, container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    async mountLogger(router: Router, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
         const middleware = createLoggerMiddleware({
             env: config.env,
         });
@@ -85,8 +79,8 @@ export class HTTPMiddlewareModule {
         registerBasicMiddleware(router);
     }
 
-    async mountPrometheus(router: Router, container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    async mountPrometheus(router: Router, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewarePrometheus)) {
             return;
@@ -95,8 +89,8 @@ export class HTTPMiddlewareModule {
         registerPrometheusMiddleware(router, this.transformBoolToEmptyObject(config.middlewarePrometheus));
     }
 
-    async mountRateLimit(router: Router, container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    async mountRateLimit(router: Router, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewareRateLimit)) {
             return;
@@ -105,8 +99,8 @@ export class HTTPMiddlewareModule {
         registerRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
     }
 
-    async mountSwagger(router: Router, container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    async mountSwagger(router: Router, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
         if (!this.isEnabled(config.middlewareSwagger)) {
             return;
         }
@@ -122,23 +116,15 @@ export class HTTPMiddlewareModule {
         router.use('/docs', middleware);
     }
 
-    async mountAuthorization(router: Router, container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    async mountAuthorization(router: Router, container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
 
         // todo: no direct datasource access here.
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
-        const identityResolver = container.resolve<IIdentityResolver>(
-            IdentityInjectionKey.Resolver,
-        );
-
-        const sessionManager = container.resolve<ISessionManager>(
-            AuthenticationInjectionKey.SessionManager,
-        );
-
-        const oauth2TokenVerifier = container.resolve<IOAuth2TokenVerifier>(
-            OAuth2InjectionToken.TokenVerifier,
-        );
+        const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
+        const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
+        const oauth2TokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
 
         const permissionProvider = new PermissionDatabaseProvider(dataSource);
         const identityPermissionProvider = new IdentityPermissionProvider({

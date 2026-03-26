@@ -8,7 +8,6 @@
 import { defineCommand } from 'citty';
 import http from 'node:http';
 import process from 'node:process';
-import type { Config } from '../../app/index.ts';
 import {
     ApplicationBuilder, ConfigInjectionKey,
 } from '../../app/index.ts';
@@ -25,7 +24,7 @@ export function defineCLIHealthCheckCommand() {
 
             await app.start();
 
-            const config = app.container.resolve<Config>(ConfigInjectionKey);
+            const config = app.container.resolve(ConfigInjectionKey);
 
             const healthCheck = http.request(
                 {

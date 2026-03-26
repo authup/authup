@@ -7,7 +7,7 @@
 
 import type { RootProvisioningEntity } from '../../../../../core/provisioning/entities/root/index.ts';
 import type { IProvisioningSource } from '../../../../../core/provisioning/types.ts';
-import type { IDIContainer } from '../../../../../core';
+import type { IContainer } from 'eldin';
 
 export class CompositeProvisioningSource implements IProvisioningSource {
     protected sources : IProvisioningSource[];
@@ -16,7 +16,7 @@ export class CompositeProvisioningSource implements IProvisioningSource {
         this.sources = sources;
     }
 
-    async load(container: IDIContainer): Promise<RootProvisioningEntity> {
+    async load(container: IContainer): Promise<RootProvisioningEntity> {
         const output : RootProvisioningEntity = {};
 
         const sourcesData = await Promise.all(

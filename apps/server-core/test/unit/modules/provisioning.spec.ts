@@ -23,9 +23,9 @@ import {
     ProvisionerModule,
     RealmEntity, RoleEntity,
 } from '../../../src/index.ts';
-import type { IDIContainer } from '../../../src/core/index.ts';
+import { Container } from 'eldin';
+import type { IContainer } from 'eldin';
 import {
-    DependencyContainer,
     PolicyProvisioningSynchronizer,
 } from '../../../src/core/index.ts';
 import type { PolicyProvisioningEntity } from '../../../src/core/provisioning/entities/policy/index.ts';
@@ -40,7 +40,7 @@ import { DatabaseInjectionKey } from '../../../src/app/modules/database/index.ts
 import { createTestDatabaseModuleForSuite } from '../../app/index.ts';
 
 describe('app/modules/provisioning', () => {
-    let di: IDIContainer;
+    let di: IContainer;
     let dataSource: DataSource;
     let policyRepositoryAdapter: PolicyRepositoryAdapter;
 
@@ -50,14 +50,14 @@ describe('app/modules/provisioning', () => {
     const database = createTestDatabaseModuleForSuite();
 
     beforeAll(async () => {
-        di = new DependencyContainer();
+        di = new Container();
 
         await config.start(di);
         await logger.start(di);
         await cache.start(di);
         await database.start(di);
 
-        dataSource = di.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+        dataSource = di.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
 
         policyRepositoryAdapter = new PolicyRepositoryAdapter({

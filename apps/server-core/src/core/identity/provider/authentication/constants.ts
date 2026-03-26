@@ -5,4 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const IDENTITY_PROVIDER_LDAP_COLLECTION_AUTHENTICATOR_TOKEN = Symbol('IdentityProviderLdapCollectionAuthenticator');
+import { TypedToken } from 'eldin';
+import type { IdentityProviderLdapCollectionAuthenticator } from './protocols/ldap/index.ts';
+
+export const IDENTITY_PROVIDER_LDAP_COLLECTION_AUTHENTICATOR_TOKEN = new TypedToken<IdentityProviderLdapCollectionAuthenticator>('IdentityProviderLdapCollectionAuthenticator');

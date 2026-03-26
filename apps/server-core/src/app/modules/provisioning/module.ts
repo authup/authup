@@ -41,7 +41,7 @@ import {
     PolicyRepository,
     UserRepository,
 } from '../../../adapters/database/domains/index.ts';
-import type { IDIContainer } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import {
     ClientProvisioningSynchronizer,
     GraphProvisioningSynchronizer,
@@ -75,15 +75,14 @@ import {
     UserRoleRepositoryAdapter,
 } from '../database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
-export class ProvisionerModule implements Module {
+export class ProvisionerModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -96,10 +95,10 @@ export class ProvisionerModule implements Module {
         this.sources = sources;
     }
 
-    async start(container: IDIContainer): Promise<void> {
+    async start(container: IContainer): Promise<void> {
         const sources = [...this.sources];
 
-        const config = container.resolve<Config>(ConfigInjectionKey);
+        const config = container.resolve(ConfigInjectionKey);
         const provisioningDir = path.join(config.writableDirectoryPath, 'provisioning');
         if (fs.existsSync(provisioningDir)) {
             sources.push(new FileProvisioningSource({ cwd: provisioningDir }));
@@ -108,7 +107,7 @@ export class ProvisionerModule implements Module {
         const composite = new CompositeProvisioningSource(sources);
         const data = await composite.load(container);
 
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
         const permissionRepository = new PermissionRepositoryAdapter({

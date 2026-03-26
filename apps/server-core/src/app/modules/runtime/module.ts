@@ -5,15 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Logger } from '@authup/server-kit';
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
-import type { IDIContainer } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import { LoggerInjectionKey } from '../logger/index.ts';
-import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
-export class RuntimeModule implements Module {
+export class RuntimeModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -23,9 +21,9 @@ export class RuntimeModule implements Module {
         this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
     }
 
-    async start(container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const logger = container.resolve<Logger>(LoggerInjectionKey);
+    async start(container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+        const logger = container.resolve(LoggerInjectionKey);
 
         logger.debug(`Environment: ${config.env}`);
         logger.debug(`WritableDirectoryPath: ${config.writableDirectoryPath}`);

@@ -5,16 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Logger } from '@authup/server-kit';
 import { Swagger } from '../../../adapters/http/index.ts';
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
-import type { IDIContainer } from '../../../core/index.ts';
-import type { Config } from '../config/index.ts';
+import type { IContainer } from 'eldin';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
-export class SwaggerModule implements Module {
+export class SwaggerModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -24,9 +22,9 @@ export class SwaggerModule implements Module {
         this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
     }
 
-    async start(container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const logger = container.resolve<Logger>(LoggerInjectionKey);
+    async start(container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+        const logger = container.resolve(LoggerInjectionKey);
 
         const swagger = new Swagger({
             baseURL: config.publicUrl,

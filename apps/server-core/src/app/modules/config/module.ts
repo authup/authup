@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 import { ConfigInjectionKey } from './constants.ts';
-import type { IDIContainer } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import { normalizeConfig } from './normalize.ts';
 import type { ConfigRawReadOptions } from './read/index.ts';
 import { readConfigRaw } from './read/index.ts';
 import type { Config } from './types.ts';
 
-export class ConfigModule implements Module {
+export class ConfigModule implements IModule {
     readonly name: string;
 
     protected instance : Config | undefined;
@@ -28,7 +28,7 @@ export class ConfigModule implements Module {
 
     // ----------------------------------------------------
 
-    async start(container: IDIContainer): Promise<void> {
+    async start(container: IContainer): Promise<void> {
         let instance : Config;
         if (this.instance) {
             instance = this.instance;
@@ -36,9 +36,7 @@ export class ConfigModule implements Module {
             instance = await this.read();
         }
 
-        container.register(ConfigInjectionKey, {
-            useValue: instance,
-        });
+        container.register(ConfigInjectionKey, { useValue: instance });
     }
 
     // ----------------------------------------------------
