@@ -97,8 +97,8 @@ export class UserPermissionService extends AbstractEntityService implements IUse
                 { type: actor.identity.type, id: actor.identity.data.id },
                 {
                     name: data.permission.name,
-                    realm_id: data.permission.realm_id,
-                    client_id: data.permission.client_id,
+                    realmId: data.permission.realm_id,
+                    clientId: data.permission.client_id,
                 },
             );
             if (junctionPolicy) {

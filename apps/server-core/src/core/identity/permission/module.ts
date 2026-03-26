@@ -68,14 +68,14 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
                 return false;
             }
 
-            if (typeof options.realm_id !== 'undefined') {
-                if ((b.permission.realmId ?? null) !== (options.realm_id ?? null)) {
+            if (typeof options.realmId !== 'undefined') {
+                if ((b.permission.realmId ?? null) !== (options.realmId ?? null)) {
                     return false;
                 }
             }
 
-            if (typeof options.client_id !== 'undefined') {
-                if ((b.permission.clientId ?? null) !== (options.client_id ?? null)) {
+            if (typeof options.clientId !== 'undefined') {
+                if ((b.permission.clientId ?? null) !== (options.clientId ?? null)) {
                     return false;
                 }
             }
