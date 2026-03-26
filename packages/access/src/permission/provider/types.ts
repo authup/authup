@@ -9,8 +9,8 @@ import type { PermissionBinding } from '../types';
 
 export type PermissionGetOptions = {
     name: string,
-    client_id?: string | null,
-    realm_id?: string | null
+    clientId?: string | null,
+    realmId?: string | null
 };
 
 export interface IPermissionProvider {

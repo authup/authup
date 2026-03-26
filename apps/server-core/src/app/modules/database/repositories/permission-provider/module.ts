@@ -42,12 +42,12 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
             name: options.name,
         };
 
-        if (typeof options.client_id !== 'undefined') {
-            where.client_id = options.client_id === null ? IsNull() : options.client_id;
+        if (typeof options.clientId !== 'undefined') {
+            where.client_id = options.clientId === null ? IsNull() : options.clientId;
         }
 
-        if (typeof options.realm_id !== 'undefined') {
-            where.realm_id = options.realm_id === null ? IsNull() : options.realm_id;
+        if (typeof options.realmId !== 'undefined') {
+            where.realm_id = options.realmId === null ? IsNull() : options.realmId;
         }
 
         const entity = await this.repository.findOne({
@@ -55,11 +55,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
             cache: {
                 id: buildCacheKey({
                     prefix: CachePrefix.PERMISSION,
-                    key: buildPermissionBindingKey({
-                        name: options.name,
-                        client_id: options.client_id,
-                        realm_id: options.realm_id,
-                    }),
+                    key: buildPermissionBindingKey(options),
                 }),
                 milliseconds: 60_000,
             },
@@ -82,7 +78,12 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
             }
 
             return {
-                permission: entity,
+                permission: {
+                    name: entity.name,
+                    realmId: entity.realm_id,
+                    clientId: entity.client_id,
+                    decisionStrategy: entity.decision_strategy,
+                },
                 policies: policies.length > 0 ? policies : undefined,
             };
         }

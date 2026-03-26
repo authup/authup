@@ -13,7 +13,6 @@ import {
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { pickRecord } from '@authup/kit';
 import { buildPermissionBindingKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
@@ -151,7 +150,11 @@ export class TokenController {
                     permissions.reduce((acc, binding) => {
                         const key = buildPermissionBindingKey(binding.permission);
                         if (!acc[key]) {
-                            acc[key] = pickRecord(binding.permission, ['name', 'client_id', 'realm_id']) as OAuth2TokenPermission;
+                            acc[key] = {
+                                name: binding.permission.name,
+                                client_id: binding.permission.clientId,
+                                realm_id: binding.permission.realmId,
+                            } as OAuth2TokenPermission;
                         }
                         return acc;
                     }, {} as Record<string, OAuth2TokenPermission>),

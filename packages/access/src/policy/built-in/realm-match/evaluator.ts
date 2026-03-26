@@ -59,9 +59,9 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             };
         }
 
-        const identity_master_match_all = policy.identity_master_match_all ?? true;
+        const identityMasterMatchAll = policy.identity_master_match_all ?? true;
         if (
-            identity_master_match_all &&
+            identityMasterMatchAll &&
             identity.realmName &&
             identity.realmName === 'master'
         ) {

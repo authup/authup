@@ -104,7 +104,12 @@ export class RobotRepository extends Repository<RobotEntity> {
                 }
 
                 return {
-                    permission: entry.permission,
+                    permission: {
+                        name: entry.permission.name,
+                        realmId: entry.permission.realm_id,
+                        clientId: entry.permission.client_id,
+                        decisionStrategy: entry.permission.decision_strategy,
+                    },
                     policies: policies.length > 0 ? policies : undefined,
                 };
             });

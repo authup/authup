@@ -7,7 +7,7 @@
 
 import type { DecisionStrategy } from '../../constants.ts';
 import type { IPolicyEngine, PolicyData } from '../../policy';
-import type { IPermissionProvider } from '../repository';
+import type { IPermissionProvider } from '../provider';
 
 export interface IPermissionEvaluator {
     evaluate(ctx: PermissionEvaluationContext): Promise<void>;
@@ -22,20 +22,20 @@ export interface IPermissionEvaluator {
 export type PermissionEvaluatorOptions = {
     repository?: IPermissionProvider,
     policyEngine?: IPolicyEngine,
-    realm_id?: string | null,
-    client_id?: string | null
+    realmId?: string | null,
+    clientId?: string | null
 };
 
 export type PermissionEvaluationOptions = {
-    decision_strategy?: `${DecisionStrategy}`,
+    decisionStrategy?: `${DecisionStrategy}`,
     policiesIncluded?: string[],
     policiesExcluded?: string[],
 };
 
 export type PermissionEvaluationContext = {
     name: string | string[],
-    realm_id?: string | null,
-    client_id?: string | null,
+    realmId?: string | null,
+    clientId?: string | null,
     input?: PolicyData,
     options?: PermissionEvaluationOptions
 };

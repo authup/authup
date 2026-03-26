@@ -10,8 +10,8 @@ import type { IdentityPolicyData, PermissionBinding, PolicyWithType } from '@aut
 
 export type ResolveJunctionPolicyOptions = {
     name: string;
-    realm_id?: string | null;
-    client_id?: string | null;
+    realmId?: string | null;
+    clientId?: string | null;
 };
 
 export interface IIdentityPermissionProvider {

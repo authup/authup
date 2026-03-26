@@ -11,9 +11,9 @@ import type { PolicyWithType } from '../policy';
 export type PermissionBinding = {
     permission: {
         name: string,
-        client_id?: string | null,
-        realm_id?: string | null,
-        decision_strategy?: `${DecisionStrategy}` | null,
+        clientId?: string | null,
+        realmId?: string | null,
+        decisionStrategy?: `${DecisionStrategy}` | null,
     },
     policies?: PolicyWithType[],
 };
