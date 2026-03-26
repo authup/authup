@@ -19,8 +19,8 @@ import {
     definePolicyIssueGroup,
 } from '../../policy';
 import { PermissionError } from '../error';
-import type { IPermissionProvider, PermissionGetOptions } from '../repository';
-import { PermissionMemoryProvider } from '../repository';
+import type { IPermissionProvider, PermissionGetOptions } from '../provider';
+import { PermissionMemoryProvider } from '../provider';
 
 import type {
     PermissionBinding,
@@ -32,9 +32,9 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
     protected policyEngine : IPolicyEngine;
 
-    protected client_id?: string | null;
+    protected clientId?: string | null;
 
-    protected realm_id?: string | null;
+    protected realmId?: string | null;
 
     // ----------------------------------------------
 
@@ -45,12 +45,12 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             this.provider = new PermissionMemoryProvider();
         }
 
-        if (typeof options.client_id !== 'undefined') {
-            this.client_id = options.client_id;
+        if (typeof options.clientId !== 'undefined') {
+            this.clientId = options.clientId;
         }
 
-        if (typeof options.realm_id !== 'undefined') {
-            this.realm_id = options.realm_id;
+        if (typeof options.realmId !== 'undefined') {
+            this.realmId = options.realmId;
         }
 
         if (options.policyEngine) {
@@ -64,22 +64,22 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
     protected async findOne(
         input: string,
-        overrides?: { realm_id?: string | null, client_id?: string | null },
+        overrides?: { realmId?: string | null, clientId?: string | null },
     ) : Promise<PermissionBinding | null> {
         const options : PermissionGetOptions = {
             name: input,
         };
 
-        if (typeof overrides?.client_id !== 'undefined') {
-            options.client_id = overrides.client_id;
-        } else if (typeof this.client_id !== 'undefined') {
-            options.client_id = this.client_id;
+        if (typeof overrides?.clientId !== 'undefined') {
+            options.clientId = overrides.clientId;
+        } else if (typeof this.clientId !== 'undefined') {
+            options.clientId = this.clientId;
         }
 
-        if (typeof overrides?.realm_id !== 'undefined') {
-            options.realm_id = overrides.realm_id;
-        } else if (typeof this.realm_id !== 'undefined') {
-            options.realm_id = this.realm_id;
+        if (typeof overrides?.realmId !== 'undefined') {
+            options.realmId = overrides.realmId;
+        } else if (typeof this.realmId !== 'undefined') {
+            options.realmId = this.realmId;
         }
 
         return this.provider.findOne(options);
@@ -100,7 +100,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             options = {},
         } = ctx;
 
-        const decision_strategy = options.decision_strategy ??
+        const decisionStrategy = options.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;
 
         const issues : Issue[] = [];
@@ -111,8 +111,8 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
         for (let i = 0; i < ctx.name.length; i++) {
             const binding = await this.findOne(ctx.name[i], {
-                realm_id: ctx.realm_id,
-                client_id: ctx.client_id,
+                realmId: ctx.realmId,
+                clientId: ctx.clientId,
             });
             if (!binding) {
                 issues.push(defineIssueItem({
@@ -121,7 +121,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                     path: [ctx.name[i]],
                 }));
 
-                if (decision_strategy === DecisionStrategy.UNANIMOUS) {
+                if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     const error = PermissionError.evaluationFailed(ctx.name);
                     error.addIssues(issues);
                     throw error;
@@ -132,7 +132,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
             const policies = binding.policies ?? [];
             if (policies.length === 0) {
-                if (decision_strategy === DecisionStrategy.AFFIRMATIVE) {
+                if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
@@ -144,7 +144,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             const data = dataBase.clone();
             data.set(BuiltInPolicyType.PERMISSION_BINDING, binding);
 
-            const policyDecisionStrategy = binding.permission.decision_strategy ??
+            const policyDecisionStrategy = binding.permission.decisionStrategy ??
                 DecisionStrategy.UNANIMOUS;
 
             const compositePolicy : PolicyWithType<CompositePolicy> = {
@@ -163,7 +163,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             );
 
             if (evaluationResult.success) {
-                if (decision_strategy === DecisionStrategy.AFFIRMATIVE) {
+                if (decisionStrategy === DecisionStrategy.AFFIRMATIVE) {
                     return;
                 }
 
@@ -176,7 +176,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
                     path: [binding.permission.name],
                 }));
 
-                if (decision_strategy === DecisionStrategy.UNANIMOUS) {
+                if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
                     const error = PermissionError.evaluationFailed(binding.permission.name);
                     error.addIssues(issues);
                     throw error;
@@ -204,7 +204,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             ...ctx,
             options: {
                 ...(ctx.options || {}),
-                decision_strategy: DecisionStrategy.AFFIRMATIVE,
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
             },
         });
     }
@@ -230,7 +230,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             ...ctx,
             options: {
                 ...(ctx.options || {}),
-                decision_strategy: DecisionStrategy.AFFIRMATIVE,
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
             },
         });
     }

@@ -78,8 +78,8 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             if (!data.role || data.role.name !== ROLE_ADMIN_NAME) {
                 await actor.permissionEvaluator.preEvaluate({
                     name: data.permission.name,
-                    realm_id: data.permission.realm_id,
-                    client_id: data.permission.client_id,
+                    realmId: data.permission.realm_id,
+                    clientId: data.permission.client_id,
                 });
             }
         }

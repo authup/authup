@@ -5,6 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export function buildPermissionBindingKey(input: { name: string, client_id?: string | null, realm_id?: string | null }) {
-    return `${input.realm_id || '_'}/${input.client_id || '_'}/${input.name}`;
+type SnakeCaseInput = { name: string, client_id?: string | null, realm_id?: string | null };
+type CamelCaseInput = { name: string, clientId?: string | null, realmId?: string | null };
+
+export function buildPermissionBindingKey(input: SnakeCaseInput | CamelCaseInput) {
+    let realmId: string | null | undefined;
+    let clientId: string | null | undefined;
+
+    if ('realm_id' in input) {
+        const snakeInput = input as SnakeCaseInput;
+        realmId = snakeInput.realm_id;
+        clientId = snakeInput.client_id;
+    } else {
+        const camelInput = input as CamelCaseInput;
+        realmId = camelInput.realmId;
+        clientId = camelInput.clientId;
+    }
+
+    return `${realmId || '_'}/${clientId || '_'}/${input.name}`;
 }

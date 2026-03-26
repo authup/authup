@@ -91,8 +91,8 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                     return false;
                 }
 
-                return (binding.permission.realm_id ?? null) === (item.permission.realm_id ?? null) &&
-                    (binding.permission.client_id ?? null) === (item.permission.client_id ?? null);
+                return (binding.permission.realmId ?? null) === (item.permission.realmId ?? null) &&
+                    (binding.permission.clientId ?? null) === (item.permission.clientId ?? null);
             }));
 
         if (identityBindings.length === 0) {

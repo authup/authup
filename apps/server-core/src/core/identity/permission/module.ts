@@ -69,13 +69,13 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             }
 
             if (typeof options.realm_id !== 'undefined') {
-                if ((b.permission.realm_id ?? null) !== (options.realm_id ?? null)) {
+                if ((b.permission.realmId ?? null) !== (options.realm_id ?? null)) {
                     return false;
                 }
             }
 
             if (typeof options.client_id !== 'undefined') {
-                if ((b.permission.client_id ?? null) !== (options.client_id ?? null)) {
+                if ((b.permission.clientId ?? null) !== (options.client_id ?? null)) {
                     return false;
                 }
             }
@@ -178,7 +178,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return bindings;
         }
 
-        return bindings.filter((binding) => binding.permission.client_id === identity.clientId);
+        return bindings.filter((binding) => binding.permission.clientId === identity.clientId);
     }
 
     private reduceEntitiesByIdentityClient<T extends { client_id?: string | null }>(

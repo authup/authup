@@ -12,11 +12,11 @@ export function isPermissionBindingEqual(a: PermissionBinding, b: PermissionBind
         return false;
     }
 
-    if ((a.permission.realm_id ?? null) !== (b.permission.realm_id ?? null)) {
+    if ((a.permission.realmId ?? null) !== (b.permission.realmId ?? null)) {
         return false;
     }
 
-    if ((a.permission.client_id ?? null) !== (b.permission.client_id ?? null)) {
+    if ((a.permission.clientId ?? null) !== (b.permission.clientId ?? null)) {
         return false;
     }
 

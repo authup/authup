@@ -60,8 +60,8 @@ describe('src/permission/helpers/merge', () => {
 
     it('should not merge items with different realm_id', () => {
         const items: PermissionBinding[] = [
-            { permission: { name: 'user_read', realm_id: 'realm-a' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
-            { permission: { name: 'user_read', realm_id: 'realm-b' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
+            { permission: { name: 'user_read', realmId: 'realm-a' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
+            { permission: { name: 'user_read', realmId: 'realm-b' }, policies: [{ type: BuiltInPolicyType.IDENTITY }] },
         ];
 
         const result = mergePermissionBindings(items);
@@ -83,11 +83,11 @@ describe('src/permission/helpers/merge', () => {
     it('should preserve per-binding decision_strategy in composite tree', () => {
         const items: PermissionBinding[] = [
             {
-                permission: { name: 'user_read', decision_strategy: DecisionStrategy.UNANIMOUS },
+                permission: { name: 'user_read', decisionStrategy: DecisionStrategy.UNANIMOUS },
                 policies: [{ type: BuiltInPolicyType.IDENTITY }, { type: BuiltInPolicyType.REALM_MATCH }],
             },
             {
-                permission: { name: 'user_read', decision_strategy: DecisionStrategy.AFFIRMATIVE },
+                permission: { name: 'user_read', decisionStrategy: DecisionStrategy.AFFIRMATIVE },
                 policies: [{ type: BuiltInPolicyType.ATTRIBUTES }],
             },
         ];

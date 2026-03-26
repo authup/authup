@@ -44,7 +44,7 @@ export function mergePermissionBindings(input: PermissionBinding[]) : Permission
 
             const policy: PolicyWithType<CompositePolicy> = {
                 type: BuiltInPolicyType.COMPOSITE,
-                decision_strategy: element.permission.decision_strategy || DecisionStrategy.UNANIMOUS,
+                decision_strategy: element.permission.decisionStrategy || DecisionStrategy.UNANIMOUS,
                 children: element.policies,
             };
 
@@ -69,7 +69,7 @@ export function mergePermissionBindings(input: PermissionBinding[]) : Permission
         output.push({
             permission: {
                 ...first.permission,
-                decision_strategy: DecisionStrategy.AFFIRMATIVE,
+                decisionStrategy: DecisionStrategy.AFFIRMATIVE,
             },
             policies: mergedPolicies,
         });
