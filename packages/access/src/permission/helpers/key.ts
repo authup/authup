@@ -12,7 +12,7 @@ export function buildPermissionBindingKey(input: SnakeCaseInput | CamelCaseInput
     let realmId: string | null | undefined;
     let clientId: string | null | undefined;
 
-    if ('realm_id' in input) {
+    if ('realm_id' in input || 'client_id' in input) {
         const snakeInput = input as SnakeCaseInput;
         realmId = snakeInput.realm_id;
         clientId = snakeInput.client_id;
