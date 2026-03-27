@@ -257,8 +257,8 @@ export function createStore(context: StoreCreateContext) {
                     permissionRepository.setMany(response.permissions.map((permission) => ({
                         permission: {
                             name: permission.name,
-                            realmId: permission.realm_id,
-                            clientId: permission.client_id,
+                            realm_id: permission.realm_id,
+                            client_id: permission.client_id,
                         },
                     })));
                 }

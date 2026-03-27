@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Role } from '@authup/core-kit';
-import type { PermissionBinding, PolicyWithType } from '@authup/access';
+import type { Client, PermissionBinding, Role } from '@authup/core-kit';
+import type { PolicyWithType } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
@@ -99,12 +99,7 @@ export class ClientRepository extends Repository<ClientEntity> {
             }
 
             return {
-                permission: {
-                    name: entry.permission.name,
-                    realmId: entry.permission.realm_id,
-                    clientId: entry.permission.client_id,
-                    decisionStrategy: entry.permission.decision_strategy,
-                },
+                permission:  entry.permission,
                 policies: policies.length > 0 ? policies : undefined,
             };
         });

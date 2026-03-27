@@ -147,10 +147,10 @@ describe('escalation prevention', () => {
 
     it('should respect permission identity: same name, different realm_id', () => {
         const parent: PermissionBinding[] = [
-            { permission: { name: 'user_read', realmId: 'realm-a' } },
+            { permission: { name: 'user_read', realm_id: 'realm-a' } },
         ];
         const child: PermissionBinding[] = [
-            { permission: { name: 'user_read', realmId: 'realm-b' } },
+            { permission: { name: 'user_read', realm_id: 'realm-b' } },
         ];
 
         expect(isSupersetPolicyAware(parent, child)).toBe(false);

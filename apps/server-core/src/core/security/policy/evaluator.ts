@@ -6,7 +6,7 @@
  */
 
 import type {
-    CompositePolicy, IPolicyEvaluator, PermissionBinding, PolicyEvaluationContext, PolicyEvaluationResult,
+    CompositePolicy, IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult,
     PolicyWithType,
 } from '@authup/access';
 import {
@@ -18,8 +18,9 @@ import {
     PolicyIssueCode,
     definePolicyIssueItem,
     maybeInvertPolicyOutcome,
-    mergePermissionBindings,
 } from '@authup/access';
+import type { PermissionBinding } from '@authup/core-kit';
+import { mergePermissionBindings } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
 export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
@@ -91,8 +92,8 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
                     return false;
                 }
 
-                return (binding.permission.realmId ?? null) === (item.permission.realmId ?? null) &&
-                    (binding.permission.clientId ?? null) === (item.permission.clientId ?? null);
+                return (binding.permission.realm_id ?? null) === (item.permission.realm_id ?? null) &&
+                    (binding.permission.client_id ?? null) === (item.permission.client_id ?? null);
             }));
 
         if (identityBindings.length === 0) {

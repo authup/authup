@@ -7,10 +7,10 @@
 
 import type {
     IPermissionProvider,
-    PermissionBinding,
     PermissionGetOptions, PolicyWithType,
 } from '@authup/access';
-import { buildPermissionBindingKey } from '@authup/access';
+import type { PermissionBinding } from '@authup/core-kit';
+import { buildPermissionBindingKey } from '@authup/core-kit';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
@@ -55,7 +55,11 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
             cache: {
                 id: buildCacheKey({
                     prefix: CachePrefix.PERMISSION,
-                    key: buildPermissionBindingKey(options),
+                    key: buildPermissionBindingKey({
+                        name: options.name,
+                        client_id: options.clientId,
+                        realm_id: options.realmId,
+                    }),
                 }),
                 milliseconds: 60_000,
             },
@@ -78,12 +82,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
             }
 
             return {
-                permission: {
-                    name: entity.name,
-                    realmId: entity.realm_id,
-                    clientId: entity.client_id,
-                    decisionStrategy: entity.decision_strategy,
-                },
+                permission: entity,
                 policies: policies.length > 0 ? policies : undefined,
             };
         }

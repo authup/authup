@@ -22,6 +22,7 @@ export * from './identity-provider-attribute-mapping';
 export * from './identity-provider-permission-mapping';
 export * from './identity-provider-role-mapping';
 export * from './permission';
+export * from './permission-binding';
 export * from './permission-policy';
 export * from './policy';
 export * from './policy-attribute';

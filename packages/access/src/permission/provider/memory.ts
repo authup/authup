@@ -19,7 +19,11 @@ export class PermissionMemoryProvider implements IPermissionProvider {
     async findOne(
         options: PermissionGetOptions,
     ): Promise<PermissionBinding | null> {
-        const entry = this.items[buildPermissionBindingKey(options)];
+        const entry = this.items[buildPermissionBindingKey({
+            name: options.name,
+            client_id: options.clientId,
+            realm_id: options.realmId,
+        })];
         if (entry) {
             return entry;
         }
