@@ -31,8 +31,8 @@ export function mergePermissionBindings(input: PermissionBinding[]) : Permission
     const output : PermissionBinding[] = [];
     const keys = Object.keys(grouped);
     for (const key of keys) {
-        const group = grouped[key];
-        const [first] = group;
+        const group = grouped[key]!;
+        const first = group[0]!;
 
         if (group.length === 1) {
             output.push(first);
