@@ -27,7 +27,7 @@ export class AuthenticationModule implements IModule {
 
     constructor() {
         this.name = ModuleName.AUTHENTICATION;
-        this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE];
+        this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG];
     }
 
     async start(container: IContainer): Promise<void> {
