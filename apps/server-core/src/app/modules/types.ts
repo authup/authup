@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IDIContainer } from '../../core/di/types.ts';
+import type { IContainer } from 'eldin';
 
-export interface Module {
+export interface IModule {
     readonly name: string;
     readonly dependsOn?: string[];
 
-    start(container: IDIContainer) : Promise<void>;
+    start(container: IContainer) : Promise<void>;
 
-    stop?(container: IDIContainer): Promise<void>
+    stop?(container: IContainer): Promise<void>
 }

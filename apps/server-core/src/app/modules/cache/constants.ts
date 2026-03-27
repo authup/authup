@@ -5,4 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const CacheInjectionKey = Symbol('Cache');
+import type { ICache } from '@authup/server-kit';
+import { TypedToken } from 'eldin';
+
+export const CacheInjectionKey = new TypedToken<ICache>('Cache');

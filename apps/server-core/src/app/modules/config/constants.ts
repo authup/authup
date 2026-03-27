@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const ConfigInjectionKey = Symbol('Config');
+import { TypedToken } from 'eldin';
+import type { Config } from './types.ts';
+
+export const ConfigInjectionKey = new TypedToken<Config>('Config');
 
 export enum ConfigEnvironmentVariableName {
     NODE_ENV = 'NODE_ENV',

@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { DataSource } from 'typeorm';
+import { TypedToken } from 'eldin';
+
 export const DatabaseInjectionKey = {
-    DataSource: Symbol('DataSource'),
+    DataSource: new TypedToken<DataSource>('DataSource'),
 } as const;

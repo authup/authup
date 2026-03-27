@@ -5,15 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DataSource } from 'typeorm';
 import type { Component } from '../../../components/index.ts';
 import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
-import type { IDIContainer } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 
-export class ComponentsModule implements Module {
+export class ComponentsModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -23,8 +22,8 @@ export class ComponentsModule implements Module {
         this.dependsOn = [ModuleName.DATABASE];
     }
 
-    async start(container: IDIContainer): Promise<void> {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    async start(container: IContainer): Promise<void> {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const components: Component[] = [
             createOAuth2CleanerComponent(dataSource),

@@ -7,7 +7,7 @@
 
 import { Application } from './module.ts';
 import type { IApplication } from './types.ts';
-import type { Module } from './modules/index.ts';
+import type { IModule } from './modules/index.ts';
 import {
     AuthenticationModule,
     CacheModule,
@@ -27,9 +27,9 @@ import {
     VaultModule,
 } from './modules/index.ts';
 
-type ModuleSlot = Module | false | undefined;
+type ModuleSlot = IModule | false | undefined;
 
-type ModuleFactory = () => Module;
+type ModuleFactory = () => IModule;
 
 const defaultFactories: Record<string, ModuleFactory> = {
     [ModuleName.CONFIG]: () => new ConfigModule(),
@@ -120,8 +120,8 @@ export class ApplicationBuilder {
 
     // ----------------------------------------------------
 
-    buildModules(): Module[] {
-        const modules: Module[] = [];
+    buildModules(): IModule[] {
+        const modules: IModule[] = [];
 
         this.slots.forEach((slot, name) => {
             if (slot === false) {
@@ -148,7 +148,7 @@ export class ApplicationBuilder {
 
     // ----------------------------------------------------
 
-    protected set(name: string, instance?: Module | false): this {
+    protected set(name: string, instance?: IModule | false): this {
         if (instance === false) {
             this.slots.set(name, false);
         } else if (instance) {

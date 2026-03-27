@@ -6,14 +6,13 @@
  */
 
 import { createLogger, setLoggerFactory } from '@authup/server-kit';
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
-import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import { LoggerInjectionKey } from './constants.ts';
-import type { IDIContainer } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 
-export class LoggerModule implements Module {
+export class LoggerModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -23,8 +22,8 @@ export class LoggerModule implements Module {
         this.dependsOn = [ModuleName.CONFIG];
     }
 
-    async start(container: IDIContainer): Promise<void> {
-        const result = container.safeResolve<Config>(ConfigInjectionKey);
+    async start(container: IContainer): Promise<void> {
+        const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.logger) {
             return;
         }

@@ -5,8 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { TypedToken } from 'eldin';
+import type {
+    IIdentityProviderAccountManager,
+    IIdentityResolver,
+    IdentityProviderLdapCollectionAuthenticator,
+} from '../../../core/index.ts';
+
 export const IdentityInjectionKey = {
-    Resolver: Symbol('Resolver'),
-    ProviderAccountManager: Symbol('AccountManager'),
-    ProviderLdapCollectionAuthenticator: Symbol('ProviderLdapCollectionAuthenticator'),
+    Resolver: new TypedToken<IIdentityResolver>('Resolver'),
+    ProviderAccountManager: new TypedToken<IIdentityProviderAccountManager>('AccountManager'),
+    ProviderLdapCollectionAuthenticator: new TypedToken<IdentityProviderLdapCollectionAuthenticator>('ProviderLdapCollectionAuthenticator'),
 } as const;

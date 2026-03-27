@@ -25,12 +25,11 @@ import type {
     RoleAttribute,
     RolePermission,
     Scope,
-    User,
     UserAttribute,
     UserPermission,
     UserRole,
 } from '@authup/core-kit';
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
 import {
     ClientEntity,
     ClientPermissionEntity,
@@ -116,20 +115,7 @@ import {
     StatusController,
     TokenController,
 } from '../../../../adapters/http/controllers/index.ts';
-import type {
-    ICredentialsAuthenticator,
-    IDIContainer,
-    IIdentityProviderAccountManager,
-    IIdentityResolver, IMailClient,
-    IOAuth2AuthorizationCodeIssuer,
-    IOAuth2AuthorizationCodeRequestVerifier,
-    IOAuth2AuthorizationCodeVerifier,
-    IOAuth2AuthorizationStateManager,
-    IOAuth2OpenIDTokenIssuer,
-    IOAuth2TokenIssuer,
-    IOAuth2TokenRevoker,
-    IOAuth2TokenVerifier, ISessionManager,
-} from '../../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import {
     ClientAuthenticator,
     ClientPermissionService,
@@ -160,12 +146,11 @@ import {
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
-import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { MailInjectionKey } from '../../mail/index.ts';
 
 export class HTTPControllerModule {
-    async mount(router: Router, container: IDIContainer): Promise<void> {
+    async mount(router: Router, container: IContainer): Promise<void> {
         const realmController = this.createRealmController(container);
         const roleController = this.createRoleController(container);
         const permissionController = await this.createPermissionController(container);
@@ -250,8 +235,8 @@ export class HTTPControllerModule {
 
     // ----------------------------------------------------
 
-    createIdentityPermissionProvider(container: IDIContainer) {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createIdentityPermissionProvider(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         return new IdentityPermissionProvider({
             clientRepository: new ClientRepository(dataSource),
             userRepository: new UserRepository(dataSource),
@@ -260,19 +245,15 @@ export class HTTPControllerModule {
         });
     }
 
-    createAuthorize(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const accessTokenIssuer = container.resolve<IOAuth2TokenIssuer>(OAuth2InjectionToken.AccessTokenIssuer);
-        const openIdTokenIssuer = container.resolve<IOAuth2OpenIDTokenIssuer>(OAuth2InjectionToken.OpenIDTokenIssuer);
+    createAuthorize(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+        const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
+        const openIdTokenIssuer = container.resolve(OAuth2InjectionToken.OpenIDTokenIssuer);
 
-        const codeIssuer = container.resolve<IOAuth2AuthorizationCodeIssuer>(
-            OAuth2InjectionToken.AuthorizationCodeIssuer,
-        );
-        const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
-            OAuth2InjectionToken.AuthorizationCodeRequestVerifier,
-        );
+        const codeIssuer = container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
+        const codeRequestVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
 
-        const identityResolver = container.resolve<IIdentityResolver>(IdentityInjectionKey.Resolver);
+        const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
 
         return new AuthorizeController({
             options: {
@@ -289,35 +270,19 @@ export class HTTPControllerModule {
         });
     }
 
-    createToken(container: IDIContainer) {
-        const sessionManager = container.resolve<ISessionManager>(
-            AuthenticationInjectionKey.SessionManager,
-        );
+    createToken(container: IContainer) {
+        const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
 
-        const codeVerifier = container.resolve<IOAuth2AuthorizationCodeVerifier>(
-            OAuth2InjectionToken.AuthorizationCodeVerifier,
-        );
+        const codeVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeVerifier);
 
-        const accessTokenIssuer = container.resolve<IOAuth2TokenIssuer>(
-            OAuth2InjectionToken.AccessTokenIssuer,
-        );
-        const refreshTokenIssuer = container.resolve<IOAuth2TokenIssuer>(
-            OAuth2InjectionToken.RefreshTokenIssuer,
-        );
+        const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
+        const refreshTokenIssuer = container.resolve(OAuth2InjectionToken.RefreshTokenIssuer);
 
-        const tokenRevoker = container.resolve<IOAuth2TokenRevoker>(
-            OAuth2InjectionToken.TokenRevoker,
-        );
-        const tokenVerifier = container.resolve<IOAuth2TokenVerifier>(
-            OAuth2InjectionToken.TokenVerifier,
-        );
+        const tokenRevoker = container.resolve(OAuth2InjectionToken.TokenRevoker);
+        const tokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
 
-        const identityResolver = container.resolve<IIdentityResolver>(
-            IdentityInjectionKey.Resolver,
-        );
-        const identityProviderLdapCollectionAuthenticator = container.resolve<ICredentialsAuthenticator<User>>(
-            IdentityInjectionKey.ProviderLdapCollectionAuthenticator,
-        );
+        const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
+        const identityProviderLdapCollectionAuthenticator = container.resolve(IdentityInjectionKey.ProviderLdapCollectionAuthenticator);
 
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
 
@@ -349,41 +314,41 @@ export class HTTPControllerModule {
         });
     }
 
-    createOpenIDController(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    createOpenIDController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
 
         return new OpenIDController({
             baseURL: config.publicUrl,
         });
     }
 
-    createActivateController(container: IDIContainer) {
+    createActivateController(container: IContainer) {
         return new ActivateController({
             service: this.createRegistrationService(container),
         });
     }
 
-    createPasswordForgotController(container: IDIContainer) {
+    createPasswordForgotController(container: IContainer) {
         return new PasswordForgotController({
             service: this.createPasswordRecoveryService(container),
         });
     }
 
-    createPasswordResetController(container: IDIContainer) {
+    createPasswordResetController(container: IContainer) {
         return new PasswordResetController({
             service: this.createPasswordRecoveryService(container),
         });
     }
 
-    createPasswordRecoveryService(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createPasswordRecoveryService(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
             realmRepository,
         });
-        const mailClient = container.resolve<IMailClient>(MailInjectionKey);
+        const mailClient = container.resolve(MailInjectionKey);
 
         return new PasswordRecoveryService({
             mailClient,
@@ -396,21 +361,21 @@ export class HTTPControllerModule {
         });
     }
 
-    createRegisterController(container: IDIContainer) {
+    createRegisterController(container: IContainer) {
         return new RegisterController({
             service: this.createRegistrationService(container),
         });
     }
 
-    createRegistrationService(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createRegistrationService(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
             realmRepository,
         });
-        const mailClient = container.resolve<IMailClient>(MailInjectionKey);
+        const mailClient = container.resolve(MailInjectionKey);
 
         return new RegistrationService({
             mailClient,
@@ -423,25 +388,17 @@ export class HTTPControllerModule {
         });
     }
 
-    createIdentityProvider(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createIdentityProvider(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
-        const accountManager = container.resolve<IIdentityProviderAccountManager>(
-            IdentityInjectionKey.ProviderAccountManager,
-        );
+        const accountManager = container.resolve(IdentityInjectionKey.ProviderAccountManager);
 
-        const codeIssuer = container.resolve<IOAuth2AuthorizationCodeIssuer>(
-            OAuth2InjectionToken.AuthorizationCodeIssuer,
-        );
+        const codeIssuer = container.resolve(OAuth2InjectionToken.AuthorizationCodeIssuer);
 
-        const codeRequestVerifier = container.resolve<IOAuth2AuthorizationCodeRequestVerifier>(
-            OAuth2InjectionToken.AuthorizationCodeRequestVerifier,
-        );
+        const codeRequestVerifier = container.resolve(OAuth2InjectionToken.AuthorizationCodeRequestVerifier);
 
-        const stateManager = container.resolve<IOAuth2AuthorizationStateManager>(
-            OAuth2InjectionToken.AuthorizationStateManager,
-        );
+        const stateManager = container.resolve(OAuth2InjectionToken.AuthorizationStateManager);
 
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
@@ -466,7 +423,7 @@ export class HTTPControllerModule {
         });
     }
 
-    createClientController(container: IDIContainer) {
+    createClientController(container: IContainer) {
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new ClientRepositoryAdapter({
             repository: container.resolve<Repository<Client>>(ClientEntity),
@@ -477,8 +434,8 @@ export class HTTPControllerModule {
         return new ClientController({ service, repository });
     }
 
-    createRobotController(container: IDIContainer) {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createRobotController(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new RobotRepositoryAdapter({
             repository: container.resolve<Repository<Robot>>(RobotEntity),
@@ -491,8 +448,8 @@ export class HTTPControllerModule {
         });
     }
 
-    async createPermissionController(container: IDIContainer) {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    async createPermissionController(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new PermissionRepositoryAdapter({
             repository: container.resolve<Repository<Permission>>(PermissionEntity),
@@ -537,7 +494,7 @@ export class HTTPControllerModule {
         });
     }
 
-    createRoleController(container: IDIContainer) {
+    createRoleController(container: IContainer) {
         const realmRepository = new RealmRepositoryAdapter(
             container.resolve<Repository<Realm>>(RealmEntity),
         );
@@ -549,7 +506,7 @@ export class HTTPControllerModule {
         return new RoleController({ service });
     }
 
-    createClientPermissionController(container: IDIContainer) {
+    createClientPermissionController(container: IContainer) {
         const repository = new ClientPermissionRepositoryAdapter(
             container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
         );
@@ -558,7 +515,7 @@ export class HTTPControllerModule {
         return new ClientPermissionController({ service });
     }
 
-    createClientRoleController(container: IDIContainer) {
+    createClientRoleController(container: IContainer) {
         const repository = new ClientRoleRepositoryAdapter(
             container.resolve<Repository<ClientRole>>(ClientRoleEntity),
         );
@@ -567,7 +524,7 @@ export class HTTPControllerModule {
         return new ClientRoleController({ service, repository, identityPermissionProvider });
     }
 
-    createClientScopeController(container: IDIContainer) {
+    createClientScopeController(container: IContainer) {
         const repository = new ClientScopeRepositoryAdapter(
             container.resolve<Repository<ClientScope>>(ClientScopeEntity),
         );
@@ -575,7 +532,7 @@ export class HTTPControllerModule {
         return new ClientScopeController({ service });
     }
 
-    createRobotPermissionController(container: IDIContainer) {
+    createRobotPermissionController(container: IContainer) {
         const repository = new RobotPermissionRepositoryAdapter(
             container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
         );
@@ -584,7 +541,7 @@ export class HTTPControllerModule {
         return new RobotPermissionController({ service });
     }
 
-    createRobotRoleController(container: IDIContainer) {
+    createRobotRoleController(container: IContainer) {
         const repository = new RobotRoleRepositoryAdapter(
             container.resolve<Repository<RobotRole>>(RobotRoleEntity),
         );
@@ -593,7 +550,7 @@ export class HTTPControllerModule {
         return new RobotRoleController({ service, repository, identityPermissionProvider });
     }
 
-    createRoleAttributeController(container: IDIContainer) {
+    createRoleAttributeController(container: IContainer) {
         const repository = new RoleAttributeRepositoryAdapter(
             container.resolve<Repository<RoleAttribute>>(RoleAttributeEntity),
         );
@@ -601,7 +558,7 @@ export class HTTPControllerModule {
         return new RoleAttributeController({ service });
     }
 
-    createRolePermissionController(container: IDIContainer) {
+    createRolePermissionController(container: IContainer) {
         const repository = new RolePermissionRepositoryAdapter(
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
@@ -610,7 +567,7 @@ export class HTTPControllerModule {
         return new RolePermissionController({ service });
     }
 
-    createPermissionPolicyController(container: IDIContainer) {
+    createPermissionPolicyController(container: IContainer) {
         const repository = new PermissionPolicyRepositoryAdapter(
             container.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity),
         );
@@ -618,7 +575,7 @@ export class HTTPControllerModule {
         return new PermissionPolicyController({ service });
     }
 
-    createScopeController(container: IDIContainer) {
+    createScopeController(container: IContainer) {
         const realmRepository = new RealmRepositoryAdapter(
             container.resolve<Repository<Realm>>(RealmEntity),
         );
@@ -630,8 +587,8 @@ export class HTTPControllerModule {
         return new ScopeController({ service });
     }
 
-    createUserController(container: IDIContainer) {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createUserController(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new UserRepositoryAdapter({
             repository: new UserRepository(dataSource),
@@ -642,7 +599,7 @@ export class HTTPControllerModule {
         return new UserController({ service });
     }
 
-    createUserAttributeController(container: IDIContainer) {
+    createUserAttributeController(container: IContainer) {
         const repository = new UserAttributeRepositoryAdapter(
             container.resolve<Repository<UserAttribute>>(UserAttributeEntity),
         );
@@ -650,7 +607,7 @@ export class HTTPControllerModule {
         return new UserAttributeController({ service });
     }
 
-    createUserPermissionController(container: IDIContainer) {
+    createUserPermissionController(container: IContainer) {
         const repository = new UserPermissionRepositoryAdapter(
             container.resolve<Repository<UserPermission>>(UserPermissionEntity),
         );
@@ -659,7 +616,7 @@ export class HTTPControllerModule {
         return new UserPermissionController({ service });
     }
 
-    createUserRoleController(container: IDIContainer) {
+    createUserRoleController(container: IContainer) {
         const repository = new UserRoleRepositoryAdapter(
             container.resolve<Repository<UserRole>>(UserRoleEntity),
         );
@@ -668,8 +625,8 @@ export class HTTPControllerModule {
         return new UserRoleController({ service, repository, identityPermissionProvider });
     }
 
-    createPolicyController(container: IDIContainer) {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createPolicyController(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const repository = new PolicyRepositoryAdapter({
             repository: new PolicyRepository(dataSource),
@@ -681,7 +638,7 @@ export class HTTPControllerModule {
         return new PolicyController({ service, repository, realmRepository: realmRepositoryAdapter, identityPermissionProvider });
     }
 
-    createIdentityProviderRoleController(container: IDIContainer) {
+    createIdentityProviderRoleController(container: IContainer) {
         const repository = new IdentityProviderRoleMappingRepositoryAdapter(
             container.resolve<Repository<any>>(IdentityProviderRoleMappingEntity),
         );
@@ -689,15 +646,15 @@ export class HTTPControllerModule {
         return new OAuth2ProviderRoleController({ repository, identityPermissionProvider });
     }
 
-    createJwkController(container: IDIContainer) {
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createJwkController(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const repository = dataSource.getRepository(KeyEntity);
         return new JwkController({ repository });
     }
 
-    createRealmController(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const dataSource = container.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+    createRealmController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const repository = new RealmRepositoryAdapter(
             container.resolve<Repository<Realm>>(RealmEntity),
         );

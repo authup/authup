@@ -5,25 +5,24 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError } from '@authup/errors';
-import { DependencyContainer } from '../core/index.ts';
-import type { Module } from './modules/index.ts';
-import type { IDIContainer } from '../core/di/types.ts';
+import { Container, ContainerError } from 'eldin';
+import type { IContainer } from 'eldin';
+import type { IModule } from './modules/index.ts';
 import type { IApplication } from './types.ts';
 
 export class Application implements IApplication {
-    public readonly container: IDIContainer;
+    public readonly container: IContainer;
 
-    protected modules: Map<string, Module>;
+    protected modules: Map<string, IModule>;
 
-    protected startOrder: Module[];
+    protected startOrder: IModule[];
 
     // ----------------------------------------------------
 
     constructor(
-        modules: Module[] = [],
+        modules: IModule[] = [],
     ) {
-        this.container = new DependencyContainer();
+        this.container = new Container();
         this.modules = new Map();
         this.startOrder = [];
 
@@ -32,11 +31,11 @@ export class Application implements IApplication {
 
     // ----------------------------------------------------
 
-    addModule(module: Module): void {
+    addModule(module: IModule): void {
         this.modules.set(module.name, module);
     }
 
-    addModules(modules: Module[]): void {
+    addModules(modules: IModule[]): void {
         modules.forEach((module) => this.addModule(module));
     }
 
@@ -62,7 +61,7 @@ export class Application implements IApplication {
 
     // ----------------------------------------------------
 
-    protected resolveOrder(): Module[] {
+    protected resolveOrder(): IModule[] {
         const names = [...this.modules.keys()];
         const registered = new Set(names);
         const inDegree = new Map<string, number>();
@@ -91,7 +90,7 @@ export class Application implements IApplication {
 
         const queue: string[] = names.filter((name) => inDegree.get(name) === 0);
 
-        const sorted: Module[] = [];
+        const sorted: IModule[] = [];
         while (queue.length > 0) {
             const current = queue.shift()!;
             sorted.push(this.modules.get(current)!);
@@ -111,7 +110,7 @@ export class Application implements IApplication {
             const remaining = names
                 .filter((name) => !sorted.some((m) => m.name === name));
 
-            throw new AuthupError(
+            throw new ContainerError(
                 `Circular module dependency detected involving: ${remaining.join(', ')}`,
             );
         }

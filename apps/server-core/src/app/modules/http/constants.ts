@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { TypedToken } from 'eldin';
+import type { IServer } from '../../../adapters/http/index.ts';
+
 export const HTTPInjectionKey = {
-    Server: Symbol('Server'),
+    Server: new TypedToken<IServer>('Server'),
 } as const;

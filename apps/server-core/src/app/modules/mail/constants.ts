@@ -5,4 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export const MailInjectionKey = Symbol('Mail');
+import { TypedToken } from 'eldin';
+import type { IMailClient } from '../../../core/index.ts';
+
+export const MailInjectionKey = new TypedToken<IMailClient>('Mail');

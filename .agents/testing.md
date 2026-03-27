@@ -41,7 +41,11 @@ What to test: permission gates, validation, realm defaulting, uniqueness, built-
 
 **Writing philosophy:** Tests should assert *expected* behavior based on the service contract and architecture docs — not merely confirm what the implementation currently does. If a test fails, it may surface a real bug in the implementation rather than a test error. When a test failure seems like it could be a legitimate implementation issue, flag it to the user before "fixing" the test. The tests are a verification tool, not a rubber stamp.
 
-**Note:** The global setup (`test/setup.ts`) starts Docker containers and the full application. Service-level tests don't need this infrastructure but currently run under the same vitest config. Running via `npm run test --workspace=apps/server-core` triggers the global setup (~7s overhead). Running directly from the workspace directory (`cd apps/server-core && npx vitest run test/unit/core/...`) skips it.
+**Important:** The vitest config lives at `test/vitest.config.ts`, not the project root. Running `npx vitest run` directly from the workspace directory will **not** find the config and **skips the global setup** (`test/setup.ts`), which provisions the master realm and starts Docker containers.
+
+- **Always use** `npm run test --workspace=apps/server-core` (from repo root) or `npx vitest run --config test/vitest.config.ts` (from workspace directory)
+- Service-level tests (`test/unit/core/entities/`) don't need the global setup and work without it
+- Integration tests (e.g., `test/unit/core/identity/provider/account.spec.ts`) **require** the provisioned database from the global setup and will fail without it
 
 ### HTTP-Level Tests
 

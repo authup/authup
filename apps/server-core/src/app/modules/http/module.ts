@@ -5,22 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Logger } from '@authup/server-kit';
 import { Router } from 'routup';
 import type { IServer } from '../../../adapters/http/index.ts';
 import {
     createHttpServer,
 } from '../../../adapters/http/index.ts';
-import type { Config } from '../config/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 import { HTTPInjectionKey } from './constants.ts';
-import type { IDIContainer } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
-export class HTTPModule implements Module {
+export class HTTPModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -40,9 +38,9 @@ export class HTTPModule implements Module {
 
     // ----------------------------------------------------
 
-    async start(container: IDIContainer): Promise<void> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
-        const logger = container.resolve<Logger>(LoggerInjectionKey);
+    async start(container: IContainer): Promise<void> {
+        const config = container.resolve(ConfigInjectionKey);
+        const logger = container.resolve(LoggerInjectionKey);
 
         logger.debug('Starting http server...');
 
@@ -78,16 +76,14 @@ export class HTTPModule implements Module {
             }
         }
 
-        container.register(HTTPInjectionKey.Server, {
-            useValue: server,
-        });
+        container.register(HTTPInjectionKey.Server, { useValue: server });
 
         logger.debug('Started http server.');
     }
 
     // ----------------------------------------------------
 
-    async stop(container: IDIContainer): Promise<void> {
+    async stop(container: IContainer): Promise<void> {
         if (!this.instance) return;
 
         container.unregister(HTTPInjectionKey.Server);

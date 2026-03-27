@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ICache, Logger } from '@authup/server-kit';
 import {
     DomainEventPublisher, DomainEventRedisPublisher,
     DomainEventSocketPublisher, createRedisClient,
@@ -30,21 +29,20 @@ import {
 } from '../../../adapters/database/index.ts';
 import { setDomainEventPublisher } from '../../../adapters/database/event-publisher/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
-import type { Config } from '../config/index.ts';
-import type { Module } from '../types.ts';
+import type { IModule } from '../types.ts';
 import { ModuleName } from '../constants.ts';
 import { DatabaseInjectionKey } from './constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
-import type { IDIContainer } from '../../../core/index.ts';
+import type { IContainer } from 'eldin';
 import { LoggerInjectionKey } from '../logger/index.ts';
 
 export type DatabaseModuleOptions = {
-    prepareBuild?: (container: IDIContainer) => Promise<void>;
-    setup?: (container: IDIContainer, options: DataSourceOptions) => Promise<void>;
-    migrate?: (container: IDIContainer, dataSource: DataSource) => Promise<void>;
+    prepareBuild?: (container: IContainer) => Promise<void>;
+    setup?: (container: IContainer, options: DataSourceOptions) => Promise<void>;
+    migrate?: (container: IContainer, dataSource: DataSource) => Promise<void>;
 };
 
-export class DatabaseModule implements Module {
+export class DatabaseModule implements IModule {
     readonly name: string;
 
     readonly dependsOn: string[];
@@ -61,8 +59,8 @@ export class DatabaseModule implements Module {
         this.options = options;
     }
 
-    async start(container: IDIContainer): Promise<void> {
-        const logger = container.resolve<Logger>(LoggerInjectionKey);
+    async start(container: IContainer): Promise<void> {
+        const logger = container.resolve(LoggerInjectionKey);
 
         if (this.options.prepareBuild) {
             await this.options.prepareBuild(container);
@@ -92,16 +90,14 @@ export class DatabaseModule implements Module {
             await this.migrate(container, dataSource);
         }
 
-        container.register(DatabaseInjectionKey.DataSource, {
-            useValue: dataSource,
-        });
+        container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
 
         this.registerRepositories(container, dataSource);
         this.registerEventPublisher(container);
     }
 
-    async stop(container: IDIContainer): Promise<void> {
-        const dataSource = container.safeResolve<DataSource>(DatabaseInjectionKey.DataSource);
+    async stop(container: IContainer): Promise<void> {
+        const dataSource = container.tryResolve(DatabaseInjectionKey.DataSource);
         if (dataSource.success) {
             await dataSource.data.destroy();
 
@@ -114,8 +110,8 @@ export class DatabaseModule implements Module {
 
     // ----------------------------------------------------
 
-    protected async setup(container: IDIContainer, options: DataSourceOptions): Promise<void> {
-        const logger = container.resolve<Logger>(LoggerInjectionKey);
+    protected async setup(container: IContainer, options: DataSourceOptions): Promise<void> {
+        const logger = container.resolve(LoggerInjectionKey);
 
         const check = await checkDatabase({
             options,
@@ -128,8 +124,8 @@ export class DatabaseModule implements Module {
         }
     }
 
-    protected async migrate(container: IDIContainer, dataSource: DataSource): Promise<void> {
-        const logger = container.resolve<Logger>(LoggerInjectionKey);
+    protected async migrate(container: IContainer, dataSource: DataSource): Promise<void> {
+        const logger = container.resolve(LoggerInjectionKey);
 
         logger.debug('Migrating database...');
         await synchronizeDatabaseSchema(dataSource);
@@ -143,8 +139,8 @@ export class DatabaseModule implements Module {
      *
      * @protected
      */
-    protected async buildDataSourceOptions(container: IDIContainer) : Promise<DataSourceOptions> {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    protected async buildDataSourceOptions(container: IContainer) : Promise<DataSourceOptions> {
+        const config = container.resolve(ConfigInjectionKey);
 
         let options : DataSourceOptions | undefined;
         if (config.db) {
@@ -161,7 +157,7 @@ export class DatabaseModule implements Module {
             throw new AuthupError(`Database type ${options.type} is not supported for ${config.env}.`);
         }
 
-        const cacheResult = container.safeResolve<ICache>(CacheInjectionKey);
+        const cacheResult = container.tryResolve(CacheInjectionKey);
         if (cacheResult.success) {
             Object.assign(options, {
                 cache: {
@@ -175,7 +171,7 @@ export class DatabaseModule implements Module {
         return options;
     }
 
-    protected registerRepositories(container: IDIContainer, dataSource: DataSource) : void {
+    protected registerRepositories(container: IContainer, dataSource: DataSource) : void {
         const entities = dataSource.options.entities || [];
         if (!Array.isArray(entities)) {
             return;
@@ -196,8 +192,8 @@ export class DatabaseModule implements Module {
     }
 
     // todo: move, wrong place
-    protected registerEventPublisher(container: IDIContainer) {
-        const config = container.resolve<Config>(ConfigInjectionKey);
+    protected registerEventPublisher(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
 
         const publisher = new DomainEventPublisher();
         if (config.redis) {
