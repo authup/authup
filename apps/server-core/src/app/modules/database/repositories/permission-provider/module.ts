@@ -82,12 +82,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
             }
 
             return {
-                permission: {
-                    name: entity.name,
-                    realm_id: entity.realm_id,
-                    client_id: entity.client_id,
-                    decision_strategy: entity.decision_strategy,
-                },
+                permission: entity,
                 policies: policies.length > 0 ? policies : undefined,
             };
         }

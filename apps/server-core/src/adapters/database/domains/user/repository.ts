@@ -113,12 +113,7 @@ export class UserRepository extends EARepository<User, UserAttribute> {
             }
 
             return {
-                permission: {
-                    name: entry.permission.name,
-                    realm_id: entry.permission.realm_id,
-                    client_id: entry.permission.client_id,
-                    decision_strategy: entry.permission.decision_strategy,
-                },
+                permission:  entry.permission,
                 policies: policies.length > 0 ? policies : undefined,
             };
         });
