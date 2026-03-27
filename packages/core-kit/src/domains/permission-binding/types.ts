@@ -5,15 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DecisionStrategy } from '@authup/kit';
+import type { Permission } from '../permission';
 import type { PolicyWithType } from '../policy';
 
+export type PermissionBindingPermission =    Pick<Permission, 'name'> &
+    Partial<Pick<Permission, 'client_id' | 'realm_id' | 'decision_strategy'>>;
+
 export type PermissionBinding = {
-    permission: {
-        name: string,
-        client_id?: string | null,
-        realm_id?: string | null,
-        decision_strategy?: `${DecisionStrategy}` | null,
-    },
+    permission: PermissionBindingPermission,
     policies?: PolicyWithType[],
 };

@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { PermissionBindingPermission } from '../types';
+
 export function buildPermissionBindingKey(
-    input: { name: string, client_id?: string | null, realm_id?: string | null },
+    input: PermissionBindingPermission,
 ) {
     return `${input.realm_id || '_'}/${input.client_id || '_'}/${input.name}`;
 }
