@@ -13,7 +13,7 @@ import {
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { buildPermissionBindingKey } from '@authup/access';
+import { buildPermissionBindingKey } from '@authup/core-kit';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
 import type {
@@ -152,8 +152,8 @@ export class TokenController {
                         if (!acc[key]) {
                             acc[key] = {
                                 name: binding.permission.name,
-                                client_id: binding.permission.clientId,
-                                realm_id: binding.permission.realmId,
+                                client_id: binding.permission.client_id,
+                                realm_id: binding.permission.realm_id,
                             } as OAuth2TokenPermission;
                         }
                         return acc;

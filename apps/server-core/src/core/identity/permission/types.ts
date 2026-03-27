@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Role } from '@authup/core-kit';
-import type { IdentityPolicyData, PermissionBinding, PolicyWithType } from '@authup/access';
+import type { PermissionBinding, Role } from '@authup/core-kit';
+import type { IdentityPolicyData, PolicyWithType } from '@authup/access';
 
 export type ResolveJunctionPolicyOptions = {
     name: string;

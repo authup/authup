@@ -8,9 +8,9 @@
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import type {
-    Role,
+    PermissionBinding, Role 
 } from '@authup/core-kit';
-import type { PermissionBinding, PolicyWithType } from '@authup/access';
+import type { PolicyWithType } from '@authup/access';
 import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';
 import { RoleAttributeEntity } from '../role-attribute/entity.ts';
@@ -112,9 +112,9 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
             return {
                 permission: {
                     name: entry.permission.name,
-                    realmId: entry.permission.realm_id,
-                    clientId: entry.permission.client_id,
-                    decisionStrategy: entry.permission.decision_strategy,
+                    realm_id: entry.permission.realm_id,
+                    client_id: entry.permission.client_id,
+                    decision_strategy: entry.permission.decision_strategy,
                 },
                 policies: policies.length > 0 ? policies : undefined,
             };

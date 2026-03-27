@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Role, User, UserAttribute } from '@authup/core-kit';
-import type { PermissionBinding, PolicyWithType } from '@authup/access';
+import type { PermissionBinding, Role, User, UserAttribute } from '@authup/core-kit';
+import type { PolicyWithType } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     DataSource, EntityManager,
@@ -115,9 +115,9 @@ export class UserRepository extends EARepository<User, UserAttribute> {
             return {
                 permission: {
                     name: entry.permission.name,
-                    realmId: entry.permission.realm_id,
-                    clientId: entry.permission.client_id,
-                    decisionStrategy: entry.permission.decision_strategy,
+                    realm_id: entry.permission.realm_id,
+                    client_id: entry.permission.client_id,
+                    decision_strategy: entry.permission.decision_strategy,
                 },
                 policies: policies.length > 0 ? policies : undefined,
             };

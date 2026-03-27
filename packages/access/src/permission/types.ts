@@ -5,15 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DecisionStrategy } from '../constants';
-import type { PolicyWithType } from '../policy';
-
-export type PermissionBinding = {
-    permission: {
-        name: string,
-        clientId?: string | null,
-        realmId?: string | null,
-        decisionStrategy?: `${DecisionStrategy}` | null,
-    },
-    policies?: PolicyWithType[],
-};
+export type { PermissionBinding } from '@authup/core-kit';

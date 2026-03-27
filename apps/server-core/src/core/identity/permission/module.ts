@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData, PermissionBinding, PolicyWithType } from '@authup/access';
-import { isPermissionBindingEqual, mergePermissionBindings } from '@authup/access';
+import type { IdentityPolicyData, PolicyWithType } from '@authup/access';
+import type { PermissionBinding } from '@authup/core-kit';
+import { isPermissionBindingEqual, mergePermissionBindings } from '@authup/core-kit';
 import type {
     IIdentityBindingRepository,
     IIdentityPermissionProvider,
@@ -69,13 +70,13 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             }
 
             if (typeof options.realmId !== 'undefined') {
-                if ((b.permission.realmId ?? null) !== (options.realmId ?? null)) {
+                if ((b.permission.realm_id ?? null) !== (options.realmId ?? null)) {
                     return false;
                 }
             }
 
             if (typeof options.clientId !== 'undefined') {
-                if ((b.permission.clientId ?? null) !== (options.clientId ?? null)) {
+                if ((b.permission.client_id ?? null) !== (options.clientId ?? null)) {
                     return false;
                 }
             }
@@ -178,7 +179,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return bindings;
         }
 
-        return bindings.filter((binding) => binding.permission.clientId === identity.clientId);
+        return bindings.filter((binding) => binding.permission.client_id === identity.clientId);
     }
 
     private reduceEntitiesByIdentityClient<T extends { client_id?: string | null }>(
