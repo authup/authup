@@ -7,8 +7,16 @@
 
 import type { PermissionBindingPermission } from '../types';
 
+function formatKeySegment(value?: string | null): string {
+    if (typeof value === 'undefined') {
+        return '*';
+    }
+
+    return value || '_';
+}
+
 export function buildPermissionBindingKey(
     input: PermissionBindingPermission,
 ) {
-    return `${input.realm_id || '_'}/${input.client_id || '_'}/${input.name}`;
+    return `${formatKeySegment(input.realm_id)}/${formatKeySegment(input.client_id)}/${input.name}`;
 }
