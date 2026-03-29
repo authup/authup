@@ -58,7 +58,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
             attributeCandidates: {
                 name: [
                     entity[this.provider.user_name_attribute || 'cn'],
-                    entity.dn,
+                    this.extractCnFromDn(entity.dn),
                 ],
                 email: [
                     entity[this.provider.user_mail_attribute || 'mail'],
@@ -163,6 +163,11 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         }
 
         return entities[0];
+    }
+
+    protected extractCnFromDn(dn: string) : string | undefined {
+        const match = /^cn=([^,]+)/i.exec(dn);
+        return match ? match[1].trim() : undefined;
     }
 
     public async findUserGroups(user: Record<string, any>) : Promise<string[]> {
