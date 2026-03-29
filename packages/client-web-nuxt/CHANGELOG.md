@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* policy-based realm scoping and global entity support ([#2928](https://github.com/authup/authup/issues/2928)) ([1ae7d10](https://github.com/authup/authup/commit/1ae7d101bae1b43b32e7df2eb3c5a18e6328ac87))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#2895](https://github.com/authup/authup/issues/2895)) ([7ecc0ad](https://github.com/authup/authup/commit/7ecc0ada93a81d9b57f7c89d4823c5ee06c7d7c0))
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#2918](https://github.com/authup/authup/issues/2918)) ([3115cdd](https://github.com/authup/authup/commit/3115cdd016569cca2164844e2b0c0235cf17c233))
+* replace server-side cookie handling with client-side authorization code flow ([#2937](https://github.com/authup/authup/issues/2937)) ([8edb612](https://github.com/authup/authup/commit/8edb612b179bf979cf7eb54a69fe9345bbffaeb8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/client-web-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

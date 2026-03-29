@@ -1,5 +1,43 @@
 # Change Log
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* policy-based realm scoping and global entity support ([#2928](https://github.com/authup/authup/issues/2928)) ([1ae7d10](https://github.com/authup/authup/commit/1ae7d101bae1b43b32e7df2eb3c5a18e6328ac87))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#2895](https://github.com/authup/authup/issues/2895)) ([7ecc0ad](https://github.com/authup/authup/commit/7ecc0ada93a81d9b57f7c89d4823c5ee06c7d7c0))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2914](https://github.com/authup/authup/issues/2914)) ([34d2cbb](https://github.com/authup/authup/commit/34d2cbbbc4f5f349e0dbd521b45f0330ce52e5a6))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2947](https://github.com/authup/authup/issues/2947)) ([918f642](https://github.com/authup/authup/commit/918f6424a1a78a666dd4d6f910564b97074b28b4))
+* enable typecheck in client-web build and fix all type errors ([#2934](https://github.com/authup/authup/issues/2934)) ([6a6c42a](https://github.com/authup/authup/commit/6a6c42a402e23904daf0ca1482f061924482ea9f))
+* remove policy_id property from APermissionForm ([6729dae](https://github.com/authup/authup/commit/6729dae63d5265981010f4e5c51c3d54ff46831c))
+* replace server-side cookie handling with client-side authorization code flow ([#2937](https://github.com/authup/authup/issues/2937)) ([8edb612](https://github.com/authup/authup/commit/8edb612b179bf979cf7eb54a69fe9345bbffaeb8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-http-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/specs bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-http-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/specs bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

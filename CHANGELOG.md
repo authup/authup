@@ -3,6 +3,40 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* add system policy provisioning and config-gated permission backfill ([#2904](https://github.com/authup/authup/issues/2904)) ([50037cb](https://github.com/authup/authup/commit/50037cbe613e3b615747cf1272929c8fcb27f97d))
+* adjust identity repositories ([#2903](https://github.com/authup/authup/issues/2903)) ([8e6043f](https://github.com/authup/authup/commit/8e6043fd4ad8adcb8f4cd25c19932423e17f8ce8))
+* custom repositories for database entities/repositories ([#2880](https://github.com/authup/authup/issues/2880)) ([9210640](https://github.com/authup/authup/commit/92106401bb96eb7cd773bfe0799482a514676fe0))
+* extract business logic from controllers into core services ([#2910](https://github.com/authup/authup/issues/2910)) ([7d13390](https://github.com/authup/authup/commit/7d133903d0c7ca7ce8687f452a4e7690602e44c7))
+* generate db migrations for permisison_policy junction table ([edfefeb](https://github.com/authup/authup/commit/edfefeb27e03f31e3f5aa1e810a385a0e676ab7e))
+* move applications/services to apps directory ([#2875](https://github.com/authup/authup/issues/2875)) ([b39354a](https://github.com/authup/authup/commit/b39354a8bd568e09493179413724e9e4bb018aa2))
+* oAuth2/OIDC spec compliance fixes ([#2922](https://github.com/authup/authup/issues/2922)) ([674851d](https://github.com/authup/authup/commit/674851d34ac443281dc6c6f698ce89150f6b48e0))
+* policy-based realm scoping and global entity support ([#2928](https://github.com/authup/authup/issues/2928)) ([1ae7d10](https://github.com/authup/authup/commit/1ae7d101bae1b43b32e7df2eb3c5a18e6328ac87))
+* restructure server-core application with modular builder pattern ([#2908](https://github.com/authup/authup/issues/2908)) ([7fb6568](https://github.com/authup/authup/commit/7fb65680a6878d90bfe945a12e1ab35e3cb929ce))
+
+
+### Bug Fixes
+
+* always remove stale policy children ([b294a2e](https://github.com/authup/authup/commit/b294a2ed09db94dc512cee02cca373644fb6e52e))
+* **client-web:** remove head-variant property ([2c46f74](https://github.com/authup/authup/commit/2c46f748cb447823a518eb844457a857e7887f2d))
+* create no-op logger factory fn ([#2956](https://github.com/authup/authup/issues/2956)) ([1b85535](https://github.com/authup/authup/commit/1b8553545319021ad8a62b74ea942d625fb73eb1))
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#2895](https://github.com/authup/authup/issues/2895)) ([7ecc0ad](https://github.com/authup/authup/commit/7ecc0ada93a81d9b57f7c89d4823c5ee06c7d7c0))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2914](https://github.com/authup/authup/issues/2914)) ([34d2cbb](https://github.com/authup/authup/commit/34d2cbbbc4f5f349e0dbd521b45f0330ce52e5a6))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2947](https://github.com/authup/authup/issues/2947)) ([918f642](https://github.com/authup/authup/commit/918f6424a1a78a666dd4d6f910564b97074b28b4))
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#2918](https://github.com/authup/authup/issues/2918)) ([3115cdd](https://github.com/authup/authup/commit/3115cdd016569cca2164844e2b0c0235cf17c233))
+* enable typecheck in client-web build and fix all type errors ([#2934](https://github.com/authup/authup/issues/2934)) ([6a6c42a](https://github.com/authup/authup/commit/6a6c42a402e23904daf0ca1482f061924482ea9f))
+* normalizing dn name in ldap login flow ([6e92c1a](https://github.com/authup/authup/commit/6e92c1a900f9ff60b9397f9b7231b8c8d65219e4))
+* remove policy_id property from APermissionForm ([6729dae](https://github.com/authup/authup/commit/6729dae63d5265981010f4e5c51c3d54ff46831c))
+* replace server-side cookie handling with client-side authorization code flow ([#2937](https://github.com/authup/authup/issues/2937)) ([8edb612](https://github.com/authup/authup/commit/8edb612b179bf979cf7eb54a69fe9345bbffaeb8))
+* restrict permissionEvaluator checks to global permissions ([#2939](https://github.com/authup/authup/issues/2939)) ([69d9cc9](https://github.com/authup/authup/commit/69d9cc9ab8d375f4943bf4808694b53bd435a5c9))
+* run synchronizeMany provisioning method sequentially ([a133294](https://github.com/authup/authup/commit/a1332949bfbd5aa2c6eb69da778ece093d1754be))
+* support realm-scoped permissions in junction permission assignment ([b41b9c7](https://github.com/authup/authup/commit/b41b9c7614a2ca926688b1ccdbbab25e549e420a))
+* touch files for version bump ([049737e](https://github.com/authup/authup/commit/049737ed3a6af5f3f7b4b7038e2790fdc5fad2b2))
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 
