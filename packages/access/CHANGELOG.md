@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* add system policy provisioning and config-gated permission backfill ([#2904](https://github.com/authup/authup/issues/2904)) ([50037cb](https://github.com/authup/authup/commit/50037cbe613e3b615747cf1272929c8fcb27f97d))
+* policy-based realm scoping and global entity support ([#2928](https://github.com/authup/authup/issues/2928)) ([1ae7d10](https://github.com/authup/authup/commit/1ae7d101bae1b43b32e7df2eb3c5a18e6328ac87))
+
+
+### Bug Fixes
+
+* support realm-scoped permissions in junction permission assignment ([b41b9c7](https://github.com/authup/authup/commit/b41b9c7614a2ca926688b1ccdbbab25e549e420a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+  * peerDependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* move applications/services to apps directory ([#2875](https://github.com/authup/authup/issues/2875)) ([b39354a](https://github.com/authup/authup/commit/b39354a8bd568e09493179413724e9e4bb018aa2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/server-core bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

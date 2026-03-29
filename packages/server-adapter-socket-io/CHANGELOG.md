@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.1-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.1-beta.30) (2026-03-29)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/adapters/compare/v1.0.0-beta.28...v1.0.0-beta.30) (2026-02-27)
 
 

@@ -1,5 +1,34 @@
 # Change Log
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* policy-based realm scoping and global entity support ([#2928](https://github.com/authup/authup/issues/2928)) ([1ae7d10](https://github.com/authup/authup/commit/1ae7d101bae1b43b32e7df2eb3c5a18e6328ac87))
+
+
+### Bug Fixes
+
+* enable typecheck in client-web build and fix all type errors ([#2934](https://github.com/authup/authup/issues/2934)) ([6a6c42a](https://github.com/authup/authup/commit/6a6c42a402e23904daf0ca1482f061924482ea9f))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/specs bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/specs bumped from ^1.0.0-beta.30 to ^1.0.1-beta.30
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

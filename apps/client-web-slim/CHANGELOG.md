@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* move applications/services to apps directory ([#2875](https://github.com/authup/authup/issues/2875)) ([b39354a](https://github.com/authup/authup/commit/b39354a8bd568e09493179413724e9e4bb018aa2))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 14 updates ([#2895](https://github.com/authup/authup/issues/2895)) ([7ecc0ad](https://github.com/authup/authup/commit/7ecc0ada93a81d9b57f7c89d4823c5ee06c7d7c0))
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2947](https://github.com/authup/authup/issues/2947)) ([918f642](https://github.com/authup/authup/commit/918f6424a1a78a666dd4d6f910564b97074b28b4))
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#2918](https://github.com/authup/authup/issues/2918)) ([3115cdd](https://github.com/authup/authup/commit/3115cdd016569cca2164844e2b0c0235cf17c233))
+* replace server-side cookie handling with client-side authorization code flow ([#2937](https://github.com/authup/authup/issues/2937)) ([8edb612](https://github.com/authup/authup/commit/8edb612b179bf979cf7eb54a69fe9345bbffaeb8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-http-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+  * peerDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-http-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 
