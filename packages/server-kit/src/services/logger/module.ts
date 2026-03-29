@@ -13,6 +13,10 @@ import {
 } from 'winston';
 import type { Logger, LoggerCreateContext } from './types';
 
+export function createNoopLogger() : Logger {
+    return create({ silent: true });
+}
+
 export function createLogger(context: LoggerCreateContext) : Logger {
     let items : LoggerOptions['transports'];
 

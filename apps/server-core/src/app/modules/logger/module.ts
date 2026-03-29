@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createLogger, setLoggerFactory } from '@authup/server-kit';
+import { createLogger, createNoopLogger, setLoggerFactory } from '@authup/server-kit';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
@@ -25,6 +25,10 @@ export class LoggerModule implements IModule {
     async setup(container: IContainer): Promise<void> {
         const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.logger) {
+            container.register(LoggerInjectionKey, {
+                useFactory: createNoopLogger,
+            });
+
             return;
         }
 
