@@ -145,7 +145,7 @@ export class ApplicationBuilder {
     }
 
     build(): IApplication {
-        return new Application(this.buildModules());
+        return new Application({ modules: this.buildModules() });
     }
 
     // ----------------------------------------------------
