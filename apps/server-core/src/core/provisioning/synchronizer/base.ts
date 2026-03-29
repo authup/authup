@@ -8,8 +8,14 @@
 import type { IProvisioningSynchronizer } from '../types.ts';
 
 export abstract class BaseProvisioningSynchronizer<T> implements IProvisioningSynchronizer<T> {
+    // Sequential to avoid race conditions on concurrent upserts.
+    // Can be switched to Promise.all() if callers guarantee unique inputs.
     async synchronizeMany(input: T[]): Promise<T[]> {
-        return Promise.all(input.map((entity) => this.synchronize(entity)));
+        const output: T[] = [];
+        for (const entity of input) {
+            output.push(await this.synchronize(entity));
+        }
+        return output;
     }
 
     abstract synchronize(input: T): Promise<T>;
