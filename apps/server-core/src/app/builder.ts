@@ -7,7 +7,7 @@
 
 import { Application } from './module.ts';
 import type { IApplication } from './types.ts';
-import type { IModule } from './modules/index.ts';
+import type { IModule } from 'orkos';
 import {
     AuthenticationModule,
     CacheModule,

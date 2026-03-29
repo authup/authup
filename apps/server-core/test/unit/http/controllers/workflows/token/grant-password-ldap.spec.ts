@@ -20,7 +20,7 @@ describe('src/http/controllers/identity-provider', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
 
         const client = createLdapTestClient();
         await client.bind();
@@ -29,7 +29,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
 
         const client = createLdapTestClient();
         await client.bind();

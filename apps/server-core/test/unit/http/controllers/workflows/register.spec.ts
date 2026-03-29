@@ -15,11 +15,11 @@ describe('http/controller/register', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     it('should register a new user', async () => {

@@ -27,7 +27,7 @@ describe('src/http/controllers/token', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
 
         const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
         const client = await suite.client.client.create(createFakeClient());
@@ -46,7 +46,7 @@ describe('src/http/controllers/token', () => {
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     it('should authorize with response_type: code', async () => {

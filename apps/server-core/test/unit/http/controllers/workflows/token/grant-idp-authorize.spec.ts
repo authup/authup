@@ -72,7 +72,7 @@ describe('identity-provider authorization code grant', () => {
     let providerId: string;
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
         fakeIdpBaseURL = await fakeIdp.start();
 
         const provider = await suite.client
@@ -87,7 +87,7 @@ describe('identity-provider authorization code grant', () => {
 
     afterAll(async () => {
         await fakeIdp.stop();
-        await suite.stop();
+        await suite.teardown();
     });
 
     it('should redirect to external IDP with state on authorize-out', async () => {

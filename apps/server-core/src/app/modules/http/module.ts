@@ -11,7 +11,7 @@ import {
     createHttpServer,
 } from '../../../adapters/http/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { HTTPInjectionKey } from './constants.ts';
 import type { IContainer } from 'eldin';
@@ -21,7 +21,7 @@ import { LoggerInjectionKey } from '../logger/index.ts';
 export class HTTPModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     protected instance : IServer | undefined;
 
@@ -31,14 +31,14 @@ export class HTTPModule implements IModule {
 
     constructor() {
         this.name = ModuleName.HTTP;
-        this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
+        this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER, ModuleName.AUTHENTICATION, ModuleName.IDENTITY, ModuleName.OAUTH2];
         this.controller = new HTTPControllerModule();
         this.middleware = new HTTPMiddlewareModule();
     }
 
     // ----------------------------------------------------
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
 
@@ -83,7 +83,7 @@ export class HTTPModule implements IModule {
 
     // ----------------------------------------------------
 
-    async stop(container: IContainer): Promise<void> {
+    async teardown(container: IContainer): Promise<void> {
         if (!this.instance) return;
 
         container.unregister(HTTPInjectionKey.Server);

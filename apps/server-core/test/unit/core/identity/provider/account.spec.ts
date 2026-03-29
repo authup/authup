@@ -50,7 +50,7 @@ describe('core/identity/provider/account', () => {
     let identity : IdentityProviderIdentity;
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
 
         const realmRepository = new RealmRepositoryAdapter(
             suite.dataSource.getRepository(RealmEntity),
@@ -107,7 +107,7 @@ describe('core/identity/provider/account', () => {
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
 
         realm = undefined;
         accountManager = undefined;

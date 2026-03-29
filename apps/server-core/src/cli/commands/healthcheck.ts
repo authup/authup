@@ -22,7 +22,7 @@ export function defineCLIHealthCheckCommand() {
                 .withConfig()
                 .build();
 
-            await app.start();
+            await app.setup();
 
             const config = app.container.resolve(ConfigInjectionKey);
 

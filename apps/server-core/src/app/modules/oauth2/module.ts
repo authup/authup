@@ -8,7 +8,7 @@
 import type { Repository } from 'typeorm';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IContainer } from 'eldin';
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 
 import {
@@ -38,14 +38,14 @@ import { ConfigInjectionKey } from '../config/index.ts';
 export class OAuth2Module implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     constructor() {
         this.name = ModuleName.OAUTH2;
-        this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG, ModuleName.IDENTITY];
+        this.dependencies = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG, ModuleName.IDENTITY];
     }
 
-    async start(container: IContainer) : Promise<void> {
+    async setup(container: IContainer) : Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
 
         container.register(OAuth2InjectionToken.ClientRepository, {

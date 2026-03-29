@@ -19,11 +19,11 @@ describe('src/http/controllers/client-permission', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     let entity : ClientPermission | undefined;

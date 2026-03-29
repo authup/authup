@@ -23,11 +23,11 @@ describe('src/http/controllers/identity-provider', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     const oAuth2IdentityProvider = createFakeOAuth2IdentityProvider();

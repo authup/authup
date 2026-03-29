@@ -19,7 +19,7 @@ describe('refresh-token', () => {
     let entity : Client;
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
 
         const input = createFakeClient();
         input.active = true;
@@ -31,7 +31,7 @@ describe('refresh-token', () => {
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     it('should grant token with client credentials', async () => {

@@ -21,8 +21,8 @@ export function defineCLIResetCommand() {
                 .withDatabase()
                 .build();
 
-            await app.start();
-            await app.reset();
+            await app.setup();
+            await app.teardown();
 
             process.exit(0);
         },

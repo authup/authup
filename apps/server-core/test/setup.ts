@@ -212,8 +212,8 @@ async function setup(project: TestProject) {
         ]))
         .build();
 
-    await app.start();
-    await app.stop();
+    await app.setup();
+    await app.teardown();
 
     await wait(0);
 }

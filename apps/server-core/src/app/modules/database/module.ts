@@ -29,7 +29,7 @@ import {
 } from '../../../adapters/database/index.ts';
 import { setDomainEventPublisher } from '../../../adapters/database/event-publisher/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { DatabaseInjectionKey } from './constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
@@ -45,7 +45,7 @@ export type DatabaseModuleOptions = {
 export class DatabaseModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     protected optionsBuilder : DataSourceOptionsBuilder;
 
@@ -53,13 +53,13 @@ export class DatabaseModule implements IModule {
 
     constructor(options: DatabaseModuleOptions = {}) {
         this.name = ModuleName.DATABASE;
-        this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
+        this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER];
 
         this.optionsBuilder = new DataSourceOptionsBuilder();
         this.options = options;
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         const logger = container.resolve(LoggerInjectionKey);
 
         if (this.options.prepareBuild) {
@@ -71,7 +71,7 @@ export class DatabaseModule implements IModule {
         if (this.options.setup) {
             await this.options.setup(container, dataSourceOptions);
         } else {
-            await this.setup(container, dataSourceOptions);
+            await this.setupDatabase(container, dataSourceOptions);
         }
 
         const dataSource = new DataSource(dataSourceOptions);
@@ -96,7 +96,7 @@ export class DatabaseModule implements IModule {
         this.registerEventPublisher(container);
     }
 
-    async stop(container: IContainer): Promise<void> {
+    async teardown(container: IContainer): Promise<void> {
         const dataSource = container.tryResolve(DatabaseInjectionKey.DataSource);
         if (dataSource.success) {
             await dataSource.data.destroy();
@@ -110,7 +110,7 @@ export class DatabaseModule implements IModule {
 
     // ----------------------------------------------------
 
-    protected async setup(container: IContainer, options: DataSourceOptions): Promise<void> {
+    protected async setupDatabase(container: IContainer, options: DataSourceOptions): Promise<void> {
         const logger = container.resolve(LoggerInjectionKey);
 
         const check = await checkDatabase({
