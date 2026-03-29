@@ -94,7 +94,6 @@ export default defineComponent({
                 :items="props.data"
                 :fields="fields"
                 :busy="props.busy"
-                head-variant="dark"
                 outlined
             >
                 <template #cell(active)="data">
