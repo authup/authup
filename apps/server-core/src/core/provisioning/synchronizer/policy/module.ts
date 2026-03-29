@@ -43,9 +43,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
             await this.repository.saveWithEA(entity, input.extraAttributes);
         }
 
-        if (input.children && input.children.length > 0) {
-            await this.synchronizeChildren(entity.id, input.children);
-        }
+        await this.synchronizeChildren(entity.id, input.children || []);
 
         return {
             ...input,
@@ -55,7 +53,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
 
     private async synchronizeChildren(
         parentId: string,
-        children: PolicyProvisioningEntity[],
+        children: PolicyProvisioningEntity[] = [],
     ): Promise<void> {
         const declaredNames = children.map((c) => c.attributes.name);
 
