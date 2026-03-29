@@ -91,7 +91,7 @@ export class ProvisionerModule implements IModule {
 
     constructor(sources: IProvisioningSource[] = []) {
         this.name = ModuleName.PROVISIONING;
-        this.dependencies = [ModuleName.DATABASE];
+        this.dependencies = [ModuleName.CONFIG, ModuleName.DATABASE];
         this.sources = sources;
     }
 
