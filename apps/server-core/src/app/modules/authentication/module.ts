@@ -15,7 +15,7 @@ import {
 import { CacheInjectionKey } from '../cache/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { AuthenticationInjectionKey } from './constants.ts';
 import { SessionRepository } from './repositories/index.ts';
@@ -23,14 +23,14 @@ import { SessionRepository } from './repositories/index.ts';
 export class AuthenticationModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     constructor() {
         this.name = ModuleName.AUTHENTICATION;
-        this.dependsOn = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG];
+        this.dependencies = [ModuleName.DATABASE, ModuleName.CACHE, ModuleName.CONFIG];
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         container.register(AuthenticationInjectionKey.SessionRepository, {
             useFactory: (c) => {
                 const cache = c.resolve(CacheInjectionKey);

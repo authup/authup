@@ -52,10 +52,10 @@ describe('app/modules/provisioning', () => {
     beforeAll(async () => {
         di = new Container();
 
-        await config.start(di);
-        await logger.start(di);
-        await cache.start(di);
-        await database.start(di);
+        await config.setup(di);
+        await logger.setup(di);
+        await cache.setup(di);
+        await database.setup(di);
 
         dataSource = di.resolve(DatabaseInjectionKey.DataSource);
         const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
@@ -68,7 +68,7 @@ describe('app/modules/provisioning', () => {
     });
 
     afterAll(async () => {
-        await database.stop(di);
+        await database.teardown(di);
     });
 
     // ---------------------------------------------------------------
@@ -97,7 +97,7 @@ describe('app/modules/provisioning', () => {
         const provisioning = new ProvisionerModule([
             new FileProvisioningSource({ cwd: 'test/data/sources' }),
         ]);
-        await provisioning.start(di);
+        await provisioning.setup(di);
 
         const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
         const roleRepository = di.resolve<Repository<Role>>(RoleEntity);

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import type { IContainer } from 'eldin';
 import { LoggerInjectionKey } from '../logger/index.ts';
@@ -14,14 +14,14 @@ import { ConfigInjectionKey } from '../config/index.ts';
 export class RuntimeModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     constructor() {
         this.name = ModuleName.RUNTIME;
-        this.dependsOn = [ModuleName.CONFIG, ModuleName.LOGGER];
+        this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER];
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
 

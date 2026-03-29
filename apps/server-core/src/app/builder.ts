@@ -5,9 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Application } from './module.ts';
-import type { IApplication } from './types.ts';
-import type { IModule } from './modules/index.ts';
+import {
+    Application,
+    type IApplication,
+    type IModule,
+} from 'orkos';
 import {
     AuthenticationModule,
     CacheModule,
@@ -143,7 +145,7 @@ export class ApplicationBuilder {
     }
 
     build(): IApplication {
-        return new Application(this.buildModules());
+        return new Application({ modules: this.buildModules() });
     }
 
     // ----------------------------------------------------

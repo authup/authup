@@ -26,7 +26,7 @@ describe('src/security/permission/checker', () => {
     let adminUser : UserEntity;
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
 
         const repository = new UserRepository(suite.dataSource);
 
@@ -36,7 +36,7 @@ describe('src/security/permission/checker', () => {
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     /*

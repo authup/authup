@@ -19,13 +19,13 @@ describe('refresh-token', () => {
     let robot : Robot;
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
 
         robot = await suite.client.robot.create(createFakeRobot());
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     it('should grant token with robot credentials', async () => {

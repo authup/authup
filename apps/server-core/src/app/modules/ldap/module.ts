@@ -6,7 +6,7 @@
  */
 
 import { LdapClientFactory } from '../../../adapters/shared/ldap/index.ts';
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { LDAPInjectionKey } from './constants.ts';
 import type { IContainer } from 'eldin';
@@ -18,7 +18,7 @@ export class LdapModule implements IModule {
         this.name = ModuleName.LDAP;
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         container.register(LDAPInjectionKey.ClientFactory, {
             useFactory: () => new LdapClientFactory(),
         });

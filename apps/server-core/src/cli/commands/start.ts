@@ -16,7 +16,7 @@ export function defineCLIStartCommand() {
         async setup() {
             const app = createApplication();
 
-            await app.start();
+            await app.setup();
         },
     });
 }

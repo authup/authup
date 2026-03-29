@@ -21,11 +21,11 @@ describe('src/http/controllers/user-role', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     let details : UserRole | undefined;

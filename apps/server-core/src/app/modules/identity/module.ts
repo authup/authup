@@ -37,21 +37,21 @@ import {
 } from '../../../core/index.ts';
 import { LDAPInjectionKey } from '../ldap/index.ts';
 
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { IdentityInjectionKey } from './constants.ts';
 
 export class IdentityModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     constructor() {
         this.name = ModuleName.IDENTITY;
-        this.dependsOn = [ModuleName.DATABASE];
+        this.dependencies = [ModuleName.DATABASE];
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const clientRepository = new ClientIdentityRepository(

@@ -162,13 +162,13 @@ export function defineCLIMigrationCommand() {
 
                     app.addModule({
                         name: ModuleName.DATABASE,
-                        dependsOn: [ModuleName.CONFIG, ModuleName.LOGGER],
-                        async start(container: IContainer): Promise<void> {
+                        dependencies: [ModuleName.CONFIG, ModuleName.LOGGER],
+                        async setup(container: IContainer): Promise<void> {
                             await runMigrationOperation(container, context.args.operation);
                         },
                     });
 
-                    await app.start();
+                    await app.setup();
                 }
 
                 process.exit(0);

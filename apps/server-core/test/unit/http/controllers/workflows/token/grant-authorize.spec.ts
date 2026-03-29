@@ -22,7 +22,7 @@ describe('refresh-token', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
 
         client = await suite.client
             .client
@@ -36,7 +36,7 @@ describe('refresh-token', () => {
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     it('should build oauth2 code challenge', async () => {

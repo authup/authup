@@ -8,21 +8,21 @@
 import type { Component } from '../../../components/index.ts';
 import { createDatabaseUniqueEntriesComponent, createOAuth2CleanerComponent } from '../../../components/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import type { IContainer } from 'eldin';
 
 export class ComponentsModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     constructor() {
         this.name = ModuleName.COMPONENTS;
-        this.dependsOn = [ModuleName.DATABASE];
+        this.dependencies = [ModuleName.DATABASE];
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const components: Component[] = [

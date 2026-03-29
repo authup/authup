@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { SMTPMailClientAdapter, VoidMailClientAdapter } from './adapter/index.ts';
 import { MailInjectionKey } from './constants.ts';
@@ -15,14 +15,14 @@ import type { IContainer } from 'eldin';
 export class MailModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     constructor() {
         this.name = ModuleName.MAIL;
-        this.dependsOn = [ModuleName.CONFIG];
+        this.dependencies = [ModuleName.CONFIG];
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.smtp) {
             container.register(MailInjectionKey, {

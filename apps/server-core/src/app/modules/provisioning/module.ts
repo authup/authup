@@ -75,7 +75,7 @@ import {
     UserRoleRepositoryAdapter,
 } from '../database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -85,17 +85,17 @@ import { CompositeProvisioningSource, FileProvisioningSource } from './sources/i
 export class ProvisionerModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     protected sources: IProvisioningSource[];
 
     constructor(sources: IProvisioningSource[] = []) {
         this.name = ModuleName.PROVISIONING;
-        this.dependsOn = [ModuleName.DATABASE];
+        this.dependencies = [ModuleName.CONFIG, ModuleName.DATABASE];
         this.sources = sources;
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         const sources = [...this.sources];
 
         const config = container.resolve(ConfigInjectionKey);

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { ConfigInjectionKey } from './constants.ts';
 import type { IContainer } from 'eldin';
@@ -28,7 +28,7 @@ export class ConfigModule implements IModule {
 
     // ----------------------------------------------------
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         let instance : Config;
         if (this.instance) {
             instance = this.instance;

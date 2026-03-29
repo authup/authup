@@ -9,7 +9,7 @@ import type { VaultClient } from '@authup/server-kit';
 import {
     createVaultClient, setVaultFactory,
 } from '@authup/server-kit';
-import type { IModule } from '../types.ts';
+import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { VaultInjectionKey } from './constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
@@ -18,14 +18,14 @@ import type { IContainer } from 'eldin';
 export class VaultModule implements IModule {
     readonly name: string;
 
-    readonly dependsOn: string[];
+    readonly dependencies: string[];
 
     constructor() {
         this.name = ModuleName.VAULT;
-        this.dependsOn = [ModuleName.CONFIG];
+        this.dependencies = [ModuleName.CONFIG];
     }
 
-    async start(container: IContainer): Promise<void> {
+    async setup(container: IContainer): Promise<void> {
         const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.vault) {
             return;

@@ -5,16 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IContainer } from 'eldin';
-import type { IModule } from './modules/index.ts';
-
-export interface IApplication {
-    readonly container: IContainer;
-
-    addModule(module: IModule): void;
-    addModules(modules: IModule[]): void;
-
-    start(): Promise<void>;
-    stop(): Promise<void>;
-    reset(): Promise<void>;
-}
+export type { IApplication } from 'orkos';

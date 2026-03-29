@@ -13,11 +13,11 @@ describe('src/http/controllers/auth/jwks/*.ts', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
-        await suite.start();
+        await suite.setup();
     });
 
     afterAll(async () => {
-        await suite.stop();
+        await suite.teardown();
     });
 
     it('should return json web token keys', async () => {
