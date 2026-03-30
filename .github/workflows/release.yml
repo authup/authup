@@ -4,6 +4,11 @@ on:
     push:
         branches:
             - master
+    workflow_dispatch:
+        inputs:
+            version:
+                description: 'Version to publish (e.g. 1.0.0-beta.32)'
+                required: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -27,52 +32,70 @@ jobs:
 
         steps:
             -   uses: googleapis/release-please-action@v4
+                if: github.event_name == 'push'
                 id: release
                 with:
                     token: ${{ secrets.GITHUB_TOKEN }}
 
+            -   name: Set publish flags
+                id: flags
+                run: |
+                    if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+                        echo "should_publish=true" >> "$GITHUB_OUTPUT"
+                        VERSION="${{ inputs.version }}"
+                    else
+                        echo "should_publish=${{ steps.release.outputs.releases_created }}" >> "$GITHUB_OUTPUT"
+                        VERSION="${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}"
+                    fi
+                    IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+                    echo "major=$MAJOR" >> "$GITHUB_OUTPUT"
+                    echo "minor=$MINOR" >> "$GITHUB_OUTPUT"
+                    echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
+                    echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
             -   name: Checkout
-                if: steps.release.outputs.releases_created == 'true'
+                if: steps.flags.outputs.should_publish == 'true'
                 uses: actions/checkout@v6
                 with:
+                    ref: v${{ steps.flags.outputs.version }}
                     fetch-depth: 0
 
             -   name: Install
-                if: steps.release.outputs.releases_created == 'true'
+                if: steps.flags.outputs.should_publish == 'true'
                 uses: ./.github/actions/install
                 with:
                     node-version: ${{ env.NODE_VERSION }}
 
             -   name: Build
-                if: steps.release.outputs.releases_created == 'true'
+                if: steps.flags.outputs.should_publish == 'true'
                 uses: ./.github/actions/build
 
             -   name: Publish
-                if: steps.release.outputs.releases_created == 'true'
+                if: steps.flags.outputs.should_publish == 'true'
                 uses: tada5hi/monoship@v2
                 with:
                     token: ${{ secrets.NPM_TOKEN }}
 
             -   uses: tada5hi/action-docker-image-publish@v3
-                if: steps.release.outputs.releases_created == 'true'
+                if: steps.flags.outputs.should_publish == 'true'
                 with:
                     cleanup: false
                     registryRepository: authup/authup
                     registryTag: |
                         latest
-                        ${{ steps.release.outputs['major'] }}
-                        ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}
-                        ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}
+                        ${{ steps.flags.outputs.major }}
+                        ${{ steps.flags.outputs.major }}.${{ steps.flags.outputs.minor }}
+                        ${{ steps.flags.outputs.major }}.${{ steps.flags.outputs.minor }}.${{ steps.flags.outputs.patch }}
 
             -   uses: tada5hi/action-docker-image-publish@v3
-                if: steps.release.outputs.releases_created == 'true'
+                if: steps.flags.outputs.should_publish == 'true'
                 with:
                     registryHost: docker.io
                     registryRepository: authup/authup
                     registryUser: authup
                     registryTag: |
                         latest
-                        ${{ steps.release.outputs['major'] }}
-                        ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}
-                        ${{ steps.release.outputs['major'] }}.${{ steps.release.outputs['minor'] }}.${{ steps.release.outputs['patch'] }}
+                        ${{ steps.flags.outputs.major }}
+                        ${{ steps.flags.outputs.major }}.${{ steps.flags.outputs.minor }}
+                        ${{ steps.flags.outputs.major }}.${{ steps.flags.outputs.minor }}.${{ steps.flags.outputs.patch }}
                     registryPassword: ${{ secrets.DOCKER_HUB_TOKEN }}
