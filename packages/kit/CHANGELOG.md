@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* policy-based realm scoping and global entity support ([#2928](https://github.com/authup/authup/issues/2928)) ([1ae7d10](https://github.com/authup/authup/commit/1ae7d101bae1b43b32e7df2eb3c5a18e6328ac87))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 6 updates ([#2914](https://github.com/authup/authup/issues/2914)) ([34d2cbb](https://github.com/authup/authup/commit/34d2cbbbc4f5f349e0dbd521b45f0330ce52e5a6))
+* enable typecheck in client-web build and fix all type errors ([#2934](https://github.com/authup/authup/issues/2934)) ([6a6c42a](https://github.com/authup/authup/commit/6a6c42a402e23904daf0ca1482f061924482ea9f))
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

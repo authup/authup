@@ -1,5 +1,32 @@
 # Change Log
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* oAuth2/OIDC spec compliance fixes ([#2922](https://github.com/authup/authup/issues/2922)) ([674851d](https://github.com/authup/authup/commit/674851d34ac443281dc6c6f698ce89150f6b48e0))
+
+
+### Bug Fixes
+
+* create no-op logger factory fn ([#2956](https://github.com/authup/authup/issues/2956)) ([1b85535](https://github.com/authup/authup/commit/1b8553545319021ad8a62b74ea942d625fb73eb1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/specs bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+  * peerDependencies
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/specs bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

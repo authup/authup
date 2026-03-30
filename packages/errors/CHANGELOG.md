@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Bug Fixes
+
+* touch files for version bump ([049737e](https://github.com/authup/authup/commit/049737ed3a6af5f3f7b4b7038e2790fdc5fad2b2))
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#2918](https://github.com/authup/authup/issues/2918)) ([3115cdd](https://github.com/authup/authup/commit/3115cdd016569cca2164844e2b0c0235cf17c233))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/specs bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/core-http-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/server-kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/adapters/compare/v1.0.0-beta.28...v1.0.0-beta.30) (2026-02-27)
 
 

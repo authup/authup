@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
+
+
+### Features
+
+* extract business logic from controllers into core services ([#2910](https://github.com/authup/authup/issues/2910)) ([7d13390](https://github.com/authup/authup/commit/7d133903d0c7ca7ce8687f452a4e7690602e44c7))
+* oAuth2/OIDC spec compliance fixes ([#2922](https://github.com/authup/authup/issues/2922)) ([674851d](https://github.com/authup/authup/commit/674851d34ac443281dc6c6f698ce89150f6b48e0))
+* policy-based realm scoping and global entity support ([#2928](https://github.com/authup/authup/issues/2928)) ([1ae7d10](https://github.com/authup/authup/commit/1ae7d101bae1b43b32e7df2eb3c5a18e6328ac87))
+
+
+### Bug Fixes
+
+* enable typecheck in client-web build and fix all type errors ([#2934](https://github.com/authup/authup/issues/2934)) ([6a6c42a](https://github.com/authup/authup/commit/6a6c42a402e23904daf0ca1482f061924482ea9f))
+* replace server-side cookie handling with client-side authorization code flow ([#2937](https://github.com/authup/authup/issues/2937)) ([8edb612](https://github.com/authup/authup/commit/8edb612b179bf979cf7eb54a69fe9345bbffaeb8))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/errors bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+    * @authup/specs bumped from ^1.0.0-beta.30 to ^1.0.0-beta.31
+
 ## [1.0.0-beta.30](https://github.com/authup/authup/compare/v1.0.0-beta.29...v1.0.0-beta.30) (2026-02-26)
 
 
