@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-beta.32](https://github.com/authup/authup/compare/v1.0.0-beta.31...v1.0.0-beta.32) (2026-03-30)
+
+
+### Bug Fixes
+
+* enhance keywoards in package.json ([c45d1fc](https://github.com/authup/authup/commit/c45d1fcd8705192a4d8365ba70772e47f0f23497))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.31 to ^1.0.0-beta.32
+    * @authup/errors bumped from ^1.0.0-beta.31 to ^1.0.0-beta.32
+    * @authup/specs bumped from ^1.0.0-beta.31 to ^1.0.0-beta.32
+    * @authup/core-kit bumped from ^1.0.0-beta.31 to ^1.0.0-beta.32
+    * @authup/core-http-kit bumped from ^1.0.0-beta.31 to ^1.0.0-beta.32
+    * @authup/server-kit bumped from ^1.0.0-beta.31 to ^1.0.0-beta.32
+
 ## [1.0.0-beta.31](https://github.com/authup/authup/compare/v1.0.0-beta.30...v1.0.0-beta.31) (2026-03-29)
 
 
