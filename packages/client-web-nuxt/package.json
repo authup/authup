@@ -34,7 +34,7 @@
         "@authup/client-web-kit": "^1.0.0-beta.32",
         "@authup/kit": "^1.0.0-beta.32",
         "@nuxt/kit": "^4.0.0",
-        "pathtrace": "^2.1.0",
+        "pathtrace": "^2.2.0",
         "smob": "^1.6.1"
     },
     "devDependencies": {
