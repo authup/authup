@@ -57,7 +57,6 @@ jobs:
                 if: steps.flags.outputs.should_publish == 'true'
                 uses: actions/checkout@v6
                 with:
-                    ref: v${{ steps.flags.outputs.version }}
                     fetch-depth: 0
 
             -   name: Install
