@@ -27,16 +27,14 @@
     },
     "keywords": [
         "auth",
-        "module",
-        "typescript",
+        "authentication",
+        "token-verification",
+        "jwt",
+        "cache",
         "middleware",
-        "http",
-        "express",
-        "socket",
-        "socket.io",
-        "websocket",
+        "server",
         "adapter",
-        "oauth2"
+        "bearer-token"
     ],
     "author": {
         "name": "Peter Placzek",

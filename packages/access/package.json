@@ -28,8 +28,16 @@
         "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
     },
     "keywords": [
+        "auth",
+        "authorization",
+        "permission",
         "policy",
-        "permission"
+        "rbac",
+        "abac",
+        "access-control",
+        "policy-engine",
+        "permission-evaluator",
+        "decision-strategy"
     ],
     "author": {
         "name": "Peter Placzek",

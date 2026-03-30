@@ -28,17 +28,17 @@
     },
     "keywords": [
         "auth",
-        "module",
-        "typescript",
-        "template",
-        "auth-template",
+        "authentication",
+        "authorization",
         "vue",
-        "list",
+        "vue3",
+        "components",
         "form",
+        "pinia",
         "oauth2",
-        "oauth2-client",
-        "domains",
-        "components"
+        "user-management",
+        "rbac",
+        "ui-kit"
     ],
     "author": {
         "name": "Peter Placzek",

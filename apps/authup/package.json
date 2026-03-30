@@ -29,7 +29,16 @@
     "bin": {
         "authup": "dist/index.mjs"
     },
-    "keywords": [],
+    "keywords": [
+        "auth",
+        "authentication",
+        "authorization",
+        "cli",
+        "command-line",
+        "oauth2",
+        "server",
+        "identity"
+    ],
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",

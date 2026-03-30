@@ -48,5 +48,17 @@
     "peerDependencies": {
         "@pinia/nuxt": "*",
         "pinia": "^2.x || ^3.x"
-    }
+    },
+    "keywords": [
+        "auth",
+        "authentication",
+        "authorization",
+        "nuxt",
+        "nuxt-module",
+        "middleware",
+        "route-guard",
+        "oauth2",
+        "session",
+        "vue"
+    ]
 }

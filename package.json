@@ -18,11 +18,17 @@
         "auth",
         "authentication",
         "authorization",
-        "module",
-        "typescript",
         "oauth2",
-        "oauth2-server",
-        "ldap"
+        "openid-connect",
+        "iam",
+        "sso",
+        "rbac",
+        "abac",
+        "ldap",
+        "identity",
+        "access-control",
+        "typescript",
+        "monorepo"
     ],
     "repository": {
         "type": "git",

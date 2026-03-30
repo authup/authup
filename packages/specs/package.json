@@ -27,7 +27,18 @@
     "engines": {
         "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
     },
-    "keywords": [],
+    "keywords": [
+        "auth",
+        "oauth2",
+        "openid-connect",
+        "jwt",
+        "jwk",
+        "specifications",
+        "types",
+        "rfc7519",
+        "rfc7517",
+        "rfc6749"
+    ],
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",

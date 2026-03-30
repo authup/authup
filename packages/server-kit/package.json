@@ -29,15 +29,17 @@
     },
     "keywords": [
         "auth",
-        "kit",
-        "utils",
+        "server",
         "jwt",
+        "crypto",
+        "bcrypt",
+        "password-hashing",
         "token",
-        "sign",
-        "verify",
-        "password",
-        "hash",
-        "crypto"
+        "signing",
+        "key-management",
+        "redis",
+        "cache",
+        "logging"
     ],
     "author": {
         "name": "Peter Placzek",

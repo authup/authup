@@ -26,7 +26,16 @@
     "engines": {
         "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
     },
-    "keywords": [],
+    "keywords": [
+        "auth",
+        "authentication",
+        "oauth2",
+        "authorization-code",
+        "vue",
+        "vite",
+        "ssr",
+        "login"
+    ],
     "author": {
         "name": "Peter Placzek",
         "email": "contact@tada5hi.net",

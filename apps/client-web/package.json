@@ -59,5 +59,17 @@
     },
     "publishConfig": {
         "access": "public"
-    }
+    },
+    "keywords": [
+        "auth",
+        "authentication",
+        "authorization",
+        "admin",
+        "dashboard",
+        "nuxt",
+        "vue",
+        "oauth2",
+        "user-management",
+        "iam"
+    ]
 }

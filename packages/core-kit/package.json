@@ -29,17 +29,15 @@
     },
     "keywords": [
         "auth",
-        "module",
-        "typescript",
-        "template",
-        "auth-template",
+        "authentication",
+        "authorization",
+        "types",
+        "interfaces",
+        "entities",
+        "validators",
         "oauth2",
-        "oauth2-client",
-        "ability",
-        "permission",
-        "header",
-        "bearer",
-        "basic"
+        "domain-model",
+        "typescript"
     ],
     "author": {
         "name": "Peter Placzek",

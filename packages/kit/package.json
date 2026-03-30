@@ -29,17 +29,14 @@
     },
     "keywords": [
         "auth",
-        "module",
+        "utility",
+        "helpers",
+        "base64",
+        "uuid",
+        "nanoid",
         "typescript",
-        "template",
-        "auth-template",
-        "oauth2",
-        "oauth2-client",
-        "ability",
-        "permission",
-        "header",
-        "bearer",
-        "basic"
+        "pattern-matching",
+        "serialization"
     ],
     "author": {
         "name": "Peter Placzek",
