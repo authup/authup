@@ -37,7 +37,9 @@ export default defineComponent({
         },
     },
     emits: ['done', 'failed'],
-    setup(props, { emit }) {
+    setup(props, {
+        emit 
+    }) {
         const apiClient = injectHTTPClient();
         const store = injectStore();
 
@@ -61,9 +63,7 @@ export default defineComponent({
                 maxLength: maxLength(255),
 
             },
-            realm_id: {
-
-            },
+            realm_id: {},
 
         }, form);
 
@@ -91,8 +91,11 @@ export default defineComponent({
 
         resetIdentityProviderQuery();
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const identityProviderRef = ref<null | { load:() => any, [key: string]: any}>(null);
+         
+        const identityProviderRef = ref<null | {
+            load:() => Promise<void>,
+            [key: string]: unknown
+        }>(null);
         const updateIdentityProviderList = () => {
             if (identityProviderRef.value) {
                 identityProviderRef.value.load();

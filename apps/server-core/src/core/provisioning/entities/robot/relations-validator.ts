@@ -14,19 +14,27 @@ export class RobotProvisioningRelationsValidator extends Container<RobotProvisio
     protected initialize() {
         super.initialize();
 
-        this.mount('realmPermissions', { optional: true }, createValidator(
+        this.mount('realmPermissions', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('globalPermissions', { optional: true }, createValidator(
+        this.mount('globalPermissions', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('realmRoles', { optional: true }, createValidator(
+        this.mount('realmRoles', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('globalRoles', { optional: true }, createValidator(
+        this.mount('globalRoles', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
     }

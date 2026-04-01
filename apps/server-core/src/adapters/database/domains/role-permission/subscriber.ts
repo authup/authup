@@ -5,24 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    RolePermission,
-} from '@authup/core-kit';
+import type { RolePermission, } from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType,
+    EntityDefaultEventName, 
+    EntityType,
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import type { DomainEventDestination} from '@authup/server-kit';
+import type { DomainEventDestination } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface, InsertEvent,
+    EntitySubscriberInterface, 
+    InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import {
-    EventSubscriber,
-} from 'typeorm';
+import { EventSubscriber, } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { RolePermissionEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -32,7 +30,9 @@ async function publishEvent(
     data: RolePermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id) },
+        {
+            channel: (id) => buildEntityChannelName(EntityType.ROLE_PERMISSION, id) 
+        },
     ];
     if (data.role_realm_id) {
         destinations.push({

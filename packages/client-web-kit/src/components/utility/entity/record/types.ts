@@ -7,7 +7,10 @@
 
 import type { BuildInput, FieldsBuildInput, FiltersBuildInput } from 'rapiq';
 import type {
-    MaybeRef, Ref, SetupContext, SlotsType,
+    MaybeRef, 
+    Ref, 
+    SetupContext, 
+    SlotsType,
     VNodeChild,
 } from 'vue';
 import type { EntitySocketManagerCreateContext } from '../socket';

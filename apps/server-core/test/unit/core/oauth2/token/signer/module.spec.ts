@@ -10,7 +10,11 @@ import type { Key } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWKError, JWKType } from '@authup/specs';
 import {
-    beforeEach, describe, expect, it, vi,
+    beforeEach, 
+    describe, 
+    expect, 
+    it, 
+    vi,
 } from 'vitest';
 import { OAuth2TokenSigner } from '../../../../../../src/core/oauth2/token/signer/module.ts';
 import type { IOAuth2KeyRepository } from '../../../../../../src/core/oauth2/key/types.ts';
@@ -48,7 +52,9 @@ describe('OAuth2TokenSigner', () => {
     it('should throw JWKError when payload has no realm_id', async () => {
         const keyRepo = createFakeKeyRepository();
         const signer = new OAuth2TokenSigner(keyRepo);
-        const payload = createPayload({ realm_id: undefined });
+        const payload = createPayload({
+            realm_id: undefined 
+        });
 
         await expect(signer.sign(payload)).rejects.toThrow(JWKError);
     });

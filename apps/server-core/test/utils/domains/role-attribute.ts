@@ -10,8 +10,12 @@ import type { RoleAttribute } from '@authup/core-kit';
 
 export function createFakeRoleAttribute(data: Partial<RoleAttribute> = {}) {
     return {
-        name: faker.string.alpha({ length: 10 }),
-        value: faker.string.alpha({ length: 10 }),
+        name: faker.string.alpha({
+            length: 10 
+        }),
+        value: faker.string.alpha({
+            length: 10 
+        }),
         ...data,
     } satisfies Partial<RoleAttribute>;
 }

@@ -6,7 +6,10 @@
  */
 
 import {
-    describe, expect, it, vi,
+    describe, 
+    expect, 
+    it, 
+    vi,
 } from 'vitest';
 import type { TokenGrantResponse } from '@hapic/oauth2';
 import { TokenAPI } from '@hapic/oauth2';

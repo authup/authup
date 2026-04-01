@@ -1,7 +1,5 @@
 <script lang="ts">
-import {
-    ALogin,
-} from '@authup/client-web-kit';
+import { ALogin, } from '@authup/client-web-kit';
 import {
     definePageMeta,
     useToast,
@@ -31,7 +29,10 @@ export default defineNuxtComponent({
         const route = useRoute();
 
         const handleDone = () => {
-            const { redirect, ...query } = route.query;
+            const {
+                redirect, 
+                ...query 
+            } = route.query;
 
             navigateTo({
                 path: (redirect || '/') as string,
@@ -40,7 +41,10 @@ export default defineNuxtComponent({
         };
 
         const handleFailed = (e: Error) => {
-            toast.show({ variant: 'warning', body: e.message });
+            toast.show({
+                variant: 'warning',
+                body: e.message 
+            });
         };
 
         const baseUrl = runtimeConfig.public.apiUrl;

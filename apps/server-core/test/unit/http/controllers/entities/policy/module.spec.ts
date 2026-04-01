@@ -6,7 +6,11 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
 import { createTestApplication } from '../../../../../app';
@@ -146,9 +150,13 @@ describe('src/http/controllers/policy', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(entity.name);
 
-        const { id } = response;
+        const {
+            id 
+        } = response;
 
-        const { name } = createFakeTimePolicy();
+        const {
+            name 
+        } = createFakeTimePolicy();
 
         response = await suite.client
             .policy

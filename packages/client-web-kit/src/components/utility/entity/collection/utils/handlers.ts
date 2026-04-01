@@ -12,7 +12,7 @@ export function buildEntityCollectionCreatedHandler<T>(
     items: Ref<T[]>,
     cb?: (entity: T) => void | Promise<void>,
 ) {
-    return (item: T, options?: { unshift?: boolean}) => {
+    return (item: T, options?: { unshift?: boolean }) => {
         options = options || {};
 
         let index : number;

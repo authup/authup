@@ -11,7 +11,8 @@ import installPagination from '@vuecs/pagination';
 import type { App, Component } from 'vue';
 import * as components from './components/entities';
 import {
-    installHTTPClient, installHTTPClientAuthenticationHook,
+    installHTTPClient, 
+    installHTTPClientAuthenticationHook,
     installSocketManager,
     installStore,
     installTranslator,

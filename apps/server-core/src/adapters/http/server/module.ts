@@ -9,6 +9,8 @@ import http from 'node:http';
 import { createNodeDispatcher } from 'routup';
 import type { HttpServerContext, IServer } from './type.ts';
 
-export function createHttpServer({ router } : HttpServerContext) : IServer {
+export function createHttpServer({
+    router 
+} : HttpServerContext) : IServer {
     return new http.Server(createNodeDispatcher(router));
 }

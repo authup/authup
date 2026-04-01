@@ -23,6 +23,9 @@ export interface IPermissionService {
         data: Record<string, any>,
         actor: ActorContext,
         options?: { updateOnly?: boolean },
-    ): Promise<{ entity: Permission, created: boolean }>;
+    ): Promise<{
+        entity: Permission,
+        created: boolean 
+    }>;
     delete(id: string, actor: ActorContext): Promise<Permission>;
 }

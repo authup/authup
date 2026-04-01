@@ -14,7 +14,12 @@ import postcss from 'rollup-plugin-postcss';
 import { builtinModules } from 'node:module';
 
 const extensions = [
-    '.js', '.mjs', '.cjs', '.ts', '.mts', '.cts',
+    '.js', 
+    '.mjs', 
+    '.cjs', 
+    '.ts', 
+    '.mts', 
+    '.cts',
 ];
 
 export function createConfig(
@@ -44,7 +49,9 @@ export function createConfig(
             ...pluginsPre,
 
             // Allows node_modules resolution
-            resolve({ extensions }),
+            resolve({
+                extensions 
+            }),
 
             esmShim(),
 

@@ -8,9 +8,7 @@ import {
     definePageMeta,
     useToast,
 } from '#imports';
-import {
-    createError, navigateTo, useRoute,
-} from '#app';
+import { createError,navigateTo,useRoute, } from '#app';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
@@ -24,7 +22,9 @@ export default defineComponent({
 
         const items = [
             {
-                name: 'General', icon: 'fas fa-bars', urlSuffix: '',
+                name: 'General',
+                icon: 'fas fa-bars',
+                urlSuffix: '',
             },
         ];
 
@@ -38,13 +38,18 @@ export default defineComponent({
                 .policy
                 .getOne(route.params.id as string);
         } catch {
-            await navigateTo({ path: '/policies' });
+            await navigateTo({
+                path: '/policies' 
+            });
             throw createError({});
         }
 
         const handleUpdated = (e: Policy) => {
             if (toast) {
-                toast.show({ variant: 'success', body: 'The policy was successfully updated.' });
+                toast.show({
+                    variant: 'success',
+                    body: 'The policy was successfully updated.' 
+                });
             }
 
             extendObject(entity.value, e);
@@ -52,7 +57,10 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

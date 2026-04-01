@@ -1,6 +1,9 @@
 <script lang="ts">
 import {
-    type PropType, computed, defineComponent, reactive,
+    type PropType, 
+    computed, 
+    defineComponent, 
+    reactive,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { maxValue, minValue } from '@vuelidate/validators';

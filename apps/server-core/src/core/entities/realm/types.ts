@@ -24,6 +24,9 @@ export interface IRealmService {
         data: Record<string, any>,
         actor: ActorContext,
         options?: { updateOnly?: boolean },
-    ): Promise<{ entity: Realm, created: boolean }>;
+    ): Promise<{
+        entity: Realm,
+        created: boolean 
+    }>;
     delete(id: string, actor: ActorContext): Promise<Realm>;
 }

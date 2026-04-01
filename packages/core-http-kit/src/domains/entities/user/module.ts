@@ -110,7 +110,10 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
 
     async passwordReset(
         data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>> &
-        { token: string, password: string },
+        {
+            token: string,
+            password: string 
+        },
     ) : Promise<PasswordResetResponse> {
         const response = await this.client.post('password-reset', nullifyEmptyObjectProperties(data));
 

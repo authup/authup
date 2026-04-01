@@ -9,7 +9,10 @@ import { createApp } from './app';
 import { getWindowPayload } from './window';
 
 const payload = getWindowPayload();
-const { app, router } = createApp(payload);
+const {
+    app, 
+    router 
+} = createApp(payload);
 
 router.isReady().then(() => {
     app.mount('#app');

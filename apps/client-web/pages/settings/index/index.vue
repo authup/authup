@@ -20,16 +20,25 @@ export default defineComponent({
 
         const store = injectStore();
 
-        const { user, userId } = storeToRefs(store);
+        const {
+            user, 
+            userId 
+        } = storeToRefs(store);
 
         const handleUpdated = (entity: User) => {
-            toast.show({ variant: 'success', body: 'The account was successfully updated.' });
+            toast.show({
+                variant: 'success',
+                body: 'The account was successfully updated.' 
+            });
 
             store.setUser(entity);
         };
 
         const handleFailed = (e: Error) => {
-            toast.show({ variant: 'warning', body: e.message });
+            toast.show({
+                variant: 'warning',
+                body: e.message 
+            });
         };
 
         return {

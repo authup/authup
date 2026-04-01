@@ -6,7 +6,16 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DPut, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
@@ -17,9 +26,7 @@ import type { IRealmService } from '../../../../../core/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import {
-    buildActorContext,
-} from '../../../request/index.ts';
+import { buildActorContext, } from '../../../request/index.ts';
 
 export type RealmControllerOptions = {
     baseURL: string
@@ -51,9 +58,15 @@ export class RealmController {
         @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<any> {
-        const { data, meta } = await this.service.getMany(useRequestQuery(req));
+        const {
+            data, 
+            meta 
+        } = await this.service.getMany(useRequestQuery(req));
 
-        return send(res, { data, meta });
+        return send(res, {
+            data,
+            meta 
+        });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -105,7 +118,13 @@ export class RealmController {
             ],
 
             id_token_signing_alg_values_supported: [
-                'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'none',
+                'HS256', 
+                'HS384', 
+                'HS512', 
+                'RS256', 
+                'RS384', 
+                'RS512', 
+                'none',
             ],
 
             token_endpoint: new URL('token', this.options.baseURL).href,
@@ -166,7 +185,10 @@ export class RealmController {
         @DResponse() res: any,
     ) : Promise<any> {
         const actor = buildActorContext(req);
-        const { entity, created } = await this.service.save(
+        const {
+            entity, 
+            created 
+        } = await this.service.save(
             id || undefined,
             data,
             actor,

@@ -21,14 +21,17 @@ import {
     type BearerAuthorizationHeader,
     parseAuthorizationHeader,
 } from 'hapic';
-import { ClientAuthenticator,
+import {
+    ClientAuthenticator,
     PolicyEngine,
     RobotAuthenticator,
-
-    UserAuthenticator } from '../../../../../core/index.ts';
+    UserAuthenticator 
+} from '../../../../../core/index.ts';
 import type {
-    ICredentialsAuthenticator, IIdentityResolver,
-    IOAuth2TokenVerifier, ISessionManager,
+    ICredentialsAuthenticator, 
+    IIdentityResolver,
+    IOAuth2TokenVerifier, 
+    ISessionManager,
 } from '../../../../../core/index.ts';
 import {
     RequestPermissionEvaluator,
@@ -93,7 +96,9 @@ export class AuthorizationMiddleware {
         );
         setRequestPermissionEvaluator(request, requestAccessContext);
 
-        const { authorization: headerValue } = request.headers;
+        const {
+            authorization: headerValue 
+        } = request.headers;
 
         try {
             if (typeof headerValue !== 'string') {

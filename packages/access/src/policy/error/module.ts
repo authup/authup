@@ -10,7 +10,10 @@ import type { PolicyIssue } from '../issue';
 
 export class PolicyError extends AuthupError {
     constructor(message?: string, code?: string | null) {
-        super({ message, code });
+        super({
+            message,
+            code 
+        });
     }
 
     addIssue(data: PolicyIssue) {

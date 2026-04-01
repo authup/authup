@@ -4,17 +4,15 @@ import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
-import {
-    definePageMeta, useToast,
-} from '#imports';
-import {
-    createError, navigateTo, useRoute,
-} from '#app';
+import { definePageMeta,useToast, } from '#imports';
+import { createError,navigateTo,useRoute, } from '#app';
 import { LayoutKey } from '../../config/layout';
 import DomainEntityNav from '../../components/DomainEntityNav';
 
 export default defineComponent({
-    components: { DomainEntityNav },
+    components: {
+        DomainEntityNav 
+    },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -28,13 +26,19 @@ export default defineComponent({
 
         const items = [
             {
-                name: 'General', icon: 'fas fa-bars', urlSuffix: '',
+                name: 'General',
+                icon: 'fas fa-bars',
+                urlSuffix: '',
             },
             {
-                name: 'Permissions', icon: 'fas fa-user-secret', urlSuffix: 'permissions',
+                name: 'Permissions',
+                icon: 'fas fa-user-secret',
+                urlSuffix: 'permissions',
             },
             {
-                name: 'Roles', icon: 'fa-solid fa-user-group', urlSuffix: 'roles',
+                name: 'Roles',
+                icon: 'fa-solid fa-user-group',
+                urlSuffix: 'roles',
             },
         ];
 
@@ -46,15 +50,22 @@ export default defineComponent({
         try {
             entity.value = await injectHTTPClient()
                 .user
-                .getOne(route.params.id as string, { fields: ['+email'] });
+                .getOne(route.params.id as string, {
+                    fields: ['+email'] 
+                });
         } catch {
-            await navigateTo({ path: '/users' });
+            await navigateTo({
+                path: '/users' 
+            });
             throw createError({});
         }
 
         const handleUpdated = (e: User) => {
             if (toast) {
-                toast.show({ variant: 'success', body: 'The user was successfully updated.' });
+                toast.show({
+                    variant: 'success',
+                    body: 'The user was successfully updated.' 
+                });
             }
 
             extendObject(entity.value, e);
@@ -62,7 +73,10 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

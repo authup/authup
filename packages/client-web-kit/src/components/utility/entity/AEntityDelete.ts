@@ -13,15 +13,21 @@ import type {
     VNodeProps,
 } from 'vue';
 import {
-    defineComponent, getCurrentInstance,
+    defineComponent, 
+    getCurrentInstance,
     h,
     mergeProps,
-    ref, resolveDynamicComponent,
+    ref, 
+    resolveDynamicComponent,
 } from 'vue';
 import type { EntityType } from '@authup/core-kit';
 import type { EntityAPISlim } from '@authup/core-http-kit';
 import {
-    TranslatorTranslationDefaultKey, TranslatorTranslationGroup, injectHTTPClient, useTranslation, wrapFnWithBusyState,
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationGroup, 
+    injectHTTPClient, 
+    useTranslation, 
+    wrapFnWithBusyState,
 } from '../../../core';
 
 enum ElementType {
@@ -149,6 +155,4 @@ const AEntityDelete = defineComponent({
     },
 });
 
-export {
-    AEntityDelete,
-};
+export { AEntityDelete, };

@@ -6,9 +6,7 @@
  */
 
 import type { Key } from '@authup/core-kit';
-import {
-    AsymmetricKey, CryptoAsymmetricAlgorithm, createAsymmetricKeyPair,
-} from '@authup/server-kit';
+import { AsymmetricKey,CryptoAsymmetricAlgorithm,createAsymmetricKeyPair, } from '@authup/server-kit';
 import { JWKType, JWTAlgorithm } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../adapters/database/index.ts';
@@ -27,7 +25,10 @@ export class OAuth2KeyRepository implements IOAuth2KeyRepository {
         });
     }
 
-    protected async createOrGet(where: { realm_id?: string, id?: string }) : Promise<Key | null> {
+    protected async createOrGet(where: {
+        realm_id?: string,
+        id?: string
+    }) : Promise<Key | null> {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(KeyEntity);
 

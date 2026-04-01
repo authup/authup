@@ -1,6 +1,10 @@
 <script lang="ts">
 import {
-    type PropType, computed, defineComponent, reactive, toRef,
+    type PropType, 
+    computed, 
+    defineComponent, 
+    reactive, 
+    toRef,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
@@ -52,7 +56,10 @@ export default defineComponent({
         });
 
         const typeOptions : FormSelectOption[] = [
-            ...Object.values(BuiltInPolicyType).map((type) => ({ id: type, value: type })),
+            ...Object.values(BuiltInPolicyType).map((type) => ({
+                id: type,
+                value: type 
+            })),
         ];
 
         const vuelidate = useVuelidate({
@@ -61,9 +68,7 @@ export default defineComponent({
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },
-            invert: {
-
-            },
+            invert: {},
             display_name: {
                 minLength: minLength(3),
                 maxLength: maxLength(256),
@@ -72,9 +77,7 @@ export default defineComponent({
                 minLength: minLength(5),
                 maxLength: maxLength(4096),
             },
-            realm_id: {
-
-            },
+            realm_id: {},
         }, form, {
             $registerAs: 'basic',
         });

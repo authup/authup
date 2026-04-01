@@ -9,13 +9,9 @@ import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit'
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import {
-    required, url,
-} from '@vuelidate/validators';
+import { required,url, } from '@vuelidate/validators';
 import type { PropType, VNodeChild } from 'vue';
-import {
-    defineComponent, h, reactive,
-} from 'vue';
+import { defineComponent,h,reactive, } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery';

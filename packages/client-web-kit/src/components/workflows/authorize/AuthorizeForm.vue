@@ -13,7 +13,9 @@ import { injectHTTPClient } from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({
-    components: { AuthorizeScopes },
+    components: {
+        AuthorizeScopes 
+    },
     props: {
         client: {
             type: Object as PropType<Client>,
@@ -55,11 +57,17 @@ export default defineComponent({
                         response_type: props.codeRequest.response_type,
                         client_id: props.client.id,
                         redirect_uri: props.codeRequest.redirect_uri,
-                        ...(props.codeRequest.state ? { state: props.codeRequest.state } : {}),
-                        ...(props.codeRequest.scope ? { scope: props.codeRequest.scope } : {}),
+                        ...(props.codeRequest.state ? {
+                            state: props.codeRequest.state 
+                        } : {}),
+                        ...(props.codeRequest.scope ? {
+                            scope: props.codeRequest.scope 
+                        } : {}),
                     });
 
-                const { url } = response;
+                const {
+                    url 
+                } = response;
 
                 if (typeof window !== 'undefined') {
                     window.location.href = url;

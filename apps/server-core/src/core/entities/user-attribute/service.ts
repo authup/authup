@@ -38,10 +38,15 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             ],
         });
 
-        const { data: entities, meta } = await this.repository.findMany(query);
+        const {
+            data: entities, 
+            meta 
+        } = await this.repository.findMany(query);
 
         const data: UserAttribute[] = [];
-        let { total } = meta;
+        let {
+            total 
+        } = meta;
 
         for (const entity of entities) {
             const canManage = await this.canManageUserAttribute(actor, entity);
@@ -52,7 +57,13 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             }
         }
 
-        return { data, meta: { ...meta, total } };
+        return {
+            data,
+            meta: {
+                ...meta,
+                total 
+            } 
+        };
     }
 
     async getOne(
@@ -66,7 +77,9 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -130,7 +143,9 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         await this.repository.validateJoinColumns(data);
 
-        let entity = await this.repository.findOneBy({ id });
+        let entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -158,7 +173,9 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -168,7 +185,9 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new ForbiddenError();
         }
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -13,7 +13,12 @@ import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     BuiltInPolicyCreateRequest,
-    BuiltInPolicyResponse, BuiltInPolicyUpdateRequest, PolicyAPICheckResponse, PolicyCreateRequest, PolicyResponse, PolicyUpdateRequest,
+    BuiltInPolicyResponse, 
+    BuiltInPolicyUpdateRequest, 
+    PolicyAPICheckResponse, 
+    PolicyCreateRequest, 
+    PolicyResponse, 
+    PolicyUpdateRequest,
 } from './types';
 
 export class PolicyAPI extends BaseAPI implements EntityAPI<Policy> {

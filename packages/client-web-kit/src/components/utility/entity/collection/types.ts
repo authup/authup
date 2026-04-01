@@ -24,7 +24,9 @@ import type {
 } from 'rapiq';
 import type {
     MaybeRef,
-    Ref, SetupContext, VNodeChild,
+    Ref, 
+    SetupContext, 
+    VNodeChild,
 } from 'vue';
 import type { EntitySocketManagerCreateContext } from '../socket';
 import type { EntityCollectionSlotName } from './constants';

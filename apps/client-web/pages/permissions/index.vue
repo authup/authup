@@ -35,13 +35,19 @@ export default defineNuxtComponent({
 
         const handleDeleted = (e: Permission) => {
             if (toast) {
-                toast.show({ variant: 'success', body: `The permission ${e.name} was successfully deleted.` });
+                toast.show({
+                    variant: 'success',
+                    body: `The permission ${e.name} was successfully deleted.` 
+                });
             }
         };
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

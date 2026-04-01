@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    MongoQuery,
-} from '@ucast/mongo2js';
+import type { MongoQuery, } from '@ucast/mongo2js';
 import type { PolicyBase } from '../../types';
 
 export type AttributesPolicyQuery<T> = MongoQuery<T>;

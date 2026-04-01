@@ -14,21 +14,38 @@ import {
 } from 'typeorm';
 import type { Realm } from '@authup/core-kit';
 
-@Entity({ name: 'auth_realms' })
+@Entity({
+    name: 'auth_realms' 
+})
 export class RealmEntity implements Realm {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'varchar', length: 128, unique: true })
+    @Column({
+        type: 'varchar',
+        length: 128,
+        unique: true 
+    })
     name: string;
 
-    @Column({ type: 'varchar', length: 256, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 256,
+        nullable: true 
+    })
     display_name: string | null;
 
-    @Column({ type: 'text', nullable: true, default: null })
+    @Column({
+        type: 'text',
+        nullable: true,
+        default: null 
+    })
     description: string | null;
 
-    @Column({ type: 'boolean', default: false })
+    @Column({
+        type: 'boolean',
+        default: false 
+    })
     built_in: boolean;
 
     @CreateDateColumn()

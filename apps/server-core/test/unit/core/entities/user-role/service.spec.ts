@@ -9,7 +9,10 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { UserRole } from '@authup/core-kit';
 import {
-    beforeEach, describe, expect, it,
+    beforeEach, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { UserRoleService } from '../../../../../src/core/entities/user-role/service.ts';
@@ -25,7 +28,9 @@ describe('core/entities/user-role/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<UserRole>();
-        service = new UserRoleService({ repository });
+        service = new UserRoleService({
+            repository 
+        });
     });
 
     describe('getMany', () => {
@@ -63,8 +68,12 @@ describe('core/entities/user-role/service', () => {
             const data = {
                 user_id: randomUUID(),
                 role_id: randomUUID(),
-                user: { realm_id: randomUUID() },
-                role: { realm_id: randomUUID() },
+                user: {
+                    realm_id: randomUUID() 
+                },
+                role: {
+                    realm_id: randomUUID() 
+                },
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -75,7 +84,10 @@ describe('core/entities/user-role/service', () => {
 
         it('should call preCheck with USER_ROLE_CREATE', async () => {
             const actor = createAllowAllActor();
-            await service.create({ user_id: randomUUID(), role_id: randomUUID() }, actor);
+            await service.create({
+                user_id: randomUUID(),
+                role_id: randomUUID() 
+            }, actor);
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.USER_ROLE_CREATE,
             });
@@ -83,7 +95,10 @@ describe('core/entities/user-role/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(
-                service.create({ user_id: randomUUID(), role_id: randomUUID() }, createDenyAllActor()),
+                service.create({
+                    user_id: randomUUID(),
+                    role_id: randomUUID() 
+                }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
     });

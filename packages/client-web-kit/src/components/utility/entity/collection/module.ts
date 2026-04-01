@@ -8,17 +8,15 @@
 import { hasOwnProperty } from '@authup/kit';
 import type { EntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
-import type {
-    ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput,
-} from '@vuecs/list-controls';
-import {
-    buildList,
-} from '@vuecs/list-controls';
+import type { ListFooterBuildOptionsInput,ListHeaderBuildOptionsInput, } from '@vuecs/list-controls';
+import { buildList, } from '@vuecs/list-controls';
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type { Ref, VNodeChild } from 'vue';
 import {
-    computed, isRef,
-    ref, unref,
+    computed, 
+    isRef,
+    ref, 
+    unref,
 } from 'vue';
 import { createMerger, isObject } from 'smob';
 import { boolableToObject } from '../../../../utils';
@@ -121,7 +119,9 @@ function create<
             }
 
             const nextQuery : ListMeta<RECORD> = merger(
-                (filters ? { filters } : {}),
+                (filters ? {
+                    filters 
+                } : {}),
                 input || {},
                 {
                     pagination: {
@@ -198,7 +198,9 @@ function create<
                 typeof renderOptions.body === 'undefined' ||
                 typeof renderOptions.body === 'boolean'
             ) {
-                renderOptions.body = { item: renderOptions.item };
+                renderOptions.body = {
+                    item: renderOptions.item 
+                };
             } else {
                 renderOptions.body.item = renderOptions.item;
             }

@@ -13,7 +13,9 @@ export default defineNuxtComponent({
         AClientForm,
     },
     emits: ['failed', 'created'],
-    setup(props, { emit }) {
+    setup(props, {
+        emit 
+    }) {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -22,7 +24,9 @@ export default defineNuxtComponent({
         });
 
         const handleCreated = (e: Client) => {
-            navigateTo({ path: `/clients/${e.id}` });
+            navigateTo({
+                path: `/clients/${e.id}` 
+            });
         };
 
         const handleFailed = (e: Error) => {
@@ -30,7 +34,9 @@ export default defineNuxtComponent({
         };
 
         const store = injectStore();
-        const { realmManagementId } = storeToRefs(store);
+        const {
+            realmManagementId 
+        } = storeToRefs(store);
 
         return {
             realmManagementId,

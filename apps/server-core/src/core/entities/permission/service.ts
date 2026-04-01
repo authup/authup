@@ -126,7 +126,9 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Permission> {
-        const { entity } = await this.save(undefined, data, actor);
+        const {
+            entity 
+        } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -135,7 +137,11 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Permission> {
-        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+        const {
+            entity 
+        } = await this.save(idOrName, data, actor, {
+            updateOnly: true 
+        });
         return entity;
     }
 
@@ -144,7 +150,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         data: Record<string, any>,
         actor: ActorContext,
         options: { updateOnly?: boolean } = {},
-    ): Promise<{ entity: Permission, created: boolean }> {
+    ): Promise<{
+        entity: Permission,
+        created: boolean 
+    }> {
         let group: string;
 
         const realm = typeof data.realm_id === 'string' ?
@@ -173,14 +182,20 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.PERMISSION_UPDATE 
+            });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_CREATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.PERMISSION_CREATE 
+            });
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, { group });
+        const validated = await this.validator.run(data, {
+            group 
+        });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -209,7 +224,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
             await this.repository.save(entity);
 
-            return { entity, created: false };
+            return {
+                entity,
+                created: false 
+            };
         }
 
         if (!isPropertySet(validated, 'realm_id') && actor.identity) {
@@ -232,16 +250,23 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         await this.assignToAdminRole(entity);
         await this.assignToRealmAdminRoles(entity);
 
-        return { entity, created: true };
+        return {
+            entity,
+            created: true 
+        };
     }
 
     async delete(
         id: string,
         actor: ActorContext,
     ): Promise<Permission> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.PERMISSION_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -257,7 +282,9 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

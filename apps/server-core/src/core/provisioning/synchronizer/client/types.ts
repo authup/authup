@@ -14,10 +14,7 @@ import type {
 } from '../../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
-import type {
-    IProvisioningSynchronizer,
-
-} from '../../types.ts';
+import type { IProvisioningSynchronizer, } from '../../types.ts';
 
 export type ClientProvisioningSynchronizerContext = {
     clientRepository: IClientRepository,

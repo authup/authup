@@ -11,7 +11,11 @@ import PageFooter from '../components/footer.vue';
 import { defineNuxtComponent } from '#app';
 
 export default defineNuxtComponent({
-    components: { PageHeader, PageSidebar, PageFooter },
+    components: {
+        PageHeader,
+        PageSidebar,
+        PageFooter 
+    },
 });
 </script>
 

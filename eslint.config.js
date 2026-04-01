@@ -8,7 +8,10 @@
 import eslintConfig from '@tada5hi/eslint-config';
 
 export default eslintConfig(
-    { typescript: true, vue: true },
+    {
+        typescript: true,
+        vue: true 
+    },
     {
         rules: {
             '@typescript-eslint/no-unused-vars': ['error', {
@@ -16,7 +19,7 @@ export default eslintConfig(
             }],
             '@typescript-eslint/no-use-before-define': 'off',
             '@typescript-eslint/no-this-alias': 'off',
-            '@typescript-eslint/only-throw-error': 'off'
+            '@typescript-eslint/only-throw-error': 'off',
         },
     },
     {

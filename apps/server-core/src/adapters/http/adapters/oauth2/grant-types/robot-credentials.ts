@@ -11,9 +11,7 @@ import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { Robot } from '@authup/core-kit';
 import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
-import {
-    RobotCredentialsGrant,
-} from '../../../../../core/index.ts';
+import { RobotCredentialsGrant, } from '../../../../../core/index.ts';
 import type { HTTPOAuth2RobotCredentialsGrantContext, IHTTPOAuth2Grant } from './types.ts';
 
 export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements IHTTPOAuth2Grant {
@@ -36,7 +34,9 @@ export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements 
         return this.runWith(
             entity,
             {
-                ipAddress: getRequestIP(req, { trustProxy: true }),
+                ipAddress: getRequestIP(req, {
+                    trustProxy: true 
+                }),
                 userAgent: getRequestHeader(req, 'user-agent'),
             },
         );

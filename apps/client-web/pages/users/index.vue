@@ -34,13 +34,19 @@ export default defineNuxtComponent({
 
         const handleDeleted = (e: User) => {
             if (toast) {
-                toast.show({ variant: 'success', body: `The user ${e.name} was successfully deleted.` });
+                toast.show({
+                    variant: 'success',
+                    body: `The user ${e.name} was successfully deleted.` 
+                });
             }
         };
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

@@ -9,7 +9,12 @@ import { EntityType } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    computed, defineComponent, h, reactive, ref, watch,
+    computed, 
+    defineComponent, 
+    h, 
+    reactive, 
+    ref, 
+    watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Role } from '@authup/core-kit';
@@ -73,9 +78,7 @@ export const ARoleForm = defineComponent({
                 minLength: minLength(5),
                 maxLength: maxLength(4096),
             },
-            realm_id: {
-
-            },
+            realm_id: {},
         }, form);
 
         const store = injectStore();
@@ -128,10 +131,18 @@ export const ARoleForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.REALM },
+                {
+                    key: TranslatorTranslationDefaultKey.NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.REALM 
+                },
             ],
         );
 

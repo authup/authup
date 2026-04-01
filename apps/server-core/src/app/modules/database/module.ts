@@ -6,8 +6,10 @@
  */
 
 import {
-    DomainEventPublisher, DomainEventRedisPublisher,
-    DomainEventSocketPublisher, createRedisClient,
+    DomainEventPublisher, 
+    DomainEventRedisPublisher,
+    DomainEventSocketPublisher, 
+    createRedisClient,
 } from '@authup/server-kit';
 import { AuthupError } from '@authup/errors';
 import type { DataSourceOptions } from 'typeorm';
@@ -90,7 +92,9 @@ export class DatabaseModule implements IModule {
             await this.migrate(container, dataSource);
         }
 
-        container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
+        container.register(DatabaseInjectionKey.DataSource, {
+            useValue: dataSource 
+        });
 
         this.registerRepositories(container, dataSource);
         this.registerEventPublisher(container);
@@ -119,7 +123,11 @@ export class DatabaseModule implements IModule {
 
         if (!check.exists) {
             logger.debug('Creating database...');
-            await createDatabase({ options, synchronize: false, ifNotExist: true });
+            await createDatabase({
+                options,
+                synchronize: false,
+                ifNotExist: true 
+            });
             logger.debug('Created database');
         }
     }
@@ -178,7 +186,6 @@ export class DatabaseModule implements IModule {
         }
 
         for (const entity of entities) {
-
             if (InstanceChecker.isEntitySchema(entity)) {
                 continue;
             }

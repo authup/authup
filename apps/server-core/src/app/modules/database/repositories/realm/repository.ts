@@ -22,12 +22,16 @@ export class RealmRepositoryAdapter implements IRealmRepository {
     }
 
     findOneById(id: string): Promise<Realm | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     findOneByName(name: string): Promise<Realm | null> {
         const qb = this.repository.createQueryBuilder('realm');
-        qb.where('realm.name LIKE :name', { name });
+        qb.where('realm.name LIKE :name', {
+            name 
+        });
 
         return qb.getOne();
     }
@@ -36,7 +40,9 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         const qb = this.repository.createQueryBuilder('realm');
         qb.groupBy('realm.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'realm',
             filters: {
                 allowed: ['id', 'built_in', 'display_name', 'name'],
@@ -112,7 +118,9 @@ export class RealmRepositoryAdapter implements IRealmRepository {
         }
 
         if (!entity && withFallback) {
-            entity = await this.findOneBy({ name: REALM_MASTER_NAME });
+            entity = await this.findOneBy({
+                name: REALM_MASTER_NAME 
+            });
         }
 
         return entity;

@@ -7,9 +7,7 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type {
-    UserRoleEntity,
-} from '../../../../../database/domains/index.ts';
+import type { UserRoleEntity, } from '../../../../../database/domains/index.ts';
 
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
@@ -21,7 +19,9 @@ export class UserRoleRequestValidator extends Container<
 
         this.mount(
             'user_id',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -32,7 +32,9 @@ export class UserRoleRequestValidator extends Container<
 
         this.mount(
             'role_id',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain

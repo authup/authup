@@ -8,7 +8,10 @@
 import { ErrorCode } from '@authup/errors';
 import { defineIssueItem } from 'validup';
 import type {
-    IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult, PolicyEvaluators,
+    IPolicyEvaluator, 
+    PolicyEvaluationContext, 
+    PolicyEvaluationResult, 
+    PolicyEvaluators,
 } from '../evaluation';
 import { maybeInvertPolicyOutcome } from '../helpers';
 import type { PolicyIssue } from '../issue';

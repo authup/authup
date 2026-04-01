@@ -20,13 +20,17 @@ export class RobotValidator extends Container<
 
         this.mount(
             'secret',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'active',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.boolean()),
         );
 
@@ -37,7 +41,9 @@ export class RobotValidator extends Container<
                 .max(128)
                 .check((ctx) => {
                     try {
-                        isRobotNameValid(ctx.value, { throwOnFailure: true });
+                        isRobotNameValid(ctx.value, {
+                            throwOnFailure: true 
+                        });
                     } catch (e) {
                         ctx.issues.push({
                             input: ctx.value,
@@ -50,36 +56,50 @@ export class RobotValidator extends Container<
 
         this.mount(
             'name',
-            { group: ValidatorGroup.CREATE },
+            {
+                group: ValidatorGroup.CREATE 
+            },
             nameValidator,
         );
         this.mount(
             'name',
-            { group: ValidatorGroup.UPDATE, optional: true },
+            {
+                group: ValidatorGroup.UPDATE,
+                optional: true 
+            },
             nameValidator,
         );
 
         this.mount(
             'display_name',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(5).max(4096).nullable()),
         );
 
         this.mount(
             'user_id',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.uuid()),
         );
 
         this.mount(
             'realm_id',
-            { group: ValidatorGroup.CREATE, optional: true },
+            {
+                group: ValidatorGroup.CREATE,
+                optional: true 
+            },
             createValidator(z.uuid()),
         );
     }

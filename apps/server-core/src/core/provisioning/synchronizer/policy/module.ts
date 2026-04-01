@@ -60,7 +60,9 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         await children.reduce(async (prev, child) => {
             await prev;
             child.attributes.parent_id = parentId;
-            child.attributes.parent = { id: parentId } as any;
+            child.attributes.parent = {
+                id: parentId 
+            } as any;
             await this.synchronize(child);
         }, Promise.resolve());
 

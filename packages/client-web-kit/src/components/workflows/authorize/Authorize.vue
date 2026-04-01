@@ -5,13 +5,14 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type {
-    Client, OAuth2AuthorizationCodeRequest, Scope,
-} from '@authup/core-kit';
+import type { Client,OAuth2AuthorizationCodeRequest,Scope, } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
-    Suspense, defineComponent, h, ref,
+    Suspense, 
+    defineComponent, 
+    h, 
+    ref,
 } from 'vue';
 import { injectHTTPClient, injectStore } from '../../../core';
 import Login from '../Login.vue';
@@ -20,11 +21,15 @@ import AuthorizeText from './AuthorizeText.vue';
 
 const wrapChild = (child: VNodeChild) => h(
     'div',
-    { class: 'd-flex align-items-center justify-content-center h-100' },
+    {
+        class: 'd-flex align-items-center justify-content-center h-100' 
+    },
     [
         h(
             'div',
-            { class: 'authorize' },
+            {
+                class: 'authorize' 
+            },
             [
                 child,
             ],
@@ -59,7 +64,9 @@ export default defineComponent({
     setup(props) {
         const httpClient = injectHTTPClient();
         const store = injectStore();
-        const { loggedIn } = storeToRefs(store);
+        const {
+            loggedIn 
+        } = storeToRefs(store);
 
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);

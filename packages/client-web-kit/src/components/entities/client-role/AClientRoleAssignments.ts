@@ -16,7 +16,9 @@ export const AClientRoleAssignments = defineComponent({
         entityId: String,
         realmId: String,
     },
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         return () => h(ARoles, {
             query: {
                 filters: {

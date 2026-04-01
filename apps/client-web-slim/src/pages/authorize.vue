@@ -6,9 +6,7 @@
   -->
 <script lang="ts">
 import { AAuthorize } from '@authup/client-web-kit';
-import type {
-    Client, OAuth2AuthorizationCodeRequest, Scope,
-} from '@authup/core-kit';
+import type { Client,OAuth2AuthorizationCodeRequest,Scope, } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import { injectPayload } from '../di';
 

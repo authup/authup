@@ -6,14 +6,21 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import type { LdapIdentityProvider } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createTestApplication } from '../../../../../app';
 import { createFakeLdapIdentityProvider } from '../../../../../utils/index.ts';
 import {
-    createLdapTestClient, createLdapTestClientURL, createLdapTestUserAccount, dropLdapTestUserAccount,
+    createLdapTestClient, 
+    createLdapTestClientURL, 
+    createLdapTestUserAccount, 
+    dropLdapTestUserAccount,
 } from '../../../../adapters/ldap/helpers';
 
 describe('src/http/controllers/identity-provider', () => {

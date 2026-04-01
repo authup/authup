@@ -24,19 +24,29 @@ export default defineComponent({
 
         const items = [
             {
-                name: 'General', icon: 'fas fa-bars', urlSuffix: '',
+                name: 'General',
+                icon: 'fas fa-bars',
+                urlSuffix: '',
             },
             {
-                name: 'Scopes', icon: 'fa-solid fa-meteor', urlSuffix: '/scopes',
+                name: 'Scopes',
+                icon: 'fa-solid fa-meteor',
+                urlSuffix: '/scopes',
             },
             {
-                name: 'URL', icon: 'fa-solid fa-link', urlSuffix: '/url',
+                name: 'URL',
+                icon: 'fa-solid fa-link',
+                urlSuffix: '/url',
             },
             {
-                name: 'Permissions', icon: 'fas fa-user-secret', urlSuffix: '/permissions',
+                name: 'Permissions',
+                icon: 'fas fa-user-secret',
+                urlSuffix: '/permissions',
             },
             {
-                name: 'Roles', icon: 'fa-solid fa-user-group', urlSuffix: '/roles',
+                name: 'Roles',
+                icon: 'fa-solid fa-user-group',
+                urlSuffix: '/roles',
             },
         ];
 
@@ -48,15 +58,22 @@ export default defineComponent({
         try {
             entity.value = await injectHTTPClient()
                 .client
-                .getOne(route.params.id as string, { fields: ['+secret'] });
+                .getOne(route.params.id as string, {
+                    fields: ['+secret'] 
+                });
         } catch {
-            await navigateTo({ path: '/clients' });
+            await navigateTo({
+                path: '/clients' 
+            });
             throw createError({});
         }
 
         const handleUpdated = (e: Client) => {
             if (toast) {
-                toast.show({ variant: 'success', body: 'The client was successfully updated.' });
+                toast.show({
+                    variant: 'success',
+                    body: 'The client was successfully updated.' 
+                });
             }
 
             extendObject(entity.value, e);
@@ -64,7 +81,10 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'success', body: e.message });
+                toast.show({
+                    variant: 'success',
+                    body: e.message 
+                });
             }
         };
 

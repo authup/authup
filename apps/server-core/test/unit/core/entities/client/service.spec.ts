@@ -9,7 +9,11 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
 import {
-    beforeEach, describe, expect, it, vi,
+    beforeEach, 
+    describe, 
+    expect, 
+    it, 
+    vi,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientService } from '../../../../../src/core/entities/client/service.ts';
@@ -41,7 +45,10 @@ describe('core/entities/client/service', () => {
     beforeEach(() => {
         repository = new FakeClientRepository();
         realmRepository = new FakeRealmRepository();
-        service = new ClientService({ repository, realmRepository });
+        service = new ClientService({
+            repository,
+            realmRepository 
+        });
     });
 
     describe('getMany', () => {
@@ -53,7 +60,10 @@ describe('core/entities/client/service', () => {
 
         it('should filter out entities with plaintext secrets on per-record permission failure', async () => {
             repository.seed([
-                createFakeClient({ name: 'safe', secret: null }),
+                createFakeClient({
+                    name: 'safe',
+                    secret: null 
+                }),
                 createFakeClient({
                     name: 'secret-plain',
                     secret: 'mysecret',
@@ -92,13 +102,17 @@ describe('core/entities/client/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const entity = repository.seed(createFakeClient({ name: 'test-client' }));
+            const entity = repository.seed(createFakeClient({
+                name: 'test-client' 
+            }));
             const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.name).toBe('test-client');
         });
 
         it('should return entity by name', async () => {
-            repository.seed([createFakeClient({ name: 'my-client' })]);
+            repository.seed([createFakeClient({
+                name: 'my-client' 
+            })]);
             const result = await service.getOne('my-client', createAllowAllActor());
             expect(result.name).toBe('my-client');
         });
@@ -106,16 +120,23 @@ describe('core/entities/client/service', () => {
         it('should return entity by name with realmId', async () => {
             const realmId = randomUUID();
             realmRepository.seed([{
-                id: realmId, name: 'client-realm', built_in: false,
+                id: realmId,
+                name: 'client-realm',
+                built_in: false,
             }]);
-            repository.seed([createFakeClient({ name: 'scoped-client', realm_id: realmId })]);
+            repository.seed([createFakeClient({
+                name: 'scoped-client',
+                realm_id: realmId 
+            })]);
 
             const result = await service.getOne('scoped-client', createAllowAllActor(), realmId);
             expect(result.name).toBe('scoped-client');
         });
 
         it('should throw NotFoundError when realm does not exist for name lookup', async () => {
-            repository.seed([createFakeClient({ name: 'some-client' })]);
+            repository.seed([createFakeClient({
+                name: 'some-client' 
+            })]);
 
             await expect(
                 service.getOne('some-client', createAllowAllActor(), randomUUID()),
@@ -144,7 +165,9 @@ describe('core/entities/client/service', () => {
     describe('create', () => {
         it('should create a client with valid data', async () => {
             const result = await service.create(
-                { name: 'new-client' },
+                {
+                    name: 'new-client' 
+                },
                 createAllowAllActor(),
             );
 
@@ -154,7 +177,10 @@ describe('core/entities/client/service', () => {
 
         it('should generate secret for confidential client', async () => {
             const result = await service.create(
-                { name: 'confidential-client', is_confidential: true },
+                {
+                    name: 'confidential-client',
+                    is_confidential: true 
+                },
                 createAllowAllActor(),
             );
 
@@ -164,7 +190,10 @@ describe('core/entities/client/service', () => {
 
         it('should set secret to null for non-confidential client', async () => {
             const result = await service.create(
-                { name: 'public-client', is_confidential: false },
+                {
+                    name: 'public-client',
+                    is_confidential: false 
+                },
                 createAllowAllActor(),
             );
 
@@ -173,7 +202,9 @@ describe('core/entities/client/service', () => {
 
         it('should call preCheck with CLIENT_CREATE', async () => {
             const actor = createAllowAllActor();
-            await service.create({ name: 'test-client' }, actor);
+            await service.create({
+                name: 'test-client' 
+            }, actor);
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.CLIENT_CREATE,
             });
@@ -181,7 +212,9 @@ describe('core/entities/client/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(
-                service.create({ name: 'test-client' }, createDenyAllActor()),
+                service.create({
+                    name: 'test-client' 
+                }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
 
@@ -189,50 +222,71 @@ describe('core/entities/client/service', () => {
             const realmId = randomUUID();
             const actor = createNonMasterRealmActor(realmId);
 
-            const result = await service.create({ name: 'realm-client' }, actor);
+            const result = await service.create({
+                name: 'realm-client' 
+            }, actor);
             expect(result.realm_id).toBe(realmId);
         });
     });
 
     describe('update', () => {
         it('should update an existing client', async () => {
-            const entity = repository.seed(createFakeClient({ name: 'old-name' }));
+            const entity = repository.seed(createFakeClient({
+                name: 'old-name' 
+            }));
 
-            const result = await service.update(entity.id, { name: 'new-name' }, createAllowAllActor());
+            const result = await service.update(entity.id, {
+                name: 'new-name' 
+            }, createAllowAllActor());
             expect(result.name).toBe('new-name');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', {
+                    name: 'x' 
+                }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
         it('should generate secret when confidential client has no secret', async () => {
             const entity = repository.seed(createFakeClient({
-                name: 'client', is_confidential: true, secret: null,
+                name: 'client',
+                is_confidential: true,
+                secret: null,
             }));
 
-            const result = await service.update(entity.id, { description: 'updated' }, createAllowAllActor());
+            const result = await service.update(entity.id, {
+                description: 'updated' 
+            }, createAllowAllActor());
             expect(result.secret).toBeDefined();
             expect(result.secret).not.toBeNull();
         });
 
         it('should clear secret when client is set to non-confidential', async () => {
             const entity = repository.seed(createFakeClient({
-                name: 'client', is_confidential: true, secret: 'old-secret',
+                name: 'client',
+                is_confidential: true,
+                secret: 'old-secret',
             }));
 
-            const result = await service.update(entity.id, { is_confidential: false }, createAllowAllActor());
+            const result = await service.update(entity.id, {
+                is_confidential: false 
+            }, createAllowAllActor());
             expect(result.secret).toBeNull();
         });
     });
 
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
-            const { entity, created } = await service.save(
+            const {
+                entity, 
+                created 
+            } = await service.save(
                 undefined,
-                { name: 'upserted-client' },
+                {
+                    name: 'upserted-client' 
+                },
                 createAllowAllActor(),
             );
 
@@ -241,15 +295,25 @@ describe('core/entities/client/service', () => {
         });
 
         it('should update when entity found', async () => {
-            const entity = repository.seed(createFakeClient({ name: 'old' }));
+            const entity = repository.seed(createFakeClient({
+                name: 'old' 
+            }));
 
-            const { created } = await service.save(entity.id, { name: 'updated' }, createAllowAllActor());
+            const {
+                created 
+            } = await service.save(entity.id, {
+                name: 'updated' 
+            }, createAllowAllActor());
             expect(created).toBe(false);
         });
 
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
-                service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
+                service.save('non-existent-id', {
+                    name: 'test' 
+                }, createAllowAllActor(), {
+                    updateOnly: true 
+                }),
             ).rejects.toThrow(NotFoundError);
         });
     });

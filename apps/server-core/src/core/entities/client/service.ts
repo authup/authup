@@ -52,12 +52,16 @@ export class ClientService extends AbstractEntityService implements IClientServi
             ],
         });
 
-        const { data: entities, meta } = await this.repository.findMany(query);
-        let { total } = meta;
+        const {
+            data: entities, 
+            meta 
+        } = await this.repository.findMany(query);
+        let {
+            total 
+        } = meta;
 
         const data: Client[] = [];
         for (const entity of entities) {
-
             if (
                 entity.secret &&
                 !entity.secret_encrypted &&
@@ -85,7 +89,13 @@ export class ClientService extends AbstractEntityService implements IClientServi
             data.push(entity);
         }
 
-        return { data, meta: { ...meta, total } };
+        return {
+            data,
+            meta: {
+                ...meta,
+                total 
+            } 
+        };
     }
 
     async getOne(
@@ -147,7 +157,9 @@ export class ClientService extends AbstractEntityService implements IClientServi
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Client> {
-        const { entity } = await this.save(undefined, data, actor);
+        const {
+            entity 
+        } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -156,7 +168,11 @@ export class ClientService extends AbstractEntityService implements IClientServi
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Client> {
-        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+        const {
+            entity 
+        } = await this.save(idOrName, data, actor, {
+            updateOnly: true 
+        });
         return entity;
     }
 
@@ -165,7 +181,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
         data: Record<string, any>,
         actor: ActorContext,
         options: { updateOnly?: boolean } = {},
-    ): Promise<{ entity: Client, created: boolean }> {
+    ): Promise<{
+        entity: Client,
+        created: boolean 
+    }> {
         let group: string;
 
         const realm = typeof data.realm_id === 'string' ?
@@ -194,14 +213,20 @@ export class ClientService extends AbstractEntityService implements IClientServi
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.CLIENT_UPDATE 
+            });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_CREATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.CLIENT_CREATE 
+            });
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, { group });
+        const validated = await this.validator.run(data, {
+            group 
+        });
 
         await this.repository.validateJoinColumns(validated);
         await this.repository.checkUniqueness(validated, entity || undefined);
@@ -242,7 +267,10 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
             await this.repository.save(entity);
 
-            return { entity, created: false };
+            return {
+                entity,
+                created: false 
+            };
         }
 
         if (!validated.realm_id) {
@@ -273,16 +301,23 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         await this.repository.save(entity);
 
-        return { entity, created: true };
+        return {
+            entity,
+            created: true 
+        };
     }
 
     async delete(
         id: string,
         actor: ActorContext,
     ): Promise<Client> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.CLIENT_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -294,7 +329,9 @@ export class ClientService extends AbstractEntityService implements IClientServi
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

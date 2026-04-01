@@ -5,11 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission} from '@authup/specs';
+import type { OAuth2TokenGrantResponse,OAuth2TokenIntrospectionResponse,OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
 import {
-    DController, DGet, DPost, DRequest, DResponse, DTags,
+    DController, 
+    DGet, 
+    DPost, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
@@ -20,12 +24,11 @@ import type {
     IIdentityPermissionProvider,
     IIdentityResolver,
     IOAuth2TokenIssuer,
-    IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../../../../../core/index.ts';
-import {
-    OAuth2OpenIDClaimsBuilder,
+    IOAuth2TokenRevoker, 
+    IOAuth2TokenVerifier 
 } from '../../../../../core/index.ts';
-import type {
-    IHTTPOAuth2Grant} from '../../../adapters/index.ts';
+import { OAuth2OpenIDClaimsBuilder, } from '../../../../../core/index.ts';
+import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
 import {
     HTTPClientCredentialsGrant,
     HTTPOAuth2AuthorizeGrant,

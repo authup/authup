@@ -10,14 +10,18 @@ export default defineComponent({
         APolicyTypePicker,
     },
     emits: ['failed'],
-    setup(props, { emit }) {
+    setup(props, {
+        emit 
+    }) {
         const type = ref<string | null>(null);
         const handlePicked = (value: string) => {
             type.value = value;
         };
 
         const handleCreated = (e: Policy) => {
-            navigateTo({ path: `/policies/${e.id}` });
+            navigateTo({
+                path: `/policies/${e.id}` 
+            });
         };
 
         const handleFailed = (e: Error) => {

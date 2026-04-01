@@ -6,7 +6,13 @@
  */
 
 export type ObjectLiteral = Record<string | number, any>;
-export type Result<T> = { success: true; data: T } | { success: false; error: Error };
+export type Result<T> = {
+    success: true;
+    data: T 
+} | {
+    success: false;
+    error: Error 
+};
 
 export type ObjectRequired<
     T extends ObjectLiteral,

@@ -45,7 +45,9 @@ export class RegistrationService implements IRegistrationService {
         validator.mount(new UserValidator({
             pathsToInclude: ['email', 'name', 'password', 'realm_id'],
         }));
-        const validated = await validator.run(data, { group: 'create' });
+        const validated = await validator.run(data, {
+            group: 'create' 
+        });
 
         await this.repository.validateJoinColumns(validated);
 

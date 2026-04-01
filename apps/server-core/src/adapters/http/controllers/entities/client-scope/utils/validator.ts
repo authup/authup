@@ -7,9 +7,7 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type {
-    ClientScopeEntity,
-} from '../../../../../database/domains/index.ts';
+import type { ClientScopeEntity, } from '../../../../../database/domains/index.ts';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class ClientScopeRequestValidator extends Container<ClientScopeEntity> {
@@ -18,7 +16,9 @@ export class ClientScopeRequestValidator extends Container<ClientScopeEntity> {
 
         this.mount(
             'client_id',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -29,7 +29,9 @@ export class ClientScopeRequestValidator extends Container<ClientScopeEntity> {
 
         this.mount(
             'scope_id',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain

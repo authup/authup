@@ -19,12 +19,8 @@ import {
     ref,
     watch,
 } from 'vue';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
-import type {
-    Scope,
-} from '@authup/core-kit';
+import { maxLength,minLength,required, } from '@vuelidate/validators';
+import type { Scope, } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
@@ -42,7 +38,8 @@ import {
     getVuelidateSeverity,
     injectStore,
     storeToRefs,
-    useTranslationsForGroup, useTranslationsForNestedValidation,
+    useTranslationsForGroup, 
+    useTranslationsForNestedValidation,
 } from '../../../core';
 import {
     defineEntityManager,
@@ -87,9 +84,7 @@ export const AScopeForm = defineComponent({
                 minLength: minLength(3),
                 maxLength: maxLength(4096),
             },
-            realm_id: {
-
-            },
+            realm_id: {},
         }, form);
 
         const store = injectStore();
@@ -153,10 +148,18 @@ export const AScopeForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.REALM },
+                {
+                    key: TranslatorTranslationDefaultKey.NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.REALM 
+                },
             ],
         );
 

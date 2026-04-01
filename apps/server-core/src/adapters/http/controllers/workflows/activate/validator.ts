@@ -18,7 +18,10 @@ export class ActivateRequestValidator extends Container<{ token: string }> {
                 const chain = createValidationChain();
                 return chain.exists()
                     .notEmpty()
-                    .isLength({ min: 3, max: 256 });
+                    .isLength({
+                        min: 3,
+                        max: 256 
+                    });
             }),
         );
     }

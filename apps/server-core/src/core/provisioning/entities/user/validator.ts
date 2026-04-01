@@ -16,12 +16,16 @@ export class UserProvisioningValidator extends Container<UserProvisioningEntity>
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
-        this.mount('strategy', { optional: true }, strategyValidator);
+        this.mount('strategy', {
+            optional: true 
+        }, strategyValidator);
 
         const attributesValidator = new UserValidator();
         this.mount('attributes', attributesValidator);
 
         const relationsValidator = new UserProvisioningRelationsValidator();
-        this.mount('relations', { optional: true }, relationsValidator);
+        this.mount('relations', {
+            optional: true 
+        }, relationsValidator);
     }
 }

@@ -8,9 +8,7 @@
 import { defineComponent, h } from 'vue';
 import type { Permission } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
-import {
-    ARobotPermissionAssignment,
-} from './ARobotPermissionAssignment';
+import { ARobotPermissionAssignment, } from './ARobotPermissionAssignment';
 import { APermissions } from '../permission';
 
 export const ARobotPermissionAssignments = defineComponent({
@@ -20,7 +18,9 @@ export const ARobotPermissionAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         return () => h(APermissions, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Permission }) => h(
                 ARobotPermissionAssignment,

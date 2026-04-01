@@ -5,18 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    IdentityProvider, LdapIdentityProvider,
-} from '@authup/core-kit';
+import type { IdentityProvider,LdapIdentityProvider, } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import {
-    numeric, required,
-} from '@vuelidate/validators';
+import { numeric,required, } from '@vuelidate/validators';
 import type { PropType } from 'vue';
-import {
-    defineComponent, reactive,
-} from 'vue';
+import { defineComponent,reactive, } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 

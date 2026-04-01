@@ -6,9 +6,7 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import type {
-    OAuth2TokenGrantResponse,
-} from '@authup/specs';
+import type { OAuth2TokenGrantResponse, } from '@authup/specs';
 import type { ISessionManager } from '../../authentication/index.ts';
 import type { IOAuth2TokenIssuer, IOAuth2TokenRevoker, IOAuth2TokenVerifier } from '../token/index.ts';
 

@@ -6,7 +6,11 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { createTestApplication } from '../../../../app';
 import { createFakeUser } from '../../../../utils/index.ts';

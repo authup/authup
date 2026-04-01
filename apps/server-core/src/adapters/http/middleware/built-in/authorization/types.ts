@@ -6,7 +6,13 @@
  */
 
 import type { IPermissionProvider } from '@authup/access';
-import type { IIdentityPermissionProvider, IIdentityResolver, IOAuth2TokenVerifier, ISessionManager } from '../../../../../core/index.ts';
+import type {
+ 
+    IIdentityPermissionProvider, 
+    IIdentityResolver, 
+    IOAuth2TokenVerifier, 
+    ISessionManager 
+} from '../../../../../core/index.ts';
 
 export type HTTPAuthorizationMiddlewareOptions = {
     clientAuthBasic?: boolean,

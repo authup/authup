@@ -31,7 +31,10 @@ import VApp from './App.vue';
 import { providePayload } from './di';
 import type { HydrationPayload } from './types';
 
-export function createApp(payload: HydrationPayload) : {app: App, router: Router} {
+export function createApp(payload: HydrationPayload) : {
+    app: App,
+    router: Router
+} {
     const app = createSSRApp(VApp);
     const pinia = createPinia();
 
@@ -95,5 +98,8 @@ export function createApp(payload: HydrationPayload) : {app: App, router: Router
         },
     });
 
-    return { app, router };
+    return {
+        app,
+        router
+    };
 }

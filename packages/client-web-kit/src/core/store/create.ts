@@ -10,9 +10,7 @@ import {
     PermissionMemoryProvider,
     PolicyEngine,
 } from '@authup/access';
-import {
-    OAuth2Error,
-} from '@authup/specs';
+import { OAuth2Error, } from '@authup/specs';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
@@ -23,9 +21,7 @@ import type {
     User,
 } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
-import {
-    Client,
-} from '@authup/core-http-kit';
+import { Client, } from '@authup/core-http-kit';
 import { StoreDispatcherEventName } from './dispatcher';
 import type { StoreCreateContext, StoreLoginContext } from './types';
 
@@ -350,7 +346,9 @@ export function createStore(context: StoreCreateContext) {
         const response = await client.token.createWithPassword({
             username: ctx.name,
             password: ctx.password,
-            ...(realmId.value ? { realm_id: ctx.realmId } : {}),
+            ...(realmId.value ? {
+                realm_id: ctx.realmId 
+            } : {}),
         });
 
         applyTokenGrantResponse(response);

@@ -6,20 +6,18 @@
  */
 
 import type {
-    ClientPermission, ClientRole, Permission, Role,
+    ClientPermission, 
+    ClientRole, 
+    Permission, 
+    Role,
 } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
-import type {
-    IClientRepository,
-} from '../../../entities/index.ts';
+import type { IClientRepository, } from '../../../entities/index.ts';
 import type { ClientProvisioningEntity } from '../../entities/client';
 import type { PermissionProvisioningEntity } from '../../entities/permission';
 import type { RoleProvisioningEntity } from '../../entities/role';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
-import type {
-    IProvisioningSynchronizer,
-
-} from '../../types.ts';
+import type { IProvisioningSynchronizer, } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import { ProvisioningEntityResolver } from '../entity-resolver.ts';
 import { ProvisioningJunctionSynchronizer } from '../junction-synchronizer.ts';
@@ -75,7 +73,10 @@ export class ClientProvisioningSynchronizer extends BaseProvisioningSynchronizer
             if (attributes) {
                 await this.clientRepository.remove(attributes);
             }
-            return { ...input, attributes: attributes || input.attributes };
+            return {
+                ...input,
+                attributes: attributes || input.attributes 
+            };
         }
 
         if (attributes) {

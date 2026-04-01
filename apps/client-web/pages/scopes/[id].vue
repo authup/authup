@@ -1,18 +1,14 @@
 <script lang="ts">
 import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Scope } from '@authup/core-kit';
-import {
-    PermissionName,
-} from '@authup/core-kit';
+import { PermissionName, } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
 import {
     definePageMeta,
     useToast,
 } from '#imports';
-import {
-    createError, navigateTo, useRoute,
-} from '#app';
+import { createError,navigateTo,useRoute, } from '#app';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
@@ -26,10 +22,14 @@ export default defineComponent({
 
         const items = [
             {
-                name: 'General', icon: 'fas fa-bars', urlSuffix: '',
+                name: 'General',
+                icon: 'fas fa-bars',
+                urlSuffix: '',
             },
             {
-                name: 'Clients', icon: 'fa-solid fa-ghost', urlSuffix: '/clients',
+                name: 'Clients',
+                icon: 'fa-solid fa-ghost',
+                urlSuffix: '/clients',
             },
         ];
 
@@ -43,13 +43,18 @@ export default defineComponent({
                 .scope
                 .getOne(route.params.id as string);
         } catch {
-            await navigateTo({ path: '/scopes' });
+            await navigateTo({
+                path: '/scopes' 
+            });
             throw createError({});
         }
 
         const handleUpdated = (e: Scope) => {
             if (toast) {
-                toast.show({ variant: 'success', body: 'The scope was successfully updated.' });
+                toast.show({
+                    variant: 'success',
+                    body: 'The scope was successfully updated.' 
+                });
             }
 
             extendObject(entity.value, e);
@@ -57,7 +62,10 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

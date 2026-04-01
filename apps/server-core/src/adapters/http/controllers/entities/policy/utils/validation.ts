@@ -11,9 +11,7 @@ import { isObject } from 'smob';
 import type { ValidatorContext } from 'validup';
 import { Container } from 'validup';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
-import type {
-    PolicyEntity,
-} from '../../../../../database/domains/index.ts';
+import type { PolicyEntity, } from '../../../../../database/domains/index.ts';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 import { PolicyAttributesValidator } from './attributes-validator.ts';
 
@@ -31,27 +29,43 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
                     min: 3,
                     max: 128,
                 })
-                .custom((value) => isPolicyNameValid(value, { throwOnFailure: true }));
+                .custom((value) => isPolicyNameValid(value, {
+                    throwOnFailure: true 
+                }));
         });
 
-        this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator);
-        this.mount('name', { group: RequestHandlerOperation.UPDATE, optional: true }, nameValidator);
+        this.mount('name', {
+            group: RequestHandlerOperation.CREATE 
+        }, nameValidator);
+        this.mount('name', {
+            group: RequestHandlerOperation.UPDATE,
+            optional: true 
+        }, nameValidator);
 
         this.mount(
             'display_name',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .isString()
-                    .isLength({ min: 3, max: 256 })
-                    .optional({ values: 'null' });
+                    .isLength({
+                        min: 3,
+                        max: 256 
+                    })
+                    .optional({
+                        values: 'null' 
+                    });
             }),
         );
 
         this.mount(
             'invert',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -61,45 +75,62 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
 
         this.mount(
             'type',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .exists()
                     .isString()
-                    .isLength({ min: 3, max: 128 });
+                    .isLength({
+                        min: 3,
+                        max: 128 
+                    });
             }),
         );
 
         this.mount(
             'parent_id',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .exists()
                     .isUUID()
-                    .optional({ values: 'null' });
+                    .optional({
+                        values: 'null' 
+                    });
             }),
         );
 
         this.mount(
             'realm_id',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .exists()
                     .isUUID()
-                    .optional({ values: 'null' });
+                    .optional({
+                        values: 'null' 
+                    });
             }),
         );
 
-        this.mount({ optional: true }, new PolicyAttributesValidator({}));
+        this.mount({
+            optional: true 
+        }, new PolicyAttributesValidator({}));
 
         this.mount(
             'children',
-            { optional: true },
+            {
+                optional: true 
+            },
             async (ctx: ValidatorContext) => {
                 if (!Array.isArray(ctx.value)) {
                     // todo: throw error

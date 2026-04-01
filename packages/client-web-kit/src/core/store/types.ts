@@ -9,7 +9,9 @@ import type {
     Store as BaseStore,
     StoreDefinition as BaseStoreDefinition,
     Pinia,
-    _ExtractActionsFromSetupStore, _ExtractGettersFromSetupStore, _ExtractStateFromSetupStore,
+    _ExtractActionsFromSetupStore, 
+    _ExtractGettersFromSetupStore, 
+    _ExtractStateFromSetupStore,
 } from 'pinia';
 import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';

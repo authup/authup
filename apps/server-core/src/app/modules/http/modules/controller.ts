@@ -86,7 +86,8 @@ import {
     ClientController,
     ClientPermissionController,
     ClientRoleController,
-    ClientScopeController, IdentityProviderController,
+    ClientScopeController, 
+    IdentityProviderController,
     OAuth2ProviderRoleController,
     PermissionController,
     PermissionPolicyController,
@@ -141,7 +142,8 @@ import {
     UserAttributeService,
     UserAuthenticator,
     UserPermissionService,
-    UserRoleService, UserService 
+    UserRoleService, 
+    UserService 
 } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
@@ -430,8 +432,14 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
-        const service = new ClientService({ repository, realmRepository: realmRepositoryAdapter });
-        return new ClientController({ service, repository });
+        const service = new ClientService({
+            repository,
+            realmRepository: realmRepositoryAdapter 
+        });
+        return new ClientController({
+            service,
+            repository 
+        });
     }
 
     createRobotController(container: IContainer) {
@@ -442,9 +450,15 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
-        const service = new RobotService({ repository, realmRepository: realmRepositoryAdapter });
+        const service = new RobotService({
+            repository,
+            realmRepository: realmRepositoryAdapter 
+        });
         return new RobotController({
-            service, repository, realmRepository: realmRepositoryAdapter, dataSource,
+            service,
+            repository,
+            realmRepository: realmRepositoryAdapter,
+            dataSource,
         });
     }
 
@@ -502,8 +516,13 @@ export class HTTPControllerModule {
             repository: container.resolve<Repository<Role>>(RoleEntity),
             realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
         });
-        const service = new RoleService({ repository, realmRepository });
-        return new RoleController({ service });
+        const service = new RoleService({
+            repository,
+            realmRepository 
+        });
+        return new RoleController({
+            service 
+        });
     }
 
     createClientPermissionController(container: IContainer) {
@@ -511,25 +530,40 @@ export class HTTPControllerModule {
             container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
         );
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        const service = new ClientPermissionService({ repository, identityPermissionProvider });
-        return new ClientPermissionController({ service });
+        const service = new ClientPermissionService({
+            repository,
+            identityPermissionProvider 
+        });
+        return new ClientPermissionController({
+            service 
+        });
     }
 
     createClientRoleController(container: IContainer) {
         const repository = new ClientRoleRepositoryAdapter(
             container.resolve<Repository<ClientRole>>(ClientRoleEntity),
         );
-        const service = new ClientRoleService({ repository });
+        const service = new ClientRoleService({
+            repository 
+        });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new ClientRoleController({ service, repository, identityPermissionProvider });
+        return new ClientRoleController({
+            service,
+            repository,
+            identityPermissionProvider 
+        });
     }
 
     createClientScopeController(container: IContainer) {
         const repository = new ClientScopeRepositoryAdapter(
             container.resolve<Repository<ClientScope>>(ClientScopeEntity),
         );
-        const service = new ClientScopeService({ repository });
-        return new ClientScopeController({ service });
+        const service = new ClientScopeService({
+            repository 
+        });
+        return new ClientScopeController({
+            service 
+        });
     }
 
     createRobotPermissionController(container: IContainer) {
@@ -537,25 +571,40 @@ export class HTTPControllerModule {
             container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
         );
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        const service = new RobotPermissionService({ repository, identityPermissionProvider });
-        return new RobotPermissionController({ service });
+        const service = new RobotPermissionService({
+            repository,
+            identityPermissionProvider 
+        });
+        return new RobotPermissionController({
+            service 
+        });
     }
 
     createRobotRoleController(container: IContainer) {
         const repository = new RobotRoleRepositoryAdapter(
             container.resolve<Repository<RobotRole>>(RobotRoleEntity),
         );
-        const service = new RobotRoleService({ repository });
+        const service = new RobotRoleService({
+            repository 
+        });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new RobotRoleController({ service, repository, identityPermissionProvider });
+        return new RobotRoleController({
+            service,
+            repository,
+            identityPermissionProvider 
+        });
     }
 
     createRoleAttributeController(container: IContainer) {
         const repository = new RoleAttributeRepositoryAdapter(
             container.resolve<Repository<RoleAttribute>>(RoleAttributeEntity),
         );
-        const service = new RoleAttributeService({ repository });
-        return new RoleAttributeController({ service });
+        const service = new RoleAttributeService({
+            repository 
+        });
+        return new RoleAttributeController({
+            service 
+        });
     }
 
     createRolePermissionController(container: IContainer) {
@@ -563,16 +612,25 @@ export class HTTPControllerModule {
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        const service = new RolePermissionService({ repository, identityPermissionProvider });
-        return new RolePermissionController({ service });
+        const service = new RolePermissionService({
+            repository,
+            identityPermissionProvider 
+        });
+        return new RolePermissionController({
+            service 
+        });
     }
 
     createPermissionPolicyController(container: IContainer) {
         const repository = new PermissionPolicyRepositoryAdapter(
             container.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity),
         );
-        const service = new PermissionPolicyService({ repository });
-        return new PermissionPolicyController({ service });
+        const service = new PermissionPolicyService({
+            repository 
+        });
+        return new PermissionPolicyController({
+            service 
+        });
     }
 
     createScopeController(container: IContainer) {
@@ -583,8 +641,13 @@ export class HTTPControllerModule {
             repository: container.resolve<Repository<Scope>>(ScopeEntity),
             realmRepository: container.resolve<Repository<Realm>>(RealmEntity),
         });
-        const service = new ScopeService({ repository, realmRepository });
-        return new ScopeController({ service });
+        const service = new ScopeService({
+            repository,
+            realmRepository 
+        });
+        return new ScopeController({
+            service 
+        });
     }
 
     createUserController(container: IContainer) {
@@ -595,16 +658,25 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
-        const service = new UserService({ repository, realmRepository: realmRepositoryAdapter });
-        return new UserController({ service });
+        const service = new UserService({
+            repository,
+            realmRepository: realmRepositoryAdapter 
+        });
+        return new UserController({
+            service 
+        });
     }
 
     createUserAttributeController(container: IContainer) {
         const repository = new UserAttributeRepositoryAdapter(
             container.resolve<Repository<UserAttribute>>(UserAttributeEntity),
         );
-        const service = new UserAttributeService({ repository });
-        return new UserAttributeController({ service });
+        const service = new UserAttributeService({
+            repository 
+        });
+        return new UserAttributeController({
+            service 
+        });
     }
 
     createUserPermissionController(container: IContainer) {
@@ -612,17 +684,28 @@ export class HTTPControllerModule {
             container.resolve<Repository<UserPermission>>(UserPermissionEntity),
         );
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        const service = new UserPermissionService({ repository, identityPermissionProvider });
-        return new UserPermissionController({ service });
+        const service = new UserPermissionService({
+            repository,
+            identityPermissionProvider 
+        });
+        return new UserPermissionController({
+            service 
+        });
     }
 
     createUserRoleController(container: IContainer) {
         const repository = new UserRoleRepositoryAdapter(
             container.resolve<Repository<UserRole>>(UserRoleEntity),
         );
-        const service = new UserRoleService({ repository });
+        const service = new UserRoleService({
+            repository 
+        });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new UserRoleController({ service, repository, identityPermissionProvider });
+        return new UserRoleController({
+            service,
+            repository,
+            identityPermissionProvider 
+        });
     }
 
     createPolicyController(container: IContainer) {
@@ -633,9 +716,17 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const realmRepositoryAdapter = new RealmRepositoryAdapter(realmRepository);
-        const service = new PolicyService({ repository, realmRepository: realmRepositoryAdapter });
+        const service = new PolicyService({
+            repository,
+            realmRepository: realmRepositoryAdapter 
+        });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new PolicyController({ service, repository, realmRepository: realmRepositoryAdapter, identityPermissionProvider });
+        return new PolicyController({
+            service,
+            repository,
+            realmRepository: realmRepositoryAdapter,
+            identityPermissionProvider 
+        });
     }
 
     createIdentityProviderRoleController(container: IContainer) {
@@ -643,13 +734,18 @@ export class HTTPControllerModule {
             container.resolve<Repository<any>>(IdentityProviderRoleMappingEntity),
         );
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new OAuth2ProviderRoleController({ repository, identityPermissionProvider });
+        return new OAuth2ProviderRoleController({
+            repository,
+            identityPermissionProvider 
+        });
     }
 
     createJwkController(container: IContainer) {
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const repository = dataSource.getRepository(KeyEntity);
-        return new JwkController({ repository });
+        return new JwkController({
+            repository 
+        });
     }
 
     createRealmController(container: IContainer) {
@@ -658,7 +754,9 @@ export class HTTPControllerModule {
         const repository = new RealmRepositoryAdapter(
             container.resolve<Repository<Realm>>(RealmEntity),
         );
-        const service = new RealmService({ repository });
+        const service = new RealmService({
+            repository 
+        });
         const keyRepository = dataSource.getRepository(KeyEntity);
 
         return new RealmController({

@@ -9,19 +9,24 @@ import type { IdentityProvider } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
+import { maxLength,minLength,required, } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import {
-    computed, defineComponent, h, reactive,
+    computed, 
+    defineComponent, 
+    h, 
+    reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     VuelidateCustomRule,
-    VuelidateCustomRuleKey, assignFormProperties, getVuelidateSeverity, useTranslationsForGroup, useTranslationsForNestedValidation,
+    VuelidateCustomRuleKey, 
+    assignFormProperties, 
+    getVuelidateSeverity, 
+    useTranslationsForGroup, 
+    useTranslationsForNestedValidation,
 } from '../../../core';
 
 export const AIdentityProviderBasicFields = defineComponent({
@@ -91,9 +96,15 @@ export const AIdentityProviderBasicFields = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                {
+                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
+                },
             ],
         );
         const translationsValidation = useTranslationsForNestedValidation($v.value);
@@ -124,7 +135,9 @@ export const AIdentityProviderBasicFields = defineComponent({
                         update();
                     },
                 }, [
-                    h('i', { class: 'fa fa-refresh' }),
+                    h('i', {
+                        class: 'fa fa-refresh' 
+                    }),
                     ' ',
                     'Generate',
                 ]),

@@ -9,15 +9,15 @@
 import { IVuelidate } from '@ilingo/vuelidate';
 import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
-import {
-    defineComponent, reactive,
-} from 'vue';
+import { maxLength,minLength,required, } from '@vuelidate/validators';
+import { defineComponent,reactive, } from 'vue';
 
 export default defineComponent({
-    components: { IVuelidate, VCFormInput, VCFormGroup },
+    components: {
+        IVuelidate,
+        VCFormInput,
+        VCFormGroup 
+    },
     props: {
         name: {
             type: String,

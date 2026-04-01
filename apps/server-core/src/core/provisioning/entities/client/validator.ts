@@ -16,12 +16,16 @@ export class ClientProvisioningValidator extends Container<ClientProvisioningEnt
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
-        this.mount('strategy', { optional: true }, strategyValidator);
+        this.mount('strategy', {
+            optional: true 
+        }, strategyValidator);
 
         const attributesValidator = new ClientValidator();
         this.mount('attributes', attributesValidator);
 
         const relationsValidator = new ClientProvisioningRelationsValidator();
-        this.mount('relations', { optional: true }, relationsValidator);
+        this.mount('relations', {
+            optional: true 
+        }, relationsValidator);
     }
 }

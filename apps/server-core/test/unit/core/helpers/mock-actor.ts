@@ -46,7 +46,10 @@ export function createMasterRealmActor(realmId?: string): ActorContext {
             type: IdentityType.USER,
             data: {
                 realm_id: id,
-                realm: { id, name: REALM_MASTER_NAME } as Realm,
+                realm: {
+                    id,
+                    name: REALM_MASTER_NAME 
+                } as Realm,
             } as User,
         },
     };
@@ -60,7 +63,10 @@ export function createNonMasterRealmActor(realmId?: string): ActorContext {
             type: IdentityType.USER,
             data: {
                 realm_id: id,
-                realm: { id, name: 'test-realm' } as Realm,
+                realm: {
+                    id,
+                    name: 'test-realm' 
+                } as Realm,
             } as User,
         },
     };

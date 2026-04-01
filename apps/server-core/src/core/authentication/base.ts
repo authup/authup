@@ -15,9 +15,15 @@ export abstract class BaseCredentialsAuthenticator<
     async safeAuthenticate(key: string, value: string, realmId?: string): Promise<Result<OUTPUT>> {
         try {
             const data = await this.authenticate(key, value, realmId);
-            return { success: true, data };
+            return {
+                success: true,
+                data 
+            };
         } catch (e) {
-            return { success: false, error: e as Error };
+            return {
+                success: false,
+                error: e as Error 
+            };
         }
     }
 

@@ -52,7 +52,7 @@ export type EARepositorySaveOptions<T> = {
     parent?: T
 };
 
-export interface IEARepository<T > {
+export interface IEARepository<T> {
     saveOneWithEA<E extends Record<string, any>>(
         input: T & E,
         attributes?: E,

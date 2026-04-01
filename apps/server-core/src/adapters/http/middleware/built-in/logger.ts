@@ -8,7 +8,9 @@
 import morgan from 'morgan';
 import type {
     Handler,
-    Next, Request, Response,
+    Next, 
+    Request, 
+    Response,
 } from 'routup';
 import { coreHandler, getRequestIP, useRequestPath } from 'routup';
 import { useLogger } from '@authup/server-kit';
@@ -27,7 +29,9 @@ export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handl
         morgan(
             (tokens, req: Request, res: Response) => {
                 const parts = [
-                    getRequestIP(req, { trustProxy: true }),
+                    getRequestIP(req, {
+                        trustProxy: true 
+                    }),
                 ];
 
                 const identity = useRequestIdentity(req);

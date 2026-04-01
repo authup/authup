@@ -6,7 +6,10 @@
  */
 
 import type {
-    Client, Identity, Robot, User,
+    Client, 
+    Identity, 
+    Robot, 
+    User,
 } from '@authup/core-kit';
 import { hasOwnProperty } from '@authup/kit';
 import type { OpenIDTokenPayload } from '@authup/specs';

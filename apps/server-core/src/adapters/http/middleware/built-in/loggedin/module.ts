@@ -6,13 +6,10 @@
  */
 
 import type { HandlerInterface } from '@routup/decorators';
-import type {
-    Next, Request, Response,
-} from 'routup';
+import type { Next,Request,Response, } from 'routup';
 import { useRequestIdentityOrFail } from '../../../request/index.ts';
 
 export class ForceLoggedInMiddleware implements HandlerInterface {
-     
     public run(request: Request, response: Response, next: Next) {
         useRequestIdentityOrFail(request);
         next();

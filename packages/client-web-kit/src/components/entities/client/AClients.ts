@@ -27,7 +27,9 @@ export const AClients = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Client>(),
     slots: Object as SlotsType<EntityCollectionVSlots<Client>>,
     setup(props, ctx) {
-        const { render } = defineEntityCollectionManager({
+        const {
+            render 
+        } = defineEntityCollectionManager({
             type: `${EntityType.CLIENT}`,
             props,
             setup: ctx,

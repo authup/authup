@@ -8,13 +8,13 @@
 import path from 'node:path';
 import process from 'node:process';
 import type { LoggerOptions } from 'winston';
-import {
-    createLogger as create, format, transports,
-} from 'winston';
+import { createLogger as create,format,transports, } from 'winston';
 import type { Logger, LoggerCreateContext } from './types';
 
 export function createNoopLogger() : Logger {
-    return create({ silent: true });
+    return create({
+        silent: true 
+    });
 }
 
 export function createLogger(context: LoggerCreateContext) : Logger {
@@ -51,7 +51,9 @@ export function createLogger(context: LoggerCreateContext) : Logger {
     // @see https://github.com/winstonjs/triple-beam/blob/master/config/npm.js
     return create({
         format: format.combine(
-            format.errors({ stack: true }),
+            format.errors({
+                stack: true 
+            }),
             format.timestamp(),
             format.colorize(),
             format.simple(),

@@ -23,7 +23,9 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
         const qb = this.repository.createQueryBuilder('userPermission');
         qb.groupBy('userPermission.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'userPermission',
             filters: {
                 allowed: [
@@ -64,7 +66,9 @@ export class UserPermissionRepositoryAdapter implements IUserPermissionRepositor
     }
 
     findOneById(id: string): Promise<UserPermission | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     async findOneByName(_name: string): Promise<UserPermission | null> {

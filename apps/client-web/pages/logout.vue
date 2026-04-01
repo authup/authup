@@ -9,7 +9,9 @@ export default defineNuxtComponent({
             [LayoutKey.REQUIRED_LOGGED_OUT]: true,
         });
 
-        await navigateTo({ path: '/login' });
+        await navigateTo({
+            path: '/login' 
+        });
     },
 });
 </script>

@@ -5,24 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    RobotPermission,
-} from '@authup/core-kit';
+import type { RobotPermission, } from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType,
+    EntityDefaultEventName, 
+    EntityType,
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import type { DomainEventDestination} from '@authup/server-kit';
+import type { DomainEventDestination } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface, InsertEvent,
+    EntitySubscriberInterface, 
+    InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import {
-    EventSubscriber,
-} from 'typeorm';
+import { EventSubscriber, } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { RobotPermissionEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -32,7 +30,9 @@ async function publishEvent(
     data: RobotPermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.ROBOT_PERMISSION, id) },
+        {
+            channel: (id) => buildEntityChannelName(EntityType.ROBOT_PERMISSION, id) 
+        },
     ];
     if (data.robot_realm_id) {
         destinations.push({

@@ -8,9 +8,7 @@
 import { defineComponent, h } from 'vue';
 import type { Robot } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
-import {
-    ARobotPermissionAssignment,
-} from '../robot-permission/ARobotPermissionAssignment';
+import { ARobotPermissionAssignment, } from '../robot-permission/ARobotPermissionAssignment';
 import { ARobots } from '../robot';
 
 export const APermissionRobotAssignments = defineComponent({
@@ -20,7 +18,9 @@ export const APermissionRobotAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         return () => h(ARobots, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Robot }) => h(
                 ARobotPermissionAssignment,

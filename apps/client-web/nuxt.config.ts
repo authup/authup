@@ -64,13 +64,15 @@ export default defineNuxtConfig({
         '@pinia/nuxt',
         [
             // '../client-web-nuxt/src/module', {
-            '@authup/client-web-nuxt', {
-                apiURLRuntimeKey: 'apiUrl',
-                cookieDomainRuntimeKey: 'cookieDomain',
-            } satisfies ModuleOptions,
+            '@authup/client-web-nuxt', 
+{
+    apiURLRuntimeKey: 'apiUrl',
+    cookieDomainRuntimeKey: 'cookieDomain',
+} satisfies ModuleOptions,
         ],
         [
-            '@nuxtjs/google-fonts', {
+            '@nuxtjs/google-fonts', 
+            {
                 families: {
                     Asap: true,
                     Nunito: true,

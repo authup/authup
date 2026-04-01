@@ -6,7 +6,15 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import { ForbiddenError } from '@ebec/http';
 import { send, sendAccepted, sendCreated } from 'routup';
@@ -45,9 +53,15 @@ export class ClientRoleController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
+        const {
+            data, 
+            meta 
+        } = await this.service.getMany(useRequestQuery(req), actor);
 
-        return send(res, { data, meta });
+        return send(res, {
+            data,
+            meta 
+        });
     }
 
     @DPost('', [ForceLoggedInMiddleware])

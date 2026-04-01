@@ -19,7 +19,9 @@ export const AIdentityProviderRoleAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         return () => h(ARoles, {
             headerTitle: false,
         }, {

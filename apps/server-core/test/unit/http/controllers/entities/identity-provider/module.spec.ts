@@ -6,7 +6,11 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import {
     buildIdentityProviderAuthorizeCallbackPath,
@@ -160,9 +164,13 @@ describe('src/http/controllers/identity-provider', () => {
 
         expect(response.name).toEqual(entity.name);
 
-        const { id } = response;
+        const {
+            id 
+        } = response;
 
-        const { name } = createFakeOAuth2IdentityProvider();
+        const {
+            name 
+        } = createFakeOAuth2IdentityProvider();
 
         response = await suite.client
             .identityProvider

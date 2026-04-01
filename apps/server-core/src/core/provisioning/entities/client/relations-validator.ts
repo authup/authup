@@ -19,23 +19,35 @@ export class ClientProvisioningRelationsValidator extends Container<ClientProvis
         const permissionValidator = new PermissionProvisioningValidator();
         const roleValidator = new RoleProvisioningValidator();
 
-        this.mount('permissions.*', { optional: true }, permissionValidator);
+        this.mount('permissions.*', {
+            optional: true 
+        }, permissionValidator);
 
-        this.mount('realmPermissions', { optional: true }, createValidator(
+        this.mount('realmPermissions', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('globalPermissions', { optional: true }, createValidator(
+        this.mount('globalPermissions', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('roles.*', { optional: true }, roleValidator);
+        this.mount('roles.*', {
+            optional: true 
+        }, roleValidator);
 
-        this.mount('realmRoles', { optional: true }, createValidator(
+        this.mount('realmRoles', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('globalRoles', { optional: true }, createValidator(
+        this.mount('globalRoles', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
     }

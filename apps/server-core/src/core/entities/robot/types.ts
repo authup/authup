@@ -25,6 +25,9 @@ export interface IRobotService {
         data: Record<string, any>,
         actor: ActorContext,
         options?: { updateOnly?: boolean },
-    ): Promise<{ entity: Robot, created: boolean }>;
+    ): Promise<{
+        entity: Robot,
+        created: boolean 
+    }>;
     delete(id: string, actor: ActorContext): Promise<Robot>;
 }

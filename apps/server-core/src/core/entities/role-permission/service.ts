@@ -56,7 +56,9 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -68,7 +70,9 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RolePermission> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_PERMISSION_CREATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROLE_PERMISSION_CREATE 
+        });
 
         await this.repository.validateJoinColumns(data);
 
@@ -94,7 +98,10 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             typeof data.policy_id === 'undefined'
         ) {
             const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
-                { type: actor.identity.type, id: actor.identity.data.id },
+                {
+                    type: actor.identity.type,
+                    id: actor.identity.data.id 
+                },
                 {
                     name: data.permission.name,
                     realmId: data.permission.realm_id,
@@ -123,9 +130,13 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         id: string,
         actor: ActorContext,
     ): Promise<RolePermission> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROLE_PERMISSION_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -137,7 +148,9 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

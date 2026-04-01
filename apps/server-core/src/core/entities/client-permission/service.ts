@@ -56,7 +56,9 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -68,7 +70,9 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<ClientPermission> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_PERMISSION_CREATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.CLIENT_PERMISSION_CREATE 
+        });
 
         await this.repository.validateJoinColumns(data);
 
@@ -92,7 +96,10 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             typeof data.policy_id === 'undefined'
         ) {
             const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
-                { type: actor.identity.type, id: actor.identity.data.id },
+                {
+                    type: actor.identity.type,
+                    id: actor.identity.data.id 
+                },
                 {
                     name: data.permission.name,
                     realmId: data.permission.realm_id,
@@ -121,9 +128,13 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         id: string,
         actor: ActorContext,
     ): Promise<ClientPermission> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.CLIENT_PERMISSION_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -135,7 +146,9 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

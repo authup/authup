@@ -5,23 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    Robot,
-} from '@authup/core-kit';
+import type { Robot, } from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType,
+    EntityDefaultEventName, 
+    EntityType,
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface, InsertEvent,
+    EntitySubscriberInterface, 
+    InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import {
-    EventSubscriber,
-} from 'typeorm';
+import { EventSubscriber, } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { RobotEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';

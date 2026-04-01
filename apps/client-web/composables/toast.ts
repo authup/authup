@@ -23,7 +23,10 @@ export function useToast() {
 
             if (isObject(el)) {
                 return toast.show({
-                    props: { position: 'top-center', ...el },
+                    props: {
+                        position: 'top-center',
+                        ...el 
+                    },
                 });
             }
 

@@ -23,13 +23,19 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
     async findOneBySignature(signature: string): Promise<OAuth2TokenPayload | null> {
         return this.cache.get<OAuth2TokenPayload>(
-            buildCacheKey({ prefix: CacheOAuth2Prefix.TOKEN_CLAIMS, key: signature }),
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.TOKEN_CLAIMS,
+                key: signature 
+            }),
         );
     }
 
     async findOneById(id: string): Promise<OAuth2TokenPayload | null> {
         return this.cache.get<OAuth2TokenPayload>(
-            buildCacheKey({ prefix: CacheOAuth2Prefix.TOKEN, key: id }),
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.TOKEN,
+                key: id 
+            }),
         );
     }
 
@@ -41,7 +47,10 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
             return;
         }
 
-        const key = buildCacheKey({ prefix: CacheOAuth2Prefix.TOKEN, key: id });
+        const key = buildCacheKey({
+            prefix: CacheOAuth2Prefix.TOKEN,
+            key: id 
+        });
         await this.cache.drop(key);
 
         await this.setInactive(id, token.exp);
@@ -53,7 +62,10 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         payload.jti = randomUUID();
 
         await this.cache.set(
-            buildCacheKey({ prefix: CacheOAuth2Prefix.TOKEN, key: payload.jti }),
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.TOKEN,
+                key: payload.jti 
+            }),
             payload,
             {
                 ttl: this.buildTTL(payload.exp),
@@ -75,7 +87,10 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
         const normalized = await this.save(data);
 
         await this.cache.set(
-            buildCacheKey({ prefix: CacheOAuth2Prefix.TOKEN_CLAIMS, key: signature }),
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.TOKEN_CLAIMS,
+                key: signature 
+            }),
             normalized,
             {
                 ttl: this.buildTTL(data.exp),

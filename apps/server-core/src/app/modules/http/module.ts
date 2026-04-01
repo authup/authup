@@ -7,9 +7,7 @@
 
 import { Router } from 'routup';
 import type { IServer } from '../../../adapters/http/index.ts';
-import {
-    createHttpServer,
-} from '../../../adapters/http/index.ts';
+import { createHttpServer, } from '../../../adapters/http/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -50,7 +48,9 @@ export class HTTPModule implements IModule {
         await this.controller.mount(router, container);
         await this.middleware.mountAfter(router, container);
 
-        const server = createHttpServer({ router });
+        const server = createHttpServer({
+            router 
+        });
 
         await new Promise<void>((resolve, reject) => {
             const errorHandler = (err?: null | Error) => {
@@ -76,7 +76,9 @@ export class HTTPModule implements IModule {
             }
         }
 
-        container.register(HTTPInjectionKey.Server, { useValue: server });
+        container.register(HTTPInjectionKey.Server, {
+            useValue: server 
+        });
 
         logger.debug('Started http server.');
     }

@@ -1,8 +1,8 @@
 <script setup>
 import {
+    VPTeamMembers,
     VPTeamPage,
-    VPTeamPageTitle,
-    VPTeamMembers
+    VPTeamPageTitle
 } from 'vitepress/theme';
 
 const members = [
@@ -11,9 +11,18 @@ const members = [
         name: 'tada5hi',
         title: 'Creator',
         links: [
-            { icon: 'github', link: 'https://github.com/tada5hi' },
-            { icon: 'twitter', link: 'https://twitter.com/tada5hi' },
-            { icon: 'linkedin', link: 'https://www.linkedin.com/in/peter-placzek-047a74210/' },
+            {
+                icon: 'github',
+                link: 'https://github.com/tada5hi' 
+            },
+            {
+                icon: 'twitter',
+                link: 'https://twitter.com/tada5hi' 
+            },
+            {
+                icon: 'linkedin',
+                link: 'https://www.linkedin.com/in/peter-placzek-047a74210/' 
+            },
         ]
     },
     {
@@ -21,8 +30,14 @@ const members = [
         name: 'migraf',
         title: 'Developer',
         links: [
-            { icon: 'github', link: 'https://github.com/migraf' },
-            { icon: 'linkedin', link: 'https://www.linkedin.com/in/michael-m-graf/' },
+            {
+                icon: 'github',
+                link: 'https://github.com/migraf' 
+            },
+            {
+                icon: 'linkedin',
+                link: 'https://www.linkedin.com/in/michael-m-graf/' 
+            },
         ]
     }
 ]

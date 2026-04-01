@@ -7,7 +7,11 @@
 
 import type { RegisterResponse } from '@authup/core-http-kit';
 import {
-    DBody, DController, DPost, DRequest, DResponse,
+    DBody, 
+    DController, 
+    DPost, 
+    DRequest, 
+    DResponse,
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';

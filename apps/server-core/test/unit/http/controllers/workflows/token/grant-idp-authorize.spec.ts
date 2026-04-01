@@ -5,7 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
@@ -18,12 +22,19 @@ import { createFakeOAuth2IdentityProvider } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 function buildFakeAccessToken(claims: Record<string, unknown>): string {
-    const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }));
+    const header = btoa(JSON.stringify({
+        alg: 'none',
+        typ: 'JWT' 
+    }));
     const payload = btoa(JSON.stringify(claims));
     return `${header}.${payload}.fakesignature`;
 }
 
-function createFakeIdpServer(): { server: Server, start: () => Promise<string>, stop: () => Promise<void> } {
+function createFakeIdpServer(): {
+    server: Server,
+    start: () => Promise<string>,
+    stop: () => Promise<void> 
+} {
     const server = createServer((req, res) => {
         if (req.url === '/token' && req.method === 'POST') {
             const accessToken = buildFakeAccessToken({
@@ -32,7 +43,9 @@ function createFakeIdpServer(): { server: Server, start: () => Promise<string>, 
                 name: 'IDP User',
             });
 
-            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.writeHead(200, {
+                'Content-Type': 'application/json' 
+            });
             res.end(JSON.stringify({
                 access_token: accessToken,
                 token_type: 'Bearer',
@@ -42,7 +55,9 @@ function createFakeIdpServer(): { server: Server, start: () => Promise<string>, 
         }
 
         if (req.url === '/authorize') {
-            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.writeHead(200, {
+                'Content-Type': 'text/plain' 
+            });
             res.end('authorize');
             return;
         }
@@ -94,7 +109,9 @@ describe('identity-provider authorization code grant', () => {
         const response = await suite.client
             .get(
                 buildIdentityProviderAuthorizePath(providerId),
-                { redirect: 'manual' },
+                {
+                    redirect: 'manual' 
+                },
             );
 
         expect(response.status).toEqual(302);
@@ -111,7 +128,9 @@ describe('identity-provider authorization code grant', () => {
         const authorizeOutResponse = await suite.client
             .get(
                 buildIdentityProviderAuthorizePath(providerId),
-                { redirect: 'manual' },
+                {
+                    redirect: 'manual' 
+                },
             );
 
         const outLocation = authorizeOutResponse.headers.get('location') as string;
@@ -123,7 +142,9 @@ describe('identity-provider authorization code grant', () => {
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                {
+                    redirect: 'manual' 
+                },
             );
 
         expect(authorizeInResponse.status).toEqual(302);
@@ -152,7 +173,9 @@ describe('identity-provider authorization code grant', () => {
         const authorizeOutResponse = await suite.client
             .get(
                 buildIdentityProviderAuthorizePath(providerId),
-                { redirect: 'manual' },
+                {
+                    redirect: 'manual' 
+                },
             );
 
         const outLocation = authorizeOutResponse.headers.get('location') as string;
@@ -161,7 +184,9 @@ describe('identity-provider authorization code grant', () => {
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                { redirect: 'manual' },
+                {
+                    redirect: 'manual' 
+                },
             );
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
@@ -169,14 +194,18 @@ describe('identity-provider authorization code grant', () => {
 
         await suite.client
             .token
-            .createWithAuthorizationCode({ code: authupCode! });
+            .createWithAuthorizationCode({
+                code: authupCode! 
+            });
 
         let error: any;
 
         try {
             await suite.client
                 .token
-                .createWithAuthorizationCode({ code: authupCode! });
+                .createWithAuthorizationCode({
+                    code: authupCode! 
+                });
         } catch (e) {
             error = e;
         }

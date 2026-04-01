@@ -7,9 +7,7 @@
 
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
-import type {
-    PermissionBinding, Role
-} from '@authup/core-kit';
+import type { PermissionBinding,Role } from '@authup/core-kit';
 import type { PolicyWithType } from '@authup/access';
 import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';

@@ -16,12 +16,16 @@ export class RobotProvisioningValidator extends Container<RobotProvisioningEntit
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
-        this.mount('strategy', { optional: true }, strategyValidator);
+        this.mount('strategy', {
+            optional: true 
+        }, strategyValidator);
 
         const attributesValidator = new RobotValidator();
         this.mount('attributes', attributesValidator);
 
         const relationsValidator = new RobotProvisioningRelationsValidator();
-        this.mount('relations', { optional: true }, relationsValidator);
+        this.mount('relations', {
+            optional: true 
+        }, relationsValidator);
     }
 }

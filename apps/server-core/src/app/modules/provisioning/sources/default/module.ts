@@ -7,10 +7,20 @@
 
 import { BuiltInPolicyType, DecisionStrategy, SystemPolicyName } from '@authup/access';
 import type {
-    Client, Permission, Robot, Role, Scope, User,
+    Client, 
+    Permission, 
+    Robot, 
+    Role, 
+    Scope, 
+    User,
 } from '@authup/core-kit';
 import {
-    PermissionName, REALM_MASTER_NAME, ROLE_ADMIN_NAME, ROLE_REALM_ADMIN_NAME, ScopeName, buildUserFakeEmail,
+    PermissionName, 
+    REALM_MASTER_NAME, 
+    ROLE_ADMIN_NAME, 
+    ROLE_REALM_ADMIN_NAME, 
+    ScopeName, 
+    buildUserFakeEmail,
 } from '@authup/core-kit';
 import type { IContainer } from 'eldin';
 import {
@@ -195,9 +205,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 name: REALM_MASTER_NAME,
                 built_in: true,
             },
-            relations: {
-
-            },
+            relations: {},
         };
 
         const userCredentialsService = new UserCredentialsService();
@@ -249,7 +257,9 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     built_in: true,
                     is_confidential: true,
                     name: 'system',
-                    secret: await clientCredentialsService.protect(config.clientSystemSecret, { secret_hashed: false }),
+                    secret: await clientCredentialsService.protect(config.clientSystemSecret, {
+                        secret_hashed: false 
+                    }),
                     secret_hashed: false,
                     active: config.clientSystemEnabled,
                 },

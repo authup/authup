@@ -8,7 +8,10 @@
 import { randomUUID } from 'node:crypto';
 import { OAuth2Error } from '@authup/specs';
 import {
-    beforeEach, describe, expect, it,
+    beforeEach, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { OAuth2AuthorizationStateManager } from '../../../../../../src/core/oauth2/authorization/state/module.ts';
 import type {
@@ -66,54 +69,86 @@ describe('OAuth2AuthorizationStateManager', () => {
                 userAgent: 'TestAgent',
             };
             const id = await manager.save(state);
-            const result = await manager.verify(id, { ip: '10.0.0.1', userAgent: 'TestAgent' });
+            const result = await manager.verify(id, {
+                ip: '10.0.0.1',
+                userAgent: 'TestAgent' 
+            });
             expect(result.ip).toBe('10.0.0.1');
             expect(result.userAgent).toBe('TestAgent');
         });
 
         it('should throw for non-existent state', async () => {
             await expect(
-                manager.verify('non-existent-id', { ip: '1.2.3.4' }),
+                manager.verify('non-existent-id', {
+                    ip: '1.2.3.4' 
+                }),
             ).rejects.toThrow(OAuth2Error);
         });
 
         it('should throw when IP does not match', async () => {
-            const id = await manager.save({ ip: '10.0.0.1' });
+            const id = await manager.save({
+                ip: '10.0.0.1' 
+            });
             await expect(
-                manager.verify(id, { ip: '10.0.0.2' }),
+                manager.verify(id, {
+                    ip: '10.0.0.2' 
+                }),
             ).rejects.toThrow(OAuth2Error);
         });
 
         it('should throw when user agent does not match', async () => {
-            const id = await manager.save({ ip: '10.0.0.1', userAgent: 'Chrome' });
+            const id = await manager.save({
+                ip: '10.0.0.1',
+                userAgent: 'Chrome' 
+            });
             await expect(
-                manager.verify(id, { ip: '10.0.0.1', userAgent: 'Firefox' }),
+                manager.verify(id, {
+                    ip: '10.0.0.1',
+                    userAgent: 'Firefox' 
+                }),
             ).rejects.toThrow(OAuth2Error);
         });
 
         it('should remove state after verify (single-use)', async () => {
-            const id = await manager.save({ ip: '10.0.0.1' });
-            await manager.verify(id, { ip: '10.0.0.1' });
+            const id = await manager.save({
+                ip: '10.0.0.1' 
+            });
+            await manager.verify(id, {
+                ip: '10.0.0.1' 
+            });
             expect(repository.has(id)).toBe(false);
         });
 
         it('should remove state even when IP mismatch (replay prevention)', async () => {
-            const id = await manager.save({ ip: '10.0.0.1' });
+            const id = await manager.save({
+                ip: '10.0.0.1' 
+            });
             await expect(
-                manager.verify(id, { ip: '10.0.0.2' }),
+                manager.verify(id, {
+                    ip: '10.0.0.2' 
+                }),
             ).rejects.toThrow(OAuth2Error);
             expect(repository.has(id)).toBe(false);
         });
 
         it('should skip user agent check when payload has no userAgent', async () => {
-            const id = await manager.save({ ip: '10.0.0.1' });
-            const result = await manager.verify(id, { ip: '10.0.0.1', userAgent: 'anything' });
+            const id = await manager.save({
+                ip: '10.0.0.1' 
+            });
+            const result = await manager.verify(id, {
+                ip: '10.0.0.1',
+                userAgent: 'anything' 
+            });
             expect(result.ip).toBe('10.0.0.1');
         });
 
         it('should skip IP check when payload has empty ip', async () => {
-            const id = await manager.save({ ip: '' });
-            const result = await manager.verify(id, { ip: '99.99.99.99' });
+            const id = await manager.save({
+                ip: '' 
+            });
+            const result = await manager.verify(id, {
+                ip: '99.99.99.99' 
+            });
             expect(result).toBeDefined();
         });
     });

@@ -22,9 +22,7 @@ import { PermissionError } from '../error';
 import type { IPermissionProvider, PermissionGetOptions } from '../provider';
 import { PermissionMemoryProvider } from '../provider';
 
-import type {
-    PermissionBinding,
-} from '../types.ts';
+import type { PermissionBinding, } from '../types.ts';
 import type { IPermissionEvaluator, PermissionEvaluationContext, PermissionEvaluatorOptions } from './types.ts';
 
 export class PermissionEvaluator implements IPermissionEvaluator {
@@ -64,7 +62,10 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
     protected async findOne(
         input: string,
-        overrides?: { realmId?: string | null, clientId?: string | null },
+        overrides?: {
+            realmId?: string | null,
+            clientId?: string | null 
+        },
     ) : Promise<PermissionBinding | null> {
         const options : PermissionGetOptions = {
             name: input,

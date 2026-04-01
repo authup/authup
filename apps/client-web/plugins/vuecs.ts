@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    injectTranslatorLocale,
-} from '@authup/client-web-kit';
+import { injectTranslatorLocale, } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
 import type { StoreManagerOptions } from '@vuecs/core';

@@ -6,15 +6,21 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IClientScopeService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import {
-    buildActorContext,
-} from '../../../request/index.ts';
+import { buildActorContext, } from '../../../request/index.ts';
 
 export type ClientScopeControllerContext = {
     service: IClientScopeService,
@@ -35,9 +41,15 @@ export class ClientScopeController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
+        const {
+            data, 
+            meta 
+        } = await this.service.getMany(useRequestQuery(req), actor);
 
-        return send(res, { data, meta });
+        return send(res, {
+            data,
+            meta 
+        });
     }
 
     @DPost('', [ForceLoggedInMiddleware])

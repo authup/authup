@@ -6,9 +6,7 @@
  */
 
 import type { Identity, OAuth2AuthorizationCode, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import {
-    ScopeName,
-} from '@authup/core-kit';
+import { ScopeName, } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2AuthorizationResponseType,
@@ -75,7 +73,9 @@ export class OAuth2Authorization {
 
         const output : OAuth2AuthorizationResult = {
             redirectUri: data.redirect_uri,
-            ...(data.state ? { state: data.state } : {}),
+            ...(data.state ? {
+                state: data.state 
+            } : {}),
         };
 
         if (!identity) {
@@ -90,8 +90,12 @@ export class OAuth2Authorization {
             realm_name: identity.data.realm.name,
 
             client_id: data.client_id,
-            ...(data.scope ? { scope: data.scope } : {}),
-            ...(data.nonce ? { nonce: data.nonce } : {}),
+            ...(data.scope ? {
+                scope: data.scope 
+            } : {}),
+            ...(data.nonce ? {
+                nonce: data.nonce 
+            } : {}),
         };
 
         let codeEntity : OAuth2AuthorizationCode | undefined;
@@ -115,7 +119,9 @@ export class OAuth2Authorization {
             (data.scope && hasOAuth2Scopes(data.scope, ScopeName.OPEN_ID));
 
         if (needsIdToken) {
-            const idTokenPayload = { ...payloadBaseNormalized };
+            const idTokenPayload = {
+                ...payloadBaseNormalized 
+            };
 
             if (output.accessToken) {
                 idTokenPayload.at_hash = await buildOAuth2TokenHash(output.accessToken);

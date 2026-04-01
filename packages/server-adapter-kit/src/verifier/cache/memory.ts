@@ -21,6 +21,8 @@ export class MemoryTokenVerifierCache implements ITokenVerifierCache {
     }
 
     async set(token: string, data: TokenVerificationData, seconds: number): Promise<void> {
-        this.driver.set(token, data, { ttl: seconds * 1000 });
+        this.driver.set(token, data, {
+            ttl: seconds * 1000 
+        });
     }
 }

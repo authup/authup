@@ -7,7 +7,8 @@
 
 import type {
     IPermissionProvider,
-    PermissionGetOptions, PolicyWithType,
+    PermissionGetOptions, 
+    PolicyWithType,
 } from '@authup/access';
 import type { PermissionBinding } from '@authup/core-kit';
 import { buildPermissionBindingKey } from '@authup/core-kit';
@@ -67,7 +68,9 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
 
         if (entity) {
             const junctions = await this.permissionPolicyRepository.find({
-                where: { permission_id: entity.id },
+                where: {
+                    permission_id: entity.id 
+                },
                 relations: ['policy'],
             });
 

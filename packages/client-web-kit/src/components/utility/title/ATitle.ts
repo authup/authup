@@ -30,7 +30,9 @@ export const ATitle = defineComponent({
     slots: Object as SlotsType<{
         default: TitleSlotProps
     }>,
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         const translation = useTranslation({
             group: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.OVERVIEW,

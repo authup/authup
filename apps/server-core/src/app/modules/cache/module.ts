@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    MemoryCache, RedisCache,
-} from '@authup/server-kit';
+import { MemoryCache,RedisCache, } from '@authup/server-kit';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { CacheInjectionKey } from './constants.ts';

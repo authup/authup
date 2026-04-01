@@ -6,7 +6,13 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { extendObject, isPropertySet, isUUID, removeObjectProperty } from '@authup/kit';
+import {
+ 
+    extendObject, 
+    isPropertySet, 
+    isUUID, 
+    removeObjectProperty 
+} from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
@@ -83,7 +89,9 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Policy> {
-        const { entity } = await this.save(undefined, data, actor);
+        const {
+            entity 
+        } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -92,7 +100,11 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Policy> {
-        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+        const {
+            entity 
+        } = await this.save(idOrName, data, actor, {
+            updateOnly: true 
+        });
         return entity;
     }
 
@@ -101,7 +113,10 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         data: Record<string, any>,
         actor: ActorContext,
         options: { updateOnly?: boolean } = {},
-    ): Promise<{ entity: Policy, created: boolean }> {
+    ): Promise<{
+        entity: Policy,
+        created: boolean 
+    }> {
         let group: string;
 
         const realm = typeof data.realm_id === 'string' ?
@@ -130,10 +145,14 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.PERMISSION_UPDATE 
+            });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_CREATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.PERMISSION_CREATE 
+            });
             group = ValidatorGroup.CREATE;
         }
 
@@ -169,7 +188,10 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
             await this.repository.saveWithEA(entity);
 
-            return { entity, created: false };
+            return {
+                entity,
+                created: false 
+            };
         }
 
         if (!isPropertySet(validated, 'realm_id') && actor.identity) {
@@ -188,14 +210,19 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         entity = this.repository.create(validated);
         await this.repository.saveWithEA(entity);
 
-        return { entity, created: true };
+        return {
+            entity,
+            created: true 
+        };
     }
 
     private async validate(
         data: Record<string, any>,
         group: string,
     ): Promise<Policy> {
-        const validated = await this.validator.run(data, { group });
+        const validated = await this.validator.run(data, {
+            group 
+        });
 
         const attributes = await this.attributesValidator.run(data);
         extendObject(validated, attributes);
@@ -216,9 +243,13 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
         id: string,
         actor: ActorContext,
     ): Promise<Policy> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.PERMISSION_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -234,7 +265,9 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
 
         await this.repository.deleteFromTree(entity);
 

@@ -6,9 +6,7 @@
  */
 
 import type { Options } from '@routup/basic';
-import {
-    basic,
-} from '@routup/basic';
+import { basic, } from '@routup/basic';
 import type { Router } from 'routup';
 
 export function registerBasicMiddleware(router: Router, input?: Options) {

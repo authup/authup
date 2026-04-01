@@ -11,7 +11,6 @@ import type { Next, Request, Response } from 'routup';
 import { useRequestIdentity } from '../../../request/index.ts';
 
 export class ForceUserLoggedInMiddleware implements HandlerInterface {
-     
     public run(request: Request, response: Response, next: Next) {
         const identity = useRequestIdentity(request);
 

@@ -35,7 +35,9 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         return this.runWith(
             data,
             {
-                ipAddress: getRequestIP(req, { trustProxy: true }),
+                ipAddress: getRequestIP(req, {
+                    trustProxy: true 
+                }),
                 userAgent: getRequestHeader(req, 'user-agent'),
             },
         );

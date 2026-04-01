@@ -34,7 +34,9 @@ export class ClientRepositoryAdapter implements IClientRepository {
         const qb = this.repository.createQueryBuilder('client');
         qb.groupBy('client.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'client',
             fields: {
                 default: [
@@ -87,17 +89,23 @@ export class ClientRepositoryAdapter implements IClientRepository {
     }
 
     findOneById(id: string): Promise<Client | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     async findOneByName(name: string, realmKey?: string): Promise<Client | null> {
         const qb = this.repository.createQueryBuilder('client');
-        qb.where('client.name LIKE :name', { name });
+        qb.where('client.name LIKE :name', {
+            name 
+        });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('client.realm_id = :realmId', { realmId: realm.id });
+                qb.andWhere('client.realm_id = :realmId', {
+                    realmId: realm.id 
+                });
             }
         }
 
@@ -122,7 +130,9 @@ export class ClientRepositoryAdapter implements IClientRepository {
         const qb = this.repository.createQueryBuilder('client');
 
         Object.entries(where).forEach(([key, value]) => {
-            qb.andWhere(`client.${key} = :${key}`, { [key]: value });
+            qb.andWhere(`client.${key} = :${key}`, {
+                [key]: value 
+            });
         });
 
         qb.addSelect('client.secret');

@@ -6,7 +6,10 @@
  */
 
 import {
-    beforeAll, describe, expect, it,
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { JWTError } from '@authup/specs';
 import type { JWTClaims } from '@authup/specs';
@@ -17,7 +20,8 @@ import {
     createSymmetricKey,
     extractTokenHeader,
     extractTokenPayload,
-    signToken, verifyToken,
+    signToken, 
+    verifyToken,
 } from '../../src';
 
 describe('src/json-web-token', () => {
@@ -34,7 +38,9 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decrypt with asymmetric keyPair', async () => {
-        const data : JWTClaims = { text: 'secretText' };
+        const data : JWTClaims = {
+            text: 'secretText' 
+        };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -51,7 +57,10 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decrypt with symmetric key', async () => {
-        const data : JWTClaims = { text: 'secretText', foo_bar: 'baz' };
+        const data : JWTClaims = {
+            text: 'secretText',
+            foo_bar: 'baz' 
+        };
 
         const signedText = await signToken(data, {
             type: 'oct',
@@ -117,7 +126,9 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decode header', async () => {
-        const data : JWTClaims = { text: 'secretText' };
+        const data : JWTClaims = {
+            text: 'secretText' 
+        };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -133,7 +144,9 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decode payload', async () => {
-        const data : JWTClaims = { text: 'secretText' };
+        const data : JWTClaims = {
+            text: 'secretText' 
+        };
 
         const signedText = await signToken(data, {
             type: 'rsa',

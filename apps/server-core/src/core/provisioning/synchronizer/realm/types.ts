@@ -12,10 +12,7 @@ import type { PermissionProvisioningEntity } from '../../entities/permission/ind
 import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type { UserProvisioningEntity } from '../../entities/user/index.ts';
-import type {
-    IProvisioningSynchronizer,
-
-} from '../../types.ts';
+import type { IProvisioningSynchronizer, } from '../../types.ts';
 
 export type RealmProvisioningSynchronizerContext = {
     repository: IRealmRepository,

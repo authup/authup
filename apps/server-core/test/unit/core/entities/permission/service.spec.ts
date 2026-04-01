@@ -7,9 +7,18 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { Permission, PermissionPolicy, Role, RolePermission } from '@authup/core-kit';
+import type {
+ 
+    Permission, 
+    PermissionPolicy, 
+    Role, 
+    RolePermission 
+} from '@authup/core-kit';
 import {
-    beforeEach, describe, expect, it,
+    beforeEach, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { SystemPolicyName } from '@authup/access';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
@@ -97,7 +106,9 @@ describe('core/entities/permission/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const entity = repository.seed(createFakePermission({ name: 'test-perm' }));
+            const entity = repository.seed(createFakePermission({
+                name: 'test-perm' 
+            }));
 
             const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.name).toBe('test-perm');
@@ -113,7 +124,9 @@ describe('core/entities/permission/service', () => {
     describe('create', () => {
         it('should create a permission with valid data', async () => {
             const result = await service.create(
-                { name: 'new-permission' },
+                {
+                    name: 'new-permission' 
+                },
                 createAllowAllActor(),
             );
 
@@ -123,7 +136,9 @@ describe('core/entities/permission/service', () => {
 
         it('should call preCheck with PERMISSION_CREATE', async () => {
             const actor = createAllowAllActor();
-            await service.create({ name: 'test-perm' }, actor);
+            await service.create({
+                name: 'test-perm' 
+            }, actor);
 
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.PERMISSION_CREATE,
@@ -132,13 +147,17 @@ describe('core/entities/permission/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(
-                service.create({ name: 'test-perm' }, createDenyAllActor()),
+                service.create({
+                    name: 'test-perm' 
+                }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
 
         it('should assign default policy via junction on create', async () => {
             await service.create(
-                { name: 'new-perm' },
+                {
+                    name: 'new-perm' 
+                },
                 createAllowAllActor(),
             );
 
@@ -150,11 +169,16 @@ describe('core/entities/permission/service', () => {
 
     describe('update', () => {
         it('should update an existing permission', async () => {
-            const entity = repository.seed(createFakePermission({ name: 'old-perm', built_in: false }));
+            const entity = repository.seed(createFakePermission({
+                name: 'old-perm',
+                built_in: false 
+            }));
 
             const result = await service.update(
                 entity.id,
-                { description: 'updated' },
+                {
+                    description: 'updated' 
+                },
                 createAllowAllActor(),
             );
 
@@ -163,24 +187,36 @@ describe('core/entities/permission/service', () => {
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', { description: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', {
+                    description: 'x' 
+                }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
         it('should prevent renaming a built-in permission', async () => {
-            const entity = repository.seed(createFakePermission({ name: 'built-in-perm', built_in: true }));
+            const entity = repository.seed(createFakePermission({
+                name: 'built-in-perm',
+                built_in: true 
+            }));
 
             await expect(
-                service.update(entity.id, { name: 'renamed-perm' }, createAllowAllActor()),
+                service.update(entity.id, {
+                    name: 'renamed-perm' 
+                }, createAllowAllActor()),
             ).rejects.toThrow(BadRequestError);
         });
 
         it('should allow updating built-in permission fields other than name', async () => {
-            const entity = repository.seed(createFakePermission({ name: 'built-in-perm', built_in: true }));
+            const entity = repository.seed(createFakePermission({
+                name: 'built-in-perm',
+                built_in: true 
+            }));
 
             const result = await service.update(
                 entity.id,
-                { description: 'updated description' },
+                {
+                    description: 'updated description' 
+                },
                 createAllowAllActor(),
             );
 
@@ -190,9 +226,14 @@ describe('core/entities/permission/service', () => {
 
     describe('save (upsert)', () => {
         it('should create when entity not found', async () => {
-            const { entity, created } = await service.save(
+            const {
+                entity, 
+                created 
+            } = await service.save(
                 undefined,
-                { name: 'upserted-perm' },
+                {
+                    name: 'upserted-perm' 
+                },
                 createAllowAllActor(),
             );
 
@@ -201,11 +242,18 @@ describe('core/entities/permission/service', () => {
         });
 
         it('should update when entity found', async () => {
-            const entity = repository.seed(createFakePermission({ name: 'old-perm', built_in: false }));
+            const entity = repository.seed(createFakePermission({
+                name: 'old-perm',
+                built_in: false 
+            }));
 
-            const { created } = await service.save(
+            const {
+                created 
+            } = await service.save(
                 entity.id,
-                { description: 'updated' },
+                {
+                    description: 'updated' 
+                },
                 createAllowAllActor(),
             );
 
@@ -214,7 +262,11 @@ describe('core/entities/permission/service', () => {
 
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
-                service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
+                service.save('non-existent-id', {
+                    name: 'test' 
+                }, createAllowAllActor(), {
+                    updateOnly: true 
+                }),
             ).rejects.toThrow(NotFoundError);
         });
     });
@@ -224,7 +276,9 @@ describe('core/entities/permission/service', () => {
             const realmId = randomUUID();
             const actor = createNonMasterRealmActor(realmId);
 
-            const result = await service.create({ name: 'realm-perm' }, actor);
+            const result = await service.create({
+                name: 'realm-perm' 
+            }, actor);
             expect(result.realm_id).toBe(realmId);
         });
 
@@ -233,7 +287,9 @@ describe('core/entities/permission/service', () => {
             const masterRealmId = actor.identity!.data.realm_id;
 
             const result = await service.create(
-                { name: 'global-perm' },
+                {
+                    name: 'global-perm' 
+                },
                 actor,
             );
 
@@ -244,7 +300,10 @@ describe('core/entities/permission/service', () => {
             const actor = createNonMasterRealmActor();
 
             const result = await service.create(
-                { name: 'global-perm', realm_id: null },
+                {
+                    name: 'global-perm',
+                    realm_id: null 
+                },
                 actor,
             );
 
@@ -254,7 +313,9 @@ describe('core/entities/permission/service', () => {
 
     describe('delete', () => {
         it('should delete a non-built-in permission', async () => {
-            const entity = repository.seed(createFakePermission({ built_in: false }));
+            const entity = repository.seed(createFakePermission({
+                built_in: false 
+            }));
 
             const result = await service.delete(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
@@ -267,7 +328,9 @@ describe('core/entities/permission/service', () => {
         });
 
         it('should prevent deletion of built-in permissions', async () => {
-            const entity = repository.seed(createFakePermission({ built_in: true }));
+            const entity = repository.seed(createFakePermission({
+                built_in: true 
+            }));
 
             await expect(
                 service.delete(entity.id, createAllowAllActor()),
@@ -275,7 +338,9 @@ describe('core/entities/permission/service', () => {
         });
 
         it('should call preCheck with PERMISSION_DELETE', async () => {
-            const entity = repository.seed(createFakePermission({ built_in: false }));
+            const entity = repository.seed(createFakePermission({
+                built_in: false 
+            }));
 
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
@@ -286,7 +351,9 @@ describe('core/entities/permission/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            const entity = repository.seed(createFakePermission({ built_in: false }));
+            const entity = repository.seed(createFakePermission({
+                built_in: false 
+            }));
 
             await expect(
                 service.delete(entity.id, createDenyAllActor()),

@@ -7,7 +7,10 @@
 
 import type { StoreGeneric, storeToRefs as _storeToRefs } from 'pinia';
 import {
-    isReactive, isRef, toRaw, toRef,
+    isReactive, 
+    isRef, 
+    toRaw, 
+    toRef,
 } from 'vue';
 
 export type StoreToRefs<T extends StoreGeneric> = ReturnType<typeof _storeToRefs<T>>;

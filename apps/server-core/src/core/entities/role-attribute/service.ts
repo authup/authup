@@ -38,10 +38,15 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             ],
         });
 
-        const { data: entities, meta } = await this.repository.findMany(query);
+        const {
+            data: entities, 
+            meta 
+        } = await this.repository.findMany(query);
 
         const data: RoleAttribute[] = [];
-        let { total } = meta;
+        let {
+            total 
+        } = meta;
 
         for (const entity of entities) {
             try {
@@ -61,7 +66,13 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             }
         }
 
-        return { data, meta: { ...meta, total } };
+        return {
+            data,
+            meta: {
+                ...meta,
+                total 
+            } 
+        };
     }
 
     async getOne(
@@ -76,7 +87,9 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -99,7 +112,9 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROLE_UPDATE 
+        });
 
         await this.repository.validateJoinColumns(data);
 
@@ -124,11 +139,15 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROLE_UPDATE 
+        });
 
         await this.repository.validateJoinColumns(data);
 
-        let entity = await this.repository.findOneBy({ id });
+        let entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -151,9 +170,13 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         id: string,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROLE_UPDATE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -165,7 +188,9 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

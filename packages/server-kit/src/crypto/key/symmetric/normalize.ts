@@ -7,7 +7,10 @@
 
 import { SymmetricAlgorithm } from './constants';
 import type {
-    SymmetricKeyCreateOptions, SymmetricKeyCreateOptionsInput, SymmetricKeyImportOptions, SymmetricKeyImportOptionsInput,
+    SymmetricKeyCreateOptions, 
+    SymmetricKeyCreateOptionsInput, 
+    SymmetricKeyImportOptions, 
+    SymmetricKeyImportOptionsInput,
 } from './types';
 
 export function normalizeSymmetricKeyCreateOptions(

@@ -24,9 +24,13 @@ export class OAuth2ClientRepository implements IOAuth2ClientRepository {
             .leftJoinAndSelect('client.realm', 'realm');
 
         if (isUUID(key)) {
-            query.where('client.id = :id', { id: key });
+            query.where('client.id = :id', {
+                id: key 
+            });
         } else {
-            query.where('client.name = :name', { name: key });
+            query.where('client.name = :name', {
+                name: key 
+            });
 
             if (realmKey) {
                 if (isUUID(realmKey)) {

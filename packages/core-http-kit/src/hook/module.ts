@@ -12,7 +12,12 @@ import { EventEmitter } from '@posva/event-emitter';
 import type { AuthorizationHeader, Client as BaseClient } from 'hapic';
 import {
     HeaderName,
-    HookName, getHeader, isClientError, setHeader, stringifyAuthorizationHeader, unsetHeader,
+    HookName, 
+    getHeader, 
+    isClientError, 
+    setHeader, 
+    stringifyAuthorizationHeader, 
+    unsetHeader,
 } from 'hapic';
 import { getClientErrorCode } from '../helpers';
 import type { TokenCreator } from '../token-creator';
@@ -114,7 +119,9 @@ export class ClientAuthenticationHook extends EventEmitter<{
                             return Promise.reject(err);
                         }
 
-                        const { request } = err;
+                        const {
+                            request 
+                        } = err;
 
                         const currentState = getClientRequestRetryState(request);
                         if (currentState.retryCount > 0) {

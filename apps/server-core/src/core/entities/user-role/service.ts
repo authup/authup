@@ -53,7 +53,9 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -65,7 +67,9 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserRole> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_ROLE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.USER_ROLE_CREATE 
+        });
 
         await this.repository.validateJoinColumns(data);
 
@@ -94,9 +98,13 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
         id: string,
         actor: ActorContext,
     ): Promise<UserRole> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_ROLE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.USER_ROLE_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -108,7 +116,9 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

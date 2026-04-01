@@ -6,7 +6,10 @@
  */
 
 import {
-    type Store, type StoreToRefs, injectStore, storeToRefs,
+    type Store, 
+    type StoreToRefs, 
+    injectStore, 
+    storeToRefs,
 } from '@authup/client-web-kit';
 import { hasOwnProperty, omitRecord } from '@authup/kit';
 import type { RouteLocationAsPathGeneric, RouteLocationNormalized } from 'vue-router';
@@ -68,7 +71,9 @@ export class RoutingInterceptor {
                     ...(
                         !this.hasLoggedOutCondition(to) &&
                         !this.hasQueryRedirectProperty(to) ?
-                            { redirect: to.fullPath } :
+                            {
+                                redirect: to.fullPath 
+                            } :
                             {}
                     ),
                 },
@@ -82,7 +87,9 @@ export class RoutingInterceptor {
                 query: {
                     ...(
                         !this.hasQueryRedirectProperty(to) ?
-                            { redirect: to.fullPath } :
+                            {
+                                redirect: to.fullPath 
+                            } :
                             {}
                     ),
                 },

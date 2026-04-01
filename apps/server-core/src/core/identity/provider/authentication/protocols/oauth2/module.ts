@@ -73,9 +73,15 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
     async safeAuthenticate(params: OAuth2AuthorizationCodeGrantPayload): Promise<Result<User>> {
         try {
             const data = await this.authenticate(params);
-            return { success: true, data };
+            return {
+                success: true,
+                data 
+            };
         } catch (e) {
-            return { success: false, error: e as Error };
+            return {
+                success: false,
+                error: e as Error 
+            };
         }
     }
 

@@ -8,7 +8,11 @@
 import { JWKType } from '@authup/specs';
 import { AsymmetricKey } from '@authup/server-kit';
 import {
-    DController, DGet, DPath, DRequest, DResponse,
+    DController, 
+    DGet, 
+    DPath, 
+    DRequest, 
+    DResponse,
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import { send } from 'routup';
@@ -40,7 +44,9 @@ export class JwkController {
         const entities = await this.repository.find({
             where: {
                 type: In([JWKType.RSA, JWKType.EC]),
-                ...(realmId ? { realm_id: realmId } : {}),
+                ...(realmId ? {
+                    realm_id: realmId 
+                } : {}),
             },
             order: {
                 priority: 'DESC',

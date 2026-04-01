@@ -23,6 +23,9 @@ export interface IRoleService {
         data: Record<string, any>,
         actor: ActorContext,
         options?: { updateOnly?: boolean },
-    ): Promise<{ entity: Role, created: boolean }>;
+    ): Promise<{
+        entity: Role,
+        created: boolean 
+    }>;
     delete(id: string, actor: ActorContext): Promise<Role>;
 }

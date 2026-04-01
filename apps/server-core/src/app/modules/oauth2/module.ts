@@ -16,7 +16,8 @@ import {
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
     OAuth2KeyRepository,
-    OAuth2ScopeRepository, OAuth2TokenRepository,
+    OAuth2ScopeRepository, 
+    OAuth2TokenRepository,
 } from './repositories/index.ts';
 import {
     OAuth2AccessTokenIssuer,

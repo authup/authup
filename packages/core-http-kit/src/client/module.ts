@@ -6,9 +6,7 @@
  */
 
 import { Client as BaseClient, HookName, isClientError } from 'hapic';
-import type {
-    Options,
-} from '@hapic/oauth2';
+import type { Options, } from '@hapic/oauth2';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
     ClientAPI,
@@ -109,39 +107,90 @@ export class Client extends BaseClient {
             }
         }
 
-        this.authorize = new OAuth2AuthorizeAPI({ client: this, options });
-        this.token = new OAuth2TokenAPI({ client: this, options });
+        this.authorize = new OAuth2AuthorizeAPI({
+            client: this,
+            options 
+        });
+        this.token = new OAuth2TokenAPI({
+            client: this,
+            options 
+        });
 
-        this.client = new ClientAPI({ client: this });
-        this.clientPermission = new ClientPermissionAPI({ client: this });
-        this.clientRole = new ClientRoleAPI({ client: this });
-        this.clientScope = new ClientScopeAPI({ client: this });
+        this.client = new ClientAPI({
+            client: this 
+        });
+        this.clientPermission = new ClientPermissionAPI({
+            client: this 
+        });
+        this.clientRole = new ClientRoleAPI({
+            client: this 
+        });
+        this.clientScope = new ClientScopeAPI({
+            client: this 
+        });
 
-        this.identityProvider = new IdentityProviderAPI({ client: this });
-        this.identityProviderRoleMapping = new IdentityProviderRoleMappingAPI({ client: this });
+        this.identityProvider = new IdentityProviderAPI({
+            client: this 
+        });
+        this.identityProviderRoleMapping = new IdentityProviderRoleMappingAPI({
+            client: this 
+        });
 
-        this.policy = new PolicyAPI({ client: this });
-        this.permission = new PermissionAPI({ client: this });
-        this.permissionPolicy = new PermissionPolicyAPI({ client: this });
+        this.policy = new PolicyAPI({
+            client: this 
+        });
+        this.permission = new PermissionAPI({
+            client: this 
+        });
+        this.permissionPolicy = new PermissionPolicyAPI({
+            client: this 
+        });
 
-        this.realm = new RealmAPI({ client: this });
+        this.realm = new RealmAPI({
+            client: this 
+        });
 
-        this.robot = new RobotAPI({ client: this });
-        this.robotPermission = new RobotPermissionAPI({ client: this });
-        this.robotRole = new RobotRoleAPI({ client: this });
+        this.robot = new RobotAPI({
+            client: this 
+        });
+        this.robotPermission = new RobotPermissionAPI({
+            client: this 
+        });
+        this.robotRole = new RobotRoleAPI({
+            client: this 
+        });
 
-        this.role = new RoleAPI({ client: this });
-        this.roleAttribute = new RoleAttributeAPI({ client: this });
-        this.rolePermission = new RolePermissionAPI({ client: this });
+        this.role = new RoleAPI({
+            client: this 
+        });
+        this.roleAttribute = new RoleAttributeAPI({
+            client: this 
+        });
+        this.rolePermission = new RolePermissionAPI({
+            client: this 
+        });
 
-        this.scope = new ScopeAPI({ client: this });
+        this.scope = new ScopeAPI({
+            client: this 
+        });
 
-        this.user = new UserAPI({ client: this });
+        this.user = new UserAPI({
+            client: this 
+        });
 
-        this.userInfo = new OAuth2UserInfoAPI({ client: this, options });
-        this.userAttribute = new UserAttributeAPI({ client: this });
-        this.userPermission = new UserPermissionAPI({ client: this });
-        this.userRole = new UserRoleAPI({ client: this });
+        this.userInfo = new OAuth2UserInfoAPI({
+            client: this,
+            options 
+        });
+        this.userAttribute = new UserAttributeAPI({
+            client: this 
+        });
+        this.userPermission = new UserPermissionAPI({
+            client: this 
+        });
+        this.userRole = new UserRoleAPI({
+            client: this 
+        });
 
         this.on(HookName.RESPONSE_ERROR, ((error) => {
             if (

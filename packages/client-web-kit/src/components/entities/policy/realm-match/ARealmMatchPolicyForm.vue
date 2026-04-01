@@ -1,7 +1,5 @@
 <script lang="ts">
-import {
-    type PropType, defineComponent, reactive,
-} from 'vue';
+import { type PropType,defineComponent,reactive, } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
@@ -41,7 +39,10 @@ export default defineComponent({
         });
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
-            const { attribute_name, ...data } = input;
+            const {
+                attribute_name, 
+                ...data 
+            } = input;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assignFormProperties(form, data as Record<string, any>);
             if (attribute_name) {

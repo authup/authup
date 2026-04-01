@@ -8,15 +8,38 @@
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { base64URLDecode, isUUID } from '@authup/kit';
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DPut, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import {
-    getRequestHeader, getRequestIP, send, sendAccepted, sendCreated, sendRedirect, useRequestParam,
+    getRequestHeader, 
+    getRequestIP, 
+    send, 
+    sendAccepted, 
+    sendCreated, 
+    sendRedirect, 
+    useRequestParam,
 } from 'routup';
-import type {
-    IdentityProvider, OAuth2AuthorizationCodeRequest} from '@authup/core-kit';
-import { IdentityProviderAttributesValidator, IdentityProviderValidator, IdentityType, PermissionName, ValidatorGroup, isOAuth2IdentityProvider, isOpenIDIdentityProvider } from '@authup/core-kit';
+import type { IdentityProvider,OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
+import {
+ 
+    IdentityProviderAttributesValidator, 
+    IdentityProviderValidator, 
+    IdentityType, 
+    PermissionName, 
+    ValidatorGroup, 
+    isOAuth2IdentityProvider, 
+    isOpenIDIdentityProvider 
+} from '@authup/core-kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
@@ -85,11 +108,16 @@ export class IdentityProviderController {
         @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<any> {
-        const { data, meta } = await this.repository.findMany(useRequestQuery(req));
+        const {
+            data, 
+            meta 
+        } = await this.repository.findMany(useRequestQuery(req));
 
         try {
             const permissionEvaluator = useRequestPermissionEvaluator(req);
-            await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_READ });
+            await permissionEvaluator.preEvaluate({
+                name: PermissionName.IDENTITY_PROVIDER_READ 
+            });
 
             for (const datum of data) {
                 try {
@@ -154,7 +182,9 @@ export class IdentityProviderController {
         @DRequest() req: any,
         @DResponse() res: any,
     ) : Promise<any> {
-        return this.write(req, res, { updateOnly: true });
+        return this.write(req, res, {
+            updateOnly: true 
+        });
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -176,9 +206,13 @@ export class IdentityProviderController {
         const paramId = useRequestParamID(req);
 
         const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
+        await permissionEvaluator.preEvaluate({
+            name: PermissionName.IDENTITY_PROVIDER_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id: paramId });
+        const entity = await this.repository.findOneBy({
+            id: paramId 
+        });
 
         if (!entity) {
             throw new NotFoundError();
@@ -191,7 +225,9 @@ export class IdentityProviderController {
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
 
         await this.repository.remove(entity);
 
@@ -288,7 +324,9 @@ export class IdentityProviderController {
             throw OAuth2Error.requestInvalid('The provider and client realm do not match.');
         }
 
-        const { code } = useRequestQuery(req);
+        const {
+            code 
+        } = useRequestQuery(req);
 
         const authenticator = createIdentityProviderOAuth2Authenticator({
             accountManager: this.accountManager,
@@ -347,7 +385,9 @@ export class IdentityProviderController {
         updateOnly?: boolean
     } = {}): Promise<any> {
         let group: string;
-        const id = getRequestParamID(req, { isUUID: false });
+        const id = getRequestParamID(req, {
+            isUUID: false 
+        });
         const realmId = getRequestBodyRealmID(req);
 
         let entity: IdentityProvider | null | undefined;
@@ -373,11 +413,15 @@ export class IdentityProviderController {
 
         const permissionEvaluator = useRequestPermissionEvaluator(req);
         if (entity) {
-            await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
+            await permissionEvaluator.preEvaluate({
+                name: PermissionName.IDENTITY_PROVIDER_UPDATE 
+            });
 
             group = ValidatorGroup.UPDATE;
         } else {
-            await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_CREATE });
+            await permissionEvaluator.preEvaluate({
+                name: PermissionName.IDENTITY_PROVIDER_CREATE 
+            });
 
             group = ValidatorGroup.CREATE;
         }

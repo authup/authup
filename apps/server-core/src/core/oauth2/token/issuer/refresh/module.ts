@@ -35,7 +35,9 @@ export class OAuth2RefreshTokenIssuer extends OAuth2BaseTokenIssuer implements I
             ...input,
             kind: OAuth2TokenKind.REFRESH,
             exp: this.buildExp(input),
-            ...(iss ? { iss } : {}),
+            ...(iss ? {
+                iss 
+            } : {}),
         });
 
         const token = await this.signer.sign(data);

@@ -14,10 +14,7 @@ import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type { UserProvisioningEntity } from '../../entities/user/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
-import type {
-    IProvisioningSynchronizer,
-
-} from '../../types.ts';
+import type { IProvisioningSynchronizer, } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RealmProvisioningSynchronizerContext } from './types.ts';
 
@@ -58,7 +55,10 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             if (attributes) {
                 await this.repository.remove(attributes);
             }
-            return { ...input, attributes: attributes || input.attributes };
+            return {
+                ...input,
+                attributes: attributes || input.attributes 
+            };
         }
 
         if (attributes) {

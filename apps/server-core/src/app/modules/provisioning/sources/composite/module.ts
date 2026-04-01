@@ -37,14 +37,24 @@ export class CompositeProvisioningSource implements IProvisioningSource {
     }
 
     private buildEntityKey(
-        attributes: { name?: string, realm_id?: string | null, client_id?: string | null },
+        attributes: {
+            name?: string,
+            realm_id?: string | null,
+            client_id?: string | null
+        },
     ): string | undefined {
         if (!attributes.name) return undefined;
         return `${attributes.name}:${attributes.realm_id || ''}:${attributes.client_id || ''}`;
     }
 
     private mergeEntities<
-        T extends { attributes: { name?: string, realm_id?: string | null, client_id?: string | null } },
+        T extends {
+            attributes: {
+                name?: string,
+                realm_id?: string | null,
+                client_id?: string | null
+            }
+        },
     >(
         target: T[] | undefined,
         source: T[] | undefined,

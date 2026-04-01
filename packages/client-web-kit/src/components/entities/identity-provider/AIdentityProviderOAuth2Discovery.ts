@@ -9,12 +9,13 @@ import { Client } from '@authup/core-http-kit';
 import { isOpenIDProviderMetadata } from '@authup/specs';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import {
-    url,
-} from '@vuelidate/validators';
+import { url, } from '@vuelidate/validators';
 import type { VNodeChild } from 'vue';
 import {
-    defineComponent, h, reactive, ref,
+    defineComponent, 
+    h, 
+    reactive, 
+    ref,
 } from 'vue';
 import { getVuelidateSeverity, useTranslationsForBaseValidation } from '../../../core';
 
@@ -100,7 +101,9 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
                         return lookup();
                     },
                 }, [
-                    h('i', { class: 'fa fa-search pe-1' }),
+                    h('i', {
+                        class: 'fa fa-search pe-1' 
+                    }),
                     'Lookup',
                 ]),
             ];

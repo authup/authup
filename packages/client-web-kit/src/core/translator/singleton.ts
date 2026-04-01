@@ -15,7 +15,10 @@ import {
 } from '@ilingo/vuelidate';
 import { useTranslation as _useTranslation, injectLocale } from '@ilingo/vuelidate/vue';
 import type {
-    BaseValidation, Validation, ValidationArgs, ValidationRuleCollection,
+    BaseValidation, 
+    Validation, 
+    ValidationArgs, 
+    ValidationRuleCollection,
 } from '@vuelidate/core';
 import type { GetContextReactive } from '@ilingo/vue';
 import type { Ref } from 'vue';

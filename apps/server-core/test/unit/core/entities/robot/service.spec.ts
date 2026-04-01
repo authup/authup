@@ -12,7 +12,11 @@ import {
 } from '@authup/core-kit';
 import type { Realm, Robot, User } from '@authup/core-kit';
 import {
-    beforeEach, describe, expect, it, vi,
+    beforeEach, 
+    describe, 
+    expect, 
+    it, 
+    vi,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RobotService } from '../../../../../src/core/entities/robot/service.ts';
@@ -51,7 +55,10 @@ function createUserActorAsOwner(userId: string): ActorContext {
             data: {
                 id: userId,
                 realm_id: realmId,
-                realm: { id: realmId, name: 'test' } as Realm,
+                realm: {
+                    id: realmId,
+                    name: 'test' 
+                } as Realm,
             } as User,
         },
     };
@@ -65,7 +72,10 @@ describe('core/entities/robot/service', () => {
     beforeEach(() => {
         repository = new FakeRobotRepository();
         realmRepository = new FakeRealmRepository();
-        service = new RobotService({ repository, realmRepository });
+        service = new RobotService({
+            repository,
+            realmRepository 
+        });
     });
 
     describe('getMany', () => {
@@ -79,8 +89,12 @@ describe('core/entities/robot/service', () => {
             const realmId = randomUUID();
 
             const [selfRobot] = repository.seed([
-                createFakeRobot({ name: 'self-robot' }),
-                createFakeRobot({ name: 'other-robot' }),
+                createFakeRobot({
+                    name: 'self-robot' 
+                }),
+                createFakeRobot({
+                    name: 'other-robot' 
+                }),
             ]);
 
             const actor: ActorContext = {
@@ -95,7 +109,10 @@ describe('core/entities/robot/service', () => {
                     data: {
                         id: selfRobot.id,
                         realm_id: realmId,
-                        realm: { id: realmId, name: 'test' } as Realm,
+                        realm: {
+                            id: realmId,
+                            name: 'test' 
+                        } as Realm,
                     } as Robot,
                 },
             };
@@ -114,13 +131,17 @@ describe('core/entities/robot/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const entity = repository.seed(createFakeRobot({ name: 'test-robot' }));
+            const entity = repository.seed(createFakeRobot({
+                name: 'test-robot' 
+            }));
             const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.name).toBe('test-robot');
         });
 
         it('should return entity by name', async () => {
-            repository.seed([createFakeRobot({ name: 'my-robot' })]);
+            repository.seed([createFakeRobot({
+                name: 'my-robot' 
+            })]);
             const result = await service.getOne('my-robot', createAllowAllActor());
             expect(result.name).toBe('my-robot');
         });
@@ -140,7 +161,9 @@ describe('core/entities/robot/service', () => {
     describe('create', () => {
         it('should create a robot with valid data', async () => {
             const result = await service.create(
-                { name: 'new-robot' },
+                {
+                    name: 'new-robot' 
+                },
                 createAllowAllActor(),
             );
 
@@ -150,7 +173,9 @@ describe('core/entities/robot/service', () => {
 
         it('should generate secret on create', async () => {
             const result = await service.create(
-                { name: 'secret-robot' },
+                {
+                    name: 'secret-robot' 
+                },
                 createAllowAllActor(),
             );
 
@@ -160,7 +185,9 @@ describe('core/entities/robot/service', () => {
 
         it('should return plaintext secret after create (not the hash)', async () => {
             const result = await service.create(
-                { name: 'plain-secret-robot' },
+                {
+                    name: 'plain-secret-robot' 
+                },
                 createAllowAllActor(),
             );
 
@@ -170,7 +197,9 @@ describe('core/entities/robot/service', () => {
 
         it('should call preCheck with ROBOT_CREATE', async () => {
             const actor = createAllowAllActor();
-            await service.create({ name: 'test-robot' }, actor);
+            await service.create({
+                name: 'test-robot' 
+            }, actor);
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROBOT_CREATE,
             });
@@ -178,7 +207,9 @@ describe('core/entities/robot/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(
-                service.create({ name: 'test-robot' }, createDenyAllActor()),
+                service.create({
+                    name: 'test-robot' 
+                }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
 
@@ -186,29 +217,39 @@ describe('core/entities/robot/service', () => {
             const realmId = randomUUID();
             const actor = createNonMasterRealmActor(realmId);
 
-            const result = await service.create({ name: 'realm-robot' }, actor);
+            const result = await service.create({
+                name: 'realm-robot' 
+            }, actor);
             expect(result.realm_id).toBe(realmId);
         });
     });
 
     describe('update', () => {
         it('should update an existing robot', async () => {
-            const entity = repository.seed(createFakeRobot({ name: 'old-name' }));
+            const entity = repository.seed(createFakeRobot({
+                name: 'old-name' 
+            }));
 
-            const result = await service.update(entity.id, { name: 'new-name' }, createAllowAllActor());
+            const result = await service.update(entity.id, {
+                name: 'new-name' 
+            }, createAllowAllActor());
             expect(result.name).toBe('new-name');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', {
+                    name: 'x' 
+                }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
         it('should return plaintext secret after update with new secret', async () => {
             const entity = repository.seed(createFakeRobot());
 
-            const result = await service.update(entity.id, { secret: 'new-secret-value' }, createAllowAllActor());
+            const result = await service.update(entity.id, {
+                secret: 'new-secret-value' 
+            }, createAllowAllActor());
             expect(result.secret).toBe('new-secret-value');
         });
     });
@@ -225,7 +266,9 @@ describe('core/entities/robot/service', () => {
         });
 
         it('should call preCheck with ROBOT_DELETE for non-owner', async () => {
-            const entity = repository.seed(createFakeRobot({ user_id: null }));
+            const entity = repository.seed(createFakeRobot({
+                user_id: null 
+            }));
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
@@ -235,7 +278,10 @@ describe('core/entities/robot/service', () => {
 
         it('should not call preCheck for owner delete', async () => {
             const userId = randomUUID();
-            const entity = repository.seed(createFakeRobot({ name: 'owned', user_id: userId }));
+            const entity = repository.seed(createFakeRobot({
+                name: 'owned',
+                user_id: userId 
+            }));
 
             const actor = createUserActorAsOwner(userId);
             await service.delete(entity.id, actor);
@@ -244,7 +290,9 @@ describe('core/entities/robot/service', () => {
 
         it('should allow owner to delete without permission check', async () => {
             const userId = randomUUID();
-            const entity = repository.seed(createFakeRobot({ user_id: userId }));
+            const entity = repository.seed(createFakeRobot({
+                user_id: userId 
+            }));
 
             const actor = createUserActorAsOwner(userId);
             vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
@@ -255,7 +303,9 @@ describe('core/entities/robot/service', () => {
         });
 
         it('should require permission check for robots not owned by actor', async () => {
-            const entity = repository.seed(createFakeRobot({ user_id: randomUUID() }));
+            const entity = repository.seed(createFakeRobot({
+                user_id: randomUUID() 
+            }));
 
             const actor = createUserActorAsOwner(randomUUID());
             vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
@@ -264,7 +314,9 @@ describe('core/entities/robot/service', () => {
         });
 
         it('should require permission check for robots with no user_id', async () => {
-            const entity = repository.seed(createFakeRobot({ user_id: null }));
+            const entity = repository.seed(createFakeRobot({
+                user_id: null 
+            }));
 
             const actor = createUserActorAsOwner(randomUUID());
             vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());

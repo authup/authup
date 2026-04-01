@@ -15,43 +15,76 @@ import {
     PrimaryGeneratedColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import type { IdentityProvider, IdentityProviderAccount, Realm, User  } from '@authup/core-kit';
+import type {
+ 
+    IdentityProvider, 
+    IdentityProviderAccount, 
+    Realm, 
+    User  
+} from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
 import { IdentityProviderEntity } from '../identity-provider/index.ts';
 
-@Entity({ name: 'auth_identity_provider_accounts' })
-@Index(['provider_id', 'user_id'], { unique: true })
+@Entity({
+    name: 'auth_identity_provider_accounts' 
+})
+@Index(['provider_id', 'user_id'], {
+    unique: true 
+})
 export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'text', nullable: true, default: null })
+    @Column({
+        type: 'text',
+        nullable: true,
+        default: null 
+    })
     access_token: string;
 
-    @Column({ type: 'text', nullable: true, default: null })
+    @Column({
+        type: 'text',
+        nullable: true,
+        default: null 
+    })
     refresh_token: string;
 
-    @Column({ type: 'varchar', length: 256 })
+    @Column({
+        type: 'varchar',
+        length: 256 
+    })
     provider_user_id: string;
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: null,
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
     })
     provider_user_name: string;
 
     @Column({
-        type: 'varchar', length: 512, nullable: true, default: null,
+        type: 'varchar',
+        length: 512,
+        nullable: true,
+        default: null,
     })
     provider_user_email: string;
 
     @Column({
-        type: 'int', unsigned: true, nullable: true, default: null,
+        type: 'int',
+        unsigned: true,
+        nullable: true,
+        default: null,
     })
     expires_in: number | null;
 
     @Column({
-        type: 'varchar', length: 28, nullable: true, default: null,
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
     })
     expires_at: string | null;
 
@@ -66,15 +99,26 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @Column()
     user_id: User['id'];
 
-    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'user_id' })
+    @ManyToOne(() => UserEntity, {
+        onDelete: 'CASCADE' 
+    })
+    @JoinColumn({
+        name: 'user_id' 
+    })
     user: UserEntity;
 
-    @Column({ nullable: true })
+    @Column({
+        nullable: true 
+    })
     user_realm_id: Realm['id'] | null;
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({ name: 'user_realm_id' })
+    @ManyToOne(() => RealmEntity, {
+        onDelete: 'CASCADE',
+        nullable: true 
+    })
+    @JoinColumn({
+        name: 'user_realm_id' 
+    })
     user_realm: RealmEntity | null;
 
     // -----------------------------------------------
@@ -82,14 +126,25 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @Column()
     provider_id: IdentityProvider['id'];
 
-    @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'provider_id' })
+    @ManyToOne(() => IdentityProviderEntity, {
+        onDelete: 'CASCADE' 
+    })
+    @JoinColumn({
+        name: 'provider_id' 
+    })
     provider: IdentityProviderEntity;
 
-    @Column({ nullable: true })
+    @Column({
+        nullable: true 
+    })
     provider_realm_id: Realm['id'] | null;
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({ name: 'provider_realm_id' })
+    @ManyToOne(() => RealmEntity, {
+        onDelete: 'CASCADE',
+        nullable: true 
+    })
+    @JoinColumn({
+        name: 'provider_realm_id' 
+    })
     provider_realm: RealmEntity | null;
 }

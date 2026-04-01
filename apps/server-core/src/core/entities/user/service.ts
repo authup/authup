@@ -52,10 +52,15 @@ export class UserService extends AbstractEntityService implements IUserService {
             ],
         });
 
-        const { data: entities, meta } = await this.repository.findMany(query);
+        const {
+            data: entities, 
+            meta 
+        } = await this.repository.findMany(query);
 
         const data: User[] = [];
-        let { total } = meta;
+        let {
+            total 
+        } = meta;
 
         for (const entity of entities) {
             if (
@@ -85,7 +90,13 @@ export class UserService extends AbstractEntityService implements IUserService {
             }
         }
 
-        return { data, meta: { ...meta, total } };
+        return {
+            data,
+            meta: {
+                ...meta,
+                total 
+            } 
+        };
     }
 
     async getOne(
@@ -140,7 +151,9 @@ export class UserService extends AbstractEntityService implements IUserService {
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<User> {
-        const { entity } = await this.save(undefined, data, actor);
+        const {
+            entity 
+        } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -149,7 +162,11 @@ export class UserService extends AbstractEntityService implements IUserService {
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<User> {
-        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+        const {
+            entity 
+        } = await this.save(idOrName, data, actor, {
+            updateOnly: true 
+        });
         return entity;
     }
 
@@ -158,7 +175,10 @@ export class UserService extends AbstractEntityService implements IUserService {
         data: Record<string, any>,
         actor: ActorContext,
         options: { updateOnly?: boolean } = {},
-    ): Promise<{ entity: User, created: boolean }> {
+    ): Promise<{
+        entity: User,
+        created: boolean 
+    }> {
         let group: string;
 
         const realm = typeof data.realm_id === 'string' ?
@@ -213,7 +233,9 @@ export class UserService extends AbstractEntityService implements IUserService {
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, { group });
+        const validated = await this.validator.run(data, {
+            group 
+        });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -263,7 +285,10 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             await this.repository.save(entity);
 
-            return { entity, created: false };
+            return {
+                entity,
+                created: false 
+            };
         }
 
         if (!validated.realm_id) {
@@ -290,14 +315,19 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         await this.repository.save(entity);
 
-        return { entity, created: true };
+        return {
+            entity,
+            created: true 
+        };
     }
 
     async delete(
         id: string,
         actor: ActorContext,
     ): Promise<User> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.USER_DELETE 
+        });
 
         if (
             actor.identity &&
@@ -307,7 +337,9 @@ export class UserService extends AbstractEntityService implements IUserService {
             throw new BadRequestError('The own user can not be deleted.');
         }
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -319,7 +351,9 @@ export class UserService extends AbstractEntityService implements IUserService {
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -37,7 +37,6 @@ export class FileProvisioningSource implements IProvisioningSource {
 
         const output : RootProvisioningEntity = {};
         for (const location of locations) {
-
             const raw = await load(location);
             const data = await this.rootValidator.run(raw.default);
 

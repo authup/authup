@@ -5,22 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityDefaultEventName,
+import {
+    EntityDefaultEventName,
     EntityType,
     buildEntityChannelName,
-    buildPermissionBindingKey } from '@authup/core-kit';
-import type {
-    Permission,
+    buildPermissionBindingKey 
 } from '@authup/core-kit';
+import type { Permission, } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface, InsertEvent,
+    EntitySubscriberInterface, 
+    InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import {
-    EventSubscriber,
-} from 'typeorm';
+import { EventSubscriber, } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { PermissionEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';

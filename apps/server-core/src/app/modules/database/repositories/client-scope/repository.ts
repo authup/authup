@@ -24,7 +24,9 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
         const qb = this.repository.createQueryBuilder('clientScope');
         qb.groupBy('clientScope.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'clientScope',
             relations: {
                 allowed: ['client', 'scope'],
@@ -52,7 +54,9 @@ export class ClientScopeRepositoryAdapter implements IClientScopeRepository {
     }
 
     findOneById(id: string): Promise<ClientScope | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     findOneByName(_name: string): Promise<ClientScope | null> {

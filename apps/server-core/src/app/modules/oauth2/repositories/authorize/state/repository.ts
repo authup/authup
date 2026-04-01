@@ -19,7 +19,10 @@ export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeState
     }
 
     async findOneById(key: string): Promise<OAuth2AuthorizationState | null> {
-        const id = buildCacheKey({ prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE, key });
+        const id = buildCacheKey({
+            prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
+            key 
+        });
         const payload = await this.cache.get<OAuth2AuthorizationState>(id);
         if (payload) {
             return payload;
@@ -30,7 +33,10 @@ export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeState
 
     async remove(key: string): Promise<void> {
         await this.cache.drop(
-            buildCacheKey({ prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE, key }),
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
+                key 
+            }),
         );
     }
 
@@ -38,7 +44,10 @@ export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeState
         const state = createNanoID();
 
         await this.cache.set(
-            buildCacheKey({ prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE, key: state }),
+            buildCacheKey({
+                prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
+                key: state 
+            }),
             data,
             {
                 ttl: 1000 * 60 * 30, // 30 min

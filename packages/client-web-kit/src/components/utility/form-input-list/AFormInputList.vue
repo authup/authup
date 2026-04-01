@@ -37,7 +37,10 @@ export default defineComponent({
     emits: ['changed'],
     setup(props, setup) {
         let counter = 0;
-        const items = ref<{ id: number, value: string }[]>([]);
+        const items = ref<{
+            id: number,
+            value: string 
+        }[]>([]);
 
         const add = (item?: string) => {
             items.value.push({

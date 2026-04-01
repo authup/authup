@@ -6,7 +6,10 @@
  */
 
 import {
-    type TokenECAlgorithm, type TokenRSAAlgorithm, extractTokenHeader, verifyToken,
+    type TokenECAlgorithm, 
+    type TokenRSAAlgorithm, 
+    extractTokenHeader, 
+    verifyToken,
 } from '@authup/server-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWKError, JWKType, JWTError } from '@authup/specs';
@@ -85,7 +88,9 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                         key: key.encryption_key,
                         ...(
                             key.signature_algorithm ?
-                                { algorithms: [key.signature_algorithm] } :
+                                {
+                                    algorithms: [key.signature_algorithm] 
+                                } :
                                 []
                         ) as TokenECAlgorithm[],
                     },
@@ -104,7 +109,9 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                         key: key.encryption_key,
                         ...(
                             key.signature_algorithm ?
-                                { algorithms: [key.signature_algorithm] } :
+                                {
+                                    algorithms: [key.signature_algorithm] 
+                                } :
                                 []
                         ) as TokenRSAAlgorithm[],
                     },

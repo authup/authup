@@ -8,7 +8,6 @@
 import type { IMailClient, MailSendOptions } from '../../../../core/index.ts';
 
 export class VoidMailClientAdapter implements IMailClient {
-     
     send(_options: MailSendOptions): Promise<void> {
         return Promise.resolve(undefined);
     }

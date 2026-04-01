@@ -141,7 +141,9 @@ export class ClientManager<
                 Promise.resolve()
                     .then(() => this.tokenFn())
                     .then((token) => {
-                        cb({ token });
+                        cb({
+                            token 
+                        });
                     })
                     .catch(() => cb());
             },

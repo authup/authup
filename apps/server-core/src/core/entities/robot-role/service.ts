@@ -53,7 +53,9 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -65,7 +67,9 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RobotRole> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_ROLE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROBOT_ROLE_CREATE 
+        });
 
         await this.repository.validateJoinColumns(data);
 
@@ -94,9 +98,13 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         id: string,
         actor: ActorContext,
     ): Promise<RobotRole> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_ROLE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROBOT_ROLE_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -108,7 +116,9 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

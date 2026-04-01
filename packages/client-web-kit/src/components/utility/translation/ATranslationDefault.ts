@@ -1,9 +1,7 @@
 import type { PropType } from 'vue';
 import { defineComponent, h } from 'vue';
 import type { TranslatorTranslationDefaultKey } from '../../../core';
-import {
-    TranslatorTranslationGroup,
-} from '../../../core';
+import { TranslatorTranslationGroup, } from '../../../core';
 import { ATranslation } from './ATranslation';
 
 export const ATranslationDefault = defineComponent({

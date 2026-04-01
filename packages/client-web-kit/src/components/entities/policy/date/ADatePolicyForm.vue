@@ -1,7 +1,5 @@
 <script lang="ts">
-import {
-    type PropType, defineComponent, reactive,
-} from 'vue';
+import { type PropType,defineComponent,reactive, } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';

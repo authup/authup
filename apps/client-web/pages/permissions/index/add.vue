@@ -11,7 +11,9 @@ export default defineNuxtComponent({
         APermissionForm,
     },
     emits: ['failed', 'created'],
-    setup(props, { emit }) {
+    setup(props, {
+        emit 
+    }) {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -20,7 +22,9 @@ export default defineNuxtComponent({
         });
 
         const handleCreated = (e: Permission) => {
-            navigateTo({ path: `/permissions/${e.id}` });
+            navigateTo({
+                path: `/permissions/${e.id}` 
+            });
         };
 
         const handleFailed = (e: Error) => {

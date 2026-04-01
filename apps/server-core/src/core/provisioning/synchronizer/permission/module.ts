@@ -34,7 +34,10 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
             if (attributes) {
                 await this.repository.remove(attributes);
             }
-            return { ...input, attributes: attributes || input.attributes };
+            return {
+                ...input,
+                attributes: attributes || input.attributes 
+            };
         }
 
         if (attributes) {

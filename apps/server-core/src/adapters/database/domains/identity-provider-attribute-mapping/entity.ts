@@ -19,28 +19,54 @@ import type { IdentityProviderAttributeMapping, IdentityProviderMappingSyncMode,
 import { IdentityProviderEntity } from '../identity-provider/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
-@Entity({ name: 'auth_identity_provider_attribute_mappings' })
-@Index(['provider_id', 'target_name'], { unique: true })
+@Entity({
+    name: 'auth_identity_provider_attribute_mappings' 
+})
+@Index(['provider_id', 'target_name'], {
+    unique: true 
+})
 export class IdentityProviderAttributeMappingEntity implements IdentityProviderAttributeMapping {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'varchar', length: 64, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 64,
+        nullable: true 
+    })
     synchronization_mode: `${IdentityProviderMappingSyncMode}` | null;
 
-    @Column({ type: 'varchar', length: 64, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 64,
+        nullable: true 
+    })
     name: string | null;
 
-    @Column({ type: 'varchar', length: 128, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 128,
+        nullable: true 
+    })
     value: string | null;
 
-    @Column({ type: 'boolean', default: false })
+    @Column({
+        type: 'boolean',
+        default: false 
+    })
     value_is_regex: boolean;
 
-    @Column({ type: 'varchar', length: 64 })
+    @Column({
+        type: 'varchar',
+        length: 64 
+    })
     target_name: string;
 
-    @Column({ type: 'varchar', length: 128, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 128,
+        nullable: true 
+    })
     target_value: string | null;
 
     @CreateDateColumn()
@@ -54,14 +80,22 @@ export class IdentityProviderAttributeMappingEntity implements IdentityProviderA
     @Column()
     provider_id: string;
 
-    @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'provider_id' })
+    @ManyToOne(() => IdentityProviderEntity, {
+        onDelete: 'CASCADE' 
+    })
+    @JoinColumn({
+        name: 'provider_id' 
+    })
     provider: IdentityProviderEntity;
 
     @Column()
     provider_realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'provider_realm_id' })
+    @ManyToOne(() => RealmEntity, {
+        onDelete: 'CASCADE' 
+    })
+    @JoinColumn({
+        name: 'provider_realm_id' 
+    })
     provider_realm: RealmEntity;
 }

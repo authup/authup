@@ -10,13 +10,16 @@ import type { IdentityProviderProtocolElement } from './type';
 
 const elements = {
     [IdentityProviderProtocol.OAUTH2]: {
-        name: 'OAuth2', icon: 'fa fa-lock',
+        name: 'OAuth2',
+        icon: 'fa fa-lock',
     },
     [IdentityProviderProtocol.OIDC]: {
-        name: 'OpenID Connect', icon: 'fas fa-id-card',
+        name: 'OpenID Connect',
+        icon: 'fas fa-id-card',
     },
     [IdentityProviderProtocol.LDAP]: {
-        name: 'LDAP', icon: 'fas fa-sitemap',
+        name: 'LDAP',
+        icon: 'fas fa-sitemap',
     },
 };
 

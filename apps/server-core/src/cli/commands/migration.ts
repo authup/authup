@@ -10,12 +10,18 @@ import path from 'node:path';
 import process from 'node:process';
 import {
     checkDatabase,
-    createDatabase, dropDatabase, generateMigration, transformFilePath,
+    createDatabase, 
+    dropDatabase, 
+    generateMigration, 
+    transformFilePath,
 } from 'typeorm-extension';
 import { DataSource, type DataSourceOptions } from 'typeorm';
 import { DataSourceOptionsBuilder } from '../../adapters/database/index.ts';
 import {
-    ApplicationBuilder, ConfigInjectionKey, LoggerInjectionKey, ModuleName,
+    ApplicationBuilder, 
+    ConfigInjectionKey, 
+    LoggerInjectionKey, 
+    ModuleName,
 } from '../../app/index.ts';
 import type { IContainer } from 'eldin';
 import { CODE_PATH } from '../../path.ts';
@@ -56,10 +62,16 @@ async function runMigrationOperation(
         logger.debug(`Migration-Directory: ${options.migrations}`);
     }
 
-    const check = await checkDatabase({ options });
+    const check = await checkDatabase({
+        options 
+    });
 
     if (!check.exists) {
-        await createDatabase({ options, synchronize: false, ifNotExist: true });
+        await createDatabase({
+            options,
+            synchronize: false,
+            ifNotExist: true 
+        });
     }
 
     const dataSource = new DataSource({
@@ -115,8 +127,13 @@ async function generateMigrations(): Promise<void> {
         const dataSourceOptions = optionsBuilder.buildWith(connection);
         const directoryPath = path.join(baseDirectory, dataSourceOptions.type);
 
-        await dropDatabase({ options: dataSourceOptions });
-        await createDatabase({ options: dataSourceOptions, synchronize: false });
+        await dropDatabase({
+            options: dataSourceOptions 
+        });
+        await createDatabase({
+            options: dataSourceOptions,
+            synchronize: false 
+        });
 
         const dataSource = new DataSource(dataSourceOptions);
         await dataSource.initialize();

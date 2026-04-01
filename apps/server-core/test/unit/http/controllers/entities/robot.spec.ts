@@ -6,7 +6,11 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { createFakeRobot, expectPropertiesEqualToSrc } from '../../../../utils/index.ts';
 import { createTestApplication } from '../../../../app/index.ts';
@@ -99,7 +103,9 @@ describe('src/http/controllers/robot', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const { name } = createFakeRobot();
+        const {
+            name 
+        } = createFakeRobot();
         let response = await suite.client
             .robot
             .create({
@@ -110,8 +116,12 @@ describe('src/http/controllers/robot', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);
 
-        const { id } = response;
-        const { name: nextName } = createFakeRobot();
+        const {
+            id 
+        } = response;
+        const {
+            name: nextName 
+        } = createFakeRobot();
 
         response = await suite.client
             .robot

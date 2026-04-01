@@ -7,7 +7,11 @@
 
 import { faker } from '@faker-js/faker';
 import {
-    beforeEach, describe, expect, it, vi,
+    beforeEach, 
+    describe, 
+    expect, 
+    it, 
+    vi,
 } from 'vitest';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { User } from '@authup/core-kit';
@@ -52,40 +56,54 @@ describe('core/identity/password-recovery/service', () => {
     describe('forgotPassword', () => {
         it('should throw when password recovery is not enabled', async () => {
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: false },
+                options: {
+                    passwordRecoveryEnabled: false 
+                },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
             await expect(
-                service.forgotPassword({ email: faker.internet.email() }),
+                service.forgotPassword({
+                    email: faker.internet.email() 
+                }),
             ).rejects.toThrow(BadRequestError);
         });
 
         it('should throw when email verification is not enabled', async () => {
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: false },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: false 
+                },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
             await expect(
-                service.forgotPassword({ email: faker.internet.email() }),
+                service.forgotPassword({
+                    email: faker.internet.email() 
+                }),
             ).rejects.toThrow(BadRequestError);
         });
 
         it('should throw NotFoundError when user does not exist', async () => {
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
             await expect(
-                service.forgotPassword({ email: 'nonexistent@example.com' }),
+                service.forgotPassword({
+                    email: 'nonexistent@example.com' 
+                }),
             ).rejects.toThrow(NotFoundError);
         });
 
@@ -99,13 +117,18 @@ describe('core/identity/password-recovery/service', () => {
             })]);
 
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
-            const result = await service.forgotPassword({ email });
+            const result = await service.forgotPassword({
+                email 
+            });
 
             expect(result.reset_expires).toBeDefined();
             expect(mailClient.send).toHaveBeenCalledTimes(1);
@@ -116,7 +139,10 @@ describe('core/identity/password-recovery/service', () => {
                 }),
             );
 
-            const user = await repository.findOneBy({ email, realm_id: masterRealm.id });
+            const user = await repository.findOneBy({
+                email,
+                realm_id: masterRealm.id 
+            });
             expect(user!.reset_hash).toBeDefined();
             expect(user!.reset_hash).not.toBeNull();
             expect(user!.reset_expires).toBeDefined();
@@ -130,13 +156,18 @@ describe('core/identity/password-recovery/service', () => {
             })]);
 
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
-            const result = await service.forgotPassword({ name: 'forgot-user' });
+            const result = await service.forgotPassword({
+                name: 'forgot-user' 
+            });
             expect(result.reset_expires).toBeDefined();
         });
 
@@ -150,14 +181,19 @@ describe('core/identity/password-recovery/service', () => {
             })]);
 
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
             const before = Date.now();
-            const result = await service.forgotPassword({ email });
+            const result = await service.forgotPassword({
+                email 
+            });
             const after = Date.now();
 
             const expires = new Date(result.reset_expires).getTime();
@@ -178,13 +214,18 @@ describe('core/identity/password-recovery/service', () => {
             vi.mocked(mailClient.send).mockRejectedValue(new Error('SMTP error'));
 
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
-            await expect(service.forgotPassword({ email })).rejects.toThrow(BadRequestError);
+            await expect(service.forgotPassword({
+                email 
+            })).rejects.toThrow(BadRequestError);
 
             const user = await repository.findOneById(entity.id);
             expect(user!.reset_hash).toBeNull();
@@ -195,7 +236,9 @@ describe('core/identity/password-recovery/service', () => {
     describe('resetPassword', () => {
         it('should throw when password recovery is not enabled', async () => {
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: false },
+                options: {
+                    passwordRecoveryEnabled: false 
+                },
                 mailClient,
                 repository,
                 realmRepository,
@@ -221,7 +264,10 @@ describe('core/identity/password-recovery/service', () => {
             })]);
 
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,
@@ -247,7 +293,10 @@ describe('core/identity/password-recovery/service', () => {
             })]);
 
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,
@@ -273,7 +322,10 @@ describe('core/identity/password-recovery/service', () => {
             }));
 
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,
@@ -304,7 +356,10 @@ describe('core/identity/password-recovery/service', () => {
             }));
 
             const service = new PasswordRecoveryService({
-                options: { passwordRecoveryEnabled: true, emailVerificationEnabled: true },
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true 
+                },
                 mailClient,
                 repository,
                 realmRepository,

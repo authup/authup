@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    User,
-} from '@authup/core-kit';
+import type { User, } from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType,
+    EntityDefaultEventName, 
+    EntityType,
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
@@ -20,9 +19,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import {
-    EventSubscriber,
-} from 'typeorm';
+import { EventSubscriber, } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { UserEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';

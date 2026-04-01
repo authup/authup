@@ -9,7 +9,11 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import {
-    beforeEach, describe, expect, it, vi,
+    beforeEach, 
+    describe, 
+    expect, 
+    it, 
+    vi,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RoleAttributeService } from '../../../../../src/core/entities/role-attribute/service.ts';
@@ -26,13 +30,17 @@ describe('core/entities/role-attribute/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RoleAttribute>();
-        service = new RoleAttributeService({ repository });
+        service = new RoleAttributeService({
+            repository 
+        });
     });
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
             repository.seed([
-                createFakeRoleAttribute({ role_id: randomUUID() }),
+                createFakeRoleAttribute({
+                    role_id: randomUUID() 
+                }),
             ]);
             const result = await service.getMany({}, createAllowAllActor());
             expect(result.data).toHaveLength(1);
@@ -40,8 +48,14 @@ describe('core/entities/role-attribute/service', () => {
 
         it('should filter out entities that fail per-record permission check', async () => {
             const [, denied] = repository.seed([
-                createFakeRoleAttribute({ name: 'allowed', role_id: 'role-1' }),
-                createFakeRoleAttribute({ name: 'denied', role_id: 'role-2' }),
+                createFakeRoleAttribute({
+                    name: 'allowed',
+                    role_id: 'role-1' 
+                }),
+                createFakeRoleAttribute({
+                    name: 'denied',
+                    role_id: 'role-2' 
+                }),
             ]);
 
             const actor = createAllowAllActor();
@@ -84,7 +98,9 @@ describe('core/entities/role-attribute/service', () => {
                 name: 'new-attr',
                 value: 'val',
                 role_id: randomUUID(),
-                role: { realm_id: roleRealmId },
+                role: {
+                    realm_id: roleRealmId 
+                },
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -95,7 +111,12 @@ describe('core/entities/role-attribute/service', () => {
         it('should use ROLE_UPDATE permission (not a separate attribute permission)', async () => {
             const actor = createAllowAllActor();
             await service.create({
-                name: 'attr', value: 'val', role_id: randomUUID(), role: { realm_id: null },
+                name: 'attr',
+                value: 'val',
+                role_id: randomUUID(),
+                role: {
+                    realm_id: null 
+                },
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
@@ -105,22 +126,35 @@ describe('core/entities/role-attribute/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(
-                service.create({ name: 'attr', role_id: randomUUID(), role: { realm_id: null } }, createDenyAllActor()),
+                service.create({
+                    name: 'attr',
+                    role_id: randomUUID(),
+                    role: {
+                        realm_id: null 
+                    } 
+                }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
     });
 
     describe('update', () => {
         it('should update an existing attribute', async () => {
-            const entity = repository.seed(createFakeRoleAttribute({ name: 'old', value: 'old-val' }));
+            const entity = repository.seed(createFakeRoleAttribute({
+                name: 'old',
+                value: 'old-val' 
+            }));
 
-            const result = await service.update(entity.id, { value: 'new-val' }, createAllowAllActor());
+            const result = await service.update(entity.id, {
+                value: 'new-val' 
+            }, createAllowAllActor());
             expect(result.value).toBe('new-val');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', { value: 'x' }, createAllowAllActor()),
+                service.update('non-existent-id', {
+                    value: 'x' 
+                }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
     });

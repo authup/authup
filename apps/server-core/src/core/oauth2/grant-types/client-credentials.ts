@@ -6,9 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import {
-    OAuth2SubKind,
-} from '@authup/specs';
+import { OAuth2SubKind, } from '@authup/specs';
 import type { Client } from '@authup/core-kit';
 import {
     IdentityType,

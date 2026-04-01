@@ -20,7 +20,10 @@ export default defineComponent({
             if (props.types) {
                 return props.types.map((type) => {
                     if (typeof type === 'string') {
-                        return { id: type, value: type } satisfies FormSelectOption;
+                        return {
+                            id: type,
+                            value: type 
+                        } satisfies FormSelectOption;
                     }
 
                     return type;

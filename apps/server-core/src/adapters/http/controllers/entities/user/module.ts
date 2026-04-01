@@ -6,18 +6,28 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DPut, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import {
-    send, sendAccepted, sendCreated, useRequestParam,
+    send, 
+    sendAccepted, 
+    sendCreated, 
+    useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IUserService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
-import {
-    buildActorContext,
-} from '../../../request/index.ts';
+import { buildActorContext, } from '../../../request/index.ts';
 
 export type UserControllerContext = {
     service: IUserService,
@@ -38,9 +48,15 @@ export class UserController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
+        const {
+            data, 
+            meta 
+        } = await this.service.getMany(useRequestQuery(req), actor);
 
-        return send(res, { data, meta });
+        return send(res, {
+            data,
+            meta 
+        });
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -107,7 +123,10 @@ export class UserController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { entity, created } = await this.service.save(
+        const {
+            entity, 
+            created 
+        } = await this.service.save(
             id || undefined,
             data,
             actor,

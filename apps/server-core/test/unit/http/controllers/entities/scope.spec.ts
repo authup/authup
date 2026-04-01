@@ -6,7 +6,11 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import type { Scope } from '@authup/core-kit';
 import { isClientError } from 'hapic';
@@ -117,7 +121,9 @@ describe('src/http/controllers/scope', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const { name } = createFakeScope();
+        const {
+            name 
+        } = createFakeScope();
 
         let response = await suite.client
             .scope
@@ -127,8 +133,12 @@ describe('src/http/controllers/scope', () => {
 
         expect(response.name).toEqual(name);
 
-        const { id } = response;
-        const { name: nextName } = createFakeScope();
+        const {
+            id 
+        } = response;
+        const {
+            name: nextName 
+        } = createFakeScope();
 
         response = await suite.client
             .scope

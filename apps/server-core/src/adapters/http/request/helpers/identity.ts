@@ -21,7 +21,9 @@ export class RequestIdentity {
     }
 
     get clientId() {
-        const { raw } = this;
+        const {
+            raw 
+        } = this;
         if (raw.type === IdentityType.CLIENT) {
             return raw.data.id;
         }

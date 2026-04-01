@@ -5,15 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    isObject,
-} from '@authup/kit';
-import type {
-    Router,
-} from 'routup';
-import {
-    errorHandler, send,
-} from 'routup';
+import { isObject, } from '@authup/kit';
+import type { Router, } from 'routup';
+import { errorHandler,send, } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import type { AuthupError } from '@authup/errors';
 import type { Issue } from 'validup';

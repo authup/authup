@@ -8,7 +8,8 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, Index,
+    Entity, 
+    Index,
     JoinColumn,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -24,24 +25,44 @@ import type {
 import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'realm_id'])
-@Entity({ name: 'auth_identity_providers' })
+@Entity({
+    name: 'auth_identity_providers' 
+})
 export class IdentityProviderEntity implements IdentityProvider {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'varchar', length: 128 })
+    @Column({
+        type: 'varchar',
+        length: 128 
+    })
     name: string;
 
-    @Column({ type: 'varchar', length: 256, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 256,
+        nullable: true 
+    })
     display_name: string | null;
 
-    @Column({ type: 'varchar', length: 64, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 64,
+        nullable: true 
+    })
     protocol: `${IdentityProviderProtocol}` | null;
 
-    @Column({ type: 'varchar', length: 64, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 64,
+        nullable: true 
+    })
     preset: `${IdentityProviderPreset}` | null;
 
-    @Column({ type: 'boolean', default: true })
+    @Column({
+        type: 'boolean',
+        default: true 
+    })
     enabled: boolean;
 
     @CreateDateColumn()
@@ -54,7 +75,11 @@ export class IdentityProviderEntity implements IdentityProvider {
     @Column()
     realm_id: string;
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'realm_id' })
+    @ManyToOne(() => RealmEntity, {
+        onDelete: 'CASCADE' 
+    })
+    @JoinColumn({
+        name: 'realm_id' 
+    })
     realm: Realm;
 }

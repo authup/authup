@@ -52,10 +52,15 @@ export class RobotService extends AbstractEntityService implements IRobotService
             ],
         });
 
-        const { data: entities, meta } = await this.repository.findMany(query);
+        const {
+            data: entities, 
+            meta 
+        } = await this.repository.findMany(query);
 
         const data: Robot[] = [];
-        let { total } = meta;
+        let {
+            total 
+        } = meta;
 
         for (const entity of entities) {
             if (
@@ -85,7 +90,13 @@ export class RobotService extends AbstractEntityService implements IRobotService
             }
         }
 
-        return { data, meta: { ...meta, total } };
+        return {
+            data,
+            meta: {
+                ...meta,
+                total 
+            } 
+        };
     }
 
     async getOne(
@@ -107,7 +118,10 @@ export class RobotService extends AbstractEntityService implements IRobotService
         } else if (realmId) {
             const realm = await this.realmRepository.resolve(realmId);
             entity = realm ?
-                await this.repository.findOneBy({ name: idOrName, realm_id: realm.id }) :
+                await this.repository.findOneBy({
+                    name: idOrName,
+                    realm_id: realm.id 
+                }) :
                 null;
         } else {
             entity = await this.repository.findOneByName(idOrName);
@@ -135,7 +149,9 @@ export class RobotService extends AbstractEntityService implements IRobotService
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Robot> {
-        const { entity } = await this.save(undefined, data, actor);
+        const {
+            entity 
+        } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -144,7 +160,11 @@ export class RobotService extends AbstractEntityService implements IRobotService
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Robot> {
-        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+        const {
+            entity 
+        } = await this.save(idOrName, data, actor, {
+            updateOnly: true 
+        });
         return entity;
     }
 
@@ -153,7 +173,10 @@ export class RobotService extends AbstractEntityService implements IRobotService
         data: Record<string, any>,
         actor: ActorContext,
         options: { updateOnly?: boolean } = {},
-    ): Promise<{ entity: Robot, created: boolean }> {
+    ): Promise<{
+        entity: Robot,
+        created: boolean 
+    }> {
         let group: string;
 
         const realm = typeof data.realm_id === 'string' ?
@@ -182,14 +205,20 @@ export class RobotService extends AbstractEntityService implements IRobotService
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.ROBOT_UPDATE 
+            });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_CREATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.ROBOT_CREATE 
+            });
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, { group });
+        const validated = await this.validator.run(data, {
+            group 
+        });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -219,7 +248,10 @@ export class RobotService extends AbstractEntityService implements IRobotService
                 entity.secret = validated.secret;
             }
 
-            return { entity, created: false };
+            return {
+                entity,
+                created: false 
+            };
         }
 
         if (!validated.realm_id) {
@@ -245,14 +277,19 @@ export class RobotService extends AbstractEntityService implements IRobotService
         await this.repository.save(entity);
         entity.secret = validated.secret;
 
-        return { entity, created: true };
+        return {
+            entity,
+            created: true 
+        };
     }
 
     async delete(
         id: string,
         actor: ActorContext,
     ): Promise<Robot> {
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -263,7 +300,9 @@ export class RobotService extends AbstractEntityService implements IRobotService
             actor.identity.data.id === entity.user_id;
 
         if (!isOwner) {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_DELETE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.ROBOT_DELETE 
+            });
 
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROBOT_DELETE,
@@ -273,7 +312,9 @@ export class RobotService extends AbstractEntityService implements IRobotService
             });
         }
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

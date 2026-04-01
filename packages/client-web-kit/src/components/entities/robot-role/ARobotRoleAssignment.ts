@@ -6,9 +6,7 @@
  */
 
 import { EntityType } from '@authup/core-kit';
-import {
-    defineComponent,
-} from 'vue';
+import { defineComponent, } from 'vue';
 import type { RobotRole } from '@authup/core-kit';
 import {
     defineEntityManager,

@@ -38,7 +38,9 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         });
 
         return this.runWith(entity, {
-            ipAddress: getRequestIP(req, { trustProxy: true }),
+            ipAddress: getRequestIP(req, {
+                trustProxy: true 
+            }),
             userAgent: getRequestHeader(req, 'user-agent'),
         });
     }

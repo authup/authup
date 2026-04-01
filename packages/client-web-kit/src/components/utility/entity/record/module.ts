@@ -13,7 +13,11 @@ import type { BuildInput } from 'rapiq';
 import { isObject } from 'smob';
 import type { Ref, VNodeChild } from 'vue';
 import {
-    computed, isRef, ref, toRef, watch,
+    computed, 
+    isRef, 
+    ref, 
+    toRef, 
+    watch,
 } from 'vue';
 import { hasNormalizedSlot, injectHTTPClient, normalizeSlot } from '../../../../core';
 import type { EntitySocketManager, EntitySocketManagerCreateContext } from '../socket';
@@ -298,7 +302,9 @@ function create<
             query = rctx.query as BuildInput<RECORD>;
         }
 
-        let { id } = rctx;
+        let {
+            id 
+        } = rctx;
 
         if (ctx.props) {
             if (resolveByProps()) {

@@ -7,9 +7,7 @@
 
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import {
-    DController, DGet,
-} from '@routup/decorators';
+import { DController,DGet, } from '@routup/decorators';
 
 export type OpenIDControllerOptions = {
     baseURL: string
@@ -43,7 +41,13 @@ export class OpenIDController {
             ],
 
             id_token_signing_alg_values_supported: [
-                'HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'none',
+                'HS256', 
+                'HS384', 
+                'HS512', 
+                'RS256', 
+                'RS384', 
+                'RS512', 
+                'none',
             ],
 
             token_endpoint: new URL('token', this.options.baseURL).href,

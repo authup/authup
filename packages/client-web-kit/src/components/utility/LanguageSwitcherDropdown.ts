@@ -7,7 +7,10 @@
 
 import { injectLocale } from '@ilingo/vuelidate/vue';
 import {
-    computed, defineComponent, h, ref,
+    computed, 
+    defineComponent, 
+    h, 
+    ref,
 } from 'vue';
 
 const LanguageSwitcherDropdown = defineComponent({
@@ -74,6 +77,4 @@ const LanguageSwitcherDropdown = defineComponent({
     },
 });
 
-export {
-    LanguageSwitcherDropdown,
-};
+export { LanguageSwitcherDropdown, };

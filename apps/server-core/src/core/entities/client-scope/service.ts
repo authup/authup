@@ -53,7 +53,9 @@ export class ClientScopeService extends AbstractEntityService implements IClient
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -65,7 +67,9 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<ClientScope> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SCOPE_CREATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.CLIENT_SCOPE_CREATE 
+        });
 
         await this.repository.validateJoinColumns(data);
 
@@ -94,9 +98,13 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         id: string,
         actor: ActorContext,
     ): Promise<ClientScope> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SCOPE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.CLIENT_SCOPE_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -108,7 +116,9 @@ export class ClientScopeService extends AbstractEntityService implements IClient
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

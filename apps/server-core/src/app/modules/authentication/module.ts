@@ -9,9 +9,7 @@ import type { Session } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { SessionEntity } from '../../../adapters/database/domains/index.ts';
 import type { IContainer } from 'eldin';
-import {
-    SessionManager,
-} from '../../../core/index.ts';
+import { SessionManager, } from '../../../core/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 

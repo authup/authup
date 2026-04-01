@@ -103,9 +103,15 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         try {
             await this.bind(user, password);
 
-            return { success: true, data: null };
+            return {
+                success: true,
+                data: null 
+            };
         } catch (e) {
-            return { success: false, error: e as Error };
+            return {
+                success: false,
+                error: e as Error 
+            };
         }
     }
 
@@ -117,9 +123,15 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         try {
             await this.unbind();
 
-            return { success: true, data: null };
+            return {
+                success: true,
+                data: null 
+            };
         } catch (e) {
-            return { success: false, error: e as Error };
+            return {
+                success: false,
+                error: e as Error 
+            };
         }
     }
 

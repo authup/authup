@@ -5,7 +5,13 @@ import { storeToRefs } from 'pinia';
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
-    AClients, AEntityDelete, APagination, ASearch, ATitle, injectStore, usePermissionCheck,
+    AClients, 
+    AEntityDelete, 
+    APagination, 
+    ASearch, 
+    ATitle, 
+    injectStore, 
+    usePermissionCheck,
 } from '@authup/client-web-kit';
 import type { BuildInput } from 'rapiq';
 import type { Component } from 'vue';
@@ -21,13 +27,17 @@ export default defineComponent({
         AClients,
     },
     emits: ['deleted'],
-    setup(_props, { emit }) {
+    setup(_props, {
+        emit 
+    }) {
         const handleDeleted = (e: Client) => {
             emit('deleted', e);
         };
 
         const store = injectStore();
-        const { realmManagementId } = storeToRefs(store);
+        const {
+            realmManagementId 
+        } = storeToRefs(store);
 
         const query : BuildInput<Client> = {
             filters: {
@@ -35,29 +45,55 @@ export default defineComponent({
             },
         };
 
-        const hasEditPermission = usePermissionCheck({ name: PermissionName.CLIENT_UPDATE });
-        const hasDropPermission = usePermissionCheck({ name: PermissionName.CLIENT_DELETE });
+        const hasEditPermission = usePermissionCheck({
+            name: PermissionName.CLIENT_UPDATE 
+        });
+        const hasDropPermission = usePermissionCheck({
+            name: PermissionName.CLIENT_DELETE 
+        });
 
         const fields = [
             {
-                key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
+                key: 'name',
+                label: 'Name',
+                thClass: 'text-left',
+                tdClass: 'text-left',
             },
             {
-                key: 'active', label: 'Active?', thClass: 'text-center', tdClass: 'text-center',
+                key: 'active',
+                label: 'Active?',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
             {
-                key: 'is_confidential', label: 'Confidential?', thClass: 'text-center', tdClass: 'text-center',
+                key: 'is_confidential',
+                label: 'Confidential?',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
             {
-                key: 'built_in', label: 'Built in?', thClass: 'text-center', tdClass: 'text-center',
+                key: 'built_in',
+                label: 'Built in?',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
             {
-                key: 'created_at', label: 'Created at', thClass: 'text-center', tdClass: 'text-center',
+                key: 'created_at',
+                label: 'Created at',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
             {
-                key: 'updated_at', label: 'Updated at', thClass: 'text-center', tdClass: 'text-center',
+                key: 'updated_at',
+                label: 'Updated at',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
-            { key: 'options', label: '', tdClass: 'text-left' },
+            {
+                key: 'options',
+                label: '',
+                tdClass: 'text-left' 
+            },
         ];
 
         return {

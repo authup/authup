@@ -6,7 +6,10 @@
  */
 
 import {
-    defineComponent, h, ref, toRef,
+    defineComponent, 
+    h, 
+    ref, 
+    toRef,
 } from 'vue';
 import { IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '@authup/core-kit';
 import type { IdentityProvider, IdentityProviderPreset } from '@authup/core-kit';
@@ -132,7 +135,9 @@ export const AIdentityProviderForm = defineComponent({
                 prefix = preset.value;
             }
 
-            return render(h('div', { class: 'alert alert-warning alert-sm' }, [
+            return render(h('div', {
+                class: 'alert alert-warning alert-sm' 
+            }, [
                 `${prefix} is not supported yet :/`,
             ]));
         };

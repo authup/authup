@@ -56,7 +56,9 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             ],
         });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -68,7 +70,9 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RobotPermission> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_PERMISSION_CREATE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROBOT_PERMISSION_CREATE 
+        });
 
         await this.repository.validateJoinColumns(data);
 
@@ -92,7 +96,10 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             typeof data.policy_id === 'undefined'
         ) {
             const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
-                { type: actor.identity.type, id: actor.identity.data.id },
+                {
+                    type: actor.identity.type,
+                    id: actor.identity.data.id 
+                },
                 {
                     name: data.permission.name,
                     realmId: data.permission.realm_id,
@@ -121,9 +128,13 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         id: string,
         actor: ActorContext,
     ): Promise<RobotPermission> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_PERMISSION_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.ROBOT_PERMISSION_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -135,7 +146,9 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

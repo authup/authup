@@ -20,13 +20,17 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'active',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.boolean()),
         );
 
         this.mount(
             'is_confidential',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.boolean()),
         );
 
@@ -39,7 +43,9 @@ export class ClientValidator extends Container<Client> {
                 .max(128)
                 .check((ctx) => {
                     try {
-                        isClientNameValid(ctx.value, { throwOnFailure: true });
+                        isClientNameValid(ctx.value, {
+                            throwOnFailure: true 
+                        });
                     } catch (e) {
                         ctx.issues.push({
                             input: ctx.value,
@@ -52,24 +58,33 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'name',
-            { group: ValidatorGroup.CREATE },
+            {
+                group: ValidatorGroup.CREATE 
+            },
             nameValidator,
         );
         this.mount(
             'name',
-            { group: ValidatorGroup.UPDATE, optional: true },
+            {
+                group: ValidatorGroup.UPDATE,
+                optional: true 
+            },
             nameValidator,
         );
 
         this.mount(
             'display_name',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(3).max(4096).nullable()),
         );
 
@@ -77,19 +92,25 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'secret',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'secret_encrypted',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.boolean()),
         );
 
         this.mount(
             'secret_hashed',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.boolean()),
         );
 
@@ -97,7 +118,9 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'redirect_uri',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(
                 z
                     .string()
@@ -122,7 +145,9 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'base_url',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(
                 z.url().nullable(),
             ),
@@ -130,7 +155,9 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'root_url',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(
                 z.url().nullable(),
             ),
@@ -138,13 +165,17 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'grant_types',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(3).max(512).nullable()),
         );
 
         this.mount(
             'scope',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(3).max(512).nullable()),
         );
 
@@ -152,7 +183,10 @@ export class ClientValidator extends Container<Client> {
 
         this.mount(
             'realm_id',
-            { group: ValidatorGroup.CREATE, optional: true },
+            {
+                group: ValidatorGroup.CREATE,
+                optional: true 
+            },
             createValidator(z.uuid()),
         );
     }

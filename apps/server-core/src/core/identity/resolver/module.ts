@@ -6,7 +6,13 @@
  */
 
 import type {
-    Client, ClientIdentity, Identity, Robot, RobotIdentity, User, UserIdentity,
+    Client, 
+    ClientIdentity, 
+    Identity, 
+    Robot, 
+    RobotIdentity, 
+    User, 
+    UserIdentity,
 } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
@@ -59,7 +65,10 @@ export class IdentityResolver implements IIdentityResolver {
         }
 
         if (data) {
-            return { type: IdentityType.CLIENT, data };
+            return {
+                type: IdentityType.CLIENT,
+                data 
+            };
         }
 
         return null;
@@ -78,7 +87,10 @@ export class IdentityResolver implements IIdentityResolver {
         }
 
         if (data) {
-            return { type: IdentityType.ROBOT, data };
+            return {
+                type: IdentityType.ROBOT,
+                data 
+            };
         }
 
         return null;
@@ -97,7 +109,10 @@ export class IdentityResolver implements IIdentityResolver {
         }
 
         if (data) {
-            return { type: IdentityType.USER, data };
+            return {
+                type: IdentityType.USER,
+                data 
+            };
         }
 
         return null;

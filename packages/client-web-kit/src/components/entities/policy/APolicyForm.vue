@@ -18,7 +18,11 @@ import ATimePolicyForm from './time/ATimePolicyForm.vue';
 import AIdentityPolicyForm from './identity/AIdentityPolicyForm.vue';
 
 export default defineComponent({
-    components: { AFormSubmit, APolicyTypePicker, APolicyBasicForm },
+    components: {
+        AFormSubmit,
+        APolicyTypePicker,
+        APolicyBasicForm 
+    },
     props: {
         entity: {
             type: Object as PropType<Policy>,
@@ -59,17 +63,22 @@ export default defineComponent({
             return null;
         });
 
-        const vuelidate = useVuelidate({ $stopPropagation: true });
+        const vuelidate = useVuelidate({
+            $stopPropagation: true 
+        });
 
         const submit = async () => {
             if (vuelidate.value.$invalid) {
                 return;
             }
 
-            const { items = [], ...data } = {
+            const {
+                items = [], 
+                ...data 
+            } = {
                 ...extractVuelidateResultsFromChild(vuelidate, 'basic'),
                 ...extractVuelidateResultsFromChild(vuelidate, 'type'),
-            } as Partial<Omit<Policy, 'children'>> & {items: string[]};
+            } as Partial<Omit<Policy, 'children'>> & { items: string[] };
 
             if (typeComputed.value) {
                 data.type = typeComputed.value;

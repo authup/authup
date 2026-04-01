@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    EntityDefaultEventName, REALM_MASTER_NAME, buildEntityChannelName,
-} from '@authup/core-kit';
+import { EntityDefaultEventName,REALM_MASTER_NAME,buildEntityChannelName, } from '@authup/core-kit';
 import type {
     EntityType,
     EntityTypeMap,
@@ -16,7 +14,11 @@ import type {
 import type { EventFullName, STCEventContext } from '@authup/core-realtime-kit';
 import { EventNameSuffix, buildEventFullName } from '@authup/core-realtime-kit';
 import {
-    computed, isRef, onMounted, onUnmounted, watch,
+    computed, 
+    isRef, 
+    onMounted, 
+    onUnmounted, 
+    watch,
 } from 'vue';
 import { injectStore, storeToRefs } from '../../../../core/store';
 import type { EntitySocketManager, EntitySocketManagerCreateContext } from './type';

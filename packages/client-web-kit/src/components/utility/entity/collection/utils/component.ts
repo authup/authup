@@ -9,7 +9,11 @@ import type { BuildInput } from 'rapiq';
 import type { PropType } from 'vue';
 import type {
     EntityCollectionVEmitOptions,
-    ListBodyOptions, ListFooterOptions, ListHeaderOptions, ListLoadingOptions, ListNoMoreOptions,
+    ListBodyOptions, 
+    ListFooterOptions, 
+    ListHeaderOptions, 
+    ListLoadingOptions, 
+    ListNoMoreOptions,
 } from '../types';
 
 export function defineEntityCollectionVEmitOptions<T>() : EntityCollectionVEmitOptions<T> {

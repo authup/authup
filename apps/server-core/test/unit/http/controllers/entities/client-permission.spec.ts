@@ -6,11 +6,13 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
-import type {
-    ClientPermission,
-} from '@authup/core-kit';
+import type { ClientPermission, } from '@authup/core-kit';
 
 import { createTestApplication } from '../../../../app';
 import { createFakeClient, createFakePermission, expectPropertiesEqualToSrc } from '../../../../utils';

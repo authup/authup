@@ -7,31 +7,43 @@
 
 <script lang="ts">
 import {
-    type PropType, computed, defineComponent, reactive, watch,
+    type PropType, 
+    computed, 
+    defineComponent, 
+    reactive, 
+    watch,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
+import { maxLength,minLength,required, } from '@vuelidate/validators';
 import { type Client, EntityType } from '@authup/core-kit';
 import { createNanoID, isBCryptHash } from '@authup/kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import { ARealmPicker } from '../realm';
 import {
-    AFormInputList, AFormSubmit, defineEntityManager, defineEntityVEmitOptions,
+    AFormInputList, 
+    AFormSubmit, 
+    defineEntityManager, 
+    defineEntityVEmitOptions,
 } from '../../utility';
 import {
     TranslatorTranslationClientKey,
-    TranslatorTranslationDefaultKey, TranslatorTranslationGroup, VuelidateCustomRule, VuelidateCustomRuleKey,
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationGroup, 
+    VuelidateCustomRule, 
+    VuelidateCustomRuleKey,
     assignFormProperties,
     injectStore,
-    storeToRefs, useTranslationsForGroup,
+    storeToRefs, 
+    useTranslationsForGroup,
 } from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 
 export default defineComponent({
     components: {
-        AFormSubmit, ARealmPicker, AFormInputList, IVuelidate,
+        AFormSubmit,
+        ARealmPicker,
+        AFormInputList,
+        IVuelidate,
     },
     props: {
         name: {
@@ -90,16 +102,12 @@ export default defineComponent({
                 // todo: url is required!
                 maxLength: maxLength(2000),
             },
-            is_confidential: {
-
-            },
+            is_confidential: {},
             secret: {
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },
-            secret_hashed: {
-
-            },
+            secret_hashed: {},
         }, form);
 
         const store = injectStore();
@@ -181,25 +189,51 @@ export default defineComponent({
         const translationsClient = useTranslationsForGroup(
             TranslatorTranslationGroup.CLIENT,
             [
-                { key: TranslatorTranslationClientKey.NAME_HINT },
-                { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
-                { key: TranslatorTranslationClientKey.REDIRECT_URI_HINT },
-                { key: TranslatorTranslationClientKey.IS_CONFIDENTIAL },
-                { key: TranslatorTranslationClientKey.IS_ACTIVE },
-                { key: TranslatorTranslationClientKey.HASH_SECRET },
+                {
+                    key: TranslatorTranslationClientKey.NAME_HINT 
+                },
+                {
+                    key: TranslatorTranslationClientKey.DESCRIPTION_HINT 
+                },
+                {
+                    key: TranslatorTranslationClientKey.REDIRECT_URI_HINT 
+                },
+                {
+                    key: TranslatorTranslationClientKey.IS_CONFIDENTIAL 
+                },
+                {
+                    key: TranslatorTranslationClientKey.IS_ACTIVE 
+                },
+                {
+                    key: TranslatorTranslationClientKey.HASH_SECRET 
+                },
             ],
         );
 
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.GENERATE },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.REALM },
-                { key: TranslatorTranslationDefaultKey.REDIRECT_URIS },
-                { key: TranslatorTranslationDefaultKey.SECRET },
+                {
+                    key: TranslatorTranslationDefaultKey.GENERATE 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.REALM 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.REDIRECT_URIS 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.SECRET 
+                },
             ],
         );
 

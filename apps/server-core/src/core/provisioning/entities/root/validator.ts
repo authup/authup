@@ -21,10 +21,14 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
-        this.mount('strategy', { optional: true }, strategyValidator);
+        this.mount('strategy', {
+            optional: true 
+        }, strategyValidator);
 
         const realmValidator = new RealmProvisioningValidator();
-        this.mount('realms', { optional: true }, createValidator(
+        this.mount('realms', {
+            optional: true 
+        }, createValidator(
             z
                 .array(z.any())
                 .check(async (ctx) => {
@@ -35,7 +39,9 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
         ));
 
         const roleValidator = new RoleProvisioningValidator();
-        this.mount('roles', { optional: true }, createValidator(
+        this.mount('roles', {
+            optional: true 
+        }, createValidator(
             z
                 .array(z.any())
                 .check(async (ctx) => {
@@ -52,7 +58,9 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
         ));
 
         const scopeValidator = new ScopeProvisioningValidator();
-        this.mount('scopes', { optional: true }, createValidator(
+        this.mount('scopes', {
+            optional: true 
+        }, createValidator(
             z
                 .array(z.any())
                 .check(async (ctx) => {
@@ -69,7 +77,9 @@ export class RootProvisioningValidator extends Container<RootProvisioningEntity>
         ));
 
         const permissionValidator = new PermissionProvisioningValidator();
-        this.mount('permissions', { optional: true }, createValidator(
+        this.mount('permissions', {
+            optional: true 
+        }, createValidator(
             z
                 .array(z.any())
                 .check(async (ctx) => {

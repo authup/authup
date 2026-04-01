@@ -6,7 +6,10 @@ import AccountSVG from '../../components/svg/AccountSVG';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
-    components: { DomainEntityNav, AccountSVG },
+    components: {
+        DomainEntityNav,
+        AccountSVG 
+    },
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -14,10 +17,14 @@ export default defineComponent({
 
         const items = [
             {
-                name: 'Account', icon: 'fas fa-bars', urlSuffix: '',
+                name: 'Account',
+                icon: 'fas fa-bars',
+                urlSuffix: '',
             },
             {
-                name: 'Security', icon: 'fa fa-lock', urlSuffix: '/security',
+                name: 'Security',
+                icon: 'fa fa-lock',
+                urlSuffix: '/security',
             },
         ];
 

@@ -9,18 +9,37 @@ import type { PermissionAPICheckResponse } from '@authup/core-http-kit';
 import type { IPermissionProvider, PermissionEvaluationContext } from '@authup/access';
 import {
     BuiltInPolicyType,
-    PermissionEvaluator, PolicyData,
+    PermissionEvaluator, 
+    PolicyData,
 } from '@authup/access';
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DPut, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import {
-    send, sendAccepted, sendCreated, useRequestParam,
+    send, 
+    sendAccepted, 
+    sendCreated, 
+    useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { IIdentityPermissionProvider, IPermissionRepository, IPermissionService, IRealmRepository } from '../../../../../core/index.ts';
+import type {
+ 
+    IIdentityPermissionProvider, 
+    IPermissionRepository, 
+    IPermissionService, 
+    IRealmRepository 
+} from '../../../../../core/index.ts';
 import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
@@ -63,9 +82,15 @@ export class PermissionController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
+        const {
+            data, 
+            meta 
+        } = await this.service.getMany(useRequestQuery(req), actor);
 
-        return send(res, { data, meta });
+        return send(res, {
+            data,
+            meta 
+        });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -90,12 +115,16 @@ export class PermissionController {
 
         let criteria: Record<string, any>;
         if (isUUID(id)) {
-            criteria = { id };
+            criteria = {
+                id 
+            };
         } else {
             const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'));
             criteria = {
                 name: id,
-                ...(realm ? { realm_id: realm.id } : {}),
+                ...(realm ? {
+                    realm_id: realm.id 
+                } : {}),
             };
         }
 
@@ -183,7 +212,10 @@ export class PermissionController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { entity, created } = await this.service.save(
+        const {
+            entity, 
+            created 
+        } = await this.service.save(
             id || undefined,
             data,
             actor,

@@ -15,7 +15,9 @@ export const ARobotRoleAssignments = defineComponent({
     props: {
         entityId: String,
     },
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         return () => h(ARoles, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
                 ARobotRoleAssignment,

@@ -12,9 +12,7 @@ import { wait } from '@authup/kit';
 import type { TestProject } from 'vitest/node';
 import type { StartedTestContainer } from 'testcontainers';
 import { GenericContainer } from 'testcontainers';
-import {
-    ApplicationBuilder, DefaultProvisioningSource, ProvisionerModule,
-} from '../src/index.ts';
+import { ApplicationBuilder,DefaultProvisioningSource,ProvisionerModule, } from '../src/index.ts';
 import { createTestDatabaseModuleForSetup } from './app/index.ts';
 
 export type DatabaseConnectionConfig = {
@@ -92,7 +90,10 @@ const containers: StartedTestContainer[] = [];
 
 function isReachable(host: string, port: number, timeoutMs = 2000): Promise<boolean> {
     return new Promise((resolve) => {
-        const socket = createConnection({ host, port });
+        const socket = createConnection({
+            host,
+            port 
+        });
         const timer = setTimeout(() => {
             socket.destroy();
             resolve(false);

@@ -5,7 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { isClientError } from 'hapic';

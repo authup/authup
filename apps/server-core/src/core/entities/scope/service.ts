@@ -78,7 +78,9 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Scope> {
-        const { entity } = await this.save(undefined, data, actor);
+        const {
+            entity 
+        } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -87,7 +89,11 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Scope> {
-        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
+        const {
+            entity 
+        } = await this.save(idOrName, data, actor, {
+            updateOnly: true 
+        });
         return entity;
     }
 
@@ -96,7 +102,10 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         data: Record<string, any>,
         actor: ActorContext,
         options: { updateOnly?: boolean } = {},
-    ): Promise<{ entity: Scope, created: boolean }> {
+    ): Promise<{
+        entity: Scope,
+        created: boolean 
+    }> {
         let group: string;
 
         const realm = typeof data.realm_id === 'string' ?
@@ -125,14 +134,20 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SCOPE_UPDATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.SCOPE_UPDATE 
+            });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SCOPE_CREATE });
+            await actor.permissionEvaluator.preEvaluate({
+                name: PermissionName.SCOPE_CREATE 
+            });
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, { group });
+        const validated = await this.validator.run(data, {
+            group 
+        });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -152,7 +167,10 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             entity = this.repository.merge(entity, validated);
             await this.repository.save(entity);
 
-            return { entity, created: false };
+            return {
+                entity,
+                created: false 
+            };
         }
 
         if (!isPropertySet(validated, 'realm_id') && actor.identity) {
@@ -171,16 +189,23 @@ export class ScopeService extends AbstractEntityService implements IScopeService
         entity = this.repository.create(validated);
         await this.repository.save(entity);
 
-        return { entity, created: true };
+        return {
+            entity,
+            created: true 
+        };
     }
 
     async delete(
         id: string,
         actor: ActorContext,
     ): Promise<Scope> {
-        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.SCOPE_DELETE });
+        await actor.permissionEvaluator.preEvaluate({
+            name: PermissionName.SCOPE_DELETE 
+        });
 
-        const entity = await this.repository.findOneBy({ id });
+        const entity = await this.repository.findOneBy({
+            id 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -192,7 +217,9 @@ export class ScopeService extends AbstractEntityService implements IScopeService
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

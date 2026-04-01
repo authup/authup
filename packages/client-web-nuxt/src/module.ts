@@ -51,7 +51,6 @@ export default defineNuxtModule<ModuleOptions>({
                 runtimeOptions,
             );
         } else {
-             
             nuxt.options.runtimeConfig.public.authup = runtimeOptions;
         }
 
@@ -67,7 +66,9 @@ export default defineNuxtModule<ModuleOptions>({
         });
 
         nuxt.hook('prepare:types', async (options) => {
-            options.references.push({ path: template.dst });
+            options.references.push({
+                path: template.dst 
+            });
         });
 
         addPlugin(resolver.resolve('./runtime/plugins/kit'));

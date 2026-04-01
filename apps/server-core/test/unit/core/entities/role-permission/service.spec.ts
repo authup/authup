@@ -12,7 +12,10 @@ import {
 } from '@authup/core-kit';
 import type { RolePermission } from '@authup/core-kit';
 import {
-    beforeEach, describe, expect, it,
+    beforeEach, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RolePermissionService } from '../../../../../src/core/entities/role-permission/service.ts';
@@ -28,7 +31,9 @@ describe('core/entities/role-permission/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RolePermission>();
-        service = new RolePermissionService({ repository });
+        service = new RolePermissionService({
+            repository 
+        });
     });
 
     describe('getMany', () => {
@@ -71,8 +76,13 @@ describe('core/entities/role-permission/service', () => {
             const data = {
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
-                role: { realm_id: randomUUID() },
-                permission: { realm_id: randomUUID(), name: 'test-perm' },
+                role: {
+                    realm_id: randomUUID() 
+                },
+                permission: {
+                    realm_id: randomUUID(),
+                    name: 'test-perm' 
+                },
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -83,7 +93,10 @@ describe('core/entities/role-permission/service', () => {
 
         it('should call preCheck with ROLE_PERMISSION_CREATE', async () => {
             const actor = createAllowAllActor();
-            await service.create({ role_id: randomUUID(), permission_id: randomUUID() }, actor);
+            await service.create({
+                role_id: randomUUID(),
+                permission_id: randomUUID() 
+            }, actor);
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
                 name: PermissionName.ROLE_PERMISSION_CREATE,
             });
@@ -94,7 +107,10 @@ describe('core/entities/role-permission/service', () => {
             await service.create({
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
-                permission: { name: 'custom-perm', realm_id: null },
+                permission: {
+                    name: 'custom-perm',
+                    realm_id: null 
+                },
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
@@ -109,8 +125,14 @@ describe('core/entities/role-permission/service', () => {
             await service.create({
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
-                role: { name: ROLE_ADMIN_NAME, realm_id: null },
-                permission: { name: 'custom-perm', realm_id: null },
+                role: {
+                    name: ROLE_ADMIN_NAME,
+                    realm_id: null 
+                },
+                permission: {
+                    name: 'custom-perm',
+                    realm_id: null 
+                },
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluate).not.toHaveBeenCalledWith({
@@ -122,7 +144,10 @@ describe('core/entities/role-permission/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(
-                service.create({ role_id: randomUUID(), permission_id: randomUUID() }, createDenyAllActor()),
+                service.create({
+                    role_id: randomUUID(),
+                    permission_id: randomUUID() 
+                }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
     });

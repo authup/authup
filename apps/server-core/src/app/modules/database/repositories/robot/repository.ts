@@ -34,7 +34,9 @@ export class RobotRepositoryAdapter implements IRobotRepository {
         const qb = this.repository.createQueryBuilder('robot');
         qb.groupBy('robot.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'robot',
             fields: {
                 allowed: [
@@ -82,17 +84,23 @@ export class RobotRepositoryAdapter implements IRobotRepository {
     }
 
     findOneById(id: string): Promise<Robot | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     async findOneByName(name: string, realmKey?: string): Promise<Robot | null> {
         const qb = this.repository.createQueryBuilder('robot');
-        qb.where('robot.name LIKE :name', { name });
+        qb.where('robot.name LIKE :name', {
+            name 
+        });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
+                qb.andWhere('robot.realm_id = :realmId', {
+                    realmId: realm.id 
+                });
             }
         }
 
@@ -117,7 +125,9 @@ export class RobotRepositoryAdapter implements IRobotRepository {
         const qb = this.repository.createQueryBuilder('robot');
 
         Object.entries(where).forEach(([key, value]) => {
-            qb.andWhere(`robot.${key} = :${key}`, { [key]: value });
+            qb.andWhere(`robot.${key} = :${key}`, {
+                [key]: value 
+            });
         });
 
         qb.addSelect('robot.secret');

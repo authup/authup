@@ -6,17 +6,22 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
-import {
-    createNanoID,
-} from '@authup/kit';
+import { createNanoID, } from '@authup/kit';
 import { isClientError } from 'hapic';
 import type { UserEntity } from '../../../../../../src';
 import {
-    PermissionEntity, PermissionPolicyEntity,
-    PolicyRepository, UserPermissionEntity, UserRepository,
+    PermissionEntity, 
+    PermissionPolicyEntity,
+    PolicyRepository, 
+    UserPermissionEntity, 
+    UserRepository,
 } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
 
@@ -140,7 +145,9 @@ describe('src/security/permission/checker', () => {
         const name = createNanoID();
 
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
-        const permission = permissionRepository.create({ name });
+        const permission = permissionRepository.create({
+            name 
+        });
 
         await permissionRepository.save(permission);
 

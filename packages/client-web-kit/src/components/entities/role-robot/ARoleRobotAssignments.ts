@@ -5,14 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    defineComponent, h,
-} from 'vue';
+import { defineComponent,h, } from 'vue';
 import type { Robot } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
-import {
-    ARobotRoleAssignment,
-} from '../robot-role/ARobotRoleAssignment';
+import { ARobotRoleAssignment, } from '../robot-role/ARobotRoleAssignment';
 import { ARobots } from '../robot';
 
 export const ARoleRobotAssignments = defineComponent({

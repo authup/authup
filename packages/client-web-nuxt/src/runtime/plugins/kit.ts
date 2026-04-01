@@ -10,7 +10,10 @@ import type { RuntimeConfig } from 'nuxt/schema';
 import { getPathValue } from 'pathtrace';
 import type { Pinia } from 'pinia';
 import {
-    defineNuxtPlugin, tryUseNuxtApp, useCookie, useRuntimeConfig,
+    defineNuxtPlugin, 
+    tryUseNuxtApp, 
+    useCookie, 
+    useRuntimeConfig,
 } from '#imports';
 import type { RuntimeOptions } from '../types';
 

@@ -13,5 +13,7 @@ export function onChange<T>(input: Ref<T>, fn: (item: T) => any) {
         if (val !== oldValue) {
             fn(val);
         }
-    }, { deep: true });
+    }, {
+        deep: true 
+    });
 }

@@ -19,7 +19,9 @@ export class HTTPOAuth2IdentityGrantType extends IdentityGrantType implements IH
         return this.runWith(
             identity.raw,
             {
-                ipAddress: getRequestIP(req, { trustProxy: true }),
+                ipAddress: getRequestIP(req, {
+                    trustProxy: true 
+                }),
                 userAgent: getRequestHeader(req, 'user-agent'),
             },
         );

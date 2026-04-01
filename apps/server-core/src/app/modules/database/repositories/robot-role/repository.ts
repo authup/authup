@@ -23,7 +23,9 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
         const qb = this.repository.createQueryBuilder('robotRole');
         qb.groupBy('robotRole.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'robotRole',
             filters: {
                 allowed: ['robot_id', 'role_id'],
@@ -58,7 +60,9 @@ export class RobotRoleRepositoryAdapter implements IRobotRoleRepository {
     }
 
     findOneById(id: string): Promise<RobotRole | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     async findOneByName(_name: string): Promise<RobotRole | null> {

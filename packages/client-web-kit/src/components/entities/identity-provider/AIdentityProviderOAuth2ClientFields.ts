@@ -8,13 +8,9 @@
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
+import { maxLength,minLength,required, } from '@vuelidate/validators';
 import type { PropType } from 'vue';
-import {
-    defineComponent, reactive,
-} from 'vue';
+import { defineComponent,reactive, } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 

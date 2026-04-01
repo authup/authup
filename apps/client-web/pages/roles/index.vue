@@ -38,13 +38,19 @@ export default defineNuxtComponent({
 
         const handleDeleted = (e: Role) => {
             if (toast) {
-                toast.show({ variant: 'success', body: `The role ${e.name} was successfully deleted.` });
+                toast.show({
+                    variant: 'success',
+                    body: `The role ${e.name} was successfully deleted.` 
+                });
             }
         };
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

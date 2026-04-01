@@ -6,15 +6,22 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DPut, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IScopeService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import {
-    buildActorContext,
-} from '../../../request/index.ts';
+import { buildActorContext, } from '../../../request/index.ts';
 
 export type ScopeControllerContext = {
     service: IScopeService,
@@ -35,9 +42,15 @@ export class ScopeController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
+        const {
+            data, 
+            meta 
+        } = await this.service.getMany(useRequestQuery(req), actor);
 
-        return send(res, { data, meta });
+        return send(res, {
+            data,
+            meta 
+        });
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -92,7 +105,10 @@ export class ScopeController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { entity, created } = await this.service.save(
+        const {
+            entity, 
+            created 
+        } = await this.service.save(
             id || undefined,
             data,
             actor,

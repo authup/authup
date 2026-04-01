@@ -27,6 +27,9 @@ export interface IUserService {
         data: Record<string, any>,
         actor: ActorContext,
         options?: { updateOnly?: boolean },
-    ): Promise<{ entity: User, created: boolean }>;
+    ): Promise<{
+        entity: User,
+        created: boolean 
+    }>;
     delete(id: string, actor: ActorContext): Promise<User>;
 }

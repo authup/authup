@@ -9,9 +9,7 @@ import type {
     OAuth2TokenPayload,
     OAuth2TokenPermission,
 } from '@authup/specs';
-import type {
-    TokenCreator,
-} from '@authup/core-http-kit';
+import type { TokenCreator, } from '@authup/core-http-kit';
 import type { ITokenVerifierCache } from './cache';
 
 export interface ITokenVerifier {

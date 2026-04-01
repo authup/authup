@@ -7,9 +7,7 @@
 
 import { Logger } from 'winston';
 
-export {
-    Logger,
-};
+export { Logger, };
 
 export type LoggerCreateContext = {
     env: string

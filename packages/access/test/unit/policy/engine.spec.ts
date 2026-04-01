@@ -6,7 +6,10 @@
  */
 
 import {
-    beforeAll, describe, expect, it,
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import type { IPolicy } from '../../../src';
 import {

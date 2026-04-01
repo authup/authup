@@ -6,7 +6,11 @@
  */
 
 import {
-    DController, DGet, DPost, DRequest, DResponse,
+    DController, 
+    DGet, 
+    DPost, 
+    DRequest, 
+    DResponse,
 } from '@routup/decorators';
 import { load } from 'locter';
 import fs from 'node:fs';
@@ -19,11 +23,8 @@ import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { CLIENT_WEB_SLIM_PACKAGE_PATH } from '../../../../../path.ts';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
-import type {
-    IOAuth2AuthorizationCodeRequestVerifier} from '../../../../../core/index.ts';
-import {
-    OAuth2AuthorizationCodeRequestValidator,
-} from '../../../../../core/index.ts';
+import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
+import { OAuth2AuthorizationCodeRequestValidator, } from '../../../../../core/index.ts';
 import { sanitizeError } from '../../../../../utils/index.ts';
 import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types.ts';
 
@@ -85,7 +86,9 @@ export class AuthorizeController {
             url.searchParams.set('id_token', result.idToken);
         }
 
-        return send(res, { url: url.href });
+        return send(res, {
+            url: url.href 
+        });
     }
 
     @DGet('', [])

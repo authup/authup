@@ -9,7 +9,10 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { RobotPermission } from '@authup/core-kit';
 import {
-    beforeEach, describe, expect, it,
+    beforeEach, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RobotPermissionService } from '../../../../../src/core/entities/robot-permission/service.ts';
@@ -25,7 +28,9 @@ describe('core/entities/robot-permission/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RobotPermission>();
-        service = new RobotPermissionService({ repository });
+        service = new RobotPermissionService({
+            repository 
+        });
     });
 
     describe('getMany', () => {
@@ -62,8 +67,13 @@ describe('core/entities/robot-permission/service', () => {
             const data = {
                 robot_id: randomUUID(),
                 permission_id: randomUUID(),
-                robot: { realm_id: randomUUID() },
-                permission: { realm_id: randomUUID(), name: 'test-perm' },
+                robot: {
+                    realm_id: randomUUID() 
+                },
+                permission: {
+                    realm_id: randomUUID(),
+                    name: 'test-perm' 
+                },
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -77,7 +87,10 @@ describe('core/entities/robot-permission/service', () => {
             await service.create({
                 robot_id: randomUUID(),
                 permission_id: randomUUID(),
-                permission: { name: 'custom-perm', realm_id: null },
+                permission: {
+                    name: 'custom-perm',
+                    realm_id: null 
+                },
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
@@ -89,7 +102,10 @@ describe('core/entities/robot-permission/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             await expect(
-                service.create({ robot_id: randomUUID(), permission_id: randomUUID() }, createDenyAllActor()),
+                service.create({
+                    robot_id: randomUUID(),
+                    permission_id: randomUUID() 
+                }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
     });

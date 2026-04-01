@@ -7,8 +7,10 @@
 
 import type { IdentityProviderAccount, User } from '@authup/core-kit';
 import {
-    UserValidator, ValidatorGroup,
-    buildUserFakeEmail, isUserFakeEmail,
+    UserValidator, 
+    ValidatorGroup,
+    buildUserFakeEmail, 
+    isUserFakeEmail,
 } from '@authup/core-kit';
 import { createNanoID, extendObject } from '@authup/kit';
 import { isValidupError, stringifyPath } from 'validup';

@@ -8,7 +8,10 @@
 import { AuthupError } from '@authup/errors';
 import type { DataSourceOptions } from 'typeorm';
 import {
-    CodeTransformation, isCodeTransformation, readDataSourceOptionsFromEnv, transformFilePath,
+    CodeTransformation, 
+    isCodeTransformation, 
+    readDataSourceOptionsFromEnv, 
+    transformFilePath,
 } from 'typeorm-extension';
 import {
     ClientEntity,

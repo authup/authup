@@ -10,9 +10,7 @@ import { createDatabase, dropDatabase, readDataSourceOptionsFromEnv } from 'type
 import fs from 'node:fs';
 import path from 'node:path';
 import { inject } from 'vitest';
-import {
-    ConfigInjectionKey, DatabaseModule,
-} from '../../src';
+import { ConfigInjectionKey,DatabaseModule, } from '../../src';
 import type { IContainer } from 'eldin';
 import { PACKAGE_PATH } from '../../src/path.ts';
 
@@ -43,13 +41,24 @@ export function createTestDatabaseModuleForSetup(): DatabaseModule {
         prepareBuild: resolveDataSourceOptions,
         async setup(_container, options) {
             if (typeof options.database === 'string') {
-                fs.rmSync(options.database, { force: true });
-                fs.mkdirSync(path.dirname(options.database), { recursive: true });
+                fs.rmSync(options.database, {
+                    force: true 
+                });
+                fs.mkdirSync(path.dirname(options.database), {
+                    recursive: true 
+                });
             } else {
-                await dropDatabase({ options, ifExist: true });
+                await dropDatabase({
+                    options,
+                    ifExist: true 
+                });
             }
 
-            await createDatabase({ options, synchronize: false, ifNotExist: true });
+            await createDatabase({
+                options,
+                synchronize: false,
+                ifNotExist: true 
+            });
         },
         async migrate(_container, dataSource) {
             await dataSource.synchronize();

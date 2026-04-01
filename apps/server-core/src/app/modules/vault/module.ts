@@ -6,9 +6,7 @@
  */
 
 import type { VaultClient } from '@authup/server-kit';
-import {
-    createVaultClient, setVaultFactory,
-} from '@authup/server-kit';
+import { createVaultClient,setVaultFactory, } from '@authup/server-kit';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { VaultInjectionKey } from './constants.ts';

@@ -6,12 +6,13 @@
  */
 
 import type {
-    Permission, RobotPermission, RobotRole, Role,
+    Permission, 
+    RobotPermission, 
+    RobotRole, 
+    Role,
 } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
-import type {
-    IRobotRepository,
-} from '../../../entities/index.ts';
+import type { IRobotRepository, } from '../../../entities/index.ts';
 import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
@@ -55,14 +56,21 @@ export class RobotProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
         let attributes = await this.robotRepository.findOneBy({
             name: input.attributes.name,
-            ...(input.attributes.realm_id ? { realm_id: input.attributes.realm_id } : { realm_id: null }),
+            ...(input.attributes.realm_id ? {
+                realm_id: input.attributes.realm_id 
+            } : {
+                realm_id: null 
+            }),
         });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
             if (attributes) {
                 await this.robotRepository.remove(attributes);
             }
-            return { ...input, attributes: attributes || input.attributes };
+            return {
+                ...input,
+                attributes: attributes || input.attributes 
+            };
         }
 
         if (attributes) {

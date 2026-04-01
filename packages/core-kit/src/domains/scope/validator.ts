@@ -25,7 +25,9 @@ export class ScopeValidator extends Container<
                 .max(128)
                 .check((ctx) => {
                     try {
-                        isScopeNameValid(ctx.value, { throwOnFailure: true });
+                        isScopeNameValid(ctx.value, {
+                            throwOnFailure: true 
+                        });
                     } catch (e) {
                         ctx.issues.push({
                             input: ctx.value,
@@ -38,30 +40,42 @@ export class ScopeValidator extends Container<
 
         this.mount(
             'name',
-            { group: ValidatorGroup.CREATE },
+            {
+                group: ValidatorGroup.CREATE 
+            },
             nameValidator,
         );
         this.mount(
             'name',
-            { group: ValidatorGroup.UPDATE, optional: true },
+            {
+                group: ValidatorGroup.UPDATE,
+                optional: true 
+            },
             nameValidator,
         );
 
         this.mount(
             'display_name',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(z.string().min(5).max(4096).nullable()),
         );
 
         this.mount(
             'realm_id',
-            { group: ValidatorGroup.CREATE, optional: true },
+            {
+                group: ValidatorGroup.CREATE,
+                optional: true 
+            },
             createValidator(z.uuid().nullable()),
         );
     }

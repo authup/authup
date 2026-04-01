@@ -6,19 +6,35 @@
  */
 
 import type { PolicyAPICheckResponse } from '@authup/core-http-kit';
-import {
-    BuiltInPolicyType, PolicyData, definePolicyEvaluationContext,
-} from '@authup/access';
+import { BuiltInPolicyType,PolicyData,definePolicyEvaluationContext, } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DPut, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import { useRequestQuery } from '@routup/basic/query';
 import {
-    send, sendAccepted, sendCreated, useRequestParam,
+    send, 
+    sendAccepted, 
+    sendCreated, 
+    useRequestParam,
 } from 'routup';
-import type { IIdentityPermissionProvider, IPolicyRepository, IPolicyService, IRealmRepository } from '../../../../../core/index.ts';
+import type {
+ 
+    IIdentityPermissionProvider, 
+    IPolicyRepository, 
+    IPolicyService, 
+    IRealmRepository 
+} from '../../../../../core/index.ts';
 import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
@@ -57,9 +73,15 @@ export class PolicyController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
+        const {
+            data, 
+            meta 
+        } = await this.service.getMany(useRequestQuery(req), actor);
 
-        return send(res, { data, meta });
+        return send(res, {
+            data,
+            meta 
+        });
     }
 
     @DGet('/:id/expanded', [])
@@ -68,7 +90,9 @@ export class PolicyController {
         @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<any> {
-        return this.getOne(id, req, res, { expanded: true });
+        return this.getOne(id, req, res, {
+            expanded: true 
+        });
     }
 
     @DGet('/:id', [])
@@ -100,12 +124,16 @@ export class PolicyController {
 
         let criteria: Record<string, any>;
         if (isUUID(paramId)) {
-            criteria = { id: paramId };
+            criteria = {
+                id: paramId 
+            };
         } else {
             const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'));
             criteria = {
                 name: paramId,
-                ...(realm ? { realm_id: realm.id } : {}),
+                ...(realm ? {
+                    realm_id: realm.id 
+                } : {}),
             };
         }
 
@@ -168,7 +196,10 @@ export class PolicyController {
     ): Promise<any> {
         const actor = buildActorContext(req);
 
-        const { entity, created } = await this.service.save(
+        const {
+            entity, 
+            created 
+        } = await this.service.save(
             id || undefined,
             data,
             actor,

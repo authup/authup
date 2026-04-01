@@ -5,12 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionBinding, Role, User, UserAttribute } from '@authup/core-kit';
+import type {
+ 
+    PermissionBinding, 
+    Role, 
+    User, 
+    UserAttribute 
+} from '@authup/core-kit';
 import type { PolicyWithType } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type {
-    DataSource, EntityManager,
-} from 'typeorm';
+import type { DataSource,EntityManager, } from 'typeorm';
 import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';
 import { UserAttributeEntity } from '../user-attribute/index.ts';

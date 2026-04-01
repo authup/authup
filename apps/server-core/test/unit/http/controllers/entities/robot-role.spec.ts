@@ -6,14 +6,14 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
-import type {
-    RobotRole,
-} from '@authup/core-kit';
-import {
-    createFakeRobot, createFakeRole, expectPropertiesEqualToSrc,
-} from '../../../../utils';
+import type { RobotRole, } from '@authup/core-kit';
+import { createFakeRobot,createFakeRole,expectPropertiesEqualToSrc, } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/robot-role', () => {

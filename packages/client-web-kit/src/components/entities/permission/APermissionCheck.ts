@@ -25,7 +25,9 @@ export const APermissionCheck = defineComponent({
             type: Object as PropType<PermissionEvaluationOptions>,
         },
     },
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         const fn = createPermissionCheckerReactiveFn();
 
         const isPermitted = computed(() => fn({

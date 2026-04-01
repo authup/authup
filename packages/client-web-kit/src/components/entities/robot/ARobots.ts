@@ -12,7 +12,9 @@ import type { Robot } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup, TranslatorTranslationVuecsKey, useTranslation,
+    TranslatorTranslationGroup, 
+    TranslatorTranslationVuecsKey, 
+    useTranslation,
 } from '../../../core';
 import {
     defineEntityCollectionManager,
@@ -25,7 +27,9 @@ export const ARobots = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Robot>(),
     slots: Object as SlotsType<EntityCollectionVSlots<Robot>>,
     setup(props, ctx) {
-        const { render } = defineEntityCollectionManager({
+        const {
+            render 
+        } = defineEntityCollectionManager({
             type: `${EntityType.ROBOT}`,
             props,
             setup: ctx,

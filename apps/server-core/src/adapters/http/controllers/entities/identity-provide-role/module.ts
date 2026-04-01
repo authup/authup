@@ -6,7 +6,15 @@
  */
 
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
@@ -57,7 +65,10 @@ export class OAuth2ProviderRoleController {
             ],
         });
 
-        const { data, meta } = await this.repository.findMany(useRequestQuery(req));
+        const {
+            data, 
+            meta 
+        } = await this.repository.findMany(useRequestQuery(req));
 
         return send(res, {
             data,
@@ -82,7 +93,9 @@ export class OAuth2ProviderRoleController {
 
         const paramId = useRequestParamID(req);
 
-        const entity = await this.repository.findOneBy({ id: paramId });
+        const entity = await this.repository.findOneBy({
+            id: paramId 
+        });
 
         if (!entity) {
             throw new NotFoundError();
@@ -113,7 +126,9 @@ export class OAuth2ProviderRoleController {
 
         await this.repository.validateJoinColumns(data);
 
-        let entity = await this.repository.findOneBy({ id: paramId });
+        let entity = await this.repository.findOneBy({
+            id: paramId 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -145,7 +160,9 @@ export class OAuth2ProviderRoleController {
             name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
         });
 
-        const entity = await this.repository.findOneBy({ id: paramId });
+        const entity = await this.repository.findOneBy({
+            id: paramId 
+        });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -157,7 +174,9 @@ export class OAuth2ProviderRoleController {
             }),
         });
 
-        const { id: entityId } = entity;
+        const {
+            id: entityId 
+        } = entity;
 
         await this.repository.remove(entity);
 

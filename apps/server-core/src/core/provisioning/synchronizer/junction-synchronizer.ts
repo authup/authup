@@ -22,14 +22,19 @@ export class ProvisioningJunctionSynchronizer<T extends ObjectLiteral = ObjectLi
     }
 
     async synchronize(
-        owner: { id: string, realm_id?: string | null },
-        targets: Array<{ id: string, realm_id?: string | null }>,
+        owner: {
+            id: string,
+            realm_id?: string | null 
+        },
+        targets: Array<{
+            id: string,
+            realm_id?: string | null 
+        }>,
         targetKey: string,
         targetRealmKey: string,
         extraAttributes?: Record<string, unknown>,
     ): Promise<void> {
         for (const target of targets) {
-
             const existing = await this.ctx.repository.findOneBy({
                 [this.ctx.ownerKey]: owner.id,
                 [targetKey]: target.id,

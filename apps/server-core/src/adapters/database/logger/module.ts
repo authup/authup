@@ -29,7 +29,6 @@ export class DatabaseLogger extends AdvancedConsoleLogger {
         const messages = this.prepareLogMessages(logMessage);
 
         for (const message of messages) {
-
             switch (message.type ?? level) {
                 case 'log':
                 case 'schema-build':

@@ -162,7 +162,9 @@ export class ExtraAttributesRepositoryAdapter<
             where.name = In(extraOptions.attributes) as FindOptionsWhereProperty<A['name']>;
         }
 
-        const attributes = await this.attributeRepository.find({ where });
+        const attributes = await this.attributeRepository.find({
+            where 
+        });
         const output : Record<string, E> = {};
 
         for (const element of value) {
@@ -225,7 +227,6 @@ export class ExtraAttributesRepositoryAdapter<
 
         const keysProcessed : string[] = [];
         for (const item of items) {
-
             if (hasOwnProperty(input, item.name)) {
                 item.value = input[item.name];
                 item[foreignColumn] = foreignColumnValue;

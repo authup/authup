@@ -6,11 +6,12 @@
  */
 
 import type {
-    Permission, Role, UserPermission, UserRole,
+    Permission, 
+    Role, 
+    UserPermission, 
+    UserRole,
 } from '@authup/core-kit';
-import {
-    buildUserFakeEmail,
-} from '@authup/core-kit';
+import { buildUserFakeEmail, } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
 import type {
     IClientRepository,
@@ -70,7 +71,10 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             if (attributes) {
                 await this.userRepository.remove(attributes);
             }
-            return { ...input, attributes: attributes || input.attributes };
+            return {
+                ...input,
+                attributes: attributes || input.attributes 
+            };
         }
 
         if (attributes) {

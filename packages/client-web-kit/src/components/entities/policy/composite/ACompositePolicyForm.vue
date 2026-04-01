@@ -1,7 +1,10 @@
 <script lang="ts">
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import {
-    type PropType, computed, defineComponent, reactive,
+    type PropType, 
+    computed, 
+    defineComponent, 
+    reactive,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';

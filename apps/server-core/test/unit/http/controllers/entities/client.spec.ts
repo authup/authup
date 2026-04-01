@@ -7,7 +7,11 @@
 
 import type { Client } from '@authup/core-kit';
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { ClientCredentialsService } from '../../../../../src/core';
 import { createFakeClient, expectPropertiesEqualToSrc } from '../../../../utils';
@@ -152,7 +156,9 @@ describe('http/controllers/client', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const { name } = createFakeClient();
+        const {
+            name 
+        } = createFakeClient();
 
         let response = await suite.client
             .client
@@ -164,9 +170,13 @@ describe('http/controllers/client', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);
 
-        const { id } = response;
+        const {
+            id 
+        } = response;
 
-        const { name: nextName } = createFakeClient();
+        const {
+            name: nextName 
+        } = createFakeClient();
 
         response = await suite.client
             .client

@@ -23,6 +23,9 @@ export interface IScopeService {
         data: Record<string, any>,
         actor: ActorContext,
         options?: { updateOnly?: boolean },
-    ): Promise<{ entity: Scope, created: boolean }>;
+    ): Promise<{
+        entity: Scope,
+        created: boolean 
+    }>;
     delete(id: string, actor: ActorContext): Promise<Scope>;
 }

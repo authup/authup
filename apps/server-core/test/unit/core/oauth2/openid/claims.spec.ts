@@ -15,7 +15,9 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
 
     describe('fromIdentity', () => {
         it('should dispatch to fromClient for CLIENT type', () => {
-            const client = { name: 'test-client' } as Client;
+            const client = {
+                name: 'test-client' 
+            } as Client;
             const result = builder.fromIdentity({
                 type: OAuth2SubKind.CLIENT,
                 data: client,
@@ -24,7 +26,9 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
         });
 
         it('should dispatch to fromRobot for ROBOT type', () => {
-            const robot = { name: 'test-robot' } as Robot;
+            const robot = {
+                name: 'test-robot' 
+            } as Robot;
             const result = builder.fromIdentity({
                 type: OAuth2SubKind.ROBOT,
                 data: robot,
@@ -33,7 +37,10 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
         });
 
         it('should dispatch to fromUser for USER type', () => {
-            const user = { name: 'test-user', email: 'test@example.com' } as User;
+            const user = {
+                name: 'test-user',
+                email: 'test@example.com' 
+            } as User;
             const result = builder.fromIdentity({
                 type: OAuth2SubKind.USER,
                 data: user,
@@ -45,7 +52,9 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
 
     describe('fromClient', () => {
         it('should map name to name, nickname, and preferred_username', () => {
-            const client = { name: 'my-client' } as Client;
+            const client = {
+                name: 'my-client' 
+            } as Client;
             const result = builder.fromClient(client);
             expect(result.name).toBe('my-client');
             expect(result.nickname).toBe('my-client');
@@ -54,14 +63,20 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
 
         it('should transform Date updated_at to unix timestamp in seconds per OIDC §5.1', () => {
             const date = new Date('2025-01-15T12:00:00Z');
-            const client = { name: 'c', updated_at: date } as Client;
+            const client = {
+                name: 'c',
+                updated_at: date 
+            } as Client;
             const result = builder.fromClient(client);
             expect(result.updated_at).toBe(Math.floor(date.getTime() / 1000));
         });
 
         it('should transform string updated_at to unix timestamp in seconds per OIDC §5.1', () => {
             const dateStr = '2025-01-15T12:00:00Z';
-            const client = { name: 'c', updated_at: dateStr } as unknown as Client;
+            const client = {
+                name: 'c',
+                updated_at: dateStr 
+            } as unknown as Client;
             const result = builder.fromClient(client);
             expect(result.updated_at).toBe(Math.floor(new Date(dateStr).getTime() / 1000));
         });
@@ -76,7 +91,9 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
 
     describe('fromRobot', () => {
         it('should map name to name, nickname, and preferred_username', () => {
-            const robot = { name: 'my-robot' } as Robot;
+            const robot = {
+                name: 'my-robot' 
+            } as Robot;
             const result = builder.fromRobot(robot);
             expect(result.name).toBe('my-robot');
             expect(result.nickname).toBe('my-robot');
@@ -85,13 +102,18 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
 
         it('should transform Date updated_at to unix timestamp in seconds per OIDC §5.1', () => {
             const date = new Date('2025-06-01T00:00:00Z');
-            const robot = { name: 'r', updated_at: date } as Robot;
+            const robot = {
+                name: 'r',
+                updated_at: date 
+            } as Robot;
             const result = builder.fromRobot(robot);
             expect(result.updated_at).toBe(Math.floor(date.getTime() / 1000));
         });
 
         it('should not have email or family_name', () => {
-            const robot = { name: 'r' } as Robot;
+            const robot = {
+                name: 'r' 
+            } as Robot;
             const result = builder.fromRobot(robot);
             expect(result).not.toHaveProperty('email');
             expect(result).not.toHaveProperty('family_name');
@@ -122,19 +144,27 @@ describe('OAuth2OpenIDClaimsBuilder', () => {
 
         it('should transform Date updated_at to unix timestamp in seconds per OIDC §5.1', () => {
             const date = new Date('2025-03-01T10:30:00Z');
-            const user = { name: 'u', updated_at: date } as User;
+            const user = {
+                name: 'u',
+                updated_at: date 
+            } as User;
             const result = builder.fromUser(user);
             expect(result.updated_at).toBe(Math.floor(date.getTime() / 1000));
         });
 
         it('should pass through non-Date non-string updated_at', () => {
-            const user = { name: 'u', updated_at: 1234567890 } as unknown as User;
+            const user = {
+                name: 'u',
+                updated_at: 1234567890 
+            } as unknown as User;
             const result = builder.fromUser(user);
             expect(result.updated_at).toBe(1234567890);
         });
 
         it('should skip missing attributes', () => {
-            const user = { name: 'u' } as User;
+            const user = {
+                name: 'u' 
+            } as User;
             const result = builder.fromUser(user);
             expect(result.name).toBe('u');
             expect(result).not.toHaveProperty('email');

@@ -53,9 +53,7 @@ import {
     ScopeProvisioningSynchronizer,
     UserProvisioningSynchronizer,
 } from '../../../core/provisioning/synchronizer/index.ts';
-import type {
-    IProvisioningSource,
-} from '../../../core/provisioning/types.ts';
+import type { IProvisioningSource, } from '../../../core/provisioning/types.ts';
 import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
@@ -101,7 +99,9 @@ export class ProvisionerModule implements IModule {
         const config = container.resolve(ConfigInjectionKey);
         const provisioningDir = path.join(config.writableDirectoryPath, 'provisioning');
         if (fs.existsSync(provisioningDir)) {
-            sources.push(new FileProvisioningSource({ cwd: provisioningDir }));
+            sources.push(new FileProvisioningSource({
+                cwd: provisioningDir 
+            }));
         }
 
         const composite = new CompositeProvisioningSource(sources);

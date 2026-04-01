@@ -22,85 +22,142 @@ import type { Client, Realm, User } from '@authup/core-kit';
 import { ClientEntity } from '../client/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
-@Entity({ name: 'auth_users' })
+@Entity({
+    name: 'auth_users' 
+})
 @Unique(['name', 'realm_id'])
 export class UserEntity implements User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Index()
-    @Column({ type: 'varchar', length: 128 })
+    @Column({
+        type: 'varchar',
+        length: 128 
+    })
     name: string;
 
-    @Column({ type: 'boolean', default: true })
+    @Column({
+        type: 'boolean',
+        default: true 
+    })
     name_locked: boolean;
 
-    @Column({ type: 'varchar', length: 128, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 128,
+        nullable: true 
+    })
     first_name: string | null;
 
-    @Column({ type: 'varchar', length: 128, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 128,
+        nullable: true 
+    })
     last_name: string | null;
 
-    @Column({ type: 'varchar', length: 256, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 256,
+        nullable: true 
+    })
     display_name: string | null;
 
     @Index()
     @Column({
-        type: 'varchar', length: 256, select: false,
+        type: 'varchar',
+        length: 256,
+        select: false,
     })
     email: string;
 
     @Column({
-        type: 'varchar', length: 512, default: null, nullable: true, select: false,
+        type: 'varchar',
+        length: 512,
+        default: null,
+        nullable: true,
+        select: false,
     })
     password: string | null;
 
     // ------------------------------------------------------------------
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 255,
+        nullable: true 
+    })
     avatar: string | null;
 
-    @Column({ type: 'varchar', length: 255, nullable: true })
+    @Column({
+        type: 'varchar',
+        length: 255,
+        nullable: true 
+    })
     cover: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: null, select: false,
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
+        select: false,
     })
     reset_hash: string | null;
 
     @Column({
-        type: 'varchar', length: 28, nullable: true, default: null, select: false,
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
+        select: false,
     })
     reset_at: string | null;
 
     @Column({
-        type: 'varchar', length: 28, nullable: true, default: null, select: false,
+        type: 'varchar',
+        length: 28,
+        nullable: true,
+        default: null,
+        select: false,
     })
     reset_expires: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: null,
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
     })
     status: string | null;
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: null,
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
     })
     status_message: string | null;
 
     // ------------------------------------------------------------------
 
     @Column({
-        type: 'boolean', default: true,
+        type: 'boolean',
+        default: true,
     })
     active: boolean;
 
     @Column({
-        type: 'varchar', length: 256, nullable: true, default: null, select: false,
+        type: 'varchar',
+        length: 256,
+        nullable: true,
+        default: null,
+        select: false,
     })
     activate_hash: string | null;
 
@@ -118,18 +175,29 @@ export class UserEntity implements User {
     @Column()
     realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'realm_id' })
+    @ManyToOne(() => RealmEntity, {
+        onDelete: 'CASCADE' 
+    })
+    @JoinColumn({
+        name: 'realm_id' 
+    })
     realm: Realm;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({ nullable: true })
+    @Column({
+        nullable: true 
+    })
     client_id: Client['id'] | null;
 
-    @ManyToOne(() => ClientEntity, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({ name: 'client_id' })
+    @ManyToOne(() => ClientEntity, {
+        onDelete: 'CASCADE',
+        nullable: true 
+    })
+    @JoinColumn({
+        name: 'client_id' 
+    })
     client: Client | null;
 
     // ------------------------------------------------------------------

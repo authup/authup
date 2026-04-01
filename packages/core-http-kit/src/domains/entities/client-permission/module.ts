@@ -9,9 +9,7 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientPermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type {
-    EntityAPISlim, EntityCollectionResponse, EntityRecordResponse,
-} from '../../types-base';
+import type { EntityAPISlim,EntityCollectionResponse,EntityRecordResponse, } from '../../types-base';
 
 export class ClientPermissionAPI extends BaseAPI implements EntityAPISlim<ClientPermission> {
     async getMany(data?: BuildInput<ClientPermission>) : Promise<EntityCollectionResponse<ClientPermission>> {

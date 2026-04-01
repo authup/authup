@@ -6,13 +6,21 @@
  */
 
 import type {
-    DataSource, DeepPartial, EntityManager, FindManyOptions, FindOneOptions,
+    DataSource, 
+    DeepPartial, 
+    EntityManager, 
+    FindManyOptions, 
+    FindOneOptions,
 } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
 import type { ObjectLiteral } from '@authup/kit';
 import { ExtraAttributesRepositoryAdapter } from './adapter.ts';
 import type {
-    EARepositoryEntityBase, EARepositoryFindOptions, EARepositoryOptions, EARepositorySaveOptions, IEARepository,
+    EARepositoryEntityBase, 
+    EARepositoryFindOptions, 
+    EARepositoryOptions, 
+    EARepositorySaveOptions, 
+    IEARepository,
 } from './types.ts';
 
 export class EARepository<

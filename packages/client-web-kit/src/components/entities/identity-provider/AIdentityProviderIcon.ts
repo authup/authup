@@ -22,11 +22,15 @@ export const AIdentityProviderIcon = defineComponent({
     },
     setup(props, setup) {
         if (props.entity.preset) {
-            const { preset } = props.entity;
+            const {
+                preset 
+            } = props.entity;
             return () => h(AIdentityProviderPreset, {
                 id: preset,
             }, {
-                default: (item: IdentityProviderPresetElement) => h('i', { class: [item.icon, setup.attrs.class] }),
+                default: (item: IdentityProviderPresetElement) => h('i', {
+                    class: [item.icon, setup.attrs.class] 
+                }),
             });
         }
 
@@ -34,11 +38,15 @@ export const AIdentityProviderIcon = defineComponent({
             return () => null;
         }
 
-        const { protocol } = props.entity;
+        const {
+            protocol 
+        } = props.entity;
         return () => h(AIdentityProviderProtocol, {
             id: protocol,
         }, {
-            default: (item: IdentityProviderProtocolElement) => h('i', { class: [item.icon, setup.attrs.class] }),
+            default: (item: IdentityProviderProtocolElement) => h('i', {
+                class: [item.icon, setup.attrs.class] 
+            }),
         });
     },
 });

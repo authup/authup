@@ -19,18 +19,14 @@ import {
     ref,
     watch,
 } from 'vue';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
+import { maxLength,minLength,required, } from '@vuelidate/validators';
 import type { Realm, Robot } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
 } from '@vuecs/form-controls';
-import {
-    SlotName,
-} from '@vuecs/list-controls';
+import { SlotName, } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     TranslatorTranslationDefaultKey,
@@ -160,12 +156,24 @@ export const ARobotForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.GENERATE },
-                { key: TranslatorTranslationDefaultKey.HASHED },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.SECRET },
+                {
+                    key: TranslatorTranslationDefaultKey.GENERATE 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.HASHED 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.SECRET 
+                },
             ],
         );
 
@@ -227,7 +235,9 @@ export const ARobotForm = defineComponent({
                     }, [
                         translationsDefault[TranslatorTranslationDefaultKey.HASHED].value,
                         ' ',
-                        h('i', { class: 'fa fa-exclamation-triangle ps-1' }),
+                        h('i', {
+                            class: 'fa fa-exclamation-triangle ps-1' 
+                        }),
                     ]) : '',
                 ],
                 content: buildFormInput({
@@ -247,7 +257,9 @@ export const ARobotForm = defineComponent({
                         generateSecret.call(null);
                     },
                 }, [
-                    h('i', { class: 'fa fa-wrench' }),
+                    h('i', {
+                        class: 'fa fa-wrench' 
+                    }),
                     ' ',
                     translationsDefault[TranslatorTranslationDefaultKey.GENERATE].value,
                 ]),
@@ -260,7 +272,9 @@ export const ARobotForm = defineComponent({
                 invalid: $v.value.$invalid,
             }, translationsSubmit);
 
-            const leftColumn = h('div', { class: 'col' }, [
+            const leftColumn = h('div', {
+                class: 'col' 
+            }, [
                 id,
                 name,
                 displayName,
@@ -277,7 +291,10 @@ export const ARobotForm = defineComponent({
             ) {
                 const realm = h(ARealms, {}, {
                     [SlotName.ITEM_ACTIONS]: (
-                        props: { data: Realm, busy: boolean },
+                        props: {
+                            data: Realm,
+                            busy: boolean 
+                        },
                     ) => renderToggleButton({
                         value: form.realm_id === props.data.id,
                         isBusy: props.busy,
@@ -307,7 +324,9 @@ export const ARobotForm = defineComponent({
                     return submit.apply(null);
                 },
             }, [
-                h('div', { class: 'row' }, [
+                h('div', {
+                    class: 'row' 
+                }, [
                     leftColumn,
                     rightColumn,
                 ]),

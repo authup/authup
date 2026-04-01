@@ -50,8 +50,12 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const realm = await this.realmRepository.resolve(validated.realm_id, true);
 
         const where: Record<string, any> = {
-            ...(validated.name ? { name: validated.name } : {}),
-            ...(validated.email ? { email: validated.email } : {}),
+            ...(validated.name ? {
+                name: validated.name 
+            } : {}),
+            ...(validated.email ? {
+                email: validated.email 
+            } : {}),
             realm_id: realm.id,
         };
 
@@ -104,8 +108,12 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const realm = await this.realmRepository.resolve(validated.realm_id, true);
 
         const where: Record<string, any> = {
-            ...(validated.name ? { name: validated.name } : {}),
-            ...(validated.email ? { email: validated.email } : {}),
+            ...(validated.name ? {
+                name: validated.name 
+            } : {}),
+            ...(validated.email ? {
+                email: validated.email 
+            } : {}),
             reset_hash: validated.token,
             realm_id: realm.id,
         };
@@ -166,12 +174,16 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         validator.mount(
             'realm_id',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain.exists()
                     .isUUID()
-                    .optional({ values: 'null' });
+                    .optional({
+                        values: 'null' 
+                    });
             }),
         );
 
@@ -209,13 +221,17 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         validator.mount(
             'realm_id',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .exists()
                     .isUUID()
-                    .optional({ values: 'null' });
+                    .optional({
+                        values: 'null' 
+                    });
             }),
         );
 
@@ -226,7 +242,10 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
                 return chain
                     .exists()
                     .notEmpty()
-                    .isLength({ min: 3, max: 256 });
+                    .isLength({
+                        min: 3,
+                        max: 256 
+                    });
             }),
         );
 
@@ -237,7 +256,10 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
                 return chain
                     .exists()
                     .notEmpty()
-                    .isLength({ min: 5, max: 512 });
+                    .isLength({
+                        min: 5,
+                        max: 512 
+                    });
             }),
         );
 

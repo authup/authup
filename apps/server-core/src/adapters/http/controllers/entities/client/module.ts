@@ -7,12 +7,24 @@
 
 import { OAuth2SubKind } from '@authup/specs';
 import {
-    DBody, DController, DDelete, DGet, DPath, DPost, DPut, DRequest, DResponse, DTags,
+    DBody, 
+    DController, 
+    DDelete, 
+    DGet, 
+    DPath, 
+    DPost, 
+    DPut, 
+    DRequest, 
+    DResponse, 
+    DTags,
 } from '@routup/decorators';
 import { NotFoundError } from '@ebec/http';
 import type { Client } from '@authup/core-kit';
 import {
-    send, sendAccepted, sendCreated, useRequestParam,
+    send, 
+    sendAccepted, 
+    sendCreated, 
+    useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
@@ -48,9 +60,15 @@ export class ClientController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
+        const {
+            data, 
+            meta 
+        } = await this.service.getMany(useRequestQuery(req), actor);
 
-        return send(res, { data, meta });
+        return send(res, {
+            data,
+            meta 
+        });
     }
 
     @DGet('/:id', [])
@@ -85,7 +103,9 @@ export class ClientController {
             for (const attribute of attributes) {
                 const attr = attribute as keyof Client;
                 if (attr === 'secret') {
-                    const withSecret = await this.repository.findOneWithSecret({ id: entity.id });
+                    const withSecret = await this.repository.findOneWithSecret({
+                        id: entity.id 
+                    });
                     if (withSecret) {
                         entity.secret = withSecret.secret;
                     }
@@ -134,7 +154,10 @@ export class ClientController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const { entity, created } = await this.service.save(
+        const {
+            entity, 
+            created 
+        } = await this.service.save(
             id || undefined,
             data,
             actor,

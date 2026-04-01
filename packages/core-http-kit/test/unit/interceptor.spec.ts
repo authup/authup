@@ -37,7 +37,11 @@ describe('src/interceptor/utils', () => {
         let retryState = getClientRequestRetryState({});
         expect(retryState.retryCount).toEqual(0);
 
-        retryState = getClientRequestRetryState({ retry: { retryCount: 2 } });
+        retryState = getClientRequestRetryState({
+            retry: {
+                retryCount: 2 
+            } 
+        });
         expect(retryState.retryCount).toEqual(2);
     });
 });

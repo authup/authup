@@ -4,7 +4,13 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
-    AEntityDelete, APagination, ARealms, ASearch, ATitle, injectStore, usePermissionCheck,
+    AEntityDelete, 
+    APagination, 
+    ARealms, 
+    ASearch, 
+    ATitle, 
+    injectStore, 
+    usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { Component } from 'vue';
@@ -21,7 +27,9 @@ export default defineComponent({
         VCTimeago,
     },
     emits: ['deleted'],
-    setup(_props, { emit }) {
+    setup(_props, {
+        emit 
+    }) {
         const store = injectStore();
         const {
             realmManagementId,
@@ -31,20 +39,37 @@ export default defineComponent({
             emit('deleted', e);
         };
 
-        const hasEditPermission = usePermissionCheck({ name: PermissionName.REALM_UPDATE });
-        const hasDropPermission = usePermissionCheck({ name: PermissionName.REALM_DELETE });
+        const hasEditPermission = usePermissionCheck({
+            name: PermissionName.REALM_UPDATE 
+        });
+        const hasDropPermission = usePermissionCheck({
+            name: PermissionName.REALM_DELETE 
+        });
 
         const fields = [
             {
-                key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
+                key: 'name',
+                label: 'Name',
+                thClass: 'text-left',
+                tdClass: 'text-left',
             },
             {
-                key: 'updated_at', label: 'Updated At', thClass: 'text-center', tdClass: 'text-center',
+                key: 'updated_at',
+                label: 'Updated At',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
             {
-                key: 'created_at', label: 'Created At', thClass: 'text-center', tdClass: 'text-center',
+                key: 'created_at',
+                label: 'Created At',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
-            { key: 'options', label: '', tdClass: 'text-left' },
+            {
+                key: 'options',
+                label: '',
+                tdClass: 'text-left' 
+            },
         ];
 
         return {

@@ -10,7 +10,10 @@ import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength } from '@vuelidate/validators';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    defineComponent, h, reactive, ref,
+    defineComponent, 
+    h, 
+    reactive, 
+    ref,
 } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
@@ -60,16 +63,16 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },
-            value_is_regex: {
-
-            },
+            value_is_regex: {},
         }, form);
 
         const validationMessages = useTranslationsForNestedValidation($v.value);
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.VALUE_IS_REGEX },
+                {
+                    key: TranslatorTranslationDefaultKey.VALUE_IS_REGEX 
+                },
             ],
         );
 
@@ -236,7 +239,9 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                 ];
             }
 
-            return h('div', { class: 'list-item flex-column' }, [
+            return h('div', {
+                class: 'list-item flex-column' 
+            }, [
                 listBar,
                 renderForm,
             ]);

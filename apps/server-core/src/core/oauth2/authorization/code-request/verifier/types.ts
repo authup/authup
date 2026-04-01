@@ -5,9 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    Client, OAuth2AuthorizationCodeRequest, Scope,
-} from '@authup/core-kit';
+import type { Client,OAuth2AuthorizationCodeRequest,Scope, } from '@authup/core-kit';
 import type { IOAuth2ClientRepository } from '../../../client/index.ts';
 import type { IOAuth2ScopeRepository } from '../../../scope/index.ts';
 

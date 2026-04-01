@@ -10,28 +10,36 @@ import type { IdentityProviderPresetElement } from './type';
 
 const elements = {
     [IdentityProviderPreset.FACEBOOK]: {
-        name: 'Facebook', icon: 'fab fa-facebook',
+        name: 'Facebook',
+        icon: 'fab fa-facebook',
     },
     [IdentityProviderPreset.GITHUB]: {
-        name: 'GitHub', icon: 'fab fa-github',
+        name: 'GitHub',
+        icon: 'fab fa-github',
     },
     [IdentityProviderPreset.GITLAB]: {
-        name: 'GitLab', icon: 'fab fa-gitlab',
+        name: 'GitLab',
+        icon: 'fab fa-gitlab',
     },
     [IdentityProviderPreset.GOOGLE]: {
-        name: 'Google', icon: 'fab fa-google',
+        name: 'Google',
+        icon: 'fab fa-google',
     },
     [IdentityProviderPreset.PAYPAL]: {
-        name: 'Paypal', icon: 'fab fa-paypal',
+        name: 'Paypal',
+        icon: 'fab fa-paypal',
     },
     [IdentityProviderPreset.INSTAGRAM]: {
-        name: 'Instagram', icon: 'fab fa-instagram',
+        name: 'Instagram',
+        icon: 'fab fa-instagram',
     },
     [IdentityProviderPreset.STACKOVERFLOW]: {
-        name: 'StackOverflow', icon: 'fa fa-code',
+        name: 'StackOverflow',
+        icon: 'fa fa-code',
     },
     [IdentityProviderPreset.TWITTER]: {
-        name: 'Twitter', icon: 'fab fa-twitter',
+        name: 'Twitter',
+        icon: 'fab fa-twitter',
     },
 };
 

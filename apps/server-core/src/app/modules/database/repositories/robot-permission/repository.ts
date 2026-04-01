@@ -24,7 +24,9 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
         const qb = this.repository.createQueryBuilder('robotPermission');
         qb.groupBy('robotPermission.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'robotPermission',
             filters: {
                 allowed: ['robot_id', 'permission_id'],
@@ -62,7 +64,9 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
     }
 
     findOneById(id: string): Promise<RobotPermission | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     findOneByName(_name: string): Promise<RobotPermission | null> {

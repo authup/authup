@@ -18,7 +18,9 @@ export class RobotRoleRequestValidator extends Container<
 
         this.mount(
             'robot_id',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -29,7 +31,9 @@ export class RobotRoleRequestValidator extends Container<
 
         this.mount(
             'role_id',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain

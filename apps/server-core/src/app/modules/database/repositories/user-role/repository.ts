@@ -23,7 +23,9 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
         const qb = this.repository.createQueryBuilder('userRole');
         qb.groupBy('userRole.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'userRole',
             filters: {
                 allowed: ['role_id', 'user_id'],
@@ -58,7 +60,9 @@ export class UserRoleRepositoryAdapter implements IUserRoleRepository {
     }
 
     findOneById(id: string): Promise<UserRole | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     async findOneByName(_name: string): Promise<UserRole | null> {

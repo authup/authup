@@ -5,24 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    ClientRole,
-} from '@authup/core-kit';
+import type { ClientRole, } from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType,
+    EntityDefaultEventName, 
+    EntityType,
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import type { DomainEventDestination} from '@authup/server-kit';
+import type { DomainEventDestination } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface, InsertEvent,
+    EntitySubscriberInterface, 
+    InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import {
-    EventSubscriber,
-} from 'typeorm';
+import { EventSubscriber, } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { CachePrefix } from '../constants.ts';
 import { ClientRoleEntity } from './entity.ts';
@@ -32,7 +30,9 @@ async function publishEvent(
     data: ClientRole,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.CLIENT_ROLE, id) },
+        {
+            channel: (id) => buildEntityChannelName(EntityType.CLIENT_ROLE, id) 
+        },
     ];
     if (data.client_realm_id) {
         destinations.push({

@@ -17,7 +17,9 @@ export function createFakeUser(data: Partial<User> = {}) {
         active: true,
         first_name: faker.person.firstName(),
         last_name: faker.person.lastName(),
-        password: faker.string.alphanumeric({ length: 64 }),
+        password: faker.string.alphanumeric({
+            length: 64 
+        }),
         ...data,
     } satisfies Partial<User>;
 }

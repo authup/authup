@@ -7,9 +7,7 @@
 
 import type { Request } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import {
-    ValidupError, buildErrorMessageForAttribute, defineIssueItem,
-} from 'validup';
+import { ValidupError,buildErrorMessageForAttribute,defineIssueItem, } from 'validup';
 import { useRequestToken } from '../../../../request/index.ts';
 import { TokenRequestValidator } from './validator.ts';
 

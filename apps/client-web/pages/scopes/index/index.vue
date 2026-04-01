@@ -1,11 +1,15 @@
 <script lang="ts">
 import { BTable } from 'bootstrap-vue-next';
 import type { Scope } from '@authup/core-kit';
+import { PermissionName, } from '@authup/core-kit';
 import {
-    PermissionName,
-} from '@authup/core-kit';
-import {
-    AEntityDelete, APagination, AScopes, ASearch, ATitle, injectStore, usePermissionCheck,
+    AEntityDelete, 
+    APagination, 
+    AScopes, 
+    ASearch, 
+    ATitle, 
+    injectStore, 
+    usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -22,13 +26,17 @@ export default defineComponent({
         AEntityDelete,
     },
     emits: ['deleted'],
-    setup(_props, { emit }) {
+    setup(_props, {
+        emit 
+    }) {
         const handleDeleted = (e: Scope) => {
             emit('deleted', e);
         };
 
         const store = injectStore();
-        const { realmManagementId } = storeToRefs(store);
+        const {
+            realmManagementId 
+        } = storeToRefs(store);
 
         const query : BuildInput<Scope> = {
             filter: {
@@ -36,23 +44,43 @@ export default defineComponent({
             },
         };
 
-        const hasEditPermission = usePermissionCheck({ name: PermissionName.SCOPE_UPDATE });
-        const hasDropPermission = usePermissionCheck({ name: PermissionName.SCOPE_DELETE });
+        const hasEditPermission = usePermissionCheck({
+            name: PermissionName.SCOPE_UPDATE 
+        });
+        const hasDropPermission = usePermissionCheck({
+            name: PermissionName.SCOPE_DELETE 
+        });
 
         const fields = [
             {
-                key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
+                key: 'name',
+                label: 'Name',
+                thClass: 'text-left',
+                tdClass: 'text-left',
             },
             {
-                key: 'built_in', label: 'Built in?', thClass: 'text-center', tdClass: 'text-center',
+                key: 'built_in',
+                label: 'Built in?',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
             {
-                key: 'created_at', label: 'Created at', thClass: 'text-center', tdClass: 'text-center',
+                key: 'created_at',
+                label: 'Created at',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
             {
-                key: 'updated_at', label: 'Updated at', thClass: 'text-left', tdClass: 'text-left',
+                key: 'updated_at',
+                label: 'Updated at',
+                thClass: 'text-left',
+                tdClass: 'text-left',
             },
-            { key: 'options', label: '', tdClass: 'text-left' },
+            {
+                key: 'options',
+                label: '',
+                tdClass: 'text-left' 
+            },
         ];
 
         return {

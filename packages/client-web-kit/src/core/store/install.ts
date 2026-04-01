@@ -10,7 +10,10 @@ import { useCookies } from '@vueuse/integrations/useCookies';
 import { defineStore } from 'pinia';
 import type { App } from 'vue';
 import type {
-    CookieGetFn, CookieOptions, CookieSetFn, CookieUnsetFn,
+    CookieGetFn, 
+    CookieOptions, 
+    CookieSetFn, 
+    CookieUnsetFn,
 } from '../../types';
 import { STORE_ID } from './constants';
 import { createStore } from './create';

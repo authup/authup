@@ -24,7 +24,9 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
                 .max(128)
                 .check((ctx) => {
                     try {
-                        isIdentityProviderNameValid(ctx.value, { throwOnFailure: true });
+                        isIdentityProviderNameValid(ctx.value, {
+                            throwOnFailure: true 
+                        });
                     } catch (e) {
                         ctx.issues.push({
                             input: ctx.value,
@@ -35,25 +37,42 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
                 }),
         );
 
-        this.mount('name', { group: ValidatorGroup.CREATE }, nameValidator);
-        this.mount('name', { group: ValidatorGroup.UPDATE, optional: true }, nameValidator);
+        this.mount('name', {
+            group: ValidatorGroup.CREATE 
+        }, nameValidator);
+        this.mount('name', {
+            group: ValidatorGroup.UPDATE,
+            optional: true 
+        }, nameValidator);
 
-        this.mount('display_name', { optional: true }, createValidator(
+        this.mount('display_name', {
+            optional: true 
+        }, createValidator(
             zod.string().min(3).max(256),
         ));
 
         const enabledValidator = createValidator(zod.boolean());
-        this.mount('enabled', { group: ValidatorGroup.CREATE }, enabledValidator);
-        this.mount('enabled', { group: ValidatorGroup.UPDATE, optional: true }, enabledValidator);
+        this.mount('enabled', {
+            group: ValidatorGroup.CREATE 
+        }, enabledValidator);
+        this.mount('enabled', {
+            group: ValidatorGroup.UPDATE,
+            optional: true 
+        }, enabledValidator);
 
         this.mount(
             'realm_id',
-            { group: ValidatorGroup.CREATE, optional: true },
+            {
+                group: ValidatorGroup.CREATE,
+                optional: true 
+            },
             createValidator(zod.uuid()),
         );
 
         this.mount('protocol', createValidator(zod.enum(IdentityProviderProtocol)));
 
-        this.mount('preset', { optional: true }, createValidator(zod.enum(IdentityProviderPreset).optional().nullable()));
+        this.mount('preset', {
+            optional: true 
+        }, createValidator(zod.enum(IdentityProviderPreset).optional().nullable()));
     }
 }

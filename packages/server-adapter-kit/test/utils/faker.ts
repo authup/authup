@@ -7,7 +7,10 @@
 
 import type { OAuth2JsonWebKey } from '@authup/specs';
 import {
-    AsymmetricKey, CryptoAsymmetricAlgorithm, createAsymmetricKeyPair, signToken,
+    AsymmetricKey, 
+    CryptoAsymmetricAlgorithm, 
+    createAsymmetricKeyPair, 
+    signToken,
 } from '@authup/server-kit';
 
 export class Faker {

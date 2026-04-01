@@ -7,9 +7,7 @@
 
 import type { Client } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
-import {
-    defineComponent,
-} from 'vue';
+import { defineComponent, } from 'vue';
 import {
     defineEntityPicker,
     defineEntityPickerVEmitOptions,
@@ -23,7 +21,9 @@ export const AClientPicker = defineComponent({
     emits: defineEntityPickerVEmitOptions<Client>(),
     slots: Object as SlotsType<EntityPickerVSlots<Client>>,
     setup(props, setup) {
-        const { render } = defineEntityPicker({
+        const {
+            render 
+        } = defineEntityPicker({
             component: AClients,
             props,
             setup,

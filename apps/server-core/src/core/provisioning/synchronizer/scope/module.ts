@@ -33,7 +33,10 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             if (attributes) {
                 await this.repository.remove(attributes);
             }
-            return { ...input, attributes: attributes || input.attributes };
+            return {
+                ...input,
+                attributes: attributes || input.attributes 
+            };
         }
 
         if (attributes) {

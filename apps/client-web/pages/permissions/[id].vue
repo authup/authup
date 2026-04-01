@@ -8,9 +8,7 @@ import {
     definePageMeta,
     useToast,
 } from '#imports';
-import {
-    createError, navigateTo, useRoute,
-} from '#app';
+import { createError,navigateTo,useRoute, } from '#app';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
@@ -24,22 +22,34 @@ export default defineComponent({
 
         const items = [
             {
-                name: 'General', icon: 'fas fa-bars', urlSuffix: '',
+                name: 'General',
+                icon: 'fas fa-bars',
+                urlSuffix: '',
             },
             {
-                name: 'Policies', icon: 'fas fa-shield-halved', urlSuffix: 'policies',
+                name: 'Policies',
+                icon: 'fas fa-shield-halved',
+                urlSuffix: 'policies',
             },
             {
-                name: 'Users', icon: 'fas fa-user', urlSuffix: 'users',
+                name: 'Users',
+                icon: 'fas fa-user',
+                urlSuffix: 'users',
             },
             {
-                name: 'Clients', icon: 'fa-solid fa-ghost ', urlSuffix: 'clients',
+                name: 'Clients',
+                icon: 'fa-solid fa-ghost ',
+                urlSuffix: 'clients',
             },
             {
-                name: 'Robots', icon: 'fas fa-robot', urlSuffix: 'robots',
+                name: 'Robots',
+                icon: 'fas fa-robot',
+                urlSuffix: 'robots',
             },
             {
-                name: 'Roles', icon: 'fas fa-user-group', urlSuffix: 'roles',
+                name: 'Roles',
+                icon: 'fas fa-user-group',
+                urlSuffix: 'roles',
             },
         ];
 
@@ -53,13 +63,18 @@ export default defineComponent({
                 .permission
                 .getOne(route.params.id as string);
         } catch {
-            await navigateTo({ path: '/permissions' });
+            await navigateTo({
+                path: '/permissions' 
+            });
             throw createError({});
         }
 
         const handleUpdated = (e: Permission) => {
             if (toast) {
-                toast.show({ variant: 'success', body: 'The permission was successfully updated.' });
+                toast.show({
+                    variant: 'success',
+                    body: 'The permission was successfully updated.' 
+                });
             }
 
             extendObject(entity.value, e);
@@ -67,7 +82,10 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

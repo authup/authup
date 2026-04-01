@@ -8,7 +8,8 @@
 import { describe, expect, it } from 'vitest';
 import type { AttributeNamesPolicy } from '../../../src';
 import {
-    AttributeNamesPolicyEvaluator, AttributeNamesPolicyValidator,
+    AttributeNamesPolicyEvaluator, 
+    AttributeNamesPolicyValidator,
     PolicyData,
     definePolicyEvaluationContext,
 } from '../../../src';

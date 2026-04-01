@@ -26,7 +26,9 @@ export const APolicies = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Policy>(),
     slots: Object as SlotsType<EntityCollectionVSlots<Policy>>,
     setup(props, setup) {
-        const { render } = defineEntityCollectionManager({
+        const {
+            render 
+        } = defineEntityCollectionManager({
             type: `${EntityType.POLICY}`,
             props,
             setup,

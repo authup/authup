@@ -24,7 +24,9 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
         const qb = this.repository.createQueryBuilder('clientRole');
         qb.groupBy('clientRole.id');
 
-        const { pagination } = applyQuery(qb, query, {
+        const {
+            pagination 
+        } = applyQuery(qb, query, {
             defaultAlias: 'clientRole',
             filters: {
                 allowed: ['client_id', 'role_id'],
@@ -59,7 +61,9 @@ export class ClientRoleRepositoryAdapter implements IClientRoleRepository {
     }
 
     findOneById(id: string): Promise<ClientRole | null> {
-        return this.findOneBy({ id });
+        return this.findOneBy({
+            id 
+        });
     }
 
     findOneByName(_name: string): Promise<ClientRole | null> {

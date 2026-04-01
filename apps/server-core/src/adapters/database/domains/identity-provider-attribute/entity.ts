@@ -8,8 +8,11 @@
 import {
     Column,
     CreateDateColumn,
-    Entity, JoinColumn, ManyToOne,
-    PrimaryGeneratedColumn, Unique,
+    Entity, 
+    JoinColumn, 
+    ManyToOne,
+    PrimaryGeneratedColumn, 
+    Unique,
     UpdateDateColumn,
 } from 'typeorm';
 import type { IdentityProvider, IdentityProviderAttribute, Realm } from '@authup/core-kit';
@@ -21,12 +24,17 @@ import { IdentityProviderEntity } from '../identity-provider/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'provider_id'])
-@Entity({ name: 'auth_identity_provider_attributes' })
+@Entity({
+    name: 'auth_identity_provider_attributes' 
+})
 export class IdentityProviderAttributeEntity implements IdentityProviderAttribute {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column({ type: 'varchar', length: 255 })
+    @Column({
+        type: 'varchar',
+        length: 255 
+    })
     name: string;
 
     @Column({
@@ -48,16 +56,27 @@ export class IdentityProviderAttributeEntity implements IdentityProviderAttribut
     @Column()
     provider_id: IdentityProvider['id'];
 
-    @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'provider_id' })
+    @ManyToOne(() => IdentityProviderEntity, {
+        onDelete: 'CASCADE' 
+    })
+    @JoinColumn({
+        name: 'provider_id' 
+    })
     provider: IdentityProviderEntity;
 
     // ------------------------------------------------------------------
-    @Column({ nullable: true })
+    @Column({
+        nullable: true 
+    })
     realm_id: Realm['id'] | null;
 
-    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE', nullable: true })
-    @JoinColumn({ name: 'realm_id' })
+    @ManyToOne(() => RealmEntity, {
+        onDelete: 'CASCADE',
+        nullable: true 
+    })
+    @JoinColumn({
+        name: 'realm_id' 
+    })
     realm: RealmEntity | null;
 
     // ------------------------------------------------------------------

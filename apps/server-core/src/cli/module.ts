@@ -22,7 +22,9 @@ import {
 export async function createCLIEntryPointCommand() {
     const pkgRaw = await fs.promises.readFile(
         path.join(process.cwd(), 'package.json'),
-        { encoding: 'utf8' },
+        {
+            encoding: 'utf8' 
+        },
     );
     const pkg = JSON.parse(pkgRaw);
 

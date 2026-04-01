@@ -14,27 +14,39 @@ export class UserProvisioningRelationsValidator extends Container<UserProvisioni
     protected initialize() {
         super.initialize();
 
-        this.mount('clientPermissions', { optional: true }, createValidator(
+        this.mount('clientPermissions', {
+            optional: true 
+        }, createValidator(
             z.record(z.string(), z.array(z.string())),
         ));
 
-        this.mount('realmPermissions', { optional: true }, createValidator(
+        this.mount('realmPermissions', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('globalPermissions', { optional: true }, createValidator(
+        this.mount('globalPermissions', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('clientRoles', { optional: true }, createValidator(
+        this.mount('clientRoles', {
+            optional: true 
+        }, createValidator(
             z.record(z.string(), z.array(z.string())),
         ));
 
-        this.mount('realmRoles', { optional: true }, createValidator(
+        this.mount('realmRoles', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('globalRoles', { optional: true }, createValidator(
+        this.mount('globalRoles', {
+            optional: true 
+        }, createValidator(
             z.array(z.string()),
         ));
     }

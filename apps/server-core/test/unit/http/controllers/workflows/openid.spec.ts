@@ -6,7 +6,11 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import type { Config } from '../../../../../src';

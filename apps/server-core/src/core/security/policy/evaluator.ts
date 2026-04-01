@@ -6,7 +6,10 @@
  */
 
 import type {
-    CompositePolicy, IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult,
+    CompositePolicy, 
+    IPolicyEvaluator, 
+    PolicyEvaluationContext, 
+    PolicyEvaluationResult,
     PolicyWithType,
 } from '@authup/access';
 import {

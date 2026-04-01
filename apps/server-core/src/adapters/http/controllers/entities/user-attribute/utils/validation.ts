@@ -18,40 +18,57 @@ export class UserAttributeRequestValidator extends Container<
 
         this.mount(
             'name',
-            { group: RequestHandlerOperation.CREATE },
+            {
+                group: RequestHandlerOperation.CREATE 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .exists()
                     .notEmpty()
                     .isString()
-                    .isLength({ min: 3, max: 255 });
+                    .isLength({
+                        min: 3,
+                        max: 255 
+                    });
             }),
         );
 
         this.mount(
             'user_id',
-            { group: RequestHandlerOperation.CREATE, optional: true },
+            {
+                group: RequestHandlerOperation.CREATE,
+                optional: true 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .exists()
                     .isUUID()
-                    .optional({ values: 'null' });
+                    .optional({
+                        values: 'null' 
+                    });
             }),
         );
 
         this.mount(
             'value',
-            { optional: true },
+            {
+                optional: true 
+            },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .exists()
                     .notEmpty()
                     .isString()
-                    .isLength({ min: 3, max: 512 })
-                    .optional({ nullable: true });
+                    .isLength({
+                        min: 3,
+                        max: 512 
+                    })
+                    .optional({
+                        nullable: true 
+                    });
             }),
         );
     }

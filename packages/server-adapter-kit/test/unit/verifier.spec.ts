@@ -8,7 +8,11 @@
 import { ErrorCode } from '@authup/errors';
 import { JWTError } from '@authup/specs';
 import {
-    beforeAll, describe, expect, it, vitest,
+    beforeAll, 
+    describe, 
+    expect, 
+    it, 
+    vitest,
 } from 'vitest';
 import { Client } from '@authup/core-http-kit';
 import { TokenAPI } from '@hapic/oauth2';
@@ -42,7 +46,9 @@ describe('verifier', () => {
     });
 
     it('should not verify token local', async () => {
-        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
+        const tokenVerifier = new TokenVerifier({
+            baseURL: 'http://localhost:3001' 
+        });
 
         try {
             await tokenVerifier.verify(ErrorCode.JWT_INVALID);

@@ -12,7 +12,9 @@ export default defineNuxtComponent({
         ARealmForm,
     },
     emits: ['failed', 'created'],
-    setup(props, { emit }) {
+    setup(props, {
+        emit 
+    }) {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -21,7 +23,9 @@ export default defineNuxtComponent({
         });
 
         const handleCreated = (e: Realm) => {
-            navigateTo({ path: `/realms/${e.id}` });
+            navigateTo({
+                path: `/realms/${e.id}` 
+            });
         };
 
         const handleFailed = (e: Error) => {

@@ -11,14 +11,14 @@ import useVuelidate from '@vuelidate/core';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed,
-    defineComponent, h, reactive, ref, watch,
+    defineComponent, 
+    h, 
+    reactive, 
+    ref, 
+    watch,
 } from 'vue';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
-import {
-    buildFormGroup, buildFormInput, buildFormTextarea,
-} from '@vuecs/form-controls';
+import { maxLength,minLength,required, } from '@vuelidate/validators';
+import { buildFormGroup,buildFormInput,buildFormTextarea, } from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     TranslatorTranslationDefaultKey,
@@ -74,9 +74,7 @@ export const APermissionForm = defineComponent({
                 minLength: minLength(5),
                 maxLength: maxLength(4096),
             },
-            realm_id: {
-
-            },
+            realm_id: {},
         }, form);
 
         const store = injectStore();
@@ -133,10 +131,18 @@ export const APermissionForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.REALM },
+                {
+                    key: TranslatorTranslationDefaultKey.NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.REALM 
+                },
             ],
         );
 

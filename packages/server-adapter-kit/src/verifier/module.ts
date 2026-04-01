@@ -28,7 +28,10 @@ import {
 import { importJWK } from 'jose';
 import type { ITokenVerifierCache } from './cache';
 import type {
-    ITokenVerifier, TokenVerificationData, TokenVerificationDataInput, TokenVerifierContext,
+    ITokenVerifier, 
+    TokenVerificationData, 
+    TokenVerificationDataInput, 
+    TokenVerifierContext,
 } from './types';
 
 export class TokenVerifier implements ITokenVerifier {
@@ -43,7 +46,9 @@ export class TokenVerifier implements ITokenVerifier {
     constructor(ctx: TokenVerifierContext) {
         this.cache = ctx.cache;
         this.maxRemoteCacheTTL = ctx.maxRemoteCacheTTL;
-        this.client = new Client({ baseURL: ctx.baseURL });
+        this.client = new Client({
+            baseURL: ctx.baseURL 
+        });
 
         if (ctx.creator) {
             // todo: use server kit singleton :)
@@ -115,7 +120,9 @@ export class TokenVerifier implements ITokenVerifier {
             payload = await verifyToken(token, {
                 type: JWKType.RSA,
                 key,
-                ...(jwk.alg ? { algorithms: [jwk.alg as JWTAlgorithm.RS256] } : {}),
+                ...(jwk.alg ? {
+                    algorithms: [jwk.alg as JWTAlgorithm.RS256] 
+                } : {}),
             }) as OAuth2TokenPayload;
         } catch {
             throw JWTError.payloadInvalid('The token could not be verified.');
@@ -144,7 +151,9 @@ export class TokenVerifier implements ITokenVerifier {
         let payload : OAuth2TokenIntrospectionResponse;
 
         try {
-            payload = await this.client.token.introspect({ token }, {
+            payload = await this.client.token.introspect({
+                token 
+            }, {
                 authorizationHeaderInherit: true,
             });
         } catch (e) {

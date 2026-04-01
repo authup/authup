@@ -10,9 +10,7 @@ import type {
     IPermissionEvaluator,
     PermissionEvaluationContext,
 } from '@authup/access';
-import {
-    BuiltInPolicyType, PolicyData,
-} from '@authup/access';
+import { BuiltInPolicyType,PolicyData, } from '@authup/access';
 import type { Request } from 'routup';
 import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 

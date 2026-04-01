@@ -6,7 +6,11 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import type { User } from '@authup/core-kit';
 import { createTestApplication } from '../../../../app';
@@ -100,9 +104,13 @@ describe('src/http/controllers/user', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(entity.name);
 
-        const { id } = response;
+        const {
+            id 
+        } = response;
 
-        const { name } = createFakeUser();
+        const {
+            name 
+        } = createFakeUser();
 
         response = await suite.client
             .user

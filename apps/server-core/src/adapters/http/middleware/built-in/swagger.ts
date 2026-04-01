@@ -11,9 +11,7 @@ import process from 'node:process';
 import type { UIOptions } from '@routup/swagger';
 import { swaggerUI } from '@routup/swagger';
 import type { Plugin } from 'routup';
-import {
-    buildFilePath, load, locate,
-} from 'locter';
+import { buildFilePath,load,locate, } from 'locter';
 import { AuthupError } from '@authup/errors';
 
 type SwaggerMiddlewareOptions = {

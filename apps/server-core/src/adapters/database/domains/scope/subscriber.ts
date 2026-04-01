@@ -5,15 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    Scope,
-} from '@authup/core-kit';
+import type { Scope, } from '@authup/core-kit';
 import {
-    EntityDefaultEventName, EntityType,
+    EntityDefaultEventName, 
+    EntityType,
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import type { DomainEventDestinations} from '@authup/server-kit';
+import type { DomainEventDestinations } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface,
@@ -21,9 +20,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import {
-    EventSubscriber,
-} from 'typeorm';
+import { EventSubscriber, } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { ScopeEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';

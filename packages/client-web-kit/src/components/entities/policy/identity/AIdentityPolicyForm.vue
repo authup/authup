@@ -3,9 +3,7 @@ import type { IdentityPolicy } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
-import {
-    defineComponent, reactive,
-} from 'vue';
+import { defineComponent,reactive, } from 'vue';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
 

@@ -18,7 +18,9 @@ export const APermissionPolicyAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         return () => h(APolicies, {
             query: {
                 filters: {

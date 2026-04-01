@@ -5,25 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type {
-    IdentityProviderRoleMapping,
-} from '@authup/core-kit';
+import type { IdentityProviderRoleMapping, } from '@authup/core-kit';
 import {
     EntityDefaultEventName,
     EntityType,
     buildEntityChannelName,
     buildEntityNamespaceName,
 } from '@authup/core-kit';
-import type { DomainEventDestination} from '@authup/server-kit';
+import type { DomainEventDestination } from '@authup/server-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface, InsertEvent,
+    EntitySubscriberInterface, 
+    InsertEvent,
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import {
-    EventSubscriber,
-} from 'typeorm';
+import { EventSubscriber, } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { IdentityProviderRoleMappingEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -33,7 +30,9 @@ async function publishEvent(
     data: IdentityProviderRoleMapping,
 ) {
     const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
+        {
+            channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, id) 
+        },
     ];
 
     if (data.provider_realm_id) {

@@ -10,9 +10,7 @@ import { buildQuery } from 'rapiq';
 import type { Scope } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type {
-    EntityAPI, EntityCollectionResponse, EntityRecordResponse,
-} from '../../types-base';
+import type { EntityAPI,EntityCollectionResponse,EntityRecordResponse, } from '../../types-base';
 
 export class ScopeAPI extends BaseAPI implements EntityAPI<Scope> {
     async getMany(data?: BuildInput<Scope>): Promise<EntityCollectionResponse<Scope>> {

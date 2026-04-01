@@ -33,7 +33,10 @@ export class SessionRepository implements ISessionRepository {
 
     async findOneById(id: string): Promise<Session | null> {
         const session = await this.cache.get<Session>(
-            buildCacheKey({ prefix: AuthenticationCachePrefix.SESSION, key: id }),
+            buildCacheKey({
+                prefix: AuthenticationCachePrefix.SESSION,
+                key: id 
+            }),
         );
 
         if (session) {
@@ -52,7 +55,10 @@ export class SessionRepository implements ISessionRepository {
         await this.repository.save(session);
 
         await this.cache.set(
-            buildCacheKey({ prefix: AuthenticationCachePrefix.SESSION, key: session.id }),
+            buildCacheKey({
+                prefix: AuthenticationCachePrefix.SESSION,
+                key: session.id 
+            }),
             session,
             {
                 ttl: new Date(session.expires_at).getTime() - Date.now(),
@@ -67,7 +73,10 @@ export class SessionRepository implements ISessionRepository {
     async remove(session: Session): Promise<void> {
         await this.repository.remove(session);
         await this.cache.drop(
-            buildCacheKey({ prefix: AuthenticationCachePrefix.SESSION, key: session.id }),
+            buildCacheKey({
+                prefix: AuthenticationCachePrefix.SESSION,
+                key: session.id 
+            }),
         );
     }
 

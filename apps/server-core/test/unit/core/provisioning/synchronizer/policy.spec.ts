@@ -8,7 +8,10 @@
 import type { PermissionPolicy } from '@authup/core-kit';
 import { BuiltInPolicyType } from '@authup/access';
 import {
-    beforeEach, describe, expect, it,
+    beforeEach, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { PolicyProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/policy/module.ts';
 import type { PolicyProvisioningEntity } from '../../../../../src/core/provisioning/entities/policy/types.ts';

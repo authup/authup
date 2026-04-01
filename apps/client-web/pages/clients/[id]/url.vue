@@ -1,9 +1,7 @@
 <script lang="ts">
 import { AClientScopes } from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
-import {
-    VCFormInput, VCFormInputCheckbox,
-} from '@vuecs/form-controls';
+import { VCFormInput,VCFormInputCheckbox, } from '@vuecs/form-controls';
 import type { BuildInput } from 'rapiq';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
@@ -11,7 +9,11 @@ import { useRuntimeConfig } from '#app';
 import { defineNuxtComponent } from '#imports';
 
 export default defineNuxtComponent({
-    components: { VCFormInput, VCFormInputCheckbox, AClientScopes },
+    components: {
+        VCFormInput,
+        VCFormInputCheckbox,
+        AClientScopes 
+    },
     props: {
         entity: {
             type: Object as PropType<Client>,

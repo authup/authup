@@ -17,17 +17,25 @@ export default defineComponent({
         const toast = useToast();
 
         const store = injectStore();
-        const { userId } = storeToRefs(store);
+        const {
+            userId 
+        } = storeToRefs(store);
 
         const handleUpdated = () => {
             if (toast) {
-                toast.show({ variant: 'success', body: 'The account was successfully updated.' });
+                toast.show({
+                    variant: 'success',
+                    body: 'The account was successfully updated.' 
+                });
             }
         };
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

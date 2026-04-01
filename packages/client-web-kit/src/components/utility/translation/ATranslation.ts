@@ -13,7 +13,9 @@ export const ATranslation = defineComponent({
             required: true,
         },
     },
-    setup(props, { slots }) {
+    setup(props, {
+        slots 
+    }) {
         const translation = useTranslation({
             group: props.group,
             key: props.name,
@@ -21,7 +23,9 @@ export const ATranslation = defineComponent({
 
         return () => {
             if (hasNormalizedSlot(SlotName.DEFAULT, slots)) {
-                return normalizeSlot(SlotName.DEFAULT, { data: translation.value }, slots);
+                return normalizeSlot(SlotName.DEFAULT, {
+                    data: translation.value 
+                }, slots);
             }
 
             return [

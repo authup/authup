@@ -10,9 +10,14 @@ import type { Role } from '@authup/core-kit';
 
 export function createFakeRole(data: Partial<Role> = {}) {
     return {
-        name: faker.string.alpha({ casing: 'lower', length: 10 }),
+        name: faker.string.alpha({
+            casing: 'lower',
+            length: 10 
+        }),
         display_name: faker.internet.displayName(),
-        description: faker.string.alpha({ length: 256 }),
+        description: faker.string.alpha({
+            length: 256 
+        }),
         ...data,
     } satisfies Partial<Role>;
 }

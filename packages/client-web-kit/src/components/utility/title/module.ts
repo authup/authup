@@ -40,7 +40,9 @@ export function buildTitle(
         } else {
             icon = h(
                 'i',
-                { class: [ctx.iconClass, 'pe-1'] },
+                {
+                    class: [ctx.iconClass, 'pe-1'] 
+                },
             );
         }
     }

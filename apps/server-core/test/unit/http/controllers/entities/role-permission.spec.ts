@@ -6,11 +6,13 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
-import type {
-    RolePermission,
-} from '@authup/core-kit';
+import type { RolePermission, } from '@authup/core-kit';
 import {
     createFakePermission,
     createFakeRole,

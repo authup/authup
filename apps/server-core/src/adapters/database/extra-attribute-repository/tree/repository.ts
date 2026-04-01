@@ -6,18 +6,28 @@
  */
 
 import type {
-    DataSource, DeepPartial, EntityManager, FindManyOptions, FindOneOptions, FindTreeOptions,
+    DataSource, 
+    DeepPartial, 
+    EntityManager, 
+    FindManyOptions, 
+    FindOneOptions, 
+    FindTreeOptions,
     SelectQueryBuilder,
 } from 'typeorm';
 import {
     FindOptionsUtils,
     InstanceChecker,
-    TreeRepository, TreeRepositoryUtils,
+    TreeRepository, 
+    TreeRepositoryUtils,
 } from 'typeorm';
 import type { ObjectLiteral } from '@authup/kit';
 import type { ExtraAttributesRepositoryAdapter } from '../adapter.ts';
 import type {
-    EARepositoryEntityBase, EARepositoryFindOptions, EARepositoryOptions, EARepositorySaveOptions, IEARepository,
+    EARepositoryEntityBase, 
+    EARepositoryFindOptions, 
+    EARepositoryOptions, 
+    EARepositorySaveOptions, 
+    IEARepository,
 } from '../types.ts';
 import { ExtraAttributesTreeRepositoryAdapter } from './adapter.ts';
 
@@ -262,7 +272,9 @@ export class EATreeRepository<
     private async executeClosureTableUpdate(entity: T, manager: EntityManager) {
         const primaryKeyValue = this.metadata.primaryColumns[0].getEntityValue(entity);
 
-        const { tableName } = this.metadata.closureJunctionTable;
+        const {
+            tableName 
+        } = this.metadata.closureJunctionTable;
         const ancestorColumn = this.metadata.closureJunctionTable.ancestorColumns[0];
         const descendantColumn = this.metadata.closureJunctionTable.descendantColumns[0];
 

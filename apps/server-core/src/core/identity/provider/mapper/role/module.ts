@@ -24,7 +24,6 @@ export class IdentityProviderRoleMapper extends IdentityProviderAccountBaseMappe
 
         const items : IdentityProviderMapperElement[] = [];
         for (const entity of entities) {
-
             const [operation] = this.resolve(identity, entity);
 
             items.push({

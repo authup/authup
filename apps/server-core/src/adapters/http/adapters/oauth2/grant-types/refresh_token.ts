@@ -17,7 +17,9 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         const refreshToken = useRequestBody(req, 'refresh_token');
 
         return this.runWith(refreshToken, {
-            ipAddress: getRequestIP(req, { trustProxy: true }),
+            ipAddress: getRequestIP(req, {
+                trustProxy: true 
+            }),
             userAgent: getRequestHeader(req, 'user-agent'),
         });
     }

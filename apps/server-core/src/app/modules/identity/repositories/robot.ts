@@ -41,9 +41,13 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
 
         const isId = isUUID(key);
         if (isId) {
-            query.where('robot.id = :id', { id: key });
+            query.where('robot.id = :id', {
+                id: key 
+            });
         } else {
-            query.where('robot.name = :name', { name: key });
+            query.where('robot.name = :name', {
+                name: key 
+            });
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
@@ -58,7 +62,9 @@ export class RobotIdentityRepository implements IRobotIdentityRepository {
             }
         }
 
-        const { columns } = this.repository.metadata;
+        const {
+            columns 
+        } = this.repository.metadata;
         for (const column of columns) {
             if (!column.isSelect) {
                 query.addSelect(`robot.${column.databaseName}`);

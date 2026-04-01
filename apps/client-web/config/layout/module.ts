@@ -74,7 +74,9 @@ export class Navigation {
             return item;
         }
 
-        const { loggedIn } = this.store;
+        const {
+            loggedIn 
+        } = this.store;
         let identity: IdentityPolicyData | undefined;
         if (this.store.userId) {
             identity = {

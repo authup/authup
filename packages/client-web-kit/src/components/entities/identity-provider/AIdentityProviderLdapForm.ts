@@ -9,7 +9,11 @@ import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import { EntityType, IdentityProviderProtocol } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import {
-    type PropType, type VNodeChild, defineComponent, h, ref,
+    type PropType, 
+    type VNodeChild, 
+    defineComponent, 
+    h, 
+    ref,
 } from 'vue';
 import { useIsEditing } from '../../../composables';
 import {
@@ -52,7 +56,9 @@ export const AIdentityProviderLdapForm = defineComponent({
         const isEditing = useIsEditing(manager.data);
 
         const busy = ref(false);
-        const $v = useVuelidate({ $stopPropagation: true });
+        const $v = useVuelidate({
+            $stopPropagation: true 
+        });
 
         const submit = async () => {
             if ($v.value.$invalid) {
@@ -88,8 +94,12 @@ export const AIdentityProviderLdapForm = defineComponent({
                     id: IdentityProviderProtocol.LDAP,
                 }, {
                     default: (element: IdentityProviderProtocolElement) => h('div', [
-                        h('h4', { class: 'mb-3' }, [
-                            h('i', { class: [element.icon, 'pe-1'] }),
+                        h('h4', {
+                            class: 'mb-3' 
+                        }, [
+                            h('i', {
+                                class: [element.icon, 'pe-1'] 
+                            }),
                             element.name,
                         ]),
                     ]),
@@ -98,7 +108,9 @@ export const AIdentityProviderLdapForm = defineComponent({
 
             const basicNode : VNodeChild = [
                 h('h6', [
-                    h('i', { class: 'fa fa-wrench' }),
+                    h('i', {
+                        class: 'fa fa-wrench' 
+                    }),
                     ' ',
                     'Basic',
                 ]),
@@ -109,7 +121,9 @@ export const AIdentityProviderLdapForm = defineComponent({
 
             const connectionNode : VNodeChild = [
                 h('h6', [
-                    h('i', { class: 'fa-solid fa-vihara' }),
+                    h('i', {
+                        class: 'fa-solid fa-vihara' 
+                    }),
                     ' ',
                     'Connection',
                 ]),
@@ -120,7 +134,9 @@ export const AIdentityProviderLdapForm = defineComponent({
 
             const credentialsNode : VNodeChild = [
                 h('h6', [
-                    h('i', { class: 'fa fa-lock' }),
+                    h('i', {
+                        class: 'fa fa-lock' 
+                    }),
                     ' ',
                     'Security',
                 ]),
@@ -131,7 +147,9 @@ export const AIdentityProviderLdapForm = defineComponent({
 
             const groupNode : VNodeChild = [
                 h('h6', [
-                    h('i', { class: 'fa-solid fa-theater-masks' }),
+                    h('i', {
+                        class: 'fa-solid fa-theater-masks' 
+                    }),
                     ' ',
                     'Group',
                 ]),
@@ -142,7 +160,9 @@ export const AIdentityProviderLdapForm = defineComponent({
 
             const userNode : VNodeChild = [
                 h('h6', [
-                    h('i', { class: 'fas fa-user' }),
+                    h('i', {
+                        class: 'fas fa-user' 
+                    }),
                     ' ',
                     'User',
                 ]),

@@ -15,7 +15,10 @@ export default defineNuxtComponent({
     },
     setup() {
         const store = injectStore();
-        const { loggedIn, user } = storeToRefs(store);
+        const {
+            loggedIn, 
+            user 
+        } = storeToRefs(store);
 
         const displayNav = ref(false);
 

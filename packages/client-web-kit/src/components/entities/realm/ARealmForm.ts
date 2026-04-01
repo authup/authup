@@ -6,17 +6,18 @@
  */
 import { createNanoID } from '@authup/kit';
 import useVuelidate from '@vuelidate/core';
-import {
-    maxLength, minLength, required,
-} from '@vuelidate/validators';
+import { maxLength,minLength,required, } from '@vuelidate/validators';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
-    computed, defineComponent, h, reactive, ref, watch,
+    computed, 
+    defineComponent, 
+    h, 
+    reactive, 
+    ref, 
+    watch,
 } from 'vue';
 import type { Realm } from '@authup/core-kit';
-import {
-    EntityType, REALM_MASTER_NAME,
-} from '@authup/core-kit';
+import { EntityType,REALM_MASTER_NAME, } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
@@ -122,11 +123,21 @@ export const ARealmForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.GENERATE },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.REALM },
+                {
+                    key: TranslatorTranslationDefaultKey.GENERATE 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
+                },
+                {
+                    key: TranslatorTranslationDefaultKey.REALM 
+                },
             ],
         );
 
@@ -165,7 +176,9 @@ export const ARealmForm = defineComponent({
                                 generateName.call(null);
                             },
                         }, [
-                            h('i', { class: 'fa fa-wrench' }),
+                            h('i', {
+                                class: 'fa fa-wrench' 
+                            }),
                             ' ',
                             translationsDefault[TranslatorTranslationDefaultKey.GENERATE].value,
                         ]),

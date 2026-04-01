@@ -6,7 +6,11 @@
  */
 
 import {
-    afterAll, beforeAll, describe, expect, it,
+    afterAll, 
+    beforeAll, 
+    describe, 
+    expect, 
+    it,
 } from 'vitest';
 import { isClientError } from 'hapic';
 import {
@@ -125,7 +129,9 @@ describe('src/http/controllers/permission', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const { name } = createFakePermission();
+        const {
+            name 
+        } = createFakePermission();
 
         let response = await suite.client
             .permission
@@ -136,8 +142,12 @@ describe('src/http/controllers/permission', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);
 
-        const { id } = response;
-        const { name: nextName } = createFakePermission();
+        const {
+            id 
+        } = response;
+        const {
+            name: nextName 
+        } = createFakePermission();
 
         response = await suite.client
             .permission

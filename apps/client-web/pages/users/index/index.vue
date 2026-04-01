@@ -1,11 +1,15 @@
 <script lang="ts">
 import { BTable } from 'bootstrap-vue-next';
 import type { User } from '@authup/core-kit';
+import { PermissionName, } from '@authup/core-kit';
 import {
-    PermissionName,
-} from '@authup/core-kit';
-import {
-    AEntityDelete, APagination, ASearch, ATitle, AUsers, injectStore, usePermissionCheck,
+    AEntityDelete, 
+    APagination, 
+    ASearch, 
+    ATitle, 
+    AUsers, 
+    injectStore, 
+    usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
@@ -22,13 +26,17 @@ export default defineComponent({
         AEntityDelete,
     },
     emits: ['deleted'],
-    setup(_props, { emit }) {
+    setup(_props, {
+        emit 
+    }) {
         const handleDeleted = (e: User) => {
             emit('deleted', e);
         };
 
         const store = injectStore();
-        const { realmManagementId } = storeToRefs(store);
+        const {
+            realmManagementId 
+        } = storeToRefs(store);
 
         const query : BuildInput<User> = {
             filter: {
@@ -36,20 +44,37 @@ export default defineComponent({
             },
         };
 
-        const hasEditPermission = usePermissionCheck({ name: PermissionName.USER_UPDATE });
-        const hasDropPermission = usePermissionCheck({ name: PermissionName.USER_DELETE });
+        const hasEditPermission = usePermissionCheck({
+            name: PermissionName.USER_UPDATE 
+        });
+        const hasDropPermission = usePermissionCheck({
+            name: PermissionName.USER_DELETE 
+        });
 
         const fields = [
             {
-                key: 'name', label: 'Name', thClass: 'text-left', tdClass: 'text-left',
+                key: 'name',
+                label: 'Name',
+                thClass: 'text-left',
+                tdClass: 'text-left',
             },
             {
-                key: 'created_at', label: 'Created At', thClass: 'text-center', tdClass: 'text-center',
+                key: 'created_at',
+                label: 'Created At',
+                thClass: 'text-center',
+                tdClass: 'text-center',
             },
             {
-                key: 'updated_at', label: 'Updated At', thClass: 'text-left', tdClass: 'text-left',
+                key: 'updated_at',
+                label: 'Updated At',
+                thClass: 'text-left',
+                tdClass: 'text-left',
             },
-            { key: 'options', label: '', tdClass: 'text-left' },
+            {
+                key: 'options',
+                label: '',
+                tdClass: 'text-left' 
+            },
         ];
 
         return {

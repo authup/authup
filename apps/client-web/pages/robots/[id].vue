@@ -8,9 +8,7 @@ import {
     definePageMeta,
     useToast,
 } from '#imports';
-import {
-    createError, navigateTo, useRoute,
-} from '#app';
+import { createError,navigateTo,useRoute, } from '#app';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
@@ -27,13 +25,19 @@ export default defineComponent({
 
         const items = [
             {
-                name: 'General', icon: 'fas fa-bars', urlSuffix: '',
+                name: 'General',
+                icon: 'fas fa-bars',
+                urlSuffix: '',
             },
             {
-                name: 'Permissions', icon: 'fas fa-user-secret', urlSuffix: 'permissions',
+                name: 'Permissions',
+                icon: 'fas fa-user-secret',
+                urlSuffix: 'permissions',
             },
             {
-                name: 'Roles', icon: 'fa-solid fa-user-group', urlSuffix: 'roles',
+                name: 'Roles',
+                icon: 'fa-solid fa-user-group',
+                urlSuffix: 'roles',
             },
         ];
 
@@ -45,15 +49,22 @@ export default defineComponent({
         try {
             entity.value = await injectHTTPClient()
                 .robot
-                .getOne(route.params.id as string, { fields: ['+secret'] });
+                .getOne(route.params.id as string, {
+                    fields: ['+secret'] 
+                });
         } catch {
-            await navigateTo({ path: '/robots' });
+            await navigateTo({
+                path: '/robots' 
+            });
             createError({});
         }
 
         const handleUpdated = (e: Robot) => {
             if (toast) {
-                toast.show({ variant: 'success', body: 'The robot was successfully updated.' });
+                toast.show({
+                    variant: 'success',
+                    body: 'The robot was successfully updated.' 
+                });
             }
 
             extendObject(entity.value, e);
@@ -61,7 +72,10 @@ export default defineComponent({
 
         const handleFailed = (e: Error) => {
             if (toast) {
-                toast.show({ variant: 'warning', body: e.message });
+                toast.show({
+                    variant: 'warning',
+                    body: e.message 
+                });
             }
         };
 

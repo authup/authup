@@ -37,7 +37,12 @@ export const ASearch = defineComponent({
     slots: Object as SlotsType<{
         default: SearchSlotProps
     }>,
-    setup(props, { slots }) {
+    setup(
+        props,
+        {
+            slots
+        }
+    ) {
         return () => buildListSearch({
             slots,
             icon: props.icon,

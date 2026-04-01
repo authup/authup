@@ -25,10 +25,14 @@ export default defineComponent({
 
         const items = [
             {
-                name: 'General', icon: 'fas fa-bars', urlSuffix: '',
+                name: 'General',
+                icon: 'fas fa-bars',
+                urlSuffix: '',
             },
             {
-                name: 'Roles', icon: 'fa-solid fa-theater-masks', urlSuffix: 'roles',
+                name: 'Roles',
+                icon: 'fa-solid fa-theater-masks',
+                urlSuffix: 'roles',
             },
         ];
 
@@ -42,18 +46,26 @@ export default defineComponent({
                 .identityProvider
                 .getOne(route.params.id as string);
         } catch {
-            await navigateTo({ path: '/identity-providers' });
+            await navigateTo({
+                path: '/identity-providers' 
+            });
             throw createError({});
         }
 
         const handleUpdated = (e: IdentityProvider) => {
-            toast.show({ variant: 'success', body: 'The identity-provider was successfully updated.' });
+            toast.show({
+                variant: 'success',
+                body: 'The identity-provider was successfully updated.' 
+            });
 
             extendObject(entity.value, e);
         };
 
         const handleFailed = (e: Error) => {
-            toast.show({ variant: 'warning', body: e.message });
+            toast.show({
+                variant: 'warning',
+                body: e.message 
+            });
         };
 
         return {

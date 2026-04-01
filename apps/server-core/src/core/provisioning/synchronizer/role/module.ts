@@ -6,9 +6,7 @@
  */
 
 import { pickRecord } from '@authup/kit';
-import type {
-    Permission, RolePermission,
-} from '@authup/core-kit';
+import type { Permission,RolePermission, } from '@authup/core-kit';
 import type { IPolicyRepository, IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
@@ -51,7 +49,10 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             if (attributes) {
                 await this.repository.remove(attributes);
             }
-            return { ...input, attributes: attributes || input.attributes };
+            return {
+                ...input,
+                attributes: attributes || input.attributes 
+            };
         }
 
         if (attributes) {
@@ -109,7 +110,9 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                         [permission],
                         'permission_id',
                         'permission_realm_id',
-                        policyId ? { policy_id: policyId } : undefined,
+                        policyId ? {
+                            policy_id: policyId 
+                        } : undefined,
                     );
                 }
             } else {
@@ -131,7 +134,10 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
     private async resolvePolicyMap(
         input: RoleProvisioningEntity,
         roleName: string | undefined,
-    ): Promise<{ defaultPolicyId: string | undefined, overrides: Map<string, string> } | undefined> {
+    ): Promise<{
+        defaultPolicyId: string | undefined,
+        overrides: Map<string, string> 
+    } | undefined> {
         if (!input.relations?.globalPermissionsPolicyName || !this.policyRepository) {
             return undefined;
         }
