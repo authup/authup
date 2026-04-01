@@ -24,9 +24,7 @@ export default defineComponent({
             src: Account,
             width: props.width,
             height: props.height,
-            style: {
-                maxWidth: '100%',
-            },
+            style: { maxWidth: '100%' },
         });
     },
 });

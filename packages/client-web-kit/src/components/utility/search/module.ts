@@ -52,18 +52,14 @@ export function buildListSearch(
             if (iconContent) {
                 options.groupPrependContent = iconContent;
             } else {
-                options.groupPrependContent = h('i', {
-                    class: ctx.iconClass,
-                });
+                options.groupPrependContent = h('i', { class: ctx.iconClass });
             }
         } else {
             options.groupAppend = true;
             if (iconContent) {
                 options.groupAppendContent = iconContent;
             } else {
-                options.groupAppendContent = h('i', {
-                    class: ctx.iconClass,
-                });
+                options.groupAppendContent = h('i', { class: ctx.iconClass });
             }
         }
     }
@@ -74,21 +70,15 @@ export function buildListSearch(
         }
 
         return ctx.load({
-            filters: {
-                name: text.length > 0 ? `~${text}` : text as any,
-            },
-            pagination: {
-                offset: 0,
-            },
+            filters: { name: text.length > 0 ? `~${text}` : text as any },
+            pagination: { offset: 0 },
         });
     });
 
     return buildFormInputText({
         type: 'text',
         onChange: (text: string) => handle(text),
-        props: {
-            placeholder: '...',
-        },
+        props: { placeholder: '...' },
         ...options,
     });
 }

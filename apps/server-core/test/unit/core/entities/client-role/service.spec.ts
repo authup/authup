@@ -28,9 +28,7 @@ describe('core/entities/client-role/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<ClientRole>();
-        service = new ClientRoleService({
-            repository 
-        });
+        service = new ClientRoleService({ repository });
     });
 
     describe('getMany', () => {
@@ -68,12 +66,8 @@ describe('core/entities/client-role/service', () => {
             const data = {
                 client_id: randomUUID(),
                 role_id: randomUUID(),
-                client: {
-                    realm_id: randomUUID() 
-                },
-                role: {
-                    realm_id: randomUUID() 
-                },
+                client: { realm_id: randomUUID() },
+                role: { realm_id: randomUUID() },
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -86,18 +80,16 @@ describe('core/entities/client-role/service', () => {
             const actor = createAllowAllActor();
             await service.create({
                 client_id: randomUUID(),
-                role_id: randomUUID() 
+                role_id: randomUUID(), 
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.CLIENT_ROLE_CREATE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_ROLE_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
                     client_id: randomUUID(),
-                    role_id: randomUUID() 
+                    role_id: randomUUID(), 
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
@@ -114,9 +106,7 @@ describe('core/entities/client-role/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.CLIENT_ROLE_DELETE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_ROLE_DELETE });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {

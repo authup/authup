@@ -7,7 +7,7 @@
 
 import type { Realm, User } from '@authup/core-kit';
 import { EntityType, buildUserFakeEmail, isUserFakeEmail } from '@authup/core-kit';
-import { buildFormGroup,buildFormInput,buildFormInputCheckbox, } from '@vuecs/form-controls';
+import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import { SlotName } from '@vuecs/list-controls';
 import useVuelidate from '@vuelidate/core';
 import {
@@ -93,9 +93,7 @@ export const AUserForm = defineComponent({
                 email,
                 required,
             },
-            realm_id: {
-                required,
-            },
+            realm_id: { required },
         }, form);
 
         const manager = defineEntityManager({
@@ -147,30 +145,14 @@ export const AUserForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.ACTIVE 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.INACTIVE 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.EMAIL 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.LOCKED 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.NOT_LOCKED 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
-                },
+                { key: TranslatorTranslationDefaultKey.ACTIVE },
+                { key: TranslatorTranslationDefaultKey.INACTIVE },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.EMAIL },
+                { key: TranslatorTranslationDefaultKey.LOCKED },
+                { key: TranslatorTranslationDefaultKey.NOT_LOCKED },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
             ],
         );
 
@@ -189,9 +171,7 @@ export const AUserForm = defineComponent({
                             $v.value.email.$model = buildUserFakeEmail(input);
                         }
                     },
-                    props: {
-                        disabled: form.name_locked,
-                    },
+                    props: { disabled: form.name_locked },
                 }),
             });
 
@@ -240,7 +220,7 @@ export const AUserForm = defineComponent({
                                 },
                             }, [form.name_locked ?
                                 translationsDefault[TranslatorTranslationDefaultKey.LOCKED].value :
-                                translationsDefault[TranslatorTranslationDefaultKey.NOT_LOCKED].value,]), // todo: add translation
+                                translationsDefault[TranslatorTranslationDefaultKey.NOT_LOCKED].value]), // todo: add translation
                             value: form.name_locked,
                             onChange(input) {
                                 form.name_locked = input;
@@ -250,12 +230,8 @@ export const AUserForm = defineComponent({
                 }
 
                 checks = [
-                    h('div', {
-                        class: 'row' 
-                    }, [
-                        h('div', {
-                            class: 'col' 
-                        }, [
+                    h('div', { class: 'row' }, [
+                        h('div', { class: 'col' }, [
                             buildFormInputCheckbox({
                                 groupClass: 'form-switch mt-3',
                                 labelContent: h('span', {
@@ -265,16 +241,14 @@ export const AUserForm = defineComponent({
                                     },
                                 }, [form.active ?
                                     translationsDefault[TranslatorTranslationDefaultKey.ACTIVE].value :
-                                    translationsDefault[TranslatorTranslationDefaultKey.INACTIVE].value,]),
+                                    translationsDefault[TranslatorTranslationDefaultKey.INACTIVE].value]),
                                 value: form.active,
                                 onChange(input) {
                                     form.active = input;
                                 },
                             }),
                         ]),
-                        h('div', {
-                            class: 'col' 
-                        }, [
+                        h('div', { class: 'col' }, [
                             nameLock,
                         ]),
                     ]),
@@ -289,9 +263,7 @@ export const AUserForm = defineComponent({
                 invalid: $v.value.$invalid,
             }, translationsSubmit);
 
-            const leftColumn = h('div', {
-                class: 'col' 
-            }, [
+            const leftColumn = h('div', { class: 'col' }, [
                 name,
                 displayName,
                 email,
@@ -324,9 +296,7 @@ export const AUserForm = defineComponent({
                 });
 
                 rightColumn = [
-                    h('div', {
-                        class: 'col',
-                    }, [
+                    h('div', { class: 'col' }, [
                         realm,
                     ]),
                 ];
@@ -339,9 +309,7 @@ export const AUserForm = defineComponent({
                     return submit.apply(null);
                 },
             }, [
-                h('div', {
-                    class: 'row' 
-                }, [
+                h('div', { class: 'row' }, [
                     leftColumn,
                     rightColumn,
                 ]),

@@ -11,7 +11,7 @@ import type {
     UserPermission, 
     UserRole,
 } from '@authup/core-kit';
-import { buildUserFakeEmail, } from '@authup/core-kit';
+import { buildUserFakeEmail } from '@authup/core-kit';
 import { pickRecord } from '@authup/kit';
 import type {
     IClientRepository,
@@ -73,7 +73,7 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes 
+                attributes: attributes || input.attributes, 
             };
         }
 

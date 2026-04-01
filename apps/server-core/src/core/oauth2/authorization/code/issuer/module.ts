@@ -45,9 +45,7 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
             entity.id_token = options.idToken;
         }
 
-        return this.repository.save(entity, {
-            maxAge: options.maxAge ?? this.options.maxAge,
-        });
+        return this.repository.save(entity, { maxAge: options.maxAge ?? this.options.maxAge });
     }
 
     async updateIdToken(
@@ -56,8 +54,6 @@ export class OAuth2AuthorizationCodeIssuer implements IOAuth2AuthorizationCodeIs
     ) : Promise<void> {
         entity.id_token = idToken;
 
-        await this.repository.save(entity, {
-            maxAge: this.options.maxAge,
-        });
+        await this.repository.save(entity, { maxAge: this.options.maxAge });
     }
 }

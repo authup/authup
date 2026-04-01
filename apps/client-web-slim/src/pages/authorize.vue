@@ -6,14 +6,12 @@
   -->
 <script lang="ts">
 import { AAuthorize } from '@authup/client-web-kit';
-import type { Client,OAuth2AuthorizationCodeRequest,Scope, } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { defineComponent } from 'vue';
 import { injectPayload } from '../di';
 
 export default defineComponent({
-    components: {
-        AAuthorize,
-    },
+    components: { AAuthorize },
     setup() {
         const app = injectPayload<{
             codeRequest: OAuth2AuthorizationCodeRequest | undefined,
@@ -22,9 +20,7 @@ export default defineComponent({
             scopes: Scope[] | undefined
         }>();
 
-        return {
-            data: app.data,
-        };
+        return { data: app.data };
     },
 });
 </script>

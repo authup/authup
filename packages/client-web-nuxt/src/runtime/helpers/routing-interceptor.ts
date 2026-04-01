@@ -71,9 +71,7 @@ export class RoutingInterceptor {
                     ...(
                         !this.hasLoggedOutCondition(to) &&
                         !this.hasQueryRedirectProperty(to) ?
-                            {
-                                redirect: to.fullPath 
-                            } :
+                            { redirect: to.fullPath } :
                             {}
                     ),
                 },
@@ -87,9 +85,7 @@ export class RoutingInterceptor {
                 query: {
                     ...(
                         !this.hasQueryRedirectProperty(to) ?
-                            {
-                                redirect: to.fullPath 
-                            } :
+                            { redirect: to.fullPath } :
                             {}
                     ),
                 },
@@ -108,22 +104,16 @@ export class RoutingInterceptor {
             if (from.path === to.path) {
                 await this.store.logout();
 
-                return {
-                    path: this.loginRoute,
-                };
+                return { path: this.loginRoute };
             }
 
             if (this.hasLoggedOutCondition(from)) {
                 await this.store.logout();
 
-                return {
-                    path: from.fullPath,
-                };
+                return { path: from.fullPath };
             }
 
-            return {
-                path: from.fullPath,
-            };
+            return { path: from.fullPath };
         }
 
         return undefined;
@@ -199,9 +189,7 @@ export class RoutingInterceptor {
             try {
                 await this.store.permissionEvaluator.preEvaluateOneOf({
                     name: permissions,
-                    input: new PolicyData({
-                        [BuiltInPolicyType.IDENTITY]: identity,
-                    }),
+                    input: new PolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
                 });
             } catch {
                 return false;

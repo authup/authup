@@ -35,11 +35,7 @@ export function createUserTokenCreator(
     return async () => client.token.createWithPassword({
         username: credentials.name,
         password: credentials.password,
-        ...(credentials.realmId ? {
-            realm_id: credentials.realmId 
-        } : {}),
-        ...(credentials.realmName ? {
-            realm_name: credentials.realmName 
-        } : {}),
+        ...(credentials.realmId ? { realm_id: credentials.realmId } : {}),
+        ...(credentials.realmName ? { realm_name: credentials.realmName } : {}),
     });
 }

@@ -18,16 +18,8 @@ export const APermissionPolicyAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, {
-        slots 
-    }) {
-        return () => h(APolicies, {
-            query: {
-                filters: {
-                    parent_id: null,
-                },
-            },
-        }, {
+    setup(props, { slots }) {
+        return () => h(APolicies, { query: { filters: { parent_id: null } } }, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Policy }) => h(
                 APermissionPolicyAssignment,
                 {

@@ -46,16 +46,14 @@ export default defineComponent({
                 .identityProvider
                 .getOne(route.params.id as string);
         } catch {
-            await navigateTo({
-                path: '/identity-providers' 
-            });
+            await navigateTo({ path: '/identity-providers' });
             throw createError({});
         }
 
         const handleUpdated = (e: IdentityProvider) => {
             toast.show({
                 variant: 'success',
-                body: 'The identity-provider was successfully updated.' 
+                body: 'The identity-provider was successfully updated.', 
             });
 
             extendObject(entity.value, e);
@@ -64,7 +62,7 @@ export default defineComponent({
         const handleFailed = (e: Error) => {
             toast.show({
                 variant: 'warning',
-                body: e.message 
+                body: e.message, 
             });
         };
 

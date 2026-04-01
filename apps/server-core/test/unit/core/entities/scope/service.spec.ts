@@ -43,7 +43,7 @@ describe('core/entities/scope/service', () => {
         realmRepository = new FakeRealmRepository();
         service = new ScopeService({
             repository,
-            realmRepository 
+            realmRepository, 
         });
     });
 
@@ -79,9 +79,7 @@ describe('core/entities/scope/service', () => {
 
     describe('getOne', () => {
         it('should return entity by id', async () => {
-            const entity = repository.seed(createFakeScope({
-                name: 'test-scope' 
-            }));
+            const entity = repository.seed(createFakeScope({ name: 'test-scope' }));
 
             const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.name).toBe('test-scope');
@@ -97,9 +95,7 @@ describe('core/entities/scope/service', () => {
     describe('create', () => {
         it('should create a scope with valid data', async () => {
             const result = await service.create(
-                {
-                    name: 'new-scope' 
-                },
+                { name: 'new-scope' },
                 createAllowAllActor(),
             );
 
@@ -109,49 +105,35 @@ describe('core/entities/scope/service', () => {
 
         it('should call preCheck with SCOPE_CREATE permission', async () => {
             const actor = createAllowAllActor();
-            await service.create({
-                name: 'new-scope' 
-            }, actor);
+            await service.create({ name: 'new-scope' }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.SCOPE_CREATE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.SCOPE_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
             await expect(
-                service.create({
-                    name: 'new-scope' 
-                }, createDenyAllActor()),
+                service.create({ name: 'new-scope' }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
 
         it('should reject invalid name (too short)', async () => {
             await expect(
-                service.create({
-                    name: 'ab' 
-                }, createAllowAllActor()),
+                service.create({ name: 'ab' }, createAllowAllActor()),
             ).rejects.toThrow(/name/i);
         });
     });
 
     describe('update', () => {
         it('should update an existing scope', async () => {
-            const entity = repository.seed(createFakeScope({
-                name: 'old-name' 
-            }));
+            const entity = repository.seed(createFakeScope({ name: 'old-name' }));
 
-            const result = await service.update(entity.id, {
-                name: 'new-name' 
-            }, createAllowAllActor());
+            const result = await service.update(entity.id, { name: 'new-name' }, createAllowAllActor());
             expect(result.name).toBe('new-name');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', {
-                    name: 'x' 
-                }, createAllowAllActor()),
+                service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
     });
@@ -160,12 +142,10 @@ describe('core/entities/scope/service', () => {
         it('should create when entity not found', async () => {
             const {
                 entity, 
-                created 
+                created, 
             } = await service.save(
                 undefined,
-                {
-                    name: 'upserted-scope' 
-                },
+                { name: 'upserted-scope' },
                 createAllowAllActor(),
             );
 
@@ -174,17 +154,11 @@ describe('core/entities/scope/service', () => {
         });
 
         it('should update when entity found', async () => {
-            const entity = repository.seed(createFakeScope({
-                name: 'old-name' 
-            }));
+            const entity = repository.seed(createFakeScope({ name: 'old-name' }));
 
-            const {
-                created 
-            } = await service.save(
+            const { created } = await service.save(
                 entity.id,
-                {
-                    name: 'updated-name' 
-                },
+                { name: 'updated-name' },
                 createAllowAllActor(),
             );
 
@@ -193,11 +167,7 @@ describe('core/entities/scope/service', () => {
 
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
-                service.save('non-existent-id', {
-                    name: 'test' 
-                }, createAllowAllActor(), {
-                    updateOnly: true 
-                }),
+                service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
             ).rejects.toThrow(NotFoundError);
         });
     });
@@ -207,9 +177,7 @@ describe('core/entities/scope/service', () => {
             const realmId = randomUUID();
             const actor = createNonMasterRealmActor(realmId);
 
-            const result = await service.create({
-                name: 'realm-scope' 
-            }, actor);
+            const result = await service.create({ name: 'realm-scope' }, actor);
             expect(result.realm_id).toBe(realmId);
         });
 
@@ -217,9 +185,7 @@ describe('core/entities/scope/service', () => {
             const actor = createMasterRealmActor();
             const masterRealmId = actor.identity!.data.realm_id;
 
-            const result = await service.create({
-                name: 'global-scope' 
-            }, actor);
+            const result = await service.create({ name: 'global-scope' }, actor);
             expect(result.realm_id).toBe(masterRealmId);
         });
 
@@ -229,7 +195,7 @@ describe('core/entities/scope/service', () => {
             const result = await service.create(
                 {
                     name: 'global-scope',
-                    realm_id: null 
+                    realm_id: null, 
                 },
                 actor,
             );

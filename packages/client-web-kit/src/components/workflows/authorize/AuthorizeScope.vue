@@ -23,9 +23,7 @@ export default defineComponent({
     setup(props) {
         const isEnabled = computed(() => props.requested.includes(props.entity.name));
 
-        return {
-            isEnabled,
-        };
+        return { isEnabled };
     },
 });
 </script>

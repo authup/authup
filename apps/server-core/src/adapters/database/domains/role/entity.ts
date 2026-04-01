@@ -19,9 +19,7 @@ import {
 } from 'typeorm';
 import { RealmEntity } from '../realm/index.ts';
 
-@Entity({
-    name: 'auth_roles' 
-})
+@Entity({ name: 'auth_roles' })
 @Unique(['name', 'client_id', 'realm_id'])
 export class RoleEntity implements Role {
     @PrimaryGeneratedColumn('uuid')
@@ -35,62 +33,54 @@ export class RoleEntity implements Role {
 
     @Column({
         type: 'varchar',
-        length: 128 
+        length: 128, 
     })
     name: string;
 
     @Column({
         type: 'varchar',
         length: 256,
-        nullable: true 
+        nullable: true, 
     })
     display_name: string | null;
 
     @Column({
         type: 'text',
-        nullable: true 
+        nullable: true, 
     })
     description: string | null;
 
     @Column({
         type: 'varchar',
         length: 16,
-        nullable: true 
+        nullable: true, 
     })
     target: string | null;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     client_id: Client['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'SET NULL',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'client_id' 
-    })
+    @JoinColumn({ name: 'client_id' })
     client: Client | null;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'realm_id' 
-    })
+    @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;
 
     // ------------------------------------------------------------------

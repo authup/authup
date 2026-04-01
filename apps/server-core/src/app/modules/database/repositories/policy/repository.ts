@@ -35,9 +35,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
         const qb = this.repository.createQueryBuilder('policy');
         qb.groupBy('policy.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'policy',
             relations: {
                 // @ts-expect-error onJoin is not in the type definition
@@ -65,12 +63,8 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
                 // @ts-expect-error realm.name filter requires relation join
                 allowed: ['id', 'name', 'type', 'parent_id', 'realm_id', 'realm.name'],
             },
-            sort: {
-                allowed: ['id', 'created_at', 'updated_at'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
+            sort: { allowed: ['id', 'created_at', 'updated_at'] },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -86,9 +80,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
     }
 
     async findOneById(id: string): Promise<Policy | null> {
-        const entity = await this.findOneBy({
-            id 
-        });
+        const entity = await this.findOneBy({ id });
         if (entity) {
             await this.repository.extendOneWithEA(entity);
         }
@@ -97,16 +89,12 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<Policy | null> {
         const qb = this.repository.createQueryBuilder('policy');
-        qb.where('policy.name LIKE :name', {
-            name 
-        });
+        qb.where('policy.name LIKE :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('policy.realm_id = :realmId', {
-                    realmId: realm.id 
-                });
+                qb.andWhere('policy.realm_id = :realmId', { realmId: realm.id });
             }
         }
 

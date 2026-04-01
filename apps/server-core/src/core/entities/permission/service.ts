@@ -126,9 +126,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Permission> {
-        const {
-            entity 
-        } = await this.save(undefined, data, actor);
+        const { entity } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -137,11 +135,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Permission> {
-        const {
-            entity 
-        } = await this.save(idOrName, data, actor, {
-            updateOnly: true 
-        });
+        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
         return entity;
     }
 
@@ -182,20 +176,14 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.PERMISSION_UPDATE 
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.PERMISSION_CREATE 
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, {
-            group 
-        });
+        const validated = await this.validator.run(data, { group });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -226,7 +214,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
             return {
                 entity,
-                created: false 
+                created: false, 
             };
         }
 
@@ -236,9 +224,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: validated,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -252,7 +238,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         return {
             entity,
-            created: true 
+            created: true, 
         };
     }
 
@@ -260,13 +246,9 @@ export class PermissionService extends AbstractEntityService implements IPermiss
         id: string,
         actor: ActorContext,
     ): Promise<Permission> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.PERMISSION_DELETE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_DELETE });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -277,14 +259,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 
@@ -366,9 +344,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             return;
         }
 
-        const realmAdminRoles = await this.roleRepository.findManyBy({
-            name: ROLE_REALM_ADMIN_NAME,
-        });
+        const realmAdminRoles = await this.roleRepository.findManyBy({ name: ROLE_REALM_ADMIN_NAME });
 
         for (const role of realmAdminRoles) {
             if (permission.realm_id && permission.realm_id !== role.realm_id) {

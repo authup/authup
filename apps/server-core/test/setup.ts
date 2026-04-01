@@ -12,7 +12,7 @@ import { wait } from '@authup/kit';
 import type { TestProject } from 'vitest/node';
 import type { StartedTestContainer } from 'testcontainers';
 import { GenericContainer } from 'testcontainers';
-import { ApplicationBuilder,DefaultProvisioningSource,ProvisionerModule, } from '../src/index.ts';
+import { ApplicationBuilder, DefaultProvisioningSource, ProvisionerModule } from '../src/index.ts';
 import { createTestDatabaseModuleForSetup } from './app/index.ts';
 
 export type DatabaseConnectionConfig = {
@@ -50,9 +50,7 @@ const DATABASE_CONTAINERS: Record<string, DatabaseContainerConfig> = {
     mysql: {
         image: 'mysql:9',
         port: 3306,
-        environment: {
-            MYSQL_ROOT_PASSWORD: 'start123',
-        },
+        environment: { MYSQL_ROOT_PASSWORD: 'start123' },
         credentials: {
             username: 'root',
             password: 'start123',
@@ -92,7 +90,7 @@ function isReachable(host: string, port: number, timeoutMs = 2000): Promise<bool
     return new Promise((resolve) => {
         const socket = createConnection({
             host,
-            port 
+            port, 
         });
         const timer = setTimeout(() => {
             socket.destroy();

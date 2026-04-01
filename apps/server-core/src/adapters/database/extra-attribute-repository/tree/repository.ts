@@ -272,9 +272,7 @@ export class EATreeRepository<
     private async executeClosureTableUpdate(entity: T, manager: EntityManager) {
         const primaryKeyValue = this.metadata.primaryColumns[0].getEntityValue(entity);
 
-        const {
-            tableName 
-        } = this.metadata.closureJunctionTable;
+        const { tableName } = this.metadata.closureJunctionTable;
         const ancestorColumn = this.metadata.closureJunctionTable.ancestorColumns[0];
         const descendantColumn = this.metadata.closureJunctionTable.descendantColumns[0];
 

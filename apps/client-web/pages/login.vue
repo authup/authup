@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ALogin, } from '@authup/client-web-kit';
+import { ALogin } from '@authup/client-web-kit';
 import {
     definePageMeta,
     useToast,
@@ -19,9 +19,7 @@ export default defineNuxtComponent({
         LoginSVG,
     },
     setup() {
-        definePageMeta({
-            [LayoutKey.REQUIRED_LOGGED_OUT]: true,
-        });
+        definePageMeta({ [LayoutKey.REQUIRED_LOGGED_OUT]: true });
 
         const toast = useToast();
         const runtimeConfig = useRuntimeConfig();
@@ -43,7 +41,7 @@ export default defineNuxtComponent({
         const handleFailed = (e: Error) => {
             toast.show({
                 variant: 'warning',
-                body: e.message 
+                body: e.message, 
             });
         };
 

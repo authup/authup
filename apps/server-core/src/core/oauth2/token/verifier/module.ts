@@ -88,9 +88,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                         key: key.encryption_key,
                         ...(
                             key.signature_algorithm ?
-                                {
-                                    algorithms: [key.signature_algorithm] 
-                                } :
+                                { algorithms: [key.signature_algorithm] } :
                                 []
                         ) as TokenECAlgorithm[],
                     },
@@ -109,9 +107,7 @@ export class OAuth2TokenVerifier implements IOAuth2TokenVerifier {
                         key: key.encryption_key,
                         ...(
                             key.signature_algorithm ?
-                                {
-                                    algorithms: [key.signature_algorithm] 
-                                } :
+                                { algorithms: [key.signature_algorithm] } :
                                 []
                         ) as TokenRSAAlgorithm[],
                     },

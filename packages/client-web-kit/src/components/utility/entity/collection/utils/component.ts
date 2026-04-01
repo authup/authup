@@ -58,8 +58,6 @@ export function defineEntityCollectionVProps<T>() {
             type: [Boolean, Object] as PropType<boolean | ListHeaderOptions<T>>,
             default: true,
         },
-        body: {
-            type: Object as PropType<ListBodyOptions<T>>,
-        },
+        body: { type: Object as PropType<ListBodyOptions<T>> },
     };
 }

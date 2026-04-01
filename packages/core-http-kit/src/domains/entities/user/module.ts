@@ -85,9 +85,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     async activate(
         token: string,
     ): Promise<User> {
-        const response = await this.client.post('activate', {
-            token,
-        });
+        const response = await this.client.post('activate', { token });
 
         return response.data;
     }

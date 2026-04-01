@@ -50,9 +50,7 @@ export class RedisCache implements ICache {
     }
 
     async set(key: string, value: any, options: CacheSetOptions): Promise<void> {
-        await this.jsonAdapter.set(key, value, {
-            milliseconds: options.ttl,
-        });
+        await this.jsonAdapter.set(key, value, { milliseconds: options.ttl });
     }
 
     async drop(key: string): Promise<void> {

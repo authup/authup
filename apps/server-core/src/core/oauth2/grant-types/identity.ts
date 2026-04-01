@@ -37,9 +37,7 @@ export class IdentityGrantType extends OAuth2BaseGrant<Identity> {
             sub_kind: identity.type,
         };
 
-        const {
-            id: sessionId 
-        } = await this.sessionManager.create(session);
+        const { id: sessionId } = await this.sessionManager.create(session);
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
             session_id: sessionId,

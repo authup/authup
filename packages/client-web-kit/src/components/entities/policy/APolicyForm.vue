@@ -21,15 +21,11 @@ export default defineComponent({
     components: {
         AFormSubmit,
         APolicyTypePicker,
-        APolicyBasicForm 
+        APolicyBasicForm, 
     },
     props: {
-        entity: {
-            type: Object as PropType<Policy>,
-        },
-        type: {
-            type: String as PropType<string>,
-        },
+        entity: { type: Object as PropType<Policy> },
+        type: { type: String as PropType<string> },
     },
     setup(props, ctx) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,9 +59,7 @@ export default defineComponent({
             return null;
         });
 
-        const vuelidate = useVuelidate({
-            $stopPropagation: true 
-        });
+        const vuelidate = useVuelidate({ $stopPropagation: true });
 
         const submit = async () => {
             if (vuelidate.value.$invalid) {
@@ -89,9 +83,7 @@ export default defineComponent({
             if (manager.data.value) {
                 if (items.length > 0) {
                     for (const item of items) {
-                        await httpClient.policy.update(item, {
-                            parent_id: manager.data.value.id,
-                        });
+                        await httpClient.policy.update(item, { parent_id: manager.data.value.id });
                     }
                 }
             }

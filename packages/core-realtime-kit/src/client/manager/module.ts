@@ -28,9 +28,7 @@ export class ClientManager<
         const url = new URL(ctx.url);
         const baseURL = `${url.protocol}//${url.host}`;
 
-        const options : Partial<ManagerOptions> = {
-            ...(ctx.options || {}),
-        };
+        const options : Partial<ManagerOptions> = { ...(ctx.options || {}) };
 
         if (options.path) {
             if (url.pathname.endsWith(options.path)) {
@@ -141,9 +139,7 @@ export class ClientManager<
                 Promise.resolve()
                     .then(() => this.tokenFn())
                     .then((token) => {
-                        cb({
-                            token 
-                        });
+                        cb({ token });
                     })
                     .catch(() => cb());
             },

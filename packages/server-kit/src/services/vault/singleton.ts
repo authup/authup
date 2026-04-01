@@ -9,9 +9,7 @@ import type { Factory } from 'singa';
 import { singa } from 'singa';
 import type { VaultClient } from '@hapic/vault';
 
-const instance = singa<VaultClient>({
-    name: 'vault',
-});
+const instance = singa<VaultClient>({ name: 'vault' });
 
 export function setVaultFactory(factory: Factory<VaultClient>) {
     instance.setFactory(factory);

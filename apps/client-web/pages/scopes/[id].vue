@@ -1,14 +1,14 @@
 <script lang="ts">
 import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Scope } from '@authup/core-kit';
-import { PermissionName, } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
 import {
     definePageMeta,
     useToast,
 } from '#imports';
-import { createError,navigateTo,useRoute, } from '#app';
+import { createError, navigateTo, useRoute } from '#app';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
@@ -43,9 +43,7 @@ export default defineComponent({
                 .scope
                 .getOne(route.params.id as string);
         } catch {
-            await navigateTo({
-                path: '/scopes' 
-            });
+            await navigateTo({ path: '/scopes' });
             throw createError({});
         }
 
@@ -53,7 +51,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The scope was successfully updated.' 
+                    body: 'The scope was successfully updated.', 
                 });
             }
 
@@ -64,7 +62,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

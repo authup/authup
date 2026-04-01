@@ -9,9 +9,7 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     props: {
-        isError: {
-            type: Boolean,
-        },
+        isError: { type: Boolean },
         message: {
             type: String,
             required: true,

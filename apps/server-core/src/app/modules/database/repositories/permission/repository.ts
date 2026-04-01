@@ -12,7 +12,7 @@ import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-e
 import type { EntityRepositoryFindManyResult, IPermissionRepository, IRealmRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
-import { PermissionEntity, } from '../../../../../adapters/database/domains/index.ts';
+import { PermissionEntity } from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type PermissionRepositoryAdapterContext = {
@@ -34,22 +34,12 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
         const qb = this.repository.createQueryBuilder('permission');
         qb.groupBy('permission.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'permission',
-            filters: {
-                allowed: ['id', 'display_name', 'name', 'built_in'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
-            relations: {
-                allowed: [],
-            },
-            sort: {
-                allowed: ['id', 'name', 'created_at', 'updated_at'],
-            },
+            filters: { allowed: ['id', 'display_name', 'name', 'built_in'] },
+            pagination: { maxLimit: 50 },
+            relations: { allowed: [] },
+            sort: { allowed: ['id', 'name', 'created_at', 'updated_at'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -64,23 +54,17 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
     }
 
     findOneById(id: string): Promise<Permission | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(name: string, realmKey?: string): Promise<Permission | null> {
         const qb = this.repository.createQueryBuilder('permission');
-        qb.where('permission.name LIKE :name', {
-            name 
-        });
+        qb.where('permission.name LIKE :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('permission.realm_id = :realmId', {
-                    realmId: realm.id 
-                });
+                qb.andWhere('permission.realm_id = :realmId', { realmId: realm.id });
             }
         }
 

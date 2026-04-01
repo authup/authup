@@ -10,12 +10,8 @@ export default defineComponent({
         AIdentityProviderProtocol,
     },
     props: {
-        protocol: {
-            type: String,
-        },
-        preset: {
-            type: String,
-        },
+        protocol: { type: String },
+        preset: { type: String },
     },
     emits: ['pick'],
     setup(props, setup) {

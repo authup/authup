@@ -56,9 +56,7 @@ export class OAuth2AuthorizationCodeRepository implements IOAuth2AuthorizationCo
         await this.cache.set(buildCacheKey({
             prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
             key: input.id,
-        }), input, {
-            ttl,
-        });
+        }), input, { ttl });
 
         return input as OAuth2AuthorizationCode;
     }

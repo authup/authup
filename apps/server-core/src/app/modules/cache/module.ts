@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { MemoryCache,RedisCache, } from '@authup/server-kit';
+import { MemoryCache, RedisCache } from '@authup/server-kit';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { CacheInjectionKey } from './constants.ts';
@@ -25,15 +25,11 @@ export class CacheModule implements IModule {
     async setup(container: IContainer): Promise<void> {
         const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.redis) {
-            container.register(CacheInjectionKey, {
-                useFactory: () => new MemoryCache(),
-            });
+            container.register(CacheInjectionKey, { useFactory: () => new MemoryCache() });
 
             return;
         }
 
-        container.register(CacheInjectionKey, {
-            useFactory: () => new RedisCache(result.data.redis),
-        });
+        container.register(CacheInjectionKey, { useFactory: () => new RedisCache(result.data.redis) });
     }
 }

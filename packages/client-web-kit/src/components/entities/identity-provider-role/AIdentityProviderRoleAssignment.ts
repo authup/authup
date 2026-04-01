@@ -70,9 +70,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.VALUE_IS_REGEX 
-                },
+                { key: TranslatorTranslationDefaultKey.VALUE_IS_REGEX },
             ],
         );
 
@@ -130,16 +128,12 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                             return manager.delete();
                         },
                     }, [
-                        h('i', {
-                            class: ['fa fa-trash'],
-                        }),
+                        h('i', { class: ['fa fa-trash'] }),
                     ]),
                 ];
             }
 
-            const itemActions = h('div', {
-                class: 'ms-auto',
-            }, [
+            const itemActions = h('div', { class: 'ms-auto' }, [
                 h('button', {
                     class: ['btn btn-xs', {
                         'btn-primary': !manager.data.value,
@@ -169,12 +163,8 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                 dropAction,
             ]);
 
-            const listBar = h('div', {
-                class: 'd-flex flex-row',
-            }, [
-                h('div', {
-                    class: 'me-2',
-                }, [
+            const listBar = h('div', { class: 'd-flex flex-row' }, [
+                h('div', { class: 'me-2' }, [
                     displayButton,
                 ]),
                 h('div', [
@@ -194,9 +184,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
 
             if (display.value) {
                 renderForm = [
-                    h('div', {
-                        class: 'mt-2',
-                    }, [
+                    h('div', { class: 'mt-2' }, [
                         buildFormGroup({
                             label: true,
                             labelContent: 'Name',
@@ -239,9 +227,7 @@ export const AIdentityProviderRoleAssignment = defineComponent({
                 ];
             }
 
-            return h('div', {
-                class: 'list-item flex-column' 
-            }, [
+            return h('div', { class: 'list-item flex-column' }, [
                 listBar,
                 renderForm,
             ]);

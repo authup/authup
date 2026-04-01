@@ -5,19 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { defineComponent,h, } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { User } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import { AUserRoleAssignment } from '../user-role';
 import { AUsers } from '../user/AUsers';
 
 export const ARoleUserAssignments = defineComponent({
-    props: {
-        entityId: String,
-    },
-    setup(props, {
-        slots 
-    }) {
+    props: { entityId: String },
+    setup(props, { slots }) {
         return () => h(AUsers, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: User }) => h(
                 AUserRoleAssignment,

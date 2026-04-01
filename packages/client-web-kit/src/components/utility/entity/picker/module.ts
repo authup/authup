@@ -6,7 +6,7 @@
  */
 
 import { SlotName } from '@vuecs/list-controls';
-import type { PropType,Ref,VNodeChild, } from 'vue';
+import type { PropType, Ref, VNodeChild } from 'vue';
 import {
     computed, 
     h, 
@@ -19,7 +19,7 @@ import { APagination } from '../../pagination';
 import { renderToggleButton } from '../../toggle-button';
 import type { EntityCollectionVSlots } from '../collection';
 import { defineEntityCollectionVEmitOptions, defineEntityCollectionVProps } from '../collection';
-import { hasNormalizedSlot,normalizeSlot, } from '../../../../core';
+import { hasNormalizedSlot, normalizeSlot } from '../../../../core';
 import { ASearch } from '../../search';
 import type { EntityPickerContext, EntityPickerVEmitOptions, RecordWithID } from './types';
 
@@ -33,12 +33,8 @@ export function defineEntityPickerVEmitOptions<T>() : EntityPickerVEmitOptions<T
 
 export function defineEntityPickerVProps<T extends RecordWithID = RecordWithID>() {
     return {
-        value: {
-            type: [Array, String] as PropType<string[] | string | null>,
-        },
-        multiple: {
-            type: Boolean as PropType<boolean | undefined>,
-        },
+        value: { type: [Array, String] as PropType<string[] | string | null> },
+        multiple: { type: Boolean as PropType<boolean | undefined> },
         ...defineEntityCollectionVProps<T>(),
     };
 }
@@ -108,9 +104,7 @@ export function defineEntityPicker<T extends RecordWithID>({
     const render = () => h(
         component,
         mergeProps(
-            {
-                ref: componentRef 
-            },
+            { ref: componentRef },
             props,
             setup.attrs,
         ),
@@ -166,7 +160,5 @@ export function defineEntityPicker<T extends RecordWithID>({
         },
     );
 
-    return {
-        render,
-    };
+    return { render };
 }

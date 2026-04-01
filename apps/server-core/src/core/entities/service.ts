@@ -15,9 +15,7 @@ export abstract class AbstractEntityService {
             return false;
         }
 
-        const {
-            data 
-        } = actor.identity;
+        const { data } = actor.identity;
         if ('realm' in data && data.realm && typeof data.realm === 'object' && 'name' in data.realm) {
             return data.realm.name === REALM_MASTER_NAME;
         }
@@ -30,9 +28,7 @@ export abstract class AbstractEntityService {
             return undefined;
         }
 
-        const {
-            data 
-        } = actor.identity;
+        const { data } = actor.identity;
         if (data.realm_id) {
             return data.realm_id;
         }

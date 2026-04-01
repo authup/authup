@@ -20,9 +20,7 @@ import {
 import type { Client, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
-@Entity({
-    name: 'auth_clients' 
-})
+@Entity({ name: 'auth_clients' })
 @Unique(['name', 'realm_id'])
 export class ClientEntity implements Client {
     @PrimaryGeneratedColumn('uuid')
@@ -59,7 +57,7 @@ export class ClientEntity implements Client {
     @Column({
         type: 'varchar',
         length: 256,
-        nullable: true 
+        nullable: true, 
     })
     display_name: string | null;
 
@@ -141,12 +139,8 @@ export class ClientEntity implements Client {
     @Column()
     realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'realm_id' 
-    })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 
     // ------------------------------------------------------------------

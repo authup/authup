@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { UserAttribute, } from '@authup/core-kit';
+import type { UserAttribute } from '@authup/core-kit';
 import {
     EntityDefaultEventName, 
     EntityType,
@@ -19,7 +19,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import { EventSubscriber, } from 'typeorm';
+import { EventSubscriber } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { UserAttributeEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -39,9 +39,7 @@ async function publishEvent(
                 channel: (id) => buildEntityChannelName(EntityType.USER_ATTRIBUTE, id),
                 namespace: buildEntityNamespaceName(data.realm_id),
             },
-            {
-                channel: (id) => buildEntityChannelName(EntityType.USER_ATTRIBUTE, id),
-            },
+            { channel: (id) => buildEntityChannelName(EntityType.USER_ATTRIBUTE, id) },
         ],
     });
 }

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProviderAttribute, } from '@authup/core-kit';
+import type { IdentityProviderAttribute } from '@authup/core-kit';
 import {
     EntityDefaultEventName, 
     EntityType,
@@ -18,7 +18,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import { EventSubscriber, } from 'typeorm';
+import { EventSubscriber } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { IdentityProviderAttributeEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -34,9 +34,7 @@ async function publishEvent(
             data,
         },
         destinations: [
-            {
-                channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ATTRIBUTE, id),
-            },
+            { channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ATTRIBUTE, id) },
 
             // todo: realm attribute
         ],

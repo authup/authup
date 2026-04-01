@@ -60,9 +60,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         await children.reduce(async (prev, child) => {
             await prev;
             child.attributes.parent_id = parentId;
-            child.attributes.parent = {
-                id: parentId 
-            } as any;
+            child.attributes.parent = { id: parentId } as any;
             await this.synchronize(child);
         }, Promise.resolve());
 
@@ -73,9 +71,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         parentId: string,
         declaredNames: (string | undefined)[],
     ): Promise<void> {
-        const existingChildren = await this.repository.findManyBy({
-            parent_id: parentId,
-        });
+        const existingChildren = await this.repository.findManyBy({ parent_id: parentId });
 
         const staleChildren = existingChildren.filter(
             (child) => !declaredNames.includes(child.name),
@@ -88,9 +84,7 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
     }
 
     private async cleanupStaleChild(child: Policy): Promise<void> {
-        const referencingJunctions = await this.permissionPolicyRepository.findManyBy({
-            policy_id: child.id,
-        });
+        const referencingJunctions = await this.permissionPolicyRepository.findManyBy({ policy_id: child.id });
 
         if (referencingJunctions.length === 0) {
             await this.repository.deleteFromTree(child);

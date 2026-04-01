@@ -7,7 +7,7 @@
 
 import type { Realm } from '@authup/core-kit';
 import type { SlotsType } from 'vue';
-import { defineComponent, } from 'vue';
+import { defineComponent } from 'vue';
 import {
     defineEntityPicker,
     defineEntityPickerVEmitOptions,
@@ -21,9 +21,7 @@ export const ARealmPicker = defineComponent({
     emits: defineEntityPickerVEmitOptions<Realm>(),
     slots: Object as SlotsType<EntityPickerVSlots<Realm>>,
     setup(props, setup) {
-        const {
-            render 
-        } = defineEntityPicker({
+        const { render } = defineEntityPicker({
             component: ARealms,
             props,
             setup,

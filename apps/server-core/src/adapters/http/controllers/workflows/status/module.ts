@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DController,DGet, } from '@routup/decorators';
+import { DController, DGet } from '@routup/decorators';
 import { load } from 'locter';
 import path from 'node:path';
 import { PACKAGE_PATH } from '../../../../../path.ts';

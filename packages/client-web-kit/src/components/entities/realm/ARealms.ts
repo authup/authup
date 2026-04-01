@@ -27,9 +27,7 @@ export const ARealms = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Realm>(),
     slots: Object as SlotsType<EntityCollectionVSlots<Realm>>,
     setup(props, ctx) {
-        const {
-            render 
-        } = defineEntityCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${EntityType.REALM}`,
             props,
             setup: ctx,
@@ -43,15 +41,9 @@ export const ARealms = defineComponent({
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
-            data: {
-                name: translationsName,
-            },
+            data: { name: translationsName },
         });
 
-        return () => render({
-            noMore: {
-                content: translation.value,
-            },
-        });
+        return () => render({ noMore: { content: translation.value } });
     },
 });

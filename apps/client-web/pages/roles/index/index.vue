@@ -27,30 +27,18 @@ export default defineComponent({
         AEntityDelete,
     },
     emits: ['deleted'],
-    setup(_props, {
-        emit 
-    }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: Role) => {
             emit('deleted', e);
         };
 
         const store = injectStore();
-        const {
-            realmManagementId 
-        } = storeToRefs(store);
+        const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<Role> = {
-            filter: {
-                realm_id: [realmManagementId.value ?? null, null],
-            },
-        };
+        const query : BuildInput<Role> = { filter: { realm_id: [realmManagementId.value ?? null, null] } };
 
-        const hasEditPermission = usePermissionCheck({
-            name: PermissionName.ROLE_UPDATE 
-        });
-        const hasDropPermission = usePermissionCheck({
-            name: PermissionName.ROLE_DELETE 
-        });
+        const hasEditPermission = usePermissionCheck({ name: PermissionName.ROLE_UPDATE });
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.ROLE_DELETE });
 
         const fields = [
             {
@@ -86,7 +74,7 @@ export default defineComponent({
             {
                 key: 'options',
                 label: '',
-                tdClass: 'text-left' 
+                tdClass: 'text-left', 
             },
         ];
 

@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { defineComponent,h, } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { Permission } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
-import { ARolePermissionAssignment, } from './ARolePermissionAssignment';
+import { ARolePermissionAssignment } from './ARolePermissionAssignment';
 import { APermissions } from '../permission';
 
 export const ARolePermissionAssignments = defineComponent({
@@ -18,9 +18,7 @@ export const ARolePermissionAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, {
-        slots 
-    }) {
+    setup(props, { slots }) {
         return () => h(APermissions, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Permission }) => h(
                 ARolePermissionAssignment,

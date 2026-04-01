@@ -69,7 +69,7 @@ describe('IdentityGrantType', () => {
             realm_id: realmId,
             realm: {
                 id: realmId,
-                name: 'master' 
+                name: 'master', 
             } as Realm,
         } as User,
     };

@@ -23,19 +23,11 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
         const qb = this.repository.createQueryBuilder('roleAttribute');
         qb.groupBy('roleAttribute.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'roleAttribute',
-            filters: {
-                allowed: ['id', 'name', 'role_id', 'realm_id'],
-            },
-            sort: {
-                allowed: ['id', 'name', 'role_id', 'realm_id', 'created_at', 'updated_at'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
+            filters: { allowed: ['id', 'name', 'role_id', 'realm_id'] },
+            sort: { allowed: ['id', 'name', 'role_id', 'realm_id', 'created_at', 'updated_at'] },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -50,9 +42,7 @@ export class RoleAttributeRepositoryAdapter implements IRoleAttributeRepository 
     }
 
     findOneById(id: string): Promise<RoleAttribute | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(): Promise<RoleAttribute | null> {

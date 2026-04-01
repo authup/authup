@@ -26,9 +26,7 @@ describe('src/policy/attribute-realm', () => {
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
-                attributes: {
-                    realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
-                },
+                attributes: { realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
             }),
         }));
         expect(outcome.success).toBeTruthy();
@@ -60,9 +58,7 @@ describe('src/policy/attribute-realm', () => {
     });
 
     it('should permit by matching master realm', async () => {
-        const config : RealmMatchPolicy = {
-            identity_master_match_all: true,
-        };
+        const config : RealmMatchPolicy = { identity_master_match_all: true };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
@@ -73,9 +69,7 @@ describe('src/policy/attribute-realm', () => {
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
                 },
-                attributes: {
-                    realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
-                },
+                attributes: { realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
             }),
         }));
         expect(outcome.success).toBeTruthy();
@@ -93,18 +87,14 @@ describe('src/policy/attribute-realm', () => {
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
-                attributes: {
-                    realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23',
-                },
+                attributes: { realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
             }),
         }));
         expect(outcome.success).toBeFalsy();
     });
 
     it('should restrict due non matching realm and master full scope disabled', async () => {
-        const policy : RealmMatchPolicy = {
-            identity_master_match_all: false,
-        };
+        const policy : RealmMatchPolicy = { identity_master_match_all: false };
 
         const evaluator = new RealmMatchPolicyEvaluator();
 
@@ -115,9 +105,7 @@ describe('src/policy/attribute-realm', () => {
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
                 },
-                attributes: {
-                    realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23',
-                },
+                attributes: { realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
             }),
         }));
         expect(outcome.success).toBeFalsy();

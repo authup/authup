@@ -53,9 +53,7 @@ describe('src/http/controllers/user', () => {
     it('should read resource', async () => {
         const response = await suite.client
             .user
-            .getOne(details.id, {
-                fields: ['+email'],
-            });
+            .getOne(details.id, { fields: ['+email'] });
 
         expect(response).toBeDefined();
 
@@ -65,9 +63,7 @@ describe('src/http/controllers/user', () => {
     it('should read resource by name', async () => {
         const response = await suite.client
             .user
-            .getOne(details.name, {
-                fields: ['+email'],
-            });
+            .getOne(details.name, { fields: ['+email'] });
 
         expect(response).toBeDefined();
 
@@ -104,13 +100,9 @@ describe('src/http/controllers/user', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(entity.name);
 
-        const {
-            id 
-        } = response;
+        const { id } = response;
 
-        const {
-            name 
-        } = createFakeUser();
+        const { name } = createFakeUser();
 
         response = await suite.client
             .user

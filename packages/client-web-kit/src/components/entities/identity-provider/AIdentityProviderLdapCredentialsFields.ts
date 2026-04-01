@@ -5,20 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider,LdapIdentityProvider, } from '@authup/core-kit';
+import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import { required } from '@vuelidate/validators';
 import type { PropType } from 'vue';
-import { defineComponent,reactive, } from 'vue';
+import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 
 export const AIdentityProviderLdapCredentialsFields = defineComponent({
     props: {
-        entity: {
-            type: Object as PropType<Partial<LdapIdentityProvider>>,
-        },
+        entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
         discovery: {
             type: Boolean,
             default: false,
@@ -32,15 +30,9 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
         });
 
         const $v = useVuelidate({
-            user: {
-                required,
-            },
-            password: {
-                required,
-            },
-        }, form, {
-            $registerAs: 'credentials',
-        });
+            user: { required },
+            password: { required },
+        }, form, { $registerAs: 'credentials' });
 
         function init() {
             if (!props.entity) return;

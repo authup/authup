@@ -14,9 +14,7 @@ import {
 } from 'typeorm';
 import type { Realm } from '@authup/core-kit';
 
-@Entity({
-    name: 'auth_realms' 
-})
+@Entity({ name: 'auth_realms' })
 export class RealmEntity implements Realm {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -24,27 +22,27 @@ export class RealmEntity implements Realm {
     @Column({
         type: 'varchar',
         length: 128,
-        unique: true 
+        unique: true, 
     })
     name: string;
 
     @Column({
         type: 'varchar',
         length: 256,
-        nullable: true 
+        nullable: true, 
     })
     display_name: string | null;
 
     @Column({
         type: 'text',
         nullable: true,
-        default: null 
+        default: null, 
     })
     description: string | null;
 
     @Column({
         type: 'boolean',
-        default: false 
+        default: false, 
     })
     built_in: boolean;
 

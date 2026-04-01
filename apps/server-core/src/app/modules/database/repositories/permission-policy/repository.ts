@@ -23,13 +23,9 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
         const qb = this.repository.createQueryBuilder('permissionPolicy');
         qb.groupBy('permissionPolicy.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'permissionPolicy',
-            filters: {
-                allowed: ['permission_id', 'policy_id'],
-            },
+            filters: { allowed: ['permission_id', 'policy_id'] },
             relations: {
                 allowed: [
                     'permission',
@@ -46,9 +42,7 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
                     'updated_at',
                 ],
             },
-            pagination: {
-                maxLimit: 50,
-            },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -63,9 +57,7 @@ export class PermissionPolicyRepositoryAdapter implements IPermissionPolicyRepos
     }
 
     findOneById(id: string): Promise<PermissionPolicy | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(): Promise<PermissionPolicy | null> {

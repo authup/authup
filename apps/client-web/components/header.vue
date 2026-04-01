@@ -10,14 +10,12 @@ import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, ref } from '#imports';
 
 export default defineNuxtComponent({
-    components: {
-        LanguageSwitcherDropdown,
-    },
+    components: { LanguageSwitcherDropdown },
     setup() {
         const store = injectStore();
         const {
             loggedIn, 
-            user 
+            user, 
         } = storeToRefs(store);
 
         const displayNav = ref(false);

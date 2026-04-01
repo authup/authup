@@ -43,9 +43,7 @@ export function buildDomainEntityNav(
 
     let prevLink : VNodeChild = [];
     if (options.prevLink) {
-        prevLink = h('li', {
-            class: 'nav-item' 
-        }, [
+        prevLink = h('li', { class: 'nav-item' }, [
             h(
                 NuxtLink,
                 {
@@ -54,9 +52,7 @@ export function buildDomainEntityNav(
                 },
                 {
                     default: () => [
-                        h('i', {
-                            class: 'fa fa-arrow-left' 
-                        }),
+                        h('i', { class: 'fa fa-arrow-left' }),
                     ],
                 },
             ),
@@ -77,14 +73,10 @@ export function buildDomainEntityNav(
 
     return h(
         'ul',
-        {
-            class: clazz 
-        },
+        { class: clazz },
         [
             prevLink,
-            ...items.map((item) => h('li', {
-                class: 'nav-item' 
-            }, [
+            ...items.map((item) => h('li', { class: 'nav-item' }, [
                 h(
                     NuxtLink,
                     {
@@ -93,9 +85,7 @@ export function buildDomainEntityNav(
                     },
                     {
                         default: () => [
-                            h('i', {
-                                class: `${item.icon} pe-1` 
-                            }),
+                            h('i', { class: `${item.icon} pe-1` }),
                             item.name,
                         ],
                     },

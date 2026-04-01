@@ -23,9 +23,7 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
         const qb = this.repository.createQueryBuilder('providerRole');
         qb.groupBy('providerRole.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'providerRole',
             filters: {
                 allowed: [
@@ -49,9 +47,7 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
                     q.addGroupBy(`${key}.id`);
                 },
             },
-            pagination: {
-                maxLimit: 50,
-            },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -66,9 +62,7 @@ export class IdentityProviderRoleMappingRepositoryAdapter implements IIdentityPr
     }
 
     findOneById(id: string): Promise<IdentityProviderRoleMapping | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(): Promise<IdentityProviderRoleMapping | null> {

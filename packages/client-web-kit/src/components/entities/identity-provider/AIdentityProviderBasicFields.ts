@@ -9,7 +9,7 @@ import type { IdentityProvider } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
 import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import { maxLength,minLength,required, } from '@vuelidate/validators';
+import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import {
     computed, 
@@ -30,11 +30,7 @@ import {
 } from '../../../core';
 
 export const AIdentityProviderBasicFields = defineComponent({
-    props: {
-        entity: {
-            type: Object as PropType<Partial<IdentityProvider>>,
-        },
-    },
+    props: { entity: { type: Object as PropType<Partial<IdentityProvider>> } },
     emits: ['updated'],
     setup(props, setup) {
         const form = reactive({
@@ -56,12 +52,8 @@ export const AIdentityProviderBasicFields = defineComponent({
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },
-            enabled: {
-                required,
-            },
-        }, form, {
-            $registerAs: 'basic',
-        });
+            enabled: { required },
+        }, form, { $registerAs: 'basic' });
 
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
 
@@ -84,9 +76,7 @@ export const AIdentityProviderBasicFields = defineComponent({
             }
         }
 
-        setup.expose({
-            assign,
-        });
+        setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(props.entity as IdentityProvider);
         onChange(updatedAt, () => assign(props.entity));
@@ -96,15 +86,9 @@ export const AIdentityProviderBasicFields = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
-                },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
             ],
         );
         const translationsValidation = useTranslationsForNestedValidation($v.value);
@@ -123,9 +107,7 @@ export const AIdentityProviderBasicFields = defineComponent({
                 }),
             });
 
-            const nameGenerator = h('div', {
-                class: 'mb-3',
-            }, [
+            const nameGenerator = h('div', { class: 'mb-3' }, [
                 h('button', {
                     class: 'btn btn-xs btn-dark',
                     onClick($event: any) {
@@ -135,9 +117,7 @@ export const AIdentityProviderBasicFields = defineComponent({
                         update();
                     },
                 }, [
-                    h('i', {
-                        class: 'fa fa-refresh' 
-                    }),
+                    h('i', { class: 'fa fa-refresh' }),
                     ' ',
                     'Generate',
                 ]),

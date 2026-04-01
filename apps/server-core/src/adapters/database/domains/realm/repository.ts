@@ -19,9 +19,7 @@ export class RealmRepository extends Repository<RealmEntity> {
         const repository = this.manager.getRepository(RealmEntity);
 
         const entity = await repository.findOne({
-            where: {
-                name: REALM_MASTER_NAME,
-            },
+            where: { name: REALM_MASTER_NAME },
             cache: true,
         });
 

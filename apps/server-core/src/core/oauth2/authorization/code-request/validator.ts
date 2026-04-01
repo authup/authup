@@ -58,41 +58,31 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
 
         this.mount(
             'state',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(5).max(2048).nullable()),
         );
 
         this.mount(
             'code_challenge',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(1).max(256).nullable()),
         );
 
         this.mount(
             'code_challenge_method',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.enum(OAuth2AuthorizationCodeChallengeMethod).nullable()),
         );
 
         this.mount(
             'nonce',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(1).max(512).nullable()),
         );
 
         this.mount(
             'realm_id',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().nonempty()),
         );
 

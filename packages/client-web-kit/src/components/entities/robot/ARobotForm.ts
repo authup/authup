@@ -19,14 +19,14 @@ import {
     ref,
     watch,
 } from 'vue';
-import { maxLength,minLength,required, } from '@vuelidate/validators';
+import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Realm, Robot } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
 } from '@vuecs/form-controls';
-import { SlotName, } from '@vuecs/list-controls';
+import { SlotName } from '@vuecs/list-controls';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     TranslatorTranslationDefaultKey,
@@ -85,9 +85,7 @@ export const ARobotForm = defineComponent({
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },
-            realm_id: {
-                required,
-            },
+            realm_id: { required },
             secret: {
                 minLength: minLength(3),
                 maxLength: maxLength(256),
@@ -156,24 +154,12 @@ export const ARobotForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.GENERATE 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.HASHED 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.SECRET 
-                },
+                { key: TranslatorTranslationDefaultKey.GENERATE },
+                { key: TranslatorTranslationDefaultKey.HASHED },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.SECRET },
             ],
         );
 
@@ -188,9 +174,7 @@ export const ARobotForm = defineComponent({
                     onChange(input) {
                         $v.value.name.$model = input;
                     },
-                    props: {
-                        disabled: isNameFixed.value,
-                    },
+                    props: { disabled: isNameFixed.value },
                 }),
             });
 
@@ -216,9 +200,7 @@ export const ARobotForm = defineComponent({
                         labelContent: 'ID',
                         content: buildFormInput({
                             value: manager.data.value.id,
-                            props: {
-                                disabled: true,
-                            },
+                            props: { disabled: true },
                         }),
                     }),
                 ];
@@ -230,14 +212,10 @@ export const ARobotForm = defineComponent({
                 label: true,
                 labelContent: [
                     translationsDefault[TranslatorTranslationDefaultKey.SECRET].value,
-                    isSecretHashed.value ? h('span', {
-                        class: 'text-danger font-weight-bold ps-1',
-                    }, [
+                    isSecretHashed.value ? h('span', { class: 'text-danger font-weight-bold ps-1' }, [
                         translationsDefault[TranslatorTranslationDefaultKey.HASHED].value,
                         ' ',
-                        h('i', {
-                            class: 'fa fa-exclamation-triangle ps-1' 
-                        }),
+                        h('i', { class: 'fa fa-exclamation-triangle ps-1' }),
                     ]) : '',
                 ],
                 content: buildFormInput({
@@ -257,9 +235,7 @@ export const ARobotForm = defineComponent({
                         generateSecret.call(null);
                     },
                 }, [
-                    h('i', {
-                        class: 'fa fa-wrench' 
-                    }),
+                    h('i', { class: 'fa fa-wrench' }),
                     ' ',
                     translationsDefault[TranslatorTranslationDefaultKey.GENERATE].value,
                 ]),
@@ -272,9 +248,7 @@ export const ARobotForm = defineComponent({
                 invalid: $v.value.$invalid,
             }, translationsSubmit);
 
-            const leftColumn = h('div', {
-                class: 'col' 
-            }, [
+            const leftColumn = h('div', { class: 'col' }, [
                 id,
                 name,
                 displayName,
@@ -309,9 +283,7 @@ export const ARobotForm = defineComponent({
                 });
 
                 rightColumn = [
-                    h('div', {
-                        class: 'col',
-                    }, [
+                    h('div', { class: 'col' }, [
                         realm,
                     ]),
                 ];
@@ -324,9 +296,7 @@ export const ARobotForm = defineComponent({
                     return submit.apply(null);
                 },
             }, [
-                h('div', {
-                    class: 'row' 
-                }, [
+                h('div', { class: 'row' }, [
                     leftColumn,
                     rightColumn,
                 ]),

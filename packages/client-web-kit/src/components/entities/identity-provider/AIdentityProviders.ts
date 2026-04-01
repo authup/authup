@@ -28,9 +28,7 @@ export const AIdentityProviders = defineComponent({
     emits: defineEntityCollectionVEmitOptions<IdentityProvider>(),
     slots: Object as SlotsType<EntityCollectionVSlots<IdentityProvider>>,
     setup(props, ctx) {
-        const {
-            render 
-        } = defineEntityCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${EntityType.IDENTITY_PROVIDER}`,
             props,
             setup: ctx,
@@ -44,16 +42,10 @@ export const AIdentityProviders = defineComponent({
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
-            data: {
-                name: translationName,
-            },
+            data: { name: translationName },
         });
 
-        return () => render({
-            noMore: {
-                content: translation.value,
-            },
-        });
+        return () => render({ noMore: { content: translation.value } });
     },
 });
 

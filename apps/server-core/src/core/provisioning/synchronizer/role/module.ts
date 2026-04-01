@@ -6,7 +6,7 @@
  */
 
 import { pickRecord } from '@authup/kit';
-import type { Permission,RolePermission, } from '@authup/core-kit';
+import type { Permission, RolePermission } from '@authup/core-kit';
 import type { IPolicyRepository, IRoleRepository } from '../../../entities/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
@@ -51,7 +51,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes 
+                attributes: attributes || input.attributes, 
             };
         }
 
@@ -110,9 +110,7 @@ export class RoleProvisioningSynchronizer extends BaseProvisioningSynchronizer<R
                         [permission],
                         'permission_id',
                         'permission_realm_id',
-                        policyId ? {
-                            policy_id: policyId 
-                        } : undefined,
+                        policyId ? { policy_id: policyId } : undefined,
                     );
                 }
             } else {

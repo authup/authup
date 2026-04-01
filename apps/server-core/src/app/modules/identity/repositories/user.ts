@@ -56,30 +56,20 @@ export class UserIdentityRepository implements IUserIdentityRepository {
 
         const isId = isUUID(key);
         if (isId) {
-            query.where('user.id = :id', {
-                id: key 
-            });
+            query.where('user.id = :id', { id: key });
         } else {
-            query.where('user.name = :name', {
-                name: key 
-            });
+            query.where('user.name = :name', { name: key });
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
-                    query.andWhere('user.realm_id = :realmId', {
-                        realmId: realmKey,
-                    });
+                    query.andWhere('user.realm_id = :realmId', { realmId: realmKey });
                 } else {
-                    query.andWhere('realm.name = :realmName', {
-                        realmName: realmKey,
-                    });
+                    query.andWhere('realm.name = :realmName', { realmName: realmKey });
                 }
             }
         }
 
-        const {
-            columns 
-        } = this.repository.metadata;
+        const { columns } = this.repository.metadata;
         for (const column of columns) {
             if (!column.isSelect) {
                 query.addSelect(`user.${column.databaseName}`);
@@ -110,9 +100,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
     }
 
     async savePermissions(user: User, items: IdentityProviderMapperElement[]): Promise<void> {
-        const {
-            userPermissionRepository: repository 
-        } = this;
+        const { userPermissionRepository: repository } = this;
 
         const ids = items.map((item) => item.value);
 
@@ -168,9 +156,7 @@ export class UserIdentityRepository implements IUserIdentityRepository {
     }
 
     async saveRoles(user: User, items: IdentityProviderMapperElement[]): Promise<void> {
-        const {
-            userRoleRepository: repository 
-        } = this;
+        const { userRoleRepository: repository } = this;
 
         const ids = items.map((item) => item.value);
 

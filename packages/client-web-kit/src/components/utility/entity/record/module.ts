@@ -231,9 +231,7 @@ function create<
         typeof ctx.socket === 'function' ||
         ctx.socket
     ) {
-        let socketContext : EntitySocketManagerCreateContext<TYPE, RECORD> = {
-            type: ctx.type,
-        };
+        let socketContext : EntitySocketManagerCreateContext<TYPE, RECORD> = { type: ctx.type };
 
         if (isObject(ctx.socket)) {
             socketContext = {
@@ -302,9 +300,7 @@ function create<
             query = rctx.query as BuildInput<RECORD>;
         }
 
-        let {
-            id 
-        } = rctx;
+        let { id } = rctx;
 
         if (ctx.props) {
             if (resolveByProps()) {
@@ -366,9 +362,7 @@ function create<
             try {
                 const response = await domainAPI.getMany({
                     ...query,
-                    pagination: {
-                        limit: 1,
-                    },
+                    pagination: { limit: 1 },
                 } as any);
 
                 if (response.data.length === 1) {

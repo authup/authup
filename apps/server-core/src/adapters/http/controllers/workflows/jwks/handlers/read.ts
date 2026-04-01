@@ -26,13 +26,9 @@ export async function getJwksRouteHandler(
     const entities = await repository.find({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
-            ...(realmId ? {
-                realm_id: realmId 
-            } : {}),
+            ...(realmId ? { realm_id: realmId } : {}),
         },
-        order: {
-            priority: 'DESC',
-        },
+        order: { priority: 'DESC' },
     });
 
     const promises = entities
@@ -54,9 +50,7 @@ export async function getJwksRouteHandler(
 
     const keys = await Promise.all(promises);
 
-    return send(res, {
-        keys,
-    });
+    return send(res, { keys });
 }
 
 export async function getJwkRouteHandler(

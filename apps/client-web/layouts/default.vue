@@ -14,7 +14,7 @@ export default defineNuxtComponent({
     components: {
         PageHeader,
         PageSidebar,
-        PageFooter 
+        PageFooter, 
     },
 });
 </script>

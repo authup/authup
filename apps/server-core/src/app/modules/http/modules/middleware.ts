@@ -64,9 +64,7 @@ export class HTTPMiddlewareModule {
 
     async mountLogger(router: Router, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
-        const middleware = createLoggerMiddleware({
-            env: config.env,
-        });
+        const middleware = createLoggerMiddleware({ env: config.env });
 
         router.use(middleware);
     }

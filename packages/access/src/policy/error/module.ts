@@ -12,7 +12,7 @@ export class PolicyError extends AuthupError {
     constructor(message?: string, code?: string | null) {
         super({
             message,
-            code 
+            code, 
         });
     }
 

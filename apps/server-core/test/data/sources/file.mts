@@ -10,80 +10,42 @@ import type { RootProvisioningEntity } from '../../../src';
 const DATA : RootProvisioningEntity = {
     roles: [
         {
-            attributes: {
-                name: 'foo',
-            },
-            relations: {
-                globalPermissions: ['foo'],
-            },
+            attributes: { name: 'foo' },
+            relations: { globalPermissions: ['foo'] },
         },
         {
-            attributes: {
-                name: 'bar',
-            },
-            relations: {
-                globalPermissions: ['*'],
-            },
+            attributes: { name: 'bar' },
+            relations: { globalPermissions: ['*'] },
         },
     ],
     permissions: [
-        {
-            attributes: {
-                name: 'foo',
-            },
-        },
+        { attributes: { name: 'foo' } },
     ],
     scopes: [
-        {
-            attributes: {
-                name: 'foo',
-            },
-        },
+        { attributes: { name: 'foo' } },
     ],
     realms: [
         {
-            attributes: {
-                name: 'foo',
-            },
+            attributes: { name: 'foo' },
             relations: {
                 users: [
-                    {
-                        attributes: {
-                            name: 'foo',
-                        },
-                    },
+                    { attributes: { name: 'foo' } },
                 ],
                 clients: [
-                    {
-                        attributes: {
-                            name: 'foo',
-                        },
-                    },
+                    { attributes: { name: 'foo' } },
                 ],
                 roles: [
                     {
-                        attributes: {
-                            name: 'foo',
-                        },
-                        relations: {
-                            globalPermissions: ['foo'],
-                        },
+                        attributes: { name: 'foo' },
+                        relations: { globalPermissions: ['foo'] },
                     },
                     {
-                        attributes: {
-                            name: 'bar',
-                        },
-                        relations: {
-                            globalPermissions: ['*'],
-                        },
+                        attributes: { name: 'bar' },
+                        relations: { globalPermissions: ['*'] },
                     },
                 ],
                 permissions: [
-                    {
-                        attributes: {
-                            name: 'foo',
-                        },
-                    },
+                    { attributes: { name: 'foo' } },
                 ],
             },
         },

@@ -18,9 +18,7 @@ export class RoleAttributeRequestValidator extends Container<
 
         this.mount(
             'name',
-            {
-                group: RequestHandlerOperation.CREATE 
-            },
+            { group: RequestHandlerOperation.CREATE },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -29,16 +27,14 @@ export class RoleAttributeRequestValidator extends Container<
                     .isString()
                     .isLength({
                         min: 3,
-                        max: 255 
+                        max: 255, 
                     });
             }),
         );
 
         this.mount(
             'role_id',
-            {
-                group: RequestHandlerOperation.CREATE 
-            },
+            { group: RequestHandlerOperation.CREATE },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -49,9 +45,7 @@ export class RoleAttributeRequestValidator extends Container<
 
         this.mount(
             'value',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -60,11 +54,9 @@ export class RoleAttributeRequestValidator extends Container<
                     .isString()
                     .isLength({
                         min: 3,
-                        max: 512 
+                        max: 512, 
                     })
-                    .optional({
-                        values: 'null' 
-                    });
+                    .optional({ values: 'null' });
             }),
         );
     }

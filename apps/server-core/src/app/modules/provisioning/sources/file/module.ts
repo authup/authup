@@ -29,9 +29,7 @@ export class FileProvisioningSource implements IProvisioningSource {
             this.options.cwd :
             path.join(process.cwd(), this.options.cwd);
 
-        const locations = await locateMany('*.{json,yaml,yml,ts,mts,mjs,js}', {
-            path: cwd,
-        });
+        const locations = await locateMany('*.{json,yaml,yml,ts,mts,mjs,js}', { path: cwd });
 
         const compositeSource = new CompositeProvisioningSource([]);
 

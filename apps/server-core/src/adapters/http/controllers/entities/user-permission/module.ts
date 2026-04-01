@@ -20,7 +20,7 @@ import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IUserPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext, } from '../../../request/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 export type UserPermissionControllerContext = {
     service: IUserPermissionService,
@@ -43,12 +43,12 @@ export class UserPermissionController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 

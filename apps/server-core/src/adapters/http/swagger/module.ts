@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Version,generate, } from '@routup/swagger';
+import { Version, generate } from '@routup/swagger';
 import fs from 'node:fs';
 import path from 'node:path';
 import { DIST_PATH, SRC_PATH } from '../../../path.ts';
@@ -79,11 +79,7 @@ export class Swagger {
                     },
                     oauth2: {
                         type: 'oauth2',
-                        flows: {
-                            password: {
-                                tokenUrl: `${new URL('token', this.options.baseURL).href}`,
-                            },
-                        },
+                        flows: { password: { tokenUrl: `${new URL('token', this.options.baseURL).href}` } },
                     },
                     basicAuth: {
                         type: 'http',

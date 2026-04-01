@@ -55,8 +55,6 @@ export class PolicyData implements IPolicyData {
     }
 
     clone() {
-        return new PolicyData({
-            ...this.data,
-        }, new Set(this.validated));
+        return new PolicyData({ ...this.data }, new Set(this.validated));
     }
 }

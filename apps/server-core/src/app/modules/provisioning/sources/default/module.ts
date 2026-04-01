@@ -50,9 +50,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     built_in: true,
                     realm_id: null,
                 },
-                extraAttributes: {
-                    decision_strategy: DecisionStrategy.UNANIMOUS,
-                },
+                extraAttributes: { decision_strategy: DecisionStrategy.UNANIMOUS },
                 children: [
                     {
                         attributes: {
@@ -156,9 +154,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     name: ROLE_ADMIN_NAME,
                     built_in: true,
                 },
-                relations: {
-                    globalPermissions: ['*'],
-                },
+                relations: { globalPermissions: ['*'] },
             },
             {
                 strategy: {
@@ -228,9 +224,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     email: buildUserFakeEmail('admin'),
                     active: config.userAdminEnabled,
                 },
-                relations: {
-                    globalRoles: [ROLE_ADMIN_NAME],
-                },
+                relations: { globalRoles: [ROLE_ADMIN_NAME] },
             },
         ];
 
@@ -257,15 +251,11 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     built_in: true,
                     is_confidential: true,
                     name: 'system',
-                    secret: await clientCredentialsService.protect(config.clientSystemSecret, {
-                        secret_hashed: false 
-                    }),
+                    secret: await clientCredentialsService.protect(config.clientSystemSecret, { secret_hashed: false }),
                     secret_hashed: false,
                     active: config.clientSystemEnabled,
                 },
-                relations: {
-                    globalRoles: [ROLE_ADMIN_NAME],
-                },
+                relations: { globalRoles: [ROLE_ADMIN_NAME] },
             },
         ];
 
@@ -288,9 +278,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     secret: await robotCredentialsService.protect(config.robotAdminSecret),
                     active: config.robotAdminEnabled,
                 },
-                relations: {
-                    globalRoles: [ROLE_ADMIN_NAME],
-                },
+                relations: { globalRoles: [ROLE_ADMIN_NAME] },
             },
         ];
 

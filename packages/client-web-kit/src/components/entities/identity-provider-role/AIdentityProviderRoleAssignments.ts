@@ -19,12 +19,8 @@ export const AIdentityProviderRoleAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, {
-        slots 
-    }) {
-        return () => h(ARoles, {
-            headerTitle: false,
-        }, {
+    setup(props, { slots }) {
+        return () => h(ARoles, { headerTitle: false }, {
             [SlotName.BODY]: (slotProps: ListBodySlotProps<Role>) => slotProps.data.map((item: Role) => h(
                 AIdentityProviderRoleAssignment,
                 {

@@ -46,9 +46,7 @@ export class TokenVerifier implements ITokenVerifier {
     constructor(ctx: TokenVerifierContext) {
         this.cache = ctx.cache;
         this.maxRemoteCacheTTL = ctx.maxRemoteCacheTTL;
-        this.client = new Client({
-            baseURL: ctx.baseURL 
-        });
+        this.client = new Client({ baseURL: ctx.baseURL });
 
         if (ctx.creator) {
             // todo: use server kit singleton :)
@@ -120,9 +118,7 @@ export class TokenVerifier implements ITokenVerifier {
             payload = await verifyToken(token, {
                 type: JWKType.RSA,
                 key,
-                ...(jwk.alg ? {
-                    algorithms: [jwk.alg as JWTAlgorithm.RS256] 
-                } : {}),
+                ...(jwk.alg ? { algorithms: [jwk.alg as JWTAlgorithm.RS256] } : {}),
             }) as OAuth2TokenPayload;
         } catch {
             throw JWTError.payloadInvalid('The token could not be verified.');
@@ -151,17 +147,11 @@ export class TokenVerifier implements ITokenVerifier {
         let payload : OAuth2TokenIntrospectionResponse;
 
         try {
-            payload = await this.client.token.introspect({
-                token 
-            }, {
-                authorizationHeaderInherit: true,
-            });
+            payload = await this.client.token.introspect({ token }, { authorizationHeaderInherit: true });
         } catch (e) {
             /* istanbul ignore next */
             if (!isObject(e)) {
-                throw new JWTError({
-                    message: 'An unexpected token occurred.',
-                });
+                throw new JWTError({ message: 'An unexpected token occurred.' });
             }
 
             if (

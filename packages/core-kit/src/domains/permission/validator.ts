@@ -26,9 +26,7 @@ export class PermissionValidator extends Container<
                 .max(128)
                 .check((ctx) => {
                     try {
-                        isPermissionNameValid(ctx.value, {
-                            throwOnFailure: true 
-                        });
+                        isPermissionNameValid(ctx.value, { throwOnFailure: true });
                     } catch (e) {
                         ctx.issues.push({
                             input: ctx.value,
@@ -38,35 +36,27 @@ export class PermissionValidator extends Container<
                     }
                 }),
         );
-        this.mount('name', {
-            group: ValidatorGroup.CREATE 
-        }, nameValidator);
+        this.mount('name', { group: ValidatorGroup.CREATE }, nameValidator);
         this.mount('name', {
             group: ValidatorGroup.UPDATE,
-            optional: true 
+            optional: true, 
         }, nameValidator);
 
         this.mount(
             'display_name',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(5).max(4096).nullable()),
         );
 
         this.mount(
             'client_id',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.uuid()),
         );
 
@@ -74,16 +64,14 @@ export class PermissionValidator extends Container<
             'realm_id',
             {
                 group: ValidatorGroup.CREATE,
-                optional: true 
+                optional: true, 
             },
             createValidator(z.uuid().nullable().optional()),
         );
 
         this.mount(
             'decision_strategy',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(
                 z.enum(DecisionStrategy)
                     .nullable(),

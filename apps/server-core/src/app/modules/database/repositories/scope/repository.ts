@@ -34,9 +34,7 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
         const qb = this.repository.createQueryBuilder('scope');
         qb.groupBy('scope.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'scope',
             fields: {
                 allowed: [
@@ -50,15 +48,9 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
                     'updated_at',
                 ],
             },
-            filters: {
-                allowed: ['id', 'built_in', 'name', 'realm_id'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
-            sort: {
-                allowed: ['id', 'name', 'updated_at', 'created_at'],
-            },
+            filters: { allowed: ['id', 'built_in', 'name', 'realm_id'] },
+            pagination: { maxLimit: 50 },
+            sort: { allowed: ['id', 'name', 'updated_at', 'created_at'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -73,23 +65,17 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
     }
 
     findOneById(id: string): Promise<Scope | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(name: string, realmKey?: string): Promise<Scope | null> {
         const qb = this.repository.createQueryBuilder('scope');
-        qb.where('scope.name LIKE :name', {
-            name 
-        });
+        qb.where('scope.name LIKE :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('scope.realm_id = :realmId', {
-                    realmId: realm.id 
-                });
+                qb.andWhere('scope.realm_id = :realmId', { realmId: realm.id });
             }
         }
 

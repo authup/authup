@@ -8,7 +8,7 @@
 import { defineComponent, h } from 'vue';
 import type { Permission } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
-import { AClientPermissionAssignment, } from './AClientPermissionAssignment';
+import { AClientPermissionAssignment } from './AClientPermissionAssignment';
 import { APermissions } from '../permission';
 
 export const AClientPermissionAssignments = defineComponent({
@@ -18,9 +18,7 @@ export const AClientPermissionAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, {
-        slots 
-    }) {
+    setup(props, { slots }) {
         return () => h(APermissions, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Permission }) => h(
                 AClientPermissionAssignment,

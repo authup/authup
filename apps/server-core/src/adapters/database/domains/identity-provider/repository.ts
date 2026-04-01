@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, IdentityProviderAttribute } from '@authup/core-kit';
-import type { DataSource,EntityManager, } from 'typeorm';
+import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker } from 'typeorm';
 import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';

@@ -7,7 +7,7 @@
 
 import type { Transporter as SMTPClient } from 'nodemailer';
 
-export type { SMTPClient, };
+export type { SMTPClient };
 
 export type SMTPOptions = {
     host?: string,

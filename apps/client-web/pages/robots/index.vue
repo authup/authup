@@ -36,7 +36,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: `The robot ${e.name} was successfully deleted.` 
+                    body: `The robot ${e.name} was successfully deleted.`, 
                 });
             }
         };
@@ -45,7 +45,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

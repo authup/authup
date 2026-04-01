@@ -14,7 +14,7 @@ import type { RobotProvisioningEntity } from '../../entities/robot/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
 import type { UserProvisioningEntity } from '../../entities/user/index.ts';
 import { ProvisioningEntityStrategyType, normalizeEntityProvisioningStrategy } from '../../strategy/index.ts';
-import type { IProvisioningSynchronizer, } from '../../types.ts';
+import type { IProvisioningSynchronizer } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RealmProvisioningSynchronizerContext } from './types.ts';
 
@@ -47,9 +47,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
 
     async synchronize(input: RealmProvisioningEntity): Promise<RealmProvisioningEntity> {
         const strategy = normalizeEntityProvisioningStrategy(input.strategy);
-        let attributes = await this.repository.findOneBy({
-            name: input.attributes.name,
-        });
+        let attributes = await this.repository.findOneBy({ name: input.attributes.name });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
             if (attributes) {
@@ -57,7 +55,7 @@ export class RealmProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes 
+                attributes: attributes || input.attributes, 
             };
         }
 

@@ -8,13 +8,11 @@
 import { defineCommand } from 'citty';
 import http from 'node:http';
 import process from 'node:process';
-import { ApplicationBuilder,ConfigInjectionKey, } from '../../app/index.ts';
+import { ApplicationBuilder, ConfigInjectionKey } from '../../app/index.ts';
 
 export function defineCLIHealthCheckCommand() {
     return defineCommand({
-        meta: {
-            name: 'healthcheck',
-        },
+        meta: { name: 'healthcheck' },
         async setup() {
             const app = new ApplicationBuilder()
                 .withConfig()

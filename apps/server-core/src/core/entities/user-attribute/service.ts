@@ -40,13 +40,11 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         const {
             data: entities, 
-            meta 
+            meta, 
         } = await this.repository.findMany(query);
 
         const data: UserAttribute[] = [];
-        let {
-            total 
-        } = meta;
+        let { total } = meta;
 
         for (const entity of entities) {
             const canManage = await this.canManageUserAttribute(actor, entity);
@@ -61,8 +59,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             data,
             meta: {
                 ...meta,
-                total 
-            } 
+                total, 
+            }, 
         };
     }
 
@@ -77,9 +75,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             ],
         });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -143,9 +139,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         await this.repository.validateJoinColumns(data);
 
-        let entity = await this.repository.findOneBy({
-            id 
-        });
+        let entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -173,9 +167,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             ],
         });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -185,9 +177,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new ForbiddenError();
         }
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 
@@ -206,9 +196,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             try {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.USER_SELF_MANAGE,
-                    input: new PolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    }),
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
                 });
 
                 return true;
@@ -220,9 +208,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         try {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
 
             return true;

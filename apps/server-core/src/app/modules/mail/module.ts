@@ -25,15 +25,11 @@ export class MailModule implements IModule {
     async setup(container: IContainer): Promise<void> {
         const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.smtp) {
-            container.register(MailInjectionKey, {
-                useFactory: () => new VoidMailClientAdapter(),
-            });
+            container.register(MailInjectionKey, { useFactory: () => new VoidMailClientAdapter() });
 
             return;
         }
 
-        container.register(MailInjectionKey, {
-            useFactory: () => new SMTPMailClientAdapter(result.data.smtp),
-        });
+        container.register(MailInjectionKey, { useFactory: () => new SMTPMailClientAdapter(result.data.smtp) });
     }
 }

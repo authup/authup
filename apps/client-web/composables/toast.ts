@@ -25,7 +25,7 @@ export function useToast() {
                 return toast.show({
                     props: {
                         position: 'top-center',
-                        ...el 
+                        ...el, 
                     },
                 });
             }

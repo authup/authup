@@ -132,9 +132,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         StoreDispatcherEventName.ACCESS_TOKEN_EXPIRE_DATE_UPDATED,
         (input) => {
             if (input) {
-                cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, {
-                    maxAge: maxAgeFn(),
-                });
+                cookieSet(CookieName.ACCESS_TOKEN_EXPIRE_DATE, input, { maxAge: maxAgeFn() });
             } else {
                 cookieUnset(CookieName.ACCESS_TOKEN_EXPIRE_DATE, {});
             }
@@ -146,9 +144,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         (input) => {
             if (input) {
                 const maxAge = maxAgeFn();
-                cookieSet(CookieName.ACCESS_TOKEN, input, {
-                    maxAge,
-                });
+                cookieSet(CookieName.ACCESS_TOKEN, input, { maxAge });
             } else {
                 cookieUnset(CookieName.ACCESS_TOKEN, {});
             }

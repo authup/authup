@@ -103,9 +103,7 @@ describe('src/http/controllers/robot', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const {
-            name 
-        } = createFakeRobot();
+        const { name } = createFakeRobot();
         let response = await suite.client
             .robot
             .create({
@@ -116,18 +114,12 @@ describe('src/http/controllers/robot', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);
 
-        const {
-            id 
-        } = response;
-        const {
-            name: nextName 
-        } = createFakeRobot();
+        const { id } = response;
+        const { name: nextName } = createFakeRobot();
 
         response = await suite.client
             .robot
-            .createOrUpdate(name, {
-                name: nextName,
-            });
+            .createOrUpdate(name, { name: nextName });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);

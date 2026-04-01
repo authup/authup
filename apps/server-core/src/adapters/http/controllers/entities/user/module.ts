@@ -27,7 +27,7 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { IUserService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
-import { buildActorContext, } from '../../../request/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 export type UserControllerContext = {
     service: IUserService,
@@ -50,12 +50,12 @@ export class UserController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 
@@ -125,7 +125,7 @@ export class UserController {
         const actor = buildActorContext(req);
         const {
             entity, 
-            created 
+            created, 
         } = await this.service.save(
             id || undefined,
             data,

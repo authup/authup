@@ -27,30 +27,18 @@ export default defineComponent({
         AClients,
     },
     emits: ['deleted'],
-    setup(_props, {
-        emit 
-    }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: Client) => {
             emit('deleted', e);
         };
 
         const store = injectStore();
-        const {
-            realmManagementId 
-        } = storeToRefs(store);
+        const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<Client> = {
-            filters: {
-                realm_id: [realmManagementId.value ?? null, null],
-            },
-        };
+        const query : BuildInput<Client> = { filters: { realm_id: [realmManagementId.value ?? null, null] } };
 
-        const hasEditPermission = usePermissionCheck({
-            name: PermissionName.CLIENT_UPDATE 
-        });
-        const hasDropPermission = usePermissionCheck({
-            name: PermissionName.CLIENT_DELETE 
-        });
+        const hasEditPermission = usePermissionCheck({ name: PermissionName.CLIENT_UPDATE });
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.CLIENT_DELETE });
 
         const fields = [
             {
@@ -92,7 +80,7 @@ export default defineComponent({
             {
                 key: 'options',
                 label: '',
-                tdClass: 'text-left' 
+                tdClass: 'text-left', 
             },
         ];
 

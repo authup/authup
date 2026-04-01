@@ -28,9 +28,7 @@ describe('core/entities/robot-permission/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RobotPermission>();
-        service = new RobotPermissionService({
-            repository 
-        });
+        service = new RobotPermissionService({ repository });
     });
 
     describe('getMany', () => {
@@ -67,12 +65,10 @@ describe('core/entities/robot-permission/service', () => {
             const data = {
                 robot_id: randomUUID(),
                 permission_id: randomUUID(),
-                robot: {
-                    realm_id: randomUUID() 
-                },
+                robot: { realm_id: randomUUID() },
                 permission: {
                     realm_id: randomUUID(),
-                    name: 'test-perm' 
+                    name: 'test-perm', 
                 },
             };
 
@@ -89,7 +85,7 @@ describe('core/entities/robot-permission/service', () => {
                 permission_id: randomUUID(),
                 permission: {
                     name: 'custom-perm',
-                    realm_id: null 
+                    realm_id: null, 
                 },
             }, actor);
 
@@ -104,7 +100,7 @@ describe('core/entities/robot-permission/service', () => {
             await expect(
                 service.create({
                     robot_id: randomUUID(),
-                    permission_id: randomUUID() 
+                    permission_id: randomUUID(), 
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
@@ -125,9 +121,7 @@ describe('core/entities/robot-permission/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.ROBOT_PERMISSION_DELETE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROBOT_PERMISSION_DELETE });
         });
     });
 });

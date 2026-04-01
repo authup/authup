@@ -13,7 +13,7 @@ import type {
     ScopeProvisioningEntity,
 } from '../../entities/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
-import type { IProvisioningSynchronizer, } from '../../types.ts';
+import type { IProvisioningSynchronizer } from '../../types.ts';
 import { BaseProvisioningSynchronizer } from '../base.ts';
 import type { RootProvisioningSynchronizerContext } from './types.ts';
 

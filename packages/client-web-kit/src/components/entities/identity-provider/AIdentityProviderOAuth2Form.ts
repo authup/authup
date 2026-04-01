@@ -23,7 +23,7 @@ import type {
     IdentityProviderPreset, 
     OAuth2IdentityProvider,
 } from '@authup/core-kit';
-import { EntityType,IdentityProviderProtocol, } from '@authup/core-kit';
+import { EntityType, IdentityProviderProtocol } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
@@ -35,7 +35,7 @@ import {
     extractVuelidateResultsFromChild,
     injectHTTPClient,
 } from '../../../core';
-import { defineEntityManager,defineEntityVEmitOptions, } from '../../utility';
+import { defineEntityManager, defineEntityVEmitOptions } from '../../utility';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields';
 import { AIdentityProviderOAuth2EndpointFields } from './AIdentityProviderOAuth2EndpointFields';
@@ -63,9 +63,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             type: String as PropType<string | null>,
             default: IdentityProviderProtocol.OAUTH2,
         },
-        preset: {
-            type: String as PropType<string | null>,
-        },
+        preset: { type: String as PropType<string | null> },
     },
     emits: defineEntityVEmitOptions<IdentityProvider>(),
     setup(props, ctx) {
@@ -94,9 +92,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
 
         const busy = ref(false);
 
-        const $v = useVuelidate({
-            $stopPropagation: true 
-        });
+        const $v = useVuelidate({ $stopPropagation: true });
 
         const isEditing = useIsEditing(manager.data);
 
@@ -180,12 +176,8 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                         id: preset.value,
                     }, {
                         default: (element: IdentityProviderPresetElement) => h('div', [
-                            h('h4', {
-                                class: 'mb-3' 
-                            }, [
-                                h('i', {
-                                    class: [element.icon, 'pe-1'] 
-                                }),
+                            h('h4', { class: 'mb-3' }, [
+                                h('i', { class: [element.icon, 'pe-1'] }),
                                 element.name,
                             ]),
                         ]),
@@ -196,12 +188,8 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                         id: protocol.value!,
                     }, {
                         default: (element: IdentityProviderProtocolElement) => h('div', [
-                            h('h4', {
-                                class: 'mb-3' 
-                            }, [
-                                h('i', {
-                                    class: [element.icon, 'pe-1'] 
-                                }),
+                            h('h4', { class: 'mb-3' }, [
+                                h('i', { class: [element.icon, 'pe-1'] }),
                                 element.name,
                             ]),
                         ]),
@@ -213,9 +201,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             if (isEditing.value) {
                 detailsNode = [
                     h('h6', [
-                        h('i', {
-                            class: 'fas fa-info-circle' 
-                        }),
+                        h('i', { class: 'fas fa-info-circle' }),
                         ' ',
                         'Details',
                     ]),
@@ -224,9 +210,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                         labelContent: 'Redirect URL',
                         content: buildFormInput({
                             value: authorizeUri,
-                            props: {
-                                disabled: true,
-                            },
+                            props: { disabled: true },
                         }),
                     }),
                     h('hr'),
@@ -235,9 +219,7 @@ export const AIdentityProviderOAuth2Form = defineComponent({
 
             const basicNode : VNodeChild = [
                 h('h6', [
-                    h('i', {
-                        class: 'fa fa-wrench' 
-                    }),
+                    h('i', { class: 'fa fa-wrench' }),
                     ' ',
                     'Basic',
                 ]),
@@ -249,24 +231,18 @@ export const AIdentityProviderOAuth2Form = defineComponent({
 
             const securityNode : VNodeChild = [
                 h('h6', [
-                    h('i', {
-                        class: 'fa fa-lock' 
-                    }),
+                    h('i', { class: 'fa fa-lock' }),
                     ' ',
                     'Security',
                 ]),
-                h(AIdentityProviderOAuth2ClientFields, {
-                    entity: manager.data.value as OAuth2IdentityProvider,
-                }),
+                h(AIdentityProviderOAuth2ClientFields, { entity: manager.data.value as OAuth2IdentityProvider }),
             ];
 
             let endpointsNode : VNodeChild;
             if (!preset.value) {
                 endpointsNode = [
                     h('h6', [
-                        h('i', {
-                            class: 'fa-solid fa-vihara' 
-                        }),
+                        h('i', { class: 'fa-solid fa-vihara' }),
                         ' ',
                         'Endpoints',
                     ]),
@@ -296,17 +272,11 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             }, [
                 headerNode,
                 detailsNode,
-                h('div', {
-                    class: 'row',
-                }, [
-                    h('div', {
-                        class: 'col',
-                    }, [
+                h('div', { class: 'row' }, [
+                    h('div', { class: 'col' }, [
                         basicNode,
                     ]),
-                    h('div', {
-                        class: 'col',
-                    }, [
+                    h('div', { class: 'col' }, [
                         securityNode,
                     ]),
                 ]),

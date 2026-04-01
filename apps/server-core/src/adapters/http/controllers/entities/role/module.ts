@@ -21,7 +21,7 @@ import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IRoleService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext, } from '../../../request/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 export type RoleControllerContext = {
     service: IRoleService,
@@ -44,12 +44,12 @@ export class RoleController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 
@@ -107,7 +107,7 @@ export class RoleController {
         const actor = buildActorContext(req);
         const {
             entity, 
-            created 
+            created, 
         } = await this.service.save(
             id || undefined,
             data,

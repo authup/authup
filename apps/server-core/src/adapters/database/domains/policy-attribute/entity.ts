@@ -24,16 +24,14 @@ import { PolicyEntity } from '../policy/entity.ts';
 import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'policy_id'])
-@Entity({
-    name: 'auth_policy_attributes' 
-})
+@Entity({ name: 'auth_policy_attributes' })
 export class PolicyAttributeEntity implements PolicyAttribute {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({
         type: 'varchar',
-        length: 255 
+        length: 255, 
     })
     name: string;
 
@@ -53,18 +51,14 @@ export class PolicyAttributeEntity implements PolicyAttribute {
 
     // ------------------------------------------------------------------
 
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'realm_id' 
-    })
+    @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity | null;
 
     // ------------------------------------------------------------------
@@ -72,12 +66,8 @@ export class PolicyAttributeEntity implements PolicyAttribute {
     @Column()
     policy_id: Policy['id'];
 
-    @ManyToOne(() => PolicyEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'policy_id' 
-    })
+    @ManyToOne(() => PolicyEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'policy_id' })
     policy: PolicyEntity;
 
     // ------------------------------------------------------------------

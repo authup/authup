@@ -55,12 +55,12 @@ export class RobotRoleController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 

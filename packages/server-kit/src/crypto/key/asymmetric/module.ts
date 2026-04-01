@@ -41,12 +41,12 @@ export class AsymmetricKey extends BaseKey {
         if (ctx.format === 'pkcs8') {
             return AsymmetricKey.fromBase64({
                 ...ctx,
-                key: decodePemToPKCS8(ctx.key) 
+                key: decodePemToPKCS8(ctx.key), 
             });
         }
         return AsymmetricKey.fromBase64({
             ...ctx,
-            key: decodePemToSpki(ctx.key) 
+            key: decodePemToSpki(ctx.key), 
         });
     }
 

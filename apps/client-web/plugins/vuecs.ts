@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectTranslatorLocale, } from '@authup/client-web-kit';
+import { injectTranslatorLocale } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
 import type { StoreManagerOptions } from '@vuecs/core';
@@ -27,15 +27,9 @@ export default defineNuxtPlugin({
                 fontAwesome,
             },
             defaults: {
-                list: {
-                    class: 'list',
-                },
-                listBody: {
-                    class: 'list-body',
-                },
-                listItem: {
-                    class: 'list-item',
-                },
+                list: { class: 'list' },
+                listBody: { class: 'list-body' },
+                listItem: { class: 'list-item' },
             },
         };
 
@@ -43,11 +37,7 @@ export default defineNuxtPlugin({
         applyStoreManagerOptions(storeManager, storeManagerOptions);
 
         ctx.vueApp.use(installCountdown);
-        ctx.vueApp.use(installTimeago, {
-            locales: {
-                de,
-            },
-        });
+        ctx.vueApp.use(installTimeago, { locales: { de } });
 
         // preset missing ...
 

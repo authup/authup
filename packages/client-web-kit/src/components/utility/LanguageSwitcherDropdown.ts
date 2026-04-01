@@ -77,4 +77,4 @@ const LanguageSwitcherDropdown = defineComponent({
     },
 });
 
-export { LanguageSwitcherDropdown, };
+export { LanguageSwitcherDropdown };

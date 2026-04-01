@@ -57,9 +57,7 @@ export function guessOauth2GrantTypeByRequest(
     let clientSecret = useRequestBody(request, 'client_secret') || useRequestQuery(request, 'client_secret');
 
     if (!clientId && !clientSecret) {
-        const {
-            authorization: headerValue 
-        } = request.headers;
+        const { authorization: headerValue } = request.headers;
 
         if (headerValue) {
             const header = parseAuthorizationHeader(headerValue);

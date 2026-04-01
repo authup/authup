@@ -24,7 +24,7 @@ import { createTestApplication } from '../../../../../app';
 function buildFakeAccessToken(claims: Record<string, unknown>): string {
     const header = btoa(JSON.stringify({
         alg: 'none',
-        typ: 'JWT' 
+        typ: 'JWT', 
     }));
     const payload = btoa(JSON.stringify(claims));
     return `${header}.${payload}.fakesignature`;
@@ -43,9 +43,7 @@ function createFakeIdpServer(): {
                 name: 'IDP User',
             });
 
-            res.writeHead(200, {
-                'Content-Type': 'application/json' 
-            });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({
                 access_token: accessToken,
                 token_type: 'Bearer',
@@ -55,9 +53,7 @@ function createFakeIdpServer(): {
         }
 
         if (req.url === '/authorize') {
-            res.writeHead(200, {
-                'Content-Type': 'text/plain' 
-            });
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end('authorize');
             return;
         }
@@ -109,9 +105,7 @@ describe('identity-provider authorization code grant', () => {
         const response = await suite.client
             .get(
                 buildIdentityProviderAuthorizePath(providerId),
-                {
-                    redirect: 'manual' 
-                },
+                { redirect: 'manual' },
             );
 
         expect(response.status).toEqual(302);
@@ -128,9 +122,7 @@ describe('identity-provider authorization code grant', () => {
         const authorizeOutResponse = await suite.client
             .get(
                 buildIdentityProviderAuthorizePath(providerId),
-                {
-                    redirect: 'manual' 
-                },
+                { redirect: 'manual' },
             );
 
         const outLocation = authorizeOutResponse.headers.get('location') as string;
@@ -142,9 +134,7 @@ describe('identity-provider authorization code grant', () => {
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                {
-                    redirect: 'manual' 
-                },
+                { redirect: 'manual' },
             );
 
         expect(authorizeInResponse.status).toEqual(302);
@@ -159,9 +149,7 @@ describe('identity-provider authorization code grant', () => {
 
         const tokenResponse = await suite.client
             .token
-            .createWithAuthorizationCode({
-                code: authupCode!,
-            });
+            .createWithAuthorizationCode({ code: authupCode! });
 
         expect(tokenResponse).toBeDefined();
         expect(tokenResponse.access_token).toBeDefined();
@@ -173,9 +161,7 @@ describe('identity-provider authorization code grant', () => {
         const authorizeOutResponse = await suite.client
             .get(
                 buildIdentityProviderAuthorizePath(providerId),
-                {
-                    redirect: 'manual' 
-                },
+                { redirect: 'manual' },
             );
 
         const outLocation = authorizeOutResponse.headers.get('location') as string;
@@ -184,9 +170,7 @@ describe('identity-provider authorization code grant', () => {
         const authorizeInResponse = await suite.client
             .get(
                 `${buildIdentityProviderAuthorizeCallbackPath(providerId)}?code=fake-idp-code&state=${state}`,
-                {
-                    redirect: 'manual' 
-                },
+                { redirect: 'manual' },
             );
 
         const inLocation = authorizeInResponse.headers.get('location') as string;
@@ -194,18 +178,14 @@ describe('identity-provider authorization code grant', () => {
 
         await suite.client
             .token
-            .createWithAuthorizationCode({
-                code: authupCode! 
-            });
+            .createWithAuthorizationCode({ code: authupCode! });
 
         let error: any;
 
         try {
             await suite.client
                 .token
-                .createWithAuthorizationCode({
-                    code: authupCode! 
-                });
+                .createWithAuthorizationCode({ code: authupCode! });
         } catch (e) {
             error = e;
         }

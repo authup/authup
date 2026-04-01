@@ -27,11 +27,7 @@ export default defineComponent({
         VCFormGroup,
         IVuelidate,
     },
-    props: {
-        entity: {
-            type: Object as PropType<Partial<Policy>>,
-        },
-    },
+    props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
         const form = reactive({
@@ -65,18 +61,14 @@ export default defineComponent({
                 minValue: minValue(1),
                 maxValue: maxValue(365),
             },
-        }, form, {
-            $registerAs: 'type',
-        });
+        }, form, { $registerAs: 'type' });
 
         function assign(data: Partial<TimePolicy> = {}) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assignFormProperties(form, data as Record<string, any>);
         }
 
-        setup.expose({
-            assign,
-        });
+        setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));

@@ -37,7 +37,7 @@ export default defineNuxtComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: `The identity-provider ${e.name} was successfully deleted.` 
+                    body: `The identity-provider ${e.name} was successfully deleted.`, 
                 });
             }
         };
@@ -46,7 +46,7 @@ export default defineNuxtComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

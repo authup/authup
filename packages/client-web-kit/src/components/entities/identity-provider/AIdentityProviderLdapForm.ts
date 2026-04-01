@@ -56,9 +56,7 @@ export const AIdentityProviderLdapForm = defineComponent({
         const isEditing = useIsEditing(manager.data);
 
         const busy = ref(false);
-        const $v = useVuelidate({
-            $stopPropagation: true 
-        });
+        const $v = useVuelidate({ $stopPropagation: true });
 
         const submit = async () => {
             if ($v.value.$invalid) {
@@ -94,12 +92,8 @@ export const AIdentityProviderLdapForm = defineComponent({
                     id: IdentityProviderProtocol.LDAP,
                 }, {
                     default: (element: IdentityProviderProtocolElement) => h('div', [
-                        h('h4', {
-                            class: 'mb-3' 
-                        }, [
-                            h('i', {
-                                class: [element.icon, 'pe-1'] 
-                            }),
+                        h('h4', { class: 'mb-3' }, [
+                            h('i', { class: [element.icon, 'pe-1'] }),
                             element.name,
                         ]),
                     ]),
@@ -108,67 +102,47 @@ export const AIdentityProviderLdapForm = defineComponent({
 
             const basicNode : VNodeChild = [
                 h('h6', [
-                    h('i', {
-                        class: 'fa fa-wrench' 
-                    }),
+                    h('i', { class: 'fa fa-wrench' }),
                     ' ',
                     'Basic',
                 ]),
-                h(AIdentityProviderBasicFields, {
-                    entity: manager.data.value,
-                }),
+                h(AIdentityProviderBasicFields, { entity: manager.data.value }),
             ];
 
             const connectionNode : VNodeChild = [
                 h('h6', [
-                    h('i', {
-                        class: 'fa-solid fa-vihara' 
-                    }),
+                    h('i', { class: 'fa-solid fa-vihara' }),
                     ' ',
                     'Connection',
                 ]),
-                h(AIdentityProviderLdapConnectionFields, {
-                    entity: manager.data.value as LdapIdentityProvider,
-                }),
+                h(AIdentityProviderLdapConnectionFields, { entity: manager.data.value as LdapIdentityProvider }),
             ];
 
             const credentialsNode : VNodeChild = [
                 h('h6', [
-                    h('i', {
-                        class: 'fa fa-lock' 
-                    }),
+                    h('i', { class: 'fa fa-lock' }),
                     ' ',
                     'Security',
                 ]),
-                h(AIdentityProviderLdapCredentialsFields, {
-                    entity: manager.data.value as LdapIdentityProvider,
-                }),
+                h(AIdentityProviderLdapCredentialsFields, { entity: manager.data.value as LdapIdentityProvider }),
             ];
 
             const groupNode : VNodeChild = [
                 h('h6', [
-                    h('i', {
-                        class: 'fa-solid fa-theater-masks' 
-                    }),
+                    h('i', { class: 'fa-solid fa-theater-masks' }),
                     ' ',
                     'Group',
                 ]),
-                h(AIdentityProviderLdapGroupFields, {
-                    entity: manager.data.value as LdapIdentityProvider,
-                }),
+                h(AIdentityProviderLdapGroupFields, { entity: manager.data.value as LdapIdentityProvider }),
             ];
 
             const userNode : VNodeChild = [
                 h('h6', [
-                    h('i', {
-                        class: 'fas fa-user' 
-                    }),
+                    h('i', { class: 'fas fa-user' }),
                     ' ',
                     'User',
                 ]),
-                h(AIdentityProviderLdapUserFields, {
-                    entity: manager.data.value as LdapIdentityProvider,
-                }),
+                h(AIdentityProviderLdapUserFields, { entity: manager.data.value as LdapIdentityProvider }),
             ];
 
             return h('form', {
@@ -179,34 +153,22 @@ export const AIdentityProviderLdapForm = defineComponent({
                 },
             }, [
                 headerNode,
-                h('div', {
-                    class: 'row',
-                }, [
-                    h('div', {
-                        class: 'col',
-                    }, [
+                h('div', { class: 'row' }, [
+                    h('div', { class: 'col' }, [
                         basicNode,
                     ]),
-                    h('div', {
-                        class: 'col',
-                    }, [
+                    h('div', { class: 'col' }, [
                         credentialsNode,
                     ]),
                 ]),
                 h('hr'),
                 connectionNode,
                 h('hr'),
-                h('div', {
-                    class: 'row',
-                }, [
-                    h('div', {
-                        class: 'col',
-                    }, [
+                h('div', { class: 'row' }, [
+                    h('div', { class: 'col' }, [
                         userNode,
                     ]),
-                    h('div', {
-                        class: 'col',
-                    }, [
+                    h('div', { class: 'col' }, [
                         groupNode,
                     ]),
                 ]),

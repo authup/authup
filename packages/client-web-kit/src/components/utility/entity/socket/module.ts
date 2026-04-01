@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { EntityDefaultEventName,REALM_MASTER_NAME,buildEntityChannelName, } from '@authup/core-kit';
+import { EntityDefaultEventName, REALM_MASTER_NAME, buildEntityChannelName } from '@authup/core-kit';
 import type {
     EntityType,
     EntityTypeMap,

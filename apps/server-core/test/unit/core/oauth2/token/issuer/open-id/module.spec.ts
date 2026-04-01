@@ -6,7 +6,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import type { Identity,Realm,User, } from '@authup/core-kit';
+import type { Identity, Realm, User } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import { JWTError, OAuth2SubKind, OAuth2TokenKind } from '@authup/specs';
 import {
@@ -54,13 +54,13 @@ describe('OAuth2OpenIDTokenIssuer', () => {
         realm_id: realmId,
         realm: {
             id: realmId,
-            name: 'master' 
+            name: 'master', 
         } as Realm,
     } as User;
 
     const identity: Identity = {
         type: OAuth2SubKind.USER,
-        data: user 
+        data: user, 
     };
 
     let repository: IOAuth2TokenRepository;
@@ -70,35 +70,23 @@ describe('OAuth2OpenIDTokenIssuer', () => {
         return new OAuth2OpenIDTokenIssuer({
             repository,
             signer,
-            identityResolver: {
-                resolve: vi.fn().mockResolvedValue(null) 
-            } as IIdentityResolver,
+            identityResolver: { resolve: vi.fn().mockResolvedValue(null) } as IIdentityResolver,
             ...overrides,
         });
     }
 
     beforeEach(() => {
         repository = createTokenRepo();
-        signer = {
-            sign: vi.fn().mockResolvedValue('signed-id-token') 
-        };
+        signer = { sign: vi.fn().mockResolvedValue('signed-id-token') };
     });
 
     describe('issue', () => {
         it('should throw when sub_kind or sub is missing', async () => {
-            const resolver: IIdentityResolver = {
-                resolve: vi.fn().mockResolvedValue(identity) 
-            };
-            const issuer = createIssuer({
-                identityResolver: resolver 
-            });
+            const resolver: IIdentityResolver = { resolve: vi.fn().mockResolvedValue(identity) };
+            const issuer = createIssuer({ identityResolver: resolver });
 
-            await expect(issuer.issue({
-                sub: userId 
-            } as OAuth2TokenPayload)).rejects.toThrow(JWTError);
-            await expect(issuer.issue({
-                sub_kind: OAuth2SubKind.USER 
-            } as OAuth2TokenPayload)).rejects.toThrow(JWTError);
+            await expect(issuer.issue({ sub: userId } as OAuth2TokenPayload)).rejects.toThrow(JWTError);
+            await expect(issuer.issue({ sub_kind: OAuth2SubKind.USER } as OAuth2TokenPayload)).rejects.toThrow(JWTError);
         });
 
         it('should throw when identity cannot be resolved', async () => {
@@ -111,12 +99,8 @@ describe('OAuth2OpenIDTokenIssuer', () => {
         });
 
         it('should resolve identity and issue token', async () => {
-            const resolver: IIdentityResolver = {
-                resolve: vi.fn().mockResolvedValue(identity) 
-            };
-            const issuer = createIssuer({
-                identityResolver: resolver 
-            });
+            const resolver: IIdentityResolver = { resolve: vi.fn().mockResolvedValue(identity) };
+            const issuer = createIssuer({ identityResolver: resolver });
 
             const [token] = await issuer.issue({
                 sub: userId,
@@ -135,7 +119,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
             await issuer.issueWithIdentity(
                 {
                     sub: userId,
-                    realm_id: realmId 
+                    realm_id: realmId, 
                 } as OAuth2TokenPayload,
                 identity,
             );
@@ -151,49 +135,37 @@ describe('OAuth2OpenIDTokenIssuer', () => {
         });
 
         it('should set realm-scoped iss from issuer option per OIDC §2', async () => {
-            const issuer = createIssuer({
-                options: {
-                    issuer: 'https://auth.example.com' 
-                } 
-            });
+            const issuer = createIssuer({ options: { issuer: 'https://auth.example.com' } });
 
             await issuer.issueWithIdentity(
                 {
                     sub: userId,
                     realm_id: realmId,
                     realm_name: 'master',
-                    client_id: clientId 
+                    client_id: clientId, 
                 } as OAuth2TokenPayload,
                 identity,
             );
 
             expect(repository.insert).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    iss: 'https://auth.example.com/realms/master' 
-                }),
+                expect.objectContaining({ iss: 'https://auth.example.com/realms/master' }),
             );
         });
 
         it('should fall back to base issuer when realm_name is not present', async () => {
-            const issuer = createIssuer({
-                options: {
-                    issuer: 'https://auth.example.com' 
-                } 
-            });
+            const issuer = createIssuer({ options: { issuer: 'https://auth.example.com' } });
 
             await issuer.issueWithIdentity(
                 {
                     sub: userId,
                     realm_id: realmId,
-                    client_id: clientId 
+                    client_id: clientId, 
                 } as OAuth2TokenPayload,
                 identity,
             );
 
             expect(repository.insert).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    iss: 'https://auth.example.com' 
-                }),
+                expect.objectContaining({ iss: 'https://auth.example.com' }),
             );
         });
 
@@ -204,15 +176,13 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 {
                     sub: userId,
                     realm_id: realmId,
-                    client_id: clientId 
+                    client_id: clientId, 
                 } as OAuth2TokenPayload,
                 identity,
             );
 
             expect(repository.insert).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    aud: clientId 
-                }),
+                expect.objectContaining({ aud: clientId }),
             );
         });
 
@@ -222,7 +192,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
             const [token, payload] = await issuer.issueWithIdentity(
                 {
                     sub: userId,
-                    realm_id: realmId 
+                    realm_id: realmId, 
                 } as OAuth2TokenPayload,
                 identity,
             );

@@ -8,7 +8,7 @@
 import { defineIssueGroup } from 'validup';
 import { DecisionStrategy } from '../../../constants';
 import { PolicyEngine } from '../../engine';
-import type { IPolicyEvaluator,PolicyEvaluationContext,PolicyEvaluationResult, } from '../../evaluation';
+import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';
 import type { PolicyIssue } from '../../issue';
 import { CompositePolicyValidator } from './validator';
@@ -77,9 +77,7 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         }
 
         if (count > 0) {
-            return {
-                success: maybeInvertPolicyOutcome(true, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
         return {

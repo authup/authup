@@ -41,29 +41,19 @@ export class ClientIdentityRepository implements IClientIdentityRepository {
 
         const isId = isUUID(key);
         if (isId) {
-            query.where('client.id = :id', {
-                id: key 
-            });
+            query.where('client.id = :id', { id: key });
         } else {
-            query.where('client.name = :name', {
-                name: key 
-            });
+            query.where('client.name = :name', { name: key });
 
             if (realmKey) {
                 if (isUUID(realmKey)) {
-                    query.andWhere('client.realm_id = :realmId', {
-                        realmId: realmKey,
-                    });
+                    query.andWhere('client.realm_id = :realmId', { realmId: realmKey });
                 } else {
-                    query.andWhere('realm.name = :realmName', {
-                        realmName: realmKey,
-                    });
+                    query.andWhere('realm.name = :realmName', { realmName: realmKey });
                 }
             }
         }
-        const {
-            columns 
-        } = this.repository.metadata;
+        const { columns } = this.repository.metadata;
         for (const column of columns) {
             if (!column.isSelect) {
                 query.addSelect(`client.${column.databaseName}`);

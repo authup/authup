@@ -11,7 +11,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import type { UserRole, } from '@authup/core-kit';
+import type { UserRole } from '@authup/core-kit';
 import {
     createFakeRole,
     createFakeUser,

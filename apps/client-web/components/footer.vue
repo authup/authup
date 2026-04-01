@@ -10,9 +10,7 @@ import { defineComponent } from 'vue';
 import { BOrchestrator } from 'bootstrap-vue-next';
 
 export default defineComponent({
-    components: {
-        BOrchestrator,
-    },
+    components: { BOrchestrator },
     computed: {
         year() {
             return new Date().getFullYear();

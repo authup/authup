@@ -6,7 +6,7 @@
  */
 
 import type { HandlerInterface } from '@routup/decorators';
-import type { Next,Request,Response, } from 'routup';
+import type { Next, Request, Response } from 'routup';
 import { useRequestIdentityOrFail } from '../../../request/index.ts';
 
 export class ForceLoggedInMiddleware implements HandlerInterface {

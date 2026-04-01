@@ -15,9 +15,9 @@ import {
     parseKeyPath as parseRedisKeyPath,
 } from 'redis-extension';
 
-import type { ClientOptions as RedisClientOptions, } from 'redis-extension';
+import type { ClientOptions as RedisClientOptions } from 'redis-extension';
 
-export type { RedisClientOptions, };
+export type { RedisClientOptions };
 
 export {
     RedisClient,

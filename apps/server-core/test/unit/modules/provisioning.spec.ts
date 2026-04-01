@@ -12,7 +12,7 @@ import type {
     Permission, 
     PermissionPolicy, 
     Realm, 
-    Role 
+    Role, 
 } from '@authup/core-kit';
 import type { DataSource, Repository } from 'typeorm';
 import {
@@ -36,9 +36,9 @@ import {
 } from '../../../src/index.ts';
 import { Container } from 'eldin';
 import type { IContainer } from 'eldin';
-import { PolicyProvisioningSynchronizer, } from '../../../src/core/index.ts';
+import { PolicyProvisioningSynchronizer } from '../../../src/core/index.ts';
 import type { PolicyProvisioningEntity } from '../../../src/core/provisioning/entities/policy/index.ts';
-import { PolicyRepository, } from '../../../src/adapters/database/domains/index.ts';
+import { PolicyRepository } from '../../../src/adapters/database/domains/index.ts';
 import {
     PermissionPolicyRepositoryAdapter,
     PolicyRepositoryAdapter,
@@ -82,9 +82,7 @@ describe('app/modules/provisioning', () => {
     // ---------------------------------------------------------------
 
     it('should load provisioning data', async () => {
-        const source = new FileProvisioningSource({
-            cwd: 'test/data/sources' 
-        });
+        const source = new FileProvisioningSource({ cwd: 'test/data/sources' });
         const output = await source.load();
 
         expect(output.roles).toHaveLength(2);
@@ -103,23 +101,17 @@ describe('app/modules/provisioning', () => {
 
     it('should synchronize provisioning data', async () => {
         const provisioning = new ProvisionerModule([
-            new FileProvisioningSource({
-                cwd: 'test/data/sources' 
-            }),
+            new FileProvisioningSource({ cwd: 'test/data/sources' }),
         ]);
         await provisioning.setup(di);
 
         const realmRepository = di.resolve<Repository<Realm>>(RealmEntity);
         const roleRepository = di.resolve<Repository<Role>>(RoleEntity);
 
-        const realm = await realmRepository.findOneBy({
-            name: 'foo' 
-        });
+        const realm = await realmRepository.findOneBy({ name: 'foo' });
         expect(realm).toBeDefined();
 
-        const roles = await roleRepository.findBy({
-            name: 'foo' 
-        });
+        const roles = await roleRepository.findBy({ name: 'foo' });
         expect(roles).toHaveLength(2);
     });
 
@@ -181,9 +173,7 @@ describe('app/modules/provisioning', () => {
 
             // Pick a permission that was provisioned with the default policy
             const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
-            const permission = await permissionRepo.findOneBy({
-                name: 'user_create' 
-            });
+            const permission = await permissionRepo.findOneBy({ name: 'user_create' });
             expect(permission).toBeDefined();
 
             const countBefore = await junctionRepo.countBy({
@@ -243,9 +233,7 @@ describe('app/modules/provisioning', () => {
             const defaultPolicyEA: Partial<CompositePolicy> = defaultPolicy!;
             expect(defaultPolicyEA.decision_strategy).toBe(DecisionStrategy.UNANIMOUS);
 
-            const children = await policyRepositoryAdapter.findManyBy({
-                parent_id: defaultPolicy!.id,
-            });
+            const children = await policyRepositoryAdapter.findManyBy({ parent_id: defaultPolicy!.id });
             expect(children).toHaveLength(3);
 
             const childNames = children.map((c) => c.name).sort();
@@ -396,9 +384,7 @@ describe('app/modules/provisioning', () => {
             const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
             const junctionRepo = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
 
-            const permission = await permissionRepo.findOneBy({
-                name: 'user_create' 
-            });
+            const permission = await permissionRepo.findOneBy({ name: 'user_create' });
             expect(permission).toBeDefined();
 
             const junction = await junctionRepo.findOneBy({
@@ -415,9 +401,7 @@ describe('app/modules/provisioning', () => {
             const junctionRepo = di.resolve<Repository<PermissionPolicy>>(PermissionPolicyEntity);
 
             const permissionRepo = di.resolve<Repository<Permission>>(PermissionEntity);
-            const permission = await permissionRepo.findOneBy({
-                name: 'user_create' 
-            });
+            const permission = await permissionRepo.findOneBy({ name: 'user_create' });
             expect(permission).toBeDefined();
 
             const countBefore = await junctionRepo.countBy({

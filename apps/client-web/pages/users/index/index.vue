@@ -1,7 +1,7 @@
 <script lang="ts">
 import { BTable } from 'bootstrap-vue-next';
 import type { User } from '@authup/core-kit';
-import { PermissionName, } from '@authup/core-kit';
+import { PermissionName } from '@authup/core-kit';
 import {
     AEntityDelete, 
     APagination, 
@@ -26,30 +26,18 @@ export default defineComponent({
         AEntityDelete,
     },
     emits: ['deleted'],
-    setup(_props, {
-        emit 
-    }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: User) => {
             emit('deleted', e);
         };
 
         const store = injectStore();
-        const {
-            realmManagementId 
-        } = storeToRefs(store);
+        const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<User> = {
-            filter: {
-                realm_id: [realmManagementId.value ?? null, null],
-            },
-        };
+        const query : BuildInput<User> = { filter: { realm_id: [realmManagementId.value ?? null, null] } };
 
-        const hasEditPermission = usePermissionCheck({
-            name: PermissionName.USER_UPDATE 
-        });
-        const hasDropPermission = usePermissionCheck({
-            name: PermissionName.USER_DELETE 
-        });
+        const hasEditPermission = usePermissionCheck({ name: PermissionName.USER_UPDATE });
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.USER_DELETE });
 
         const fields = [
             {
@@ -73,7 +61,7 @@ export default defineComponent({
             {
                 key: 'options',
                 label: '',
-                tdClass: 'text-left' 
+                tdClass: 'text-left', 
             },
         ];
 

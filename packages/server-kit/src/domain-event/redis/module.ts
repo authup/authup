@@ -23,9 +23,7 @@ export class DomainEventRedisPublisher implements IDomainEventPublisher {
 
         const pipeline = this.driver.pipeline();
         for (let i = 0; i < ctx.destinations.length; i++) {
-            const {
-                namespace 
-            } = ctx.destinations[i];
+            const { namespace } = ctx.destinations[i];
             const keyPrefix = (namespace ? `${namespace}:` : '');
 
             let key = keyPrefix + buildDomainEventChannelName(ctx.destinations[i].channel);

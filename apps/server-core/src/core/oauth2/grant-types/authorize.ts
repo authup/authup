@@ -6,9 +6,9 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
-import { hasOAuth2Scopes, } from '@authup/specs';
+import { hasOAuth2Scopes } from '@authup/specs';
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
-import { ScopeName, } from '@authup/core-kit';
+import { ScopeName } from '@authup/core-kit';
 import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import type { IOAuth2Grant, OAuth2AuthorizeGrantContext, OAuth2GrantRunWIthOptions } from './types.ts';

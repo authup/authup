@@ -40,13 +40,11 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         const {
             data: entities, 
-            meta 
+            meta, 
         } = await this.repository.findMany(query);
 
         const data: RoleAttribute[] = [];
-        let {
-            total 
-        } = meta;
+        let { total } = meta;
 
         for (const entity of entities) {
             try {
@@ -56,9 +54,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                         PermissionName.ROLE_UPDATE,
                         PermissionName.ROLE_DELETE,
                     ],
-                    input: new PolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    }),
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
                 });
                 data.push(entity);
             } catch {
@@ -70,8 +66,8 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             data,
             meta: {
                 ...meta,
-                total 
-            } 
+                total, 
+            }, 
         };
     }
 
@@ -87,9 +83,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
             ],
         });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -100,9 +94,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
                 PermissionName.ROLE_UPDATE,
                 PermissionName.ROLE_DELETE,
             ],
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
         return entity;
@@ -112,9 +104,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.ROLE_UPDATE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -124,9 +114,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
         await this.repository.save(entity);
@@ -139,15 +127,11 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.ROLE_UPDATE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
         await this.repository.validateJoinColumns(data);
 
-        let entity = await this.repository.findOneBy({
-            id 
-        });
+        let entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -156,9 +140,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
         await this.repository.save(entity);
@@ -170,27 +152,19 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
         id: string,
         actor: ActorContext,
     ): Promise<RoleAttribute> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.ROLE_UPDATE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -23,9 +23,7 @@ describe('src/config/*.ts', () => {
     });
 
     it('should load config form fs', async () => {
-        const config = await readConfigRawFromFS({
-            cwd: 'test/data/config',
-        });
+        const config = await readConfigRawFromFS({ cwd: 'test/data/config' });
 
         expect(config.db).toBeDefined();
         expect(config.db.type).toEqual('mysql');

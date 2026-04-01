@@ -35,9 +35,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
         const qb = this.repository.createQueryBuilder('provider');
         qb.groupBy('provider.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'provider',
             relations: {
                 allowed: ['realm'],
@@ -58,15 +56,9 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
                     'updated_at',
                 ],
             },
-            filters: {
-                allowed: ['name', 'protocol', 'enabled', 'realm_id', 'realm.name'],
-            },
-            sort: {
-                allowed: ['id', 'created_at', 'updated_at'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
+            filters: { allowed: ['name', 'protocol', 'enabled', 'realm_id', 'realm.name'] },
+            sort: { allowed: ['id', 'created_at', 'updated_at'] },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -81,9 +73,7 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
     }
 
     async findOneById(id: string): Promise<IdentityProvider | null> {
-        const entity = await this.findOneBy({
-            id 
-        });
+        const entity = await this.findOneBy({ id });
         if (entity) {
             await this.repository.extendOneWithEA(entity);
         }
@@ -92,16 +82,12 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
 
     async findOneByName(name: string, realmKey?: string): Promise<IdentityProvider | null> {
         const qb = this.repository.createQueryBuilder('provider');
-        qb.where('provider.name = :name', {
-            name 
-        });
+        qb.where('provider.name = :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('provider.realm_id = :realmId', {
-                    realmId: realm.id 
-                });
+                qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
             }
         }
 
@@ -173,16 +159,12 @@ export class IdentityProviderRepositoryAdapter implements IIdentityProviderRepos
 
     async findByProtocol(protocol: IdentityProviderProtocol, realmKey?: string): Promise<IdentityProvider[]> {
         const qb = this.repository.createQueryBuilder('provider');
-        qb.where('provider.protocol = :protocol', {
-            protocol 
-        });
+        qb.where('provider.protocol = :protocol', { protocol });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('provider.realm_id = :realmId', {
-                    realmId: realm.id 
-                });
+                qb.andWhere('provider.realm_id = :realmId', { realmId: realm.id });
             }
         }
 

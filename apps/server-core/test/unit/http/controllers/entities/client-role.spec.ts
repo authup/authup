@@ -12,8 +12,8 @@ import {
     expect, 
     it,
 } from 'vitest';
-import type { ClientRole, } from '@authup/core-kit';
-import { createFakeClient,createFakeRole,expectPropertiesEqualToSrc, } from '../../../../utils';
+import type { ClientRole } from '@authup/core-kit';
+import { createFakeClient, createFakeRole, expectPropertiesEqualToSrc } from '../../../../utils';
 import { createTestApplication } from '../../../../app';
 
 describe('src/http/controllers/client-role', () => {

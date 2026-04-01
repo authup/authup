@@ -12,12 +12,8 @@ import { ARoles } from '../role';
 import { ARobotRoleAssignment } from './ARobotRoleAssignment';
 
 export const ARobotRoleAssignments = defineComponent({
-    props: {
-        entityId: String,
-    },
-    setup(props, {
-        slots 
-    }) {
+    props: { entityId: String },
+    setup(props, { slots }) {
         return () => h(ARoles, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
                 ARobotRoleAssignment,

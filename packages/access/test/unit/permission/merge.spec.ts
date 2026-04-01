@@ -13,12 +13,8 @@ describe('src/permission/helpers/merge', () => {
     it('should return single item unchanged', () => {
         const items: PermissionBinding[] = [
             {
-                permission: {
-                    name: 'user_read' 
-                },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }] 
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }], 
             },
         ];
 
@@ -32,18 +28,10 @@ describe('src/permission/helpers/merge', () => {
     it('should produce unrestricted result when any binding has no policy', () => {
         const items: PermissionBinding[] = [
             {
-                permission: {
-                    name: 'user_read' 
-                },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }] 
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }], 
             },
-            {
-                permission: {
-                    name: 'user_read' 
-                } 
-            }, // no policy = unrestricted
+            { permission: { name: 'user_read' } }, // no policy = unrestricted
         ];
 
         const result = mergePermissionBindings(items);
@@ -54,20 +42,12 @@ describe('src/permission/helpers/merge', () => {
     it('should produce composite with AFFIRMATIVE when all bindings have policies', () => {
         const items: PermissionBinding[] = [
             {
-                permission: {
-                    name: 'user_read' 
-                },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }] 
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }], 
             },
             {
-                permission: {
-                    name: 'user_read' 
-                },
-                policies: [{
-                    type: BuiltInPolicyType.REALM_MATCH 
-                }] 
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.REALM_MATCH }], 
             },
         ];
 
@@ -83,20 +63,12 @@ describe('src/permission/helpers/merge', () => {
     it('should not merge items with different names', () => {
         const items: PermissionBinding[] = [
             {
-                permission: {
-                    name: 'user_read' 
-                },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }] 
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }], 
             },
             {
-                permission: {
-                    name: 'user_write' 
-                },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }] 
+                permission: { name: 'user_write' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }], 
             },
         ];
 
@@ -109,20 +81,16 @@ describe('src/permission/helpers/merge', () => {
             {
                 permission: {
                     name: 'user_read',
-                    realm_id: 'realm-a' 
+                    realm_id: 'realm-a', 
                 },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }] 
+                policies: [{ type: BuiltInPolicyType.IDENTITY }], 
             },
             {
                 permission: {
                     name: 'user_read',
-                    realm_id: 'realm-b' 
+                    realm_id: 'realm-b', 
                 },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }] 
+                policies: [{ type: BuiltInPolicyType.IDENTITY }], 
             },
         ];
 
@@ -133,26 +101,14 @@ describe('src/permission/helpers/merge', () => {
     it('should handle unrestricted with three bindings where one has no policy', () => {
         const items: PermissionBinding[] = [
             {
-                permission: {
-                    name: 'user_read' 
-                },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }] 
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.IDENTITY }], 
             },
             {
-                permission: {
-                    name: 'user_read' 
-                },
-                policies: [{
-                    type: BuiltInPolicyType.REALM_MATCH 
-                }] 
+                permission: { name: 'user_read' },
+                policies: [{ type: BuiltInPolicyType.REALM_MATCH }], 
             },
-            {
-                permission: {
-                    name: 'user_read' 
-                } 
-            }, // unrestricted
+            { permission: { name: 'user_read' } }, // unrestricted
         ];
 
         const result = mergePermissionBindings(items);
@@ -165,22 +121,16 @@ describe('src/permission/helpers/merge', () => {
             {
                 permission: {
                     name: 'user_read',
-                    decision_strategy: DecisionStrategy.UNANIMOUS 
+                    decision_strategy: DecisionStrategy.UNANIMOUS, 
                 },
-                policies: [{
-                    type: BuiltInPolicyType.IDENTITY 
-                }, {
-                    type: BuiltInPolicyType.REALM_MATCH 
-                }],
+                policies: [{ type: BuiltInPolicyType.IDENTITY }, { type: BuiltInPolicyType.REALM_MATCH }],
             },
             {
                 permission: {
                     name: 'user_read',
-                    decision_strategy: DecisionStrategy.AFFIRMATIVE 
+                    decision_strategy: DecisionStrategy.AFFIRMATIVE, 
                 },
-                policies: [{
-                    type: BuiltInPolicyType.ATTRIBUTES 
-                }],
+                policies: [{ type: BuiltInPolicyType.ATTRIBUTES }],
             },
         ];
 
@@ -205,16 +155,8 @@ describe('src/permission/helpers/merge', () => {
 
     it('should handle all unrestricted bindings', () => {
         const items: PermissionBinding[] = [
-            {
-                permission: {
-                    name: 'user_read' 
-                } 
-            },
-            {
-                permission: {
-                    name: 'user_read' 
-                } 
-            },
+            { permission: { name: 'user_read' } },
+            { permission: { name: 'user_read' } },
         ];
 
         const result = mergePermissionBindings(items);

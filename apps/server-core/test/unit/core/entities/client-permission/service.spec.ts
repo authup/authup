@@ -28,9 +28,7 @@ describe('core/entities/client-permission/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<ClientPermission>();
-        service = new ClientPermissionService({
-            repository 
-        });
+        service = new ClientPermissionService({ repository });
     });
 
     describe('getMany', () => {
@@ -67,12 +65,10 @@ describe('core/entities/client-permission/service', () => {
             const data = {
                 client_id: randomUUID(),
                 permission_id: randomUUID(),
-                client: {
-                    realm_id: randomUUID() 
-                },
+                client: { realm_id: randomUUID() },
                 permission: {
                     realm_id: randomUUID(),
-                    name: 'test-perm' 
+                    name: 'test-perm', 
                 },
             };
 
@@ -89,7 +85,7 @@ describe('core/entities/client-permission/service', () => {
                 permission_id: randomUUID(),
                 permission: {
                     name: 'custom-perm',
-                    realm_id: null 
+                    realm_id: null, 
                 },
             }, actor);
 
@@ -104,7 +100,7 @@ describe('core/entities/client-permission/service', () => {
             await expect(
                 service.create({
                     client_id: randomUUID(),
-                    permission_id: randomUUID() 
+                    permission_id: randomUUID(), 
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
@@ -125,9 +121,7 @@ describe('core/entities/client-permission/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.CLIENT_PERMISSION_DELETE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_PERMISSION_DELETE });
         });
     });
 });

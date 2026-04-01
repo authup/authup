@@ -14,7 +14,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import { EventSubscriber, } from 'typeorm';
+import { EventSubscriber } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { ClientScopeEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -30,9 +30,7 @@ async function publishEvent(
             data,
         },
         destinations: [
-            {
-                channel: (id) => buildEntityChannelName(EntityType.CLIENT_SCOPE, id),
-            },
+            { channel: (id) => buildEntityChannelName(EntityType.CLIENT_SCOPE, id) },
 
             // todo: realm attribute
         ],

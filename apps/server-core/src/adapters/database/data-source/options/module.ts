@@ -190,9 +190,7 @@ export class DataSourceOptionsBuilder {
         }
 
         if (options.type === 'mysql') {
-            Object.assign(options, {
-                connectorPackage: 'mysql2',
-            } satisfies Partial<DataSourceOptions>);
+            Object.assign(options, { connectorPackage: 'mysql2' } satisfies Partial<DataSourceOptions>);
         }
 
         return options;

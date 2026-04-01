@@ -2,22 +2,16 @@
 import { AAuthorize } from '@authup/client-web-kit';
 import { defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
-import { useRoute, } from '#app';
+import { useRoute } from '#app';
 
 export default defineComponent({
-    components: {
-        AAuthorize,
-    },
+    components: { AAuthorize },
     async setup() {
-        definePageMeta({
-            layout: false,
-        });
+        definePageMeta({ layout: false });
 
         const route = useRoute();
 
-        return {
-            route,
-        };
+        return { route };
     },
 });
 </script>

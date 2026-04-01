@@ -56,9 +56,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             ],
         });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -70,9 +68,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<ClientPermission> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.CLIENT_PERMISSION_CREATE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_PERMISSION_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -98,7 +94,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
                 {
                     type: actor.identity.type,
-                    id: actor.identity.data.id 
+                    id: actor.identity.data.id, 
                 },
                 {
                     name: data.permission.name,
@@ -113,9 +109,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: data,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
         });
 
         let entity = this.repository.create(data);
@@ -128,27 +122,19 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         id: string,
         actor: ActorContext,
     ): Promise<ClientPermission> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.CLIENT_PERMISSION_DELETE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_PERMISSION_DELETE });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_PERMISSION_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

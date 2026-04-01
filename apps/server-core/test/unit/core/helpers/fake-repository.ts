@@ -58,7 +58,7 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
     create(data: Partial<T>): T {
         return {
             id: randomUUID(),
-            ...data 
+            ...data, 
         } as T;
     }
 

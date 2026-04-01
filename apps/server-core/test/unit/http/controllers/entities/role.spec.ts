@@ -45,9 +45,7 @@ describe('src/http/controllers/role', () => {
         try {
             await suite.client
                 .role
-                .create({
-                    name: details.name,
-                });
+                .create({ name: details.name });
         } catch (e) {
             if (isClientError(e)) {
                 expect(e.statusCode).toEqual(409);
@@ -123,32 +121,22 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const {
-            name 
-        } = createFakeRole();
+        const { name } = createFakeRole();
 
         let response = await suite.client
             .role
-            .createOrUpdate(name, {
-                name,
-            });
+            .createOrUpdate(name, { name });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);
 
-        const {
-            id 
-        } = response;
+        const { id } = response;
 
-        const {
-            name: nextName 
-        } = createFakeRole();
+        const { name: nextName } = createFakeRole();
 
         response = await suite.client
             .role
-            .createOrUpdate(name, {
-                name: nextName,
-            });
+            .createOrUpdate(name, { name: nextName });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);

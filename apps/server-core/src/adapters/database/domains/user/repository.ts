@@ -10,11 +10,11 @@ import type {
     PermissionBinding, 
     Role, 
     User, 
-    UserAttribute 
+    UserAttribute, 
 } from '@authup/core-kit';
 import type { PolicyWithType } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type { DataSource,EntityManager, } from 'typeorm';
+import type { DataSource, EntityManager } from 'typeorm';
 import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';
 import { UserAttributeEntity } from '../user-attribute/index.ts';
@@ -55,12 +55,8 @@ export class UserRepository extends EARepository<User, UserAttribute> {
         const items = await this.manager
             .getRepository(UserRoleEntity)
             .find({
-                where: {
-                    user_id: id,
-                },
-                relations: {
-                    role: true,
-                },
+                where: { user_id: id },
+                relations: { role: true },
                 cache: {
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.USER_OWNED_ROLES,
@@ -86,12 +82,8 @@ export class UserRepository extends EARepository<User, UserAttribute> {
         const repository = this.manager.getRepository(UserPermissionEntity);
 
         const entities = await repository.find({
-            where: {
-                user_id: id,
-            },
-            relations: {
-                permission: true,
-            },
+            where: { user_id: id },
+            relations: { permission: true },
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.USER_OWNED_PERMISSIONS,

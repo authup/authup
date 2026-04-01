@@ -74,11 +74,7 @@ describe('src/http/controllers/policy', () => {
     it('should read child policies', async () => {
         const response = await suite.client
             .policy
-            .getMany({
-                filters: {
-                    parent_id: ids[2],
-                },
-            });
+            .getMany({ filters: { parent_id: ids[2] } });
 
         expect(response.data).toBeDefined();
         expect(response.data.length).toBeGreaterThanOrEqual(1);
@@ -96,11 +92,7 @@ describe('src/http/controllers/policy', () => {
 
         response = await suite.client
             .policy
-            .getMany({
-                filters: {
-                    parent_id: null,
-                },
-            });
+            .getMany({ filters: { parent_id: null } });
 
         expect(response.data).toBeDefined();
         expect(response.data.length).toBeGreaterThanOrEqual(2);
@@ -150,13 +142,9 @@ describe('src/http/controllers/policy', () => {
         expect(response).toBeDefined();
         expect(response.name).toEqual(entity.name);
 
-        const {
-            id 
-        } = response;
+        const { id } = response;
 
-        const {
-            name 
-        } = createFakeTimePolicy();
+        const { name } = createFakeTimePolicy();
 
         response = await suite.client
             .policy

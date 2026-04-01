@@ -17,22 +17,14 @@ export const ATitle = defineComponent({
             type: Boolean,
             default: true,
         },
-        iconPosition: {
-            type: String as PropType<'start' | 'end'>,
-        },
-        iconClass: {
-            type: String,
-        },
-        text: {
-            type: String,
-        },
+        iconPosition: { type: String as PropType<'start' | 'end'> },
+        iconClass: { type: String },
+        text: { type: String },
     },
     slots: Object as SlotsType<{
         default: TitleSlotProps
     }>,
-    setup(props, {
-        slots 
-    }) {
+    setup(props, { slots }) {
         const translation = useTranslation({
             group: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.OVERVIEW,

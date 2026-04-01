@@ -25,9 +25,7 @@ export class LoggerModule implements IModule {
     async setup(container: IContainer): Promise<void> {
         const result = container.tryResolve(ConfigInjectionKey);
         if (!result.success || !result.data.logger) {
-            container.register(LoggerInjectionKey, {
-                useFactory: createNoopLogger,
-            });
+            container.register(LoggerInjectionKey, { useFactory: createNoopLogger });
 
             return;
         }

@@ -15,8 +15,6 @@ export class IdentityProviderRoleMappingRepository implements IIdentityProviderR
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
-        return repository.findBy({
-            provider_id: providerId,
-        });
+        return repository.findBy({ provider_id: providerId });
     }
 }

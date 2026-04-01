@@ -20,16 +20,10 @@ export default defineComponent({
         VCFormGroup,
         IVuelidate,
     },
-    props: {
-        entity: {
-            type: Object as PropType<Partial<Policy>>,
-        },
-    },
+    props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
-        const form = reactive<{ items: string[] }>({
-            items: [],
-        });
+        const form = reactive<{ items: string[] }>({ items: [] });
 
         const id = computed(() => {
             if (!props.entity) {
@@ -39,11 +33,7 @@ export default defineComponent({
             return props.entity.id;
         });
 
-        const vuelidate = useVuelidate({
-            items: {},
-        }, form, {
-            $registerAs: 'type',
-        });
+        const vuelidate = useVuelidate({ items: {} }, form, { $registerAs: 'type' });
 
         const query = computed<BuildInput<Policy & { parent_id?: string | null }>>(() => {
             const filters : FiltersBuildInput<Policy & { parent_id?: string | null }> = {};
@@ -69,9 +59,7 @@ export default defineComponent({
 
             return {
                 filters,
-                sort: {
-                    name: 'ASC',
-                },
+                sort: { name: 'ASC' },
             };
         });
 
@@ -81,9 +69,7 @@ export default defineComponent({
             }
         }
 
-        setup.expose({
-            assign,
-        });
+        setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));

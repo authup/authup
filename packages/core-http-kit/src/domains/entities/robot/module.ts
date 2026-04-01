@@ -71,9 +71,7 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
     async integrity(
         id: Robot['id'] | Robot['name'],
     ): Promise<EntityRecordResponse<Robot>> {
-        const {
-            data: response 
-        } = await this.client
+        const { data: response } = await this.client
             .get(`robots/${id}/integrity`);
 
         return response;

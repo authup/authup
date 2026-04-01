@@ -43,9 +43,7 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
 
         this.mount(
             'client_secret',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(128).optional()
                 .nullable()),
         );
@@ -57,9 +55,7 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
 
         this.mount(
             'token_revoke_url',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.url().optional().nullable()),
         );
 
@@ -70,9 +66,7 @@ export class IdentityProviderOAuth2AttributesValidator extends Container<OAuth2I
 
         this.mount(
             'user_info_url',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.url().optional().nullable()),
         );
 

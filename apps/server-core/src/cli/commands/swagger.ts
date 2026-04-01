@@ -12,9 +12,7 @@ import { ApplicationBuilder, ConfigInjectionKey } from '../../app/index.ts';
 
 export function defineCLISwaggerCommand() {
     return defineCommand({
-        meta: {
-            name: 'swagger',
-        },
+        meta: { name: 'swagger' },
         args: {
             operation: {
                 required: true,
@@ -33,9 +31,7 @@ export function defineCLISwaggerCommand() {
 
             const config = app.container.resolve(ConfigInjectionKey);
 
-            const swagger = new Swagger({
-                baseURL: config.publicUrl,
-            });
+            const swagger = new Swagger({ baseURL: config.publicUrl });
 
             if (context.args.operation === 'generate') {
                 await swagger.generate();

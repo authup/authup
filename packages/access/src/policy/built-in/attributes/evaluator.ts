@@ -62,9 +62,7 @@ export class AttributesPolicyEvaluator<
 
         const testIt = guard<T>(policy.query);
 
-        return {
-            success: maybeInvertPolicyOutcome(testIt(data as T), policy.invert),
-        };
+        return { success: maybeInvertPolicyOutcome(testIt(data as T), policy.invert) };
     }
 
     protected fixQuery(

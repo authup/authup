@@ -15,7 +15,7 @@ import {
     PrimaryGeneratedColumn, 
     UpdateDateColumn,
 } from 'typeorm';
-import type { JWKType, } from '@authup/specs';
+import type { JWKType } from '@authup/specs';
 import type {
     Key,
     Realm,
@@ -27,9 +27,7 @@ import { RealmEntity } from '../realm/index.ts';
     'realm_id',
     'type',
 ])
-@Entity({
-    name: 'auth_keys' 
-})
+@Entity({ name: 'auth_keys' })
 export class KeyEntity implements Key {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -84,15 +82,11 @@ export class KeyEntity implements Key {
     @Index()
     @Column({
         nullable: true,
-        default: null 
+        default: null, 
     })
     realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'realm_id' 
-    })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 }

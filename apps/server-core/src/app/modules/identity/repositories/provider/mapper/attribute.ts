@@ -15,8 +15,6 @@ export class IdentityProviderAttributeMappingRepository implements IIdentityProv
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(IdentityProviderAttributeMappingEntity);
 
-        return repository.findBy({
-            provider_id: providerId,
-        });
+        return repository.findBy({ provider_id: providerId });
     }
 }

@@ -117,9 +117,7 @@ describe('src/http/controllers/identity-provider', () => {
         const response = await suite.client
             .get(
                 buildIdentityProviderAuthorizePath(oAuth2IdentityProvider.id),
-                {
-                    redirect: 'manual',
-                },
+                { redirect: 'manual' },
             );
 
         expect(response.status).toEqual(302);
@@ -164,13 +162,9 @@ describe('src/http/controllers/identity-provider', () => {
 
         expect(response.name).toEqual(entity.name);
 
-        const {
-            id 
-        } = response;
+        const { id } = response;
 
-        const {
-            name 
-        } = createFakeOAuth2IdentityProvider();
+        const { name } = createFakeOAuth2IdentityProvider();
 
         response = await suite.client
             .identityProvider

@@ -9,7 +9,7 @@ import { Client } from '@authup/core-http-kit';
 import { isOpenIDProviderMetadata } from '@authup/specs';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import { url, } from '@vuelidate/validators';
+import { url } from '@vuelidate/validators';
 import type { VNodeChild } from 'vue';
 import {
     defineComponent, 
@@ -23,15 +23,9 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
     emits: ['lookup', 'failed'],
     setup(_, setup) {
         const busy = ref(false);
-        const form = reactive({
-            url: '',
-        });
+        const form = reactive({ url: '' });
 
-        const $v = useVuelidate({
-            url: {
-                url,
-            },
-        }, form);
+        const $v = useVuelidate({ url: { url } }, form);
 
         const lookupValid = ref(false);
 
@@ -67,9 +61,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
         return () => {
             let messageNode : VNodeChild;
             if (message.value) {
-                messageNode = h('div', {
-                    class: 'alert alert-sm alert-warning',
-                }, message.value);
+                messageNode = h('div', { class: 'alert alert-sm alert-warning' }, message.value);
             }
 
             return [
@@ -78,12 +70,8 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
                     validationSeverity: getVuelidateSeverity($v.value.url),
                     labelContent: 'Discovery',
                     content: buildFormInput({
-                        class: {
-                            'is-valid': lookupValid.value,
-                        },
-                        props: {
-                            placeholder: 'https://example.com/.well-known/openid-configuration',
-                        },
+                        class: { 'is-valid': lookupValid.value },
+                        props: { placeholder: 'https://example.com/.well-known/openid-configuration' },
                         value: $v.value.url.$model,
                         onChange(input) {
                             $v.value.url.$model = input;
@@ -101,9 +89,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
                         return lookup();
                     },
                 }, [
-                    h('i', {
-                        class: 'fa fa-search pe-1' 
-                    }),
+                    h('i', { class: 'fa fa-search pe-1' }),
                     'Lookup',
                 ]),
             ];

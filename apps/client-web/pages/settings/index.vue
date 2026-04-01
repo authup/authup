@@ -8,12 +8,10 @@ import { LayoutKey } from '../../config/layout';
 export default defineComponent({
     components: {
         DomainEntityNav,
-        AccountSVG 
+        AccountSVG, 
     },
     setup() {
-        definePageMeta({
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-        });
+        definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
         const items = [
             {
@@ -28,9 +26,7 @@ export default defineComponent({
             },
         ];
 
-        return {
-            items,
-        };
+        return { items };
     },
 });
 </script>

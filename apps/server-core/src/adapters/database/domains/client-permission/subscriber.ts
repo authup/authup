@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { ClientPermission, } from '@authup/core-kit';
+import type { ClientPermission } from '@authup/core-kit';
 import {
     EntityDefaultEventName, 
     EntityType,
@@ -20,7 +20,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import { EventSubscriber, } from 'typeorm';
+import { EventSubscriber } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { CachePrefix } from '../constants.ts';
 import { ClientPermissionEntity } from './entity.ts';
@@ -30,9 +30,7 @@ async function publishEvent(
     data: ClientPermission,
 ) {
     const destinations : DomainEventDestination[] = [
-        {
-            channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id) 
-        },
+        { channel: (id) => buildEntityChannelName(EntityType.CLIENT_PERMISSION, id) },
     ];
     if (data.client_realm_id) {
         destinations.push({

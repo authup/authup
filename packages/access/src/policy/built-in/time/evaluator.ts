@@ -72,18 +72,14 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
         if (policy.start) {
             const start = normalizeDate(toDate(policy.start, now), now);
             if (now < start) {
-                return {
-                    success: maybeInvertPolicyOutcome(false, policy.invert),
-                };
+                return { success: maybeInvertPolicyOutcome(false, policy.invert) };
             }
         }
 
         if (policy.end) {
             const end = normalizeDate(toDate(policy.end, now), now);
             if (now > end) {
-                return {
-                    success: maybeInvertPolicyOutcome(false, policy.invert),
-                };
+                return { success: maybeInvertPolicyOutcome(false, policy.invert) };
             }
         }
 
@@ -93,9 +89,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
                 policy.day_of_week
             ) {
                 if (now.getDay() !== policy.day_of_week) {
-                    return {
-                        success: maybeInvertPolicyOutcome(false, policy.invert),
-                    };
+                    return { success: maybeInvertPolicyOutcome(false, policy.invert) };
                 }
             }
 
@@ -104,9 +98,7 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
                 policy.day_of_month
             ) {
                 if (now.getDate() !== policy.day_of_month) {
-                    return {
-                        success: maybeInvertPolicyOutcome(false, policy.invert),
-                    };
+                    return { success: maybeInvertPolicyOutcome(false, policy.invert) };
                 }
             }
 
@@ -122,15 +114,11 @@ export class TimePolicyEvaluator implements IPolicyEvaluator {
                 const dayOfYear = Math.floor(diff / oneDay);
 
                 if (dayOfYear !== policy.day_of_year) {
-                    return {
-                        success: maybeInvertPolicyOutcome(false, policy.invert),
-                    };
+                    return { success: maybeInvertPolicyOutcome(false, policy.invert) };
                 }
             }
         }
 
-        return {
-            success: maybeInvertPolicyOutcome(true, policy.invert),
-        };
+        return { success: maybeInvertPolicyOutcome(true, policy.invert) };
     }
 }

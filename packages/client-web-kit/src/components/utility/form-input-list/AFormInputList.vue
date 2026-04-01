@@ -61,9 +61,7 @@ export default defineComponent({
             }
         }
 
-        setup.expose({
-            assign,
-        });
+        setup.expose({ assign });
 
         assign();
 

@@ -29,18 +29,12 @@ describe('src/json-web-token', () => {
     let key : CryptoKey;
 
     beforeAll(async () => {
-        keyPair = await createAsymmetricKeyPair({
-            name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
-        });
-        key = await createSymmetricKey({
-            name: SymmetricAlgorithm.HMAC,
-        });
+        keyPair = await createAsymmetricKeyPair({ name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5 });
+        key = await createSymmetricKey({ name: SymmetricAlgorithm.HMAC });
     });
 
     it('should sign and decrypt with asymmetric keyPair', async () => {
-        const data : JWTClaims = {
-            text: 'secretText' 
-        };
+        const data : JWTClaims = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -59,7 +53,7 @@ describe('src/json-web-token', () => {
     it('should sign and decrypt with symmetric key', async () => {
         const data : JWTClaims = {
             text: 'secretText',
-            foo_bar: 'baz' 
+            foo_bar: 'baz', 
         };
 
         const signedText = await signToken(data, {
@@ -81,9 +75,7 @@ describe('src/json-web-token', () => {
     });
 
     it('sign and not verify token (expired)', async () => {
-        const data : JWTClaims = {
-            exp: 1000,
-        };
+        const data : JWTClaims = { exp: 1000 };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -99,9 +91,7 @@ describe('src/json-web-token', () => {
     });
 
     it('sign and not verify token (not active before)', async () => {
-        const data : JWTClaims = {
-            nbf: Math.floor(new Date().getTime() / 1000) + 3600,
-        };
+        const data : JWTClaims = { nbf: Math.floor(new Date().getTime() / 1000) + 3600 };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -126,9 +116,7 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decode header', async () => {
-        const data : JWTClaims = {
-            text: 'secretText' 
-        };
+        const data : JWTClaims = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             type: 'rsa',
@@ -144,9 +132,7 @@ describe('src/json-web-token', () => {
     });
 
     it('should sign and decode payload', async () => {
-        const data : JWTClaims = {
-            text: 'secretText' 
-        };
+        const data : JWTClaims = { text: 'secretText' };
 
         const signedText = await signToken(data, {
             type: 'rsa',

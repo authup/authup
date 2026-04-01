@@ -9,9 +9,7 @@ import type { MiddlewareOptions, Next, Socket } from './types';
 
 export function createMiddleware(context: MiddlewareOptions) {
     return async (socket: Socket, next: Next) => {
-        const {
-            token 
-        } = socket.handshake.auth;
+        const { token } = socket.handshake.auth;
 
         if (!token || typeof token !== 'string') {
             return next();

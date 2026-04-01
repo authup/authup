@@ -22,9 +22,7 @@ export const APolicyParentAssignment = defineComponent({
             type: String,
             required: true,
         },
-        entity: {
-            type: Object as PropType<Policy>,
-        },
+        entity: { type: Object as PropType<Policy> },
         parentId: {
             type: String,
             required: true,
@@ -46,13 +44,7 @@ export const APolicyParentAssignment = defineComponent({
             },
         });
 
-        await manager.resolve({
-            query: {
-                filters: {
-                    id: props.entityId,
-                },
-            },
-        });
+        await manager.resolve({ query: { filters: { id: props.entityId } } });
 
         return () => renderToggleButton({
             changed: (value) => {

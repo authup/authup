@@ -7,7 +7,7 @@
 
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import { DController,DGet, } from '@routup/decorators';
+import { DController, DGet } from '@routup/decorators';
 
 export type OpenIDControllerOptions = {
     baseURL: string

@@ -83,31 +83,21 @@ describe('src/http/controllers/realm', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const {
-            name 
-        } = createFakeRealm();
+        const { name } = createFakeRealm();
         let response = await suite.client
             .realm
-            .createOrUpdate(name, {
-                name 
-            });
+            .createOrUpdate(name, { name });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);
 
-        const {
-            id 
-        } = response;
+        const { id } = response;
 
-        const {
-            name: nextName 
-        } = createFakeRealm();
+        const { name: nextName } = createFakeRealm();
 
         response = await suite.client
             .realm
-            .createOrUpdate(name, {
-                name: nextName 
-            });
+            .createOrUpdate(name, { name: nextName });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);

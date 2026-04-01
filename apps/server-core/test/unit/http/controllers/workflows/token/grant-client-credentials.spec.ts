@@ -52,9 +52,7 @@ describe('refresh-token', () => {
     });
 
     it('should not grant with client-credentials (inactive)', async () => {
-        await suite.client.client.update(entity.id, {
-            active: false,
-        });
+        await suite.client.client.update(entity.id, { active: false });
 
         expect.assertions(2);
 
@@ -71,9 +69,7 @@ describe('refresh-token', () => {
                 expect(e?.response?.data?.code).toEqual(ErrorCode.ENTITY_INACTIVE);
             }
         } finally {
-            await suite.client.client.update(entity.id, {
-                active: true,
-            });
+            await suite.client.client.update(entity.id, { active: true });
         }
     });
 

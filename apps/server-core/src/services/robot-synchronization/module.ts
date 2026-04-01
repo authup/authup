@@ -22,9 +22,7 @@ export class RobotSynchronizationService {
                 'robots',
                 {
                     type: 'kv',
-                    options: {
-                        version: 1,
-                    },
+                    options: { version: 1 },
                 },
             );
         } catch (e) {

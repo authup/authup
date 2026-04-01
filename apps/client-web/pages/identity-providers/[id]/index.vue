@@ -8,9 +8,7 @@ import { defineNuxtComponent, definePageMeta } from '#imports';
 import { LayoutKey } from '../../../config/layout';
 
 export default defineNuxtComponent({
-    components: {
-        AIdentityProviderForm,
-    },
+    components: { AIdentityProviderForm },
     props: {
         entity: {
             type: Object as PropType<IdentityProvider>,
@@ -18,9 +16,7 @@ export default defineNuxtComponent({
         },
     },
     emits: ['updated', 'failed'],
-    setup(props, {
-        emit 
-    }) {
+    setup(props, { emit }) {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [

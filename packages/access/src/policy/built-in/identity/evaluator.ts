@@ -58,16 +58,12 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator {
         }
 
         if (!policy.types || policy.types.length === 0) {
-            return {
-                success: maybeInvertPolicyOutcome(true, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
         const typeAllowed = policy.types.includes(data.type);
         if (typeAllowed) {
-            return {
-                success: maybeInvertPolicyOutcome(typeAllowed, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(typeAllowed, policy.invert) };
         }
 
         return {

@@ -19,13 +19,11 @@ import {
     Unique,
     UpdateDateColumn,
 } from 'typeorm';
-import type { Policy,Realm } from '@authup/core-kit';
+import type { Policy, Realm } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 
 @Unique(['name', 'realm_id'])
-@Entity({
-    name: 'auth_policies' 
-})
+@Entity({ name: 'auth_policies' })
 @Tree('closure-table', {
     closureTableName: 'auth_policy_tree',
     ancestorColumnName: () => 'ancestor_id',
@@ -37,72 +35,60 @@ export class PolicyEntity implements Policy {
 
     @Column({
         type: 'boolean',
-        default: false 
+        default: false, 
     })
     built_in: boolean;
 
     @Column({
         type: 'varchar',
-        length: 64 
+        length: 64, 
     })
     type: string;
 
     @Column({
         type: 'varchar',
-        length: 128 
+        length: 128, 
     })
     name: string;
 
     @Column({
         type: 'varchar',
         length: 256,
-        nullable: true 
+        nullable: true, 
     })
     display_name: string | null;
 
     @Column({
         type: 'text',
-        nullable: true 
+        nullable: true, 
     })
     description: string | null;
 
     @Column({
         type: 'boolean',
-        default: false 
+        default: false, 
     })
     invert: boolean;
 
-    @TreeChildren({
-        cascade: true 
-    })
+    @TreeChildren({ cascade: true })
     children: PolicyEntity[];
 
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     parent_id: Policy['id'] | null;
 
-    @TreeParent({
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'parent_id' 
-    })
+    @TreeParent({ onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'parent_id' })
     parent: Policy | null;
 
     @Index()
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'realm_id' 
-    })
+    @JoinColumn({ name: 'realm_id' })
     realm: Realm | null;
 
     @CreateDateColumn()

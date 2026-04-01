@@ -36,9 +36,7 @@ export class ConfigModule implements IModule {
             instance = await this.read();
         }
 
-        container.register(ConfigInjectionKey, {
-            useValue: instance 
-        });
+        container.register(ConfigInjectionKey, { useValue: instance });
     }
 
     // ----------------------------------------------------

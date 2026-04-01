@@ -58,13 +58,9 @@ export default defineComponent({
         try {
             entity.value = await injectHTTPClient()
                 .client
-                .getOne(route.params.id as string, {
-                    fields: ['+secret'] 
-                });
+                .getOne(route.params.id as string, { fields: ['+secret'] });
         } catch {
-            await navigateTo({
-                path: '/clients' 
-            });
+            await navigateTo({ path: '/clients' });
             throw createError({});
         }
 
@@ -72,7 +68,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The client was successfully updated.' 
+                    body: 'The client was successfully updated.', 
                 });
             }
 
@@ -83,7 +79,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

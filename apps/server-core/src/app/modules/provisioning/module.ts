@@ -53,7 +53,7 @@ import {
     ScopeProvisioningSynchronizer,
     UserProvisioningSynchronizer,
 } from '../../../core/provisioning/synchronizer/index.ts';
-import type { IProvisioningSource, } from '../../../core/provisioning/types.ts';
+import type { IProvisioningSource } from '../../../core/provisioning/types.ts';
 import {
     ClientPermissionRepositoryAdapter,
     ClientRepositoryAdapter,
@@ -99,9 +99,7 @@ export class ProvisionerModule implements IModule {
         const config = container.resolve(ConfigInjectionKey);
         const provisioningDir = path.join(config.writableDirectoryPath, 'provisioning');
         if (fs.existsSync(provisioningDir)) {
-            sources.push(new FileProvisioningSource({
-                cwd: provisioningDir 
-            }));
+            sources.push(new FileProvisioningSource({ cwd: provisioningDir }));
         }
 
         const composite = new CompositeProvisioningSource(sources);
@@ -142,9 +140,7 @@ export class ProvisionerModule implements IModule {
             realmRepository,
         });
 
-        const permissionSynchronizer = new PermissionProvisioningSynchronizer({
-            repository: permissionRepository,
-        });
+        const permissionSynchronizer = new PermissionProvisioningSynchronizer({ repository: permissionRepository });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
@@ -251,9 +247,7 @@ export class ProvisionerModule implements IModule {
 
         const permissions = await permissionRepo.find();
         for (const permission of permissions) {
-            const hasAnyPolicy = await junctionRepo.findOneBy({
-                permission_id: permission.id,
-            });
+            const hasAnyPolicy = await junctionRepo.findOneBy({ permission_id: permission.id });
 
             if (!hasAnyPolicy) {
                 await junctionRepo.save(junctionRepo.create({

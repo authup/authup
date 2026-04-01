@@ -26,9 +26,7 @@ export class SwaggerModule implements IModule {
         const config = container.resolve(ConfigInjectionKey);
         const logger = container.resolve(LoggerInjectionKey);
 
-        const swagger = new Swagger({
-            baseURL: config.publicUrl,
-        });
+        const swagger = new Swagger({ baseURL: config.publicUrl });
 
         const swaggerCanGenerate = await swagger.canGenerate();
         const swaggerExists = await swagger.exists();

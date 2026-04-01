@@ -46,9 +46,7 @@ describe('refresh-token', () => {
     });
 
     it('should not grant with robot-credentials (inactive)', async () => {
-        await suite.client.robot.update(robot.id, {
-            active: false,
-        });
+        await suite.client.robot.update(robot.id, { active: false });
 
         expect.assertions(2);
 
@@ -65,9 +63,7 @@ describe('refresh-token', () => {
     });
 
     it('should not grant with robot-credentials (invalid credentials)', async () => {
-        await suite.client.robot.update(robot.id, {
-            active: true,
-        });
+        await suite.client.robot.update(robot.id, { active: true });
 
         expect.assertions(2);
 

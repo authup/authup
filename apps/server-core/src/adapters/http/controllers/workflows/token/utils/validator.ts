@@ -22,7 +22,7 @@ export class TokenRequestValidator extends Container<{ token: string }> {
                     .isString()
                     .isLength({
                         min: 16,
-                        max: 2048 
+                        max: 2048, 
                     });
             }),
         );

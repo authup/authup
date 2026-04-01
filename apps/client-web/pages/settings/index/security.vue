@@ -6,26 +6,20 @@ import { defineComponent } from 'vue';
 import { LayoutKey } from '~/config/layout';
 
 export default defineComponent({
-    components: {
-        AUserPasswordForm,
-    },
+    components: { AUserPasswordForm },
     setup() {
-        definePageMeta({
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-        });
+        definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
         const toast = useToast();
 
         const store = injectStore();
-        const {
-            userId 
-        } = storeToRefs(store);
+        const { userId } = storeToRefs(store);
 
         const handleUpdated = () => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The account was successfully updated.' 
+                    body: 'The account was successfully updated.', 
                 });
             }
         };
@@ -34,7 +28,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

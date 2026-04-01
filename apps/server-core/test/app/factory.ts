@@ -55,9 +55,7 @@ export function createTestApplication() : TestHTTPApplication {
         .withHTTP()
         .buildModules();
 
-    return new TestHTTPApplication({
-        modules 
-    });
+    return new TestHTTPApplication({ modules });
 }
 
 export function createTestDatabaseApplication() : TestApplication {
@@ -67,7 +65,5 @@ export function createTestDatabaseApplication() : TestApplication {
         .withDatabase(createTestDatabaseModuleForSuite())
         .buildModules();
 
-    return new TestApplication({
-        modules 
-    });
+    return new TestApplication({ modules });
 }

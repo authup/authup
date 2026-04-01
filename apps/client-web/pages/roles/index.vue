@@ -7,9 +7,7 @@ import DomainEntityNav from '../../components/DomainEntityNav';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
-    components: {
-        DomainEntityNav,
-    },
+    components: { DomainEntityNav },
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -40,7 +38,7 @@ export default defineNuxtComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: `The role ${e.name} was successfully deleted.` 
+                    body: `The role ${e.name} was successfully deleted.`, 
                 });
             }
         };
@@ -49,7 +47,7 @@ export default defineNuxtComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

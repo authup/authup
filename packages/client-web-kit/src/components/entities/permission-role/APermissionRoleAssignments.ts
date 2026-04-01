@@ -18,9 +18,7 @@ export const APermissionRoleAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, {
-        slots 
-    }) {
+    setup(props, { slots }) {
         return () => h(ARoles, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Role }) => h(
                 ARolePermissionAssignment,

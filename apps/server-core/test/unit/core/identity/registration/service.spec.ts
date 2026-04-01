@@ -37,18 +37,14 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
 }
 
 function createMockMailClient(): IMailClient {
-    return {
-        send: vi.fn().mockResolvedValue(undefined),
-    };
+    return { send: vi.fn().mockResolvedValue(undefined) };
 }
 
 function createValidRegistrationData() {
     return {
         name: faker.internet.username(),
         email: faker.internet.email(),
-        password: faker.string.alphanumeric({
-            length: 16 
-        }),
+        password: faker.string.alphanumeric({ length: 16 }),
     };
 }
 
@@ -66,9 +62,7 @@ describe('core/identity/registration/service', () => {
     describe('register', () => {
         it('should throw when registration is not enabled', async () => {
             const service = new RegistrationService({
-                options: {
-                    registrationEnabled: false 
-                },
+                options: { registrationEnabled: false },
                 mailClient,
                 repository,
                 realmRepository,
@@ -83,7 +77,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: false 
+                    emailVerificationEnabled: false, 
                 },
                 mailClient,
                 repository,
@@ -100,7 +94,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
@@ -128,9 +122,7 @@ describe('core/identity/registration/service', () => {
 
         it('should hash the password before saving', async () => {
             const service = new RegistrationService({
-                options: {
-                    registrationEnabled: true 
-                },
+                options: { registrationEnabled: true },
                 mailClient,
                 repository,
                 realmRepository,
@@ -147,9 +139,7 @@ describe('core/identity/registration/service', () => {
 
         it('should auto-generate password when none provided', async () => {
             const service = new RegistrationService({
-                options: {
-                    registrationEnabled: true 
-                },
+                options: { registrationEnabled: true },
                 mailClient,
                 repository,
                 realmRepository,
@@ -169,9 +159,7 @@ describe('core/identity/registration/service', () => {
 
         it('should persist the user in the repository', async () => {
             const service = new RegistrationService({
-                options: {
-                    registrationEnabled: true 
-                },
+                options: { registrationEnabled: true },
                 mailClient,
                 repository,
                 realmRepository,
@@ -187,9 +175,7 @@ describe('core/identity/registration/service', () => {
 
         it('should resolve realm_id to master realm when not provided', async () => {
             const service = new RegistrationService({
-                options: {
-                    registrationEnabled: true 
-                },
+                options: { registrationEnabled: true },
                 mailClient,
                 repository,
                 realmRepository,
@@ -198,9 +184,7 @@ describe('core/identity/registration/service', () => {
             await service.register(createValidRegistrationData());
 
             const masterRealm = realmRepository.getMasterRealm();
-            const users = await repository.findManyBy({
-                realm_id: masterRealm.id 
-            });
+            const users = await repository.findManyBy({ realm_id: masterRealm.id });
             expect(users).toHaveLength(1);
         });
 
@@ -210,7 +194,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
@@ -227,9 +211,7 @@ describe('core/identity/registration/service', () => {
 
         it('should reject invalid email', async () => {
             const service = new RegistrationService({
-                options: {
-                    registrationEnabled: true 
-                },
+                options: { registrationEnabled: true },
                 mailClient,
                 repository,
                 realmRepository,
@@ -239,7 +221,7 @@ describe('core/identity/registration/service', () => {
                 service.register({
                     name: faker.internet.username(),
                     email: 'not-an-email',
-                    password: 'securepass123' 
+                    password: 'securepass123', 
                 }),
             ).rejects.toThrow(/email/i);
         });
@@ -257,16 +239,14 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
-            await service.activate({
-                token: activateHash 
-            });
+            await service.activate({ token: activateHash });
 
             const user = await repository.findOneById(entity.id);
             expect(user!.active).toBe(true);
@@ -277,7 +257,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: {
                     registrationEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
@@ -285,9 +265,7 @@ describe('core/identity/registration/service', () => {
             });
 
             await expect(
-                service.activate({
-                    token: 'nonexistent-token' 
-                }),
+                service.activate({ token: 'nonexistent-token' }),
             ).rejects.toThrow(NotFoundError);
         });
     });

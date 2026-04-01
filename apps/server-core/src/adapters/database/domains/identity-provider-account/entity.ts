@@ -20,18 +20,14 @@ import type {
     IdentityProvider, 
     IdentityProviderAccount, 
     Realm, 
-    User  
+    User,  
 } from '@authup/core-kit';
 import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
 import { IdentityProviderEntity } from '../identity-provider/index.ts';
 
-@Entity({
-    name: 'auth_identity_provider_accounts' 
-})
-@Index(['provider_id', 'user_id'], {
-    unique: true 
-})
+@Entity({ name: 'auth_identity_provider_accounts' })
+@Index(['provider_id', 'user_id'], { unique: true })
 export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -39,20 +35,20 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @Column({
         type: 'text',
         nullable: true,
-        default: null 
+        default: null, 
     })
     access_token: string;
 
     @Column({
         type: 'text',
         nullable: true,
-        default: null 
+        default: null, 
     })
     refresh_token: string;
 
     @Column({
         type: 'varchar',
-        length: 256 
+        length: 256, 
     })
     provider_user_id: string;
 
@@ -99,26 +95,18 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @Column()
     user_id: User['id'];
 
-    @ManyToOne(() => UserEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'user_id' 
-    })
+    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     user_realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'user_realm_id' 
-    })
+    @JoinColumn({ name: 'user_realm_id' })
     user_realm: RealmEntity | null;
 
     // -----------------------------------------------
@@ -126,25 +114,17 @@ export class IdentityProviderAccountEntity implements IdentityProviderAccount {
     @Column()
     provider_id: IdentityProvider['id'];
 
-    @ManyToOne(() => IdentityProviderEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'provider_id' 
-    })
+    @ManyToOne(() => IdentityProviderEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'provider_id' })
     provider: IdentityProviderEntity;
 
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     provider_realm_id: Realm['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'provider_realm_id' 
-    })
+    @JoinColumn({ name: 'provider_realm_id' })
     provider_realm: RealmEntity | null;
 }

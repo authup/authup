@@ -14,7 +14,7 @@ import type {
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker, 
     IOAuth2TokenVerifier, 
-    ISessionManager 
+    ISessionManager, 
 } from '../../../../../core/index.ts';
 
 export type TokenControllerContext = {

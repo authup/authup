@@ -17,9 +17,7 @@ export class JWTError extends AuthupError {
     }
 
     static invalid() {
-        return new JWTError({
-            message: 'The JWT is invalid.',
-        });
+        return new JWTError({ message: 'The JWT is invalid.' });
     }
 
     static expired() {
@@ -30,9 +28,7 @@ export class JWTError extends AuthupError {
     }
 
     static notFound() {
-        return new JWTError({
-            message: 'The JWT was not found.',
-        });
+        return new JWTError({ message: 'The JWT was not found.' });
     }
 
     static notActive() {
@@ -53,9 +49,7 @@ export class JWTError extends AuthupError {
         return new JWTError({
             code: ErrorCode.JWT_INACTIVE,
             message: `The token is not active before: ${date}.`,
-            data: {
-                date,
-            },
+            data: { date },
         });
     }
 

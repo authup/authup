@@ -17,8 +17,8 @@ import {
     ref, 
     watch,
 } from 'vue';
-import { maxLength,minLength,required, } from '@vuelidate/validators';
-import { buildFormGroup,buildFormInput,buildFormTextarea, } from '@vuecs/form-controls';
+import { maxLength, minLength, required } from '@vuelidate/validators';
+import { buildFormGroup, buildFormInput, buildFormTextarea } from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     TranslatorTranslationDefaultKey,
@@ -41,11 +41,7 @@ import {
 import { ARealmPicker } from '../realm';
 
 export const APermissionForm = defineComponent({
-    props: {
-        entity: {
-            type: Object as PropType<Permission>,
-        },
-    },
+    props: { entity: { type: Object as PropType<Permission> } },
     emits: defineEntityVEmitOptions<Permission>(),
     setup(props, ctx) {
         const busy = ref(false);
@@ -131,18 +127,10 @@ export const APermissionForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.REALM 
-                },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
             ],
         );
 
@@ -189,9 +177,7 @@ export const APermissionForm = defineComponent({
                     onChange(input) {
                         $v.value.description.$model = input;
                     },
-                    props: {
-                        rows: 4,
-                    },
+                    props: { rows: 4 },
                 }),
             }));
 

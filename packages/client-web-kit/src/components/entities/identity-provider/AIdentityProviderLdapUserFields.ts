@@ -5,19 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityProvider,LdapIdentityProvider, } from '@authup/core-kit';
+import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
-import { defineComponent,reactive, } from 'vue';
+import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 
 export const AIdentityProviderLdapUserFields = defineComponent({
     props: {
-        entity: {
-            type: Object as PropType<Partial<LdapIdentityProvider>>,
-        },
+        entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
         discovery: {
             type: Boolean,
             default: false,
@@ -39,9 +37,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
             user_name_attribute: {},
             user_mail_attribute: {},
             user_display_name_attribute: {},
-        }, form, {
-            $registerAs: 'user',
-        });
+        }, form, { $registerAs: 'user' });
 
         function init() {
             if (!props.entity) return;
@@ -67,9 +63,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
                     onChange(input) {
                         $v.value.user_filter.$model = input;
                     },
-                    props: {
-                        placeholder: '(|({name_attribute}={{input}})({mail_attribute}={{input}}))',
-                    },
+                    props: { placeholder: '(|({name_attribute}={{input}})({mail_attribute}={{input}}))' },
                 }),
             }),
             buildFormGroup({

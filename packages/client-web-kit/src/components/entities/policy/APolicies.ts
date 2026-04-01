@@ -26,9 +26,7 @@ export const APolicies = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Policy>(),
     slots: Object as SlotsType<EntityCollectionVSlots<Policy>>,
     setup(props, setup) {
-        const {
-            render 
-        } = defineEntityCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${EntityType.POLICY}`,
             props,
             setup,
@@ -42,15 +40,9 @@ export const APolicies = defineComponent({
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
-            data: {
-                name: translationName,
-            },
+            data: { name: translationName },
         });
 
-        return () => render({
-            noMore: {
-                content: translation.value,
-            },
-        });
+        return () => render({ noMore: { content: translation.value } });
     },
 });

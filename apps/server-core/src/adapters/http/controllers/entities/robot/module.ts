@@ -76,12 +76,12 @@ export class RobotController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 
@@ -92,9 +92,7 @@ export class RobotController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const {
-            entity 
-        } = await this.service.save(undefined, data, actor);
+        const { entity } = await this.service.save(undefined, data, actor);
 
         if (isRobotSynchronizationServiceUsable()) {
             const robotSynchronizationService = useRobotSynchronizationService();
@@ -170,9 +168,7 @@ export class RobotController {
                 for (const attribute of attributes) {
                     const isValid = validAttributes.includes(attribute);
                     if (isValid && attribute === 'secret') {
-                        const withSecret = await this.repository.findOneWithSecret({
-                            id: entity.id 
-                        });
+                        const withSecret = await this.repository.findOneWithSecret({ id: entity.id });
                         if (withSecret) {
                             entity.secret = withSecret.secret;
                         }
@@ -205,15 +201,11 @@ export class RobotController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const {
-            entity 
-        } = await this.service.save(
+        const { entity } = await this.service.save(
             id,
             data,
             actor,
-            {
-                updateOnly: true 
-            },
+            { updateOnly: true },
         );
 
         if (data.secret) {
@@ -236,7 +228,7 @@ export class RobotController {
         const actor = buildActorContext(req);
         const {
             entity, 
-            created 
+            created, 
         } = await this.service.save(
             id || undefined,
             data,
@@ -283,18 +275,12 @@ export class RobotController {
         let realm: Realm | undefined;
 
         if (isUUID(id)) {
-            query.where('robot.id = :id', {
-                id 
-            });
+            query.where('robot.id = :id', { id });
         } else {
-            query.where('robot.name LIKE :name', {
-                name: id 
-            });
+            query.where('robot.name LIKE :name', { name: id });
 
             realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'), true);
-            query.andWhere('robot.realm_id = :realmId', {
-                realmId: realm.id 
-            });
+            query.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
         }
 
         if (!realm) {
@@ -328,9 +314,7 @@ export class RobotController {
             let credentials: Pick<Robot, 'id' | 'secret' | 'name'> | undefined;
             if (isRobotSynchronizationServiceUsable()) {
                 const robotSynchronizationService = useRobotSynchronizationService();
-                credentials = await robotSynchronizationService.find({
-                    name: entity.name 
-                });
+                credentials = await robotSynchronizationService.find({ name: entity.name });
             }
 
             if (credentials) {

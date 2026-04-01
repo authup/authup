@@ -13,15 +13,13 @@ export function createFakeOAuth2IdentityProvider(data: Partial<OAuth2IdentityPro
     return {
         name: faker.string.alpha({
             length: 16,
-            casing: 'lower' 
+            casing: 'lower', 
         }),
         display_name: faker.internet.displayName(),
         enabled: true,
         protocol: IdentityProviderProtocol.OAUTH2,
         client_id: faker.internet.username(),
-        client_secret: faker.string.alphanumeric({
-            length: 64 
-        }),
+        client_secret: faker.string.alphanumeric({ length: 64 }),
         token_url: faker.internet.url(),
         authorize_url: faker.internet.url(),
         ...data,
@@ -32,16 +30,14 @@ export function createFakeLdapIdentityProvider(data: Partial<LdapIdentityProvide
     return {
         name: faker.string.alpha({
             length: 16,
-            casing: 'lower' 
+            casing: 'lower', 
         }),
         display_name: faker.internet.displayName(),
         enabled: true,
         protocol: IdentityProviderProtocol.LDAP,
         url: 'ldap://localhost:4000',
         user: 'cn=admin,dc=example,dc=com',
-        password: faker.string.alphanumeric({
-            length: 64 
-        }),
+        password: faker.string.alphanumeric({ length: 64 }),
         base_dn: 'dc=example,dc=com',
         user_name_attribute: 'cn',
         ...data,

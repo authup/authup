@@ -28,9 +28,7 @@ describe('http/controller/password', () => {
     it('should attempt password forgot', async () => {
         const response = await suite.client
             .user
-            .passwordForgot({
-                name: 'admin',
-            });
+            .passwordForgot({ name: 'admin' });
 
         expect(response.reset_expires).toBeDefined();
     });

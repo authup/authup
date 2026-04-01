@@ -13,7 +13,7 @@ import {
     it,
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
-import { createNanoID, } from '@authup/kit';
+import { createNanoID } from '@authup/kit';
 import { isClientError } from 'hapic';
 import type { UserEntity } from '../../../../../../src';
 import {
@@ -35,9 +35,7 @@ describe('src/security/permission/checker', () => {
 
         const repository = new UserRepository(suite.dataSource);
 
-        adminUser = await repository.findOneByOrFail({
-            name: 'admin',
-        });
+        adminUser = await repository.findOneByOrFail({ name: 'admin' });
     });
 
     afterAll(async () => {
@@ -145,9 +143,7 @@ describe('src/security/permission/checker', () => {
         const name = createNanoID();
 
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
-        const permission = permissionRepository.create({
-            name 
-        });
+        const permission = permissionRepository.create({ name });
 
         await permissionRepository.save(permission);
 

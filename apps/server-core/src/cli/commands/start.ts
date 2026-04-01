@@ -10,9 +10,7 @@ import { createApplication } from '../../app/index.ts';
 
 export function defineCLIStartCommand() {
     return defineCommand({
-        meta: {
-            name: 'start',
-        },
+        meta: { name: 'start' },
         async setup() {
             const app = createApplication();
 

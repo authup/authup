@@ -48,9 +48,7 @@ describe('src/http/controllers/permission', () => {
         try {
             await suite.client
                 .permission
-                .create({
-                    name: details.name,
-                });
+                .create({ name: details.name });
         } catch (e) {
             if (isClientError(e)) {
                 expect(e.statusCode).toEqual(409);
@@ -129,31 +127,21 @@ describe('src/http/controllers/permission', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const {
-            name 
-        } = createFakePermission();
+        const { name } = createFakePermission();
 
         let response = await suite.client
             .permission
-            .createOrUpdate(name, {
-                name,
-            });
+            .createOrUpdate(name, { name });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(name);
 
-        const {
-            id 
-        } = response;
-        const {
-            name: nextName 
-        } = createFakePermission();
+        const { id } = response;
+        const { name: nextName } = createFakePermission();
 
         response = await suite.client
             .permission
-            .createOrUpdate(name, {
-                name: nextName,
-            });
+            .createOrUpdate(name, { name: nextName });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);

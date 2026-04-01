@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { UserRole, } from '@authup/core-kit';
+import type { UserRole } from '@authup/core-kit';
 import {
     EntityDefaultEventName, 
     EntityType,
@@ -20,7 +20,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import { EventSubscriber, } from 'typeorm';
+import { EventSubscriber } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { UserRoleEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -30,9 +30,7 @@ async function publishEvent(
     data: UserRole,
 ) {
     const destinations : DomainEventDestination[] = [
-        {
-            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id) 
-        },
+        { channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id) },
     ];
     if (data.user_realm_id) {
         destinations.push({

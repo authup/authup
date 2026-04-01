@@ -26,7 +26,7 @@ import type { IRealmService } from '../../../../../core/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext, } from '../../../request/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 export type RealmControllerOptions = {
     baseURL: string
@@ -60,12 +60,12 @@ export class RealmController {
     ): Promise<any> {
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req));
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 
@@ -187,7 +187,7 @@ export class RealmController {
         const actor = buildActorContext(req);
         const {
             entity, 
-            created 
+            created, 
         } = await this.service.save(
             id || undefined,
             data,

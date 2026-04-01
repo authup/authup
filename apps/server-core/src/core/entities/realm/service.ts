@@ -56,9 +56,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Realm> {
-        const {
-            entity 
-        } = await this.save(undefined, data, actor);
+        const { entity } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -67,11 +65,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Realm> {
-        const {
-            entity 
-        } = await this.save(idOrName, data, actor, {
-            updateOnly: true 
-        });
+        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
         return entity;
     }
 
@@ -104,20 +98,14 @@ export class RealmService extends AbstractEntityService implements IRealmService
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.REALM_UPDATE 
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.REALM_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.REALM_CREATE 
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.REALM_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, {
-            group 
-        });
+        const validated = await this.validator.run(data, { group });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -141,15 +129,13 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
             return {
                 entity,
-                created: false 
+                created: false, 
             };
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.REALM_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: validated,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
         entity = this.repository.create(validated);
@@ -157,7 +143,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
         return {
             entity,
-            created: true 
+            created: true, 
         };
     }
 
@@ -165,13 +151,9 @@ export class RealmService extends AbstractEntityService implements IRealmService
         id: string,
         actor: ActorContext,
     ): Promise<Realm> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.REALM_DELETE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.REALM_DELETE });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -182,14 +164,10 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.REALM_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

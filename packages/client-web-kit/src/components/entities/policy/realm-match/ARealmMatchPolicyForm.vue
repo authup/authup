@@ -1,5 +1,5 @@
 <script lang="ts">
-import { type PropType,defineComponent,reactive, } from 'vue';
+import { type PropType, defineComponent, reactive } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
@@ -15,11 +15,7 @@ export default defineComponent({
         VCFormGroup,
         IVuelidate,
     },
-    props: {
-        entity: {
-            type: Object as PropType<Partial<Policy>>,
-        },
-    },
+    props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
         const form = reactive({
@@ -34,9 +30,7 @@ export default defineComponent({
             attribute_null_match_all: {},
             identity_master_match_all: {},
             attribute_name: {},
-        }, form, {
-            $registerAs: 'type',
-        });
+        }, form, { $registerAs: 'type' });
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
             const {
@@ -52,9 +46,7 @@ export default defineComponent({
             }
         }
 
-        setup.expose({
-            assign,
-        });
+        setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));

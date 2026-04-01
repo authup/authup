@@ -34,9 +34,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
         const qb = this.repository.createQueryBuilder('client');
         qb.groupBy('client.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'client',
             fields: {
                 default: [
@@ -60,21 +58,15 @@ export class ClientRepositoryAdapter implements IClientRepository {
                 ],
                 allowed: ['secret'],
             },
-            filters: {
-                allowed: ['id', 'name', 'realm_id', 'realm.name'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
+            filters: { allowed: ['id', 'name', 'realm_id', 'realm.name'] },
+            pagination: { maxLimit: 50 },
             relations: {
                 allowed: ['realm'],
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
                 },
             },
-            sort: {
-                allowed: ['id', 'created_at', 'updated_at'],
-            },
+            sort: { allowed: ['id', 'created_at', 'updated_at'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -89,23 +81,17 @@ export class ClientRepositoryAdapter implements IClientRepository {
     }
 
     findOneById(id: string): Promise<Client | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(name: string, realmKey?: string): Promise<Client | null> {
         const qb = this.repository.createQueryBuilder('client');
-        qb.where('client.name LIKE :name', {
-            name 
-        });
+        qb.where('client.name LIKE :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('client.realm_id = :realmId', {
-                    realmId: realm.id 
-                });
+                qb.andWhere('client.realm_id = :realmId', { realmId: realm.id });
             }
         }
 
@@ -130,9 +116,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
         const qb = this.repository.createQueryBuilder('client');
 
         Object.entries(where).forEach(([key, value]) => {
-            qb.andWhere(`client.${key} = :${key}`, {
-                [key]: value 
-            });
+            qb.andWhere(`client.${key} = :${key}`, { [key]: value });
         });
 
         qb.addSelect('client.secret');

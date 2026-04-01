@@ -28,9 +28,7 @@ describe('core/entities/client-scope/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<ClientScope>();
-        service = new ClientScopeService({
-            repository 
-        });
+        service = new ClientScopeService({ repository });
     });
 
     describe('getMany', () => {
@@ -68,12 +66,8 @@ describe('core/entities/client-scope/service', () => {
             const data = {
                 client_id: randomUUID(),
                 scope_id: randomUUID(),
-                client: {
-                    realm_id: randomUUID() 
-                },
-                scope: {
-                    realm_id: randomUUID() 
-                },
+                client: { realm_id: randomUUID() },
+                scope: { realm_id: randomUUID() },
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -86,18 +80,16 @@ describe('core/entities/client-scope/service', () => {
             const actor = createAllowAllActor();
             await service.create({
                 client_id: randomUUID(),
-                scope_id: randomUUID() 
+                scope_id: randomUUID(), 
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.CLIENT_SCOPE_CREATE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_SCOPE_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
                     client_id: randomUUID(),
-                    scope_id: randomUUID() 
+                    scope_id: randomUUID(), 
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
@@ -118,9 +110,7 @@ describe('core/entities/client-scope/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.CLIENT_SCOPE_DELETE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_SCOPE_DELETE });
         });
     });
 });

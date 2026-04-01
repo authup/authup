@@ -30,17 +30,13 @@ describe('core/entities/role-attribute/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RoleAttribute>();
-        service = new RoleAttributeService({
-            repository 
-        });
+        service = new RoleAttributeService({ repository });
     });
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
             repository.seed([
-                createFakeRoleAttribute({
-                    role_id: randomUUID() 
-                }),
+                createFakeRoleAttribute({ role_id: randomUUID() }),
             ]);
             const result = await service.getMany({}, createAllowAllActor());
             expect(result.data).toHaveLength(1);
@@ -50,11 +46,11 @@ describe('core/entities/role-attribute/service', () => {
             const [, denied] = repository.seed([
                 createFakeRoleAttribute({
                     name: 'allowed',
-                    role_id: 'role-1' 
+                    role_id: 'role-1', 
                 }),
                 createFakeRoleAttribute({
                     name: 'denied',
-                    role_id: 'role-2' 
+                    role_id: 'role-2', 
                 }),
             ]);
 
@@ -98,9 +94,7 @@ describe('core/entities/role-attribute/service', () => {
                 name: 'new-attr',
                 value: 'val',
                 role_id: randomUUID(),
-                role: {
-                    realm_id: roleRealmId 
-                },
+                role: { realm_id: roleRealmId },
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -114,14 +108,10 @@ describe('core/entities/role-attribute/service', () => {
                 name: 'attr',
                 value: 'val',
                 role_id: randomUUID(),
-                role: {
-                    realm_id: null 
-                },
+                role: { realm_id: null },
             }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.ROLE_UPDATE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -129,9 +119,7 @@ describe('core/entities/role-attribute/service', () => {
                 service.create({
                     name: 'attr',
                     role_id: randomUUID(),
-                    role: {
-                        realm_id: null 
-                    } 
+                    role: { realm_id: null }, 
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
@@ -141,20 +129,16 @@ describe('core/entities/role-attribute/service', () => {
         it('should update an existing attribute', async () => {
             const entity = repository.seed(createFakeRoleAttribute({
                 name: 'old',
-                value: 'old-val' 
+                value: 'old-val', 
             }));
 
-            const result = await service.update(entity.id, {
-                value: 'new-val' 
-            }, createAllowAllActor());
+            const result = await service.update(entity.id, { value: 'new-val' }, createAllowAllActor());
             expect(result.value).toBe('new-val');
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', {
-                    value: 'x' 
-                }, createAllowAllActor()),
+                service.update('non-existent-id', { value: 'x' }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
     });
@@ -172,9 +156,7 @@ describe('core/entities/role-attribute/service', () => {
 
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.ROLE_UPDATE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_UPDATE });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {

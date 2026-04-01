@@ -22,7 +22,7 @@ import { PermissionError } from '../error';
 import type { IPermissionProvider, PermissionGetOptions } from '../provider';
 import { PermissionMemoryProvider } from '../provider';
 
-import type { PermissionBinding, } from '../types.ts';
+import type { PermissionBinding } from '../types.ts';
 import type { IPermissionEvaluator, PermissionEvaluationContext, PermissionEvaluatorOptions } from './types.ts';
 
 export class PermissionEvaluator implements IPermissionEvaluator {
@@ -67,9 +67,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             clientId?: string | null 
         },
     ) : Promise<PermissionBinding | null> {
-        const options : PermissionGetOptions = {
-            name: input,
-        };
+        const options : PermissionGetOptions = { name: input };
 
         if (typeof overrides?.clientId !== 'undefined') {
             options.clientId = overrides.clientId;
@@ -97,9 +95,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             return;
         }
 
-        const {
-            options = {},
-        } = ctx;
+        const { options = {} } = ctx;
 
         const decisionStrategy = options.decisionStrategy ??
             DecisionStrategy.UNANIMOUS;

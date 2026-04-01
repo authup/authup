@@ -46,9 +46,7 @@ describe('verifier', () => {
     });
 
     it('should not verify token local', async () => {
-        const tokenVerifier = new TokenVerifier({
-            baseURL: 'http://localhost:3001' 
-        });
+        const tokenVerifier = new TokenVerifier({ baseURL: 'http://localhost:3001' });
 
         try {
             await tokenVerifier.verify(ErrorCode.JWT_INVALID);

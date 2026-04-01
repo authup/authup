@@ -4,15 +4,13 @@ import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { defineComponent, ref } from 'vue';
-import { definePageMeta,useToast, } from '#imports';
-import { createError,navigateTo,useRoute, } from '#app';
+import { definePageMeta, useToast } from '#imports';
+import { createError, navigateTo, useRoute } from '#app';
 import { LayoutKey } from '../../config/layout';
 import DomainEntityNav from '../../components/DomainEntityNav';
 
 export default defineComponent({
-    components: {
-        DomainEntityNav 
-    },
+    components: { DomainEntityNav },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -50,13 +48,9 @@ export default defineComponent({
         try {
             entity.value = await injectHTTPClient()
                 .user
-                .getOne(route.params.id as string, {
-                    fields: ['+email'] 
-                });
+                .getOne(route.params.id as string, { fields: ['+email'] });
         } catch {
-            await navigateTo({
-                path: '/users' 
-            });
+            await navigateTo({ path: '/users' });
             throw createError({});
         }
 
@@ -64,7 +58,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The user was successfully updated.' 
+                    body: 'The user was successfully updated.', 
                 });
             }
 
@@ -75,7 +69,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

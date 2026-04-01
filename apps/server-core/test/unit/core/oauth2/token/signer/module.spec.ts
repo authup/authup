@@ -19,9 +19,7 @@ import {
 import { OAuth2TokenSigner } from '../../../../../../src/core/oauth2/token/signer/module.ts';
 import type { IOAuth2KeyRepository } from '../../../../../../src/core/oauth2/key/types.ts';
 
-vi.mock('@authup/server-kit', () => ({
-    signToken: vi.fn().mockResolvedValue('signed-jwt-token'),
-}));
+vi.mock('@authup/server-kit', () => ({ signToken: vi.fn().mockResolvedValue('signed-jwt-token') }));
 
 function createFakeKeyRepository(key: Key | null = null): IOAuth2KeyRepository {
     return {
@@ -52,9 +50,7 @@ describe('OAuth2TokenSigner', () => {
     it('should throw JWKError when payload has no realm_id', async () => {
         const keyRepo = createFakeKeyRepository();
         const signer = new OAuth2TokenSigner(keyRepo);
-        const payload = createPayload({
-            realm_id: undefined 
-        });
+        const payload = createPayload({ realm_id: undefined });
 
         await expect(signer.sign(payload)).rejects.toThrow(JWKError);
     });

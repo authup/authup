@@ -100,9 +100,7 @@ export class ExtraAttributesRepositoryAdapter<
 
         let extra : Record<string, any> = {};
         if (attributes) {
-            extra = {
-                ...attributes,
-            };
+            extra = { ...attributes };
         }
 
         const keys = Object.keys(input) as (keyof T)[];
@@ -162,9 +160,7 @@ export class ExtraAttributesRepositoryAdapter<
             where.name = In(extraOptions.attributes) as FindOptionsWhereProperty<A['name']>;
         }
 
-        const attributes = await this.attributeRepository.find({
-            where 
-        });
+        const attributes = await this.attributeRepository.find({ where });
         const output : Record<string, E> = {};
 
         for (const element of value) {

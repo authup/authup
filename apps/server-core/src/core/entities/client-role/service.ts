@@ -53,9 +53,7 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
             ],
         });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -67,9 +65,7 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<ClientRole> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.CLIENT_ROLE_CREATE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_ROLE_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -83,9 +79,7 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_ROLE_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: data,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
         });
 
         let entity = this.repository.create(data);
@@ -98,27 +92,19 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
         id: string,
         actor: ActorContext,
     ): Promise<ClientRole> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.CLIENT_ROLE_DELETE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_ROLE_DELETE });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_ROLE_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

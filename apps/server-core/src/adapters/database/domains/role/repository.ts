@@ -7,7 +7,7 @@
 
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
-import type { PermissionBinding,Role } from '@authup/core-kit';
+import type { PermissionBinding, Role } from '@authup/core-kit';
 import type { PolicyWithType } from '@authup/access';
 import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';
@@ -77,12 +77,8 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
         const repository = this.manager.getRepository(RolePermissionEntity);
         const entities = await repository.find({
-            where: {
-                role_id: id,
-            },
-            relations: {
-                permission: true,
-            },
+            where: { role_id: id },
+            relations: { permission: true },
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,

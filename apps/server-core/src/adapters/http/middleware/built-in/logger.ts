@@ -29,9 +29,7 @@ export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handl
         morgan(
             (tokens, req: Request, res: Response) => {
                 const parts = [
-                    getRequestIP(req, {
-                        trustProxy: true 
-                    }),
+                    getRequestIP(req, { trustProxy: true }),
                 ];
 
                 const identity = useRequestIdentity(req);

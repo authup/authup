@@ -54,13 +54,11 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         const {
             data: entities, 
-            meta 
+            meta, 
         } = await this.repository.findMany(query);
 
         const data: User[] = [];
-        let {
-            total 
-        } = meta;
+        let { total } = meta;
 
         for (const entity of entities) {
             if (
@@ -79,9 +77,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                         PermissionName.USER_UPDATE,
                         PermissionName.USER_DELETE,
                     ],
-                    input: new PolicyData({
-                        [BuiltInPolicyType.ATTRIBUTES]: entity,
-                    }),
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
                 });
 
                 data.push(entity);
@@ -94,8 +90,8 @@ export class UserService extends AbstractEntityService implements IUserService {
             data,
             meta: {
                 ...meta,
-                total 
-            } 
+                total, 
+            }, 
         };
     }
 
@@ -138,9 +134,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                     PermissionName.USER_UPDATE,
                     PermissionName.USER_DELETE,
                 ],
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
         }
 
@@ -151,9 +145,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<User> {
-        const {
-            entity 
-        } = await this.save(undefined, data, actor);
+        const { entity } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -162,11 +154,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<User> {
-        const {
-            entity 
-        } = await this.save(idOrName, data, actor, {
-            updateOnly: true 
-        });
+        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
         return entity;
     }
 
@@ -209,9 +197,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         let hasAbility: boolean | undefined;
         if (entity) {
             try {
-                await actor.permissionEvaluator.preEvaluate({
-                    name: PermissionName.USER_UPDATE,
-                });
+                await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
                 hasAbility = true;
             } catch (e) {
                 if (
@@ -225,17 +211,13 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.USER_CREATE,
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_CREATE });
             hasAbility = true;
 
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, {
-            group 
-        });
+        const validated = await this.validator.run(data, { group });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -287,7 +269,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             return {
                 entity,
-                created: false 
+                created: false, 
             };
         }
 
@@ -303,9 +285,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         if (hasAbility) {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_CREATE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
         }
 
@@ -317,7 +297,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         return {
             entity,
-            created: true 
+            created: true, 
         };
     }
 
@@ -325,9 +305,7 @@ export class UserService extends AbstractEntityService implements IUserService {
         id: string,
         actor: ActorContext,
     ): Promise<User> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.USER_DELETE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_DELETE });
 
         if (
             actor.identity &&
@@ -337,23 +315,17 @@ export class UserService extends AbstractEntityService implements IUserService {
             throw new BadRequestError('The own user can not be deleted.');
         }
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.USER_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

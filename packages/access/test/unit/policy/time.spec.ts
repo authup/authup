@@ -26,20 +26,12 @@ describe('src/policy/time', () => {
         const time = new Date();
         time.setHours(12, 0);
 
-        let outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
-            data: new PolicyData({
-                [BuiltInPolicyType.TIME]: time,
-            }),
-        }));
+        let outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.TIME]: time }) }));
         expect(outcome.success)
             .toBeTruthy();
 
         time.setHours(6, 0);
-        outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
-            data: new PolicyData({
-                [BuiltInPolicyType.TIME]: time,
-            }),
-        }));
+        outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.TIME]: time }) }));
         expect(outcome.success)
             .toBeFalsy();
     });

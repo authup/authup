@@ -35,7 +35,7 @@ export class ScopeProvisioningSynchronizer extends BaseProvisioningSynchronizer<
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes 
+                attributes: attributes || input.attributes, 
             };
         }
 

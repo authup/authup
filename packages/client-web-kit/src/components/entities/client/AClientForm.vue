@@ -14,7 +14,7 @@ import {
     watch,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
-import { maxLength,minLength,required, } from '@vuelidate/validators';
+import { maxLength, minLength, required } from '@vuelidate/validators';
 import { type Client, EntityType } from '@authup/core-kit';
 import { createNanoID, isBCryptHash } from '@authup/kit';
 import { IVuelidate } from '@ilingo/vuelidate';
@@ -76,9 +76,7 @@ export default defineComponent({
         });
 
         const vuelidate = useVuelidate({
-            active: {
-                required,
-            },
+            active: { required },
             name: {
                 required,
                 [
@@ -95,9 +93,7 @@ export default defineComponent({
                 minLength: minLength(3),
                 maxLength: maxLength(256),
             },
-            realm_id: {
-                required,
-            },
+            realm_id: { required },
             redirect_uri: {
                 // todo: url is required!
                 maxLength: maxLength(2000),
@@ -189,51 +185,25 @@ export default defineComponent({
         const translationsClient = useTranslationsForGroup(
             TranslatorTranslationGroup.CLIENT,
             [
-                {
-                    key: TranslatorTranslationClientKey.NAME_HINT 
-                },
-                {
-                    key: TranslatorTranslationClientKey.DESCRIPTION_HINT 
-                },
-                {
-                    key: TranslatorTranslationClientKey.REDIRECT_URI_HINT 
-                },
-                {
-                    key: TranslatorTranslationClientKey.IS_CONFIDENTIAL 
-                },
-                {
-                    key: TranslatorTranslationClientKey.IS_ACTIVE 
-                },
-                {
-                    key: TranslatorTranslationClientKey.HASH_SECRET 
-                },
+                { key: TranslatorTranslationClientKey.NAME_HINT },
+                { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
+                { key: TranslatorTranslationClientKey.REDIRECT_URI_HINT },
+                { key: TranslatorTranslationClientKey.IS_CONFIDENTIAL },
+                { key: TranslatorTranslationClientKey.IS_ACTIVE },
+                { key: TranslatorTranslationClientKey.HASH_SECRET },
             ],
         );
 
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.GENERATE 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.REALM 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.REDIRECT_URIS 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.SECRET 
-                },
+                { key: TranslatorTranslationDefaultKey.GENERATE },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
+                { key: TranslatorTranslationDefaultKey.REDIRECT_URIS },
+                { key: TranslatorTranslationDefaultKey.SECRET },
             ],
         );
 

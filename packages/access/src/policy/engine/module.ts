@@ -54,9 +54,7 @@ export class PolicyEngine implements IPolicyEngine {
             ctx.exclude.length > 0 &&
             ctx.exclude.includes(policy.type)
         ) {
-            return {
-                success: maybeInvertPolicyOutcome(true, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
         if (
@@ -64,9 +62,7 @@ export class PolicyEngine implements IPolicyEngine {
             ctx.include.length > 0 &&
             !ctx.include.includes(policy.type)
         ) {
-            return {
-                success: maybeInvertPolicyOutcome(true, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
         const issues : PolicyIssue[] = [];

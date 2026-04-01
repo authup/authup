@@ -49,17 +49,13 @@ export function createConfig(
             ...pluginsPre,
 
             // Allows node_modules resolution
-            resolve({
-                extensions 
-            }),
+            resolve({ extensions }),
 
             esmShim(),
 
             vue(),
 
-            postcss({
-                extract: true,
-            }),
+            postcss({ extract: true }),
 
             swc.rollup(),
 

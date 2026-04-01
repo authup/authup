@@ -20,9 +20,7 @@ export type SocketManagerInstallOptions = {
 export function installSocketManager(app: App, options : SocketManagerInstallOptions) {
     const storeCreator = injectStoreFactory(app);
     const store = storeCreator(options.pinia);
-    const {
-        accessToken 
-    } = storeToRefs(store);
+    const { accessToken } = storeToRefs(store);
 
     const manager = new ClientManager({
         url: options.baseURL,

@@ -12,7 +12,5 @@ export default defineNuxtPlugin((ctx) => {
     ctx.vueApp.component('BDropdown', BDropdown);
     ctx.vueApp.component('BDropdownItem', BDropdownItem);
 
-    ctx.vueApp.use(createBootstrap({
-        orchestrator: true,
-    }));
+    ctx.vueApp.use(createBootstrap({ orchestrator: true }));
 });

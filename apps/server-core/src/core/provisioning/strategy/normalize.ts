@@ -13,9 +13,7 @@ export function normalizeEntityProvisioningStrategy<A extends ObjectLiteral = Ob
     input?: ProvisioningEntityStrategy<A>,
 ) : ProvisioningEntityStrategy<A> {
     if (!input) {
-        return {
-            type: ProvisioningEntityStrategyType.CREATE_ONLY,
-        };
+        return { type: ProvisioningEntityStrategyType.CREATE_ONLY };
     }
 
     return input;

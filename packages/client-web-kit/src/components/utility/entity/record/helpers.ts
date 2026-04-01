@@ -43,20 +43,10 @@ export function defineEntityVEmitOptions<T>(): EntityVEmitOptions<T> {
 
 export function defineEntityVProps<T>() {
     return {
-        entity: {
-            type: Object as PropType<T>,
-        },
-        entityId: {
-            type: String,
-        },
-        queryFilters: {
-            type: Object as PropType<FiltersBuildInput<T extends Record<string, any> ? T : never>>,
-        },
-        queryFields: {
-            type: Object as PropType<FieldsBuildInput<T extends Record<string, any> ? T : never>>,
-        },
-        query: {
-            type: Object as PropType<T extends Record<string, any> ? BuildInput<T> : never>,
-        },
+        entity: { type: Object as PropType<T> },
+        entityId: { type: String },
+        queryFilters: { type: Object as PropType<FiltersBuildInput<T extends Record<string, any> ? T : never>> },
+        queryFields: { type: Object as PropType<FieldsBuildInput<T extends Record<string, any> ? T : never>> },
+        query: { type: Object as PropType<T extends Record<string, any> ? BuildInput<T> : never> },
     };
 }

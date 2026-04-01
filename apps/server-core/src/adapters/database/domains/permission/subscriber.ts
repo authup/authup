@@ -9,9 +9,9 @@ import {
     EntityDefaultEventName,
     EntityType,
     buildEntityChannelName,
-    buildPermissionBindingKey 
+    buildPermissionBindingKey, 
 } from '@authup/core-kit';
-import type { Permission, } from '@authup/core-kit';
+import type { Permission } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
     EntitySubscriberInterface, 
@@ -19,7 +19,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import { EventSubscriber, } from 'typeorm';
+import { EventSubscriber } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { PermissionEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -35,9 +35,7 @@ async function publishEvent(
             data,
         },
         destinations: [
-            {
-                channel: (id) => buildEntityChannelName(EntityType.PERMISSION, id),
-            },
+            { channel: (id) => buildEntityChannelName(EntityType.PERMISSION, id) },
         ],
     });
 }

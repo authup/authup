@@ -92,9 +92,7 @@ export class DatabaseModule implements IModule {
             await this.migrate(container, dataSource);
         }
 
-        container.register(DatabaseInjectionKey.DataSource, {
-            useValue: dataSource 
-        });
+        container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
 
         this.registerRepositories(container, dataSource);
         this.registerEventPublisher(container);
@@ -117,16 +115,14 @@ export class DatabaseModule implements IModule {
     protected async setupDatabase(container: IContainer, options: DataSourceOptions): Promise<void> {
         const logger = container.resolve(LoggerInjectionKey);
 
-        const check = await checkDatabase({
-            options,
-        });
+        const check = await checkDatabase({ options });
 
         if (!check.exists) {
             logger.debug('Creating database...');
             await createDatabase({
                 options,
                 synchronize: false,
-                ifNotExist: true 
+                ifNotExist: true, 
             });
             logger.debug('Created database');
         }
@@ -192,9 +188,7 @@ export class DatabaseModule implements IModule {
 
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            container.register(entity, {
-                useFactory: () => dataSource.getRepository(entity),
-            });
+            container.register(entity, { useFactory: () => dataSource.getRepository(entity) });
         }
     }
 

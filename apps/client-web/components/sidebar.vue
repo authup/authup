@@ -16,7 +16,7 @@ export default defineNuxtComponent({
         const {
             loggedIn, 
             accessTokenExpireDate: tokenExpireDate, 
-            realmManagement 
+            realmManagement, 
         } = storeToRefs(store);
 
         const tokenExpiresIn = computed(() => {

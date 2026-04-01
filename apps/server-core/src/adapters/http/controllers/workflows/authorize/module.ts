@@ -24,7 +24,7 @@ import { CLIENT_WEB_SLIM_PACKAGE_PATH } from '../../../../../path.ts';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
-import { OAuth2AuthorizationCodeRequestValidator, } from '../../../../../core/index.ts';
+import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
 import { sanitizeError } from '../../../../../utils/index.ts';
 import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types.ts';
 
@@ -86,9 +86,7 @@ export class AuthorizeController {
             url.searchParams.set('id_token', result.idToken);
         }
 
-        return send(res, {
-            url: url.href 
-        });
+        return send(res, { url: url.href });
     }
 
     @DGet('', [])
@@ -104,9 +102,7 @@ export class AuthorizeController {
         let error : Error | undefined;
 
         try {
-            const data = await this.codeRequestValidator.run(req, {
-                locations: ['body', 'query'],
-            });
+            const data = await this.codeRequestValidator.run(req, { locations: ['body', 'query'] });
 
             const result = await this.codeRequestVerifier.verify(data);
             client = result.client;
@@ -124,9 +120,7 @@ export class AuthorizeController {
         const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
 
         const payload = {
-            config: {
-                baseURL: this.options.baseURL,
-            },
+            config: { baseURL: this.options.baseURL },
             data: {
                 codeRequest,
                 error,

@@ -19,8 +19,6 @@ export class LdapModule implements IModule {
     }
 
     async setup(container: IContainer): Promise<void> {
-        container.register(LDAPInjectionKey.ClientFactory, {
-            useFactory: () => new LdapClientFactory(),
-        });
+        container.register(LDAPInjectionKey.ClientFactory, { useFactory: () => new LdapClientFactory() });
     }
 }

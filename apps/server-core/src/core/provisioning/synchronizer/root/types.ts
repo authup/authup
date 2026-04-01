@@ -10,7 +10,7 @@ import type { ScopeProvisioningEntity } from '../../entities/scope/index.ts';
 import type { PermissionProvisioningEntity } from '../../entities/permission/index.ts';
 import type { RealmProvisioningEntity } from '../../entities/realm/index.ts';
 import type { RoleProvisioningEntity } from '../../entities/role/index.ts';
-import type { IProvisioningSynchronizer, } from '../../types.ts';
+import type { IProvisioningSynchronizer } from '../../types.ts';
 
 export type RootProvisioningSynchronizerContext = {
     policySynchronizer: IProvisioningSynchronizer<PolicyProvisioningEntity>,

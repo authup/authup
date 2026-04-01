@@ -131,18 +131,10 @@ export const ARoleForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.REALM 
-                },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
             ],
         );
 
@@ -185,9 +177,7 @@ export const ARoleForm = defineComponent({
                     onChange(input) {
                         $v.value.description.$model = input;
                     },
-                    props: {
-                        rows: 6,
-                    },
+                    props: { rows: 6 },
                 }),
             }));
 

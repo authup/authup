@@ -36,7 +36,7 @@ export class PermissionProvisioningSynchronizer extends BaseProvisioningSynchron
             }
             return {
                 ...input,
-                attributes: attributes || input.attributes 
+                attributes: attributes || input.attributes, 
             };
         }
 

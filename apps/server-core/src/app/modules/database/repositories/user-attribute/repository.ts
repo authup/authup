@@ -23,19 +23,11 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
         const qb = this.repository.createQueryBuilder('userAttribute');
         qb.groupBy('userAttribute.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'userAttribute',
-            filters: {
-                allowed: ['id', 'name', 'user_id', 'realm_id'],
-            },
-            sort: {
-                allowed: ['id', 'name', 'user_id', 'realm_id', 'created_at', 'updated_at'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
+            filters: { allowed: ['id', 'name', 'user_id', 'realm_id'] },
+            sort: { allowed: ['id', 'name', 'user_id', 'realm_id', 'created_at', 'updated_at'] },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -50,9 +42,7 @@ export class UserAttributeRepositoryAdapter implements IUserAttributeRepository 
     }
 
     findOneById(id: string): Promise<UserAttribute | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(): Promise<UserAttribute | null> {

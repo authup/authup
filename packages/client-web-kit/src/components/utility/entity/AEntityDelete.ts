@@ -119,11 +119,7 @@ const AEntityDelete = defineComponent({
             let icon : VNodeArrayChildren = [];
             if (props.elementIcon) {
                 icon = [
-                    h('i', {
-                        class: [props.elementIcon, {
-                            'pe-1': props.withText,
-                        }],
-                    }),
+                    h('i', { class: [props.elementIcon, { 'pe-1': props.withText }] }),
                 ];
             }
 
@@ -155,4 +151,4 @@ const AEntityDelete = defineComponent({
     },
 });
 
-export { AEntityDelete, };
+export { AEntityDelete };

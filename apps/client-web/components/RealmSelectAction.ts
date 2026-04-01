@@ -12,21 +12,15 @@ import type { PropType } from 'vue';
 
 export default defineNuxtComponent({
     props: {
-        listRef: {
-            type: Object,
-        },
+        listRef: { type: Object },
         entity: {
             type: Object as PropType<Realm>,
             required: true,
         },
-        modelValue: {
-            type: String,
-        },
+        modelValue: { type: String },
     },
     emits: ['update:modelValue'],
-    setup(props, {
-        emit 
-    }) {
+    setup(props, { emit }) {
         const modelValue = toRef(props, 'modelValue');
 
         const isMaster = computed(() => props.entity.name === REALM_MASTER_NAME);
@@ -57,11 +51,9 @@ export default defineNuxtComponent({
 
             return h('button', {
                 class: 'btn btn-xs btn-disabled btn-success',
-                disabled: true 
+                disabled: true, 
             }, [
-                h('i', {
-                    class: 'fa-solid fa-check',
-                }),
+                h('i', { class: 'fa-solid fa-check' }),
             ]);
         };
     },

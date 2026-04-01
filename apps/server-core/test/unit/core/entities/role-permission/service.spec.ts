@@ -31,9 +31,7 @@ describe('core/entities/role-permission/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<RolePermission>();
-        service = new RolePermissionService({
-            repository 
-        });
+        service = new RolePermissionService({ repository });
     });
 
     describe('getMany', () => {
@@ -76,12 +74,10 @@ describe('core/entities/role-permission/service', () => {
             const data = {
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
-                role: {
-                    realm_id: randomUUID() 
-                },
+                role: { realm_id: randomUUID() },
                 permission: {
                     realm_id: randomUUID(),
-                    name: 'test-perm' 
+                    name: 'test-perm', 
                 },
             };
 
@@ -95,11 +91,9 @@ describe('core/entities/role-permission/service', () => {
             const actor = createAllowAllActor();
             await service.create({
                 role_id: randomUUID(),
-                permission_id: randomUUID() 
+                permission_id: randomUUID(), 
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.ROLE_PERMISSION_CREATE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_PERMISSION_CREATE });
         });
 
         it('should preCheck permission name when permission is provided', async () => {
@@ -109,7 +103,7 @@ describe('core/entities/role-permission/service', () => {
                 permission_id: randomUUID(),
                 permission: {
                     name: 'custom-perm',
-                    realm_id: null 
+                    realm_id: null, 
                 },
             }, actor);
 
@@ -127,11 +121,11 @@ describe('core/entities/role-permission/service', () => {
                 permission_id: randomUUID(),
                 role: {
                     name: ROLE_ADMIN_NAME,
-                    realm_id: null 
+                    realm_id: null, 
                 },
                 permission: {
                     name: 'custom-perm',
-                    realm_id: null 
+                    realm_id: null, 
                 },
             }, actor);
 
@@ -146,7 +140,7 @@ describe('core/entities/role-permission/service', () => {
             await expect(
                 service.create({
                     role_id: randomUUID(),
-                    permission_id: randomUUID() 
+                    permission_id: randomUUID(), 
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
@@ -168,9 +162,7 @@ describe('core/entities/role-permission/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.ROLE_PERMISSION_DELETE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_PERMISSION_DELETE });
         });
     });
 });

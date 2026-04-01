@@ -7,7 +7,7 @@
 
 import type {
     IPermissionProvider,
-    PermissionGetOptions, 
+    PermissionGetOptions,
     PolicyWithType,
 } from '@authup/access';
 import type { PermissionBinding } from '@authup/core-kit';
@@ -39,9 +39,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
     }
 
     async findOne(options: PermissionGetOptions) : Promise<PermissionBinding | null> {
-        const where : FindOptionsWhere<PermissionEntity> = {
-            name: options.name,
-        };
+        const where : FindOptionsWhere<PermissionEntity> = { name: options.name };
 
         if (typeof options.clientId !== 'undefined') {
             where.client_id = options.clientId === null ? IsNull() : options.clientId;
@@ -68,9 +66,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
 
         if (entity) {
             const junctions = await this.permissionPolicyRepository.find({
-                where: {
-                    permission_id: entity.id 
-                },
+                where: { permission_id: entity.id },
                 relations: ['policy'],
             });
 

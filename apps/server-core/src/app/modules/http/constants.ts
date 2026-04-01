@@ -8,6 +8,4 @@
 import { TypedToken } from 'eldin';
 import type { IServer } from '../../../adapters/http/index.ts';
 
-export const HTTPInjectionKey = {
-    Server: new TypedToken<IServer>('Server'),
-} as const;
+export const HTTPInjectionKey = { Server: new TypedToken<IServer>('Server') } as const;

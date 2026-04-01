@@ -38,7 +38,7 @@ import type {
     IIdentityPermissionProvider, 
     IPermissionRepository, 
     IPermissionService, 
-    IRealmRepository 
+    IRealmRepository, 
 } from '../../../../../core/index.ts';
 import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -84,12 +84,12 @@ export class PermissionController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 
@@ -115,16 +115,12 @@ export class PermissionController {
 
         let criteria: Record<string, any>;
         if (isUUID(id)) {
-            criteria = {
-                id 
-            };
+            criteria = { id };
         } else {
             const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'));
             criteria = {
                 name: id,
-                ...(realm ? {
-                    realm_id: realm.id 
-                } : {}),
+                ...(realm ? { realm_id: realm.id } : {}),
             };
         }
 
@@ -158,9 +154,7 @@ export class PermissionController {
                 await permissionEvaluator.preEvaluate(ctx);
             }
 
-            output = {
-                status: 'success',
-            };
+            output = { status: 'success' };
         } catch (e) {
             output = {
                 status: 'error',
@@ -214,7 +208,7 @@ export class PermissionController {
         const actor = buildActorContext(req);
         const {
             entity, 
-            created 
+            created, 
         } = await this.service.save(
             id || undefined,
             data,

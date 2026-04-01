@@ -35,7 +35,7 @@ export class SessionRepository implements ISessionRepository {
         const session = await this.cache.get<Session>(
             buildCacheKey({
                 prefix: AuthenticationCachePrefix.SESSION,
-                key: id 
+                key: id, 
             }),
         );
 
@@ -43,9 +43,7 @@ export class SessionRepository implements ISessionRepository {
             return session;
         }
 
-        return this.repository.findOneBy({
-            id,
-        });
+        return this.repository.findOneBy({ id });
     }
 
     // -----------------------------------------------------
@@ -57,12 +55,10 @@ export class SessionRepository implements ISessionRepository {
         await this.cache.set(
             buildCacheKey({
                 prefix: AuthenticationCachePrefix.SESSION,
-                key: session.id 
+                key: session.id, 
             }),
             session,
-            {
-                ttl: new Date(session.expires_at).getTime() - Date.now(),
-            },
+            { ttl: new Date(session.expires_at).getTime() - Date.now() },
         );
 
         return session;
@@ -75,7 +71,7 @@ export class SessionRepository implements ISessionRepository {
         await this.cache.drop(
             buildCacheKey({
                 prefix: AuthenticationCachePrefix.SESSION,
-                key: session.id 
+                key: session.id, 
             }),
         );
     }

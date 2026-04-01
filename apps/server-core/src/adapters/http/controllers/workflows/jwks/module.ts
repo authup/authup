@@ -44,13 +44,9 @@ export class JwkController {
         const entities = await this.repository.find({
             where: {
                 type: In([JWKType.RSA, JWKType.EC]),
-                ...(realmId ? {
-                    realm_id: realmId 
-                } : {}),
+                ...(realmId ? { realm_id: realmId } : {}),
             },
-            order: {
-                priority: 'DESC',
-            },
+            order: { priority: 'DESC' },
         });
 
         const promises = entities
@@ -72,9 +68,7 @@ export class JwkController {
 
         const keys = await Promise.all(promises);
 
-        return send(res, {
-            keys,
-        });
+        return send(res, { keys });
     }
 
     @DGet('/jwks/:id', [])

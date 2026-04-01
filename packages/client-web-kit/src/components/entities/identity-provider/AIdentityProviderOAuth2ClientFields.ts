@@ -8,18 +8,14 @@
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import { maxLength,minLength,required, } from '@vuelidate/validators';
+import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { PropType } from 'vue';
-import { defineComponent,reactive, } from 'vue';
+import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 
 export const AIdentityProviderOAuth2ClientFields = defineComponent({
-    props: {
-        entity: {
-            type: Object as PropType<Partial<OAuth2IdentityProvider>>,
-        },
-    },
+    props: { entity: { type: Object as PropType<Partial<OAuth2IdentityProvider>> } },
     emits: ['updated'],
     setup(props) {
         const form = reactive({
@@ -37,9 +33,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
                 minLength: minLength(3),
                 maxLength: maxLength(128),
             },
-        }, form, {
-            $registerAs: 'client',
-        });
+        }, form, { $registerAs: 'client' });
 
         function assign() {
             assignFormProperties(form, props.entity);

@@ -20,7 +20,7 @@ import type {
     RemoveEvent,
     UpdateEvent,
 } from 'typeorm';
-import { EventSubscriber, } from 'typeorm';
+import { EventSubscriber } from 'typeorm';
 import { publishDomainEvent } from '../../event-publisher/index.ts';
 import { PolicyAttributeEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
@@ -30,9 +30,7 @@ async function publishEvent(
     data: PolicyAttribute,
 ) {
     const destinations : DomainEventDestinations = [
-        {
-            channel: (id) => buildEntityChannelName(EntityType.POLICY_ATTRIBUTE, id),
-        },
+        { channel: (id) => buildEntityChannelName(EntityType.POLICY_ATTRIBUTE, id) },
     ];
     if (data.realm_id) {
         destinations.push({

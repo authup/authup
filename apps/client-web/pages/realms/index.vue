@@ -34,7 +34,7 @@ export default defineNuxtComponent({
             const toast = useToast();
             toast.show({
                 variant: 'success',
-                body: `The realm ${e.name} was successfully deleted.` 
+                body: `The realm ${e.name} was successfully deleted.`, 
             });
         };
 
@@ -42,7 +42,7 @@ export default defineNuxtComponent({
             const toast = useToast();
             toast.show({
                 variant: 'warning',
-                body: e.message 
+                body: e.message, 
             });
         };
 

@@ -44,7 +44,7 @@ function createUserActor(userId: string, realmId?: string): ActorContext {
                 realm_id: rId,
                 realm: {
                     id: rId,
-                    name: 'test-realm' 
+                    name: 'test-realm', 
                 } as Realm,
             } as User,
         },
@@ -57,17 +57,13 @@ describe('core/entities/user-attribute/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<UserAttribute>();
-        service = new UserAttributeService({
-            repository 
-        });
+        service = new UserAttributeService({ repository });
     });
 
     describe('getMany', () => {
         it('should return entities when actor has permission', async () => {
             repository.seed([
-                createFakeUserAttribute({
-                    user_id: randomUUID() 
-                }),
+                createFakeUserAttribute({ user_id: randomUUID() }),
             ]);
             const result = await service.getMany({}, createAllowAllActor());
             expect(result.data).toHaveLength(1);
@@ -80,11 +76,11 @@ describe('core/entities/user-attribute/service', () => {
             repository.seed([
                 createFakeUserAttribute({
                     name: 'mine',
-                    user_id: userId 
+                    user_id: userId, 
                 }),
                 createFakeUserAttribute({
                     name: 'other',
-                    user_id: otherId 
+                    user_id: otherId, 
                 }),
             ]);
 
@@ -108,17 +104,13 @@ describe('core/entities/user-attribute/service', () => {
 
     describe('getOne', () => {
         it('should return entity when actor can manage', async () => {
-            const entity = repository.seed(createFakeUserAttribute({
-                user_id: randomUUID() 
-            }));
+            const entity = repository.seed(createFakeUserAttribute({ user_id: randomUUID() }));
             const result = await service.getOne(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
         });
 
         it('should throw ForbiddenError when actor cannot manage', async () => {
-            const entity = repository.seed(createFakeUserAttribute({
-                user_id: randomUUID() 
-            }));
+            const entity = repository.seed(createFakeUserAttribute({ user_id: randomUUID() }));
 
             const actor = createUserActor(randomUUID());
             vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
@@ -139,9 +131,7 @@ describe('core/entities/user-attribute/service', () => {
                 name: 'new-attr',
                 value: 'val',
                 user_id: userId,
-                user: {
-                    realm_id: userRealmId 
-                },
+                user: { realm_id: userRealmId },
             };
 
             const result = await service.create(data, createAllowAllActor());
@@ -156,7 +146,7 @@ describe('core/entities/user-attribute/service', () => {
 
             const result = await service.create({
                 name: 'attr',
-                value: 'val' 
+                value: 'val', 
             }, actor);
             expect(result.user_id).toBe(userId);
             expect(result.realm_id).toBe(realmId);
@@ -169,7 +159,7 @@ describe('core/entities/user-attribute/service', () => {
             await expect(
                 service.create({
                     name: 'attr',
-                    value: 'val' 
+                    value: 'val', 
                 }, actor),
             ).rejects.toThrow(BadRequestError);
         });
@@ -178,7 +168,7 @@ describe('core/entities/user-attribute/service', () => {
             await expect(
                 service.create({
                     name: 'attr',
-                    value: 'val' 
+                    value: 'val', 
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
@@ -192,9 +182,7 @@ describe('core/entities/user-attribute/service', () => {
                 user_id: randomUUID(),
             }));
 
-            const result = await service.update(entity.id, {
-                value: 'new-val' 
-            }, createAllowAllActor());
+            const result = await service.update(entity.id, { value: 'new-val' }, createAllowAllActor());
             expect(result.value).toBe('new-val');
         });
 
@@ -205,9 +193,7 @@ describe('core/entities/user-attribute/service', () => {
             }));
 
             const actor = createAllowAllActor();
-            await service.update(entity.id, {
-                value: 'new' 
-            }, actor);
+            await service.update(entity.id, { value: 'new' }, actor);
 
             expect(actor.permissionEvaluator.evaluateOneOf).toHaveBeenCalledWith({
                 name: [
@@ -219,9 +205,7 @@ describe('core/entities/user-attribute/service', () => {
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
-                service.update('non-existent-id', {
-                    value: 'x' 
-                }, createAllowAllActor()),
+                service.update('non-existent-id', { value: 'x' }, createAllowAllActor()),
             ).rejects.toThrow(NotFoundError);
         });
 
@@ -235,17 +219,13 @@ describe('core/entities/user-attribute/service', () => {
             vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
             vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockResolvedValue(undefined);
 
-            await expect(service.update(entity.id, {
-                value: 'new' 
-            }, actor)).rejects.toThrow(ForbiddenError);
+            await expect(service.update(entity.id, { value: 'new' }, actor)).rejects.toThrow(ForbiddenError);
         });
     });
 
     describe('delete', () => {
         it('should delete an existing attribute', async () => {
-            const entity = repository.seed(createFakeUserAttribute({
-                user_id: randomUUID() 
-            }));
+            const entity = repository.seed(createFakeUserAttribute({ user_id: randomUUID() }));
 
             const result = await service.delete(entity.id, createAllowAllActor());
             expect(result.id).toBe(entity.id);
@@ -259,7 +239,7 @@ describe('core/entities/user-attribute/service', () => {
             const userId = randomUUID();
             const entity = repository.seed(createFakeUserAttribute({
                 name: 'my-attr',
-                user_id: userId 
+                user_id: userId, 
             }));
 
             const actor = createUserActor(userId);
@@ -268,9 +248,7 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should throw ForbiddenError when actor cannot manage others attributes', async () => {
-            const entity = repository.seed(createFakeUserAttribute({
-                user_id: randomUUID() 
-            }));
+            const entity = repository.seed(createFakeUserAttribute({ user_id: randomUUID() }));
 
             const actor = createUserActor(randomUUID());
             vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());

@@ -11,9 +11,7 @@ import { ApplicationBuilder } from '../../app/index.ts';
 
 export function defineCLIResetCommand() {
     return defineCommand({
-        meta: {
-            name: 'reset',
-        },
+        meta: { name: 'reset' },
         async setup() {
             const app = new ApplicationBuilder()
                 .withConfig()

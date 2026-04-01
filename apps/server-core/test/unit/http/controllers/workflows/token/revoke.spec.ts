@@ -37,15 +37,11 @@ describe('token-revoke', () => {
 
         await suite.client
             .token
-            .revoke({
-                token: response.access_token,
-            });
+            .revoke({ token: response.access_token });
 
         const introspectResponse = await suite.client
             .token
-            .introspect({
-                token: response.access_token,
-            });
+            .introspect({ token: response.access_token });
 
         expect(introspectResponse).toBeDefined();
         expect(introspectResponse.active).toBeFalsy();
@@ -64,15 +60,11 @@ describe('token-revoke', () => {
 
         await suite.client
             .token
-            .revoke({
-                token: response.refresh_token,
-            });
+            .revoke({ token: response.refresh_token });
 
         const introspectResponse = await suite.client
             .token
-            .introspect({
-                token: response.refresh_token,
-            });
+            .introspect({ token: response.refresh_token });
 
         expect(introspectResponse).toBeDefined();
         expect(introspectResponse.active).toBeFalsy();

@@ -28,9 +28,7 @@ import type {
 import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/index.ts';
 
-@Entity({
-    name: 'auth_robots' 
-})
+@Entity({ name: 'auth_robots' })
 @Unique(['name', 'realm_id'])
 export class RobotEntity implements Robot {
     @PrimaryGeneratedColumn('uuid')
@@ -39,32 +37,32 @@ export class RobotEntity implements Robot {
     @Column({
         type: 'varchar',
         length: 256,
-        select: false 
+        select: false, 
     })
     secret: string;
 
     @Column({
         type: 'varchar',
-        length: 128 
+        length: 128, 
     })
     name: string;
 
     @Column({
         type: 'varchar',
         length: 256,
-        nullable: true 
+        nullable: true, 
     })
     display_name: string | null;
 
     @Column({
         type: 'text',
-        nullable: true 
+        nullable: true, 
     })
     description: string;
 
     @Column({
         type: 'boolean',
-        default: true 
+        default: true, 
     })
     active: boolean;
 
@@ -80,34 +78,28 @@ export class RobotEntity implements Robot {
 
     @Column({
         nullable: true,
-        default: null 
+        default: null, 
     })
     user_id: User['id'] | null;
 
     @ManyToOne(() => UserEntity, {
         onDelete: 'CASCADE',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'user_id' 
-    })
+    @JoinColumn({ name: 'user_id' })
     user: User | null;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     client_id: Client['id'] | null;
 
     @ManyToOne(() => RealmEntity, {
         onDelete: 'CASCADE',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'client_id' 
-    })
+    @JoinColumn({ name: 'client_id' })
     client: Client | null;
 
     // ------------------------------------------------------------------
@@ -116,12 +108,8 @@ export class RobotEntity implements Robot {
     @Column()
     realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'realm_id' 
-    })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
     realm: Realm;
 
     // ------------------------------------------------------------------

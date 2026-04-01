@@ -78,9 +78,7 @@ describe('core/identity/provider/account', () => {
         identity = {
             id: 'foo',
             data: claims,
-            attributeCandidates: {
-                name: ['fooBarBaz'],
-            },
+            attributeCandidates: { name: ['fooBarBaz'] },
             provider,
         };
 
@@ -180,9 +178,7 @@ describe('core/identity/provider/account', () => {
 
     it('should synchronize roles', async () => {
         const roleRepository = new RoleRepository(suite.dataSource);
-        const role = roleRepository.create({
-            name: createNanoID(),
-        });
+        const role = roleRepository.create({ name: createNanoID() });
 
         await roleRepository.save(role);
 
@@ -215,9 +211,7 @@ describe('core/identity/provider/account', () => {
 
     it('should not synchronize roles', async () => {
         const roleRepository = new RoleRepository(suite.dataSource);
-        const role = roleRepository.create({
-            name: createNanoID(),
-        });
+        const role = roleRepository.create({ name: createNanoID() });
 
         await roleRepository.save(role);
 
@@ -250,9 +244,7 @@ describe('core/identity/provider/account', () => {
 
     it('should synchronize permissions', async () => {
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
-        const permission = permissionRepository.create({
-            name: createNanoID(),
-        });
+        const permission = permissionRepository.create({ name: createNanoID() });
 
         await permissionRepository.save(permission);
 
@@ -290,9 +282,7 @@ describe('core/identity/provider/account', () => {
             .dataSource
             .getRepository(PermissionEntity);
 
-        const permission = permissionRepository.create({
-            name: createNanoID(),
-        });
+        const permission = permissionRepository.create({ name: createNanoID() });
 
         await permissionRepository.save(permission);
 

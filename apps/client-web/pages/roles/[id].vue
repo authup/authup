@@ -8,7 +8,7 @@ import {
     definePageMeta,
     useToast,
 } from '#imports';
-import { createError,navigateTo,useRoute, } from '#app';
+import { createError, navigateTo, useRoute } from '#app';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
@@ -56,9 +56,7 @@ export default defineComponent({
                 .role
                 .getOne(route.params.id as string);
         } catch {
-            await navigateTo({
-                path: '/roles' 
-            });
+            await navigateTo({ path: '/roles' });
             throw createError({});
         }
 
@@ -66,7 +64,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The role was successfully updated.' 
+                    body: 'The role was successfully updated.', 
                 });
             }
 
@@ -77,7 +75,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

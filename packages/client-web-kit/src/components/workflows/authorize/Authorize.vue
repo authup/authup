@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import type { Client,OAuth2AuthorizationCodeRequest,Scope, } from '@authup/core-kit';
+import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
@@ -21,15 +21,11 @@ import AuthorizeText from './AuthorizeText.vue';
 
 const wrapChild = (child: VNodeChild) => h(
     'div',
-    {
-        class: 'd-flex align-items-center justify-content-center h-100' 
-    },
+    { class: 'd-flex align-items-center justify-content-center h-100' },
     [
         h(
             'div',
-            {
-                class: 'authorize' 
-            },
+            { class: 'authorize' },
             [
                 child,
             ],
@@ -44,29 +40,17 @@ export default defineComponent({
         Login,
     },
     props: {
-        codeRequest: {
-            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
-        },
-        client: {
-            type: Object as PropType<Client>,
-        },
-        clientId: {
-            type: String,
-        },
-        scopes: {
-            type: Array as PropType<Scope[]>,
-        },
-        error: {
-            type: Object as PropType<Error>,
-        },
+        codeRequest: { type: Object as PropType<OAuth2AuthorizationCodeRequest> },
+        client: { type: Object as PropType<Client> },
+        clientId: { type: String },
+        scopes: { type: Array as PropType<Scope[]> },
+        error: { type: Object as PropType<Error> },
     },
     emits: ['redirect'],
     setup(props) {
         const httpClient = injectHTTPClient();
         const store = injectStore();
-        const {
-            loggedIn 
-        } = storeToRefs(store);
+        const { loggedIn } = storeToRefs(store);
 
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
@@ -109,12 +93,8 @@ export default defineComponent({
 
             if (!loggedIn.value) {
                 return wrapChild(h(Suspense, {}, {
-                    default: () => h(Login, {
-                        codeRequest: props.codeRequest,
-                    }),
-                    fallback: () => h(AuthorizeText, {
-                        message: 'Loading...',
-                    }),
+                    default: () => h(Login, { codeRequest: props.codeRequest }),
+                    fallback: () => h(AuthorizeText, { message: 'Loading...' }),
                 }));
             }
 
@@ -128,9 +108,7 @@ export default defineComponent({
                     client: client.value!,
                     scopes: props.scopes,
                 }),
-                fallback: () => h(AuthorizeText, {
-                    message: 'Loading...',
-                }),
+                fallback: () => h(AuthorizeText, { message: 'Loading...' }),
             }));
         };
     },

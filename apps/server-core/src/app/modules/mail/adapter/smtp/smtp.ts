@@ -23,9 +23,7 @@ export class SMTPMailClientAdapter implements IMailClient {
         }
 
         if (typeof input === 'string') {
-            return createSMTPClient({
-                connectionString: input,
-            });
+            return createSMTPClient({ connectionString: input });
         }
 
         return createSMTPClient(input);

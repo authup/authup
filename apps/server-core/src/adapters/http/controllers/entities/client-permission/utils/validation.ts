@@ -7,7 +7,7 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { ClientPermissionEntity, } from '../../../../../database/domains/index.ts';
+import type { ClientPermissionEntity } from '../../../../../database/domains/index.ts';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class ClientPermissionRequestValidator extends Container<
@@ -18,9 +18,7 @@ export class ClientPermissionRequestValidator extends Container<
 
         this.mount(
             'client_id',
-            {
-                group: RequestHandlerOperation.CREATE 
-            },
+            { group: RequestHandlerOperation.CREATE },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -31,9 +29,7 @@ export class ClientPermissionRequestValidator extends Container<
 
         this.mount(
             'permission_id',
-            {
-                group: RequestHandlerOperation.CREATE 
-            },
+            { group: RequestHandlerOperation.CREATE },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -44,16 +40,12 @@ export class ClientPermissionRequestValidator extends Container<
 
         this.mount(
             'policy_id',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .isUUID()
-                    .optional({
-                        values: 'null' 
-                    });
+                    .optional({ values: 'null' });
             }),
         );
     }

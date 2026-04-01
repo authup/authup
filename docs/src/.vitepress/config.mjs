@@ -7,12 +7,12 @@ export default defineConfig({
         socialLinks: [
             {
                 icon: 'github',
-                link: 'https://github.com/authup/authup' 
+                link: 'https://github.com/authup/authup', 
             },
         ],
         editLink: {
             pattern: 'https://github.com/authup/authup/edit/master/docs/:path',
-            text: 'Edit this page on GitHub'
+            text: 'Edit this page on GitHub',
         },
         nav: [
             {
@@ -23,7 +23,7 @@ export default defineConfig({
             {
                 text: 'Getting Started',
                 link: '/getting-started/',
-                activeMatch: '/getting-started/'
+                activeMatch: '/getting-started/',
             },
             {
                 text: 'Guide',
@@ -31,17 +31,17 @@ export default defineConfig({
                 items: [
                     {
                         text: 'User',
-                        link: '/guide/user/' 
+                        link: '/guide/user/', 
                     },
                     {
                         text: 'Development',
-                        link: '/guide/development/' 
+                        link: '/guide/development/', 
                     },
                     {
                         text: 'Deployment',
-                        link: '/guide/deployment/' 
+                        link: '/guide/deployment/', 
                     },
-                ]
+                ],
             },
             {
                 text: 'SDKs',
@@ -49,13 +49,13 @@ export default defineConfig({
                 items: [
                     {
                         text: 'JavaScript',
-                        link: '/sdks/javascript/' 
+                        link: '/sdks/javascript/', 
                     },
                     {
                         text: 'Python',
-                        link: '/sdks/python/' 
-                    }
-                ]
+                        link: '/sdks/python/', 
+                    },
+                ],
             },
             {
                 text: 'About',
@@ -63,10 +63,10 @@ export default defineConfig({
                 items: [
                     {
                         text: 'Team',
-                        link: '/about/team' 
+                        link: '/about/team', 
                     },
-                ]
-            }
+                ],
+            },
         ],
         sidebar: {
             '/getting-started/': [
@@ -75,21 +75,21 @@ export default defineConfig({
                     items: [
                         {
                             text: 'What is Authup?',
-                            link: '/getting-started/' 
+                            link: '/getting-started/', 
                         },
                         {
                             text: 'Features',
-                            link: '/getting-started/features' 
+                            link: '/getting-started/features', 
                         },
                         {
                             text: 'Architecture',
-                            link: '/getting-started/architecture' 
+                            link: '/getting-started/architecture', 
                         },
                         {
                             text: 'Guides',
-                            link: '/getting-started/guides' 
+                            link: '/getting-started/guides', 
                         },
-                    ]
+                    ],
                 },
             ],
             '/guide/user/': [
@@ -98,9 +98,9 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/guide/user/' 
-                        }
-                    ]
+                            link: '/guide/user/', 
+                        },
+                    ],
                 },
                 {
                     text: 'Concepts',
@@ -108,9 +108,9 @@ export default defineConfig({
                         // { text: 'Single Sign-On (SSO)', link: '/guide/user/sso' },
                         {
                             text: 'Permissions & Policies',
-                            link: '/guide/user/permissions-and-policies' 
-                        }
-                    ]
+                            link: '/guide/user/permissions-and-policies', 
+                        },
+                    ],
                 },
                 /*
                 {
@@ -131,14 +131,14 @@ export default defineConfig({
                     items: [
                         {
                             text: 'FAQ',
-                            link: '/guide/user/faq' 
+                            link: '/guide/user/faq', 
                         },
                         {
                             text: 'Contact',
-                            link: '/guide/user/contact' 
+                            link: '/guide/user/contact', 
                         },
-                    ]
-                }
+                    ],
+                },
             ],
             '/guide/deployment': [
                 {
@@ -146,16 +146,16 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/guide/deployment/' 
+                            link: '/guide/deployment/', 
                         },
-                    ]
+                    ],
                 },
                 {
                     text: 'Configuration',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/guide/deployment/configuration' 
+                            link: '/guide/deployment/configuration', 
                         },
                         {
                             text: 'server:core',
@@ -163,66 +163,66 @@ export default defineConfig({
                             items: [
                                 {
                                     text: 'General',
-                                    link: '/guide/deployment/configuration-server-core' 
+                                    link: '/guide/deployment/configuration-server-core', 
                                 },
                                 {
                                     text: 'Database',
-                                    link: '/guide/deployment/configuration-server-core-database' 
+                                    link: '/guide/deployment/configuration-server-core-database', 
                                 },
                                 {
                                     text: 'Redis',
-                                    link: '/guide/deployment/configuration-server-core-redis' 
+                                    link: '/guide/deployment/configuration-server-core-redis', 
                                 },
                                 {
                                     text: 'SMTP',
-                                    link: '/guide/deployment/configuration-server-core-smtp' 
+                                    link: '/guide/deployment/configuration-server-core-smtp', 
                                 },
                                 {
                                     text: 'Vault',
-                                    link: '/guide/deployment/configuration-server-core-vault' 
-                                }
-                            ]
+                                    link: '/guide/deployment/configuration-server-core-vault', 
+                                },
+                            ],
                         },
                         {
                             text: 'client:web',
-                            link: '/guide/deployment/configuration-client-web' 
-                        }
-                    ]
+                            link: '/guide/deployment/configuration-client-web', 
+                        },
+                    ],
                 },
                 {
                     text: 'Targets',
                     items: [
                         {
                             text: 'Bare Metal',
-                            link: '/guide/deployment/bare-metal' 
+                            link: '/guide/deployment/bare-metal', 
                         },
                         {
                             text: 'Docker',
-                            link: '/guide/deployment/docker' 
+                            link: '/guide/deployment/docker', 
                         },
                         {
                             text: 'Docker Compose',
-                            link: '/guide/deployment/docker-compose' 
+                            link: '/guide/deployment/docker-compose', 
                         },
-                    ]
+                    ],
                 },
                 {
                     text: 'Provisioning',
                     items: [
                         {
                             text: 'Overview',
-                            link: '/guide/deployment/provisioning' 
-                        }
-                    ]
+                            link: '/guide/deployment/provisioning', 
+                        },
+                    ],
                 },
                 {
                     text: 'Reverse Proxy',
                     items: [
                         {
                             text: 'Nginx',
-                            link: '/guide/deployment/nginx' 
-                        }
-                    ]
+                            link: '/guide/deployment/nginx', 
+                        },
+                    ],
                 },
             ],
             '/guide/development': [
@@ -231,69 +231,69 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/guide/development/' 
+                            link: '/guide/development/', 
                         },
                         {
                             text: 'Code of Conduct',
-                            link: '/guide/development/code-of-conduct' 
+                            link: '/guide/development/code-of-conduct', 
                         },
                         {
                             text: 'Submission Guidelines',
-                            link: '/guide/development/submission-guidelines' 
+                            link: '/guide/development/submission-guidelines', 
                         },
                         {
                             text: 'Repository Structure',
-                            link: '/guide/development/repository-structure' 
+                            link: '/guide/development/repository-structure', 
                         },
                         {
                             text: 'Quick Start',
-                            link: '/guide/development/quick-start' 
+                            link: '/guide/development/quick-start', 
                         },
-                    ]
+                    ],
                 },
                 {
                     text: 'Integration',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/guide/development/integration' 
+                            link: '/guide/development/integration', 
                         },
                         {
                             text: 'SKDs',
-                            link: '/guide/development/sdks' 
+                            link: '/guide/development/sdks', 
                         },
                         {
                             text: 'Projects (Showcases)',
-                            link: '/guide/development/projects' 
-                        }
-                    ]
+                            link: '/guide/development/projects', 
+                        },
+                    ],
                 },
                 {
                     text: 'API',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/guide/development/api-introduction' 
+                            link: '/guide/development/api-introduction', 
                         },
                         {
                             text: 'OAuth2',
-                            link: '/guide/development/api-oauth2' 
+                            link: '/guide/development/api-oauth2', 
                         },
                         {
                             text: 'Examples',
-                            link: '/guide/development/api-examples' 
+                            link: '/guide/development/api-examples', 
                         },
                         {
                             text: 'Error Handling',
-                            link: '/guide/development/api-error-handling' 
+                            link: '/guide/development/api-error-handling', 
                         },
-                    ]
+                    ],
                 },
             ],
             '/sdks/python': [
                 {
                     text: 'Python',
-                    link: '/sdks/python' 
+                    link: '/sdks/python', 
                 },
             ],
             '/sdks/javascript/': [
@@ -302,121 +302,121 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/sdks/javascript/access/' 
+                            link: '/sdks/javascript/access/', 
                         },
                         {
                             text: 'Concepts',
                             items: [
                                 {
                                     text: 'Permission Checker',
-                                    link: '/sdks/javascript/access/permission-checker' 
+                                    link: '/sdks/javascript/access/permission-checker', 
                                 },
                                 {
                                     text: 'Policies',
-                                    link: '/sdks/javascript/access/policies' 
+                                    link: '/sdks/javascript/access/policies', 
                                 },
-                            ]
+                            ],
                         },
                         {
                             text: 'API Reference',
-                            link: '/sdks/javascript/access/api-reference' 
-                        }
-                    ]
+                            link: '/sdks/javascript/access/api-reference', 
+                        },
+                    ],
                 },
                 {
                     text: 'Client-Web-Kit',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/sdks/javascript/client-web-kit/' 
+                            link: '/sdks/javascript/client-web-kit/', 
                         },
                         {
                             text: 'Concepts',
                             items: [
                                 {
                                     text: 'Session',
-                                    link: '/sdks/javascript/client-web-kit/session' 
+                                    link: '/sdks/javascript/client-web-kit/session', 
                                 },
-                            ]
+                            ],
                         },
                         {
                             text: 'Components',
                             items: [
                                 {
                                     text: 'Records',
-                                    link: '/sdks/javascript/client-web-kit/records' 
+                                    link: '/sdks/javascript/client-web-kit/records', 
                                 },
                                 {
                                     text: 'Forms',
-                                    link: '/sdks/javascript/client-web-kit/forms' 
+                                    link: '/sdks/javascript/client-web-kit/forms', 
                                 },
                                 {
                                     text: 'Collections',
-                                    link: '/sdks/javascript/client-web-kit/collections' 
+                                    link: '/sdks/javascript/client-web-kit/collections', 
                                 },
-                            ]
-                        }
-                    ]
+                            ],
+                        },
+                    ],
                 },
                 {
                     text: 'Client-Web-Nuxt',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/sdks/javascript/client-web-nuxt/' 
+                            link: '/sdks/javascript/client-web-nuxt/', 
                         },
                         {
                             text: 'Concepts',
                             items: [
                                 {
                                     text: 'Route Protection',
-                                    link: '/sdks/javascript/client-web-nuxt/route-protection' 
+                                    link: '/sdks/javascript/client-web-nuxt/route-protection', 
                                 },
-                            ]
-                        }
-                    ]
+                            ],
+                        },
+                    ],
                 },
                 {
                     text: 'Core-Kit',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/sdks/javascript/core-kit/' 
+                            link: '/sdks/javascript/core-kit/', 
                         },
                         {
                             text: 'API Reference',
-                            link: '/sdks/javascript/core-kit/api-reference' 
-                        }
-                    ]
+                            link: '/sdks/javascript/core-kit/api-reference', 
+                        },
+                    ],
                 },
                 {
                     text: 'Core-HTTP-Kit',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/sdks/javascript/core-http-kit/' 
+                            link: '/sdks/javascript/core-http-kit/', 
                         },
                         {
                             text: 'Concepts',
                             items: [
                                 {
                                     text: 'Interceptor',
-                                    link: '/sdks/javascript/core-http-kit/interceptor' 
+                                    link: '/sdks/javascript/core-http-kit/interceptor', 
                                 },
                                 {
                                     text: 'Token Creator',
-                                    link: '/sdks/javascript/core-http-kit/token-creator' 
+                                    link: '/sdks/javascript/core-http-kit/token-creator', 
                                 },
                                 {
                                     text: 'Token Verifier',
-                                    link: '/sdks/javascript/core-http-kit/token-verifier' 
+                                    link: '/sdks/javascript/core-http-kit/token-verifier', 
                                 },
                                 {
                                     text: 'Client',
-                                    link: '/sdks/javascript/core-http-kit/client' 
+                                    link: '/sdks/javascript/core-http-kit/client', 
                                 },
-                            ]
-                        }
+                            ],
+                        },
                     ],
                 },
                 {
@@ -424,38 +424,38 @@ export default defineConfig({
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/sdks/javascript/server-adapter-http/' 
+                            link: '/sdks/javascript/server-adapter-http/', 
                         },
                         {
                             text: 'Concepts',
                             items: [
                                 {
                                     text: 'Middleware',
-                                    link: '/sdks/javascript/server-adapter-http/middleware' 
+                                    link: '/sdks/javascript/server-adapter-http/middleware', 
                                 },
-                            ]
-                        }
-                    ]
+                            ],
+                        },
+                    ],
                 },
                 {
                     text: 'Server-Adapter-Socket-IO',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/sdks/javascript/server-adapter-socket/' 
+                            link: '/sdks/javascript/server-adapter-socket/', 
                         },
                         {
                             text: 'Concepts',
                             items: [
                                 {
                                     text: 'Middleware',
-                                    link: '/sdks/javascript/server-adapter-socket/middleware' 
+                                    link: '/sdks/javascript/server-adapter-socket/middleware', 
                                 },
-                            ]
-                        }
-                    ]
-                }
-            ]
-        }
-    }
-})
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+});

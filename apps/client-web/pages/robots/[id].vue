@@ -8,7 +8,7 @@ import {
     definePageMeta,
     useToast,
 } from '#imports';
-import { createError,navigateTo,useRoute, } from '#app';
+import { createError, navigateTo, useRoute } from '#app';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
@@ -49,13 +49,9 @@ export default defineComponent({
         try {
             entity.value = await injectHTTPClient()
                 .robot
-                .getOne(route.params.id as string, {
-                    fields: ['+secret'] 
-                });
+                .getOne(route.params.id as string, { fields: ['+secret'] });
         } catch {
-            await navigateTo({
-                path: '/robots' 
-            });
+            await navigateTo({ path: '/robots' });
             createError({});
         }
 
@@ -63,7 +59,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The robot was successfully updated.' 
+                    body: 'The robot was successfully updated.', 
                 });
             }
 
@@ -74,7 +70,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

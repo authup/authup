@@ -44,9 +44,7 @@ export class MemoryCache implements ICache {
     }
 
     async set(key: string, value: unknown, options: CacheSetOptions): Promise<void> {
-        this.instance.set(key, value, {
-            ttl: options.ttl,
-        });
+        this.instance.set(key, value, { ttl: options.ttl });
     }
 
     async drop(key: string): Promise<void> {

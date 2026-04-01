@@ -23,9 +23,7 @@ export class Faker {
             return this.keyPair;
         }
 
-        this.keyPair = await createAsymmetricKeyPair({
-            name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
-        });
+        this.keyPair = await createAsymmetricKeyPair({ name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5 });
 
         return this.keyPair;
     }

@@ -21,7 +21,7 @@ export type RenderContext = {
 export async function render(ctx: RenderContext) {
     const {
         app, 
-        router 
+        router, 
     } = createApp(ctx.payload);
 
     // set the router to the desired URL before rendering

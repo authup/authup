@@ -79,9 +79,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Role> {
-        const {
-            entity 
-        } = await this.save(undefined, data, actor);
+        const { entity } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -90,11 +88,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Role> {
-        const {
-            entity 
-        } = await this.save(idOrName, data, actor, {
-            updateOnly: true 
-        });
+        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
         return entity;
     }
 
@@ -135,20 +129,14 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.ROLE_UPDATE 
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.ROLE_CREATE 
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, {
-            group 
-        });
+        const validated = await this.validator.run(data, { group });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -169,7 +157,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
             return {
                 entity,
-                created: false 
+                created: false, 
             };
         }
 
@@ -179,9 +167,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: validated,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
         await this.repository.checkUniqueness(validated);
@@ -191,7 +177,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         return {
             entity,
-            created: true 
+            created: true, 
         };
     }
 
@@ -199,13 +185,9 @@ export class RoleService extends AbstractEntityService implements IRoleService {
         id: string,
         actor: ActorContext,
     ): Promise<Role> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.ROLE_DELETE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_DELETE });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -216,14 +198,10 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

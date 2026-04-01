@@ -8,6 +8,4 @@
 import type { LinesRecord } from 'ilingo';
 import { TranslatorTranslationVuecsKey } from '../constants';
 
-export const TranslatorTranslationVuecsGerman : LinesRecord = {
-    [TranslatorTranslationVuecsKey.NO_MORE]: 'Keine weiteren {{name}} verfügbar',
-};
+export const TranslatorTranslationVuecsGerman : LinesRecord = { [TranslatorTranslationVuecsKey.NO_MORE]: 'Keine weiteren {{name}} verfügbar' };

@@ -27,9 +27,7 @@ export const ARobots = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Robot>(),
     slots: Object as SlotsType<EntityCollectionVSlots<Robot>>,
     setup(props, ctx) {
-        const {
-            render 
-        } = defineEntityCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${EntityType.ROBOT}`,
             props,
             setup: ctx,
@@ -43,15 +41,9 @@ export const ARobots = defineComponent({
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
-            data: {
-                name: translationName,
-            },
+            data: { name: translationName },
         });
 
-        return () => render({
-            noMore: {
-                content: translation.value,
-            },
-        });
+        return () => render({ noMore: { content: translation.value } });
     },
 });

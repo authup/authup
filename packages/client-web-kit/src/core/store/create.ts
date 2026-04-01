@@ -10,7 +10,7 @@ import {
     PermissionMemoryProvider,
     PolicyEngine,
 } from '@authup/access';
-import { OAuth2Error, } from '@authup/specs';
+import { OAuth2Error } from '@authup/specs';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
@@ -21,7 +21,7 @@ import type {
     User,
 } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
-import { Client, } from '@authup/core-http-kit';
+import { Client } from '@authup/core-http-kit';
 import { StoreDispatcherEventName } from './dispatcher';
 import type { StoreCreateContext, StoreLoginContext } from './types';
 
@@ -59,9 +59,7 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
 
 export function createStore(context: StoreCreateContext) {
-    const client = new Client({
-        baseURL: context.baseURL,
-    });
+    const client = new Client({ baseURL: context.baseURL });
 
     const cookiesRead = ref<boolean>(false);
     const setCookiesRead = (value: boolean) => {
@@ -176,9 +174,7 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             if (tempAccessToken) {
-                await client.token.revoke({
-                    token: tempAccessToken,
-                });
+                await client.token.revoke({ token: tempAccessToken });
             }
         } catch {
             // ...
@@ -186,9 +182,7 @@ export function createStore(context: StoreCreateContext) {
 
         try {
             if (tempRefreshToken) {
-                await client.token.revoke({
-                    token: tempRefreshToken,
-                });
+                await client.token.revoke({ token: tempRefreshToken });
             }
         } catch {
             // ...
@@ -221,9 +215,7 @@ export function createStore(context: StoreCreateContext) {
 
         tokenResolved.value = true;
 
-        return client.token.introspect<OAuth2TokenIntrospectionResponse>({
-            token: accessToken.value,
-        }, {
+        return client.token.introspect<OAuth2TokenIntrospectionResponse>({ token: accessToken.value }, {
             authorizationHeader: {
                 type: 'Bearer',
                 token: accessToken.value,
@@ -287,9 +279,7 @@ export function createStore(context: StoreCreateContext) {
             }
 
             try {
-                const response = await client.token.createWithRefreshToken({
-                    refresh_token: refreshToken.value,
-                });
+                const response = await client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
 
                 applyTokenGrantResponse(response);
             } catch (e) {
@@ -346,9 +336,7 @@ export function createStore(context: StoreCreateContext) {
         const response = await client.token.createWithPassword({
             username: ctx.name,
             password: ctx.password,
-            ...(realmId.value ? {
-                realm_id: ctx.realmId 
-            } : {}),
+            ...(realmId.value ? { realm_id: ctx.realmId } : {}),
         });
 
         applyTokenGrantResponse(response);
@@ -360,9 +348,7 @@ export function createStore(context: StoreCreateContext) {
     };
 
     const exchangeAuthorizationCode = async (code: string) => {
-        const response = await client.token.createWithAuthorizationCode({
-            code,
-        });
+        const response = await client.token.createWithAuthorizationCode({ code });
 
         await cleanup();
 

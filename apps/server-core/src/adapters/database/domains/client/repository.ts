@@ -37,12 +37,8 @@ export class ClientRepository extends Repository<ClientEntity> {
         const entities = await this.manager
             .getRepository(ClientRoleEntity)
             .find({
-                where: {
-                    client_id: id,
-                },
-                relations: {
-                    role: true,
-                },
+                where: { client_id: id },
+                relations: { role: true },
                 cache: {
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.CLIENT_OWNED_ROLES,
@@ -68,12 +64,8 @@ export class ClientRepository extends Repository<ClientEntity> {
         const repository = this.manager.getRepository(ClientPermissionEntity);
 
         const entities = await repository.find({
-            where: {
-                client_id: id,
-            },
-            relations: {
-                permission: true,
-            },
+            where: { client_id: id },
+            relations: { permission: true },
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.CLIENT_OWNED_PERMISSIONS,

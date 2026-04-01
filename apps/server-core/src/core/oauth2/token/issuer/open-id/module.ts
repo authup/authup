@@ -12,7 +12,7 @@ import { OAuth2OpenIDClaimsBuilder } from '../../../openid/index.ts';
 import type { IOAuth2TokenSigner } from '../../signer/index.ts';
 import type { IOAuth2TokenRepository } from '../../repository/index.ts';
 import { OAuth2BaseTokenIssuer } from '../base.ts';
-import type { OAuth2TokenIssuerResponse, } from '../types.ts';
+import type { OAuth2TokenIssuerResponse } from '../types.ts';
 import type { IOAuth2OpenIDTokenIssuer, OAuth2OpenIDTokenIssuerContext } from './types.ts';
 import type { IIdentityResolver } from '../../../../identity/index.ts';
 
@@ -73,12 +73,8 @@ export class OAuth2OpenIDTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             auth_time: utc,
             exp: this.buildExp(input),
             updated_at: utc,
-            ...(iss ? {
-                iss 
-            } : {}),
-            ...(input.client_id ? {
-                aud: input.client_id 
-            } : {}),
+            ...(iss ? { iss } : {}),
+            ...(input.client_id ? { aud: input.client_id } : {}),
         });
 
         const token = await this.signer.sign(data);

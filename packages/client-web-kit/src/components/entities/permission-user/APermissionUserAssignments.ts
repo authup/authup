@@ -18,9 +18,7 @@ export const APermissionUserAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, {
-        slots 
-    }) {
+    setup(props, { slots }) {
         return () => h(AUsers, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: User }) => h(
                 AUserPermissionAssignment,

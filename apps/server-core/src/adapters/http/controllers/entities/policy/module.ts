@@ -6,7 +6,7 @@
  */
 
 import type { PolicyAPICheckResponse } from '@authup/core-http-kit';
-import { BuiltInPolicyType,PolicyData,definePolicyEvaluationContext, } from '@authup/access';
+import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import {
@@ -33,7 +33,7 @@ import type {
     IIdentityPermissionProvider, 
     IPolicyRepository, 
     IPolicyService, 
-    IRealmRepository 
+    IRealmRepository, 
 } from '../../../../../core/index.ts';
 import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -75,12 +75,12 @@ export class PolicyController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 
@@ -90,9 +90,7 @@ export class PolicyController {
         @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<any> {
-        return this.getOne(id, req, res, {
-            expanded: true 
-        });
+        return this.getOne(id, req, res, { expanded: true });
     }
 
     @DGet('/:id', [])
@@ -124,16 +122,12 @@ export class PolicyController {
 
         let criteria: Record<string, any>;
         if (isUUID(paramId)) {
-            criteria = {
-                id: paramId 
-            };
+            criteria = { id: paramId };
         } else {
             const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'));
             criteria = {
                 name: paramId,
-                ...(realm ? {
-                    realm_id: realm.id 
-                } : {}),
+                ...(realm ? { realm_id: realm.id } : {}),
             };
         }
 
@@ -153,13 +147,9 @@ export class PolicyController {
 
         let output: PolicyAPICheckResponse;
         try {
-            await policyEngine.evaluate(entity, definePolicyEvaluationContext({
-                data: new PolicyData(data),
-            }));
+            await policyEngine.evaluate(entity, definePolicyEvaluationContext({ data: new PolicyData(data) }));
 
-            output = {
-                status: 'success',
-            };
+            output = { status: 'success' };
         } catch (e) {
             output = {
                 status: 'error',
@@ -198,7 +188,7 @@ export class PolicyController {
 
         const {
             entity, 
-            created 
+            created, 
         } = await this.service.save(
             id || undefined,
             data,

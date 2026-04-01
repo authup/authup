@@ -20,7 +20,7 @@ import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IClientPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext, } from '../../../request/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 export type ClientPermissionControllerContext = {
     service: IClientPermissionService,
@@ -43,12 +43,12 @@ export class ClientPermissionController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { type PropType,defineComponent,reactive, } from 'vue';
+import { type PropType, defineComponent, reactive } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
@@ -14,11 +14,7 @@ export default defineComponent({
         VCFormGroup,
         IVuelidate,
     },
-    props: {
-        entity: {
-            type: Object as PropType<Partial<Policy>>,
-        },
-    },
+    props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
         const form = reactive({
@@ -29,18 +25,14 @@ export default defineComponent({
         const vuelidate = useVuelidate({
             start: {},
             end: {},
-        }, form, {
-            $registerAs: 'type',
-        });
+        }, form, { $registerAs: 'type' });
 
         function assign(data: Partial<DatePolicy> = {}) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             assignFormProperties(form, data as Record<string, any>);
         }
 
-        setup.expose({
-            assign,
-        });
+        setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));

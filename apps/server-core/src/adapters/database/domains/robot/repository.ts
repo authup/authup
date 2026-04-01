@@ -41,12 +41,8 @@ export class RobotRepository extends Repository<RobotEntity> {
         const entities = await this.manager
             .getRepository(RobotRoleEntity)
             .find({
-                where: {
-                    robot_id: id,
-                },
-                relations: {
-                    role: true,
-                },
+                where: { robot_id: id },
+                relations: { role: true },
                 cache: {
                     id: buildRedisKeyPath({
                         prefix: CachePrefix.ROBOT_OWNED_ROLES,
@@ -73,12 +69,8 @@ export class RobotRepository extends Repository<RobotEntity> {
         const repository = this.manager.getRepository(RobotPermissionEntity);
 
         const entities = await repository.find({
-            where: {
-                robot_id: id,
-            },
-            relations: {
-                permission: true,
-            },
+            where: { robot_id: id },
+            relations: { permission: true },
             cache: {
                 id: buildRedisKeyPath({
                     prefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,

@@ -15,8 +15,6 @@ export class IdentityProviderPermissionMappingRepository implements IIdentityPro
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(IdentityProviderPermissionMappingEntity);
 
-        return repository.findBy({
-            provider_id: providerId,
-        });
+        return repository.findBy({ provider_id: providerId });
     }
 }

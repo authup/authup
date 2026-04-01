@@ -13,21 +13,15 @@ export type RedisClientCreateInput = string | boolean | RedisClient | RedisClien
 
 export function createRedisClient(input: RedisClientCreateInput) {
     if (typeof input === 'boolean') {
-        return createClient({
-            connectionString: 'redis://127.0.0.1',
-        });
+        return createClient({ connectionString: 'redis://127.0.0.1' });
     }
 
     if (typeof input === 'string') {
-        return createClient({
-            connectionString: input,
-        });
+        return createClient({ connectionString: input });
     }
 
     if (!isRedisClient(input)) {
-        return createClient({
-            options: input,
-        });
+        return createClient({ options: input });
     }
 
     return input;

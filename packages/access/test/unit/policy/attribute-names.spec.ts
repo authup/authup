@@ -37,9 +37,7 @@ describe('src/policy/attribute-names', () => {
 
     it('should parse options', async () => {
         const validator = new AttributeNamesPolicyValidator();
-        const output = await validator.run({
-            names: ['foo', 'bar'],
-        } satisfies AttributeNamesPolicy);
+        const output = await validator.run({ names: ['foo', 'bar'] } satisfies AttributeNamesPolicy);
 
         expect(output.names).toEqual(['foo', 'bar']);
     });
@@ -93,15 +91,7 @@ describe('src/policy/attribute-names', () => {
 
         const outcome = await evaluator.evaluate(
             policy,
-            definePolicyEvaluationContext({
-                data: new PolicyData({
-                    attributes: {
-                        user: {
-                            name: 'admin',
-                        },
-                    },
-                }),
-            }),
+            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { user: { name: 'admin' } } }) }),
         );
         expect(outcome.success)
             .toBeTruthy();
@@ -117,15 +107,7 @@ describe('src/policy/attribute-names', () => {
 
         const outcome = await evaluator.evaluate(
             policy,
-            definePolicyEvaluationContext({
-                data: new PolicyData({
-                    attributes: {
-                        user: {
-                            display_name: 'admin',
-                        },
-                    },
-                }),
-            }),
+            definePolicyEvaluationContext({ data: new PolicyData({ attributes: { user: { display_name: 'admin' } } }) }),
         );
         expect(outcome.success)
             .toBeFalsy();

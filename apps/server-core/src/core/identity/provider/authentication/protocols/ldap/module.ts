@@ -105,12 +105,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
             return {
                 success: true,
-                data: null 
+                data: null, 
             };
         } catch (e) {
             return {
                 success: false,
-                error: e as Error 
+                error: e as Error, 
             };
         }
     }
@@ -125,12 +125,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
             return {
                 success: true,
-                data: null 
+                data: null, 
             };
         } catch (e) {
             return {
                 success: false,
-                error: e as Error 
+                error: e as Error, 
             };
         }
     }

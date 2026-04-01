@@ -7,7 +7,7 @@
 
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { Container } from 'validup';
-import type { IdentityProviderRoleMappingEntity, } from '../../../../../database/domains/index.ts';
+import type { IdentityProviderRoleMappingEntity } from '../../../../../database/domains/index.ts';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
 export class IdentityProviderRoleMappingRequestValidator extends Container<
@@ -18,9 +18,7 @@ export class IdentityProviderRoleMappingRequestValidator extends Container<
 
         this.mount(
             'provider_id',
-            {
-                group: RequestHandlerOperation.CREATE 
-            },
+            { group: RequestHandlerOperation.CREATE },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -31,9 +29,7 @@ export class IdentityProviderRoleMappingRequestValidator extends Container<
 
         this.mount(
             'role_id',
-            {
-                group: RequestHandlerOperation.CREATE 
-            },
+            { group: RequestHandlerOperation.CREATE },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
@@ -44,39 +40,29 @@ export class IdentityProviderRoleMappingRequestValidator extends Container<
 
         this.mount(
             'name',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .isString()
-                    .optional({
-                        values: 'null' 
-                    });
+                    .optional({ values: 'null' });
             }),
         );
 
         this.mount(
             'value',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain
                     .isString()
-                    .optional({
-                        values: 'null' 
-                    });
+                    .optional({ values: 'null' });
             }),
         );
 
         this.mount(
             'value_is_regex',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(() => {
                 const chain = createValidationChain();
                 return chain

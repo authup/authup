@@ -65,9 +65,7 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             identity.realmName &&
             identity.realmName === 'master'
         ) {
-            return {
-                success: maybeInvertPolicyOutcome(true, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
         let keys : string[];
@@ -143,17 +141,13 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
 
             if (outcome) {
                 if (policy.decision_strategy === DecisionStrategy.AFFIRMATIVE) {
-                    return {
-                        success: maybeInvertPolicyOutcome(true, policy.invert),
-                    };
+                    return { success: maybeInvertPolicyOutcome(true, policy.invert) };
                 }
 
                 count++;
             } else {
                 if (policy.decision_strategy === DecisionStrategy.UNANIMOUS) {
-                    return {
-                        success: maybeInvertPolicyOutcome(false, policy.invert),
-                    };
+                    return { success: maybeInvertPolicyOutcome(false, policy.invert) };
                 }
 
                 count--;
@@ -161,13 +155,9 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         if (!evaluated) {
-            return {
-                success: maybeInvertPolicyOutcome(true, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
-        return {
-            success: maybeInvertPolicyOutcome(count > 0, policy.invert),
-        };
+        return { success: maybeInvertPolicyOutcome(count > 0, policy.invert) };
     }
 }

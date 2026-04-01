@@ -62,15 +62,13 @@ async function runMigrationOperation(
         logger.debug(`Migration-Directory: ${options.migrations}`);
     }
 
-    const check = await checkDatabase({
-        options 
-    });
+    const check = await checkDatabase({ options });
 
     if (!check.exists) {
         await createDatabase({
             options,
             synchronize: false,
-            ifNotExist: true 
+            ifNotExist: true, 
         });
     }
 
@@ -127,12 +125,10 @@ async function generateMigrations(): Promise<void> {
         const dataSourceOptions = optionsBuilder.buildWith(connection);
         const directoryPath = path.join(baseDirectory, dataSourceOptions.type);
 
-        await dropDatabase({
-            options: dataSourceOptions 
-        });
+        await dropDatabase({ options: dataSourceOptions });
         await createDatabase({
             options: dataSourceOptions,
-            synchronize: false 
+            synchronize: false, 
         });
 
         const dataSource = new DataSource(dataSourceOptions);
@@ -156,9 +152,7 @@ async function generateMigrations(): Promise<void> {
 
 export function defineCLIMigrationCommand() {
     return defineCommand({
-        meta: {
-            name: 'migration',
-        },
+        meta: { name: 'migration' },
         args: {
             operation: {
                 required: true,

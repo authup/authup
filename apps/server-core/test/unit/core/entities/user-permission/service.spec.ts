@@ -28,9 +28,7 @@ describe('core/entities/user-permission/service', () => {
 
     beforeEach(() => {
         repository = new FakeEntityRepository<UserPermission>();
-        service = new UserPermissionService({
-            repository 
-        });
+        service = new UserPermissionService({ repository });
     });
 
     describe('getMany', () => {
@@ -68,12 +66,10 @@ describe('core/entities/user-permission/service', () => {
             const data = {
                 user_id: randomUUID(),
                 permission_id: randomUUID(),
-                user: {
-                    realm_id: randomUUID() 
-                },
+                user: { realm_id: randomUUID() },
                 permission: {
                     realm_id: randomUUID(),
-                    name: 'test-perm' 
+                    name: 'test-perm', 
                 },
             };
 
@@ -90,7 +86,7 @@ describe('core/entities/user-permission/service', () => {
                 permission_id: randomUUID(),
                 permission: {
                     name: 'custom-perm',
-                    realm_id: null 
+                    realm_id: null, 
                 },
             }, actor);
 
@@ -105,7 +101,7 @@ describe('core/entities/user-permission/service', () => {
             await expect(
                 service.create({
                     user_id: randomUUID(),
-                    permission_id: randomUUID() 
+                    permission_id: randomUUID(), 
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
@@ -126,9 +122,7 @@ describe('core/entities/user-permission/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
-                name: PermissionName.USER_PERMISSION_DELETE,
-            });
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_PERMISSION_DELETE });
         });
     });
 });

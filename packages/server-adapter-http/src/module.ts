@@ -11,9 +11,7 @@ import type { Middleware, MiddlewareOptions, Next } from './types';
 
 export function createMiddleware(context: MiddlewareOptions) : Middleware {
     return async (req: IncomingMessage, _res: ServerResponse, next: Next) => {
-        let {
-            authorization 
-        } = req.headers;
+        let { authorization } = req.headers;
 
         if (!authorization && context.tokenByCookie) {
             const cookieToken = context.tokenByCookie(req, CookieName.ACCESS_TOKEN);

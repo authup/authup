@@ -26,9 +26,7 @@ export async function canRequestManageUserAttribute(
         if (isMe) {
             await permissionEvaluator.evaluate({
                 name: PermissionName.USER_SELF_MANAGE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
 
             return true;
@@ -43,9 +41,7 @@ export async function canRequestManageUserAttribute(
         try {
             await permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
         } catch {
             return false;

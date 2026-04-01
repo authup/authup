@@ -11,9 +11,7 @@ import { getJWTClaimByPattern } from '../../../src';
 
 const claims : JWTClaims = {
     iss: 'https://google.de',
-    realm_access: {
-        roles: ['foo', 'bar', 'baz'],
-    },
+    realm_access: { roles: ['foo', 'bar', 'baz'] },
     bool: true,
     num: 5,
     empty: '',

@@ -9,7 +9,7 @@ import type { Session } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { SessionEntity } from '../../../adapters/database/domains/index.ts';
 import type { IContainer } from 'eldin';
-import { SessionManager, } from '../../../core/index.ts';
+import { SessionManager } from '../../../core/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
@@ -46,9 +46,7 @@ export class AuthenticationModule implements IModule {
                 const repository = c.resolve(AuthenticationInjectionKey.SessionRepository);
                 return new SessionManager({
                     repository,
-                    options: {
-                        maxAge: config.tokenRefreshMaxAge + 3_600,
-                    },
+                    options: { maxAge: config.tokenRefreshMaxAge + 3_600 },
                 });
             },
         });

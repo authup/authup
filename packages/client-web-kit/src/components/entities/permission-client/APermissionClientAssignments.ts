@@ -18,9 +18,7 @@ export const APermissionClientAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, {
-        slots 
-    }) {
+    setup(props, { slots }) {
         return () => h(AClients, {}, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Client }) => h(
                 AClientPermissionAssignment,

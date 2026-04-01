@@ -6,7 +6,7 @@
  */
 
 import type { Key } from '@authup/core-kit';
-import { AsymmetricKey,CryptoAsymmetricAlgorithm,createAsymmetricKeyPair, } from '@authup/server-kit';
+import { AsymmetricKey, CryptoAsymmetricAlgorithm, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWTAlgorithm } from '@authup/specs';
 import { useDataSource } from 'typeorm-extension';
 import { KeyEntity } from '../../../../../adapters/database/index.ts';
@@ -14,15 +14,11 @@ import type { IOAuth2KeyRepository } from '../../../../../core/index.ts';
 
 export class OAuth2KeyRepository implements IOAuth2KeyRepository {
     async findByRealmId(realmId: string): Promise<Key | null> {
-        return this.createOrGet({
-            realm_id: realmId,
-        });
+        return this.createOrGet({ realm_id: realmId });
     }
 
     async findById(id: string): Promise<Key | null> {
-        return this.createOrGet({
-            id,
-        });
+        return this.createOrGet({ id });
     }
 
     protected async createOrGet(where: {
@@ -51,9 +47,7 @@ export class OAuth2KeyRepository implements IOAuth2KeyRepository {
             return null;
         }
 
-        const keyPair = await createAsymmetricKeyPair({
-            name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5,
-        });
+        const keyPair = await createAsymmetricKeyPair({ name: CryptoAsymmetricAlgorithm.RSASSA_PKCS1_V1_5 });
 
         const privateKeyContainer = new AsymmetricKey(keyPair.privateKey);
         const publicKeyContainer = new AsymmetricKey(keyPair.publicKey);

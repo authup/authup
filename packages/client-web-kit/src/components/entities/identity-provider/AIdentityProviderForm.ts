@@ -21,12 +21,8 @@ import { AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form';
 
 export const AIdentityProviderForm = defineComponent({
     props: {
-        entity: {
-            type: Object as PropType<IdentityProvider>,
-        },
-        realmId: {
-            type: String,
-        },
+        entity: { type: Object as PropType<IdentityProvider> },
+        realmId: { type: String },
     },
     emits: ['created', 'deleted', 'updated', 'failed'],
     setup(props, setup) {
@@ -135,9 +131,7 @@ export const AIdentityProviderForm = defineComponent({
                 prefix = preset.value;
             }
 
-            return render(h('div', {
-                class: 'alert alert-warning alert-sm' 
-            }, [
+            return render(h('div', { class: 'alert alert-warning alert-sm' }, [
                 `${prefix} is not supported yet :/`,
             ]));
         };

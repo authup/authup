@@ -22,9 +22,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
     }
 
     async clear(): Promise<void> {
-        await this.instance.clear({
-            prefix: this.buildKey(''),
-        });
+        await this.instance.clear({ prefix: this.buildKey('') });
     }
 
     async connect(): Promise<void> {
@@ -68,9 +66,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
             await this.instance.set(
                 this.buildKey(options.identifier),
                 options,
-                {
-                    ttl: options.duration,
-                },
+                { ttl: options.duration },
             );
 
             return;
@@ -80,9 +76,7 @@ export class DatabaseQueryResultCache implements QueryResultCache {
             await this.instance.set(
                 this.buildKey(encodeURIComponent(options.query)),
                 options,
-                {
-                    ttl: options.duration,
-                },
+                { ttl: options.duration },
             );
         }
     }

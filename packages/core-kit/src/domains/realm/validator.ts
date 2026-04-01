@@ -25,9 +25,7 @@ export class RealmValidator extends Container<
                 .max(128)
                 .check((ctx) => {
                     try {
-                        isRealmNameValid(ctx.value, {
-                            throwOnFailure: true 
-                        });
+                        isRealmNameValid(ctx.value, { throwOnFailure: true });
                     } catch (e) {
                         ctx.issues.push({
                             input: ctx.value,
@@ -38,27 +36,21 @@ export class RealmValidator extends Container<
                 }),
         );
 
-        this.mount('name', {
-            group: ValidatorGroup.CREATE 
-        }, nameValidator);
+        this.mount('name', { group: ValidatorGroup.CREATE }, nameValidator);
         this.mount('name', {
             group: ValidatorGroup.UPDATE,
-            optional: true 
+            optional: true, 
         }, nameValidator);
 
         this.mount(
             'display_name',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'description',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(5).max(4096).nullable()),
         );
     }

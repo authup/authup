@@ -16,9 +16,7 @@ export class ScopeProvisioningValidator extends Container<ScopeProvisioningEntit
         super.initialize();
 
         const strategyValidator = new ProvisioningStrategyValidator();
-        this.mount('strategy', {
-            optional: true 
-        }, strategyValidator);
+        this.mount('strategy', { optional: true }, strategyValidator);
 
         const attributesValidator = new ScopeValidator();
         this.mount('attributes', attributesValidator);

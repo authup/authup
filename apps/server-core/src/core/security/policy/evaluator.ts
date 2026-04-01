@@ -100,31 +100,23 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             }));
 
         if (identityBindings.length === 0) {
-            return {
-                success: maybeInvertPolicyOutcome(false, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
         const bindingsMerged = mergePermissionBindings(identityBindings);
         if (bindingsMerged.length === 0) {
-            return {
-                success: maybeInvertPolicyOutcome(false, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
         const policies : PolicyWithType[] = bindingsMerged
             .flatMap((b) => b.policies || []);
 
         if (policies.length === 0) {
-            return {
-                success: maybeInvertPolicyOutcome(true, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
         if (!ctx.evaluators) {
-            return {
-                success: maybeInvertPolicyOutcome(false, policy.invert),
-            };
+            return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
         const compositePolicy : PolicyWithType<CompositePolicy> = {

@@ -22,9 +22,7 @@ import type { Client, Realm, User } from '@authup/core-kit';
 import { ClientEntity } from '../client/index.ts';
 import { RealmEntity } from '../realm/index.ts';
 
-@Entity({
-    name: 'auth_users' 
-})
+@Entity({ name: 'auth_users' })
 @Unique(['name', 'realm_id'])
 export class UserEntity implements User {
     @PrimaryGeneratedColumn('uuid')
@@ -33,34 +31,34 @@ export class UserEntity implements User {
     @Index()
     @Column({
         type: 'varchar',
-        length: 128 
+        length: 128, 
     })
     name: string;
 
     @Column({
         type: 'boolean',
-        default: true 
+        default: true, 
     })
     name_locked: boolean;
 
     @Column({
         type: 'varchar',
         length: 128,
-        nullable: true 
+        nullable: true, 
     })
     first_name: string | null;
 
     @Column({
         type: 'varchar',
         length: 128,
-        nullable: true 
+        nullable: true, 
     })
     last_name: string | null;
 
     @Column({
         type: 'varchar',
         length: 256,
-        nullable: true 
+        nullable: true, 
     })
     display_name: string | null;
 
@@ -86,14 +84,14 @@ export class UserEntity implements User {
     @Column({
         type: 'varchar',
         length: 255,
-        nullable: true 
+        nullable: true, 
     })
     avatar: string | null;
 
     @Column({
         type: 'varchar',
         length: 255,
-        nullable: true 
+        nullable: true, 
     })
     cover: string | null;
 
@@ -175,29 +173,21 @@ export class UserEntity implements User {
     @Column()
     realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'realm_id' 
-    })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
     realm: Realm;
 
     // ------------------------------------------------------------------
 
     @Index()
-    @Column({
-        nullable: true 
-    })
+    @Column({ nullable: true })
     client_id: Client['id'] | null;
 
     @ManyToOne(() => ClientEntity, {
         onDelete: 'CASCADE',
-        nullable: true 
+        nullable: true, 
     })
-    @JoinColumn({
-        name: 'client_id' 
-    })
+    @JoinColumn({ name: 'client_id' })
     client: Client | null;
 
     // ------------------------------------------------------------------

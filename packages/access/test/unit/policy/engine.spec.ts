@@ -38,20 +38,12 @@ describe('src/policy', () => {
 
         const attributePolicy = definePolicyWithType(
             BuiltInPolicyType.ATTRIBUTES,
-            defineAttributesPolicy<User>({
-                query: {
-                    name: {
-                        $eq: 'admin',
-                    },
-                },
-            }),
+            defineAttributesPolicy<User>({ query: { name: { $eq: 'admin' } } }),
         );
 
         const attributeNamesPolicy = definePolicyWithType(
             BuiltInPolicyType.ATTRIBUTE_NAMES,
-            {
-                names: ['name'],
-            },
+            { names: ['name'] },
         );
 
         compositePolicy = definePolicyWithType(
@@ -67,13 +59,7 @@ describe('src/policy', () => {
     });
 
     it('should evaluate with valid data', async () => {
-        const outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({
-            data: new PolicyData({
-                attributes: {
-                    name: 'admin',
-                },
-            }),
-        }));
+        const outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name: 'admin' } }) }));
         expect(outcome.success).toBeTruthy();
     });
 
@@ -89,13 +75,7 @@ describe('src/policy', () => {
 
         expect(outcome.success).toBeFalsy();
 
-        outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({
-            data: new PolicyData({
-                attributes: {
-                    name: 'foo',
-                },
-            }),
-        }));
+        outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({ data: new PolicyData({ attributes: { name: 'foo' } }) }));
         expect(outcome.success).toBeFalsy();
     });
 });

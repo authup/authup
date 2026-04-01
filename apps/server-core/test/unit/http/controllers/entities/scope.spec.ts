@@ -46,9 +46,7 @@ describe('src/http/controllers/scope', () => {
         try {
             await suite.client
                 .scope
-                .create({
-                    name: details.name,
-                } satisfies Partial<Scope>);
+                .create({ name: details.name } satisfies Partial<Scope>);
         } catch (e) {
             if (isClientError(e)) {
                 expect(e.statusCode).toEqual(409);
@@ -121,30 +119,20 @@ describe('src/http/controllers/scope', () => {
     });
 
     it('should create and update resource with put', async () => {
-        const {
-            name 
-        } = createFakeScope();
+        const { name } = createFakeScope();
 
         let response = await suite.client
             .scope
-            .createOrUpdate(name, {
-                name,
-            });
+            .createOrUpdate(name, { name });
 
         expect(response.name).toEqual(name);
 
-        const {
-            id 
-        } = response;
-        const {
-            name: nextName 
-        } = createFakeScope();
+        const { id } = response;
+        const { name: nextName } = createFakeScope();
 
         response = await suite.client
             .scope
-            .createOrUpdate(name, {
-                name: nextName,
-            });
+            .createOrUpdate(name, { name: nextName });
 
         expect(response).toBeDefined();
         expect(response.name).toEqual(nextName);

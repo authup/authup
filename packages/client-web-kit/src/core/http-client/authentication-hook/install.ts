@@ -23,9 +23,7 @@ export function installHTTPClientAuthenticationHook(
     const storeFactory = injectStoreFactory(app);
     const store = storeFactory(options.pinia);
 
-    const {
-        refreshToken 
-    } = storeToRefs(store);
+    const { refreshToken } = storeToRefs(store);
 
     const hook = new ClientAuthenticationHook({
         baseURL: options.baseURL,
@@ -34,12 +32,8 @@ export function installHTTPClientAuthenticationHook(
                 throw new Error('No refresh token available.');
             }
 
-            const client = new Client({
-                baseURL: options.baseURL 
-            });
-            return client.token.createWithRefreshToken({
-                refresh_token: refreshToken.value,
-            });
+            const client = new Client({ baseURL: options.baseURL });
+            return client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
         },
         timer: !options.isServer,
     });

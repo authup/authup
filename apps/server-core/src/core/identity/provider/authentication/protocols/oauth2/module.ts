@@ -75,12 +75,12 @@ export class IdentityProviderOAuth2Authenticator implements IOAuth2Authenticator
             const data = await this.authenticate(params);
             return {
                 success: true,
-                data 
+                data, 
             };
         } catch (e) {
             return {
                 success: false,
-                error: e as Error 
+                error: e as Error, 
             };
         }
     }

@@ -8,9 +8,7 @@
 import { type Factory, singa } from 'singa';
 import type { Logger } from 'winston';
 
-const instance = singa<Logger>({
-    name: 'logger',
-});
+const instance = singa<Logger>({ name: 'logger' });
 
 export function setLoggerFactory(factory: Factory<Logger>) {
     instance.setFactory(factory);

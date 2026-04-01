@@ -73,9 +73,7 @@ export function install(app: App, options: Options): void {
         isServer: options.isServer,
     });
 
-    installTranslator(app, {
-        locale: options.translatorLocale,
-    });
+    installTranslator(app, { locale: options.translatorLocale });
 
     installComponents(app, options.components);
 

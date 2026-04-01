@@ -30,9 +30,7 @@ export class TestHTTPApplication extends TestApplication {
         const address = httpServer.address() as AddressInfo;
         const baseURL = `http://localhost:${address.port}`;
 
-        const client = new Client({
-            baseURL,
-        });
+        const client = new Client({ baseURL });
 
         client.setAuthorizationHeader({
             type: 'Basic',

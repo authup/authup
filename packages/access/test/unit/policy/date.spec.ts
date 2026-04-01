@@ -24,29 +24,20 @@ describe('src/policy/date', () => {
 
         const evaluator = new DatePolicyEvaluator();
         const dateTime = new Date('2024-04-15');
-        let outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
-            data: new PolicyData({
-                [BuiltInPolicyType.DATE]: dateTime,
-            }),
-        }));
+        let outcome = await evaluator.evaluate(
+            policy,
+            definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.DATE]: dateTime }) }),
+        );
         expect(outcome.success).toBeTruthy();
 
         // march
         dateTime.setMonth(2, 1);
-        outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
-            data: new PolicyData({
-                [BuiltInPolicyType.DATE]: dateTime,
-            }),
-        }));
+        outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.DATE]: dateTime }) }));
         expect(outcome.success).toBeFalsy();
 
         // june
         dateTime.setMonth(5, 1);
-        outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
-            data: new PolicyData({
-                [BuiltInPolicyType.DATE]: dateTime,
-            }),
-        }));
+        outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({ data: new PolicyData({ [BuiltInPolicyType.DATE]: dateTime }) }));
         expect(outcome.success).toBeFalsy();
     });
 

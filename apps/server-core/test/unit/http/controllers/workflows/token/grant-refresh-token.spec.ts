@@ -36,9 +36,7 @@ describe('refresh-token', () => {
 
         response = await suite.client
             .token
-            .createWithRefreshToken({
-                refresh_token: response.refresh_token,
-            });
+            .createWithRefreshToken({ refresh_token: response.refresh_token });
 
         expect(response).toBeDefined();
         expect(response.access_token).toBeDefined();

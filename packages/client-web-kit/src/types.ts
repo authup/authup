@@ -89,16 +89,16 @@ export interface CookieOptions {
 export type CookieSetFn = (
     key: string,
     value: any,
-    options: CookieOptions
+    options: CookieOptions,
 ) => void;
 
 export type CookieUnsetFn = (
     key: string,
-    options: CookieOptions
+    options: CookieOptions,
 ) => void;
 
 export type CookieGetFn = (
-    key: string
+    key: string,
 ) => any;
 
 export type Options = {

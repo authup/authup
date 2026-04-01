@@ -172,9 +172,7 @@ export class LdapClient implements ILdapClient {
                     const entries : Record<string, any>[] = [];
 
                     res.on('searchEntry', (searchEntry) => {
-                        const entry : Record<string, any> = {
-                            dn: searchEntry.pojo.objectName,
-                        };
+                        const entry : Record<string, any> = { dn: searchEntry.pojo.objectName };
 
                         for (let i = 0; i < searchEntry.attributes.length; i++) {
                             const attribute = searchEntry.attributes[i];

@@ -24,13 +24,9 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
         const qb = this.repository.createQueryBuilder('robotPermission');
         qb.groupBy('robotPermission.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'robotPermission',
-            filters: {
-                allowed: ['robot_id', 'permission_id'],
-            },
+            filters: { allowed: ['robot_id', 'permission_id'] },
             relations: {
                 allowed: [
                     'robot',
@@ -47,9 +43,7 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
                     'updated_at',
                 ],
             },
-            pagination: {
-                maxLimit: 50,
-            },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -64,9 +58,7 @@ export class RobotPermissionRepositoryAdapter implements IRobotPermissionReposit
     }
 
     findOneById(id: string): Promise<RobotPermission | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     findOneByName(_name: string): Promise<RobotPermission | null> {

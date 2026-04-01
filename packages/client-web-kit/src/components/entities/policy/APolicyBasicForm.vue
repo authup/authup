@@ -25,11 +25,7 @@ export default defineComponent({
         VCFormGroup,
         IVuelidate,
     },
-    props: {
-        entity: {
-            type: Object as PropType<Policy>,
-        },
-    },
+    props: { entity: { type: Object as PropType<Policy> } },
     emits: ['updated'],
     setup(props, setup) {
         const entity = toRef(props, 'entity');
@@ -58,7 +54,7 @@ export default defineComponent({
         const typeOptions : FormSelectOption[] = [
             ...Object.values(BuiltInPolicyType).map((type) => ({
                 id: type,
-                value: type 
+                value: type, 
             })),
         ];
 
@@ -78,17 +74,13 @@ export default defineComponent({
                 maxLength: maxLength(4096),
             },
             realm_id: {},
-        }, form, {
-            $registerAs: 'basic',
-        });
+        }, form, { $registerAs: 'basic' });
 
         function assign(data: Partial<Policy> = {}) {
             assignFormProperties(form, data);
         }
 
-        setup.expose({
-            assign,
-        });
+        setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));

@@ -17,9 +17,7 @@ export const AFormSubmit = defineComponent({
         },
     },
     emits: ['submit'],
-    setup(props, {
-        emit 
-    }) {
+    setup(props, { emit }) {
         const translationsSubmit = createFormSubmitTranslations();
 
         const render = () => buildFormSubmitWithTranslations({

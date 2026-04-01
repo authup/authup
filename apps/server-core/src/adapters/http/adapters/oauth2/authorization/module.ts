@@ -30,9 +30,7 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
     async authorizeWithRequest(req: Request) : Promise<OAuth2AuthorizationResult> {
         const codeRequestValidated = await this.validateWithRequest(req);
 
-        const {
-            data 
-        } = await this.codeRequestVerifier.verify(codeRequestValidated);
+        const { data } = await this.codeRequestVerifier.verify(codeRequestValidated);
 
         const identity = useRequestIdentityOrFail(req);
 
@@ -49,8 +47,6 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
     async validateWithRequest(
         req: Request,
     ) : Promise<OAuth2AuthorizationCodeRequest> {
-        return this.requestValidator.run(req, {
-            locations: ['body', 'query'],
-        });
+        return this.requestValidator.run(req, { locations: ['body', 'query'] });
     }
 }

@@ -31,15 +31,9 @@ export default defineComponent({
         AIdentityProviderIcon,
 
     },
-    props: {
-        codeRequest: {
-            type: Object as PropType<OAuth2AuthorizationCodeRequest>,
-        },
-    },
+    props: { codeRequest: { type: Object as PropType<OAuth2AuthorizationCodeRequest> } },
     emits: ['done', 'failed'],
-    setup(props, {
-        emit 
-    }) {
+    setup(props, { emit }) {
         const apiClient = injectHTTPClient();
         const store = injectStore();
 

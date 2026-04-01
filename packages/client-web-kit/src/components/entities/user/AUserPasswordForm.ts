@@ -20,7 +20,7 @@ import {
     ref, 
     toRef,
 } from 'vue';
-import { buildFormGroup,buildFormInput,buildFormInputCheckbox, } from '@vuecs/form-controls';
+import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
 import {
     buildFormSubmitWithTranslations,
     createFormSubmitTranslations, 

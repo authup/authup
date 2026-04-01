@@ -37,9 +37,7 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
 }
 
 function createMockMailClient(): IMailClient {
-    return {
-        send: vi.fn().mockResolvedValue(undefined),
-    };
+    return { send: vi.fn().mockResolvedValue(undefined) };
 }
 
 describe('core/identity/password-recovery/service', () => {
@@ -56,18 +54,14 @@ describe('core/identity/password-recovery/service', () => {
     describe('forgotPassword', () => {
         it('should throw when password recovery is not enabled', async () => {
             const service = new PasswordRecoveryService({
-                options: {
-                    passwordRecoveryEnabled: false 
-                },
+                options: { passwordRecoveryEnabled: false },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
             await expect(
-                service.forgotPassword({
-                    email: faker.internet.email() 
-                }),
+                service.forgotPassword({ email: faker.internet.email() }),
             ).rejects.toThrow(BadRequestError);
         });
 
@@ -75,7 +69,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: false 
+                    emailVerificationEnabled: false, 
                 },
                 mailClient,
                 repository,
@@ -83,9 +77,7 @@ describe('core/identity/password-recovery/service', () => {
             });
 
             await expect(
-                service.forgotPassword({
-                    email: faker.internet.email() 
-                }),
+                service.forgotPassword({ email: faker.internet.email() }),
             ).rejects.toThrow(BadRequestError);
         });
 
@@ -93,7 +85,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
@@ -101,9 +93,7 @@ describe('core/identity/password-recovery/service', () => {
             });
 
             await expect(
-                service.forgotPassword({
-                    email: 'nonexistent@example.com' 
-                }),
+                service.forgotPassword({ email: 'nonexistent@example.com' }),
             ).rejects.toThrow(NotFoundError);
         });
 
@@ -119,16 +109,14 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
-            const result = await service.forgotPassword({
-                email 
-            });
+            const result = await service.forgotPassword({ email });
 
             expect(result.reset_expires).toBeDefined();
             expect(mailClient.send).toHaveBeenCalledTimes(1);
@@ -141,7 +129,7 @@ describe('core/identity/password-recovery/service', () => {
 
             const user = await repository.findOneBy({
                 email,
-                realm_id: masterRealm.id 
+                realm_id: masterRealm.id, 
             });
             expect(user!.reset_hash).toBeDefined();
             expect(user!.reset_hash).not.toBeNull();
@@ -158,16 +146,14 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
-            const result = await service.forgotPassword({
-                name: 'forgot-user' 
-            });
+            const result = await service.forgotPassword({ name: 'forgot-user' });
             expect(result.reset_expires).toBeDefined();
         });
 
@@ -183,7 +169,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
@@ -191,9 +177,7 @@ describe('core/identity/password-recovery/service', () => {
             });
 
             const before = Date.now();
-            const result = await service.forgotPassword({
-                email 
-            });
+            const result = await service.forgotPassword({ email });
             const after = Date.now();
 
             const expires = new Date(result.reset_expires).getTime();
@@ -216,16 +200,14 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
                 realmRepository,
             });
 
-            await expect(service.forgotPassword({
-                email 
-            })).rejects.toThrow(BadRequestError);
+            await expect(service.forgotPassword({ email })).rejects.toThrow(BadRequestError);
 
             const user = await repository.findOneById(entity.id);
             expect(user!.reset_hash).toBeNull();
@@ -236,9 +218,7 @@ describe('core/identity/password-recovery/service', () => {
     describe('resetPassword', () => {
         it('should throw when password recovery is not enabled', async () => {
             const service = new PasswordRecoveryService({
-                options: {
-                    passwordRecoveryEnabled: false 
-                },
+                options: { passwordRecoveryEnabled: false },
                 mailClient,
                 repository,
                 realmRepository,
@@ -266,7 +246,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
@@ -295,7 +275,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
@@ -324,7 +304,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,
@@ -358,7 +338,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: {
                     passwordRecoveryEnabled: true,
-                    emailVerificationEnabled: true 
+                    emailVerificationEnabled: true, 
                 },
                 mailClient,
                 repository,

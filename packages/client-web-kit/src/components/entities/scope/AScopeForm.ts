@@ -19,8 +19,8 @@ import {
     ref,
     watch,
 } from 'vue';
-import { maxLength,minLength,required, } from '@vuelidate/validators';
-import type { Scope, } from '@authup/core-kit';
+import { maxLength, minLength, required } from '@vuelidate/validators';
+import type { Scope } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
@@ -53,9 +53,7 @@ export const AScopeForm = defineComponent({
             type: String,
             default: undefined,
         },
-        entity: {
-            type: Object as PropType<Scope>,
-        },
+        entity: { type: Object as PropType<Scope> },
     },
     emits: defineEntityVEmitOptions<Scope>(),
     setup(props, ctx) {
@@ -148,18 +146,10 @@ export const AScopeForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.REALM 
-                },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
             ],
         );
 
@@ -175,9 +165,7 @@ export const AScopeForm = defineComponent({
                         onChange(input) {
                             $v.value.name.$model = input;
                         },
-                        props: {
-                            disabled: isNameFixed.value,
-                        },
+                        props: { disabled: isNameFixed.value },
                     }),
                 }),
                 buildFormGroup({
@@ -202,9 +190,7 @@ export const AScopeForm = defineComponent({
                         onChange(input) {
                             $v.value.description.$model = input;
                         },
-                        props: {
-                            rows: 7,
-                        },
+                        props: { rows: 7 },
                     }),
                 }),
             ];

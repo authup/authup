@@ -35,9 +35,7 @@ export class UserRepositoryAdapter implements IUserRepository {
         const qb = this.repository.createQueryBuilder('user');
         qb.groupBy('user.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'user',
             fields: {
                 default: [
@@ -56,21 +54,15 @@ export class UserRepositoryAdapter implements IUserRepository {
                 ],
                 allowed: ['email'],
             },
-            filters: {
-                allowed: ['id', 'name', 'realm_id'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
+            filters: { allowed: ['id', 'name', 'realm_id'] },
+            pagination: { maxLimit: 50 },
             relations: {
                 allowed: ['realm'],
                 onJoin: (_property: string, key: string, q: any) => {
                     q.addGroupBy(`${key}.id`);
                 },
             },
-            sort: {
-                allowed: ['id', 'name', 'display_name', 'created_at', 'updated_at'],
-            },
+            sort: { allowed: ['id', 'name', 'display_name', 'created_at', 'updated_at'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -87,9 +79,7 @@ export class UserRepositoryAdapter implements IUserRepository {
     }
 
     async findOneById(id: string): Promise<User | null> {
-        const entity = await this.findOneBy({
-            id 
-        });
+        const entity = await this.findOneBy({ id });
         if (entity) {
             await this.repository.extendOneWithEA(entity);
         }
@@ -98,16 +88,12 @@ export class UserRepositoryAdapter implements IUserRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<User | null> {
         const qb = this.repository.createQueryBuilder('user');
-        qb.where('user.name LIKE :name', {
-            name 
-        });
+        qb.where('user.name LIKE :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('user.realm_id = :realmId', {
-                    realmId: realm.id 
-                });
+                qb.andWhere('user.realm_id = :realmId', { realmId: realm.id });
             }
         }
 
@@ -128,20 +114,14 @@ export class UserRepositoryAdapter implements IUserRepository {
         const qb = this.repository.createQueryBuilder('user');
 
         if (isUUID(id)) {
-            qb.where('user.id = :id', {
-                id 
-            });
+            qb.where('user.id = :id', { id });
         } else {
-            qb.where('user.name LIKE :name', {
-                name: id 
-            });
+            qb.where('user.name LIKE :name', { name: id });
 
             if (realmKey) {
                 const realm = await this.realmRepository.resolve(realmKey);
                 if (realm) {
-                    qb.andWhere('user.realm_id = :realmId', {
-                        realmId: realm.id 
-                    });
+                    qb.andWhere('user.realm_id = :realmId', { realmId: realm.id });
                 }
             }
         }
@@ -165,9 +145,7 @@ export class UserRepositoryAdapter implements IUserRepository {
                 ],
                 allowed: ['email'],
             },
-            relations: {
-                allowed: ['realm'],
-            },
+            relations: { allowed: ['realm'] },
         });
 
         const entity = await qb.getOne();

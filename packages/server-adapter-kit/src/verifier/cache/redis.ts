@@ -20,9 +20,7 @@ export class RedisTokenVerifierCache implements ITokenVerifierCache {
         if (!input) {
             client = createClient();
         } else if (typeof input === 'string') {
-            client = createClient({
-                connectionString: input,
-            });
+            client = createClient({ connectionString: input });
         } else {
             client = input;
         }
@@ -38,9 +36,7 @@ export class RedisTokenVerifierCache implements ITokenVerifierCache {
         return this.instance.set(
             this.buildKey(token),
             data,
-            {
-                seconds,
-            },
+            { seconds },
         );
     }
 

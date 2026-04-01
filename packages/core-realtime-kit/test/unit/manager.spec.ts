@@ -46,42 +46,30 @@ describe('src/manager', () => {
     });
 
     it('should accept different url + path combinations', () => {
-        let manager = new ClientManager({
-            url: `http://localhost:${port}`,
-        });
+        let manager = new ClientManager({ url: `http://localhost:${port}` });
         expect(manager.options.path).toEqual('/socket.io');
 
-        manager = new ClientManager({
-            url: `http://localhost:${port}/api/`,
-        });
+        manager = new ClientManager({ url: `http://localhost:${port}/api/` });
         expect(manager.options.path).toEqual('/api/socket.io');
 
         manager = new ClientManager({
             url: `http://localhost:${port}/api/socket.io`,
-            options: {
-                path: '/socket.io',
-            },
+            options: { path: '/socket.io' },
         });
+        expect(manager.options.path).toEqual('/api/socket.io');
+
+        manager = new ClientManager({ url: `http://localhost:${port}/api/socket.io` });
         expect(manager.options.path).toEqual('/api/socket.io');
 
         manager = new ClientManager({
             url: `http://localhost:${port}/api/socket.io`,
-        });
-        expect(manager.options.path).toEqual('/api/socket.io');
-
-        manager = new ClientManager({
-            url: `http://localhost:${port}/api/socket.io`,
-            options: {
-                path: '/socket.jo',
-            },
+            options: { path: '/socket.jo' },
         });
         expect(manager.options.path).toEqual('/api/socket.io/socket.jo');
     });
 
     it('should connect to server', async () => {
-        const manager = new ClientManager({
-            url: `http://localhost:${port}`,
-        });
+        const manager = new ClientManager({ url: `http://localhost:${port}` });
         const socket = await manager.connect();
         expect(socket.connected).toBeTruthy();
 
@@ -90,9 +78,7 @@ describe('src/manager', () => {
     });
 
     it('should inject and eject', () => {
-        const manager = new ClientManager({
-            url: `http://localhost:${port}`,
-        });
+        const manager = new ClientManager({ url: `http://localhost:${port}` });
         const socket = manager.inject();
         expect(socket.connected).toBeFalsy();
 
@@ -100,9 +86,7 @@ describe('src/manager', () => {
     });
 
     it('should reconnect', async () => {
-        const manager = new ClientManager({
-            url: `http://localhost:${port}`,
-        });
+        const manager = new ClientManager({ url: `http://localhost:${port}` });
 
         const socket = await manager.connect();
         expect(socket.connected).toBeTruthy();

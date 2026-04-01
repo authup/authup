@@ -6,12 +6,8 @@ import { BuiltInPolicyType } from '@authup/access';
 
 export default defineComponent({
     props: {
-        type: {
-            type: String,
-        },
-        types: {
-            type: Array as PropType<(FormSelectOption | string)[]>,
-        },
+        type: { type: String },
+        types: { type: Array as PropType<(FormSelectOption | string)[]> },
     },
     emits: ['pick'],
     setup(props, setup) {
@@ -22,7 +18,7 @@ export default defineComponent({
                     if (typeof type === 'string') {
                         return {
                             id: type,
-                            value: type 
+                            value: type, 
                         } satisfies FormSelectOption;
                     }
 

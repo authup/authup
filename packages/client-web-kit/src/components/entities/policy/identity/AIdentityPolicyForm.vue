@@ -3,38 +3,24 @@ import type { IdentityPolicy } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
-import { defineComponent,reactive, } from 'vue';
+import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
 
 export default defineComponent({
-    components: {
-        AFormInputList,
-    },
-    props: {
-        entity: {
-            type: Object as PropType<Partial<Policy>>,
-        },
-    },
+    components: { AFormInputList },
+    props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
-        const form = reactive<{ types: string[] }>({
-            types: [],
-        });
+        const form = reactive<{ types: string[] }>({ types: [] });
 
-        const vuelidate = useVuelidate({
-            types: {},
-        }, form, {
-            $registerAs: 'type',
-        });
+        const vuelidate = useVuelidate({ types: {} }, form, { $registerAs: 'type' });
 
         function assign(data: Partial<IdentityPolicy> = {}) {
             form.types = data.types || [];
         }
 
-        setup.expose({
-            assign,
-        });
+        setup.expose({ assign });
 
         const updatedAt = useUpdatedAt(props.entity as Policy);
         onChange(updatedAt, () => assign(props.entity));

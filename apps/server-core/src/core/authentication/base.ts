@@ -17,12 +17,12 @@ export abstract class BaseCredentialsAuthenticator<
             const data = await this.authenticate(key, value, realmId);
             return {
                 success: true,
-                data 
+                data, 
             };
         } catch (e) {
             return {
                 success: false,
-                error: e as Error 
+                error: e as Error, 
             };
         }
     }

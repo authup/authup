@@ -67,7 +67,7 @@ export class OAuth2ProviderRoleController {
 
         const {
             data, 
-            meta 
+            meta, 
         } = await this.repository.findMany(useRequestQuery(req));
 
         return send(res, {
@@ -93,9 +93,7 @@ export class OAuth2ProviderRoleController {
 
         const paramId = useRequestParamID(req);
 
-        const entity = await this.repository.findOneBy({
-            id: paramId 
-        });
+        const entity = await this.repository.findOneBy({ id: paramId });
 
         if (!entity) {
             throw new NotFoundError();
@@ -114,21 +112,15 @@ export class OAuth2ProviderRoleController {
         const paramId = useRequestParamID(req);
 
         const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluate({
-            name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
-        });
+        await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE });
 
         const validator = new IdentityProviderRoleMappingRequestValidator();
         const validatorAdapter = new RoutupContainerAdapter(validator);
-        const data = await validatorAdapter.run(req, {
-            group: RequestHandlerOperation.UPDATE,
-        });
+        const data = await validatorAdapter.run(req, { group: RequestHandlerOperation.UPDATE });
 
         await this.repository.validateJoinColumns(data);
 
-        let entity = await this.repository.findOneBy({
-            id: paramId 
-        });
+        let entity = await this.repository.findOneBy({ id: paramId });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -137,9 +129,7 @@ export class OAuth2ProviderRoleController {
 
         await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
         await this.repository.save(entity);
@@ -156,27 +146,19 @@ export class OAuth2ProviderRoleController {
         const paramId = useRequestParamID(req);
 
         const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluate({
-            name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
-        });
+        await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE });
 
-        const entity = await this.repository.findOneBy({
-            id: paramId 
-        });
+        const entity = await this.repository.findOneBy({ id: paramId });
         if (!entity) {
             throw new NotFoundError();
         }
 
         await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
 
         await this.repository.remove(entity);
 
@@ -192,16 +174,12 @@ export class OAuth2ProviderRoleController {
         @DResponse() res: Response,
     ): Promise<any> {
         const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluate({
-            name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
-        });
+        await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE });
 
         const validator = new IdentityProviderRoleMappingRequestValidator();
         const validatorAdapter = new RoutupContainerAdapter(validator);
 
-        const data = await validatorAdapter.run(req, {
-            group: RequestHandlerOperation.CREATE,
-        });
+        const data = await validatorAdapter.run(req, { group: RequestHandlerOperation.CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -223,9 +201,7 @@ export class OAuth2ProviderRoleController {
 
         await permissionEvaluator.evaluate({
             name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: data,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
         });
 
         const identity = useRequestIdentityOrFail(req);

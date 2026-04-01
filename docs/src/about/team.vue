@@ -2,7 +2,7 @@
 import {
     VPTeamMembers,
     VPTeamPage,
-    VPTeamPageTitle
+    VPTeamPageTitle,
 } from 'vitepress/theme';
 
 const members = [
@@ -13,17 +13,17 @@ const members = [
         links: [
             {
                 icon: 'github',
-                link: 'https://github.com/tada5hi' 
+                link: 'https://github.com/tada5hi', 
             },
             {
                 icon: 'twitter',
-                link: 'https://twitter.com/tada5hi' 
+                link: 'https://twitter.com/tada5hi', 
             },
             {
                 icon: 'linkedin',
-                link: 'https://www.linkedin.com/in/peter-placzek-047a74210/' 
+                link: 'https://www.linkedin.com/in/peter-placzek-047a74210/', 
             },
-        ]
+        ],
     },
     {
         avatar: 'https://www.github.com/migraf.png',
@@ -32,15 +32,15 @@ const members = [
         links: [
             {
                 icon: 'github',
-                link: 'https://github.com/migraf' 
+                link: 'https://github.com/migraf', 
             },
             {
                 icon: 'linkedin',
-                link: 'https://www.linkedin.com/in/michael-m-graf/' 
+                link: 'https://www.linkedin.com/in/michael-m-graf/', 
             },
-        ]
-    }
-]
+        ],
+    },
+];
 </script>
 
 <template>

@@ -25,9 +25,7 @@ function createMockPermissionEvaluator(
 }
 
 export function createAllowAllActor(): ActorContext {
-    return {
-        permissionEvaluator: createMockPermissionEvaluator(),
-    };
+    return { permissionEvaluator: createMockPermissionEvaluator() };
 }
 
 export function createDenyAllActor(): ActorContext {
@@ -48,7 +46,7 @@ export function createMasterRealmActor(realmId?: string): ActorContext {
                 realm_id: id,
                 realm: {
                     id,
-                    name: REALM_MASTER_NAME 
+                    name: REALM_MASTER_NAME, 
                 } as Realm,
             } as User,
         },
@@ -65,7 +63,7 @@ export function createNonMasterRealmActor(realmId?: string): ActorContext {
                 realm_id: id,
                 realm: {
                     id,
-                    name: 'test-realm' 
+                    name: 'test-realm', 
                 } as Realm,
             } as User,
         },

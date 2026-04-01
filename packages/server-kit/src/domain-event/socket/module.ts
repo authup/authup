@@ -42,9 +42,7 @@ export class DomainEventSocketPublisher implements IDomainEventPublisher {
                 .in(roomName)
                 .emit(fullEventName, {
                     ...ctx.content,
-                    meta: {
-                        roomName,
-                    },
+                    meta: { roomName },
                 });
 
             if (typeof destination.channel === 'function') {

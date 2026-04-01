@@ -27,9 +27,7 @@ export const AClients = defineComponent({
     emits: defineEntityCollectionVEmitOptions<Client>(),
     slots: Object as SlotsType<EntityCollectionVSlots<Client>>,
     setup(props, ctx) {
-        const {
-            render 
-        } = defineEntityCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${EntityType.CLIENT}`,
             props,
             setup: ctx,
@@ -43,16 +41,10 @@ export const AClients = defineComponent({
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
-            data: {
-                name: translationName,
-            },
+            data: { name: translationName },
         });
 
-        return () => render({
-            noMore: {
-                content: translation.value,
-            },
-        });
+        return () => render({ noMore: { content: translation.value } });
     },
 });
 

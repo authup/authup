@@ -28,30 +28,18 @@ export default defineComponent({
         VCTimeago,
     },
     emits: ['deleted'],
-    setup(_props, {
-        emit 
-    }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: Permission) => {
             emit('deleted', e);
         };
 
         const store = injectStore();
-        const {
-            realmManagementId 
-        } = storeToRefs(store);
+        const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<Permission> = {
-            filters: {
-                realm_id: [realmManagementId.value ?? null, null],
-            },
-        };
+        const query : BuildInput<Permission> = { filters: { realm_id: [realmManagementId.value ?? null, null] } };
 
-        const hasEditPermission = usePermissionCheck({
-            name: PermissionName.PERMISSION_UPDATE 
-        });
-        const hasDropPermission = usePermissionCheck({
-            name: PermissionName.PERMISSION_DELETE 
-        });
+        const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
 
         const fields = [
             {
@@ -87,7 +75,7 @@ export default defineComponent({
             {
                 key: 'options',
                 label: '',
-                tdClass: 'text-left' 
+                tdClass: 'text-left', 
             },
         ];
 

@@ -23,13 +23,9 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
         const qb = this.repository.createQueryBuilder('rolePermission');
         qb.groupBy('rolePermission.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'rolePermission',
-            filters: {
-                allowed: ['role_id', 'permission_id'],
-            },
+            filters: { allowed: ['role_id', 'permission_id'] },
             relations: {
                 allowed: [
                     'role',
@@ -46,9 +42,7 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
                     'updated_at',
                 ],
             },
-            pagination: {
-                maxLimit: 50,
-            },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -63,9 +57,7 @@ export class RolePermissionRepositoryAdapter implements IRolePermissionRepositor
     }
 
     findOneById(id: string): Promise<RolePermission | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(_name: string): Promise<RolePermission | null> {

@@ -13,20 +13,14 @@ import { injectHTTPClient } from '../../../core';
 import AuthorizeScope from './AuthorizeScope.vue';
 
 export default defineComponent({
-    components: {
-        AuthorizeScope 
-    },
+    components: { AuthorizeScope },
     props: {
         client: {
             type: Object as PropType<Client>,
             required: true,
         },
-        scopesAvailable: {
-            type: Array as PropType<Scope[]>,
-        },
-        scopesRequested: {
-            type: [String, Array] as PropType<string[] | string>,
-        },
+        scopesAvailable: { type: Array as PropType<Scope[]> },
+        scopesRequested: { type: [String, Array] as PropType<string[] | string> },
     },
     setup(props) {
         const httpClient = injectHTTPClient();
@@ -50,12 +44,8 @@ export default defineComponent({
             }
 
             if (props.client.id) {
-                const {
-                    data: clientScopes 
-                } = await httpClient.clientScope.getMany({
-                    filters: {
-                        client_id: props.client.id,
-                    },
+                const { data: clientScopes } = await httpClient.clientScope.getMany({
+                    filters: { client_id: props.client.id },
                     include: ['scope'],
                 });
 

@@ -8,9 +8,7 @@
 import { singa } from 'singa';
 import type { DataSource } from 'typeorm';
 
-const instance = singa<DataSource>({
-    name: 'dataSource',
-});
+const instance = singa<DataSource>({ name: 'dataSource' });
 
 export function setDataSourceSync(dataSource: DataSource) {
     instance.setFactory(() => dataSource);

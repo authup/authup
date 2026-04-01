@@ -12,7 +12,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import type { RolePermission, } from '@authup/core-kit';
+import type { RolePermission } from '@authup/core-kit';
 import {
     createFakePermission,
     createFakeRole,

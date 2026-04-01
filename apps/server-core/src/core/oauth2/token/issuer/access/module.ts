@@ -35,9 +35,7 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
             ...input,
             kind: OAuth2TokenKind.ACCESS,
             exp: this.buildExp(input),
-            ...(iss ? {
-                iss 
-            } : {}),
+            ...(iss ? { iss } : {}),
         });
 
         const token = await this.signer.sign(data);

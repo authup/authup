@@ -60,7 +60,7 @@ function createPayload(overrides: Partial<OAuth2TokenPayload> = {}): OAuth2Token
     return {
         jti: randomUUID(),
         sub: 'u1',
-        ...overrides 
+        ...overrides, 
     } as OAuth2TokenPayload;
 }
 
@@ -77,9 +77,7 @@ describe('OAuth2TokenVerifier', () => {
 
     describe('isInactive', () => {
         it('should delegate to token repository', async () => {
-            const tokenRepo = createTokenRepo({
-                isInactive: vi.fn().mockResolvedValue(true) 
-            });
+            const tokenRepo = createTokenRepo({ isInactive: vi.fn().mockResolvedValue(true) });
             const verifier = new OAuth2TokenVerifier(createKeyRepo(), tokenRepo);
 
             expect(await verifier.isInactive('some-jti')).toBe(true);
@@ -90,9 +88,7 @@ describe('OAuth2TokenVerifier', () => {
     describe('verify - cache path', () => {
         it('should return cached payload when found by signature', async () => {
             const payload = createPayload();
-            const tokenRepo = createTokenRepo({
-                findOneBySignature: vi.fn().mockResolvedValue(payload) 
-            });
+            const tokenRepo = createTokenRepo({ findOneBySignature: vi.fn().mockResolvedValue(payload) });
             const verifier = new OAuth2TokenVerifier(createKeyRepo(), tokenRepo);
 
             const result = await verifier.verify('cached-token');
@@ -101,11 +97,7 @@ describe('OAuth2TokenVerifier', () => {
         });
 
         it('should throw JWTError when cached payload has no jti', async () => {
-            const tokenRepo = createTokenRepo({
-                findOneBySignature: vi.fn().mockResolvedValue({
-                    sub: 'u1' 
-                } as OAuth2TokenPayload),
-            });
+            const tokenRepo = createTokenRepo({ findOneBySignature: vi.fn().mockResolvedValue({ sub: 'u1' } as OAuth2TokenPayload) });
             const verifier = new OAuth2TokenVerifier(createKeyRepo(), tokenRepo);
 
             await expect(verifier.verify('cached-token')).rejects.toThrow(JWTError);
@@ -129,9 +121,7 @@ describe('OAuth2TokenVerifier', () => {
             });
             const verifier = new OAuth2TokenVerifier(createKeyRepo(), tokenRepo);
 
-            expect(await verifier.verify('cached-token', {
-                skipActiveCheck: true 
-            })).toBe(payload);
+            expect(await verifier.verify('cached-token', { skipActiveCheck: true })).toBe(payload);
             expect(tokenRepo.isInactive).not.toHaveBeenCalled();
         });
     });
@@ -145,9 +135,7 @@ describe('OAuth2TokenVerifier', () => {
         });
 
         it('should throw JWKError when key not found by kid', async () => {
-            extractTokenHeader.mockReturnValue({
-                kid: 'unknown-key-id' 
-            });
+            extractTokenHeader.mockReturnValue({ kid: 'unknown-key-id' });
             const verifier = new OAuth2TokenVerifier(createKeyRepo(), createTokenRepo());
 
             await expect(verifier.verify('raw-token')).rejects.toThrow(JWKError);
@@ -155,13 +143,9 @@ describe('OAuth2TokenVerifier', () => {
 
         it('should verify OCT token and cache result', async () => {
             const payload = createPayload();
-            const key = createKey(JWKType.OCT, {
-                decryption_key: 'secret' 
-            } as any);
+            const key = createKey(JWKType.OCT, { decryption_key: 'secret' } as any);
             const tokenRepo = createTokenRepo();
-            extractTokenHeader.mockReturnValue({
-                kid: key.id 
-            });
+            extractTokenHeader.mockReturnValue({ kid: key.id });
             verifyToken.mockResolvedValue(payload);
 
             const verifier = new OAuth2TokenVerifier(createKeyRepo(key), tokenRepo);
@@ -170,12 +154,8 @@ describe('OAuth2TokenVerifier', () => {
         });
 
         it('should throw JWKError when OCT key has no decryption_key', async () => {
-            const key = createKey(JWKType.OCT, {
-                decryption_key: null 
-            } as any);
-            extractTokenHeader.mockReturnValue({
-                kid: key.id 
-            });
+            const key = createKey(JWKType.OCT, { decryption_key: null } as any);
+            extractTokenHeader.mockReturnValue({ kid: key.id });
 
             const verifier = new OAuth2TokenVerifier(createKeyRepo(key), createTokenRepo());
             await expect(verifier.verify('raw-token')).rejects.toThrow(JWKError);
@@ -185,11 +165,9 @@ describe('OAuth2TokenVerifier', () => {
             const payload = createPayload();
             const key = createKey(JWKType.EC, {
                 encryption_key: 'ec-public-key',
-                signature_algorithm: 'ES256' 
+                signature_algorithm: 'ES256', 
             } as any);
-            extractTokenHeader.mockReturnValue({
-                kid: key.id 
-            });
+            extractTokenHeader.mockReturnValue({ kid: key.id });
             verifyToken.mockResolvedValue(payload);
 
             const verifier = new OAuth2TokenVerifier(createKeyRepo(key), createTokenRepo());
@@ -197,12 +175,8 @@ describe('OAuth2TokenVerifier', () => {
         });
 
         it('should throw JWKError when EC key has no encryption_key', async () => {
-            const key = createKey(JWKType.EC, {
-                encryption_key: null 
-            } as any);
-            extractTokenHeader.mockReturnValue({
-                kid: key.id 
-            });
+            const key = createKey(JWKType.EC, { encryption_key: null } as any);
+            extractTokenHeader.mockReturnValue({ kid: key.id });
 
             const verifier = new OAuth2TokenVerifier(createKeyRepo(key), createTokenRepo());
             await expect(verifier.verify('raw-token')).rejects.toThrow(JWKError);
@@ -212,11 +186,9 @@ describe('OAuth2TokenVerifier', () => {
             const payload = createPayload();
             const key = createKey(JWKType.RSA, {
                 encryption_key: 'rsa-public-key',
-                signature_algorithm: 'RS256' 
+                signature_algorithm: 'RS256', 
             } as any);
-            extractTokenHeader.mockReturnValue({
-                kid: key.id 
-            });
+            extractTokenHeader.mockReturnValue({ kid: key.id });
             verifyToken.mockResolvedValue(payload);
 
             const verifier = new OAuth2TokenVerifier(createKeyRepo(key), createTokenRepo());
@@ -224,30 +196,18 @@ describe('OAuth2TokenVerifier', () => {
         });
 
         it('should throw JWTError when verified payload has no jti', async () => {
-            const key = createKey(JWKType.OCT, {
-                decryption_key: 'secret' 
-            } as any);
-            extractTokenHeader.mockReturnValue({
-                kid: key.id 
-            });
-            verifyToken.mockResolvedValue({
-                sub: 'u1' 
-            } as OAuth2TokenPayload);
+            const key = createKey(JWKType.OCT, { decryption_key: 'secret' } as any);
+            extractTokenHeader.mockReturnValue({ kid: key.id });
+            verifyToken.mockResolvedValue({ sub: 'u1' } as OAuth2TokenPayload);
 
             const verifier = new OAuth2TokenVerifier(createKeyRepo(key), createTokenRepo());
             await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
         });
 
         it('should check active status after crypto verification', async () => {
-            const key = createKey(JWKType.OCT, {
-                decryption_key: 'secret' 
-            } as any);
-            const tokenRepo = createTokenRepo({
-                isInactive: vi.fn().mockResolvedValue(true) 
-            });
-            extractTokenHeader.mockReturnValue({
-                kid: key.id 
-            });
+            const key = createKey(JWKType.OCT, { decryption_key: 'secret' } as any);
+            const tokenRepo = createTokenRepo({ isInactive: vi.fn().mockResolvedValue(true) });
+            extractTokenHeader.mockReturnValue({ kid: key.id });
             verifyToken.mockResolvedValue(createPayload());
 
             const verifier = new OAuth2TokenVerifier(createKeyRepo(key), tokenRepo);
@@ -257,21 +217,13 @@ describe('OAuth2TokenVerifier', () => {
 
         it('should skip active check in crypto path when skipActiveCheck is true', async () => {
             const payload = createPayload();
-            const key = createKey(JWKType.OCT, {
-                decryption_key: 'secret' 
-            } as any);
-            const tokenRepo = createTokenRepo({
-                isInactive: vi.fn().mockResolvedValue(true) 
-            });
-            extractTokenHeader.mockReturnValue({
-                kid: key.id 
-            });
+            const key = createKey(JWKType.OCT, { decryption_key: 'secret' } as any);
+            const tokenRepo = createTokenRepo({ isInactive: vi.fn().mockResolvedValue(true) });
+            extractTokenHeader.mockReturnValue({ kid: key.id });
             verifyToken.mockResolvedValue(payload);
 
             const verifier = new OAuth2TokenVerifier(createKeyRepo(key), tokenRepo);
-            expect(await verifier.verify('raw-token', {
-                skipActiveCheck: true 
-            })).toBe(payload);
+            expect(await verifier.verify('raw-token', { skipActiveCheck: true })).toBe(payload);
             expect(tokenRepo.isInactive).not.toHaveBeenCalled();
         });
     });

@@ -62,12 +62,12 @@ export class ClientController {
         const actor = buildActorContext(req);
         const {
             data, 
-            meta 
+            meta, 
         } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
-            meta 
+            meta, 
         });
     }
 
@@ -103,9 +103,7 @@ export class ClientController {
             for (const attribute of attributes) {
                 const attr = attribute as keyof Client;
                 if (attr === 'secret') {
-                    const withSecret = await this.repository.findOneWithSecret({
-                        id: entity.id 
-                    });
+                    const withSecret = await this.repository.findOneWithSecret({ id: entity.id });
                     if (withSecret) {
                         entity.secret = withSecret.secret;
                     }
@@ -156,7 +154,7 @@ export class ClientController {
         const actor = buildActorContext(req);
         const {
             entity, 
-            created 
+            created, 
         } = await this.service.save(
             id || undefined,
             data,

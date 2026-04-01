@@ -27,9 +27,7 @@ export const AClientScopes = defineComponent({
     emits: defineEntityCollectionVEmitOptions<ClientScope>(),
     slots: Object as SlotsType<EntityCollectionVSlots<ClientScope>>,
     setup(props, ctx) {
-        const {
-            render,
-        } = defineEntityCollectionManager({
+        const { render } = defineEntityCollectionManager({
             type: `${EntityType.CLIENT_SCOPE}`,
             props,
             setup: ctx,
@@ -43,16 +41,10 @@ export const AClientScopes = defineComponent({
         const translation = useTranslation({
             group: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
-            data: {
-                name: translationClientScopes,
-            },
+            data: { name: translationClientScopes },
         });
 
-        return () => render({
-            noMore: {
-                content: translation.value,
-            },
-        });
+        return () => render({ noMore: { content: translation.value } });
     },
 });
 

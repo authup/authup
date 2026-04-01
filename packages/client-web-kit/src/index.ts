@@ -7,8 +7,6 @@ export * from './composables';
 export * from './core';
 export * from './types';
 
-export { install, };
+export { install };
 
-export default {
-    install,
-} satisfies Plugin<Options | undefined>;
+export default { install } satisfies Plugin<Options | undefined>;

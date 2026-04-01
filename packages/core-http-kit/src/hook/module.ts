@@ -119,9 +119,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
                             return Promise.reject(err);
                         }
 
-                        const {
-                            request 
-                        } = err;
+                        const { request } = err;
 
                         const currentState = getClientRequestRetryState(request);
                         if (currentState.retryCount > 0) {

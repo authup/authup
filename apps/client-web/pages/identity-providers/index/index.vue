@@ -29,30 +29,18 @@ export default defineComponent({
         VCTimeago,
     },
     emits: ['deleted'],
-    setup(_props, {
-        emit 
-    }) {
+    setup(_props, { emit }) {
         const handleDeleted = (e: IdentityProvider) => {
             emit('deleted', e);
         };
 
         const store = injectStore();
-        const {
-            realmManagementId 
-        } = storeToRefs(store);
+        const { realmManagementId } = storeToRefs(store);
 
-        const query : BuildInput<IdentityProvider> = {
-            filter: {
-                realm_id: [realmManagementId.value ?? null, null],
-            },
-        };
+        const query : BuildInput<IdentityProvider> = { filter: { realm_id: [realmManagementId.value ?? null, null] } };
 
-        const hasEditPermission = usePermissionCheck({
-            name: PermissionName.IDENTITY_PROVIDER_UPDATE 
-        });
-        const hasDropPermission = usePermissionCheck({
-            name: PermissionName.IDENTITY_PROVIDER_DELETE 
-        });
+        const hasEditPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
+        const hasDropPermission = usePermissionCheck({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
 
         const fields = [
             {

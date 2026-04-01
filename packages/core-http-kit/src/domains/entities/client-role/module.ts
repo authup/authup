@@ -9,7 +9,7 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPISlim,EntityCollectionResponse,EntityRecordResponse, } from '../../types-base';
+import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
 export class ClientRoleAPI extends BaseAPI implements EntityAPISlim<ClientRole> {
     async getMany(data: BuildInput<ClientRole> = {}): Promise<EntityCollectionResponse<ClientRole>> {

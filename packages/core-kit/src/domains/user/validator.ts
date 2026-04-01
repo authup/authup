@@ -23,9 +23,7 @@ export class UserValidator extends Container<User> {
                 .max(128)
                 .check((ctx) => {
                     try {
-                        isUserNameValid(ctx.value, {
-                            throwOnFailure: true 
-                        });
+                        isUserNameValid(ctx.value, { throwOnFailure: true });
                     } catch (e) {
                         ctx.issues.push({
                             input: ctx.value,
@@ -38,25 +36,21 @@ export class UserValidator extends Container<User> {
 
         this.mount(
             'name',
-            {
-                group: ValidatorGroup.CREATE 
-            },
+            { group: ValidatorGroup.CREATE },
             nameValidator,
         );
         this.mount(
             'name',
             {
                 group: ValidatorGroup.UPDATE,
-                optional: true 
+                optional: true, 
             },
             nameValidator,
         );
 
         this.mount(
             'name_locked',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.boolean()),
         );
 
@@ -64,17 +58,13 @@ export class UserValidator extends Container<User> {
 
         this.mount(
             'first_name',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(128).nullable()),
         );
 
         this.mount(
             'last_name',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(128).nullable()),
         );
 
@@ -82,9 +72,7 @@ export class UserValidator extends Container<User> {
 
         this.mount(
             'display_name',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
@@ -94,16 +82,14 @@ export class UserValidator extends Container<User> {
 
         this.mount(
             'email',
-            {
-                group: ValidatorGroup.CREATE 
-            },
+            { group: ValidatorGroup.CREATE },
             emailValidator,
         );
         this.mount(
             'email',
             {
                 optional: true,
-                group: ValidatorGroup.UPDATE 
+                group: ValidatorGroup.UPDATE, 
             },
             emailValidator,
         );
@@ -112,9 +98,7 @@ export class UserValidator extends Container<User> {
 
         this.mount(
             'password',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(512)),
         );
 
@@ -122,17 +106,13 @@ export class UserValidator extends Container<User> {
 
         this.mount(
             'active',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.boolean()),
         );
 
         this.mount(
             'name_locked',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.boolean()),
         );
 
@@ -140,24 +120,20 @@ export class UserValidator extends Container<User> {
             'realm_id',
             {
                 group: ValidatorGroup.CREATE,
-                optional: true 
+                optional: true, 
             },
             createValidator(z.uuid()),
         );
 
         this.mount(
             'status',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'status_message',
-            {
-                optional: true 
-            },
+            { optional: true },
             createValidator(z.string().min(3).max(256).nullable()),
         );
     }

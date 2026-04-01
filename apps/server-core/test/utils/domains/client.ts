@@ -12,9 +12,7 @@ export function createFakeClient(data: Partial<Client> = {}) {
     return {
         name: faker.internet.username(),
         display_name: faker.internet.displayName(),
-        secret: faker.string.alpha({
-            length: 10 
-        }),
+        secret: faker.string.alpha({ length: 10 }),
         redirect_uri: 'https://example.com/**',
         is_confidential: true,
         ...data,

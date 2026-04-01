@@ -20,12 +20,8 @@ export default defineComponent({
             type: Array as PropType<DomainEntityNavItems>,
             required: true,
         },
-        direction: {
-            type: String as PropType<'vertical' | 'horizontal'>,
-        },
-        prevLink: {
-            type: Boolean,
-        },
+        direction: { type: String as PropType<'vertical' | 'horizontal'> },
+        prevLink: { type: Boolean },
     },
     setup(props) {
         const items = toRef(props, 'items');

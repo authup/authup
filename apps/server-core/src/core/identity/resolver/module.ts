@@ -67,7 +67,7 @@ export class IdentityResolver implements IIdentityResolver {
         if (data) {
             return {
                 type: IdentityType.CLIENT,
-                data 
+                data, 
             };
         }
 
@@ -89,7 +89,7 @@ export class IdentityResolver implements IIdentityResolver {
         if (data) {
             return {
                 type: IdentityType.ROBOT,
-                data 
+                data, 
             };
         }
 
@@ -111,7 +111,7 @@ export class IdentityResolver implements IIdentityResolver {
         if (data) {
             return {
                 type: IdentityType.USER,
-                data 
+                data, 
             };
         }
 

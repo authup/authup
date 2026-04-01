@@ -21,7 +21,7 @@ export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeState
     async findOneById(key: string): Promise<OAuth2AuthorizationState | null> {
         const id = buildCacheKey({
             prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
-            key 
+            key, 
         });
         const payload = await this.cache.get<OAuth2AuthorizationState>(id);
         if (payload) {
@@ -35,7 +35,7 @@ export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeState
         await this.cache.drop(
             buildCacheKey({
                 prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
-                key 
+                key, 
             }),
         );
     }
@@ -46,12 +46,10 @@ export class OAuth2AuthorizationStateRepository implements IOAuth2AuthorizeState
         await this.cache.set(
             buildCacheKey({
                 prefix: CacheOAuth2Prefix.AUTHORIZATION_CODE,
-                key: state 
+                key: state, 
             }),
             data,
-            {
-                ttl: 1000 * 60 * 30, // 30 min
-            },
+            { ttl: 1000 * 60 * 30 }, // 30 min
         );
 
         return state;

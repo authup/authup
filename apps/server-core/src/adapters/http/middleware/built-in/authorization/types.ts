@@ -11,7 +11,7 @@ import type {
     IIdentityPermissionProvider, 
     IIdentityResolver, 
     IOAuth2TokenVerifier, 
-    ISessionManager 
+    ISessionManager, 
 } from '../../../../../core/index.ts';
 
 export type HTTPAuthorizationMiddlewareOptions = {

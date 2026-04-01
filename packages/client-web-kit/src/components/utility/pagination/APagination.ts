@@ -12,18 +12,10 @@ import type { PaginationLoadFn } from './type';
 
 export const APagination = defineComponent({
     props: {
-        total: {
-            type: Number,
-        },
-        meta: {
-            type: Object as PropType<Record<string, any>>,
-        },
-        busy: {
-            type: Boolean,
-        },
-        load: {
-            type: Function as PropType<PaginationLoadFn>,
-        },
+        total: { type: Number },
+        meta: { type: Object as PropType<Record<string, any>> },
+        busy: { type: Boolean },
+        load: { type: Function as PropType<PaginationLoadFn> },
     },
     setup(props) {
         return () => buildPagination({

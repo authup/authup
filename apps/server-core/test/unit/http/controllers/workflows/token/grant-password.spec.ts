@@ -81,9 +81,7 @@ describe('src/http/controllers/token', () => {
             }
         }
 
-        await suite.client.user.update(entity.id, {
-            active: true,
-        });
+        await suite.client.user.update(entity.id, { active: true });
 
         const response = await suite.client
             .token

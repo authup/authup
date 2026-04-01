@@ -25,7 +25,7 @@ import {
     ClientAuthenticator,
     PolicyEngine,
     RobotAuthenticator,
-    UserAuthenticator 
+    UserAuthenticator, 
 } from '../../../../../core/index.ts';
 import type {
     ICredentialsAuthenticator, 
@@ -96,9 +96,7 @@ export class AuthorizationMiddleware {
         );
         setRequestPermissionEvaluator(request, requestAccessContext);
 
-        const {
-            authorization: headerValue 
-        } = request.headers;
+        const { authorization: headerValue } = request.headers;
 
         try {
             if (typeof headerValue !== 'string') {

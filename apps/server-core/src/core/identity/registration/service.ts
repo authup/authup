@@ -42,12 +42,8 @@ export class RegistrationService implements IRegistrationService {
         }
 
         const validator = new Container({});
-        validator.mount(new UserValidator({
-            pathsToInclude: ['email', 'name', 'password', 'realm_id'],
-        }));
-        const validated = await validator.run(data, {
-            group: 'create' 
-        });
+        validator.mount(new UserValidator({ pathsToInclude: ['email', 'name', 'password', 'realm_id'] }));
+        const validated = await validator.run(data, { group: 'create' });
 
         await this.repository.validateJoinColumns(validated);
 
@@ -85,15 +81,11 @@ export class RegistrationService implements IRegistrationService {
             }
         }
 
-        return {
-            active: entity.active,
-        };
+        return { active: entity.active };
     }
 
     async activate(data: { token: string }): Promise<void> {
-        const entity = await this.repository.findOneBy({
-            activate_hash: data.token,
-        });
+        const entity = await this.repository.findOneBy({ activate_hash: data.token });
 
         if (!entity) {
             throw new NotFoundError();

@@ -15,9 +15,7 @@ import {
 
 describe('src/policy/identity', () => {
     it('should permit due defined identity', async () => {
-        const policy : IdentityPolicy = {
-            types: [],
-        };
+        const policy : IdentityPolicy = { types: [] };
 
         const evaluator = new IdentityPolicyEvaluator();
 
@@ -34,9 +32,7 @@ describe('src/policy/identity', () => {
     });
 
     it('should permit due matching type', async () => {
-        const policy : IdentityPolicy = {
-            types: ['user'],
-        };
+        const policy : IdentityPolicy = { types: ['user'] };
 
         const evaluator = new IdentityPolicyEvaluator();
 
@@ -53,9 +49,7 @@ describe('src/policy/identity', () => {
     });
 
     it('should not permit due non matching type', async () => {
-        const policy : IdentityPolicy = {
-            types: ['foo'],
-        };
+        const policy : IdentityPolicy = { types: ['foo'] };
 
         const evaluator = new IdentityPolicyEvaluator();
 
@@ -72,9 +66,7 @@ describe('src/policy/identity', () => {
     });
 
     it('should not permit due non defined identity', async () => {
-        const policy : IdentityPolicy = {
-            types: [],
-        };
+        const policy : IdentityPolicy = { types: [] };
 
         const evaluator = new IdentityPolicyEvaluator();
 

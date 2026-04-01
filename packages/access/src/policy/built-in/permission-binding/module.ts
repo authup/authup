@@ -20,8 +20,6 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         const policy = await this.validator.run(value);
 
         // todo: this must be changed when the permission-checker not only checks owned permissions.
-        return {
-            success: maybeInvertPolicyOutcome(true, policy.invert),
-        };
+        return { success: maybeInvertPolicyOutcome(true, policy.invert) };
     }
 }

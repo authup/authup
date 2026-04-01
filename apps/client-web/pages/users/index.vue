@@ -36,7 +36,7 @@ export default defineNuxtComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: `The user ${e.name} was successfully deleted.` 
+                    body: `The user ${e.name} was successfully deleted.`, 
                 });
             }
         };
@@ -45,7 +45,7 @@ export default defineNuxtComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message 
+                    body: e.message, 
                 });
             }
         };

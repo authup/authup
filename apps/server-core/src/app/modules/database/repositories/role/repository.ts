@@ -34,9 +34,7 @@ export class RoleRepositoryAdapter implements IRoleRepository {
         const qb = this.repository.createQueryBuilder('role');
         qb.groupBy('role.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'role',
             fields: {
                 allowed: [
@@ -50,15 +48,9 @@ export class RoleRepositoryAdapter implements IRoleRepository {
                     'updated_at',
                 ],
             },
-            filters: {
-                allowed: ['id', 'name', 'target', 'realm_id'],
-            },
-            pagination: {
-                maxLimit: 50,
-            },
-            sort: {
-                allowed: ['id', 'name', 'updated_at', 'created_at'],
-            },
+            filters: { allowed: ['id', 'name', 'target', 'realm_id'] },
+            pagination: { maxLimit: 50 },
+            sort: { allowed: ['id', 'name', 'updated_at', 'created_at'] },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -73,23 +65,17 @@ export class RoleRepositoryAdapter implements IRoleRepository {
     }
 
     findOneById(id: string): Promise<Role | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     async findOneByName(name: string, realmKey?: string): Promise<Role | null> {
         const qb = this.repository.createQueryBuilder('role');
-        qb.where('role.name LIKE :name', {
-            name 
-        });
+        qb.where('role.name LIKE :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
             if (realm) {
-                qb.andWhere('role.realm_id = :realmId', {
-                    realmId: realm.id 
-                });
+                qb.andWhere('role.realm_id = :realmId', { realmId: realm.id });
             }
         }
 

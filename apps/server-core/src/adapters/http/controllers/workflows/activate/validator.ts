@@ -20,7 +20,7 @@ export class ActivateRequestValidator extends Container<{ token: string }> {
                     .notEmpty()
                     .isLength({
                         min: 3,
-                        max: 256 
+                        max: 256, 
                     });
             }),
         );

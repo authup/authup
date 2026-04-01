@@ -54,11 +54,9 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         const {
             data: entities, 
-            meta 
+            meta, 
         } = await this.repository.findMany(query);
-        let {
-            total 
-        } = meta;
+        let { total } = meta;
 
         const data: Client[] = [];
         for (const entity of entities) {
@@ -74,9 +72,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                             PermissionName.CLIENT_UPDATE,
                             PermissionName.CLIENT_DELETE,
                         ],
-                        input: new PolicyData({
-                            [BuiltInPolicyType.ATTRIBUTES]: entity,
-                        }),
+                        input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
                     });
                     data.push(entity);
                 } catch {
@@ -93,8 +89,8 @@ export class ClientService extends AbstractEntityService implements IClientServi
             data,
             meta: {
                 ...meta,
-                total 
-            } 
+                total, 
+            }, 
         };
     }
 
@@ -144,9 +140,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
                     PermissionName.CLIENT_UPDATE,
                     PermissionName.CLIENT_DELETE,
                 ],
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
         }
 
@@ -157,9 +151,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Client> {
-        const {
-            entity 
-        } = await this.save(undefined, data, actor);
+        const { entity } = await this.save(undefined, data, actor);
         return entity;
     }
 
@@ -168,11 +160,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<Client> {
-        const {
-            entity 
-        } = await this.save(idOrName, data, actor, {
-            updateOnly: true 
-        });
+        const { entity } = await this.save(idOrName, data, actor, { updateOnly: true });
         return entity;
     }
 
@@ -213,20 +201,14 @@ export class ClientService extends AbstractEntityService implements IClientServi
         }
 
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.CLIENT_UPDATE 
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
             group = ValidatorGroup.UPDATE;
         } else {
-            await actor.permissionEvaluator.preEvaluate({
-                name: PermissionName.CLIENT_CREATE 
-            });
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_CREATE });
             group = ValidatorGroup.CREATE;
         }
 
-        const validated = await this.validator.run(data, {
-            group 
-        });
+        const validated = await this.validator.run(data, { group });
 
         await this.repository.validateJoinColumns(validated);
         await this.repository.checkUniqueness(validated, entity || undefined);
@@ -248,9 +230,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.CLIENT_UPDATE,
-                input: new PolicyData({
-                    [BuiltInPolicyType.ATTRIBUTES]: entity,
-                }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
 
             if (entity.is_confidential) {
@@ -269,7 +249,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
             return {
                 entity,
-                created: false 
+                created: false, 
             };
         }
 
@@ -282,9 +262,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: validated,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
         entity = this.repository.create(validated);
@@ -303,7 +281,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         return {
             entity,
-            created: true 
+            created: true, 
         };
     }
 
@@ -311,27 +289,19 @@ export class ClientService extends AbstractEntityService implements IClientServi
         id: string,
         actor: ActorContext,
     ): Promise<Client> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.CLIENT_DELETE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_DELETE });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -6,7 +6,7 @@
  */
 import { createNanoID } from '@authup/kit';
 import useVuelidate from '@vuelidate/core';
-import { maxLength,minLength,required, } from '@vuelidate/validators';
+import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed, 
@@ -17,7 +17,7 @@ import {
     watch,
 } from 'vue';
 import type { Realm } from '@authup/core-kit';
-import { EntityType,REALM_MASTER_NAME, } from '@authup/core-kit';
+import { EntityType, REALM_MASTER_NAME } from '@authup/core-kit';
 import {
     buildFormGroup,
     buildFormInput,
@@ -123,21 +123,11 @@ export const ARealmForm = defineComponent({
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
-                {
-                    key: TranslatorTranslationDefaultKey.GENERATE 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DISPLAY_NAME 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.DESCRIPTION 
-                },
-                {
-                    key: TranslatorTranslationDefaultKey.REALM 
-                },
+                { key: TranslatorTranslationDefaultKey.GENERATE },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
+                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.REALM },
             ],
         );
 
@@ -162,9 +152,7 @@ export const ARealmForm = defineComponent({
 
             if (!manager.data.value || !manager.data.value.id) {
                 children.push([
-                    h('div', {
-                        class: 'mb-3',
-                    }, [
+                    h('div', { class: 'mb-3' }, [
                         h('button', {
                             class: ['btn btn-xs', {
                                 'btn-dark': isNameEmpty.value,
@@ -176,9 +164,7 @@ export const ARealmForm = defineComponent({
                                 generateName.call(null);
                             },
                         }, [
-                            h('i', {
-                                class: 'fa fa-wrench' 
-                            }),
+                            h('i', { class: 'fa fa-wrench' }),
                             ' ',
                             translationsDefault[TranslatorTranslationDefaultKey.GENERATE].value,
                         ]),
@@ -209,9 +195,7 @@ export const ARealmForm = defineComponent({
                     onChange(input) {
                         $v.value.description.$model = input;
                     },
-                    props: {
-                        rows: 4,
-                    },
+                    props: { rows: 4 },
                 }),
             }));
 

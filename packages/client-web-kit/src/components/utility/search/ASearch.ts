@@ -15,33 +15,19 @@ import { buildListSearch } from './module';
 export const ASearch = defineComponent({
     props: {
         // todo: add entity-key prop
-        icon: {
-            type: Boolean,
-        },
-        iconPosition: {
-            type: String as PropType<'start' | 'end'>,
-        },
-        iconClass: {
-            type: String,
-        },
-        busy: {
-            type: Boolean,
-        },
-        load: {
-            type: Function as PropType<ListLoadFn>,
-        },
-        meta: {
-            type: Object as PropType<ListMeta<any>>,
-        },
+        icon: { type: Boolean },
+        iconPosition: { type: String as PropType<'start' | 'end'> },
+        iconClass: { type: String },
+        busy: { type: Boolean },
+        load: { type: Function as PropType<ListLoadFn> },
+        meta: { type: Object as PropType<ListMeta<any>> },
     },
     slots: Object as SlotsType<{
         default: SearchSlotProps
     }>,
     setup(
         props,
-        {
-            slots
-        }
+        { slots },
     ) {
         return () => buildListSearch({
             slots,

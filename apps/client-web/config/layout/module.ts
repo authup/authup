@@ -74,9 +74,7 @@ export class Navigation {
             return item;
         }
 
-        const {
-            loggedIn 
-        } = this.store;
+        const { loggedIn } = this.store;
         let identity: IdentityPolicyData | undefined;
         if (this.store.userId) {
             identity = {
@@ -112,9 +110,7 @@ export class Navigation {
                 try {
                     await this.store.permissionEvaluator.preEvaluateOneOf({
                         name: permissions,
-                        input: new PolicyData({
-                            identity,
-                        }),
+                        input: new PolicyData({ identity }),
                     });
                 } catch {
                     canPass = false;

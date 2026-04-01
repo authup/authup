@@ -8,7 +8,7 @@
 import type { Policy } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import type { SlotsType } from 'vue';
-import { defineComponent,h, } from 'vue';
+import { defineComponent, h } from 'vue';
 import { defineEntityPicker, defineEntityPickerVEmitOptions, defineEntityPickerVProps } from '../../utility';
 import type { EntityPickerVSlots } from '../../utility';
 import { APolicies } from './APolicies';
@@ -16,9 +16,7 @@ import { APolicyParentAssignment } from './APolicyParentAssignment';
 
 export const APolicyPicker = defineComponent({
     props: {
-        parentId: {
-            type: String,
-        },
+        parentId: { type: String },
         ...defineEntityPickerVProps<Policy>(),
     },
     emits: defineEntityPickerVEmitOptions<Policy>(),
@@ -27,9 +25,7 @@ export const APolicyPicker = defineComponent({
         slots, 
         ...setup 
     }) {
-        const {
-            render 
-        } = defineEntityPicker({
+        const { render } = defineEntityPicker({
             component: APolicies,
             props,
             setup: {

@@ -22,9 +22,7 @@ type User = {
 const policy : AttributesPolicy<User> = {
     invert: false,
     query: {
-        name: {
-            $regex: /t/,
-        },
+        name: { $regex: /t/ },
         age: {
             $lt: 18,
             $gt: 12,
@@ -49,13 +47,7 @@ describe('src/policy/attributes', () => {
 
     it('should parse options', async () => {
         const validator = new AttributesPolicyValidator();
-        const output = await validator.run({
-            query: {
-                name: {
-                    $eq: 'admin',
-                },
-            },
-        } satisfies AttributesPolicy);
+        const output = await validator.run({ query: { name: { $eq: 'admin' } } } satisfies AttributesPolicy);
 
         expect(output.query).toBeDefined();
     });
@@ -63,11 +55,7 @@ describe('src/policy/attributes', () => {
     it('should parse options with unknown', async () => {
         const validator = new AttributesPolicyValidator();
         const output = await validator.run({
-            query: {
-                name: {
-                    $eq: 'admin',
-                },
-            },
+            query: { name: { $eq: 'admin' } },
             foo: 'bar',
         } satisfies AttributesPolicy & { foo?: string }) as Partial<AttributesPolicy> & { foo?: string };
 

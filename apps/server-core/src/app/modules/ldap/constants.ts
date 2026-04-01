@@ -8,6 +8,4 @@
 import { TypedToken } from 'eldin';
 import type { ILdapClientFactory } from '../../../core/index.ts';
 
-export const LDAPInjectionKey = {
-    ClientFactory: new TypedToken<ILdapClientFactory>('ClientFactory'),
-} as const;
+export const LDAPInjectionKey = { ClientFactory: new TypedToken<ILdapClientFactory>('ClientFactory') } as const;

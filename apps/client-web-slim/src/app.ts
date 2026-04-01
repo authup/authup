@@ -100,6 +100,6 @@ export function createApp(payload: HydrationPayload) : {
 
     return {
         app,
-        router
+        router,
     };
 }

@@ -6,7 +6,7 @@
  */
 
 import type { VaultClient } from '@authup/server-kit';
-import { createVaultClient,setVaultFactory, } from '@authup/server-kit';
+import { createVaultClient, setVaultFactory } from '@authup/server-kit';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { VaultInjectionKey } from './constants.ts';
@@ -29,9 +29,7 @@ export class VaultModule implements IModule {
             return;
         }
 
-        container.register(VaultInjectionKey, {
-            useFactory: () => this.createClient(result.data.vault),
-        });
+        container.register(VaultInjectionKey, { useFactory: () => this.createClient(result.data.vault) });
 
         // todo: remove this
         setVaultFactory(() => this.createClient(result.data.vault));
@@ -41,13 +39,9 @@ export class VaultModule implements IModule {
 
     protected createClient(data: string | boolean) : VaultClient {
         if (typeof data === 'boolean') {
-            return createVaultClient({
-                connectionString: 'start123@http://127.0.0.1:8090/v1/',
-            });
+            return createVaultClient({ connectionString: 'start123@http://127.0.0.1:8090/v1/' });
         }
 
-        return createVaultClient({
-            connectionString: data,
-        });
+        return createVaultClient({ connectionString: data });
     }
 }

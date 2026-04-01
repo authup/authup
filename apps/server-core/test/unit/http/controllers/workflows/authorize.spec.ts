@@ -13,7 +13,7 @@ import {
 } from 'vitest';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import type { OAuth2TokenPayload, } from '@authup/specs';
+import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2AuthorizationResponseType,
     OAuth2SubKind,

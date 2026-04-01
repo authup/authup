@@ -181,26 +181,20 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         type: 'link',
         url: '/login',
         icon: 'fas fa-sign',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_OUT]: true,
-        },
+        meta: { [LayoutKey.REQUIRED_LOGGED_OUT]: true },
     },
     {
         name: 'Settings',
         type: 'link',
         url: '/settings',
         icon: 'fas fa-cog',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-        },
+        meta: { [LayoutKey.REQUIRED_LOGGED_IN]: true },
     },
     {
         name: 'Logout',
         type: 'link',
         url: '/logout',
         icon: 'fa fa-power-off',
-        meta: {
-            [LayoutKey.REQUIRED_LOGGED_IN]: true,
-        },
+        meta: { [LayoutKey.REQUIRED_LOGGED_IN]: true },
     },
 ];

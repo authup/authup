@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OAuth2TokenGrantResponse,OAuth2TokenIntrospectionResponse,OAuth2TokenPermission } from '@authup/specs';
+import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
 import {
     DController, 
@@ -25,9 +25,9 @@ import type {
     IIdentityResolver,
     IOAuth2TokenIssuer,
     IOAuth2TokenRevoker, 
-    IOAuth2TokenVerifier 
+    IOAuth2TokenVerifier, 
 } from '../../../../../core/index.ts';
-import { OAuth2OpenIDClaimsBuilder, } from '../../../../../core/index.ts';
+import { OAuth2OpenIDClaimsBuilder } from '../../../../../core/index.ts';
 import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
 import {
     HTTPClientCredentialsGrant,
@@ -114,9 +114,7 @@ export class TokenController {
     ): Promise<OAuth2TokenIntrospectionResponse> {
         try {
             const token = await extractTokenFromRequest(req);
-            const payload = await this.tokenVerifier.verify(token, {
-                skipActiveCheck: true,
-            });
+            const payload = await this.tokenVerifier.verify(token, { skipActiveCheck: true });
             if (!payload.sub || !payload.sub_kind) {
                 throw OAuth2Error.identityInvalid();
             }

@@ -24,13 +24,9 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
         const qb = this.repository.createQueryBuilder('clientPermission');
         qb.groupBy('clientPermission.id');
 
-        const {
-            pagination 
-        } = applyQuery(qb, query, {
+        const { pagination } = applyQuery(qb, query, {
             defaultAlias: 'clientPermission',
-            filters: {
-                allowed: ['client_id', 'permission_id'],
-            },
+            filters: { allowed: ['client_id', 'permission_id'] },
             relations: {
                 allowed: [
                     'client',
@@ -47,9 +43,7 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
                     'updated_at',
                 ],
             },
-            pagination: {
-                maxLimit: 50,
-            },
+            pagination: { maxLimit: 50 },
         });
 
         const [entities, total] = await qb.getManyAndCount();
@@ -64,9 +58,7 @@ export class ClientPermissionRepositoryAdapter implements IClientPermissionRepos
     }
 
     findOneById(id: string): Promise<ClientPermission | null> {
-        return this.findOneBy({
-            id 
-        });
+        return this.findOneBy({ id });
     }
 
     findOneByName(_name: string): Promise<ClientPermission | null> {

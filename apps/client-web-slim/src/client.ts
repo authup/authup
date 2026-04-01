@@ -11,7 +11,7 @@ import { getWindowPayload } from './window';
 const payload = getWindowPayload();
 const {
     app, 
-    router 
+    router, 
 } = createApp(payload);
 
 router.isReady().then(() => {

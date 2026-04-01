@@ -9,18 +9,16 @@ import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit'
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
 import useVuelidate from '@vuelidate/core';
-import { required,url, } from '@vuelidate/validators';
+import { required, url } from '@vuelidate/validators';
 import type { PropType, VNodeChild } from 'vue';
-import { defineComponent,h,reactive, } from 'vue';
+import { defineComponent, h, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery';
 
 export const AIdentityProviderOAuth2EndpointFields = defineComponent({
     props: {
-        entity: {
-            type: Object as PropType<Partial<OAuth2IdentityProvider>>,
-        },
+        entity: { type: Object as PropType<Partial<OAuth2IdentityProvider>> },
         discovery: {
             type: Boolean,
             default: false,
@@ -43,12 +41,8 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                 required,
                 url,
             },
-            user_info_url: {
-                url,
-            },
-        }, form, {
-            $registerAs: 'endpoint',
-        });
+            user_info_url: { url },
+        }, form, { $registerAs: 'endpoint' });
 
         function init() {
             if (!props.entity) return;
@@ -89,9 +83,7 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                         onChange(input) {
                             $v.value.token_url.$model = input;
                         },
-                        props: {
-                            placeholder: 'https://...',
-                        },
+                        props: { placeholder: 'https://...' },
                     }),
                 }),
                 buildFormGroup({
@@ -104,9 +96,7 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                         onChange(input) {
                             $v.value.authorize_url.$model = input;
                         },
-                        props: {
-                            placeholder: 'https://...',
-                        },
+                        props: { placeholder: 'https://...' },
                     }),
                 }),
                 buildFormGroup({
@@ -119,9 +109,7 @@ export const AIdentityProviderOAuth2EndpointFields = defineComponent({
                         onChange(input) {
                             $v.value.user_info_url.$model = input;
                         },
-                        props: {
-                            placeholder: 'https://...',
-                        },
+                        props: { placeholder: 'https://...' },
                     }),
                 }),
             ];

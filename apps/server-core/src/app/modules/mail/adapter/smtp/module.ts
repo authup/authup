@@ -33,9 +33,7 @@ export function createSMTPClient(options?: SMTPOptions | string) : SMTPClient {
             auth,
             secure: options.ssl,
             opportunisticTLS: options.starttls,
-            tls: {
-                rejectUnauthorized: false,
-            },
+            tls: { rejectUnauthorized: false },
         });
     }
 

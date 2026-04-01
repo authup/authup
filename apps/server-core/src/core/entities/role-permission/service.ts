@@ -56,9 +56,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             ],
         });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
@@ -70,9 +68,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<RolePermission> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.ROLE_PERMISSION_CREATE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_PERMISSION_CREATE });
 
         await this.repository.validateJoinColumns(data);
 
@@ -100,7 +96,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
                 {
                     type: actor.identity.type,
-                    id: actor.identity.data.id 
+                    id: actor.identity.data.id, 
                 },
                 {
                     name: data.permission.name,
@@ -115,9 +111,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_CREATE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: data,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
         });
 
         let entity = this.repository.create(data);
@@ -130,27 +124,19 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         id: string,
         actor: ActorContext,
     ): Promise<RolePermission> {
-        await actor.permissionEvaluator.preEvaluate({
-            name: PermissionName.ROLE_PERMISSION_DELETE 
-        });
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROLE_PERMISSION_DELETE });
 
-        const entity = await this.repository.findOneBy({
-            id 
-        });
+        const entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_DELETE,
-            input: new PolicyData({
-                [BuiltInPolicyType.ATTRIBUTES]: entity,
-            }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
         });
 
-        const {
-            id: entityId 
-        } = entity;
+        const { id: entityId } = entity;
         await this.repository.remove(entity);
         entity.id = entityId;
 

@@ -21,16 +21,14 @@ import { RealmEntity } from '../realm/index.ts';
 import { UserEntity } from '../user/entity.ts';
 
 @Unique(['name', 'user_id'])
-@Entity({
-    name: 'auth_user_attributes' 
-})
+@Entity({ name: 'auth_user_attributes' })
 export class UserAttributeEntity implements UserAttribute {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column({
         type: 'varchar',
-        length: 255 
+        length: 255, 
     })
     name: string;
 
@@ -53,23 +51,15 @@ export class UserAttributeEntity implements UserAttribute {
     @Column()
     realm_id: Realm['id'];
 
-    @ManyToOne(() => RealmEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'realm_id' 
-    })
+    @ManyToOne(() => RealmEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'realm_id' })
     realm: RealmEntity;
 
     @Column()
     user_id: User['id'];
 
-    @ManyToOne(() => UserEntity, {
-        onDelete: 'CASCADE' 
-    })
-    @JoinColumn({
-        name: 'user_id' 
-    })
+    @ManyToOne(() => UserEntity, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'user_id' })
     user: UserEntity;
 
     // ------------------------------------------------------------------

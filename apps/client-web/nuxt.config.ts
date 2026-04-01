@@ -11,9 +11,7 @@ export default defineNuxtConfig({
         ],
     },
 
-    devtools: {
-        componentInspector: false,
-    },
+    devtools: { componentInspector: false },
 
     experimental: {
         // todo: enable after v3.12.4

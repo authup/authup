@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { defineComponent,h, } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { Scope } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import { AScopes } from '../scope';
-import { AClientScopeAssignment, } from './AClientScopeAssignment';
+import { AClientScopeAssignment } from './AClientScopeAssignment';
 
 export const AClientScopeAssignments = defineComponent({
     props: {
@@ -18,9 +18,7 @@ export const AClientScopeAssignments = defineComponent({
             required: true,
         },
     },
-    setup(props, {
-        slots 
-    }) {
+    setup(props, { slots }) {
         return () => h(AScopes, { }, {
             [SlotName.ITEM_ACTIONS]: (slotProps: { data: Scope }) => h(
                 AClientScopeAssignment,

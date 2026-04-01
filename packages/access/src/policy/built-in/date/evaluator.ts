@@ -56,23 +56,17 @@ export class DatePolicyEvaluator implements IPolicyEvaluator {
         if (policy.start) {
             const start = normalizeDate(toDate(policy.start));
             if (now < start) {
-                return {
-                    success: maybeInvertPolicyOutcome(false, policy.invert),
-                };
+                return { success: maybeInvertPolicyOutcome(false, policy.invert) };
             }
         }
 
         if (policy.end) {
             const end = normalizeDate(toDate(policy.end));
             if (now > end) {
-                return {
-                    success: maybeInvertPolicyOutcome(false, policy.invert),
-                };
+                return { success: maybeInvertPolicyOutcome(false, policy.invert) };
             }
         }
 
-        return {
-            success: maybeInvertPolicyOutcome(true, policy.invert),
-        };
+        return { success: maybeInvertPolicyOutcome(true, policy.invert) };
     }
 }

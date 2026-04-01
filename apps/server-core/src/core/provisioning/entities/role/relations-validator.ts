@@ -14,15 +14,11 @@ export class RoleProvisioningRelationsValidator extends Container<RoleProvisioni
     protected initialize() {
         super.initialize();
 
-        this.mount('realmPermissions', {
-            optional: true 
-        }, createValidator(
+        this.mount('realmPermissions', { optional: true }, createValidator(
             z.array(z.string()),
         ));
 
-        this.mount('globalPermissions', {
-            optional: true 
-        }, createValidator(
+        this.mount('globalPermissions', { optional: true }, createValidator(
             z.array(z.string()),
         ));
     }
