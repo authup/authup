@@ -80,7 +80,7 @@
         "smob": "^1.6.1",
         "socket.io-client": "^4.8.3",
         "universal-cookie": "^8.1.0",
-        "vue": "^3.5.31",
+        "vue": "^3.5.32",
         "vue-tsc": "^3.2.6"
     },
     "peerDependencies": {
