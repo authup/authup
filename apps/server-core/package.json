@@ -72,7 +72,7 @@
         "@authup/kit": "^1.0.0-beta.32",
         "@authup/server-kit": "^1.0.0-beta.32",
         "@authup/specs": "^1.0.0-beta.32",
-        "@ebec/http": "^2.3.0",
+        "@ebec/http": "^3.0.3",
         "@hapic/oauth2": "^3.2.0",
         "@routup/assets": "^3.4.2",
         "@routup/basic": "^1.4.3",
