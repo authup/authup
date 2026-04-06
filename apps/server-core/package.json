@@ -87,7 +87,7 @@
         "citty": "^0.2.2",
         "confinity": "^1.0.0-beta.1",
         "cors": "^2.8.6",
-        "dotenv": "^17.4.0",
+        "dotenv": "^17.4.1",
         "dycraft": "^1.1.0",
         "eldin": "^1.1.0",
         "envix": "^1.5.0",
@@ -98,7 +98,7 @@
         "mysql2": "^3.20.0",
         "node-cron": "^4.2.1",
         "nodemailer": "^8.0.4",
-        "orkos": "^1.1.0",
+        "orkos": "^1.1.1",
         "pg": "^8.20.0",
         "rapiq": "^0.9.0",
         "reflect-metadata": "^0.2.2",
@@ -126,7 +126,7 @@
         "testcontainers": "^11.13.0",
         "ts-node": "^10.8.2",
         "unplugin-swc": "^1.5.9",
-        "vite": "^8.0.3",
+        "vite": "^8.0.5",
         "vitest": "^4.0.14"
     },
     "publishConfig": {
