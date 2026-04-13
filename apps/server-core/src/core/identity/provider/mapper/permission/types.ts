@@ -7,6 +7,6 @@
 
 import type { IdentityProviderPermissionMapping } from '@authup/core-kit';
 
-export interface IIdentityProviderPermissionMappingRepository {
+export interface IIdentityProviderPermissionMappingFinder {
     findByProviderId(providerId: string) : Promise<IdentityProviderPermissionMapping[]>;
 }

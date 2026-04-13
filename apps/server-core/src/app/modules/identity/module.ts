@@ -76,14 +76,14 @@ export class IdentityModule implements IModule {
 
         // ---------------------------------------------
 
-        const attributeMapperRepository = new IdentityProviderAttributeMappingRepository();
-        const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperRepository);
+        const attributeMapperFinder = new IdentityProviderAttributeMappingRepository();
+        const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperFinder);
 
-        const roleMapperRepository = new IdentityProviderRoleMappingRepository();
-        const roleMapper = new IdentityProviderRoleMapper(roleMapperRepository);
+        const roleMapperFinder = new IdentityProviderRoleMappingRepository();
+        const roleMapper = new IdentityProviderRoleMapper(roleMapperFinder);
 
-        const permissionMapperRepository = new IdentityProviderPermissionMappingRepository();
-        const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
+        const permissionMapperFinder = new IdentityProviderPermissionMappingRepository();
+        const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperFinder);
 
         const providerAccountRepository = new IdentityProviderAccountRepository();
 

@@ -7,19 +7,19 @@
 import type { IdentityProviderIdentity } from '../../types.ts';
 import { IdentityProviderAccountBaseMapper } from '../base.ts';
 import type { IdentityProviderMapperElement } from '../types.ts';
-import type { IIdentityProviderAttributeMappingRepository } from './types.ts';
+import type { IIdentityProviderAttributeMappingFinder } from './types.ts';
 
 export class IdentityProviderAttributeMapper extends IdentityProviderAccountBaseMapper {
-    protected repository: IIdentityProviderAttributeMappingRepository;
+    protected finder: IIdentityProviderAttributeMappingFinder;
 
-    constructor(repository: IIdentityProviderAttributeMappingRepository) {
+    constructor(finder: IIdentityProviderAttributeMappingFinder) {
         super();
 
-        this.repository = repository;
+        this.finder = finder;
     }
 
     async execute(identity: IdentityProviderIdentity): Promise<IdentityProviderMapperElement[]> {
-        const entities = await this.repository.findByProviderId(identity.provider.id);
+        const entities = await this.finder.findByProviderId(identity.provider.id);
 
         const items : IdentityProviderMapperElement[] = [];
         for (const entity of entities) {

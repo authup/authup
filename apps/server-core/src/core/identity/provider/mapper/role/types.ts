@@ -7,6 +7,6 @@
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 
-export interface IIdentityProviderRoleMappingRepository {
+export interface IIdentityProviderRoleMappingFinder {
     findByProviderId(providerId: string) : Promise<IdentityProviderRoleMapping[]>;
 }
