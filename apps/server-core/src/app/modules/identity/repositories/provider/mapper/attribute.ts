@@ -7,10 +7,10 @@
 
 import type { IdentityProviderAttributeMapping } from '@authup/core-kit';
 import { useDataSource } from 'typeorm-extension';
-import type { IIdentityProviderAttributeMappingFinder } from '../../../../../../core/index.ts';
+import type { IIdentityProviderAttributeMappingRepository } from '../../../../../../core/index.ts';
 import { IdentityProviderAttributeMappingEntity } from '../../../../../../adapters/database/domains/index.ts';
 
-export class IdentityProviderAttributeMappingRepository implements IIdentityProviderAttributeMappingFinder {
+export class IdentityProviderAttributeMappingRepository implements IIdentityProviderAttributeMappingRepository {
     async findByProviderId(providerId: string): Promise<IdentityProviderAttributeMapping[]> {
         const dataSource = await useDataSource();
         const repository = dataSource.getRepository(IdentityProviderAttributeMappingEntity);

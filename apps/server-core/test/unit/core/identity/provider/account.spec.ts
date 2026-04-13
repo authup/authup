@@ -82,14 +82,14 @@ describe('core/identity/provider/account', () => {
             provider,
         };
 
-        const attributeMapperFinder = new IdentityProviderAttributeMappingRepository();
-        const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperFinder);
+        const attributeMapperRepository = new IdentityProviderAttributeMappingRepository();
+        const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperRepository);
 
         const roleMapperFinder = new IdentityProviderRoleMappingRepository();
         const roleMapper = new IdentityProviderRoleMapper(roleMapperFinder);
 
-        const permissionMapperFinder = new IdentityProviderPermissionMappingRepository();
-        const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperFinder);
+        const permissionMapperRepository = new IdentityProviderPermissionMappingRepository();
+        const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
 
         const providerAccountRepository = new IdentityProviderAccountRepository();
 
