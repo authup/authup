@@ -57,7 +57,7 @@ export class PermissionValidator extends Container<
         this.mount(
             'client_id',
             { optional: true },
-            createValidator(z.uuid()),
+            createValidator(z.uuid().nullable()),
         );
 
         this.mount(
