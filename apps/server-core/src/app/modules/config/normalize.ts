@@ -44,7 +44,6 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         logger: true,
         redis: false,
         smtp: false,
-        vault: false,
 
         port,
         host,

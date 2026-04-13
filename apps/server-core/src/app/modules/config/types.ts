@@ -55,11 +55,6 @@ export type Config = {
     /**
      * default: false
      */
-    vault: string | boolean,
-
-    /**
-     * default: false
-     */
     smtp: string | boolean | SMTPOptions,
 
     // ----------------------------------------------------

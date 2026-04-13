@@ -58,14 +58,6 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.smtp = smtp;
     }
 
-    const vault = oneOf([
-        readBool(ConfigEnvironmentVariableName.VAULT),
-        read(ConfigEnvironmentVariableName.VAULT),
-    ]);
-    if (typeof vault !== 'undefined') {
-        options.vault = vault;
-    }
-
     // -------------------------------------------------------------
 
     const host = read(ConfigEnvironmentVariableName.HOST);

@@ -26,7 +26,6 @@ import {
     ProvisionerModule,
     RuntimeModule,
     SwaggerModule,
-    VaultModule,
 } from './modules/index.ts';
 
 type ModuleSlot = IModule | false | undefined;
@@ -38,7 +37,6 @@ const defaultFactories: Record<string, ModuleFactory> = {
     [ModuleName.LOGGER]: () => new LoggerModule(),
     [ModuleName.CACHE]: () => new CacheModule(),
     [ModuleName.MAIL]: () => new MailModule(),
-    [ModuleName.VAULT]: () => new VaultModule(),
     [ModuleName.RUNTIME]: () => new RuntimeModule(),
     [ModuleName.SWAGGER]: () => new SwaggerModule(),
     [ModuleName.DATABASE]: () => new DatabaseModule(),
@@ -74,10 +72,6 @@ export class ApplicationBuilder {
 
     withMail(instance?: MailModule | false): this {
         return this.set(ModuleName.MAIL, instance);
-    }
-
-    withVault(instance?: VaultModule | false): this {
-        return this.set(ModuleName.VAULT, instance);
     }
 
     withRuntime(instance?: RuntimeModule | false): this {

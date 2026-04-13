@@ -50,14 +50,5 @@ export async function readConfigRawFromFS(options: ConfigReadFsOptions = {}) {
         raw.smtp = smtp;
     }
 
-    const vault = container.get([
-        'vault',
-        'server.vault',
-        'server.core.vault',
-    ]);
-    if (vault) {
-        raw.vault = vault;
-    }
-
     return raw;
 }

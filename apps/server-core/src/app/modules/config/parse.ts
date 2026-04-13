@@ -32,12 +32,6 @@ export function parseConfig(input: unknown = {}): ConfigInput {
             zod.boolean().optional(),
             zod.any().optional(),
         ])).optional(),
-        vault: zod.lazy(() => zod.union([
-            zod.string().optional(),
-            zod.boolean().optional(),
-            zod.any().optional(),
-        ])).optional(),
-
         port: zod.number()
             .nonnegative().optional(),
         host: zod.string().optional(),
