@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.1-beta.32](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.1-beta.32) (2026-04-13)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.32 to ^1.0.1-beta.32
+    * @authup/errors bumped from ^1.0.0-beta.32 to ^1.0.1-beta.32
+    * @authup/core-http-kit bumped from ^1.0.0-beta.32 to ^1.0.1-beta.32
+
 ## [1.0.0-beta.32](https://github.com/authup/authup/compare/v1.0.0-beta.31...v1.0.0-beta.32) (2026-03-30)
 
 

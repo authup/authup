@@ -62,15 +62,15 @@
     },
     "devDependencies": {
         "@authup/core-kit": "^1.0.0-beta.32",
-        "@authup/errors": "^1.0.0-beta.32",
-        "@authup/kit": "^1.0.0-beta.32",
+        "@authup/errors": "^1.0.1-beta.32",
+        "@authup/kit": "^1.0.1-beta.32",
         "vitest": "^4.0.14",
         "unplugin-swc": "^1.5.9"
     },
     "peerDependencies": {
         "@authup/core-kit": "^1.0.0-beta.32",
-        "@authup/errors": "^1.0.0-beta.32",
-        "@authup/kit": "^1.0.0-beta.32"
+        "@authup/errors": "^1.0.1-beta.32",
+        "@authup/kit": "^1.0.1-beta.32"
     },
     "publishConfig": {
         "access": "public"

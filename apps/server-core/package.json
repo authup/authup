@@ -66,10 +66,10 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/access": "^1.0.0-beta.32",
-        "@authup/core-http-kit": "^1.0.0-beta.32",
+        "@authup/core-http-kit": "^1.0.1-beta.32",
         "@authup/core-kit": "^1.0.0-beta.32",
-        "@authup/errors": "^1.0.0-beta.32",
-        "@authup/kit": "^1.0.0-beta.32",
+        "@authup/errors": "^1.0.1-beta.32",
+        "@authup/kit": "^1.0.1-beta.32",
         "@authup/server-kit": "^1.0.0-beta.32",
         "@authup/specs": "^1.0.0-beta.32",
         "@ebec/http": "^2.3.0",
