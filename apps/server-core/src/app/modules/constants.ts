@@ -10,7 +10,6 @@ export const ModuleName = {
     LOGGER: 'logger',
     CACHE: 'cache',
     MAIL: 'mail',
-    VAULT: 'vault',
     RUNTIME: 'runtime',
     SWAGGER: 'swagger',
     DATABASE: 'database',

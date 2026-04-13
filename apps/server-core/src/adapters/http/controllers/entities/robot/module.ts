@@ -20,8 +20,7 @@ import {
 } from '@routup/decorators';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
-import { REALM_MASTER_NAME } from '@authup/core-kit';
-import type { Realm, Robot } from '@authup/core-kit';
+import type { Robot } from '@authup/core-kit';
 import {
     send, 
     sendAccepted, 
@@ -29,14 +28,12 @@ import {
     useRequestParam,
 } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { isVaultClientUsable } from '@authup/server-kit';
 import type { DataSource } from 'typeorm';
 import type { IRealmRepository, IRobotRepository, IRobotService } from '../../../../../core/index.ts';
-import { OAuth2ScopeAttributesResolver, RobotCredentialsService } from '../../../../../core/index.ts';
-import { RobotEntity, RobotRepository } from '../../../../database/domains/index.ts';
+import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
+import { RobotEntity } from '../../../../database/domains/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
-import { isRobotSynchronizationServiceUsable, useRobotSynchronizationService } from '../../../../../services/index.ts';
 import {
     buildActorContext,
     useRequestIdentity,
@@ -94,21 +91,7 @@ export class RobotController {
         const actor = buildActorContext(req);
         const { entity } = await this.service.save(undefined, data, actor);
 
-        if (isRobotSynchronizationServiceUsable()) {
-            const robotSynchronizationService = useRobotSynchronizationService();
-            await robotSynchronizationService.save(entity);
-        }
-
         return sendCreated(res, entity);
-    }
-
-    @DGet('/:id/integrity', [])
-    async command(
-        @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
-    ): Promise<any> {
-        return this.handleIntegrity(id, req, res);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -208,13 +191,6 @@ export class RobotController {
             { updateOnly: true },
         );
 
-        if (data.secret) {
-            if (isRobotSynchronizationServiceUsable()) {
-                const robotSynchronizationService = useRobotSynchronizationService();
-                await robotSynchronizationService.save(entity);
-            }
-        }
-
         return sendAccepted(res, entity);
     }
 
@@ -235,13 +211,6 @@ export class RobotController {
             actor,
         );
 
-        if (created || data.secret) {
-            if (isRobotSynchronizationServiceUsable()) {
-                const robotSynchronizationService = useRobotSynchronizationService();
-                await robotSynchronizationService.save(entity);
-            }
-        }
-
         if (created) {
             return sendCreated(res, entity);
         }
@@ -258,91 +227,6 @@ export class RobotController {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(id, actor);
 
-        if (isRobotSynchronizationServiceUsable()) {
-            const robotSynchronizationService = useRobotSynchronizationService();
-            await robotSynchronizationService.remove(entity);
-        }
-
         return sendAccepted(res, entity);
-    }
-
-    // ------------------------------------------------------------------
-
-    private async handleIntegrity(id: string, req: any, res: any): Promise<any> {
-        const robotRepository = new RobotRepository(this.dataSource);
-        const query = robotRepository.createQueryBuilder('robot');
-
-        let realm: Realm | undefined;
-
-        if (isUUID(id)) {
-            query.where('robot.id = :id', { id });
-        } else {
-            query.where('robot.name LIKE :name', { name: id });
-
-            realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'), true);
-            query.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
-        }
-
-        if (!realm) {
-            query.leftJoinAndSelect('robot.realm', 'realm');
-        }
-
-        const entity = await query
-            .addSelect('robot.secret')
-            .getOne();
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        if (entity.realm) {
-            realm = entity.realm;
-        }
-
-        if (
-            !isVaultClientUsable() ||
-            !realm ||
-            realm.name !== REALM_MASTER_NAME
-        ) {
-            return sendAccepted(res);
-        }
-
-        const credentialsService = new RobotCredentialsService();
-
-        let refreshCredentials = false;
-        if (entity.secret) {
-            let credentials: Pick<Robot, 'id' | 'secret' | 'name'> | undefined;
-            if (isRobotSynchronizationServiceUsable()) {
-                const robotSynchronizationService = useRobotSynchronizationService();
-                credentials = await robotSynchronizationService.find({ name: entity.name });
-            }
-
-            if (credentials) {
-                const secretHashedEqual = await credentialsService.verify(credentials.secret, entity);
-                if (!secretHashedEqual) {
-                    refreshCredentials = true;
-                }
-            } else {
-                refreshCredentials = true;
-            }
-        } else {
-            refreshCredentials = true;
-        }
-
-        if (refreshCredentials) {
-            const secret = credentialsService.generateSecret();
-            entity.secret = await credentialsService.protect(secret);
-            await robotRepository.save(entity);
-
-            if (isRobotSynchronizationServiceUsable()) {
-                const robotSynchronizationService = useRobotSynchronizationService();
-                await robotSynchronizationService.save({
-                    ...entity,
-                    secret,
-                });
-            }
-        }
-
-        return sendAccepted(res);
     }
 }

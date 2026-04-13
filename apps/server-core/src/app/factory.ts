@@ -17,7 +17,6 @@ export function createApplication() {
         .withLogger()
         .withCache()
         .withMail()
-        .withVault()
         .withRuntime()
         .withSwagger()
         .withDatabase()

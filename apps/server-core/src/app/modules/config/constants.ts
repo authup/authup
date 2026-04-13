@@ -16,7 +16,6 @@ export enum ConfigEnvironmentVariableName {
 
     REDIS = 'REDIS',
     SMTP = 'SMTP',
-    VAULT = 'VAULT',
 
     HOST = 'HOST',
     PORT = 'PORT',
