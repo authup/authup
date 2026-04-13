@@ -37,8 +37,8 @@ export class PermissionEvaluator implements IPermissionEvaluator {
     // ----------------------------------------------
 
     constructor(options: PermissionEvaluatorOptions = {}) {
-        if (options.repository) {
-            this.provider = options.repository;
+        if (options.provider) {
+            this.provider = options.provider;
         } else {
             this.provider = new PermissionMemoryProvider();
         }

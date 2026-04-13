@@ -148,9 +148,9 @@ export function createStore(context: StoreCreateContext) {
 
     // --------------------------------------------------------------------
 
-    const permissionRepository = new PermissionMemoryProvider();
+    const permissionProvider = new PermissionMemoryProvider();
     const permissionEvaluator = new PermissionEvaluator({
-        repository: permissionRepository,
+        provider: permissionProvider,
         policyEngine: new PolicyEngine(),
     });
 
@@ -167,7 +167,7 @@ export function createStore(context: StoreCreateContext) {
         setRealm(null);
         setRealmManagement(null);
 
-        permissionRepository.setMany([]);
+        permissionProvider.setMany([]);
 
         tokenResolved.value = false;
         userResolved.value = false;
@@ -242,7 +242,7 @@ export function createStore(context: StoreCreateContext) {
                 }
 
                 if (response.permissions) {
-                    permissionRepository.setMany(response.permissions.map((permission) => ({
+                    permissionProvider.setMany(response.permissions.map((permission) => ({
                         permission: {
                             name: permission.name,
                             realm_id: permission.realm_id,

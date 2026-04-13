@@ -36,7 +36,7 @@ const abilities : PermissionBinding[] = [
 
 const provider = new PermissionMemoryProvider(abilities);
 const evaluator = new PermissionEvaluator({
-    repository: provider,
+    provider,
     policyEngine: new PolicyEngine(PolicyDefaultEvaluators),
 });
 

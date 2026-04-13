@@ -139,7 +139,7 @@ export class PermissionController {
         };
 
         const permissionEvaluator = new PermissionEvaluator({
-            repository: this.permissionProvider,
+            provider: this.permissionProvider,
             policyEngine: new PolicyEngine(this.identityPermissionProvider),
         });
 

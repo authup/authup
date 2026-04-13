@@ -80,7 +80,7 @@ export class AuthorizationMiddleware {
         this.oauth2TokenVerifier = ctx.oauth2TokenVerifier;
 
         this.permissionEvaluator = new PermissionEvaluator({
-            repository: ctx.permissionProvider,
+            provider: ctx.permissionProvider,
             policyEngine: new PolicyEngine(ctx.identityPermissionProvider),
             realmId: null,
             clientId: null,

@@ -11,16 +11,16 @@ import type { IdentityProviderMapperElement } from '../types.ts';
 import type { IIdentityProviderRoleMappingFinder } from './types.ts';
 
 export class IdentityProviderRoleMapper extends IdentityProviderAccountBaseMapper {
-    protected repository: IIdentityProviderRoleMappingFinder;
+    protected finder: IIdentityProviderRoleMappingFinder;
 
-    constructor(repository: IIdentityProviderRoleMappingFinder) {
+    constructor(finder: IIdentityProviderRoleMappingFinder) {
         super();
 
-        this.repository = repository;
+        this.finder = finder;
     }
 
     async execute(identity: IdentityProviderIdentity): Promise<IdentityProviderMapperElement[]> {
-        const entities = await this.repository.findByProviderId(identity.provider.id);
+        const entities = await this.finder.findByProviderId(identity.provider.id);
 
         const items : IdentityProviderMapperElement[] = [];
         for (const entity of entities) {

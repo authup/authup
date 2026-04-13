@@ -85,8 +85,8 @@ describe('core/identity/provider/account', () => {
         const attributeMapperRepository = new IdentityProviderAttributeMappingRepository();
         const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperRepository);
 
-        const roleMapperRepository = new IdentityProviderRoleMappingRepository();
-        const roleMapper = new IdentityProviderRoleMapper(roleMapperRepository);
+        const roleMapperFinder = new IdentityProviderRoleMappingRepository();
+        const roleMapper = new IdentityProviderRoleMapper(roleMapperFinder);
 
         const permissionMapperRepository = new IdentityProviderPermissionMappingRepository();
         const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);

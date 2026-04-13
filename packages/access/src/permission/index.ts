@@ -8,5 +8,5 @@
 export * from './error';
 export * from './helpers';
 export * from './provider';
-export * from './checker';
+export * from './evaluator';
 export * from './types';
