@@ -45,7 +45,7 @@ The `evaluate` method accepts an object of type [PermissionEvaluationContext](./
 import { PermissionEvaluator, PermissionMemoryProvider, PolicyData } from '@authup/access';
 
 const evaluator = new PermissionEvaluator({
-    repository: new PermissionMemoryProvider([])
+    provider: new PermissionMemoryProvider([])
 });
 
 evaluator.evaluate({
