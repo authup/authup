@@ -64,7 +64,11 @@ export default defineComponent({
 
         function assign(data: Partial<Policy> = {}) {
             if (data.children) {
-                form.items = data.children.map((child) => child.id);
+                form.items = data.children
+                    .map((child) => child.id)
+                    .filter((id): id is string => !!id);
+            } else {
+                form.items = [];
             }
         }
 

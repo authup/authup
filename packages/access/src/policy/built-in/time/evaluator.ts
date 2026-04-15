@@ -30,13 +30,15 @@ function toDate(
 
             const startHours = Number(parts[0]);
             const startMinutes = Number(parts[1]);
+            const startSeconds = parts[2] !== undefined ? Number(parts[2]) : 0;
 
             if (
                 Number.isFinite(startHours) &&
-                Number.isFinite(startMinutes)
+                Number.isFinite(startMinutes) &&
+                Number.isFinite(startSeconds)
             ) {
                 const date = dateRef ? new Date(dateRef) : new Date();
-                date.setHours(startHours, startMinutes);
+                date.setHours(startHours, startMinutes, startSeconds, 0);
 
                 return date;
             }
