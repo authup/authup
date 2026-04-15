@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.0-beta.33) (2026-04-15)
+
+
+### Bug Fixes
+
+* **core-kit:** allow nullable client_id in permission and role validators ([0c9a717](https://github.com/authup/authup/commit/0c9a717acd542d70346dea73fee3976924808b7c))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.32 to ^1.0.1-beta.32
+    * @authup/errors bumped from ^1.0.0-beta.32 to ^1.0.1-beta.32
+    * @authup/specs bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+
 ## [1.0.0-beta.32](https://github.com/authup/authup/compare/v1.0.0-beta.31...v1.0.0-beta.32) (2026-03-30)
 
 

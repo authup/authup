@@ -1,5 +1,28 @@
 # Change Log
 
+## [1.0.0-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.0-beta.33) (2026-04-15)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 16 updates ([#2973](https://github.com/authup/authup/issues/2973)) ([b95589a](https://github.com/authup/authup/commit/b95589a06e8907cefcb8b1c704682928d513766e))
+* **deps:** bump the minorandpatch group with 2 updates ([#2963](https://github.com/authup/authup/issues/2963)) ([9410e03](https://github.com/authup/authup/commit/9410e03b3a65551ea1f9ee752fd40fd1884693f1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+    * @authup/core-http-kit bumped from ^1.0.0-beta.32 to ^1.0.1-beta.32
+    * @authup/core-kit bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+    * @authup/errors bumped from ^1.0.0-beta.32 to ^1.0.1-beta.32
+    * @authup/kit bumped from ^1.0.0-beta.32 to ^1.0.1-beta.32
+    * @authup/server-kit bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+    * @authup/specs bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+  * devDependencies
+    * @authup/client-web-slim bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+
 ## [1.0.0-beta.32](https://github.com/authup/authup/compare/v1.0.0-beta.31...v1.0.0-beta.32) (2026-03-30)
 
 
