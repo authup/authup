@@ -152,7 +152,7 @@ export default defineComponent({
                         entity-type="role"
                         :with-text="false"
                         :disabled="!hasDropPermission"
-                        @deleted="(e) => props.deleted(e)"
+                        @deleted="props.deleted"
                     />
                 </template>
             </BTable>
