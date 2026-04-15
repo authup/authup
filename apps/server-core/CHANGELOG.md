@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.1-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.33...v1.0.1-beta.33) (2026-04-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.33 to ^1.0.1-beta.33
+    * @authup/core-http-kit bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+    * @authup/core-kit bumped from ^1.0.0-beta.33 to ^1.0.1-beta.33
+    * @authup/errors bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+    * @authup/kit bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+    * @authup/server-kit bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+    * @authup/specs bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+  * devDependencies
+    * @authup/client-web-slim bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+
 ## [1.0.0-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.0-beta.33) (2026-04-15)
 
 

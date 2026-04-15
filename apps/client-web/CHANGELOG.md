@@ -1,5 +1,18 @@
 # Change Log
 
+## [1.0.1-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.33...v1.0.1-beta.33) (2026-04-15)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.33 to ^1.0.1-beta.33
+    * @authup/kit bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+    * @authup/core-kit bumped from ^1.0.0-beta.33 to ^1.0.1-beta.33
+    * @authup/core-http-kit bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.33 to ^1.0.0-beta.34
+
 ## [1.0.0-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.0-beta.33) (2026-04-15)
 
 
