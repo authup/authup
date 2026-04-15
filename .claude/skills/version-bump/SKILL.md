@@ -1,6 +1,6 @@
 ---
 name: version-bump
-description: Touches all packages that have no direct commits since the last release so release-please assigns the correct linked version instead of computing a wrong patch bump. Updates copyright years as the no-op change.
+description: Touches all packages that have no bump-worthy (fix/feat) commits since the last release so release-please assigns the correct linked version. Covers both packages with no commits and packages with only non-bump commits (refactor, chore, etc.). Updates copyright years as the no-op change.
 compatibility: Requires git and access to the local filesystem.
 allowed-tools: Bash(git:*) Read Edit Glob Grep
 metadata:
@@ -13,6 +13,10 @@ metadata:
 When release-please creates a release PR, packages that have no direct commits (only dependency bumps) may get a wrong version like `1.0.1-beta.30` instead of the expected `1.0.0-beta.31`. This skill creates a no-op commit touching those packages so release-please picks them up correctly.
 
 ## Step 1: Identify affected packages
+
+There are two categories of packages that need touching:
+
+### Category A: Wrong version in release PR
 
 Check the open release-please PR for packages that got the wrong version:
 
@@ -27,6 +31,30 @@ gh pr diff <PR_NUMBER> 2>&1 | grep -B20 '"version": "1.0.1-' | grep "^diff"
 ```
 
 Extract the package paths from those diff lines.
+
+### Category B: Packages with only non-bump commits
+
+Release-please only bumps versions for `fix:` and `feat:` commits. Packages touched exclusively by `refactor:`, `chore:`, `perf:`, `docs:`, `style:`, `test:`, or `ci:` commits since the last release will NOT get a version bump.
+
+Find the last release commit:
+
+```bash
+git log --oneline --grep="chore: release master" -1
+```
+
+Then find packages touched since that commit that have NO `fix:` or `feat:` commits:
+
+```bash
+# Get all packages touched since last release
+git log <LAST_RELEASE>..HEAD --name-only --pretty=format: | grep -oE '(apps|packages)/[^/]+' | sort -u
+
+# For each package, check if it has any fix/feat commits
+git log <LAST_RELEASE>..HEAD --oneline --grep="^fix" --grep="^feat" --extended-regexp -- <PACKAGE_PATH>
+```
+
+Any package with changes but no `fix:`/`feat:` commits needs to be touched.
+
+Combine both categories, deduplicating packages that appear in both.
 
 ## Step 2: Touch each affected package
 
