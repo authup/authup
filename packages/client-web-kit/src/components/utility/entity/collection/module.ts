@@ -31,9 +31,7 @@ import type {
     ListMeta,
 } from './types';
 import {
-    buildEntityCollectionCreatedHandler,
-    buildEntityCollectionDeletedHandler,
-    buildEntityCollectionUpdatedHandler,
+    ListHandlers,
     mergeEntityCollectionRenderOptions,
 } from './utils';
 
@@ -164,18 +162,32 @@ function create<
         }
     }
 
-    const handleCreated = buildEntityCollectionCreatedHandler(data, (cbEntity) => {
-        total.value++;
+    const handlers = new ListHandlers<RECORD>(data, {
+        created: (cbEntity) => {
+            total.value++;
 
-        if (context.onCreated) {
-            context.onCreated(cbEntity, meta.value);
-        }
+            if (context.onCreated) {
+                context.onCreated(cbEntity, meta.value);
+            }
+
+            if (context.setup && typeof context.setup.emit === 'function') {
+                context.setup.emit('created', cbEntity);
+            }
+        },
+        deleted: (cbEntity) => {
+            total.value--;
+
+            if (context.setup && typeof context.setup.emit === 'function') {
+                context.setup.emit('deleted', cbEntity);
+            }
+        },
+        updated: (cbEntity) => {
+            if (context.setup && typeof context.setup.emit === 'function') {
+                context.setup.emit('updated', cbEntity);
+            }
+        },
     });
 
-    const handleDeleted = buildEntityCollectionDeletedHandler(data, () => {
-        total.value--;
-    });
-    const handleUpdated = buildEntityCollectionUpdatedHandler(data);
 
     function render(defaults?: EntityCollectionRenderOptions<RECORD>) : VNodeChild {
         let renderOptions : EntityCollectionRenderOptions<RECORD>;
@@ -214,30 +226,30 @@ function create<
                     context.setup.emit('created', value);
                 }
 
-                handleCreated(value);
+                handlers.created(value);
             },
             onDeleted: (value: RECORD) => {
                 if (context.setup.emit) {
                     context.setup.emit('deleted', value);
                 }
 
-                handleDeleted(value);
+                handlers.deleted(value);
             },
             onUpdated: (value: RECORD) => {
                 if (context.setup.emit) {
                     context.setup.emit('updated', value);
                 }
 
-                handleUpdated(value);
+                handlers.updated(value);
             },
             slotItems: context.setup.slots || {},
         });
     }
 
     context.setup.expose({
-        handleCreated,
-        handleDeleted,
-        handleUpdated,
+        handleCreated: (data: RECORD) => handlers.created(data),
+        handleDeleted: (data: RECORD) => handlers.deleted(data),
+        handleUpdated: (data: RECORD) => handlers.updated(data),
         load,
         data,
     });
@@ -270,14 +282,14 @@ function create<
                 meta.value?.pagination?.offset === 0;
 
             if (isSorted || total.value < (meta.value?.pagination?.limit ?? 0)) {
-                handleCreated(entity);
+                handlers.created(entity);
             }
         };
         socketContext.onDeleted = (entity: RECORD) => {
-            handleDeleted(entity);
+            handlers.deleted(entity);
         };
         socketContext.onUpdated = (entity: RECORD) => {
-            handleDeleted(entity);
+            handlers.updated(entity);
         };
         socketContext.realmId = realmId;
 
@@ -290,9 +302,15 @@ function create<
         meta,
         total,
 
-        handleCreated,
-        handleUpdated,
-        handleDeleted,
+        handleCreated: (entity: RECORD) => {
+            handlers.updated(entity);
+        },
+        handleDeleted: (entity: RECORD) => {
+            handlers.deleted(entity);
+        },
+        handleUpdated: (entity: RECORD) => {
+            handlers.updated(entity);
+        },
 
         render,
         load,
