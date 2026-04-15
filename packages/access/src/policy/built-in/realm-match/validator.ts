@@ -12,7 +12,7 @@ import { DecisionStrategy } from '../../../constants';
 import type { RealmMatchPolicy } from './types';
 
 export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {
-    initialize() {
+    override initialize() {
         super.initialize();
 
         this.mount(

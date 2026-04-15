@@ -12,7 +12,7 @@ import { z } from 'zod';
 import type { IdentityPolicyData } from '../types.ts';
 
 export class PolicyIdentityDataValidator extends Container<IdentityPolicyData> {
-    initialize() {
+    override initialize() {
         super.initialize();
 
         this.mount(

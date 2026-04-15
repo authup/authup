@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildPermissionKey } from '@authup/access';
 import {
     EntityDefaultEventName,
     EntityType,
     buildEntityChannelName,
-    buildPermissionBindingKey, 
 } from '@authup/core-kit';
 import type { Permission } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type {
-    EntitySubscriberInterface, 
+    EntitySubscriberInterface,
     InsertEvent,
     RemoveEvent,
     UpdateEvent,
@@ -68,7 +68,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
                 }),
                 buildRedisKeyPath({
                     prefix: CachePrefix.PERMISSION,
-                    key: buildPermissionBindingKey({
+                    key: buildPermissionKey({
                         name: event.entity.name,
                         client_id: event.entity.client_id,
                         realm_id: event.entity.realm_id,
@@ -91,7 +91,7 @@ export class PermissionSubscriber implements EntitySubscriberInterface<Permissio
                     prefix: CachePrefix.PERMISSION,
                     key: event.entity.id,
                 }),
-                buildPermissionBindingKey({
+                buildPermissionKey({
                     name: event.entity.name,
                     client_id: event.entity.client_id,
                     realm_id: event.entity.realm_id,

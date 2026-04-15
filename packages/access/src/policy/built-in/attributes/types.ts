@@ -6,12 +6,12 @@
  */
 
 import type { MongoQuery } from '@ucast/mongo2js';
-import type { PolicyBase } from '../../types';
+import type { BasePolicy } from '../../types';
 
 export type AttributesPolicyQuery<T> = MongoQuery<T>;
 
 export interface AttributesPolicy<
     T extends Record<string, any> = Record<string, any>,
-> extends PolicyBase {
+> extends BasePolicy {
     query: AttributesPolicyQuery<T>
 }

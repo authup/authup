@@ -5,9 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IdentityPolicyData, PolicyWithType } from '@authup/access';
-import type { PermissionBinding } from '@authup/core-kit';
-import { isPermissionBindingEqual, mergePermissionBindings } from '@authup/core-kit';
+import type {
+    IdentityPolicyData,
+    PermissionPolicyBinding,
+} from '@authup/access';
+import { isPermissionPolicyBindingEqual, mergePermissionPolicyBindings } from '@authup/access';
+import type { Policy } from '@authup/core-kit';
+import { isPolicy } from '@authup/core-kit';
 import type {
     IIdentityBindingRepository,
     IIdentityPermissionProvider,
@@ -36,12 +40,12 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         const parentBindings = await this.getFor(parent);
         const childBindings = await this.getFor(child);
 
-        const parentMerged = mergePermissionBindings(parentBindings);
-        const childMerged = mergePermissionBindings(childBindings);
+        const parentMerged = mergePermissionPolicyBindings(parentBindings);
+        const childMerged = mergePermissionPolicyBindings(childBindings);
 
         for (const childItem of childMerged) {
             const parentItem = parentMerged.find(
-                (p) => isPermissionBindingEqual(p, childItem),
+                (p) => isPermissionPolicyBindingEqual(p, childItem),
             );
 
             if (!parentItem) {
@@ -62,7 +66,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
     async resolveJunctionPolicy(
         identity: IdentityPolicyData,
         options: ResolveJunctionPolicyOptions,
-    ): Promise<PolicyWithType | undefined> {
+    ): Promise<Policy | undefined> {
         const bindings = await this.getFor(identity);
         const matching = bindings.filter((b) => {
             if (b.permission.name !== options.name) {
@@ -88,16 +92,19 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             return undefined;
         }
 
-        const merged = mergePermissionBindings(matching);
+        const merged = mergePermissionPolicyBindings(matching);
 
         if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {
-            return merged[0].policies[0];
+            const policy = merged[0].policies[0];
+            if (isPolicy(policy)) {
+                return policy;
+            }
         }
 
         return undefined;
     }
 
-    async getFor(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
+    async getFor(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
         switch (identity.type) {
             case 'client': {
                 return this.getForClient(identity);
@@ -116,7 +123,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         return [];
     }
 
-    async getForClient(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
+    async getForClient(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
         const bindings = await this.clientRepository.getBoundPermissions(identity.id);
         const roles = await this.clientRepository.getBoundRoles(identity.id);
         const roleBindings = await this.roleRepository.getBoundPermissionsForMany(roles);
@@ -130,7 +137,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         ];
     }
 
-    async getForUser(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
+    async getForUser(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
         const bindings = await this.userRepository.getBoundPermissions(identity.id)
             .then((data) => this.reduceBindingsByIdentityClient(data, identity));
 
@@ -148,7 +155,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         ];
     }
 
-    async getForRobot(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
+    async getForRobot(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
         const bindings = await this.robotRepository.getBoundPermissions(identity.id)
             .then((data) => this.reduceBindingsByIdentityClient(data, identity));
 
@@ -166,15 +173,15 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         ];
     }
 
-    async getForRole(identity: IdentityPolicyData) : Promise<PermissionBinding[]> {
+    async getForRole(identity: IdentityPolicyData) : Promise<PermissionPolicyBinding[]> {
         return this.roleRepository.getBoundPermissions(identity.id)
             .then((data) => this.reduceBindingsByIdentityClient(data, identity));
     }
 
     private reduceBindingsByIdentityClient(
-        bindings: PermissionBinding[],
+        bindings: PermissionPolicyBinding[],
         identity: IdentityPolicyData,
-    ): PermissionBinding[] {
+    ): PermissionPolicyBinding[] {
         if (!identity.clientId) {
             return bindings;
         }

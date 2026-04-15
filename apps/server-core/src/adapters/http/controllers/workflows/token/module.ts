@@ -8,24 +8,24 @@
 import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
 import {
-    DController, 
-    DGet, 
-    DPost, 
-    DRequest, 
-    DResponse, 
+    DController,
+    DGet,
+    DPost,
+    DRequest,
+    DResponse,
     DTags,
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
-import { buildPermissionBindingKey } from '@authup/core-kit';
+import { buildPermissionKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
 import type {
     IIdentityPermissionProvider,
     IIdentityResolver,
     IOAuth2TokenIssuer,
-    IOAuth2TokenRevoker, 
-    IOAuth2TokenVerifier, 
+    IOAuth2TokenRevoker,
+    IOAuth2TokenVerifier,
 } from '../../../../../core/index.ts';
 import { OAuth2OpenIDClaimsBuilder } from '../../../../../core/index.ts';
 import type { IHTTPOAuth2Grant } from '../../../adapters/index.ts';
@@ -149,7 +149,7 @@ export class TokenController {
                 // todo: permissions property should be removed.
                 permissions: Object.values(
                     permissions.reduce((acc, binding) => {
-                        const key = buildPermissionBindingKey(binding.permission);
+                        const key = buildPermissionKey(binding.permission);
                         if (!acc[key]) {
                             acc[key] = {
                                 name: binding.permission.name,

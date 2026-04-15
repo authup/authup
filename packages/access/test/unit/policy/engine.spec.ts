@@ -6,12 +6,12 @@
  */
 
 import {
-    beforeAll, 
-    describe, 
-    expect, 
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
-import type { IPolicy } from '../../../src';
+import type { BasePolicy } from '../../../src';
 import {
     BuiltInPolicyType,
     DecisionStrategy,
@@ -31,7 +31,7 @@ type User = {
 describe('src/policy', () => {
     let enforcer : PolicyEngine;
 
-    let compositePolicy : IPolicy;
+    let compositePolicy : BasePolicy;
 
     beforeAll(() => {
         enforcer = new PolicyEngine(PolicyDefaultEvaluators);
@@ -66,7 +66,7 @@ describe('src/policy', () => {
     it('should evaluate with invalid data', async () => {
         let outcome = await enforcer.evaluate(compositePolicy, definePolicyEvaluationContext({
             data: new PolicyData({
-                attributes: {
+                [BuiltInPolicyType.ATTRIBUTES]: {
                     id: 'foo',
                     name: 'admin',
                 },

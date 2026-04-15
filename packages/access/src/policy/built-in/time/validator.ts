@@ -12,7 +12,7 @@ import type { TimePolicy } from './types';
 import { TimePolicyInterval } from './constants';
 
 export class TimePolicyValidator extends Container<TimePolicy> {
-    initialize() {
+    override initialize() {
         super.initialize();
 
         this.mount('day_of_week', createValidator(

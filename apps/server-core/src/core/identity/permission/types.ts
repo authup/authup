@@ -5,8 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionBinding, Role } from '@authup/core-kit';
-import type { IdentityPolicyData, PolicyWithType } from '@authup/access';
+import type { Policy, Role } from '@authup/core-kit';
+import type {
+    IdentityPolicyData,
+    PermissionPolicyBinding,
+} from '@authup/access';
 
 export type ResolveJunctionPolicyOptions = {
     name: string;
@@ -15,19 +18,19 @@ export type ResolveJunctionPolicyOptions = {
 };
 
 export interface IIdentityPermissionProvider {
-    getFor(identity: IdentityPolicyData): Promise<PermissionBinding[]>;
+    getFor(identity: IdentityPolicyData): Promise<PermissionPolicyBinding[]>;
     isSuperset(parent: IdentityPolicyData, child: IdentityPolicyData): Promise<boolean>;
-    resolveJunctionPolicy(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<PolicyWithType | undefined>;
+    resolveJunctionPolicy(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<Policy | undefined>;
 }
 
 export interface IIdentityBindingRepository {
-    getBoundPermissions(entity: string): Promise<PermissionBinding[]>;
+    getBoundPermissions(entity: string): Promise<PermissionPolicyBinding[]>;
     getBoundRoles(entity: string): Promise<Role[]>;
 }
 
 export interface IRoleBindingRepository {
-    getBoundPermissions(entity: string | Role): Promise<PermissionBinding[]>;
-    getBoundPermissionsForMany(entities: (string | Role)[]): Promise<PermissionBinding[]>;
+    getBoundPermissions(entity: string | Role): Promise<PermissionPolicyBinding[]>;
+    getBoundPermissionsForMany(entities: (string | Role)[]): Promise<PermissionPolicyBinding[]>;
 }
 
 export type IdentityPermissionProviderContext = {

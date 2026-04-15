@@ -8,9 +8,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { ErrorCode } from '@authup/errors';
-import type { AttributeNamesPolicy, PermissionBinding, PolicyWithType } from '../../../src';
+import type { AttributeNamesPolicy, PermissionPolicyBinding } from '../../../src';
 import {
-    BuiltInPolicyType, 
+    BuiltInPolicyType,
     PermissionError,
 
     PermissionEvaluator,
@@ -20,14 +20,14 @@ import {
     PolicyEngine,
 } from '../../../src';
 
-const abilities : PermissionBinding[] = [
+const abilities : PermissionPolicyBinding[] = [
     {
         permission: { name: 'user_edit' },
         policies: [
             {
                 type: BuiltInPolicyType.ATTRIBUTE_NAMES,
                 names: ['name'],
-            } satisfies PolicyWithType<AttributeNamesPolicy>,
+            } satisfies AttributeNamesPolicy,
         ],
     },
     { permission: { name: 'user_add' } },
@@ -44,7 +44,7 @@ describe('src/ability/manager.ts', () => {
     it('should work with policy', async () => {
         await evaluator.evaluate({
             name: 'user_edit',
-            input: new PolicyData({ attributes: { name: 'admin' } }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { name: 'admin' } }),
         });
     });
 
@@ -54,7 +54,7 @@ describe('src/ability/manager.ts', () => {
         try {
             await evaluator.evaluate({
                 name: 'user_edit',
-                input: new PolicyData({ attributes: { id: '123' } }),
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { id: '123' } }),
             });
         } catch (e) {
             expect(e).toBeInstanceOf(PermissionError);

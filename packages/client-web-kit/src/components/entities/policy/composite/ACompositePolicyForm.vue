@@ -1,16 +1,15 @@
 <script lang="ts">
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import {
-    type PropType, 
-    computed, 
-    defineComponent, 
+    type PropType,
+    computed,
+    defineComponent,
     reactive,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import { VCFormGroup } from '@vuecs/form-controls';
-import type { CompositePolicy } from '@authup/access';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import { APolicyPicker } from '../APolicyPicker';
 
@@ -63,9 +62,13 @@ export default defineComponent({
             };
         });
 
-        function assign(data: Partial<CompositePolicy> = {}) {
+        function assign(data: Partial<Policy> = {}) {
             if (data.children) {
-                form.items = data.children.map((child) => child.id);
+                form.items = data.children
+                    .map((child) => child.id)
+                    .filter((id): id is string => !!id);
+            } else {
+                form.items = [];
             }
         }
 

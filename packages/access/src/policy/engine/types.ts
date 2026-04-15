@@ -6,10 +6,10 @@
  */
 
 import type { PolicyEvaluationContext, PolicyEvaluationResult } from '../evaluation';
-import type { IPolicy } from '../types';
+import type { BasePolicy } from '../types';
 
 export interface IPolicyEngine {
-    evaluate(policy: IPolicy, options: PolicyEvaluationContext) : Promise<PolicyEvaluationResult>;
+    evaluate(policy: BasePolicy, options: PolicyEvaluationContext) : Promise<PolicyEvaluationResult>;
 
-    evaluateOrFail(policy: IPolicy, options: PolicyEvaluationContext) : Promise<void>;
+    evaluateOrFail(policy: BasePolicy, options: PolicyEvaluationContext) : Promise<void>;
 }

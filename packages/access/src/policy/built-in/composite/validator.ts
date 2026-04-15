@@ -12,7 +12,7 @@ import { DecisionStrategy } from '../../../constants';
 import type { CompositePolicy } from './types';
 
 export class CompositePolicyValidator extends Container<CompositePolicy> {
-    initialize() {
+    override initialize() {
         super.initialize();
 
         this.mount(

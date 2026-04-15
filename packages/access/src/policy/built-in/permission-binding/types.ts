@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyBase } from '../../types';
+import type { BasePolicy } from '../../types';
 
-export interface PermissionBindingPolicy extends PolicyBase {
+export interface PermissionBindingPolicy extends BasePolicy {
 
 }

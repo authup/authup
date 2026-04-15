@@ -9,7 +9,7 @@ import { ErrorCode } from '@authup/errors';
 import type { Issue } from 'validup';
 import { defineIssueItem } from 'validup';
 import { DecisionStrategy } from '../../constants.ts';
-import type { CompositePolicy, IPolicyEngine, PolicyWithType } from '../../policy';
+import type { CompositePolicy, IPolicyEngine } from '../../policy';
 import {
     BuiltInPolicyType,
     PolicyData,
@@ -19,10 +19,9 @@ import {
     definePolicyIssueGroup,
 } from '../../policy';
 import { PermissionError } from '../error';
-import type { IPermissionProvider, PermissionGetOptions } from '../provider';
-import { PermissionMemoryProvider } from '../provider';
+import type { IPermissionProvider } from '../provider';
 
-import type { PermissionBinding } from '../types.ts';
+import type { PermissionPolicyBinding } from '../types.ts';
 import type { IPermissionEvaluator, PermissionEvaluationContext, PermissionEvaluatorOptions } from './types.ts';
 
 export class PermissionEvaluator implements IPermissionEvaluator {
@@ -36,20 +35,11 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
     // ----------------------------------------------
 
-    constructor(options: PermissionEvaluatorOptions = {}) {
-        if (options.provider) {
-            this.provider = options.provider;
-        } else {
-            this.provider = new PermissionMemoryProvider();
-        }
+    constructor(options: PermissionEvaluatorOptions) {
+        this.provider = options.provider;
 
-        if (typeof options.clientId !== 'undefined') {
-            this.clientId = options.clientId;
-        }
-
-        if (typeof options.realmId !== 'undefined') {
-            this.realmId = options.realmId;
-        }
+        this.clientId = options.clientId || null;
+        this.realmId = options.realmId || null;
 
         if (options.policyEngine) {
             this.policyEngine = options.policyEngine;
@@ -62,26 +52,16 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
     protected async findOne(
         input: string,
-        overrides?: {
+        overrides: {
             realmId?: string | null,
-            clientId?: string | null 
-        },
-    ) : Promise<PermissionBinding | null> {
-        const options : PermissionGetOptions = { name: input };
-
-        if (typeof overrides?.clientId !== 'undefined') {
-            options.clientId = overrides.clientId;
-        } else if (typeof this.clientId !== 'undefined') {
-            options.clientId = this.clientId;
-        }
-
-        if (typeof overrides?.realmId !== 'undefined') {
-            options.realmId = overrides.realmId;
-        } else if (typeof this.realmId !== 'undefined') {
-            options.realmId = this.realmId;
-        }
-
-        return this.provider.findOne(options);
+            clientId?: string | null
+        } = {},
+    ) : Promise<PermissionPolicyBinding | null> {
+        return this.provider.findOne({
+            name: input,
+            clientId: overrides.clientId ?? this.clientId,
+            realmId: overrides.realmId ?? this.realmId,
+        });
     }
 
     // ----------------------------------------------
@@ -106,16 +86,16 @@ export class PermissionEvaluator implements IPermissionEvaluator {
 
         const dataBase = ctx.input || new PolicyData();
 
-        for (let i = 0; i < ctx.name.length; i++) {
-            const binding = await this.findOne(ctx.name[i], {
+        for (const name of ctx.name) {
+            const binding = await this.findOne(name, {
                 realmId: ctx.realmId,
                 clientId: ctx.clientId,
             });
             if (!binding) {
                 issues.push(defineIssueItem({
                     code: ErrorCode.PERMISSION_NOT_FOUND,
-                    message: `The ${ctx.name[i]} permission could not be resolved`,
-                    path: [ctx.name[i]],
+                    message: `The ${name} permission could not be resolved`,
+                    path: [name],
                 }));
 
                 if (decisionStrategy === DecisionStrategy.UNANIMOUS) {
@@ -144,7 +124,7 @@ export class PermissionEvaluator implements IPermissionEvaluator {
             const policyDecisionStrategy = binding.permission.decision_strategy ??
                 DecisionStrategy.UNANIMOUS;
 
-            const compositePolicy : PolicyWithType<CompositePolicy> = {
+            const compositePolicy : CompositePolicy = {
                 type: BuiltInPolicyType.COMPOSITE,
                 decision_strategy: policyDecisionStrategy,
                 children: policies,

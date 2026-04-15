@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import type { IdentityPolicy } from '../../../src';
 import {
+    BuiltInPolicyType,
     IdentityPolicyEvaluator,
     PolicyData,
     definePolicyEvaluationContext,
@@ -21,7 +22,7 @@ describe('src/policy/identity', () => {
 
         const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
-                identity: {
+                [BuiltInPolicyType.IDENTITY]: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
@@ -38,7 +39,7 @@ describe('src/policy/identity', () => {
 
         const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
-                identity: {
+                [BuiltInPolicyType.IDENTITY]: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
@@ -55,7 +56,7 @@ describe('src/policy/identity', () => {
 
         const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
-                identity: {
+                [BuiltInPolicyType.IDENTITY]: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',

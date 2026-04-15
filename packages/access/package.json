@@ -61,14 +61,12 @@
         "zod": "^4.3.6"
     },
     "devDependencies": {
-        "@authup/core-kit": "^1.0.0-beta.33",
         "@authup/errors": "^1.0.0-beta.33",
         "@authup/kit": "^1.0.0-beta.33",
         "vitest": "^4.0.14",
         "unplugin-swc": "^1.5.9"
     },
     "peerDependencies": {
-        "@authup/core-kit": "^1.0.0-beta.33",
         "@authup/errors": "^1.0.0-beta.33",
         "@authup/kit": "^1.0.0-beta.33"
     },

@@ -7,7 +7,15 @@
 
 import type { NameValidOptions } from '../../helpers';
 import { isNameValid } from '../../helpers';
+import type { Policy } from './entity';
 
 export function isPolicyNameValid(name: string, options: NameValidOptions = {}) : boolean {
     return isNameValid(name, options);
+}
+
+export function isPolicy(input: Record<string, any>): input is Policy {
+    return typeof input === 'object' &&
+        input !== null &&
+        typeof input.id === 'string' &&
+        typeof input.type === 'string';
 }

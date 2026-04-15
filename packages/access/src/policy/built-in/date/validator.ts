@@ -11,7 +11,7 @@ import { z } from 'zod';
 import type { DatePolicy } from './types';
 
 export class DatePolicyValidator extends Container<DatePolicy> {
-    initialize() {
+    override initialize() {
         super.initialize();
 
         this.mount('start', createValidator(

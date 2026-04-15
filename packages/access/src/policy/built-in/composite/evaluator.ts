@@ -32,9 +32,11 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
         const engine = new PolicyEngine(ctx.evaluators);
         const issues : PolicyIssue[] = [];
 
-        for (let i = 0; i < policy.children.length; i++) {
-            const childPolicy = policy.children[i];
-            const path = [...(ctx.path || []), childPolicy.type];
+        for (const childPolicy of policy.children) {
+            const path = [
+                ...(ctx.path || []),
+                ...(childPolicy.type ? [childPolicy.type] : []),
+            ];
 
             const outcome = await engine.evaluate(childPolicy, {
                 ...ctx,

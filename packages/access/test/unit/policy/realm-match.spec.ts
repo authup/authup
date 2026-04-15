@@ -8,6 +8,7 @@
 import { describe, expect, it } from 'vitest';
 import type { RealmMatchPolicy } from '../../../src';
 import {
+    BuiltInPolicyType,
     PolicyData,
     RealmMatchPolicyEvaluator,
     definePolicyEvaluationContext,
@@ -21,12 +22,12 @@ describe('src/policy/attribute-realm', () => {
 
         const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
             data: new PolicyData({
-                identity: {
+                [BuiltInPolicyType.IDENTITY]: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
-                attributes: { realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
+                [BuiltInPolicyType.ATTRIBUTES]: { realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
             }),
         }));
         expect(outcome.success).toBeTruthy();
@@ -42,13 +43,13 @@ describe('src/policy/attribute-realm', () => {
 
         const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
             data: new PolicyData({
-                identity: {
+                [BuiltInPolicyType.IDENTITY]: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                     realmName: 'master',
                 },
-                attributes: {
+                [BuiltInPolicyType.ATTRIBUTES]: {
                     user_realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                     permission_realm_id: null,
                 },
@@ -64,12 +65,12 @@ describe('src/policy/attribute-realm', () => {
 
         const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
             data: new PolicyData({
-                identity: {
+                [BuiltInPolicyType.IDENTITY]: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
                 },
-                attributes: { realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
+                [BuiltInPolicyType.ATTRIBUTES]: { realm_id: 'c641912c-21e5-4cb4-84b6-169e2b2bb023' },
             }),
         }));
         expect(outcome.success).toBeTruthy();
@@ -82,12 +83,12 @@ describe('src/policy/attribute-realm', () => {
 
         const outcome = await evaluator.evaluate(config, definePolicyEvaluationContext({
             data: new PolicyData({
-                identity: {
+                [BuiltInPolicyType.IDENTITY]: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmId: 'c641912c-21e5-4cb4-84b6-169e2b2bb023',
                 },
-                attributes: { realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
+                [BuiltInPolicyType.ATTRIBUTES]: { realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
             }),
         }));
         expect(outcome.success).toBeFalsy();
@@ -100,12 +101,12 @@ describe('src/policy/attribute-realm', () => {
 
         const outcome = await evaluator.evaluate(policy, definePolicyEvaluationContext({
             data: new PolicyData({
-                identity: {
+                [BuiltInPolicyType.IDENTITY]: {
                     type: 'user',
                     id: '245e3c5d-5747-4fbd-8554-c33d34780c58',
                     realmName: 'master',
                 },
-                attributes: { realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
+                [BuiltInPolicyType.ATTRIBUTES]: { realm_id: '1b17ab3d-3e87-4d63-9997-374ed9a58c23' },
             }),
         }));
         expect(outcome.success).toBeFalsy();

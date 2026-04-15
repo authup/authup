@@ -6,9 +6,9 @@
  */
 
 import type { DecisionStrategy } from '../../../constants';
-import type { PolicyBase } from '../../types';
+import type { BasePolicy } from '../../types';
 
-export interface RealmMatchPolicy extends PolicyBase {
+export interface RealmMatchPolicy extends BasePolicy {
     /**
      * Determines how realm-id/name matches are handled.
      */

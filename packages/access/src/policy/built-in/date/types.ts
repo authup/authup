@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyBase } from '../../types';
+import type { BasePolicy } from '../../types';
 
-export interface DatePolicy extends PolicyBase {
+export interface DatePolicy extends BasePolicy {
     start?: string | Date | number,
 
     end?: string | Date | number,

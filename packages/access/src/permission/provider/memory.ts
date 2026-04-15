@@ -5,25 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPermissionBindingKey, mergePermissionBindings } from '../helpers';
-import type { PermissionBinding } from '../types';
+import { buildPermissionKey, mergePermissionPolicyBindings } from '../helpers';
+import type { PermissionPolicyBinding } from '../types';
 import type { IPermissionProvider, PermissionGetOptions } from './types';
 
 export class PermissionMemoryProvider implements IPermissionProvider {
-    protected items : Record<string, PermissionBinding> = {};
+    protected items : Record<string, PermissionPolicyBinding> = {};
 
-    constructor(items: PermissionBinding[] = []) {
+    constructor(items: PermissionPolicyBinding[] = []) {
         this.setMany(items);
     }
 
     async findOne(
         options: PermissionGetOptions,
-    ): Promise<PermissionBinding | null> {
-        const entry = this.items[buildPermissionBindingKey({
+    ): Promise<PermissionPolicyBinding | null> {
+        const key = buildPermissionKey({
             name: options.name,
             client_id: options.clientId,
             realm_id: options.realmId,
-        })];
+        });
+
+        const entry = this.items[key];
         if (entry) {
             return entry;
         }
@@ -31,11 +33,12 @@ export class PermissionMemoryProvider implements IPermissionProvider {
         return null;
     }
 
-    setMany(input: PermissionBinding[]) {
-        this.items = mergePermissionBindings(input)
+    setMany(input: PermissionPolicyBinding[]) {
+        this.items = mergePermissionPolicyBindings(input)
             .reduce((prev, current) => {
-                prev[buildPermissionBindingKey(current.permission)] = current;
+                const key = buildPermissionKey(current.permission);
+                prev[key] = current;
                 return prev;
-            }, {} as Record<string, PermissionBinding>);
+            }, {} as Record<string, PermissionPolicyBinding>);
     }
 }

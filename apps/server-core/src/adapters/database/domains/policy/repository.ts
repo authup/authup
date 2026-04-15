@@ -5,8 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { definePolicyWithType } from '@authup/access';
-import type { BuiltInPolicyTypeMap, PolicyWithType } from '@authup/access';
+import type { BasePolicy } from '@authup/access';
 import type { Policy, PolicyAttribute } from '@authup/core-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { EntityNotFoundError } from 'typeorm';
@@ -32,7 +31,7 @@ export class PolicyRepository extends EATreeRepository<Policy, PolicyAttribute> 
         });
     }
 
-    async findDescendantsTreeById(id: string): Promise<PolicyWithType | null> {
+    async findDescendantsTreeById(id: string): Promise<BasePolicy | null> {
         const entity = this.create();
         entity.id = id;
 
@@ -45,15 +44,5 @@ export class PolicyRepository extends EATreeRepository<Policy, PolicyAttribute> 
 
             throw e;
         }
-    }
-
-    createByType<
-        K extends keyof BuiltInPolicyTypeMap,
-        D extends BuiltInPolicyTypeMap<any>[K] & Partial<Omit<Policy, 'type'>>,
-    >(type: K, data: D) : PolicyWithType<D, K> {
-        return definePolicyWithType(type, {
-            ...this.create(),
-            ...data,
-        });
     }
 }

@@ -6,13 +6,11 @@
  */
 
 import type {
- 
-    PermissionBinding, 
-    Role, 
-    User, 
-    UserAttribute, 
+    Role,
+    User,
+    UserAttribute,
 } from '@authup/core-kit';
-import type { PolicyWithType } from '@authup/access';
+import type { BasePolicy, PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { CachePrefix } from '../constants.ts';
@@ -71,7 +69,7 @@ export class UserRepository extends EARepository<User, UserAttribute> {
 
     async getBoundPermissions(
         entity: string | User,
-    ) : Promise<PermissionBinding[]> {
+    ) : Promise<PermissionPolicyBinding[]> {
         let id : string;
         if (typeof entity === 'string') {
             id = entity;
@@ -103,7 +101,7 @@ export class UserRepository extends EARepository<User, UserAttribute> {
         const policyTrees = await this.loadPolicyTrees([...policyIds]);
 
         return entities.map((entry) => {
-            const policies: PolicyWithType[] = [];
+            const policies: BasePolicy[] = [];
             if (entry.policy_id && policyTrees[entry.policy_id]) {
                 policies.push(policyTrees[entry.policy_id]);
             }
@@ -115,13 +113,13 @@ export class UserRepository extends EARepository<User, UserAttribute> {
         });
     }
 
-    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, PolicyWithType>> {
+    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, BasePolicy>> {
         if (policyIds.length === 0) {
             return {};
         }
 
         const policyRepository = new PolicyRepository(this.manager);
-        const result: Record<string, PolicyWithType> = {};
+        const result: Record<string, BasePolicy> = {};
 
         for (const id of policyIds) {
             const tree = await policyRepository.findDescendantsTreeById(id);
