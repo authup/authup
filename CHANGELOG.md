@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.34](https://github.com/authup/authup/compare/v1.0.0-beta.33...v1.0.0-beta.34) (2026-04-15)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([b2327b0](https://github.com/authup/authup/commit/b2327b033bd988b95a901d47e16e598cd7270999))
+* set next version to v1.0.0-beta.34 ([0f340ae](https://github.com/authup/authup/commit/0f340ae2f69305c71eb22d8960fd3c3998bb45a5))
+* touched missing file & updated version-bump skill ([9acbca9](https://github.com/authup/authup/commit/9acbca9fd01b042451615f7ba5b76154334aae8a))
+
 ## [1.0.0-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.0-beta.33) (2026-04-15)
 
 
