@@ -5,7 +5,7 @@
 | Tool             | Purpose                                           |
 |------------------|---------------------------------------------------|
 | NX               | Monorepo task runner (dependency-ordered builds)   |
-| Rollup           | Package JS bundling                               |
+| tsdown           | Package JS bundling (rolldown-based)               |
 | Vite             | client-web-slim builds                            |
 | Nuxt             | client-web builds                                 |
 | Vitest + SWC     | Test runner with fast compilation                  |

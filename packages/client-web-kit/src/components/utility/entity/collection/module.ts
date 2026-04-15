@@ -221,7 +221,6 @@ function create<
                     context.setup.emit('deleted', value);
                 }
 
-                console.log(value);
                 handleDeleted(value);
             },
             onUpdated: (value: RECORD) => {
