@@ -17,6 +17,7 @@ import {
 } from '@routup/decorators';
 import type { Request, Response } from 'routup';
 import { sendAccepted } from 'routup';
+import { buildPermissionKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
 import type {

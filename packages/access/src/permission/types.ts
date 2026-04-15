@@ -12,7 +12,7 @@ export type BasePermission = {
     name: string;
     client_id?: string | null,
     realm_id?: string | null,
-    decision_strategy?: `${DecisionStrategy}`
+    decision_strategy?: `${DecisionStrategy}` | null
 };
 
 export type PermissionPolicyBinding = {

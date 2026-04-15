@@ -6,11 +6,12 @@
  */
 
 import type {
-    BasePolicy,
     IdentityPolicyData,
     PermissionPolicyBinding,
 } from '@authup/access';
 import { isPermissionPolicyBindingEqual, mergePermissionPolicyBindings } from '@authup/access';
+import type { Policy } from '@authup/core-kit';
+import { isPolicy } from '@authup/core-kit';
 import type {
     IIdentityBindingRepository,
     IIdentityPermissionProvider,
@@ -65,7 +66,7 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
     async resolveJunctionPolicy(
         identity: IdentityPolicyData,
         options: ResolveJunctionPolicyOptions,
-    ): Promise<BasePolicy | undefined> {
+    ): Promise<Policy | undefined> {
         const bindings = await this.getFor(identity);
         const matching = bindings.filter((b) => {
             if (b.permission.name !== options.name) {
@@ -94,7 +95,10 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
         const merged = mergePermissionPolicyBindings(matching);
 
         if (merged.length > 0 && merged[0].policies && merged[0].policies.length > 0) {
-            return merged[0].policies[0];
+            const policy = merged[0].policies[0];
+            if (isPolicy(policy)) {
+                return policy;
+            }
         }
 
         return undefined;
