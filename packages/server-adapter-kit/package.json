@@ -2,7 +2,7 @@
     "name": "@authup/server-adapter-kit",
     "type": "module",
     "version": "1.0.0-beta.32",
-    "description": "A package containing a toolkit for server side services.",
+    "description": "A package containing a toolkit for server side adapters",
     "exports": {
         "./package.json": "./package.json",
         ".": {

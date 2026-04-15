@@ -2,7 +2,7 @@
     "name": "@authup/server-adapter-http",
     "type": "module",
     "version": "1.0.0-beta.32",
-    "description": "A http plugin for authup.",
+    "description": "A http adapter plugin for authup",
     "exports": {
         "./package.json": "./package.json",
         ".": {
