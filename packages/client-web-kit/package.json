@@ -12,14 +12,14 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs"
         },
-        "./dist/index.css": "./dist/index.css"
+        "./dist/style.css": "./dist/style.css"
     },
     "files": [
         "dist"
     ],
     "scripts": {
         "build:types": "vue-tsc --declaration --emitDeclarationOnly -p tsconfig.build.json",
-        "build:js": "cross-env NODE_ENV=production rollup -c",
+        "build:js": "tsdown",
         "build": "rimraf ./dist && npm run build:js && npm run build:types",
         "build:watch": "npm run build -- --watch"
     },
@@ -66,6 +66,7 @@
         "@authup/errors": "^1.0.0-beta.34",
         "@authup/specs": "^1.0.0-beta.34",
         "@ilingo/vuelidate": "^6.0.0",
+        "ilingo": "^5.0.0",
         "@posva/event-emitter": "^1.0.3",
         "@types/node": "^25.5.2",
         "@vitejs/plugin-vue": "^6.0.5",
@@ -97,6 +98,7 @@
         "@vuelidate/core": "^2.x",
         "@vuelidate/validators": "^2.x",
         "@ilingo/vuelidate": "^6.x",
+        "ilingo": "^5.x",
         "pinia": "^2.x || ^3.x",
         "rapiq": ">=0.8.0 <1.0.0",
         "smob": "^1.6.1",

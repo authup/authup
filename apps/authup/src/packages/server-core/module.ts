@@ -35,7 +35,7 @@ export class ServerCorePackage implements Package {
         const modulePath = findModulePath(PackageName.SERVER_CORE);
         if (typeof modulePath === 'string') {
             const directory = path.dirname(modulePath);
-            const outputPath = path.join(directory, 'dist', 'cli', 'index.js');
+            const outputPath = path.join(directory, 'dist', 'cli.mjs');
             parts.push(`node ${outputPath}`);
         } else {
             parts.push(`npx ${PackageName.SERVER_CORE}`);
