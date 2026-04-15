@@ -1,7 +1,7 @@
 {
     "name": "@authup/client-web-slim",
     "type": "module",
-    "version": "1.0.0-beta.32",
+    "version": "1.0.0-beta.33",
     "description": "This package contains a slim web app.",
     "license": "Apache-2.0",
     "module": "dist/index.mjs",
@@ -51,10 +51,10 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.32",
-        "@authup/kit": "^1.0.0-beta.32",
-        "@authup/core-kit": "^1.0.0-beta.32",
-        "@authup/core-http-kit": "^1.0.0-beta.32",
+        "@authup/client-web-kit": "^1.0.0-beta.33",
+        "@authup/kit": "^1.0.0-beta.33",
+        "@authup/core-kit": "^1.0.0-beta.33",
+        "@authup/core-http-kit": "^1.0.0-beta.33",
         "@fortawesome/fontawesome-free": "^7.2.0",
         "@vitejs/plugin-vue": "^6.0.5",
         "@vuecs/countdown": "^1.0.1",
@@ -74,10 +74,10 @@
         "vue-router": "^5.0.4"
     },
     "peerDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.32",
-        "@authup/kit": "^1.0.0-beta.32",
-        "@authup/core-kit": "^1.0.0-beta.32",
-        "@authup/core-http-kit": "^1.0.0-beta.32",
+        "@authup/client-web-kit": "^1.0.0-beta.33",
+        "@authup/kit": "^1.0.0-beta.33",
+        "@authup/core-kit": "^1.0.0-beta.33",
+        "@authup/core-http-kit": "^1.0.0-beta.33",
         "@fortawesome/fontawesome-free": "^7.2.0",
         "@vuecs/countdown": "^1.0.1",
         "@vuecs/form-controls": "^2.5.0",

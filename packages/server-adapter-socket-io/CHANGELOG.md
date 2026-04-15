@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.0-beta.33) (2026-04-15)
+
+
+### Bug Fixes
+
+* minor changes to bump version ([9207dda](https://github.com/authup/authup/commit/9207dda00f805bc76c6c104b3cbb3a4485ea83eb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+
 ## [1.0.0-beta.32](https://github.com/authup/authup/compare/v1.0.0-beta.31...v1.0.0-beta.32) (2026-03-30)
 
 
