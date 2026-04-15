@@ -11,7 +11,7 @@ import { z } from 'zod';
 import type { IdentityPolicy } from './types';
 
 export class IdentityPolicyValidator extends Container<IdentityPolicy> {
-    protected initialize() {
+    override initialize() {
         this.mount(
             'types',
             createValidator(

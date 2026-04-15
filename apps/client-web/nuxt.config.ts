@@ -42,6 +42,7 @@ export default defineNuxtConfig({
     ],
 
     alias: {
+        '@authup/access': path.join(__dirname, '..', '..', 'packages', 'access', 'src'),
         '@authup/core-kit': path.join(__dirname, '..', '..', 'packages', 'core-kit', 'src'),
         '@authup/core-http-kit': path.join(__dirname, '..', '..', 'packages', 'core-http-kit', 'src'),
         '@authup/kit': path.join(__dirname, '..', '..', 'packages', 'kit', 'src'),
@@ -62,14 +63,14 @@ export default defineNuxtConfig({
         '@pinia/nuxt',
         [
             // '../client-web-nuxt/src/module', {
-            '@authup/client-web-nuxt', 
+            '@authup/client-web-nuxt',
 {
     apiURLRuntimeKey: 'apiUrl',
     cookieDomainRuntimeKey: 'cookieDomain',
 } satisfies ModuleOptions,
         ],
         [
-            '@nuxtjs/google-fonts', 
+            '@nuxtjs/google-fonts',
             {
                 families: {
                     Asap: true,

@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyBase } from '../../types';
+import type { BasePolicy } from '../../types';
 import type { TimePolicyInterval } from './constants';
 
-export interface TimePolicy extends PolicyBase {
+export interface TimePolicy extends BasePolicy {
     /**
      * Format: HH:MM
      */

@@ -7,7 +7,7 @@
 
 import { type Store } from '@authup/client-web-kit';
 import type { IdentityPolicyData } from '@authup/access';
-import { PolicyData } from '@authup/access';
+import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import type {
     NavigationItem,
     NavigationItemNormalized,
@@ -110,7 +110,7 @@ export class Navigation {
                 try {
                     await this.store.permissionEvaluator.preEvaluateOneOf({
                         name: permissions,
-                        input: new PolicyData({ identity }),
+                        input: new PolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
                     });
                 } catch {
                     canPass = false;

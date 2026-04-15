@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PermissionBinding } from '../types';
+import type { PermissionPolicyBinding } from '../types';
 
 export type PermissionGetOptions = {
     name: string,
@@ -14,5 +14,5 @@ export type PermissionGetOptions = {
 };
 
 export interface IPermissionProvider {
-    findOne(criteria: PermissionGetOptions) : Promise<PermissionBinding | null>;
+    findOne(criteria: PermissionGetOptions) : Promise<PermissionPolicyBinding | null>;
 }

@@ -6,9 +6,9 @@
  */
 
 import type { DecisionStrategy } from '../../../constants';
-import type { PolicyBase, PolicyWithType } from '../../types';
+import type { BasePolicy } from '../../types';
 
-export interface CompositePolicy extends PolicyBase {
+export interface CompositePolicy extends BasePolicy {
     /**
      * How to decide if a policy evaluates to true.
      */
@@ -16,5 +16,5 @@ export interface CompositePolicy extends PolicyBase {
     /**
      * Child policies.
      */
-    children: PolicyWithType[],
+    children: BasePolicy[],
 }

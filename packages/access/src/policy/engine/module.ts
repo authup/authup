@@ -8,16 +8,16 @@
 import { ErrorCode } from '@authup/errors';
 import { defineIssueItem } from 'validup';
 import type {
-    IPolicyEvaluator, 
-    PolicyEvaluationContext, 
-    PolicyEvaluationResult, 
+    IPolicyEvaluator,
+    PolicyEvaluationContext,
+    PolicyEvaluationResult,
     PolicyEvaluators,
 } from '../evaluation';
 import { maybeInvertPolicyOutcome } from '../helpers';
 import type { PolicyIssue } from '../issue';
-import type { IPolicy } from '../types.ts';
 import type { IPolicyEngine } from './types.ts';
 import { PolicyError } from '../error';
+import type { BasePolicy } from '../types.ts';
 
 /**
  * The policy engine is a component that interprets defined policies and makes decisions
@@ -40,7 +40,7 @@ export class PolicyEngine implements IPolicyEngine {
     public registerEvaluators(evaluators: PolicyEvaluators) {
         const keys = Object.keys(evaluators);
         for (const key of keys) {
-            this.registerEvaluator(key, evaluators[key]);
+            this.registerEvaluator(key, evaluators[key]!);
         }
     }
 
@@ -48,7 +48,19 @@ export class PolicyEngine implements IPolicyEngine {
      * @param policy
      * @param ctx
      */
-    async evaluate(policy: IPolicy, ctx: PolicyEvaluationContext) : Promise<PolicyEvaluationResult> {
+    async evaluate(policy: BasePolicy, ctx: PolicyEvaluationContext) : Promise<PolicyEvaluationResult> {
+        if (!policy.type) {
+            return {
+                success: maybeInvertPolicyOutcome(false, policy.invert),
+                issues: [
+                    defineIssueItem({
+                        path: [],
+                        message: 'The policy can not be handled by any evaluator.',
+                        code: ErrorCode.POLICY_EVALUATOR_NOT_FOUND,
+                    }),
+                ],
+            };
+        }
         if (
             ctx.exclude &&
             ctx.exclude.length > 0 &&
@@ -104,7 +116,7 @@ export class PolicyEngine implements IPolicyEngine {
         }
     }
 
-    async evaluateOrFail(policy: IPolicy, ctx: PolicyEvaluationContext) : Promise<void> {
+    async evaluateOrFail(policy: BasePolicy, ctx: PolicyEvaluationContext) : Promise<void> {
         const issues : PolicyIssue[] = [];
 
         try {

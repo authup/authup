@@ -6,11 +6,12 @@
  */
 
 import type {
-    CompositePolicy, 
-    IPolicyEvaluator, 
-    PolicyEvaluationContext, 
+    BasePolicy,
+    CompositePolicy,
+    IPolicyEvaluator,
+    PermissionPolicyBinding,
+    PolicyEvaluationContext,
     PolicyEvaluationResult,
-    PolicyWithType,
 } from '@authup/access';
 import {
     AttributesPolicyEvaluator,
@@ -21,9 +22,8 @@ import {
     PolicyIssueCode,
     definePolicyIssueItem,
     maybeInvertPolicyOutcome,
+    mergePermissionPolicyBindings,
 } from '@authup/access';
-import type { PermissionBinding } from '@authup/core-kit';
-import { mergePermissionBindings } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 
 export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
@@ -42,7 +42,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         this.identityPermissionProvider = identityPermissionProvider;
     }
 
-    async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionBinding | null> {
+    async accessData(ctx: PolicyEvaluationContext) : Promise<PermissionPolicyBinding | null> {
         if (!ctx.data.has(BuiltInPolicyType.PERMISSION_BINDING)) {
             return null;
         }
@@ -51,7 +51,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return ctx.data.get(BuiltInPolicyType.PERMISSION_BINDING);
         }
 
-        const data = ctx.data.get<PermissionBinding>(BuiltInPolicyType.PERMISSION_BINDING);
+        const data = ctx.data.get<PermissionPolicyBinding>(BuiltInPolicyType.PERMISSION_BINDING);
 
         ctx.data.set(BuiltInPolicyType.PERMISSION_BINDING, data);
         ctx.data.setValidated(BuiltInPolicyType.PERMISSION_BINDING);
@@ -103,12 +103,12 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
-        const bindingsMerged = mergePermissionBindings(identityBindings);
+        const bindingsMerged = mergePermissionPolicyBindings(identityBindings);
         if (bindingsMerged.length === 0) {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
-        const policies : PolicyWithType[] = bindingsMerged
+        const policies : BasePolicy[] = bindingsMerged
             .flatMap((b) => b.policies || []);
 
         if (policies.length === 0) {
@@ -119,7 +119,7 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
             return { success: maybeInvertPolicyOutcome(false, policy.invert) };
         }
 
-        const compositePolicy : PolicyWithType<CompositePolicy> = {
+        const compositePolicy : CompositePolicy = {
             children: policies,
             type: BuiltInPolicyType.COMPOSITE,
         };
@@ -127,7 +127,10 @@ export class PermissionBindingPolicyEvaluator implements IPolicyEvaluator {
         const engine = new PolicyEngine(ctx.evaluators);
         const outcome = await engine.evaluate(compositePolicy, {
             ...ctx,
-            path: [...(ctx.path || []), compositePolicy.type],
+            path: [
+                ...(ctx.path || []),
+                ...(compositePolicy.type ? [compositePolicy.type] : []),
+            ],
         });
 
         return {

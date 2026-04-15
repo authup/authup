@@ -5,4 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { buildPermissionBindingKey } from '@authup/core-kit';
+
+import type { BasePermission } from '../types.ts';
+
+function formatKeySegment(value?: string | null): string {
+    return value || '*';
+}
+
+export function buildPermissionKey(
+    input: BasePermission,
+) {
+    return `${formatKeySegment(input.realm_id)}/${formatKeySegment(input.client_id)}/${input.name}`;
+}

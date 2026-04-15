@@ -13,7 +13,7 @@ import type { AttributesPolicy } from './types';
 export class AttributesPolicyValidator<
     T extends Record<string, any> = Record<string, any>,
 > extends Container<AttributesPolicy<T>> {
-    initialize() {
+    override initialize() {
         super.initialize();
 
         this.mount(

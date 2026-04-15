@@ -20,7 +20,7 @@ export interface IPermissionEvaluator {
 }
 
 export type PermissionEvaluatorOptions = {
-    provider?: IPermissionProvider,
+    provider: IPermissionProvider,
     policyEngine?: IPolicyEngine,
     realmId?: string | null,
     clientId?: string | null

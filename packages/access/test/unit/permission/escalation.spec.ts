@@ -6,22 +6,22 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { PermissionBinding } from '../../../src';
+import type { PermissionPolicyBinding } from '../../../src';
 import {
     BuiltInPolicyType,
-    isPermissionBindingEqual,
-    mergePermissionBindings,
+    isPermissionPolicyBindingEqual,
+    mergePermissionPolicyBindings,
 } from '../../../src';
 
 function isSupersetPolicyAware(
-    parentBindings: PermissionBinding[],
-    childBindings: PermissionBinding[],
+    parentBindings: PermissionPolicyBinding[],
+    childBindings: PermissionPolicyBinding[],
 ): boolean {
-    const parentMerged = mergePermissionBindings(parentBindings);
-    const childMerged = mergePermissionBindings(childBindings);
+    const parentMerged = mergePermissionPolicyBindings(parentBindings);
+    const childMerged = mergePermissionPolicyBindings(childBindings);
 
     for (const childItem of childMerged) {
-        const parentItem = parentMerged.find((p) => isPermissionBindingEqual(p, childItem));
+        const parentItem = parentMerged.find((p) => isPermissionPolicyBindingEqual(p, childItem));
 
         if (!parentItem) {
             return false;
@@ -38,14 +38,14 @@ function isSupersetPolicyAware(
 describe('escalation prevention', () => {
     const realmBoundPolicy = {
         type: BuiltInPolicyType.ATTRIBUTES,
-        id: 'realm-bound-id', 
+        id: 'realm-bound-id',
     };
 
     it('should allow: unrestricted actor assigning unrestricted role', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
         ];
 
@@ -53,13 +53,13 @@ describe('escalation prevention', () => {
     });
 
     it('should allow: unrestricted actor assigning restricted role', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
         ];
 
@@ -67,13 +67,13 @@ describe('escalation prevention', () => {
     });
 
     it('should block: restricted actor assigning unrestricted role', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
         ];
 
@@ -81,16 +81,16 @@ describe('escalation prevention', () => {
     });
 
     it('should allow: restricted actor assigning equally restricted role', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
         ];
 
@@ -98,10 +98,10 @@ describe('escalation prevention', () => {
     });
 
     it('should block: actor missing a permission the role has', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
             { permission: { name: 'user_write' } },
         ];
@@ -110,14 +110,14 @@ describe('escalation prevention', () => {
     });
 
     it('should allow: actor with both restricted and unrestricted bindings (merge = unrestricted)', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
             { permission: { name: 'user_read' } }, // unrestricted via another role
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
         ];
 
@@ -125,20 +125,20 @@ describe('escalation prevention', () => {
     });
 
     it('should block: actor has restricted binding, target has unrestricted (even with multiple actor bindings)', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             {
                 permission: { name: 'user_read' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
             {
                 permission: { name: 'user_read' },
                 policies: [{
                     type: BuiltInPolicyType.IDENTITY,
-                    id: 'other', 
-                }], 
+                    id: 'other',
+                }],
             },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
         ];
 
@@ -146,19 +146,19 @@ describe('escalation prevention', () => {
     });
 
     it('should handle multiple permissions correctly', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
             {
                 permission: { name: 'user_write' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
             { permission: { name: 'role_read' } },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
             {
                 permission: { name: 'user_write' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
         ];
 
@@ -166,14 +166,14 @@ describe('escalation prevention', () => {
     });
 
     it('should block: one permission restricted in parent but unrestricted in child', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
             {
                 permission: { name: 'user_write' },
-                policies: [realmBoundPolicy], 
+                policies: [realmBoundPolicy],
             },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             { permission: { name: 'user_read' } },
             { permission: { name: 'user_write' } }, // unrestricted in target
         ];
@@ -182,20 +182,20 @@ describe('escalation prevention', () => {
     });
 
     it('should respect permission identity: same name, different realm_id', () => {
-        const parent: PermissionBinding[] = [
+        const parent: PermissionPolicyBinding[] = [
             {
                 permission: {
                     name: 'user_read',
-                    realm_id: 'realm-a', 
-                }, 
+                    realm_id: 'realm-a',
+                },
             },
         ];
-        const child: PermissionBinding[] = [
+        const child: PermissionPolicyBinding[] = [
             {
                 permission: {
                     name: 'user_read',
-                    realm_id: 'realm-b', 
-                }, 
+                    realm_id: 'realm-b',
+                },
             },
         ];
 

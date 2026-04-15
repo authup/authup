@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './key';
 export * from './equal';
+export * from './key';
 export * from './merge';

@@ -5,4 +5,20 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { isPermissionBindingEqual } from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '../types';
+
+export function isPermissionPolicyBindingEqual(a: PermissionPolicyBinding, b: PermissionPolicyBinding): boolean {
+    if (a.permission.name !== b.permission.name) {
+        return false;
+    }
+
+    if ((a.permission.realm_id ?? null) !== (b.permission.realm_id ?? null)) {
+        return false;
+    }
+
+    if ((a.permission.client_id ?? null) !== (b.permission.client_id ?? null)) {
+        return false;
+    }
+
+    return true;
+}

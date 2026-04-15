@@ -92,7 +92,7 @@ export class AttributesPolicyEvaluator<
                 ) {
                     const fragments = value.match(/\/(.*?)\/([a-z]*)?$/i);
                     if (fragments) {
-                        query[key] = new RegExp(fragments[1], fragments[2]);
+                        query[key] = new RegExp(`${fragments[1]}`, `${fragments[2]}`);
                     }
                 }
             }

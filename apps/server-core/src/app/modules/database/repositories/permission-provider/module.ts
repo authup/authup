@@ -6,12 +6,14 @@
  */
 
 import type {
+    BasePolicy,
     IPermissionProvider,
     PermissionGetOptions,
-    PolicyWithType,
+    PermissionPolicyBinding,
 } from '@authup/access';
-import type { PermissionBinding } from '@authup/core-kit';
-import { buildPermissionBindingKey } from '@authup/core-kit';
+import {
+    buildPermissionKey,
+} from '@authup/access';
 import { buildCacheKey } from '@authup/server-kit';
 import type { DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { IsNull } from 'typeorm';
@@ -38,7 +40,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
         this.policyRepository = new PolicyRepository(this.dataSource);
     }
 
-    async findOne(options: PermissionGetOptions) : Promise<PermissionBinding | null> {
+    async findOne(options: PermissionGetOptions) : Promise<PermissionPolicyBinding | null> {
         const where : FindOptionsWhere<PermissionEntity> = { name: options.name };
 
         if (typeof options.clientId !== 'undefined') {
@@ -54,7 +56,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
             cache: {
                 id: buildCacheKey({
                     prefix: CachePrefix.PERMISSION,
-                    key: buildPermissionBindingKey({
+                    key: buildPermissionKey({
                         name: options.name,
                         client_id: options.clientId,
                         realm_id: options.realmId,
@@ -70,7 +72,7 @@ export class PermissionDatabaseProvider implements IPermissionProvider {
                 relations: ['policy'],
             });
 
-            const policies : PolicyWithType[] = [];
+            const policies : BasePolicy[] = [];
             for (const junction of junctions) {
                 if (junction.policy) {
                     const tree = await this.policyRepository.findDescendantsTree(junction.policy);

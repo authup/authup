@@ -26,10 +26,20 @@ function toDate(
 ) : Date {
     if (typeof input === 'string') {
         if (timeRegex.test(input)) {
-            const [startHours, startMinutes] = input.split(':').map(Number);
-            const date = dateRef ? new Date(dateRef) : new Date();
-            date.setHours(startHours, startMinutes);
-            return date;
+            const parts = input.split(':');
+
+            const startHours = Number(parts[0]);
+            const startMinutes = Number(parts[1]);
+
+            if (
+                Number.isFinite(startHours) &&
+                Number.isFinite(startMinutes)
+            ) {
+                const date = dateRef ? new Date(dateRef) : new Date();
+                date.setHours(startHours, startMinutes);
+
+                return date;
+            }
         }
 
         return new Date(input);

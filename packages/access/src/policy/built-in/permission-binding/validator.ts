@@ -9,6 +9,7 @@ import { Container } from 'validup';
 import type { PermissionBindingPolicy } from './types';
 
 export class PermissionBindingPolicyValidator extends Container<PermissionBindingPolicy> {
-    protected initialize() {
+    override initialize() {
+
     }
 }

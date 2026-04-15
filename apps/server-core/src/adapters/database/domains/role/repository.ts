@@ -7,8 +7,8 @@
 
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
-import type { PermissionBinding, Role } from '@authup/core-kit';
-import type { PolicyWithType } from '@authup/access';
+import type { Role } from '@authup/core-kit';
+import type { BasePolicy, PermissionPolicyBinding } from '@authup/access';
 import { CachePrefix } from '../constants.ts';
 import { EARepository } from '../../extra-attribute-repository/index.ts';
 import { RoleAttributeEntity } from '../role-attribute/entity.ts';
@@ -35,8 +35,8 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
     async getBoundPermissionsForMany(
         ids: (string | Role)[],
-    ) : Promise<PermissionBinding[]> {
-        const promises : Promise<PermissionBinding[]>[] = [];
+    ) : Promise<PermissionPolicyBinding[]> {
+        const promises : Promise<PermissionPolicyBinding[]>[] = [];
 
         for (const id of ids) {
             promises.push(this.getBoundPermissions(id));
@@ -67,7 +67,7 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
 
     async getBoundPermissions(
         entity: string | Role,
-    ) : Promise<PermissionBinding[]> {
+    ) : Promise<PermissionPolicyBinding[]> {
         let id : string;
         if (typeof entity === 'string') {
             id = entity;
@@ -98,7 +98,7 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
         const policyTrees = await this.loadPolicyTrees([...policyIds]);
 
         return entities.map((entry) => {
-            const policies: PolicyWithType[] = [];
+            const policies: BasePolicy[] = [];
             if (entry.policy_id && policyTrees[entry.policy_id]) {
                 policies.push(policyTrees[entry.policy_id]);
             }
@@ -110,13 +110,13 @@ export class RoleRepository extends EARepository<RoleEntity, RoleAttributeEntity
         });
     }
 
-    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, PolicyWithType>> {
+    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, BasePolicy>> {
         if (policyIds.length === 0) {
             return {};
         }
 
         const policyRepository = new PolicyRepository(this.manager);
-        const result: Record<string, PolicyWithType> = {};
+        const result: Record<string, BasePolicy> = {};
 
         for (const id of policyIds) {
             const tree = await policyRepository.findDescendantsTreeById(id);

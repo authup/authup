@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, PermissionBinding, Role } from '@authup/core-kit';
-import type { PolicyWithType } from '@authup/access';
+import type { Client, Role } from '@authup/core-kit';
+import type { BasePolicy, PermissionPolicyBinding } from '@authup/access';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import type { DataSource, EntityManager } from 'typeorm';
 import { InstanceChecker, Repository } from 'typeorm';
@@ -53,7 +53,7 @@ export class ClientRepository extends Repository<ClientEntity> {
 
     async getBoundPermissions(
         entity: string | Client,
-    ) : Promise<PermissionBinding[]> {
+    ) : Promise<PermissionPolicyBinding[]> {
         let id : string;
         if (typeof entity === 'string') {
             id = entity;
@@ -85,7 +85,7 @@ export class ClientRepository extends Repository<ClientEntity> {
         const policyTrees = await this.loadPolicyTrees([...policyIds]);
 
         return entities.map((entry) => {
-            const policies: PolicyWithType[] = [];
+            const policies: BasePolicy[] = [];
             if (entry.policy_id && policyTrees[entry.policy_id]) {
                 policies.push(policyTrees[entry.policy_id]);
             }
@@ -97,13 +97,13 @@ export class ClientRepository extends Repository<ClientEntity> {
         });
     }
 
-    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, PolicyWithType>> {
+    private async loadPolicyTrees(policyIds: string[]): Promise<Record<string, BasePolicy>> {
         if (policyIds.length === 0) {
             return {};
         }
 
         const policyRepository = new PolicyRepository(this.#manager);
-        const result: Record<string, PolicyWithType> = {};
+        const result: Record<string, BasePolicy> = {};
 
         for (const id of policyIds) {
             const tree = await policyRepository.findDescendantsTreeById(id);
