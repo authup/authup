@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.0-beta.33) (2026-04-15)
+
+
+### Bug Fixes
+
+* **core-kit:** allow nullable client_id in permission and role validators ([0c9a717](https://github.com/authup/authup/commit/0c9a717acd542d70346dea73fee3976924808b7c))
+* **deps:** bump the minorandpatch group across 1 directory with 16 updates ([#2973](https://github.com/authup/authup/issues/2973)) ([b95589a](https://github.com/authup/authup/commit/b95589a06e8907cefcb8b1c704682928d513766e))
+* **deps:** bump the minorandpatch group across 1 directory with 7 updates ([#2961](https://github.com/authup/authup/issues/2961)) ([3422973](https://github.com/authup/authup/commit/342297313ec1d76d2d367551e1e0bc484a66d158))
+* **deps:** bump the minorandpatch group with 2 updates ([#2963](https://github.com/authup/authup/issues/2963)) ([9410e03](https://github.com/authup/authup/commit/9410e03b3a65551ea1f9ee752fd40fd1884693f1))
+* minor changes to bump version ([9207dda](https://github.com/authup/authup/commit/9207dda00f805bc76c6c104b3cbb3a4485ea83eb))
+
 ## [1.0.0-beta.32](https://github.com/authup/authup/compare/v1.0.0-beta.31...v1.0.0-beta.32) (2026-03-30)
 
 

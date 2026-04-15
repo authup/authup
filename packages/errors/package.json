@@ -1,7 +1,7 @@
 {
     "name": "@authup/errors",
     "type": "module",
-    "version": "1.0.0-beta.32",
+    "version": "1.0.0-beta.33",
     "description": "Package containing error codes and basic error classes.",
     "license": "Apache-2.0",
     "exports": {

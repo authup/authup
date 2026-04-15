@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.33](https://github.com/authup/authup/compare/v1.0.0-beta.32...v1.0.0-beta.33) (2026-04-15)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group with 2 updates ([#2963](https://github.com/authup/authup/issues/2963)) ([9410e03](https://github.com/authup/authup/commit/9410e03b3a65551ea1f9ee752fd40fd1884693f1))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+    * @authup/kit bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+    * @authup/core-kit bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+    * @authup/server-core bumped from ^1.0.0-beta.32 to ^1.0.0-beta.33
+
 ## [1.0.0-beta.32](https://github.com/authup/authup/compare/v1.0.0-beta.31...v1.0.0-beta.32) (2026-03-30)
 
 
