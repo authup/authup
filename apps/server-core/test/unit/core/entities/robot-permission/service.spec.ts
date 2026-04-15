@@ -106,6 +106,57 @@ describe('core/entities/robot-permission/service', () => {
         });
     });
 
+    describe('update', () => {
+        it('should update policy_id on an existing entity', async () => {
+            const entity = repository.seed({ policy_id: null });
+            const policyId = randomUUID();
+
+            const result = await service.update(entity.id, { policy_id: policyId }, createAllowAllActor());
+            expect(result.policy_id).toBe(policyId);
+        });
+
+        it('should clear policy_id when set to null', async () => {
+            const entity = repository.seed({ policy_id: randomUUID() });
+
+            const result = await service.update(entity.id, { policy_id: null }, createAllowAllActor());
+            expect(result.policy_id).toBeNull();
+        });
+
+        it('should throw NotFoundError when entity does not exist', async () => {
+            await expect(
+                service.update('non-existent-id', { policy_id: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(NotFoundError);
+        });
+
+        it('should call preCheck with ROBOT_PERMISSION_UPDATE', async () => {
+            const entity = repository.seed({});
+            const actor = createAllowAllActor();
+            await service.update(entity.id, { policy_id: null }, actor);
+            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROBOT_PERMISSION_UPDATE });
+        });
+
+        it('should throw when actor lacks permission', async () => {
+            const entity = repository.seed({});
+            await expect(
+                service.update(entity.id, { policy_id: randomUUID() }, createDenyAllActor()),
+            ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should only update policy_id and not other fields', async () => {
+            const originalRobotId = randomUUID();
+            const entity = repository.seed({ robot_id: originalRobotId, policy_id: null });
+            const policyId = randomUUID();
+
+            const result = await service.update(
+                entity.id,
+                { policy_id: policyId, robot_id: randomUUID() },
+                createAllowAllActor(),
+            );
+            expect(result.policy_id).toBe(policyId);
+            expect(result.robot_id).toBe(originalRobotId);
+        });
+    });
+
     describe('delete', () => {
         it('should delete an existing entity', async () => {
             const entity = repository.seed({});

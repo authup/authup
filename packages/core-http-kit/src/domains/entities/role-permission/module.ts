@@ -9,9 +9,9 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { RolePermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
-export class RolePermissionAPI extends BaseAPI implements EntityAPISlim<RolePermission> {
+export class RolePermissionAPI extends BaseAPI implements EntityAPI<RolePermission> {
     async getMany(data?: BuildInput<RolePermission>) : Promise<EntityCollectionResponse<RolePermission>> {
         const response = await this.client.get(`role-permissions${buildQuery(data)}`);
         return response.data;
@@ -31,6 +31,12 @@ export class RolePermissionAPI extends BaseAPI implements EntityAPISlim<RolePerm
 
     async create(data: Partial<RolePermission>) : Promise<EntityRecordResponse<RolePermission>> {
         const response = await this.client.post('role-permissions', data);
+
+        return response.data;
+    }
+
+    async update(id: RolePermission['id'], data: Partial<RolePermission>) : Promise<EntityRecordResponse<RolePermission>> {
+        const response = await this.client.post(`role-permissions/${id}`, data);
 
         return response.data;
     }

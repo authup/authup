@@ -9,9 +9,9 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { RobotPermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 
-export class RobotPermissionAPI extends BaseAPI implements EntityAPISlim<RobotPermission> {
+export class RobotPermissionAPI extends BaseAPI implements EntityAPI<RobotPermission> {
     async getMany(data?: BuildInput<RobotPermission>) : Promise<EntityCollectionResponse<RobotPermission>> {
         const response = await this.client.get(`robot-permissions${buildQuery(data)}`);
         return response.data;
@@ -31,6 +31,12 @@ export class RobotPermissionAPI extends BaseAPI implements EntityAPISlim<RobotPe
 
     async create(data: Partial<RobotPermission>) : Promise<EntityRecordResponse<RobotPermission>> {
         const response = await this.client.post('robot-permissions', data);
+
+        return response.data;
+    }
+
+    async update(id: RobotPermission['id'], data: Partial<RobotPermission>) : Promise<EntityRecordResponse<RobotPermission>> {
+        const response = await this.client.post(`robot-permissions/${id}`, data);
 
         return response.data;
     }
