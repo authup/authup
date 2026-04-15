@@ -20,7 +20,7 @@ export default defineNuxtConfig({
     },
 
     css: [
-        '@authup/client-web-kit/../dist/index.css',
+        '@authup/client-web-kit/../dist/style.css',
         '@vuecs/navigation/dist/index.css',
         '@vuecs/pagination/dist/index.css',
         '@fortawesome/fontawesome-free/css/all.css',

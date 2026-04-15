@@ -13,9 +13,9 @@ import { buildList } from '@vuecs/list-controls';
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type { Ref, VNodeChild } from 'vue';
 import {
-    computed, 
+    computed,
     isRef,
-    ref, 
+    ref,
     unref,
 } from 'vue';
 import { createMerger, isObject } from 'smob';
@@ -221,6 +221,7 @@ function create<
                     context.setup.emit('deleted', value);
                 }
 
+                console.log(value);
                 handleDeleted(value);
             },
             onUpdated: (value: RECORD) => {

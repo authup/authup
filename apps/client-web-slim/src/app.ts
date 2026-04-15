@@ -19,7 +19,7 @@ import fontAwesome from '@vuecs/preset-font-awesome';
 import '@fortawesome/fontawesome-free/css/all.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import '@vuecs/pagination/dist/index.css';
-import '@authup/client-web-kit/../dist/index.css';
+import '@authup/client-web-kit/../dist/style.css';
 import '../../client-web/assets/css/bootstrap-override.css';
 import '../../client-web/assets/css/root.css';
 import '../../client-web/assets/css/form.css';

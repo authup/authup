@@ -4,12 +4,12 @@ import { BTable } from 'bootstrap-vue-next';
 import type { Role } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
-    AEntityDelete, 
-    APagination, 
-    ARoles, 
-    ASearch, 
-    ATitle, 
-    injectStore, 
+    AEntityDelete,
+    APagination,
+    ARoles,
+    ASearch,
+    ATitle,
+    injectStore,
     usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
@@ -74,7 +74,7 @@ export default defineComponent({
             {
                 key: 'options',
                 label: '',
-                tdClass: 'text-left', 
+                tdClass: 'text-left',
             },
         ];
 
@@ -152,7 +152,7 @@ export default defineComponent({
                         entity-type="role"
                         :with-text="false"
                         :disabled="!hasDropPermission"
-                        @deleted="props.deleted"
+                        @deleted="(e) => props.deleted(e)"
                     />
                 </template>
             </BTable>
