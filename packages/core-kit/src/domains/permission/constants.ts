@@ -15,6 +15,7 @@ export enum PermissionName {
     CLIENT_PERMISSION_CREATE = 'client_permission_create',
     CLIENT_PERMISSION_DELETE = 'client_permission_delete',
     CLIENT_PERMISSION_READ = 'client_permission_read',
+    CLIENT_PERMISSION_UPDATE = 'client_permission_update',
 
     CLIENT_ROLE_CREATE = 'client_role_create',
     CLIENT_ROLE_DELETE = 'client_role_delete',
@@ -52,6 +53,7 @@ export enum PermissionName {
     ROBOT_PERMISSION_CREATE = 'robot_permission_create',
     ROBOT_PERMISSION_DELETE = 'robot_permission_delete',
     ROBOT_PERMISSION_READ = 'robot_permission_read',
+    ROBOT_PERMISSION_UPDATE = 'robot_permission_update',
 
     ROBOT_ROLE_CREATE = 'robot_role_create',
     ROBOT_ROLE_DELETE = 'robot_role_delete',
@@ -66,6 +68,7 @@ export enum PermissionName {
     ROLE_PERMISSION_CREATE = 'role_permission_create',
     ROLE_PERMISSION_DELETE = 'role_permission_delete',
     ROLE_PERMISSION_READ = 'role_permission_read',
+    ROLE_PERMISSION_UPDATE = 'role_permission_update',
 
     SCOPE_CREATE = 'scope_create',
     SCOPE_DELETE = 'scope_delete',
@@ -81,6 +84,7 @@ export enum PermissionName {
     USER_PERMISSION_CREATE = 'user_permission_create',
     USER_PERMISSION_DELETE = 'user_permission_delete',
     USER_PERMISSION_READ = 'user_permission_read',
+    USER_PERMISSION_UPDATE = 'user_permission_update',
 
     USER_ROLE_CREATE = 'user_role_create',
     USER_ROLE_DELETE = 'user_role_delete',

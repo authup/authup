@@ -16,5 +16,6 @@ export interface IRobotPermissionService {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<RobotPermission>>;
     getOne(id: string, actor: ActorContext): Promise<RobotPermission>;
     create(data: Record<string, any>, actor: ActorContext): Promise<RobotPermission>;
+    update(id: string, data: Record<string, any>, actor: ActorContext): Promise<RobotPermission>;
     delete(id: string, actor: ActorContext): Promise<RobotPermission>;
 }

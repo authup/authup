@@ -6,13 +6,14 @@
  */
 
 import { EntityType } from '@authup/core-kit';
-import { defineComponent } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { ClientPermission } from '@authup/core-kit';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
     renderToggleButton,
 } from '../../utility';
+import { APermissionPolicyBindingButton } from '../permission-policy-binding';
 
 export const AClientPermissionAssignment = defineComponent({
     props: {
@@ -41,20 +42,37 @@ export const AClientPermissionAssignment = defineComponent({
             },
         });
 
-        return () => renderToggleButton({
-            changed: (value) => {
-                if (value) {
-                    return manager.create({
-                        client_id: props.clientId,
-                        permission_id: props.permissionId,
-                    });
-                }
+        return () => {
+            const children = [
+                renderToggleButton({
+                    changed: (value) => {
+                        if (value) {
+                            return manager.create({
+                                client_id: props.clientId,
+                                permission_id: props.permissionId,
+                            });
+                        }
 
-                return manager.delete();
-            },
-            value: !!manager.data.value,
-            isBusy: manager.busy.value,
-        });
+                        return manager.delete();
+                    },
+                    value: !!manager.data.value,
+                    isBusy: manager.busy.value,
+                }),
+            ];
+
+            if (manager.data.value) {
+                children.push(h(APermissionPolicyBindingButton, {
+                    entityType: EntityType.CLIENT_PERMISSION,
+                    entity: manager.data.value,
+                    key: manager.data.value.id,
+                    onUpdated: (entity: ClientPermission) => {
+                        manager.updated(entity);
+                    },
+                }));
+            }
+
+            return h('span', { class: 'd-flex gap-1' }, children);
+        };
     },
 });
 

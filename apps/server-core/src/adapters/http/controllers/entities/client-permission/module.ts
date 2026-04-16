@@ -65,6 +65,19 @@ export class ClientPermissionController {
         return sendCreated(res, entity);
     }
 
+    @DPost('/:id', [ForceLoggedInMiddleware])
+    async edit(
+        @DPath('id') id: string,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
+    ): Promise<any> {
+        const actor = buildActorContext(req);
+        const entity = await this.service.update(id, data, actor);
+
+        return sendAccepted(res, entity);
+    }
+
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,

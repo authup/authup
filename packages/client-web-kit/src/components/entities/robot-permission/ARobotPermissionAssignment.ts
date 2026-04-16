@@ -6,14 +6,14 @@
  */
 
 import { EntityType } from '@authup/core-kit';
-import { defineComponent } from 'vue';
+import { defineComponent, h } from 'vue';
 import type { RobotPermission } from '@authup/core-kit';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
-
     renderToggleButton,
 } from '../../utility';
+import { APermissionPolicyBindingButton } from '../permission-policy-binding';
 
 export const ARobotPermissionAssignment = defineComponent({
     props: {
@@ -42,20 +42,37 @@ export const ARobotPermissionAssignment = defineComponent({
             },
         });
 
-        return () => renderToggleButton({
-            changed: (value) => {
-                if (value) {
-                    return manager.create({
-                        robot_id: props.robotId,
-                        permission_id: props.permissionId,
-                    });
-                }
+        return () => {
+            const children = [
+                renderToggleButton({
+                    changed: (value) => {
+                        if (value) {
+                            return manager.create({
+                                robot_id: props.robotId,
+                                permission_id: props.permissionId,
+                            });
+                        }
 
-                return manager.delete();
-            },
-            value: !!manager.data.value,
-            isBusy: manager.busy.value,
-        });
+                        return manager.delete();
+                    },
+                    value: !!manager.data.value,
+                    isBusy: manager.busy.value,
+                }),
+            ];
+
+            if (manager.data.value) {
+                children.push(h(APermissionPolicyBindingButton, {
+                    entityType: EntityType.ROBOT_PERMISSION,
+                    entity: manager.data.value,
+                    key: manager.data.value.id,
+                    onUpdated: (entity: RobotPermission) => {
+                        manager.updated(entity);
+                    },
+                }));
+            }
+
+            return h('span', { class: 'd-flex gap-1' }, children);
+        };
     },
 });
 

@@ -118,6 +118,35 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         return entity;
     }
 
+    async update(
+        id: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+    ): Promise<RobotPermission> {
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_PERMISSION_UPDATE });
+
+        const entity = await this.repository.findOneBy({ id });
+        if (!entity) {
+            throw new NotFoundError();
+        }
+
+        const updateData: Record<string, any> = {};
+        if (Object.prototype.hasOwnProperty.call(data, 'policy_id')) {
+            updateData.policy_id = data.policy_id;
+        }
+
+        await this.repository.validateJoinColumns(updateData);
+
+        const merged = this.repository.merge(entity, updateData);
+
+        await actor.permissionEvaluator.evaluate({
+            name: PermissionName.ROBOT_PERMISSION_UPDATE,
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: merged }),
+        });
+
+        return this.repository.save(merged);
+    }
+
     async delete(
         id: string,
         actor: ActorContext,

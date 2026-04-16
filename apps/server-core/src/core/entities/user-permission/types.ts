@@ -16,5 +16,6 @@ export interface IUserPermissionService {
     getMany(query: Record<string, any>, actor: ActorContext): Promise<EntityRepositoryFindManyResult<UserPermission>>;
     getOne(id: string, actor: ActorContext): Promise<UserPermission>;
     create(data: Record<string, any>, actor: ActorContext): Promise<UserPermission>;
+    update(id: string, data: Record<string, any>, actor: ActorContext): Promise<UserPermission>;
     delete(id: string, actor: ActorContext): Promise<UserPermission>;
 }
