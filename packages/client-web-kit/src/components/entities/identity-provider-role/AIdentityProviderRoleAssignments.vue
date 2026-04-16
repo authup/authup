@@ -20,8 +20,8 @@ export default defineComponent({
     },
     setup(props, { slots }) {
         const forwardedSlots = computed(() => {
-            const { body, ...rest } = slots;
-            return rest;
+            
+            return Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'body'));
         });
         return { forwardedSlots };
     },

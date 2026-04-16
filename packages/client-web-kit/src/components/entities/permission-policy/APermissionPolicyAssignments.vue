@@ -51,8 +51,8 @@ export default defineComponent({
         });
 
         const forwardedSlots = computed(() => {
-            const { item, ...rest } = slots;
-            return rest;
+            
+            return Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'item'));
         });
 
         return { detailPolicy, forwardedSlots };
