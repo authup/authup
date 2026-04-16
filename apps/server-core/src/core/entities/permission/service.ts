@@ -34,21 +34,37 @@ const REALM_ADMIN_EXCLUDED_PERMISSIONS = [
 ];
 
 /**
- * CUD permissions for global-capable entity types.
- * These get system.realm-bound to prevent realm_admin from
- * creating/modifying/deleting global entities.
- * All other permissions get system.realm-or-global.
+ * CUD permissions that get system.realm-bound on realm_admin.
+ * Covers direct entity types (both global-capable and realm-only).
+ *
+ * Junction entity CUD (e.g. user_role, role_permission) intentionally
+ * use realm-or-global instead, because their attributes include
+ * multiple realm_id fields (e.g. user_realm_id + role_realm_id).
+ * With attribute_name_strict: false, realm-bound would reject
+ * junctions where one side is global (realm_id: null).
  */
 const REALM_ADMIN_BOUND_PERMISSIONS = [
-    PermissionName.ROLE_CREATE,
-    PermissionName.ROLE_UPDATE,
-    PermissionName.ROLE_DELETE,
+    PermissionName.CLIENT_CREATE,
+    PermissionName.CLIENT_UPDATE,
+    PermissionName.CLIENT_DELETE,
+    PermissionName.IDENTITY_PROVIDER_CREATE,
+    PermissionName.IDENTITY_PROVIDER_UPDATE,
+    PermissionName.IDENTITY_PROVIDER_DELETE,
     PermissionName.PERMISSION_CREATE,
     PermissionName.PERMISSION_UPDATE,
     PermissionName.PERMISSION_DELETE,
+    PermissionName.ROBOT_CREATE,
+    PermissionName.ROBOT_UPDATE,
+    PermissionName.ROBOT_DELETE,
+    PermissionName.ROLE_CREATE,
+    PermissionName.ROLE_UPDATE,
+    PermissionName.ROLE_DELETE,
     PermissionName.SCOPE_CREATE,
     PermissionName.SCOPE_UPDATE,
     PermissionName.SCOPE_DELETE,
+    PermissionName.USER_CREATE,
+    PermissionName.USER_UPDATE,
+    PermissionName.USER_DELETE,
 ];
 
 export type PermissionServiceContext = {
