@@ -6,7 +6,7 @@
 -->
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import AIdentityProviderRoleAssignment from './AIdentityProviderRoleAssignment.vue';
 import { ARoles } from '../role';
 
@@ -17,6 +17,13 @@ export default defineComponent({
             type: String,
             required: true,
         },
+    },
+    setup(props, { slots }) {
+        const forwardedSlots = computed(() => {
+            const { body, ...rest } = slots;
+            return rest;
+        });
+        return { forwardedSlots };
     },
 });
 </script>
@@ -31,7 +38,7 @@ export default defineComponent({
             />
         </template>
         <template
-            v-for="(_, name) in $slots"
+            v-for="(_, name) in forwardedSlots"
             :key="name"
             #[name]="slotData"
         >

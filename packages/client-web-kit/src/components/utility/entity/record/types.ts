@@ -86,6 +86,7 @@ export type EntityManagerCreateContext<
         SlotsType<EntityVSlots<T>>
     >>,
     props?: EntityVProps<T>,
+    query?: () => T extends Record<string, any> ? BuildInput<T> : never,
     realmId?: MaybeRef<string> | ((entity: T | undefined) => string | undefined),
     onResolved?(entity?: T) : any,
     onCreated?(entity: T): any,

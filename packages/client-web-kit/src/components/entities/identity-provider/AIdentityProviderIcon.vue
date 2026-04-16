@@ -14,6 +14,7 @@ import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
 export default defineComponent({
     components: { AIdentityProviderPreset, AIdentityProviderProtocol },
+    inheritAttrs: false,
     props: {
         entity: {
             type: Object as PropType<IdentityProvider>,

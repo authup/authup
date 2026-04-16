@@ -26,6 +26,12 @@ export default defineComponent({
         const manager = defineEntityManager({
             type: `${EntityType.ROBOT_ROLE}`,
             setup,
+            query: () => ({
+                filters: {
+                    robot_id: props.robotId,
+                    role_id: props.roleId,
+                },
+            }),
             socket: {
                 processEvent(event) {
                     return event.data.robot_id === props.robotId &&

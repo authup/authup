@@ -6,13 +6,20 @@
 -->
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { AUserRoleAssignment } from '../user-role';
 import { AUsers } from '../user/AUsers';
 
 export default defineComponent({
     components: { AUsers, AUserRoleAssignment },
     props: { entityId: { type: String, required: true } },
+    setup(props, { slots }) {
+        const forwardedSlots = computed(() => {
+            const { itemActions, ...rest } = slots;
+            return rest;
+        });
+        return { forwardedSlots };
+    },
 });
 </script>
 <template>
@@ -25,12 +32,11 @@ export default defineComponent({
             />
         </template>
         <template
-            v-for="(_, name) in $slots"
+            v-for="(_, name) in forwardedSlots"
             :key="name"
             #[name]="slotData"
         >
-            <slot
-                :name="name"
+            <slot                :name="name"
                 v-bind="slotData ?? {}"
             />
         </template>

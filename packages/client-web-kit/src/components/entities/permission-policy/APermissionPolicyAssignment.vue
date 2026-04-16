@@ -32,6 +32,12 @@ export default defineComponent({
         const manager = defineEntityManager({
             type: `${EntityType.PERMISSION_POLICY}`,
             setup,
+            query: () => ({
+                filters: {
+                    permission_id: props.permissionId,
+                    policy_id: props.policyId,
+                },
+            }),
             socket: {
                 processEvent(event) {
                     return event.data.permission_id === props.permissionId &&

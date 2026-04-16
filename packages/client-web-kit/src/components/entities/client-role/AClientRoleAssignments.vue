@@ -16,10 +16,14 @@ export default defineComponent({
         entityId: { type: String, required: true },
         realmId: String,
     },
-    setup(props) {
+    setup(props, { slots }) {
         const query = computed(() => ({ filters: { realm_id: [...(props.realmId ? [props.realmId] : []), null] } }));
+        const forwardedSlots = computed(() => {
+            const { itemActions, ...rest } = slots;
+            return rest;
+        });
 
-        return { query };
+        return { query, forwardedSlots };
     },
 });
 </script>
@@ -33,12 +37,11 @@ export default defineComponent({
             />
         </template>
         <template
-            v-for="(_, name) in $slots"
+            v-for="(_, name) in forwardedSlots"
             :key="name"
             #[name]="slotData"
         >
-            <slot
-                :name="name"
+            <slot                :name="name"
                 v-bind="slotData ?? {}"
             />
         </template>

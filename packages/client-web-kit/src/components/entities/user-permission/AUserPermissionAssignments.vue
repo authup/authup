@@ -6,7 +6,7 @@
 -->
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 import { APermissions } from '../permission';
 import AUserPermissionAssignment from './AUserPermissionAssignment.vue';
 
@@ -17,6 +17,13 @@ export default defineComponent({
             type: String,
             required: true,
         },
+    },
+    setup(props, { slots }) {
+        const forwardedSlots = computed(() => {
+            const { itemActions, ...rest } = slots;
+            return rest;
+        });
+        return { forwardedSlots };
     },
 });
 </script>
@@ -31,6 +38,7 @@ export default defineComponent({
         </template>
         <template
             v-for="(_, name) in $slots"
+            v-if="name !== 'itemActions'"
             :key="name"
             #[name]="slotData"
         >

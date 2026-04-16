@@ -9,6 +9,7 @@
 /* global document, KeyboardEvent */
 import type { Policy } from '@authup/core-kit';
 import {
+    computed,
     defineComponent,
     onMounted,
     onUnmounted,
@@ -32,7 +33,7 @@ export default defineComponent({
             required: true,
         },
     },
-    setup() {
+    setup(props, { slots }) {
         const detailPolicy = ref<Policy | null>(null);
 
         const handleKeydown = (e: KeyboardEvent) => {
@@ -49,7 +50,12 @@ export default defineComponent({
             document.removeEventListener('keydown', handleKeydown);
         });
 
-        return { detailPolicy };
+        const forwardedSlots = computed(() => {
+            const { item, ...rest } = slots;
+            return rest;
+        });
+
+        return { detailPolicy, forwardedSlots };
     },
 });
 </script>
@@ -71,7 +77,7 @@ export default defineComponent({
                 </div>
             </template>
             <template
-                v-for="(_, name) in $slots"
+                v-for="(_, name) in forwardedSlots"
                 :key="name"
                 #[name]="slotData"
             >
