@@ -52,6 +52,7 @@ export enum TranslatorTranslationDefaultKey {
     OVERVIEW = 'overview',
     IDENTITY_PROVIDERS = 'identityProviders',
     NAME = 'name',
+    DECISION_STRATEGY = 'decisionStrategy',
     DESCRIPTION = 'description',
     PERMISSIONS = 'permissions',
     POLICY = 'policy',

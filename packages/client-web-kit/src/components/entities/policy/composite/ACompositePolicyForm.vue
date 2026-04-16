@@ -8,8 +8,10 @@ import {
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
+import { DecisionStrategy } from '@authup/kit';
 import { IVuelidate } from '@ilingo/vuelidate';
-import { VCFormGroup } from '@vuecs/form-controls';
+import type { FormSelectOption } from '@vuecs/form-controls';
+import { VCFormGroup, VCFormSelect } from '@vuecs/form-controls';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import { APolicyPicker } from '../APolicyPicker';
 
@@ -17,12 +19,22 @@ export default defineComponent({
     components: {
         APolicyChildrenPicker: APolicyPicker,
         VCFormGroup,
+        VCFormSelect,
         IVuelidate,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
-        const form = reactive<{ items: string[] }>({ items: [] });
+        const form = reactive<{ items: string[], decision_strategy: string }>({
+            items: [],
+            decision_strategy: '',
+        });
+
+        const decisionStrategyOptions : FormSelectOption[] = Object.values(DecisionStrategy)
+            .map((value) => ({
+                id: value,
+                value,
+            }));
 
         const id = computed(() => {
             if (!props.entity) {
@@ -32,7 +44,7 @@ export default defineComponent({
             return props.entity.id;
         });
 
-        const vuelidate = useVuelidate({ items: {} }, form, { $registerAs: 'type' });
+        const vuelidate = useVuelidate({ items: {}, decision_strategy: {} }, form, { $registerAs: 'type' });
 
         const query = computed<BuildInput<Policy & { parent_id?: string | null }>>(() => {
             const filters : FiltersBuildInput<Policy & { parent_id?: string | null }> = {};
@@ -70,6 +82,14 @@ export default defineComponent({
             } else {
                 form.items = [];
             }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const record = data as Record<string, any>;
+            if (record.decision_strategy) {
+                form.decision_strategy = record.decision_strategy;
+            } else {
+                form.decision_strategy = '';
+            }
         }
 
         setup.expose({ assign });
@@ -80,10 +100,33 @@ export default defineComponent({
         assign(props.entity);
 
         const handleUpdated = (children: string[]) => {
+            form.items = children;
+            emitUpdated();
+        };
+
+        const decisionStrategyHint = computed(() => {
+            switch (form.decision_strategy) {
+                case DecisionStrategy.AFFIRMATIVE:
+                    return 'At least one child policy must evaluate positively.';
+                case DecisionStrategy.CONSENSUS:
+                    return 'More child policies must evaluate positively than negatively.';
+                case DecisionStrategy.UNANIMOUS:
+                    return 'All child policies must evaluate positively.';
+                default:
+                    return 'No strategy selected. Defaults to unanimous (all child policies must evaluate positively).';
+            }
+        });
+
+        const handleDecisionStrategyUpdated = () => {
+            emitUpdated();
+        };
+
+        const emitUpdated = () => {
             setup.emit('updated', {
                 data: [
-                    ...children,
+                    ...form.items,
                 ],
+                decision_strategy: form.decision_strategy || undefined,
                 valid: !vuelidate.value.$invalid,
             });
         };
@@ -92,7 +135,10 @@ export default defineComponent({
             id,
 
             handleUpdated,
+            handleDecisionStrategyUpdated,
 
+            decisionStrategyHint,
+            decisionStrategyOptions,
             vuelidate,
 
             query,
@@ -102,6 +148,28 @@ export default defineComponent({
 </script>
 <template>
     <div>
+        <IVuelidate :validation="vuelidate.decision_strategy">
+            <template #default="props">
+                <VCFormGroup
+                    :validation-messages="props.data"
+                    :validation-severity="props.severity"
+                >
+                    <template #label>
+                        Decision Strategy
+                    </template>
+                    <VCFormSelect
+                        v-model="vuelidate.decision_strategy.$model"
+                        :options="decisionStrategyOptions"
+                        :option-default="true"
+                        :option-default-value="'-- None (default: unanimous) --'"
+                        @change="handleDecisionStrategyUpdated"
+                    />
+                    <div class="alert alert-sm alert-info mt-1 mb-0">
+                        {{ decisionStrategyHint }}
+                    </div>
+                </VCFormGroup>
+            </template>
+        </IVuelidate>
         <IVuelidate :validation="vuelidate.items">
             <template #default="props">
                 <VCFormGroup

@@ -33,6 +33,7 @@ export const TranslatorTranslationDefaultEnglish : LinesRecord = {
     [TranslatorTranslationDefaultKey.OVERVIEW]: 'overview',
     [TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS]: 'identity providers',
     [TranslatorTranslationDefaultKey.NAME]: 'name',
+    [TranslatorTranslationDefaultKey.DECISION_STRATEGY]: 'decision strategy',
     [TranslatorTranslationDefaultKey.DESCRIPTION]: 'description',
     [TranslatorTranslationDefaultKey.POLICY]: 'policy',
     [TranslatorTranslationDefaultKey.POLICIES]: 'policies',
