@@ -70,25 +70,24 @@ export class ListHandlers<T extends ObjectLiteral> {
                 break;
             }
             case 'updated': {
-                if (index !== -1) {
+                const existing = index !== -1 ? this.data.value[index] : undefined;
+                if (existing) {
                     const keys = Object.keys(item.data) as (keyof T)[];
                     for (const key of keys) {
-                        this.data.value[index][key] = item.data[key];
+                        existing[key] = item.data[key];
                     }
 
                     if (this.options.updated) {
-                        this.options.updated(this.data.value[index]);
+                        this.options.updated(existing);
                     }
                 }
                 break;
             }
             case 'deleted': {
                 if (index !== -1) {
-                    const output = this.data.value[index];
+                    const [output] = this.data.value.splice(index, 1);
 
-                    this.data.value.splice(index, 1);
-
-                    if (this.options.deleted) {
+                    if (this.options.deleted && output) {
                         this.options.deleted(output);
                     }
                 }
