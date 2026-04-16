@@ -24,7 +24,7 @@ import { APolicies } from '../policy/APolicies';
 
 type PermissionBindingEntity = PermissionRelation & { id: string };
 
-export const APermissionBindingPolicyButton = defineComponent({
+export const APermissionPolicyBindingButton = defineComponent({
     props: {
         entityType: {
             type: String as PropType<keyof EntityTypeMap>,
@@ -76,7 +76,6 @@ export const APermissionBindingPolicyButton = defineComponent({
                 const response = await api.update(props.entity.id, { policy_id: policyId });
                 currentPolicyId.value = policyId;
                 emit('updated', response);
-                modalOpen.value = false;
             } catch (e) {
                 if (e instanceof Error) {
                     emit('failed', e);

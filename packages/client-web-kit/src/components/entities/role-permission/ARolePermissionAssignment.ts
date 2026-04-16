@@ -13,7 +13,7 @@ import {
     defineEntityVEmitOptions,
     renderToggleButton,
 } from '../../utility';
-import { APermissionBindingPolicyButton } from '../permission-binding-policy';
+import { APermissionPolicyBindingButton } from '../permission-policy-binding';
 
 export const ARolePermissionAssignment = defineComponent({
     props: {
@@ -61,7 +61,7 @@ export const ARolePermissionAssignment = defineComponent({
             ];
 
             if (manager.data.value) {
-                children.push(h(APermissionBindingPolicyButton, {
+                children.push(h(APermissionPolicyBindingButton, {
                     entityType: EntityType.ROLE_PERMISSION,
                     entity: manager.data.value,
                     key: manager.data.value.id,
