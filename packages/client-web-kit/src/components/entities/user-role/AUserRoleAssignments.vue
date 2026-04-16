@@ -12,7 +12,7 @@ import AUserRoleAssignment from './AUserRoleAssignment.vue';
 
 export default defineComponent({
     components: { ARoles, AUserRoleAssignment },
-    props: { entityId: String },
+    props: { entityId: { type: String, required: true } },
 });
 </script>
 <template>

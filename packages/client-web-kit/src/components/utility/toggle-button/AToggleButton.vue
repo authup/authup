@@ -32,6 +32,8 @@ export default defineComponent({
 </script>
 <template>
     <button
+        type="button"
+        :aria-label="isBusy ? 'Processing' : (value ? 'Remove' : 'Add')"
         :class="['btn btn-xs', {
             'btn-dark': isBusy,
             'btn-success': !isBusy && !value,
@@ -41,6 +43,7 @@ export default defineComponent({
         @click="handleClick"
     >
         <i
+            aria-hidden="true"
             :class="['fa', {
                 'fa-question': isBusy,
                 'fa-plus': !isBusy && !value,

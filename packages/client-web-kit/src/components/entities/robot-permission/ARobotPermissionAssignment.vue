@@ -19,8 +19,8 @@ import { APermissionPolicyBindingButton } from '../permission-policy-binding';
 export default defineComponent({
     components: { AToggleButton, APermissionPolicyBindingButton },
     props: {
-        robotId: String,
-        permissionId: String,
+        robotId: { type: String, required: true },
+        permissionId: { type: String, required: true },
     },
     emits: defineEntityVEmitOptions<RobotPermission>(),
     async setup(props, setup) {

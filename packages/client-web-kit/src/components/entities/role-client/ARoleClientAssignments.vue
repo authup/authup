@@ -12,7 +12,7 @@ import { AClientRoleAssignment } from '../client-role';
 
 export default defineComponent({
     components: { AClients, AClientRoleAssignment },
-    props: { entityId: String },
+    props: { entityId: { type: String, required: true } },
 });
 </script>
 <template>

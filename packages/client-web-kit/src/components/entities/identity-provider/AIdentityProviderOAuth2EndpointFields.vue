@@ -51,6 +51,10 @@ export default defineComponent({
         }, form, { $registerAs: 'endpoint' });
 
         function init() {
+            form.token_url = '';
+            form.authorize_url = '';
+            form.user_info_url = '';
+
             if (!props.entity) return;
 
             assignFormProperties(form, props.entity);

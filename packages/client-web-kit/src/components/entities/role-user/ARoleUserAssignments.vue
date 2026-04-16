@@ -12,7 +12,7 @@ import { AUsers } from '../user/AUsers';
 
 export default defineComponent({
     components: { AUsers, AUserRoleAssignment },
-    props: { entityId: String },
+    props: { entityId: { type: String, required: true } },
 });
 </script>
 <template>

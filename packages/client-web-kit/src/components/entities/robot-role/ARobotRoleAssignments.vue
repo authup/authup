@@ -12,7 +12,7 @@ import ARobotRoleAssignment from './ARobotRoleAssignment.vue';
 
 export default defineComponent({
     components: { ARoles, ARobotRoleAssignment },
-    props: { entityId: String },
+    props: { entityId: { type: String, required: true } },
 });
 </script>
 <template>

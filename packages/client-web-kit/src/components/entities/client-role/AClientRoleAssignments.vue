@@ -13,7 +13,7 @@ import AClientRoleAssignment from './AClientRoleAssignment.vue';
 export default defineComponent({
     components: { ARoles, AClientRoleAssignment },
     props: {
-        entityId: String,
+        entityId: { type: String, required: true },
         realmId: String,
     },
     setup(props) {

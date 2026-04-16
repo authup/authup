@@ -18,8 +18,8 @@ import AToggleButton from '../../utility/toggle-button/AToggleButton.vue';
 export default defineComponent({
     components: { AToggleButton },
     props: {
-        roleId: String,
-        robotId: String,
+        roleId: { type: String, required: true },
+        robotId: { type: String, required: true },
     },
     emits: defineEntityVEmitOptions<RobotRole>(),
     async setup(props, setup) {

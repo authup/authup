@@ -12,7 +12,7 @@ import { ARobots } from '../robot';
 
 export default defineComponent({
     components: { ARobots, ARobotRoleAssignment },
-    props: { entityId: String },
+    props: { entityId: { type: String, required: true } },
 });
 </script>
 <template>

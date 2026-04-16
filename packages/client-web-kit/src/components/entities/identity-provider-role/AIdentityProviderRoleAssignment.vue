@@ -175,7 +175,7 @@ export default defineComponent({
                 <button
                     v-if="manager.data.value"
                     class="btn btn-xs btn-danger ms-1"
-                    :disabled="$v.$invalid || manager.busy.value"
+                    :disabled="manager.busy.value"
                     @click="handleDelete"
                 >
                     <i class="fa fa-trash" />
