@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { APermissionPolicyAssignment } from './APermissionPolicyAssignment';
-export { APermissionPolicyAssignments } from './APermissionPolicyAssignments';
+export { default as APermissionPolicyAssignment } from './APermissionPolicyAssignment.vue';
+export { default as APermissionPolicyAssignments } from './APermissionPolicyAssignments.vue';

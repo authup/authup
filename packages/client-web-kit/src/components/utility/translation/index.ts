@@ -6,4 +6,4 @@
  */
 
 export { ATranslation } from './ATranslation';
-export { ATranslationDefault } from './ATranslationDefault';
+export { default as ATranslationDefault } from './ATranslationDefault.vue';

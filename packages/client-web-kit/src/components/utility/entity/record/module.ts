@@ -395,6 +395,25 @@ function create<
         }
     };
 
+    if (ctx.query) {
+        const queryFn = ctx.query;
+        let initialized = false;
+
+        watch(
+            () => JSON.stringify(queryFn()),
+            () => {
+                if (!initialized) {
+                    initialized = true;
+                    return;
+                }
+
+                entity.value = undefined;
+                resolve({ query: queryFn() as any });
+            },
+            { immediate: true },
+        );
+    }
+
     const manager : EntityManager<RECORD> = {
         resolve,
         resolveOrFail,

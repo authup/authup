@@ -5,4 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { APermissionRobotAssignments } from './APermissionRobotAssignments';
+export { default as APermissionRobotAssignments } from './APermissionRobotAssignments.vue';

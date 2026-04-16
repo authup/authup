@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AUserRoleAssignments } from './AUserRoleAssignments';
-export { AUserRoleAssignment } from './AUserRoleAssignment';
+export { default as AUserRoleAssignments } from './AUserRoleAssignments.vue';
+export { default as AUserRoleAssignment } from './AUserRoleAssignment.vue';

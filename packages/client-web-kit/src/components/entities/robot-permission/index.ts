@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { ARobotPermissionAssignments } from './ARobotPermissionAssignments';
-export { ARobotPermissionAssignment } from './ARobotPermissionAssignment';
+export { default as ARobotPermissionAssignments } from './ARobotPermissionAssignments.vue';
+export { default as ARobotPermissionAssignment } from './ARobotPermissionAssignment.vue';

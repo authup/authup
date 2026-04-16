@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AIdentityProviderRoleAssignments } from './AIdentityProviderRoleAssignments';
-export { AIdentityProviderRoleAssignment } from './AIdentityProviderRoleAssignment';
+export { default as AIdentityProviderRoleAssignments } from './AIdentityProviderRoleAssignments.vue';
+export { default as AIdentityProviderRoleAssignment } from './AIdentityProviderRoleAssignment.vue';
