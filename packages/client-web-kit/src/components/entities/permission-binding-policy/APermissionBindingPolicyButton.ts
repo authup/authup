@@ -11,6 +11,8 @@ import {
     Teleport,
     defineComponent,
     h,
+    onMounted,
+    onUnmounted,
     ref,
     toRef,
     watch,
@@ -33,7 +35,7 @@ export const APermissionBindingPolicyButton = defineComponent({
             required: true,
         },
     },
-    emits: ['updated'],
+    emits: ['updated', 'failed'],
     setup(props, { emit }) {
         const client = injectHTTPClient();
 
@@ -45,6 +47,20 @@ export const APermissionBindingPolicyButton = defineComponent({
         watch(entityRef, (val) => {
             currentPolicyId.value = val.policy_id;
         }, { deep: true });
+
+        const handleKeydown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape' && modalOpen.value) {
+                modalOpen.value = false;
+            }
+        };
+
+        onMounted(() => {
+            document.addEventListener('keydown', handleKeydown);
+        });
+
+        onUnmounted(() => {
+            document.removeEventListener('keydown', handleKeydown);
+        });
 
         const handlePolicySelect = async (policyId: string | null) => {
             if (busy.value) return;
@@ -61,10 +77,16 @@ export const APermissionBindingPolicyButton = defineComponent({
                 currentPolicyId.value = policyId;
                 emit('updated', response);
                 modalOpen.value = false;
+            } catch (e) {
+                if (e instanceof Error) {
+                    emit('failed', e);
+                }
             } finally {
                 busy.value = false;
             }
         };
+
+        const modalTitleId = `policy-modal-title-${props.entity.id}`;
 
         return () => {
             const children = [];
@@ -96,6 +118,8 @@ export const APermissionBindingPolicyButton = defineComponent({
                     class: 'modal fade show d-block',
                     tabindex: '-1',
                     role: 'dialog',
+                    'aria-modal': 'true',
+                    'aria-labelledby': modalTitleId,
                 }, [
                     h('div', {
                         class: 'modal-dialog',
@@ -106,10 +130,11 @@ export const APermissionBindingPolicyButton = defineComponent({
                     }, [
                         h('div', { class: 'modal-content' }, [
                             h('div', { class: 'modal-header' }, [
-                                h('h5', { class: 'modal-title' }, 'Junction Policy'),
+                                h('h5', { class: 'modal-title', id: modalTitleId }, 'Junction Policy'),
                                 h('button', {
                                     type: 'button',
                                     class: 'btn-close',
+                                    'aria-label': 'Close',
                                     onClick() {
                                         modalOpen.value = false;
                                     },
@@ -154,7 +179,7 @@ export const APermissionBindingPolicyButton = defineComponent({
                                         onClick() {
                                             handlePolicySelect(null);
                                         },
-                                    }, 'Clear Policy') :
+                                    }, 'Reset') :
                                     undefined,
                                 h('button', {
                                     type: 'button',

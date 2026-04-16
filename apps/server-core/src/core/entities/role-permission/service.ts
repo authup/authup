@@ -139,13 +139,14 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         await this.repository.validateJoinColumns(updateData);
 
+        const merged = this.repository.merge(entity, updateData);
+
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: updateData }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: merged }),
         });
 
-        const updated = this.repository.merge(entity, updateData);
-        return this.repository.save(updated);
+        return this.repository.save(merged);
     }
 
     async delete(
