@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.35](https://github.com/authup/authup/compare/v1.0.0-beta.34...v1.0.0-beta.35) (2026-04-16)
+
+
+### Features
+
+* add decision_strategy field to PermissionForm and CompositePoli… ([#2993](https://github.com/authup/authup/issues/2993)) ([dcd3517](https://github.com/authup/authup/commit/dcd3517e52f803c2b1a5ee66f7973c0d98ffc72f))
+* add policy management for permission-binding junctions ([#2992](https://github.com/authup/authup/issues/2992)) ([b4abf9b](https://github.com/authup/authup/commit/b4abf9b5153c39b457ace48ee00d3738e74f2ad9))
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([e11b6c9](https://github.com/authup/authup/commit/e11b6c9050127d1651ecf5f5ea3ac10b05208111))
+* handle updated, created, deleted event in entity collection ([54a6680](https://github.com/authup/authup/commit/54a6680d80f685028a9dfb0d0721a39705682c7e))
+* use realm-bound policy for direct entity CUD on realm_admin role ([#2996](https://github.com/authup/authup/issues/2996)) ([b431815](https://github.com/authup/authup/commit/b43181502010d8e2a8a01d155f216ebfe1203ad7))
+
 ## [1.0.0-beta.34](https://github.com/authup/authup/compare/v1.0.0-beta.33...v1.0.0-beta.34) (2026-04-15)
 
 

@@ -1,5 +1,32 @@
 # Change Log
 
+## [1.0.0-beta.35](https://github.com/authup/authup/compare/v1.0.0-beta.34...v1.0.0-beta.35) (2026-04-16)
+
+
+### Features
+
+* add policy management for permission-binding junctions ([#2992](https://github.com/authup/authup/issues/2992)) ([b4abf9b](https://github.com/authup/authup/commit/b4abf9b5153c39b457ace48ee00d3738e74f2ad9))
+
+
+### Bug Fixes
+
+* use realm-bound policy for direct entity CUD on realm_admin role ([#2996](https://github.com/authup/authup/issues/2996)) ([b431815](https://github.com/authup/authup/commit/b43181502010d8e2a8a01d155f216ebfe1203ad7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/core-http-kit bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/core-kit bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/errors bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/kit bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/server-kit bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/specs bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+  * devDependencies
+    * @authup/client-web-slim bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+
 ## [1.0.0-beta.34](https://github.com/authup/authup/compare/v1.0.0-beta.33...v1.0.0-beta.34) (2026-04-15)
 
 

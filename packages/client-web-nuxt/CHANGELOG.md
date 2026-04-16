@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.1-beta.34](https://github.com/authup/authup/compare/v1.0.0-beta.34...v1.0.1-beta.34) (2026-04-16)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/client-web-kit bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/kit bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+
 ## [1.0.0-beta.34](https://github.com/authup/authup/compare/v1.0.0-beta.33...v1.0.0-beta.34) (2026-04-15)
 
 
