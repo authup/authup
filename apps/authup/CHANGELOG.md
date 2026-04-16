@@ -1,5 +1,22 @@
 # Change Log
 
+## [1.0.0-beta.35](https://github.com/authup/authup/compare/v1.0.0-beta.34...v1.0.0-beta.35) (2026-04-16)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([e11b6c9](https://github.com/authup/authup/commit/e11b6c9050127d1651ecf5f5ea3ac10b05208111))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/kit bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/core-kit bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+    * @authup/server-core bumped from ^1.0.0-beta.34 to ^1.0.0-beta.35
+
 ## [1.0.0-beta.34](https://github.com/authup/authup/compare/v1.0.0-beta.33...v1.0.0-beta.34) (2026-04-15)
 
 

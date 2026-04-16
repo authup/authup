@@ -1,7 +1,7 @@
 {
     "name": "@authup/specs",
     "type": "module",
-    "version": "1.0.0-beta.34",
+    "version": "1.0.0-beta.35",
     "description": "A package containing constants, interfaces, utils, ... for different specifications.",
     "license": "Apache-2.0",
     "exports": {
@@ -57,13 +57,13 @@
         "smob": "^1.6.1"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.34",
-        "@authup/kit": "^1.0.0-beta.34",
+        "@authup/errors": "^1.0.0-beta.35",
+        "@authup/kit": "^1.0.0-beta.35",
         "vitest": "^4.0.14"
     },
     "peerDependencies": {
-        "@authup/errors": "^1.0.0-beta.34",
-        "@authup/kit": "^1.0.0-beta.34"
+        "@authup/errors": "^1.0.0-beta.35",
+        "@authup/kit": "^1.0.0-beta.35"
     },
     "publishConfig": {
         "access": "public"
