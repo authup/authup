@@ -19,9 +19,7 @@ export default defineComponent({
         },
     },
     setup(props, { slots }) {
-        const forwardedSlots = computed(() => {
-            return Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'itemActions'));
-        });
+        const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'itemActions')));
         return { forwardedSlots };
     },
 });
@@ -40,7 +38,8 @@ export default defineComponent({
             :key="name"
             #[name]="slotData"
         >
-            <slot                :name="name"
+            <slot
+                :name="name"
                 v-bind="slotData ?? {}"
             />
         </template>

@@ -19,10 +19,7 @@ export default defineComponent({
         },
     },
     setup(props, { slots }) {
-        const forwardedSlots = computed(() => {
-            
-            return Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'body'));
-        });
+        const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'body')));
         return { forwardedSlots };
     },
 });

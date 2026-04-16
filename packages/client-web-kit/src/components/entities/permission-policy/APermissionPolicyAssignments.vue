@@ -50,10 +50,7 @@ export default defineComponent({
             document.removeEventListener('keydown', handleKeydown);
         });
 
-        const forwardedSlots = computed(() => {
-            
-            return Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'item'));
-        });
+        const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'item')));
 
         return { detailPolicy, forwardedSlots };
     },

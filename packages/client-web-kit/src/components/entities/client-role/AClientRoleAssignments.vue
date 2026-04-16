@@ -18,9 +18,7 @@ export default defineComponent({
     },
     setup(props, { slots }) {
         const query = computed(() => ({ filters: { realm_id: [...(props.realmId ? [props.realmId] : []), null] } }));
-        const forwardedSlots = computed(() => {
-            return Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'itemActions'));
-        });
+        const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'itemActions')));
 
         return { query, forwardedSlots };
     },
@@ -40,7 +38,8 @@ export default defineComponent({
             :key="name"
             #[name]="slotData"
         >
-            <slot                :name="name"
+            <slot
+                :name="name"
                 v-bind="slotData ?? {}"
             />
         </template>
