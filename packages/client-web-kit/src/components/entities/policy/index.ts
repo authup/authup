@@ -13,5 +13,9 @@ export { default as ARealmMatchPolicyForm } from './realm-match/ARealmMatchPolic
 export { default as ATimePolicyForm } from './time/ATimePolicyForm.vue';
 export { APolicy } from './APolicy';
 export { APolicies } from './APolicies';
+export { APolicyDetailNav } from './APolicyDetailNav';
+export { APolicyInlineInfo } from './APolicyInlineInfo';
+export { APolicySummary } from './APolicySummary';
+export { APolicyTypeBadge } from './APolicyTypeBadge';
 export { default as APolicyTypePicker } from './APolicyTypePicker.vue';
 export { default as APolicyForm } from './APolicyForm.vue';
