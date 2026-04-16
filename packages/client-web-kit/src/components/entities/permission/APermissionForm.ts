@@ -7,18 +7,25 @@
 
 import type { Permission } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
+import { DecisionStrategy } from '@authup/kit';
 import useVuelidate from '@vuelidate/core';
 import type { PropType, VNodeArrayChildren } from 'vue';
 import {
     computed,
-    defineComponent, 
-    h, 
-    reactive, 
-    ref, 
+    defineComponent,
+    h,
+    reactive,
+    ref,
     watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
-import { buildFormGroup, buildFormInput, buildFormTextarea } from '@vuecs/form-controls';
+import type { FormSelectOption } from '@vuecs/form-controls';
+import { 
+    buildFormGroup, 
+    buildFormInput, 
+    buildFormSelect, 
+    buildFormTextarea, 
+} from '@vuecs/form-controls';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     TranslatorTranslationDefaultKey,
@@ -40,6 +47,19 @@ import {
 } from '../../utility';
 import { ARealmPicker } from '../realm';
 
+function decisionStrategyHint(value: string) : string {
+    switch (value) {
+        case DecisionStrategy.AFFIRMATIVE:
+            return 'At least one policy must evaluate positively.';
+        case DecisionStrategy.CONSENSUS:
+            return 'More policies must evaluate positively than negatively.';
+        case DecisionStrategy.UNANIMOUS:
+            return 'All policies must evaluate positively.';
+        default:
+            return 'No strategy selected. Defaults to unanimous (all policies must evaluate positively).';
+    }
+}
+
 export const APermissionForm = defineComponent({
     props: { entity: { type: Object as PropType<Permission> } },
     emits: defineEntityVEmitOptions<Permission>(),
@@ -50,8 +70,15 @@ export const APermissionForm = defineComponent({
             name: '',
             display_name: '',
             description: '',
+            decision_strategy: '',
             realm_id: '',
         });
+
+        const decisionStrategyOptions : FormSelectOption[] = Object.values(DecisionStrategy)
+            .map((value) => ({
+                id: value,
+                value,
+            }));
 
         const $v = useVuelidate({
             name: {
@@ -70,6 +97,7 @@ export const APermissionForm = defineComponent({
                 minLength: minLength(5),
                 maxLength: maxLength(4096),
             },
+            decision_strategy: {},
             realm_id: {},
         }, form);
 
@@ -118,7 +146,12 @@ export const APermissionForm = defineComponent({
                 return;
             }
 
-            await manager.createOrUpdate(form);
+            const data : Record<string, any> = {
+                ...form,
+                decision_strategy: form.decision_strategy || null,
+            };
+
+            await manager.createOrUpdate(data);
         };
 
         const translationsValidation = useTranslationsForNestedValidation($v.value);
@@ -130,6 +163,7 @@ export const APermissionForm = defineComponent({
                 { key: TranslatorTranslationDefaultKey.NAME },
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                { key: TranslatorTranslationDefaultKey.DECISION_STRATEGY },
                 { key: TranslatorTranslationDefaultKey.REALM },
             ],
         );
@@ -179,6 +213,25 @@ export const APermissionForm = defineComponent({
                     },
                     props: { rows: 4 },
                 }),
+            }));
+
+            children.push(buildFormGroup({
+                validationMessages: translationsValidation.decision_strategy.value,
+                validationSeverity: getVuelidateSeverity($v.value.decision_strategy),
+                label: true,
+                labelContent: translationsDefault[TranslatorTranslationDefaultKey.DECISION_STRATEGY].value,
+                content: [
+                    buildFormSelect({
+                        value: $v.value.decision_strategy.$model,
+                        onChange(input) {
+                            $v.value.decision_strategy.$model = input;
+                        },
+                        options: decisionStrategyOptions,
+                        optionDefault: true,
+                        optionDefaultValue: '-- None (default: unanimous) --',
+                    }),
+                    h('div', { class: 'alert alert-sm alert-info mt-1 mb-0' }, decisionStrategyHint($v.value.decision_strategy.$model)),
+                ],
             }));
 
             if (!realmId.value && !isEditing.value) {
