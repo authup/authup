@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AClientRoleAssignments } from './AClientRoleAssignments';
-export { AClientRoleAssignment } from './AClientRoleAssignment';
+export { default as AClientRoleAssignments } from './AClientRoleAssignments.vue';
+export { default as AClientRoleAssignment } from './AClientRoleAssignment.vue';

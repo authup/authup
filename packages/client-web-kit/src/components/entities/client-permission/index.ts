@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AClientPermissionAssignments } from './AClientPermissionAssignments';
-export { AClientPermissionAssignment } from './AClientPermissionAssignment';
+export { default as AClientPermissionAssignments } from './AClientPermissionAssignments.vue';
+export { default as AClientPermissionAssignment } from './AClientPermissionAssignment.vue';

@@ -7,5 +7,5 @@
 
 export { AClientScope } from './AClientScope';
 export { AClientScopes } from './AClientScopes';
-export { AClientScopeAssignments } from './AClientScopeAssignments';
-export { AClientScopeAssignment } from './AClientScopeAssignment';
+export { default as AClientScopeAssignments } from './AClientScopeAssignments.vue';
+export { default as AClientScopeAssignment } from './AClientScopeAssignment.vue';

@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { ARobotRoleAssignments } from './ARobotRoleAssignments';
-export { ARobotRoleAssignment } from './ARobotRoleAssignment';
+export { default as ARobotRoleAssignments } from './ARobotRoleAssignments.vue';
+export { default as ARobotRoleAssignment } from './ARobotRoleAssignment.vue';

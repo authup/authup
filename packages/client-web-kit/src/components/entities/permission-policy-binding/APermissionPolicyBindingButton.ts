@@ -21,8 +21,8 @@ import { SlotName } from '@vuecs/list-controls';
 import { hasOwnProperty } from '@authup/kit';
 import { injectHTTPClient } from '../../../core';
 import { APolicies } from '../policy/APolicies';
-import { APolicyInlineInfo } from '../policy/APolicyInlineInfo';
-import { APolicySummary } from '../policy/APolicySummary';
+import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
+import APolicySummary from '../policy/APolicySummary.vue';
 
 type PermissionBindingEntity = PermissionRelation & { id: string };
 

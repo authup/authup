@@ -5,4 +5,4 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { ARoleUserAssignments } from './ARoleUserAssignments';
+export { default as ARoleUserAssignments } from './ARoleUserAssignments.vue';

@@ -38,7 +38,7 @@ import {
 import { defineEntityManager, defineEntityVEmitOptions } from '../../utility';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields';
-import { AIdentityProviderOAuth2EndpointFields } from './AIdentityProviderOAuth2EndpointFields';
+import AIdentityProviderOAuth2EndpointFields from './AIdentityProviderOAuth2EndpointFields.vue';
 import { AIdentityProviderPreset } from './AIdentityProviderPreset';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 import type { IdentityProviderPresetElement } from './preset';

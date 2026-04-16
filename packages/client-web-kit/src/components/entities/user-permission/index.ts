@@ -5,5 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AUserPermissionAssignments } from './AUserPermissionAssignments';
-export { AUserPermissionAssignment } from './AUserPermissionAssignment';
+export { default as AUserPermissionAssignments } from './AUserPermissionAssignments.vue';
+export { default as AUserPermissionAssignment } from './AUserPermissionAssignment.vue';

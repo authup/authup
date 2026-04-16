@@ -13,7 +13,7 @@ import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormSelectOption } from '@vuecs/form-controls';
 import { VCFormGroup, VCFormSelect } from '@vuecs/form-controls';
 import { onChange, useUpdatedAt } from '../../../../composables';
-import { APolicyPicker } from '../APolicyPicker';
+import APolicyPicker from '../APolicyPicker.vue';
 
 export default defineComponent({
     components: {

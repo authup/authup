@@ -12,4 +12,4 @@ export { AIdentityProviderLdapForm } from './AIdentityProviderLdapForm';
 export { AIdentityProviders } from './AIdentityProviders';
 export { AIdentityProviderPreset } from './AIdentityProviderPreset';
 export { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
-export { AIdentityProviderIcon } from './AIdentityProviderIcon';
+export { default as AIdentityProviderIcon } from './AIdentityProviderIcon.vue';
