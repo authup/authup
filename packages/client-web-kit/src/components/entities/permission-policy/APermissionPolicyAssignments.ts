@@ -17,9 +17,8 @@ import type { Policy } from '@authup/core-kit';
 import { SlotName } from '@vuecs/list-controls';
 import { APermissionPolicyAssignment } from './APermissionPolicyAssignment';
 import { APolicies } from '../policy';
-import { APolicyDetailNav } from '../policy/APolicyDetailNav';
+import { APolicyInlineInfo } from '../policy/APolicyInlineInfo';
 import { APolicySummary } from '../policy/APolicySummary';
-import { APolicyTypeBadge } from '../policy/APolicyTypeBadge';
 
 export const APermissionPolicyAssignments = defineComponent({
     props: {
@@ -48,32 +47,22 @@ export const APermissionPolicyAssignments = defineComponent({
         return () => {
             const children = [
                 h(APolicies, { query: { filters: { parent_id: null } } }, {
-                    [SlotName.ITEM]: (slotProps: { data: Policy }) => {
-                        const badges = [
-                            h(APolicyTypeBadge, { type: slotProps.data.type }),
-                        ];
-                        if (slotProps.data.invert) {
-                            badges.push(h('span', { class: 'badge bg-warning' }, 'Inverted'));
-                        }
-
-                        return [
-                            h('div', [slotProps.data.name]),
-                            ...badges,
-                            h('div', { class: 'ms-auto d-flex align-items-center gap-1' }, [
-                                h(APolicyDetailNav, {
-                                    policyId: slotProps.data.id,
-                                    onClick: () => {
-                                        detailPolicy.value = slotProps.data;
-                                    },
-                                }),
-                                h(APermissionPolicyAssignment, {
-                                    permissionId: props.entityId,
-                                    policyId: slotProps.data.id,
-                                    key: slotProps.data.id,
-                                }),
-                            ]),
-                        ];
-                    },
+                    [SlotName.ITEM]: (slotProps: { data: Policy }) => [
+                        h('div', [slotProps.data.name]),
+                        h(APolicyInlineInfo, {
+                            entity: slotProps.data,
+                            onDetail: (policy: Policy) => {
+                                detailPolicy.value = policy;
+                            },
+                        }),
+                        h('div', { class: 'ms-auto' }, [
+                            h(APermissionPolicyAssignment, {
+                                permissionId: props.entityId,
+                                policyId: slotProps.data.id,
+                                key: slotProps.data.id,
+                            }),
+                        ]),
+                    ],
                     ...slots,
                 }),
             ];

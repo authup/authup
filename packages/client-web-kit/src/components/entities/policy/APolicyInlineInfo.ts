@@ -18,7 +18,8 @@ export const APolicyInlineInfo = defineComponent({
             required: true,
         },
     },
-    setup(props) {
+    emits: ['detail'],
+    setup(props, { emit }) {
         return () => {
             const children = [
                 h(APolicyTypeBadge, { type: props.entity.type }),
@@ -28,9 +29,14 @@ export const APolicyInlineInfo = defineComponent({
                 children.push(h('span', { class: 'badge bg-warning' }, 'Inverted'));
             }
 
-            children.push(h(APolicyDetailNav, { policyId: props.entity.id }));
+            children.push(h(APolicyDetailNav, {
+                policyId: props.entity.id,
+                onClick: () => {
+                    emit('detail', props.entity);
+                },
+            }));
 
-            return h('span', { class: 'd-flex gap-1 align-items-center' }, children);
+            return children;
         };
     },
 });

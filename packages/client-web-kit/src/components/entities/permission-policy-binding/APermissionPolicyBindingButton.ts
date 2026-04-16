@@ -21,9 +21,8 @@ import { SlotName } from '@vuecs/list-controls';
 import { hasOwnProperty } from '@authup/kit';
 import { injectHTTPClient } from '../../../core';
 import { APolicies } from '../policy/APolicies';
-import { APolicyDetailNav } from '../policy/APolicyDetailNav';
+import { APolicyInlineInfo } from '../policy/APolicyInlineInfo';
 import { APolicySummary } from '../policy/APolicySummary';
-import { APolicyTypeBadge } from '../policy/APolicyTypeBadge';
 
 type PermissionBindingEntity = PermissionRelation & { id: string };
 
@@ -150,23 +149,16 @@ export const APermissionPolicyBindingButton = defineComponent({
                     modalBody = h(APolicies, { query: { filters: { parent_id: null } } }, {
                         [SlotName.ITEM]: (slotProps: { data: Policy }) => {
                             const isSelected = currentPolicyId.value === slotProps.data.id;
-                            const badges = [
-                                h(APolicyTypeBadge, { type: slotProps.data.type }),
-                            ];
-                            if (slotProps.data.invert) {
-                                badges.push(h('span', { class: 'badge bg-warning' }, 'Inverted'));
-                            }
 
                             return [
                                 h('div', [slotProps.data.name]),
-                                ...badges,
-                                h('div', { class: 'ms-auto d-flex align-items-center gap-1' }, [
-                                    h(APolicyDetailNav, {
-                                        policyId: slotProps.data.id,
-                                        onClick: () => {
-                                            detailPolicy.value = slotProps.data;
-                                        },
-                                    }),
+                                h(APolicyInlineInfo, {
+                                    entity: slotProps.data,
+                                    onDetail: (policy: Policy) => {
+                                        detailPolicy.value = policy;
+                                    },
+                                }),
+                                h('div', { class: 'ms-auto' }, [
                                     h('button', {
                                         class: ['btn btn-xs', {
                                             'btn-dark': busy.value,

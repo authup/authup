@@ -17,8 +17,10 @@ export const APolicyDetailNav = defineComponent({
     emits: ['click'],
     setup(props, { emit }) {
         return () => h('button', {
+            type: 'button',
             class: 'btn btn-xs btn-outline-info',
             title: 'View policy details',
+            'aria-label': 'View policy details',
             onClick(e: Event) {
                 e.preventDefault();
                 emit('click', props.policyId);
