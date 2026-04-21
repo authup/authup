@@ -526,13 +526,9 @@ export class HTTPControllerModule {
         const repository = new ClientRoleRepositoryAdapter(
             container.resolve<Repository<ClientRole>>(ClientRoleEntity),
         );
-        const service = new ClientRoleService({ repository });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new ClientRoleController({
-            service,
-            repository,
-            identityPermissionProvider, 
-        });
+        const service = new ClientRoleService({ repository, identityPermissionProvider });
+        return new ClientRoleController({ service });
     }
 
     createClientScopeController(container: IContainer) {
@@ -559,13 +555,9 @@ export class HTTPControllerModule {
         const repository = new RobotRoleRepositoryAdapter(
             container.resolve<Repository<RobotRole>>(RobotRoleEntity),
         );
-        const service = new RobotRoleService({ repository });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new RobotRoleController({
-            service,
-            repository,
-            identityPermissionProvider, 
-        });
+        const service = new RobotRoleService({ repository, identityPermissionProvider });
+        return new RobotRoleController({ service });
     }
 
     createRoleAttributeController(container: IContainer) {
@@ -650,13 +642,9 @@ export class HTTPControllerModule {
         const repository = new UserRoleRepositoryAdapter(
             container.resolve<Repository<UserRole>>(UserRoleEntity),
         );
-        const service = new UserRoleService({ repository });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new UserRoleController({
-            service,
-            repository,
-            identityPermissionProvider, 
-        });
+        const service = new UserRoleService({ repository, identityPermissionProvider });
+        return new UserRoleController({ service });
     }
 
     createPolicyController(container: IContainer) {
@@ -684,13 +672,9 @@ export class HTTPControllerModule {
         const repository = new IdentityProviderRoleMappingRepositoryAdapter(
             container.resolve<Repository<any>>(IdentityProviderRoleMappingEntity),
         );
-        const service = new IdentityProviderRoleMappingService({ repository });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new IdentityProviderRoleMappingController({
-            service,
-            repository,
-            identityPermissionProvider,
-        });
+        const service = new IdentityProviderRoleMappingService({ repository, identityPermissionProvider });
+        return new IdentityProviderRoleMappingController({ service });
     }
 
     createJwkController(container: IContainer) {

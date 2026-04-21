@@ -6,26 +6,31 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ConflictError, NotFoundError } from '@ebec/http';
+import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientRoleValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { ClientRole } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
 import { AbstractEntityService } from '../service.ts';
 import type { EntityRepositoryFindManyResult } from '../types.ts';
+import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IClientRoleRepository, IClientRoleService } from './types.ts';
 
 export type ClientRoleServiceContext = {
     repository: IClientRoleRepository;
+    identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export class ClientRoleService extends AbstractEntityService implements IClientRoleService {
     protected repository: IClientRoleRepository;
+
+    protected identityPermissionProvider: IIdentityPermissionProvider;
 
     protected validator: ClientRoleValidator;
 
     constructor(ctx: ClientRoleServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new ClientRoleValidator();
     }
 
@@ -88,6 +93,23 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
 
         if (validated.client) {
             validated.client_realm_id = validated.client.realm_id;
+        }
+
+        if (validated.role && actor.identity) {
+            const hasPermissions = await this.identityPermissionProvider.isSuperset(
+                {
+                    type: actor.identity.type,
+                    id: actor.identity.data.id,
+                },
+                {
+                    type: 'role',
+                    id: validated.role_id,
+                    clientId: validated.role.client_id,
+                },
+            );
+            if (!hasPermissions) {
+                throw new ForbiddenError('You don\'t own the required permissions.');
+            }
         }
 
         await actor.permissionEvaluator.evaluate({

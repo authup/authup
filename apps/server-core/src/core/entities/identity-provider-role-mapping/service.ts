@@ -6,26 +6,36 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { BadRequestError, ConflictError, NotFoundError } from '@ebec/http';
+import { 
+    BadRequestError, 
+    ConflictError, 
+    ForbiddenError, 
+    NotFoundError, 
+} from '@ebec/http';
 import { IdentityProviderRoleMappingValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
 import { AbstractEntityService } from '../service.ts';
 import type { EntityRepositoryFindManyResult } from '../types.ts';
+import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IIdentityProviderRoleMappingRepository, IIdentityProviderRoleMappingService } from './types.ts';
 
 export type IdentityProviderRoleMappingServiceContext = {
     repository: IIdentityProviderRoleMappingRepository;
+    identityPermissionProvider: IIdentityPermissionProvider;
 };
 
 export class IdentityProviderRoleMappingService extends AbstractEntityService implements IIdentityProviderRoleMappingService {
     protected repository: IIdentityProviderRoleMappingRepository;
+
+    protected identityPermissionProvider: IIdentityPermissionProvider;
 
     protected validator: IdentityProviderRoleMappingValidator;
 
     constructor(ctx: IdentityProviderRoleMappingServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.identityPermissionProvider = ctx.identityPermissionProvider;
         this.validator = new IdentityProviderRoleMappingValidator();
     }
 
@@ -96,6 +106,23 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
             validated.role_realm_id !== validated.provider_realm_id
         ) {
             throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
+        }
+
+        if (validated.role && actor.identity) {
+            const hasPermissions = await this.identityPermissionProvider.isSuperset(
+                {
+                    type: actor.identity.type,
+                    id: actor.identity.data.id,
+                },
+                {
+                    type: 'role',
+                    id: validated.role_id,
+                    clientId: validated.role.client_id,
+                },
+            );
+            if (!hasPermissions) {
+                throw new ForbiddenError('You don\'t own the required permissions.');
+            }
         }
 
         await actor.permissionEvaluator.evaluate({

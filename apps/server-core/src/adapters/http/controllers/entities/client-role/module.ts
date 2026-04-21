@@ -16,20 +16,16 @@ import {
     DResponse, 
     DTags,
 } from '@routup/decorators';
-import { ForbiddenError } from '@ebec/http';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import type { IClientRoleRepository, IClientRoleService, IIdentityPermissionProvider } from '../../../../../core/index.ts';
+import type { IClientRoleService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    useRequestIdentityOrFail,
 } from '../../../request/index.ts';
 
 export type ClientRoleControllerContext = {
     service: IClientRoleService,
-    repository: IClientRoleRepository,
-    identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('client')
@@ -37,14 +33,8 @@ export type ClientRoleControllerContext = {
 export class ClientRoleController {
     protected service: IClientRoleService;
 
-    protected repository: IClientRoleRepository;
-
-    protected identityPermissionProvider: IIdentityPermissionProvider;
-
     constructor(ctx: ClientRoleControllerContext) {
         this.service = ctx.service;
-        this.repository = ctx.repository;
-        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -71,21 +61,6 @@ export class ClientRoleController {
         @DResponse() res: any,
     ): Promise<any> {
         const actor = buildActorContext(req);
-
-        await this.repository.validateJoinColumns(data);
-
-        if (data.role) {
-            const identity = useRequestIdentityOrFail(req);
-            const hasPermissions = await this.identityPermissionProvider.isSuperset(identity, {
-                type: 'role',
-                id: data.role.id,
-                clientId: data.role.client_id,
-            });
-            if (!hasPermissions) {
-                throw new ForbiddenError('You don\'t own the required permissions.');
-            }
-        }
-
         const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);

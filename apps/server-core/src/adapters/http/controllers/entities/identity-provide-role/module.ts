@@ -16,27 +16,19 @@ import {
     DResponse,
     DTags,
 } from '@routup/decorators';
-import { ForbiddenError } from '@ebec/http';
 import type { Request, Response } from 'routup';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { useRequestBody } from '@routup/basic/body';
 import type {
-    IIdentityPermissionProvider,
-    IIdentityProviderRoleMappingRepository,
     IIdentityProviderRoleMappingService,
 } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
     buildActorContext,
-    useRequestIdentityOrFail,
-    useRequestParamID,
 } from '../../../request/index.ts';
 
 export type IdentityProviderRoleMappingControllerContext = {
     service: IIdentityProviderRoleMappingService,
-    repository: IIdentityProviderRoleMappingRepository,
-    identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('identity-provider')
@@ -44,14 +36,8 @@ export type IdentityProviderRoleMappingControllerContext = {
 export class IdentityProviderRoleMappingController {
     protected service: IIdentityProviderRoleMappingService;
 
-    protected repository: IIdentityProviderRoleMappingRepository;
-
-    protected identityPermissionProvider: IIdentityPermissionProvider;
-
     constructor(ctx: IdentityProviderRoleMappingControllerContext) {
         this.service = ctx.service;
-        this.repository = ctx.repository;
-        this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -78,7 +64,7 @@ export class IdentityProviderRoleMappingController {
         @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.getOne(useRequestParamID(req), actor);
+        const entity = await this.service.getOne(id, actor);
 
         return send(res, entity);
     }
@@ -90,22 +76,7 @@ export class IdentityProviderRoleMappingController {
         @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
-
-        await this.repository.validateJoinColumns(data);
-
-        if (data.role) {
-            const identity = useRequestIdentityOrFail(req);
-            const hasPermissions = await this.identityPermissionProvider.isSuperset(identity, {
-                type: 'role',
-                id: data.role.id,
-                clientId: data.role.client_id,
-            });
-            if (!hasPermissions) {
-                throw new ForbiddenError('You don\'t own the required permissions.');
-            }
-        }
-
-        const entity = await this.service.create(useRequestBody(req), actor);
+        const entity = await this.service.create(data, actor);
 
         return sendCreated(res, entity);
     }
@@ -118,7 +89,7 @@ export class IdentityProviderRoleMappingController {
         @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.update(useRequestParamID(req), useRequestBody(req), actor);
+        const entity = await this.service.update(id, data, actor);
 
         return sendAccepted(res, entity);
     }
@@ -130,7 +101,7 @@ export class IdentityProviderRoleMappingController {
         @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
+        const entity = await this.service.delete(id, actor);
 
         return sendAccepted(res, entity);
     }
