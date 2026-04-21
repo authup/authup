@@ -16,7 +16,7 @@ import type {
 export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRepository<T> {
     protected store: T[] = [];
 
-    protected joinColumnHandler: ((data: Partial<T>) => void) | undefined;
+    protected joinColumnHandler: ((data: Partial<T>) => void | Promise<void>) | undefined;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<T>> {
@@ -88,11 +88,11 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
 
     async validateJoinColumns(data: Partial<T>): Promise<void> {
         if (this.joinColumnHandler) {
-            this.joinColumnHandler(data);
+            await this.joinColumnHandler(data);
         }
     }
 
-    onValidateJoinColumns(handler: (data: Partial<T>) => void) {
+    onValidateJoinColumns(handler: (data: Partial<T>) => void | Promise<void>) {
         this.joinColumnHandler = handler;
     }
 
