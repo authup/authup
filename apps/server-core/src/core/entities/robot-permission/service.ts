@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
+import { ConflictError, NotFoundError } from '@ebec/http';
 import { PermissionName, RobotPermissionValidator, ValidatorGroup } from '@authup/core-kit';
 import type { RobotPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
@@ -76,6 +76,14 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
         await this.repository.validateJoinColumns(validated);
+
+        const existing = await this.repository.findOneBy({
+            permission_id: validated.permission_id,
+            robot_id: validated.robot_id,
+        });
+        if (existing) {
+            throw new ConflictError('The robot-permission assignment already exists.');
+        }
 
         if (validated.permission) {
             validated.permission_realm_id = validated.permission.realm_id;

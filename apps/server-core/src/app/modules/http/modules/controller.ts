@@ -88,7 +88,7 @@ import {
     ClientRoleController,
     ClientScopeController, 
     IdentityProviderController,
-    OAuth2ProviderRoleController,
+    IdentityProviderRoleMappingController,
     PermissionController,
     PermissionPolicyController,
     PolicyController,
@@ -125,6 +125,7 @@ import {
     ClientService,
     CredentialsAuthenticator,
     IdentityPermissionProvider,
+    IdentityProviderRoleMappingService,
     PasswordRecoveryService,
     PermissionPolicyService,
     PermissionService,
@@ -142,8 +143,8 @@ import {
     UserAttributeService,
     UserAuthenticator,
     UserPermissionService,
-    UserRoleService, 
-    UserService, 
+    UserRoleService,
+    UserService,
 } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
@@ -683,10 +684,12 @@ export class HTTPControllerModule {
         const repository = new IdentityProviderRoleMappingRepositoryAdapter(
             container.resolve<Repository<any>>(IdentityProviderRoleMappingEntity),
         );
+        const service = new IdentityProviderRoleMappingService({ repository });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new OAuth2ProviderRoleController({
+        return new IdentityProviderRoleMappingController({
+            service,
             repository,
-            identityPermissionProvider, 
+            identityPermissionProvider,
         });
     }
 

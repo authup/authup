@@ -6,69 +6,63 @@
  */
 
 import {
-    DBody, 
-    DController, 
-    DDelete, 
-    DGet, 
-    DPath, 
-    DPost, 
-    DRequest, 
-    DResponse, 
+    DBody,
+    DController,
+    DDelete,
+    DGet,
+    DPath,
+    DPost,
+    DRequest,
+    DResponse,
     DTags,
 } from '@routup/decorators';
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
-import type { IdentityProviderRoleMapping } from '@authup/core-kit';
-import type { Request, Response } from 'routup';
+import { ForbiddenError } from '@ebec/http';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import type { IIdentityPermissionProvider, IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
+import { useRequestBody } from '@routup/basic/body';
+import type {
+    IIdentityPermissionProvider,
+    IIdentityProviderRoleMappingRepository,
+    IIdentityProviderRoleMappingService,
+} from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { IdentityProviderRoleMappingRequestValidator } from './utils/index.ts';
 import {
-    RequestHandlerOperation,
+    buildActorContext,
     useRequestIdentityOrFail,
     useRequestParamID,
-    useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 
-export type OAuth2ProviderRoleControllerContext = {
+export type IdentityProviderRoleMappingControllerContext = {
+    service: IIdentityProviderRoleMappingService,
     repository: IIdentityProviderRoleMappingRepository,
     identityPermissionProvider: IIdentityPermissionProvider,
 };
 
 @DTags('identity-provider')
 @DController('/identity-provider-role-mappings')
-export class OAuth2ProviderRoleController {
+export class IdentityProviderRoleMappingController {
+    protected service: IIdentityProviderRoleMappingService;
+
     protected repository: IIdentityProviderRoleMappingRepository;
 
     protected identityPermissionProvider: IIdentityPermissionProvider;
 
-    constructor(ctx: OAuth2ProviderRoleControllerContext) {
+    constructor(ctx: IdentityProviderRoleMappingControllerContext) {
+        this.service = ctx.service;
         this.repository = ctx.repository;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
     }
 
-    @DGet('', [])
-    async getProviders(
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+    @DGet('', [ForceLoggedInMiddleware])
+    async getMany(
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
-        const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.IDENTITY_PROVIDER_READ,
-                PermissionName.IDENTITY_PROVIDER_UPDATE,
-                PermissionName.IDENTITY_PROVIDER_DELETE,
-            ],
-        });
-
+        const actor = buildActorContext(req);
         const {
-            data, 
-            meta, 
-        } = await this.repository.findMany(useRequestQuery(req));
+            data,
+            meta,
+        } = await this.service.getMany(useRequestQuery(req), actor);
 
         return send(res, {
             data,
@@ -76,148 +70,67 @@ export class OAuth2ProviderRoleController {
         });
     }
 
-    @DGet('/:id', [])
-    async getProvider(
+    @DGet('/:id', [ForceLoggedInMiddleware])
+    async getOne(
         @DPath('id') id: string,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
-        const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.IDENTITY_PROVIDER_READ,
-                PermissionName.IDENTITY_PROVIDER_UPDATE,
-                PermissionName.IDENTITY_PROVIDER_DELETE,
-            ],
-        });
-
-        const paramId = useRequestParamID(req);
-
-        const entity = await this.repository.findOneBy({ id: paramId });
-
-        if (!entity) {
-            throw new NotFoundError();
-        }
+        const actor = buildActorContext(req);
+        const entity = await this.service.getOne(useRequestParamID(req), actor);
 
         return send(res, entity);
     }
 
-    @DPost('/:id', [ForceLoggedInMiddleware])
-    async editProvider(
-        @DPath('id') id: string,
-        @DBody() user: NonNullable<IdentityProviderRoleMapping>,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+    @DPost('', [ForceLoggedInMiddleware])
+    async add(
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
-        const paramId = useRequestParamID(req);
-
-        const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE });
-
-        const validator = new IdentityProviderRoleMappingRequestValidator();
-        const validatorAdapter = new RoutupContainerAdapter(validator);
-        const data = await validatorAdapter.run(req, { group: RequestHandlerOperation.UPDATE });
+        const actor = buildActorContext(req);
 
         await this.repository.validateJoinColumns(data);
 
-        let entity = await this.repository.findOneBy({ id: paramId });
-        if (!entity) {
-            throw new NotFoundError();
+        if (data.role) {
+            const identity = useRequestIdentityOrFail(req);
+            const hasPermissions = await this.identityPermissionProvider.isSuperset(identity, {
+                type: 'role',
+                id: data.role.id,
+                clientId: data.role.client_id,
+            });
+            if (!hasPermissions) {
+                throw new ForbiddenError('You don\'t own the required permissions.');
+            }
         }
 
-        entity = this.repository.merge(entity, data);
+        const entity = await this.service.create(useRequestBody(req), actor);
 
-        await permissionEvaluator.evaluate({
-            name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
-        });
+        return sendCreated(res, entity);
+    }
 
-        await this.repository.save(entity);
+    @DPost('/:id', [ForceLoggedInMiddleware])
+    async edit(
+        @DPath('id') id: string,
+        @DBody() data: any,
+        @DRequest() req: any,
+        @DResponse() res: any,
+    ): Promise<any> {
+        const actor = buildActorContext(req);
+        const entity = await this.service.update(useRequestParamID(req), useRequestBody(req), actor);
 
         return sendAccepted(res, entity);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
-    async dropProvider(
+    async drop(
         @DPath('id') id: string,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+        @DRequest() req: any,
+        @DResponse() res: any,
     ): Promise<any> {
-        const paramId = useRequestParamID(req);
+        const actor = buildActorContext(req);
+        const entity = await this.service.delete(useRequestParamID(req), actor);
 
-        const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE });
-
-        const entity = await this.repository.findOneBy({ id: paramId });
-        if (!entity) {
-            throw new NotFoundError();
-        }
-
-        await permissionEvaluator.evaluate({
-            name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
-        });
-
-        const { id: entityId } = entity;
-
-        await this.repository.remove(entity);
-
-        entity.id = entityId;
-
-        return sendAccepted(res);
-    }
-
-    @DPost('', [ForceLoggedInMiddleware])
-    async addProvider(
-        @DBody() user: NonNullable<IdentityProviderRoleMapping>,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
-    ): Promise<any> {
-        const permissionEvaluator = useRequestPermissionEvaluator(req);
-        await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE });
-
-        const validator = new IdentityProviderRoleMappingRequestValidator();
-        const validatorAdapter = new RoutupContainerAdapter(validator);
-
-        const data = await validatorAdapter.run(req, { group: RequestHandlerOperation.CREATE });
-
-        await this.repository.validateJoinColumns(data);
-
-        if (data.provider) {
-            data.provider_realm_id = data.provider.realm_id;
-        }
-
-        if (data.role) {
-            data.role_realm_id = data.role.realm_id;
-        }
-
-        if (
-            data.role_realm_id &&
-            data.provider_realm_id &&
-            data.role_realm_id !== data.provider_realm_id
-        ) {
-            throw new BadRequestError('It is not possible to map an identity provider to a role of another realm.');
-        }
-
-        await permissionEvaluator.evaluate({
-            name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
-        });
-
-        const identity = useRequestIdentityOrFail(req);
-        const hasPermissions = await this.identityPermissionProvider.isSuperset(identity, {
-            type: 'role',
-            id: data.role_id,
-            clientId: data.role.client_id,
-        });
-        if (!hasPermissions) {
-            throw new ForbiddenError('You don\'t own the required permissions.');
-        }
-
-        const entity = this.repository.create(data);
-
-        await this.repository.save(entity);
-
-        return sendCreated(res, entity);
+        return sendAccepted(res, entity);
     }
 }

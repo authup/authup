@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
+import { ConflictError, NotFoundError } from '@ebec/http';
 import { ClientRoleValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { ClientRole } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -73,6 +73,14 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
         await this.repository.validateJoinColumns(validated);
+
+        const existing = await this.repository.findOneBy({
+            role_id: validated.role_id,
+            client_id: validated.client_id,
+        });
+        if (existing) {
+            throw new ConflictError('The client-role assignment already exists.');
+        }
 
         if (validated.role) {
             validated.role_realm_id = validated.role.realm_id;

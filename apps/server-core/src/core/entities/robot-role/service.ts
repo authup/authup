@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
+import { ConflictError, NotFoundError } from '@ebec/http';
 import { PermissionName, RobotRoleValidator, ValidatorGroup } from '@authup/core-kit';
 import type { RobotRole } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -73,6 +73,14 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
         await this.repository.validateJoinColumns(validated);
+
+        const existing = await this.repository.findOneBy({
+            role_id: validated.role_id,
+            robot_id: validated.robot_id,
+        });
+        if (existing) {
+            throw new ConflictError('The robot-role assignment already exists.');
+        }
 
         if (validated.role) {
             validated.role_realm_id = validated.role.realm_id;
