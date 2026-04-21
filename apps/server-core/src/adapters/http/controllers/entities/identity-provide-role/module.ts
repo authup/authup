@@ -17,6 +17,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import { ForbiddenError } from '@ebec/http';
+import type { Request, Response } from 'routup';
 import { send, sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import { useRequestBody } from '@routup/basic/body';
@@ -55,8 +56,8 @@ export class IdentityProviderRoleMappingController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const {
@@ -73,8 +74,8 @@ export class IdentityProviderRoleMappingController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.getOne(useRequestParamID(req), actor);
@@ -85,8 +86,8 @@ export class IdentityProviderRoleMappingController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
 
@@ -113,8 +114,8 @@ export class IdentityProviderRoleMappingController {
     async edit(
         @DPath('id') id: string,
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.update(useRequestParamID(req), useRequestBody(req), actor);
@@ -125,8 +126,8 @@ export class IdentityProviderRoleMappingController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DRequest() req: Request,
+        @DResponse() res: Response,
     ): Promise<any> {
         const actor = buildActorContext(req);
         const entity = await this.service.delete(useRequestParamID(req), actor);
