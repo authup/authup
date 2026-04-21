@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, RobotRoleValidator, ValidatorGroup } from '@authup/core-kit';
 import type { RobotRole } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
 import { AbstractEntityService } from '../service.ts';
@@ -21,9 +21,12 @@ export type RobotRoleServiceContext = {
 export class RobotRoleService extends AbstractEntityService implements IRobotRoleService {
     protected repository: IRobotRoleRepository;
 
+    protected validator: RobotRoleValidator;
+
     constructor(ctx: RobotRoleServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.validator = new RobotRoleValidator();
     }
 
     async getMany(
@@ -67,22 +70,24 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
     ): Promise<RobotRole> {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_ROLE_CREATE });
 
-        await this.repository.validateJoinColumns(data);
+        const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
-        if (data.role) {
-            data.role_realm_id = data.role.realm_id;
+        await this.repository.validateJoinColumns(validated);
+
+        if (validated.role) {
+            validated.role_realm_id = validated.role.realm_id;
         }
 
-        if (data.robot) {
-            data.robot_realm_id = data.robot.realm_id;
+        if (validated.robot) {
+            validated.robot_realm_id = validated.robot.realm_id;
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
-        let entity = this.repository.create(data);
+        let entity = this.repository.create(validated);
         entity = await this.repository.save(entity);
 
         return entity;

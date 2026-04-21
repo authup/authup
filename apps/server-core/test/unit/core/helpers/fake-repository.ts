@@ -16,6 +16,8 @@ import type {
 export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRepository<T> {
     protected store: T[] = [];
 
+    protected joinColumnHandler: ((data: Partial<T>) => void) | undefined;
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async findMany(query: Record<string, any>): Promise<EntityRepositoryFindManyResult<T>> {
         return {
@@ -84,9 +86,14 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async validateJoinColumns(data: Partial<T>): Promise<void> {
-        // no-op in fake
+        if (this.joinColumnHandler) {
+            this.joinColumnHandler(data);
+        }
+    }
+
+    onValidateJoinColumns(handler: (data: Partial<T>) => void) {
+        this.joinColumnHandler = handler;
     }
 
     async checkUniqueness(): Promise<void> {

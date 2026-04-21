@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import { ClientRoleValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { ClientRole } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
 import { AbstractEntityService } from '../service.ts';
@@ -21,9 +21,12 @@ export type ClientRoleServiceContext = {
 export class ClientRoleService extends AbstractEntityService implements IClientRoleService {
     protected repository: IClientRoleRepository;
 
+    protected validator: ClientRoleValidator;
+
     constructor(ctx: ClientRoleServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.validator = new ClientRoleValidator();
     }
 
     async getMany(
@@ -67,22 +70,24 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
     ): Promise<ClientRole> {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_ROLE_CREATE });
 
-        await this.repository.validateJoinColumns(data);
+        const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
-        if (data.role) {
-            data.role_realm_id = data.role.realm_id;
+        await this.repository.validateJoinColumns(validated);
+
+        if (validated.role) {
+            validated.role_realm_id = validated.role.realm_id;
         }
 
-        if (data.client) {
-            data.client_realm_id = data.client.realm_id;
+        if (validated.client) {
+            validated.client_realm_id = validated.client.realm_id;
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.CLIENT_ROLE_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
-        let entity = this.repository.create(data);
+        let entity = this.repository.create(validated);
         entity = await this.repository.save(entity);
 
         return entity;
