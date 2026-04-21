@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
+import { ConflictError, NotFoundError } from '@ebec/http';
 import { ClientScopeValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -73,6 +73,14 @@ export class ClientScopeService extends AbstractEntityService implements IClient
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
         await this.repository.validateJoinColumns(validated);
+
+        const existing = await this.repository.findOneBy({
+            client_id: validated.client_id,
+            scope_id: validated.scope_id,
+        });
+        if (existing) {
+            throw new ConflictError('The client-scope assignment already exists.');
+        }
 
         if (validated.client) {
             validated.client_realm_id = validated.client.realm_id;

@@ -6,8 +6,8 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import { ConflictError, NotFoundError } from '@ebec/http';
+import { PermissionName, PermissionPolicyValidator, ValidatorGroup } from '@authup/core-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
 import { AbstractEntityService } from '../service.ts';
@@ -21,9 +21,12 @@ export type PermissionPolicyServiceContext = {
 export class PermissionPolicyService extends AbstractEntityService implements IPermissionPolicyService {
     protected repository: IPermissionPolicyRepository;
 
+    protected validator: PermissionPolicyValidator;
+
     constructor(ctx: PermissionPolicyServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.validator = new PermissionPolicyValidator();
     }
 
     async getMany(
@@ -65,22 +68,32 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
     ): Promise<PermissionPolicy> {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.PERMISSION_UPDATE });
 
-        await this.repository.validateJoinColumns(data);
+        const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
-        if (data.permission) {
-            data.permission_realm_id = data.permission.realm_id;
+        await this.repository.validateJoinColumns(validated);
+
+        const existing = await this.repository.findOneBy({
+            permission_id: validated.permission_id,
+            policy_id: validated.policy_id,
+        });
+        if (existing) {
+            throw new ConflictError('The permission-policy assignment already exists.');
         }
 
-        if (data.policy) {
-            data.policy_realm_id = data.policy.realm_id;
+        if (validated.permission) {
+            validated.permission_realm_id = validated.permission.realm_id;
+        }
+
+        if (validated.policy) {
+            validated.policy_realm_id = validated.policy.realm_id;
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.PERMISSION_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
-        let entity = this.repository.create(data);
+        let entity = this.repository.create(validated);
         entity = await this.repository.save(entity);
 
         return entity;

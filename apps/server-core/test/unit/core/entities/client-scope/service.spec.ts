@@ -14,7 +14,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientScopeService } from '../../../../../src/core/entities/client-scope/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -116,6 +116,17 @@ describe('core/entities/client-scope/service', () => {
                     scope_id: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw ConflictError when assignment already exists', async () => {
+            const clientId = randomUUID();
+            const scopeId = randomUUID();
+
+            repository.seed({ client_id: clientId, scope_id: scopeId });
+
+            await expect(
+                service.create({ client_id: clientId, scope_id: scopeId }, createAllowAllActor()),
+            ).rejects.toThrow(ConflictError);
         });
     });
 

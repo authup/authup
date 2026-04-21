@@ -88,7 +88,7 @@ import {
     ClientRoleController,
     ClientScopeController, 
     IdentityProviderController,
-    OAuth2ProviderRoleController,
+    IdentityProviderRoleMappingController,
     PermissionController,
     PermissionPolicyController,
     PolicyController,
@@ -125,6 +125,7 @@ import {
     ClientService,
     CredentialsAuthenticator,
     IdentityPermissionProvider,
+    IdentityProviderRoleMappingService,
     PasswordRecoveryService,
     PermissionPolicyService,
     PermissionService,
@@ -142,8 +143,8 @@ import {
     UserAttributeService,
     UserAuthenticator,
     UserPermissionService,
-    UserRoleService, 
-    UserService, 
+    UserRoleService,
+    UserService,
 } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
@@ -525,13 +526,9 @@ export class HTTPControllerModule {
         const repository = new ClientRoleRepositoryAdapter(
             container.resolve<Repository<ClientRole>>(ClientRoleEntity),
         );
-        const service = new ClientRoleService({ repository });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new ClientRoleController({
-            service,
-            repository,
-            identityPermissionProvider, 
-        });
+        const service = new ClientRoleService({ repository, identityPermissionProvider });
+        return new ClientRoleController({ service });
     }
 
     createClientScopeController(container: IContainer) {
@@ -558,13 +555,9 @@ export class HTTPControllerModule {
         const repository = new RobotRoleRepositoryAdapter(
             container.resolve<Repository<RobotRole>>(RobotRoleEntity),
         );
-        const service = new RobotRoleService({ repository });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new RobotRoleController({
-            service,
-            repository,
-            identityPermissionProvider, 
-        });
+        const service = new RobotRoleService({ repository, identityPermissionProvider });
+        return new RobotRoleController({ service });
     }
 
     createRoleAttributeController(container: IContainer) {
@@ -649,13 +642,9 @@ export class HTTPControllerModule {
         const repository = new UserRoleRepositoryAdapter(
             container.resolve<Repository<UserRole>>(UserRoleEntity),
         );
-        const service = new UserRoleService({ repository });
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new UserRoleController({
-            service,
-            repository,
-            identityPermissionProvider, 
-        });
+        const service = new UserRoleService({ repository, identityPermissionProvider });
+        return new UserRoleController({ service });
     }
 
     createPolicyController(container: IContainer) {
@@ -684,10 +673,8 @@ export class HTTPControllerModule {
             container.resolve<Repository<any>>(IdentityProviderRoleMappingEntity),
         );
         const identityPermissionProvider = this.createIdentityPermissionProvider(container);
-        return new OAuth2ProviderRoleController({
-            repository,
-            identityPermissionProvider, 
-        });
+        const service = new IdentityProviderRoleMappingService({ repository, identityPermissionProvider });
+        return new IdentityProviderRoleMappingController({ service });
     }
 
     createJwkController(container: IContainer) {

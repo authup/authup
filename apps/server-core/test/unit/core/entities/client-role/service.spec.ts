@@ -9,26 +9,36 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { ClientRole } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
+    vi,
 } from 'vitest';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientRoleService } from '../../../../../src/core/entities/client-role/service.ts';
+import type { IIdentityPermissionProvider } from '../../../../../src/core/identity/permission/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
+    createMasterRealmActor,
 } from '../../helpers/mock-actor.ts';
 
 describe('core/entities/client-role/service', () => {
     let repository: FakeEntityRepository<ClientRole>;
     let service: ClientRoleService;
 
+    let identityPermissionProvider: IIdentityPermissionProvider;
+
     beforeEach(() => {
         repository = new FakeEntityRepository<ClientRole>();
-        service = new ClientRoleService({ repository });
+        identityPermissionProvider = {
+            getFor: vi.fn(),
+            isSuperset: vi.fn().mockResolvedValue(true),
+            resolveJunctionPolicy: vi.fn(),
+        };
+        service = new ClientRoleService({ repository, identityPermissionProvider });
     });
 
     describe('getMany', () => {
@@ -116,6 +126,38 @@ describe('core/entities/client-role/service', () => {
                     role_id: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw ForbiddenError when actor does not own role permissions (superset check)', async () => {
+            const identityPermissionProviderDeny: IIdentityPermissionProvider = {
+                getFor: vi.fn(),
+                isSuperset: vi.fn().mockResolvedValue(false),
+                resolveJunctionPolicy: vi.fn(),
+            };
+            const svc = new ClientRoleService({ repository, identityPermissionProvider: identityPermissionProviderDeny });
+
+            repository.onValidateJoinColumns((data: any) => {
+                data.role = { realm_id: null, client_id: null };
+                data.client = { realm_id: null };
+            });
+
+            await expect(
+                svc.create({
+                    client_id: randomUUID(),
+                    role_id: randomUUID(),
+                }, createMasterRealmActor()),
+            ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw ConflictError when assignment already exists', async () => {
+            const roleId = randomUUID();
+            const clientId = randomUUID();
+
+            repository.seed({ role_id: roleId, client_id: clientId });
+
+            await expect(
+                service.create({ role_id: roleId, client_id: clientId }, createAllowAllActor()),
+            ).rejects.toThrow(ConflictError);
         });
     });
 

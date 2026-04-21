@@ -296,6 +296,14 @@ export class PermissionService extends AbstractEntityService implements IPermiss
             throw new AuthupError(`The ${SystemPolicyName.DEFAULT} policy is not provisioned. Cannot create permissions without the default security policy.`);
         }
 
+        const existing = await this.permissionPolicyRepository.findOneBy({
+            permission_id: permission.id,
+            policy_id: defaultPolicy.id,
+        });
+        if (existing) {
+            return;
+        }
+
         const entry = this.permissionPolicyRepository.create({
             permission_id: permission.id,
             permission_realm_id: permission.realm_id,
@@ -312,6 +320,14 @@ export class PermissionService extends AbstractEntityService implements IPermiss
     private async assignToAdminRole(permission: Permission): Promise<void> {
         const adminRole = await this.roleRepository.findOneByName(ROLE_ADMIN_NAME);
         if (!adminRole) {
+            return;
+        }
+
+        const existing = await this.rolePermissionRepository.findOneBy({
+            role_id: adminRole.id,
+            permission_id: permission.id,
+        });
+        if (existing) {
             return;
         }
 
@@ -364,6 +380,14 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         for (const role of realmAdminRoles) {
             if (permission.realm_id && permission.realm_id !== role.realm_id) {
+                continue;
+            }
+
+            const existing = await this.rolePermissionRepository.findOneBy({
+                role_id: role.id,
+                permission_id: permission.id,
+            });
+            if (existing) {
                 continue;
             }
 

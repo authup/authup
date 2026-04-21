@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
+import { ConflictError, NotFoundError } from '@ebec/http';
 import { PermissionName, UserPermissionValidator, ValidatorGroup } from '@authup/core-kit';
 import type { UserPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
@@ -78,6 +78,14 @@ export class UserPermissionService extends AbstractEntityService implements IUse
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
         await this.repository.validateJoinColumns(validated);
+
+        const existing = await this.repository.findOneBy({
+            permission_id: validated.permission_id,
+            user_id: validated.user_id,
+        });
+        if (existing) {
+            throw new ConflictError('The user-permission assignment already exists.');
+        }
 
         if (validated.permission) {
             validated.permission_realm_id = validated.permission.realm_id;

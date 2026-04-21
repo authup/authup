@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
+import { ConflictError, NotFoundError } from '@ebec/http';
 import { ClientPermissionValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { ClientPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
@@ -76,6 +76,14 @@ export class ClientPermissionService extends AbstractEntityService implements IC
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
         await this.repository.validateJoinColumns(validated);
+
+        const existing = await this.repository.findOneBy({
+            client_id: validated.client_id,
+            permission_id: validated.permission_id,
+        });
+        if (existing) {
+            throw new ConflictError('The client-permission assignment already exists.');
+        }
 
         if (validated.permission) {
             validated.permission_realm_id = validated.permission.realm_id;

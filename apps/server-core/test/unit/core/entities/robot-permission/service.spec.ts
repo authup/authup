@@ -14,7 +14,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { RobotPermissionService } from '../../../../../src/core/entities/robot-permission/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -124,6 +124,17 @@ describe('core/entities/robot-permission/service', () => {
                     permission_id: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw ConflictError when assignment already exists', async () => {
+            const permissionId = randomUUID();
+            const robotId = randomUUID();
+
+            repository.seed({ permission_id: permissionId, robot_id: robotId });
+
+            await expect(
+                service.create({ permission_id: permissionId, robot_id: robotId }, createAllowAllActor()),
+            ).rejects.toThrow(ConflictError);
         });
     });
 

@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
+import { ConflictError, NotFoundError } from '@ebec/http';
 import { 
     PermissionName, 
     ROLE_ADMIN_NAME, 
@@ -81,6 +81,14 @@ export class RolePermissionService extends AbstractEntityService implements IRol
         const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
         await this.repository.validateJoinColumns(validated);
+
+        const existing = await this.repository.findOneBy({
+            role_id: validated.role_id,
+            permission_id: validated.permission_id,
+        });
+        if (existing) {
+            throw new ConflictError('The role-permission assignment already exists.');
+        }
 
         if (validated.permission) {
             validated.permission_realm_id = validated.permission.realm_id;

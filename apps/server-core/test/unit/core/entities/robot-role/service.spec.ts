@@ -9,26 +9,36 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { RobotRole } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
+    vi,
 } from 'vitest';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { RobotRoleService } from '../../../../../src/core/entities/robot-role/service.ts';
+import type { IIdentityPermissionProvider } from '../../../../../src/core/identity/permission/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
+    createMasterRealmActor,
 } from '../../helpers/mock-actor.ts';
 
 describe('core/entities/robot-role/service', () => {
     let repository: FakeEntityRepository<RobotRole>;
     let service: RobotRoleService;
 
+    let identityPermissionProvider: IIdentityPermissionProvider;
+
     beforeEach(() => {
         repository = new FakeEntityRepository<RobotRole>();
-        service = new RobotRoleService({ repository });
+        identityPermissionProvider = {
+            getFor: vi.fn(),
+            isSuperset: vi.fn().mockResolvedValue(true),
+            resolveJunctionPolicy: vi.fn(),
+        };
+        service = new RobotRoleService({ repository, identityPermissionProvider });
     });
 
     describe('getMany', () => {
@@ -116,6 +126,38 @@ describe('core/entities/robot-role/service', () => {
                     role_id: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw ForbiddenError when actor does not own role permissions (superset check)', async () => {
+            const identityPermissionProviderDeny: IIdentityPermissionProvider = {
+                getFor: vi.fn(),
+                isSuperset: vi.fn().mockResolvedValue(false),
+                resolveJunctionPolicy: vi.fn(),
+            };
+            const svc = new RobotRoleService({ repository, identityPermissionProvider: identityPermissionProviderDeny });
+
+            repository.onValidateJoinColumns((data: any) => {
+                data.role = { realm_id: null, client_id: null };
+                data.robot = { realm_id: null };
+            });
+
+            await expect(
+                svc.create({
+                    robot_id: randomUUID(),
+                    role_id: randomUUID(),
+                }, createMasterRealmActor()),
+            ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw ConflictError when assignment already exists', async () => {
+            const roleId = randomUUID();
+            const robotId = randomUUID();
+
+            repository.seed({ role_id: roleId, robot_id: robotId });
+
+            await expect(
+                service.create({ role_id: roleId, robot_id: robotId }, createAllowAllActor()),
+            ).rejects.toThrow(ConflictError);
         });
     });
 
