@@ -71,40 +71,43 @@ describe('core/entities/role-permission/service', () => {
 
     describe('create', () => {
         it('should create entity and propagate realm ids', async () => {
+            const roleRealmId = randomUUID();
+            const permissionRealmId = randomUUID();
+
+            repository.onValidateJoinColumns((data: any) => {
+                data.role = { realm_id: roleRealmId };
+                data.permission = { realm_id: permissionRealmId, name: 'test-perm' };
+            });
+
             const data = {
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
-                role: { realm_id: randomUUID() },
-                permission: {
-                    realm_id: randomUUID(),
-                    name: 'test-perm', 
-                },
             };
 
             const result = await service.create(data, createAllowAllActor());
             expect(result.id).toBeDefined();
-            expect(result.role_realm_id).toBe(data.role.realm_id);
-            expect(result.permission_realm_id).toBe(data.permission.realm_id);
+            expect(result.role_realm_id).toBe(roleRealmId);
+            expect(result.permission_realm_id).toBe(permissionRealmId);
         });
 
         it('should call preCheck with ROLE_PERMISSION_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({
                 role_id: randomUUID(),
-                permission_id: randomUUID(), 
+                permission_id: randomUUID(),
             }, actor);
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_PERMISSION_CREATE });
         });
 
         it('should preCheck permission name when permission is provided', async () => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.permission = { name: 'custom-perm', realm_id: null };
+            });
+
             const actor = createAllowAllActor();
             await service.create({
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
-                permission: {
-                    name: 'custom-perm',
-                    realm_id: null, 
-                },
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
@@ -115,18 +118,15 @@ describe('core/entities/role-permission/service', () => {
         });
 
         it('should skip permission name preCheck for admin role', async () => {
+            repository.onValidateJoinColumns((data: any) => {
+                data.role = { name: ROLE_ADMIN_NAME, realm_id: null };
+                data.permission = { name: 'custom-perm', realm_id: null };
+            });
+
             const actor = createAllowAllActor();
             await service.create({
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
-                role: {
-                    name: ROLE_ADMIN_NAME,
-                    realm_id: null, 
-                },
-                permission: {
-                    name: 'custom-perm',
-                    realm_id: null, 
-                },
             }, actor);
 
             expect(actor.permissionEvaluator.preEvaluate).not.toHaveBeenCalledWith({
@@ -136,11 +136,29 @@ describe('core/entities/role-permission/service', () => {
             });
         });
 
+        it('should throw validation error when role_id is missing', async () => {
+            await expect(
+                service.create({ permission_id: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/role_id/);
+        });
+
+        it('should throw validation error when permission_id is missing', async () => {
+            await expect(
+                service.create({ role_id: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/permission_id/);
+        });
+
+        it('should throw validation error when role_id is not a valid UUID', async () => {
+            await expect(
+                service.create({ role_id: 'not-a-uuid', permission_id: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/role_id/);
+        });
+
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
                     role_id: randomUUID(),
-                    permission_id: randomUUID(), 
+                    permission_id: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });

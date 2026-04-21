@@ -63,17 +63,23 @@ describe('core/entities/robot-role/service', () => {
 
     describe('create', () => {
         it('should create entity and propagate realm ids', async () => {
+            const robotRealmId = randomUUID();
+            const roleRealmId = randomUUID();
+
+            repository.onValidateJoinColumns((data: any) => {
+                data.robot = { realm_id: robotRealmId };
+                data.role = { realm_id: roleRealmId };
+            });
+
             const data = {
                 robot_id: randomUUID(),
                 role_id: randomUUID(),
-                robot: { realm_id: randomUUID() },
-                role: { realm_id: randomUUID() },
             };
 
             const result = await service.create(data, createAllowAllActor());
             expect(result.id).toBeDefined();
-            expect(result.robot_realm_id).toBe(data.robot.realm_id);
-            expect(result.role_realm_id).toBe(data.role.realm_id);
+            expect(result.robot_realm_id).toBe(robotRealmId);
+            expect(result.role_realm_id).toBe(roleRealmId);
         });
 
         it('should call preCheck with ROBOT_ROLE_CREATE', async () => {
@@ -85,11 +91,29 @@ describe('core/entities/robot-role/service', () => {
             expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROBOT_ROLE_CREATE });
         });
 
+        it('should throw validation error when robot_id is missing', async () => {
+            await expect(
+                service.create({ role_id: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/robot_id/);
+        });
+
+        it('should throw validation error when role_id is missing', async () => {
+            await expect(
+                service.create({ robot_id: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/role_id/);
+        });
+
+        it('should throw validation error when robot_id is not a valid UUID', async () => {
+            await expect(
+                service.create({ robot_id: 'not-a-uuid', role_id: randomUUID() }, createAllowAllActor()),
+            ).rejects.toThrow(/robot_id/);
+        });
+
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({
                     robot_id: randomUUID(),
-                    role_id: randomUUID(), 
+                    role_id: randomUUID(),
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });

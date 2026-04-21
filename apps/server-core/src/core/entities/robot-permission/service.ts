@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { NotFoundError } from '@ebec/http';
-import { PermissionName } from '@authup/core-kit';
+import { PermissionName, RobotPermissionValidator, ValidatorGroup } from '@authup/core-kit';
 import type { RobotPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { ActorContext } from '../actor/types.ts';
@@ -25,10 +25,13 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
 
     protected identityPermissionProvider: IIdentityPermissionProvider;
 
+    protected validator: RobotPermissionValidator;
+
     constructor(ctx: RobotPermissionServiceContext) {
         super();
         this.repository = ctx.repository;
         this.identityPermissionProvider = ctx.identityPermissionProvider;
+        this.validator = new RobotPermissionValidator();
     }
 
     async getMany(
@@ -70,49 +73,51 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
     ): Promise<RobotPermission> {
         await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_PERMISSION_CREATE });
 
-        await this.repository.validateJoinColumns(data);
+        const validated = await this.validator.run(data, { group: ValidatorGroup.CREATE });
 
-        if (data.permission) {
-            data.permission_realm_id = data.permission.realm_id;
+        await this.repository.validateJoinColumns(validated);
+
+        if (validated.permission) {
+            validated.permission_realm_id = validated.permission.realm_id;
 
             await actor.permissionEvaluator.preEvaluate({
-                name: data.permission.name,
-                realmId: data.permission.realm_id,
-                clientId: data.permission.client_id,
+                name: validated.permission.name,
+                realmId: validated.permission.realm_id,
+                clientId: validated.permission.client_id,
             });
         }
 
-        if (data.robot) {
-            data.robot_realm_id = data.robot.realm_id;
+        if (validated.robot) {
+            validated.robot_realm_id = validated.robot.realm_id;
         }
 
         if (
-            data.permission &&
+            validated.permission &&
             actor.identity &&
-            typeof data.policy_id === 'undefined'
+            typeof validated.policy_id === 'undefined'
         ) {
             const junctionPolicy = await this.identityPermissionProvider.resolveJunctionPolicy(
                 {
                     type: actor.identity.type,
-                    id: actor.identity.data.id, 
+                    id: actor.identity.data.id,
                 },
                 {
-                    name: data.permission.name,
-                    realmId: data.permission.realm_id,
-                    clientId: data.permission.client_id,
+                    name: validated.permission.name,
+                    realmId: validated.permission.realm_id,
+                    clientId: validated.permission.client_id,
                 },
             );
             if (junctionPolicy) {
-                data.policy_id = junctionPolicy.id;
+                validated.policy_id = junctionPolicy.id;
             }
         }
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROBOT_PERMISSION_CREATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
         });
 
-        let entity = this.repository.create(data);
+        let entity = this.repository.create(validated);
         entity = await this.repository.save(entity);
 
         return entity;
