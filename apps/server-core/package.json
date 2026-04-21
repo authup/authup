@@ -95,7 +95,7 @@
         "ldapjs": "^3.0.7",
         "locter": "^2.2.1",
         "morgan": "^1.10.1",
-        "mysql2": "^3.21.0",
+        "mysql2": "^3.22.1",
         "node-cron": "^4.2.1",
         "nodemailer": "^8.0.5",
         "orkos": "^1.1.1",
@@ -126,7 +126,7 @@
         "testcontainers": "^11.14.0",
         "ts-node": "^10.8.2",
         "unplugin-swc": "^1.5.9",
-        "vite": "^8.0.8",
+        "vite": "^8.0.9",
         "vitest": "^4.0.14"
     },
     "publishConfig": {
