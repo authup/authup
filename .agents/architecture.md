@@ -257,8 +257,8 @@ Service responsibility:
 | Category | Examples | Service Characteristics |
 |---|---|---|
 | **Simple CRUD** | role, scope, realm, permission | Validator + validateJoinColumns + checkUniqueness + permission checks |
-| **Junction** | client-permission, robot-permission, user-permission, client-scope, role-permission | No validator (just UUID fields), validateJoinColumns populates join entities, realm_id extraction from joins |
-| **Junction with superset check** | client-role, robot-role, user-role | Service does permission checks + save; controller additionally calls `validateJoinColumns` + `identityPermissionProvider.isSuperset()` before delegating to service (superset check requires adapter-level `RequestIdentity`) |
+| **Junction** | client-permission, robot-permission, user-permission, client-scope, role-permission, permission-policy | Validator (UUID fields), validateJoinColumns populates join entities, duplicate check on unique key, realm_id extraction from joins |
+| **Junction with superset check** | client-role, robot-role, user-role, identity-provider-role-mapping | Same as junction + `identityPermissionProvider.isSuperset()` in service to verify actor owns all permissions in target role |
 | **Attribute** | role-attribute, user-attribute | Per-record permission filtering in `getMany`, managed under parent entity's UPDATE permission |
 | **Complex with secrets** | client, robot | Uses `{Entity}CredentialsService` for secret handling, per-record secret filtering in `getMany` |
 | **Complex with self-access** | user | Self-edit fallback (strips restricted fields), self-access detection in `getOne`, name-lock protection |
@@ -343,7 +343,6 @@ Controller conventions:
 - Format response with `send()`, `sendCreated()`, `sendAccepted()` from `routup`
 
 Exceptions where controllers retain some logic:
-- **Superset junction controllers** (client-role, robot-role, user-role): Call `repository.validateJoinColumns()` and `identityPermissionProvider.isSuperset()` before delegating to service, because the superset check requires adapter-specific `RequestIdentity`
 - **Self-access resolution** (client, robot, user): Resolve `@me`/`@self` tokens to actual IDs before delegating
 - **Infrastructure concerns** (robot): Robot synchronization after save/delete uses infrastructure-level singletons
 
@@ -530,7 +529,7 @@ A permission binding wraps a permission entity with its associated policies. The
 
 ### Superset Check
 
-When assigning a role to an identity (user-role, client-role, robot-role), the system verifies the actor owns all permissions in the target role. The check is **policy-aware**:
+When assigning a role to an identity or identity-provider (user-role, client-role, robot-role, identity-provider-role-mapping), the service verifies the actor owns all permissions in the target role. The check is **policy-aware**:
 
 1. Merge actor's bindings per permission (using `mergePermissionBindings` with AFFIRMATIVE strategy)
 2. Merge target's bindings per permission
