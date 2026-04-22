@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.36](https://github.com/authup/authup/compare/v1.0.0-beta.35...v1.0.0-beta.36) (2026-04-22)
+
+
+### Features
+
+* add policy detail/preview to assignment components ([#3000](https://github.com/authup/authup/issues/3000)) ([916c462](https://github.com/authup/authup/commit/916c4629d462a161cb12dda09e9776a3b39bed99))
+
+
+### Bug Fixes
+
+* add duplicate checks to junction entity services ([#3006](https://github.com/authup/authup/issues/3006)) ([2533d09](https://github.com/authup/authup/commit/2533d09be31b018f80290e61ba0a80805aa3bf2c))
+* add input validation to junction entity services ([#3005](https://github.com/authup/authup/issues/3005)) ([ab1cb75](https://github.com/authup/authup/commit/ab1cb75c430034124a552221f569a9462d455100))
+* **deps:** bump the minorandpatch group across 1 directory with 10 updates ([#3004](https://github.com/authup/authup/issues/3004)) ([4c2cb91](https://github.com/authup/authup/commit/4c2cb918f4d1eb734ddf6a33655679c558cb4623))
+* touched files for release ([596b32f](https://github.com/authup/authup/commit/596b32ffc540b49e7deed6260714438397f65dbd))
+
 ## [1.0.0-beta.35](https://github.com/authup/authup/compare/v1.0.0-beta.34...v1.0.0-beta.35) (2026-04-16)
 
 

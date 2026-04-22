@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.36](https://github.com/authup/authup/compare/v1.0.0-beta.35...v1.0.0-beta.36) (2026-04-22)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 10 updates ([#3004](https://github.com/authup/authup/issues/3004)) ([4c2cb91](https://github.com/authup/authup/commit/4c2cb918f4d1eb734ddf6a33655679c558cb4623))
+
 ## [1.0.0-beta.35](https://github.com/authup/authup/compare/v1.0.0-beta.34...v1.0.0-beta.35) (2026-04-16)
 
 
