@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-beta.36](https://github.com/authup/authup/compare/v1.0.0-beta.35...v1.0.0-beta.36) (2026-04-22)
+
+
+### Bug Fixes
+
+* touched files for release ([596b32f](https://github.com/authup/authup/commit/596b32ffc540b49e7deed6260714438397f65dbd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+  * peerDependencies
+    * @authup/errors bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+
 ## [1.0.0-beta.35](https://github.com/authup/authup/compare/v1.0.0-beta.34...v1.0.0-beta.35) (2026-04-16)
 
 

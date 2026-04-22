@@ -1,5 +1,38 @@
 # Change Log
 
+## [1.0.0-beta.36](https://github.com/authup/authup/compare/v1.0.0-beta.35...v1.0.0-beta.36) (2026-04-22)
+
+
+### Features
+
+* add policy detail/preview to assignment components ([#3000](https://github.com/authup/authup/issues/3000)) ([916c462](https://github.com/authup/authup/commit/916c4629d462a161cb12dda09e9776a3b39bed99))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 10 updates ([#3004](https://github.com/authup/authup/issues/3004)) ([4c2cb91](https://github.com/authup/authup/commit/4c2cb918f4d1eb734ddf6a33655679c558cb4623))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/core-kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/core-http-kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/errors bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/specs bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/core-kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/core-http-kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/errors bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+    * @authup/specs bumped from ^1.0.0-beta.35 to ^1.0.0-beta.36
+
 ## [1.0.0-beta.35](https://github.com/authup/authup/compare/v1.0.0-beta.34...v1.0.0-beta.35) (2026-04-16)
 
 
