@@ -2,12 +2,12 @@ import { defineConfig } from 'tsdown';
 import swc from 'unplugin-swc';
 
 export default defineConfig({
-    entry: {
-        index: 'src/index.ts',
-        cli: 'src/cli/index.ts',
-    },
+    entry: ['src/**/*.ts'],
     format: 'esm',
+    unbundle: true,
+    dts: false,
     sourcemap: true,
+    shims: true,
     plugins: [
         swc.rolldown({
             jsc: {
