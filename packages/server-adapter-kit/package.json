@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-kit",
     "type": "module",
-    "version": "1.0.0-beta.36",
+    "version": "1.0.0-beta.37",
     "description": "A package containing a toolkit for server side adapters",
     "exports": {
         "./package.json": "./package.json",
@@ -52,12 +52,12 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/kit": "^1.0.0-beta.36",
-        "@authup/errors": "^1.0.0-beta.36",
-        "@authup/specs": "^1.0.0-beta.36",
-        "@authup/core-kit": "^1.0.0-beta.36",
-        "@authup/core-http-kit": "^1.0.0-beta.36",
-        "@authup/server-kit": "^1.0.0-beta.36",
+        "@authup/kit": "^1.0.0-beta.37",
+        "@authup/errors": "^1.0.0-beta.37",
+        "@authup/specs": "^1.0.0-beta.37",
+        "@authup/core-kit": "^1.0.0-beta.37",
+        "@authup/core-http-kit": "^1.0.0-beta.37",
+        "@authup/server-kit": "^1.0.0-beta.37",
         "@hapic/oauth2": "^3.2.0",
         "@isaacs/ttlcache": "^2.1.4",
         "jose": "^6.2.2",

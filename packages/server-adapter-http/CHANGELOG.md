@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.37](https://github.com/authup/authup/compare/v1.0.0-beta.36...v1.0.0-beta.37) (2026-04-23)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([642b0e2](https://github.com/authup/authup/commit/642b0e23a21d707cc9b389cd0eb824af487bd4ce))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/core-kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/core-http-kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+
 ## [1.0.0-beta.36](https://github.com/authup/authup/compare/v1.0.0-beta.35...v1.0.0-beta.36) (2026-04-22)
 
 

@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.37](https://github.com/authup/authup/compare/v1.0.0-beta.36...v1.0.0-beta.37) (2026-04-23)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([642b0e2](https://github.com/authup/authup/commit/642b0e23a21d707cc9b389cd0eb824af487bd4ce))
+* **server-core:** emit database migrations in build output ([f4273e0](https://github.com/authup/authup/commit/f4273e03c227243a997372f1aca1cc5469565530))
+* set next version to v1.0.0-beta.37 ([93ba232](https://github.com/authup/authup/commit/93ba2321580cf1a6c644a989ae89d49a6ffe1eff))
+
 ## [1.0.0-beta.36](https://github.com/authup/authup/compare/v1.0.0-beta.35...v1.0.0-beta.36) (2026-04-22)
 
 

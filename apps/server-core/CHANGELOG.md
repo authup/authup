@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.37](https://github.com/authup/authup/compare/v1.0.0-beta.36...v1.0.0-beta.37) (2026-04-23)
+
+
+### Bug Fixes
+
+* **server-core:** emit database migrations in build output ([f4273e0](https://github.com/authup/authup/commit/f4273e03c227243a997372f1aca1cc5469565530))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/core-http-kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/core-kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/errors bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/server-kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/specs bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+  * devDependencies
+    * @authup/client-web-slim bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+
 ## [1.0.0-beta.36](https://github.com/authup/authup/compare/v1.0.0-beta.35...v1.0.0-beta.36) (2026-04-22)
 
 
