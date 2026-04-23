@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.0.0-beta.37](https://github.com/authup/authup/compare/v1.0.0-beta.36...v1.0.0-beta.37) (2026-04-23)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([642b0e2](https://github.com/authup/authup/commit/642b0e23a21d707cc9b389cd0eb824af487bd4ce))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/errors bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/core-kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/specs bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/errors bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/core-kit bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+    * @authup/specs bumped from ^1.0.0-beta.36 to ^1.0.0-beta.37
+
 ## [1.0.0-beta.36](https://github.com/authup/authup/compare/v1.0.0-beta.35...v1.0.0-beta.36) (2026-04-22)
 
 
