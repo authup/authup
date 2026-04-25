@@ -6,13 +6,19 @@
  */
 
 import type { Realm, Role } from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRealmRepository, IRoleRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
-import { RoleEntity } from '../../../../../adapters/database/domains/index.ts';
+import { loadBoundPermissions } from '../bindings.ts';
+import {
+    CachePrefix,
+    RoleEntity,
+    RolePermissionEntity,
+} from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type RoleRepositoryAdapterContext = {
@@ -130,5 +136,21 @@ export class RoleRepositoryAdapter implements IRoleRepository {
         if (!isUnique) {
             throw new DatabaseConflictError();
         }
+    }
+
+    async getBoundPermissions(entity: string | Role): Promise<PermissionPolicyBinding[]> {
+        const id = typeof entity === 'string' ? entity : entity.id;
+        return loadBoundPermissions({
+            manager: this.repository.manager,
+            junctionTarget: RolePermissionEntity,
+            where: { role_id: id },
+            cachePrefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
+            cacheKey: id,
+        });
+    }
+
+    async getBoundPermissionsForMany(entities: (string | Role)[]): Promise<PermissionPolicyBinding[]> {
+        const results = await Promise.all(entities.map((entity) => this.getBoundPermissions(entity)));
+        return results.flat();
     }
 }

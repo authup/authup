@@ -39,6 +39,14 @@ class FakeRobotRepository extends FakeEntityRepository<Robot> implements IRobotR
     async findOneWithSecret(where: Record<string, any>): Promise<Robot | null> {
         return this.findOneBy(where);
     }
+
+    async getBoundRoles(): Promise<any[]> {
+        return [];
+    }
+
+    async getBoundPermissions(): Promise<any[]> {
+        return [];
+    }
 }
 
 function createUserActorAsOwner(userId: string): ActorContext {

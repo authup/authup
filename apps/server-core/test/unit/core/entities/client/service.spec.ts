@@ -35,6 +35,14 @@ class FakeClientRepository extends FakeEntityRepository<Client> implements IClie
     async findOneWithSecret(where: Record<string, any>): Promise<Client | null> {
         return this.findOneBy(where);
     }
+
+    async getBoundRoles(): Promise<any[]> {
+        return [];
+    }
+
+    async getBoundPermissions(): Promise<any[]> {
+        return [];
+    }
 }
 
 describe('core/entities/client/service', () => {

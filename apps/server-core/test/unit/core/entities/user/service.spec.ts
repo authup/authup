@@ -43,6 +43,14 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
     async findOneByWithEmail(where: Record<string, any>): Promise<User | null> {
         return this.findOneBy(where);
     }
+
+    async getBoundRoles(): Promise<any[]> {
+        return [];
+    }
+
+    async getBoundPermissions(): Promise<any[]> {
+        return [];
+    }
 }
 
 function createSelfActor(userId: string, userName?: string, realmId?: string): ActorContext {

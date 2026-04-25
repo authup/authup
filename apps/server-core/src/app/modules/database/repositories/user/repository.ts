@@ -5,15 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm, User } from '@authup/core-kit';
+import type { Realm, Role, User } from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '@authup/access';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRealmRepository, IUserRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import type { UserRepository } from '../../../../../adapters/database/domains/index.ts';
-import { UserEntity } from '../../../../../adapters/database/domains/index.ts';
+import {
+    CachePrefix,
+    UserEntity,
+    UserPermissionEntity,
+    UserRoleEntity,
+} from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
+import { loadBoundPermissions } from '../bindings.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type UserRepositoryAdapterContext = {
@@ -207,5 +215,35 @@ export class UserRepositoryAdapter implements IUserRepository {
         if (!isUnique) {
             throw new DatabaseConflictError();
         }
+    }
+
+    async getBoundRoles(entity: string | User): Promise<Role[]> {
+        const id = typeof entity === 'string' ? entity : entity.id;
+        const entries = await this.repository.manager
+            .getRepository(UserRoleEntity)
+            .find({
+                where: { user_id: id },
+                relations: { role: true },
+                cache: {
+                    id: buildRedisKeyPath({
+                        prefix: CachePrefix.USER_OWNED_ROLES,
+                        key: id,
+                    }),
+                    milliseconds: 60_000,
+                },
+            });
+
+        return entries.map((entry) => entry.role);
+    }
+
+    async getBoundPermissions(entity: string | User): Promise<PermissionPolicyBinding[]> {
+        const id = typeof entity === 'string' ? entity : entity.id;
+        return loadBoundPermissions({
+            manager: this.repository.manager,
+            junctionTarget: UserPermissionEntity,
+            where: { user_id: id },
+            cachePrefix: CachePrefix.USER_OWNED_PERMISSIONS,
+            cacheKey: id,
+        });
     }
 }

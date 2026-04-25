@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DataSource, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import type { Client, Realm, Robot } from '@authup/core-kit';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IContainer } from 'eldin';
 import type { IModule } from 'orkos';
@@ -16,11 +17,11 @@ import {
     OAuth2AuthorizationStateRepository,
     OAuth2ClientRepository,
     OAuth2KeyRepository,
-    OAuth2ScopeRepository, 
+    OAuth2ScopeRepository,
     OAuth2TokenRepository,
 } from './repositories/index.ts';
 import {
-    IdentityPermissionProvider,
+    IdentityRoleProvider,
     OAuth2AccessTokenIssuer,
     OAuth2AuthorizationCodeIssuer,
     OAuth2AuthorizationCodeRequestVerifier,
@@ -36,12 +37,16 @@ import { OAuth2InjectionToken } from './constants.ts';
 import { IdentityInjectionKey } from '../identity/index.ts';
 import {
     ClientEntity,
-    ClientRepository,
     ClientScopeEntity,
-    RobotRepository,
-    RoleRepository,
+    RealmEntity,
+    RobotEntity,
     UserRepository,
 } from '../../../adapters/database/domains/index.ts';
+import {
+    ClientRepositoryAdapter,
+    RobotRepositoryAdapter,
+    UserRepositoryAdapter,
+} from '../database/repositories/index.ts';
 import { DatabaseInjectionKey } from '../database/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
@@ -171,12 +176,20 @@ export class OAuth2Module implements IModule {
             useFactory: (c) => {
                 const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
                 const tokenSigner = c.resolve(OAuth2InjectionToken.TokenSigner);
-                const dataSource = c.resolve<DataSource>(DatabaseInjectionKey.DataSource);
-                const identityRoleProvider = new IdentityPermissionProvider({
-                    clientRepository: new ClientRepository(dataSource),
-                    userRepository: new UserRepository(dataSource),
-                    robotRepository: new RobotRepository(dataSource),
-                    roleRepository: new RoleRepository(dataSource),
+                const realmRepository = c.resolve<Repository<Realm>>(RealmEntity);
+                const identityRoleProvider = new IdentityRoleProvider({
+                    clientRepository: new ClientRepositoryAdapter({
+                        repository: c.resolve<Repository<Client>>(ClientEntity),
+                        realmRepository,
+                    }),
+                    userRepository: new UserRepositoryAdapter({
+                        repository: new UserRepository(c.resolve(DatabaseInjectionKey.DataSource)),
+                        realmRepository,
+                    }),
+                    robotRepository: new RobotRepositoryAdapter({
+                        repository: c.resolve<Repository<Robot>>(RobotEntity),
+                        realmRepository,
+                    }),
                 });
                 return new OAuth2AccessTokenIssuer(
                     tokenRepository,

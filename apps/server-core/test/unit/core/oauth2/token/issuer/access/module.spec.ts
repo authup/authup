@@ -19,7 +19,7 @@ import {
 import { OAuth2AccessTokenIssuer } from '../../../../../../../src/core/oauth2/token/issuer/access/module.ts';
 import type { IOAuth2TokenRepository } from '../../../../../../../src/core/oauth2/token/repository/types.ts';
 import type { IOAuth2TokenSigner } from '../../../../../../../src/core/oauth2/token/signer/types.ts';
-import type { IIdentityRoleProvider } from '../../../../../../../src/core/identity/permission/types.ts';
+import type { IIdentityRoleProvider } from '../../../../../../../src/core/identity/role/types.ts';
 
 function createTokenRepo(): IOAuth2TokenRepository {
     return {

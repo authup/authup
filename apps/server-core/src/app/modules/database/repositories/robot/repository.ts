@@ -5,14 +5,22 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Realm, Robot } from '@authup/core-kit';
+import type { Realm, Robot, Role } from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '@authup/access';
+import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-extension';
 import type { EntityRepositoryFindManyResult, IRealmRepository, IRobotRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
-import { RobotEntity } from '../../../../../adapters/database/domains/index.ts';
+import { loadBoundPermissions } from '../bindings.ts';
+import {
+    CachePrefix,
+    RobotEntity,
+    RobotPermissionEntity,
+    RobotRoleEntity,
+} from '../../../../../adapters/database/domains/index.ts';
 import { RealmRepositoryAdapter } from '../realm/repository.ts';
 
 export type RobotRepositoryAdapterContext = {
@@ -153,5 +161,35 @@ export class RobotRepositoryAdapter implements IRobotRepository {
         if (!isUnique) {
             throw new DatabaseConflictError();
         }
+    }
+
+    async getBoundRoles(entity: string | Robot): Promise<Role[]> {
+        const id = typeof entity === 'string' ? entity : entity.id;
+        const entries = await this.repository.manager
+            .getRepository(RobotRoleEntity)
+            .find({
+                where: { robot_id: id },
+                relations: { role: true },
+                cache: {
+                    id: buildRedisKeyPath({
+                        prefix: CachePrefix.ROBOT_OWNED_ROLES,
+                        key: id,
+                    }),
+                    milliseconds: 60_000,
+                },
+            });
+
+        return entries.map((entry) => entry.role);
+    }
+
+    async getBoundPermissions(entity: string | Robot): Promise<PermissionPolicyBinding[]> {
+        const id = typeof entity === 'string' ? entity : entity.id;
+        return loadBoundPermissions({
+            manager: this.repository.manager,
+            junctionTarget: RobotPermissionEntity,
+            where: { robot_id: id },
+            cachePrefix: CachePrefix.ROBOT_OWNED_PERMISSIONS,
+            cacheKey: id,
+        });
     }
 }
