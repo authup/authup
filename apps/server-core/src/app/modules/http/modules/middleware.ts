@@ -8,14 +8,6 @@
 import type { Router } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
-import type { Repository } from 'typeorm';
-import type { 
-    Client, 
-    Realm, 
-    Robot, 
-    Role, 
-} from '@authup/core-kit';
-import { IdentityPermissionProvider, IdentityRoleProvider } from '../../../../core/index.ts';
 import {
     createAuthorizationMiddleware,
     createLoggerMiddleware,
@@ -36,19 +28,6 @@ import {
     DatabaseInjectionKey,
     PermissionDatabaseProvider,
 } from '../../database/index.ts';
-import {
-    ClientRepositoryAdapter,
-    RobotRepositoryAdapter,
-    RoleRepositoryAdapter,
-    UserRepositoryAdapter,
-} from '../../database/repositories/index.ts';
-import {
-    ClientEntity,
-    RealmEntity,
-    RobotEntity,
-    RoleEntity,
-    UserRepository,
-} from '../../../../adapters/database/domains/index.ts';
 
 export class HTTPMiddlewareModule {
     async mountBefore(router: Router, container: IContainer): Promise<void> {
@@ -133,44 +112,14 @@ export class HTTPMiddlewareModule {
 
     async mountAuthorization(router: Router, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
-
-        // todo: no direct datasource access here.
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
         const oauth2TokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
 
         const permissionProvider = new PermissionDatabaseProvider(dataSource);
-        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
-        const clientRepository = new ClientRepositoryAdapter({
-            repository: container.resolve<Repository<Client>>(ClientEntity),
-            realmRepository,
-        });
-        const userRepository = new UserRepositoryAdapter({
-            repository: new UserRepository(dataSource),
-            realmRepository,
-        });
-        const robotRepository = new RobotRepositoryAdapter({
-            repository: container.resolve<Repository<Robot>>(RobotEntity),
-            realmRepository,
-        });
-        const roleRepository = new RoleRepositoryAdapter({
-            repository: container.resolve<Repository<Role>>(RoleEntity),
-            realmRepository,
-        });
-        const roleProvider = new IdentityRoleProvider({
-            clientRepository,
-            userRepository,
-            robotRepository,
-        });
-        const identityPermissionProvider = new IdentityPermissionProvider({
-            clientRepository,
-            userRepository,
-            robotRepository,
-            roleRepository,
-            roleProvider,
-        });
 
         const middleware = createAuthorizationMiddleware({
             identityResolver,

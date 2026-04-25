@@ -121,9 +121,7 @@ import {
     ClientScopeService,
     ClientService,
     CredentialsAuthenticator,
-    IdentityPermissionProvider,
     IdentityProviderRoleMappingService,
-    IdentityRoleProvider,
     PasswordRecoveryService,
     PermissionPolicyService,
     PermissionService,
@@ -237,36 +235,7 @@ export class HTTPControllerModule {
     // ----------------------------------------------------
 
     createIdentityPermissionProvider(container: IContainer) {
-        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
-        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
-        const clientRepository = new ClientRepositoryAdapter({
-            repository: container.resolve<Repository<Client>>(ClientEntity),
-            realmRepository,
-        });
-        const userRepository = new UserRepositoryAdapter({
-            repository: new UserRepository(dataSource),
-            realmRepository,
-        });
-        const robotRepository = new RobotRepositoryAdapter({
-            repository: container.resolve<Repository<Robot>>(RobotEntity),
-            realmRepository,
-        });
-        const roleRepository = new RoleRepositoryAdapter({
-            repository: container.resolve<Repository<Role>>(RoleEntity),
-            realmRepository,
-        });
-        const roleProvider = new IdentityRoleProvider({
-            clientRepository,
-            userRepository,
-            robotRepository,
-        });
-        return new IdentityPermissionProvider({
-            clientRepository,
-            userRepository,
-            robotRepository,
-            roleRepository,
-            roleProvider,
-        });
+        return container.resolve(IdentityInjectionKey.PermissionProvider);
     }
 
     createAuthorize(container: IContainer) {

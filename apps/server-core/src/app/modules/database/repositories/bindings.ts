@@ -75,14 +75,16 @@ async function loadPolicyTrees(
     }
 
     const policyRepository = new PolicyRepository(manager);
-    const result: Record<string, BasePolicy> = {};
+    const trees = await Promise.all(
+        policyIds.map((id) => policyRepository.findDescendantsTreeById(id)
+            .then((tree) => [id, tree] as const)),
+    );
 
-    for (const id of policyIds) {
-        const tree = await policyRepository.findDescendantsTreeById(id);
+    const result: Record<string, BasePolicy> = {};
+    for (const [id, tree] of trees) {
         if (tree) {
             result[id] = tree;
         }
     }
-
     return result;
 }

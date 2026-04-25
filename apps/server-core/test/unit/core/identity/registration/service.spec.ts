@@ -14,7 +14,8 @@ import {
     vi,
 } from 'vitest';
 import { BadRequestError, NotFoundError } from '@ebec/http';
-import type { User } from '@authup/core-kit';
+import type { Role, User } from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '@authup/access';
 import { RegistrationService } from '../../../../../src/core/identity/registration/service.ts';
 import type { IMailClient } from '../../../../../src/core/mail/types.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
@@ -35,11 +36,11 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
         return this.findOneBy(where);
     }
 
-    async getBoundRoles(): Promise<any[]> {
+    async getBoundRoles(_entity: string | User): Promise<Role[]> {
         return [];
     }
 
-    async getBoundPermissions(): Promise<any[]> {
+    async getBoundPermissions(_entity: string | User): Promise<PermissionPolicyBinding[]> {
         return [];
     }
 }

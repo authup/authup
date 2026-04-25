@@ -7,7 +7,8 @@
 
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
-import type { Client } from '@authup/core-kit';
+import type { Client, Role } from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach, 
     describe, 
@@ -36,11 +37,11 @@ class FakeClientRepository extends FakeEntityRepository<Client> implements IClie
         return this.findOneBy(where);
     }
 
-    async getBoundRoles(): Promise<any[]> {
+    async getBoundRoles(_entity: string | Client): Promise<Role[]> {
         return [];
     }
 
-    async getBoundPermissions(): Promise<any[]> {
+    async getBoundPermissions(_entity: string | Client): Promise<PermissionPolicyBinding[]> {
         return [];
     }
 }

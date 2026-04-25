@@ -11,15 +11,15 @@ import type { IRoleRepository } from '../../../../src/core/entities/role/types.t
 import { FakeEntityRepository } from './fake-repository.ts';
 
 export class FakeRoleRepository extends FakeEntityRepository<Role> implements IRoleRepository {
-    async checkUniqueness(): Promise<void> {
+    async checkUniqueness(_data: Partial<Role>, _existing?: Role): Promise<void> {
         // no-op
     }
 
-    async getBoundPermissions(): Promise<PermissionPolicyBinding[]> {
+    async getBoundPermissions(_entity: string | Role): Promise<PermissionPolicyBinding[]> {
         return [];
     }
 
-    async getBoundPermissionsForMany(): Promise<PermissionPolicyBinding[]> {
+    async getBoundPermissionsForMany(_entities: (string | Role)[]): Promise<PermissionPolicyBinding[]> {
         return [];
     }
 }
