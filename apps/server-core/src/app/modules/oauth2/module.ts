@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Repository } from 'typeorm';
+import type { DataSource, Repository } from 'typeorm';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IContainer } from 'eldin';
 import type { IModule } from 'orkos';
@@ -20,6 +20,7 @@ import {
     OAuth2TokenRepository,
 } from './repositories/index.ts';
 import {
+    IdentityPermissionProvider,
     OAuth2AccessTokenIssuer,
     OAuth2AuthorizationCodeIssuer,
     OAuth2AuthorizationCodeRequestVerifier,
@@ -33,7 +34,15 @@ import {
 } from '../../../core/index.ts';
 import { OAuth2InjectionToken } from './constants.ts';
 import { IdentityInjectionKey } from '../identity/index.ts';
-import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/domains/index.ts';
+import {
+    ClientEntity,
+    ClientRepository,
+    ClientScopeEntity,
+    RobotRepository,
+    RoleRepository,
+    UserRepository,
+} from '../../../adapters/database/domains/index.ts';
+import { DatabaseInjectionKey } from '../database/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
 
 export class OAuth2Module implements IModule {
@@ -162,6 +171,13 @@ export class OAuth2Module implements IModule {
             useFactory: (c) => {
                 const tokenRepository = c.resolve(OAuth2InjectionToken.TokenRepository);
                 const tokenSigner = c.resolve(OAuth2InjectionToken.TokenSigner);
+                const dataSource = c.resolve<DataSource>(DatabaseInjectionKey.DataSource);
+                const identityRoleProvider = new IdentityPermissionProvider({
+                    clientRepository: new ClientRepository(dataSource),
+                    userRepository: new UserRepository(dataSource),
+                    robotRepository: new RobotRepository(dataSource),
+                    roleRepository: new RoleRepository(dataSource),
+                });
                 return new OAuth2AccessTokenIssuer(
                     tokenRepository,
                     tokenSigner,
@@ -169,6 +185,7 @@ export class OAuth2Module implements IModule {
                         maxAge: config.tokenAccessMaxAge,
                         issuer: config.publicUrl,
                     },
+                    identityRoleProvider,
                 );
             },
         });

@@ -23,6 +23,10 @@ export interface IIdentityPermissionProvider {
     resolveJunctionPolicy(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<Policy | undefined>;
 }
 
+export interface IIdentityRoleProvider {
+    getRolesFor(identity: IdentityPolicyData): Promise<Role[]>;
+}
+
 export interface IIdentityBindingRepository {
     getBoundPermissions(entity: string): Promise<PermissionPolicyBinding[]>;
     getBoundRoles(entity: string): Promise<Role[]>;
