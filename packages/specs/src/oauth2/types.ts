@@ -77,7 +77,21 @@ export type OAuth2TokenPayload = JWTClaims & {
     /**
      * Self: user agent
      */
-    user_agent?: string
+    user_agent?: string,
+
+    /**
+     * Realm-scoped role claims (roles where realm_id matches a realm).
+     */
+    realm_access?: OAuth2AccessGrantClaim,
+
+    /**
+     * Global role claims (roles with realm_id = null).
+     */
+    global_access?: OAuth2AccessGrantClaim
+};
+
+export type OAuth2AccessGrantClaim = {
+    roles: string[]
 };
 
 // todo: this should be removed.

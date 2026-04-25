@@ -10,17 +10,18 @@ import type {
     PermissionPolicyBinding,
 } from '@authup/access';
 import { isPermissionPolicyBindingEqual, mergePermissionPolicyBindings } from '@authup/access';
-import type { Policy } from '@authup/core-kit';
+import type { Policy, Role } from '@authup/core-kit';
 import { isPolicy } from '@authup/core-kit';
 import type {
     IIdentityBindingRepository,
     IIdentityPermissionProvider,
+    IIdentityRoleProvider,
     IRoleBindingRepository,
     IdentityPermissionProviderContext,
     ResolveJunctionPolicyOptions,
 } from './types.ts';
 
-export class IdentityPermissionProvider implements IIdentityPermissionProvider {
+export class IdentityPermissionProvider implements IIdentityPermissionProvider, IIdentityRoleProvider {
     protected clientRepository: IIdentityBindingRepository;
 
     protected userRepository: IIdentityBindingRepository;
@@ -117,6 +118,24 @@ export class IdentityPermissionProvider implements IIdentityPermissionProvider {
             }
             case 'role': {
                 return this.getForRole(identity);
+            }
+        }
+
+        return [];
+    }
+
+    async getRolesFor(identity: IdentityPolicyData) : Promise<Role[]> {
+        switch (identity.type) {
+            case 'client': {
+                return this.clientRepository.getBoundRoles(identity.id);
+            }
+            case 'user': {
+                return this.userRepository.getBoundRoles(identity.id)
+                    .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
+            }
+            case 'robot': {
+                return this.robotRepository.getBoundRoles(identity.id)
+                    .then((data) => this.reduceEntitiesByIdentityClient(data, identity));
             }
         }
 

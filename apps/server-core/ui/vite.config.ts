@@ -13,7 +13,7 @@ import vuePlugin from '@vitejs/plugin-vue';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const packagesRoot = path.resolve(__dirname, '..', '..', '..', 'packages');
 
-export default defineConfig(() => ({
+export default defineConfig({
     base: '/public/',
     plugins: [
         vuePlugin(),
@@ -28,4 +28,4 @@ export default defineConfig(() => ({
         },
     },
     ssr: { noExternal: true },
-}));
+});
