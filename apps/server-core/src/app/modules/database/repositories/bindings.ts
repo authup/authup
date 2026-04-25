@@ -13,6 +13,7 @@ import type {
     ObjectLiteral,
 } from 'typeorm';
 import type { BasePolicy, PermissionPolicyBinding } from '@authup/access';
+import type { Permission } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { PolicyRepository } from '../../../../adapters/database/domains/policy/index.ts';
 
@@ -25,7 +26,7 @@ export type LoadBoundPermissionsOptions<E extends ObjectLiteral> = {
 };
 
 type PermissionJunction = {
-    permission: any;
+    permission: Permission;
     policy_id?: string | null;
 };
 

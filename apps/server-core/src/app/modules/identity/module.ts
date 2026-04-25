@@ -26,11 +26,9 @@ import {
 import { DatabaseInjectionKey, IdentityProviderRepositoryAdapter } from '../database/index.ts';
 import {
     ClientEntity,
-    ClientRepository,
     IdentityProviderRepository,
     RealmEntity,
     RobotEntity,
-    RobotRepository,
     RoleEntity,
     UserPermissionEntity,
     UserRepository,
@@ -74,10 +72,10 @@ export class IdentityModule implements IModule {
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
 
         const clientRepository = new ClientIdentityRepository(
-            new ClientRepository(dataSource),
+            container.resolve<Repository<Client>>(ClientEntity),
         );
         const robotRepository = new RobotIdentityRepository(
-            new RobotRepository(dataSource),
+            container.resolve<Repository<Robot>>(RobotEntity),
         );
         const userRepository = new UserIdentityRepository({
             repository: new UserRepository(dataSource),

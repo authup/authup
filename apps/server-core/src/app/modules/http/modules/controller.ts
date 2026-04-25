@@ -234,10 +234,6 @@ export class HTTPControllerModule {
 
     // ----------------------------------------------------
 
-    createIdentityPermissionProvider(container: IContainer) {
-        return container.resolve(IdentityInjectionKey.PermissionProvider);
-    }
-
     createAuthorize(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const accessTokenIssuer = container.resolve(OAuth2InjectionToken.AccessTokenIssuer);
@@ -275,7 +271,7 @@ export class HTTPControllerModule {
         const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
         const identityProviderLdapCollectionAuthenticator = container.resolve(IdentityInjectionKey.ProviderLdapCollectionAuthenticator);
 
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
 
         const clientAuthenticator = new ClientAuthenticator(identityResolver);
         const robotAuthenticator = new RobotAuthenticator(identityResolver);
@@ -473,7 +469,7 @@ export class HTTPControllerModule {
             permissionPolicyRepository,
         });
 
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const permissionProvider = new PermissionDatabaseProvider(dataSource);
 
         return new PermissionController({
@@ -504,7 +500,7 @@ export class HTTPControllerModule {
         const repository = new ClientPermissionRepositoryAdapter(
             container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
         );
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new ClientPermissionService({
             repository,
             identityPermissionProvider, 
@@ -516,7 +512,7 @@ export class HTTPControllerModule {
         const repository = new ClientRoleRepositoryAdapter(
             container.resolve<Repository<ClientRole>>(ClientRoleEntity),
         );
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new ClientRoleService({ repository, identityPermissionProvider });
         return new ClientRoleController({ service });
     }
@@ -533,7 +529,7 @@ export class HTTPControllerModule {
         const repository = new RobotPermissionRepositoryAdapter(
             container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
         );
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new RobotPermissionService({
             repository,
             identityPermissionProvider, 
@@ -545,7 +541,7 @@ export class HTTPControllerModule {
         const repository = new RobotRoleRepositoryAdapter(
             container.resolve<Repository<RobotRole>>(RobotRoleEntity),
         );
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new RobotRoleService({ repository, identityPermissionProvider });
         return new RobotRoleController({ service });
     }
@@ -562,7 +558,7 @@ export class HTTPControllerModule {
         const repository = new RolePermissionRepositoryAdapter(
             container.resolve<Repository<RolePermission>>(RolePermissionEntity),
         );
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new RolePermissionService({
             repository,
             identityPermissionProvider, 
@@ -620,7 +616,7 @@ export class HTTPControllerModule {
         const repository = new UserPermissionRepositoryAdapter(
             container.resolve<Repository<UserPermission>>(UserPermissionEntity),
         );
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new UserPermissionService({
             repository,
             identityPermissionProvider, 
@@ -632,7 +628,7 @@ export class HTTPControllerModule {
         const repository = new UserRoleRepositoryAdapter(
             container.resolve<Repository<UserRole>>(UserRoleEntity),
         );
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new UserRoleService({ repository, identityPermissionProvider });
         return new UserRoleController({ service });
     }
@@ -649,7 +645,7 @@ export class HTTPControllerModule {
             repository,
             realmRepository: realmRepositoryAdapter, 
         });
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         return new PolicyController({
             service,
             repository,
@@ -662,7 +658,7 @@ export class HTTPControllerModule {
         const repository = new IdentityProviderRoleMappingRepositoryAdapter(
             container.resolve<Repository<any>>(IdentityProviderRoleMappingEntity),
         );
-        const identityPermissionProvider = this.createIdentityPermissionProvider(container);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const service = new IdentityProviderRoleMappingService({ repository, identityPermissionProvider });
         return new IdentityProviderRoleMappingController({ service });
     }
