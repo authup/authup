@@ -10,18 +10,16 @@ import {
     PermissionName,
     ROLE_ADMIN_NAME,
 } from '@authup/core-kit';
-import type { Role } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
+    beforeEach,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { RoleService } from '../../../../../src/core/entities/role/service.ts';
-import type { IRoleRepository } from '../../../../../src/core/entities/role/types.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
+import { FakeRoleRepository } from '../../helpers/fake-role-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
@@ -29,12 +27,6 @@ import {
     createNonMasterRealmActor,
 } from '../../helpers/mock-actor.ts';
 import { createFakeRole } from '../../../../utils/domains/index.ts';
-
-class FakeRoleRepository extends FakeEntityRepository<Role> implements IRoleRepository {
-    async checkUniqueness(): Promise<void> {
-        // no-op
-    }
-}
 
 describe('core/entities/role/service', () => {
     let repository: FakeRoleRepository;

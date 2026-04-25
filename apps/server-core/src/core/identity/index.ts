@@ -11,3 +11,4 @@ export * from './permission/index.ts';
 export * from './provider/index.ts';
 export * from './registration/index.ts';
 export * from './resolver/index.ts';
+export * from './role/index.ts';

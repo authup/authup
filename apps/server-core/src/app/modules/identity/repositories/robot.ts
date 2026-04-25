@@ -8,14 +8,14 @@
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Robot } from '@authup/core-kit';
+import type { Repository } from 'typeorm';
 import type { IRobotIdentityRepository } from '../../../../core/index.ts';
-import type { RobotRepository } from '../../../../adapters/database/domains/index.ts';
 import { CachePrefix } from '../../../../adapters/database/domains/index.ts';
 
 export class RobotIdentityRepository implements IRobotIdentityRepository {
-    private readonly repository: RobotRepository;
+    private readonly repository: Repository<Robot>;
 
-    constructor(repository: RobotRepository) {
+    constructor(repository: Repository<Robot>) {
         this.repository = repository;
     }
 

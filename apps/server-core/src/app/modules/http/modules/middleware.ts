@@ -8,7 +8,6 @@
 import type { Router } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
-import { IdentityPermissionProvider } from '../../../../core/index.ts';
 import {
     createAuthorizationMiddleware,
     createLoggerMiddleware,
@@ -25,13 +24,10 @@ import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
-import { DatabaseInjectionKey, PermissionDatabaseProvider  } from '../../database/index.ts';
 import {
-    ClientRepository,
-    RobotRepository,
-    RoleRepository,
-    UserRepository,
-} from '../../../../adapters/database/domains/index.ts';
+    DatabaseInjectionKey,
+    PermissionDatabaseProvider,
+} from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
     async mountBefore(router: Router, container: IContainer): Promise<void> {
@@ -116,21 +112,14 @@ export class HTTPMiddlewareModule {
 
     async mountAuthorization(router: Router, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
-
-        // todo: no direct datasource access here.
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 
         const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
         const sessionManager = container.resolve(AuthenticationInjectionKey.SessionManager);
         const oauth2TokenVerifier = container.resolve(OAuth2InjectionToken.TokenVerifier);
+        const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
 
         const permissionProvider = new PermissionDatabaseProvider(dataSource);
-        const identityPermissionProvider = new IdentityPermissionProvider({
-            clientRepository: new ClientRepository(dataSource),
-            userRepository: new UserRepository(dataSource),
-            robotRepository: new RobotRepository(dataSource),
-            roleRepository: new RoleRepository(dataSource),
-        });
 
         const middleware = createAuthorizationMiddleware({
             identityResolver,

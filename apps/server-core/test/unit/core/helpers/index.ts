@@ -8,4 +8,5 @@
 export * from './fake-repository.ts';
 export * from './fake-policy-repository.ts';
 export * from './fake-realm-repository.ts';
+export * from './fake-role-repository.ts';
 export * from './mock-actor.ts';

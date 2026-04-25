@@ -10,7 +10,8 @@ import {
     IdentityType,
     PermissionName,
 } from '@authup/core-kit';
-import type { Realm, User } from '@authup/core-kit';
+import type { Realm, Role, User } from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach, 
     describe, 
@@ -42,6 +43,14 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
 
     async findOneByWithEmail(where: Record<string, any>): Promise<User | null> {
         return this.findOneBy(where);
+    }
+
+    async getBoundRoles(_entity: string | User): Promise<Role[]> {
+        return [];
+    }
+
+    async getBoundPermissions(_entity: string | User): Promise<PermissionPolicyBinding[]> {
+        return [];
     }
 }
 

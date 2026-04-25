@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { User } from '@authup/core-kit';
+import type { Role, User } from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '@authup/access';
 import type { ActorContext } from '../actor/types.ts';
 import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
 
@@ -15,6 +16,10 @@ export interface IUserRepository extends IEntityRepository<User> {
     findOne(id: string, query?: Record<string, any>, realm?: string): Promise<User | null>;
 
     findOneByWithEmail(where: Record<string, any>): Promise<User | null>;
+
+    getBoundRoles(entity: string | User): Promise<Role[]>;
+
+    getBoundPermissions(entity: string | User): Promise<PermissionPolicyBinding[]>;
 }
 
 export interface IUserService {

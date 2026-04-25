@@ -10,7 +10,13 @@ import {
     IdentityType,
     PermissionName,
 } from '@authup/core-kit';
-import type { Realm, Robot, User } from '@authup/core-kit';
+import type { 
+    Realm, 
+    Robot, 
+    Role, 
+    User, 
+} from '@authup/core-kit';
+import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach, 
     describe, 
@@ -38,6 +44,14 @@ class FakeRobotRepository extends FakeEntityRepository<Robot> implements IRobotR
 
     async findOneWithSecret(where: Record<string, any>): Promise<Robot | null> {
         return this.findOneBy(where);
+    }
+
+    async getBoundRoles(_entity: string | Robot): Promise<Role[]> {
+        return [];
+    }
+
+    async getBoundPermissions(_entity: string | Robot): Promise<PermissionPolicyBinding[]> {
+        return [];
     }
 }
 

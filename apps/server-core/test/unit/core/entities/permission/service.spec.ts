@@ -8,11 +8,10 @@
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type {
- 
-    Permission, 
-    PermissionPolicy, 
-    Role, 
-    RolePermission, 
+
+    Permission,
+    PermissionPolicy,
+    RolePermission,
 } from '@authup/core-kit';
 import {
     beforeEach, 
@@ -24,7 +23,12 @@ import { SystemPolicyName } from '@authup/access';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
-import { FakeEntityRepository, FakePolicyRepository, FakeRealmRepository } from '../../helpers/index.ts';
+import {
+    FakeEntityRepository,
+    FakePolicyRepository,
+    FakeRealmRepository,
+    FakeRoleRepository,
+} from '../../helpers/index.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
@@ -44,7 +48,7 @@ const defaultPolicyId = randomUUID();
 describe('core/entities/permission/service', () => {
     let repository: FakePermissionRepository;
     let realmRepository: FakeRealmRepository;
-    let roleRepository: FakeEntityRepository<Role>;
+    let roleRepository: FakeRoleRepository;
     let rolePermissionRepository: FakeEntityRepository<RolePermission>;
     let policyRepository: FakePolicyRepository;
     let permissionPolicyRepository: FakeEntityRepository<PermissionPolicy>;
@@ -53,7 +57,7 @@ describe('core/entities/permission/service', () => {
     beforeEach(() => {
         repository = new FakePermissionRepository();
         realmRepository = new FakeRealmRepository();
-        roleRepository = new FakeEntityRepository<Role>();
+        roleRepository = new FakeRoleRepository();
         rolePermissionRepository = new FakeEntityRepository<RolePermission>();
         policyRepository = new FakePolicyRepository();
         policyRepository.seed([{

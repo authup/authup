@@ -8,14 +8,14 @@
 import { buildRedisKeyPath } from '@authup/server-kit';
 import { isUUID } from '@authup/kit';
 import type { Client } from '@authup/core-kit';
+import type { Repository } from 'typeorm';
 import type { IClientIdentityRepository } from '../../../../core/index.ts';
-import type { ClientRepository } from '../../../../adapters/database/domains/index.ts';
 import { CachePrefix } from '../../../../adapters/database/domains/index.ts';
 
 export class ClientIdentityRepository implements IClientIdentityRepository {
-    private readonly repository: ClientRepository;
+    private readonly repository: Repository<Client>;
 
-    constructor(repository: ClientRepository) {
+    constructor(repository: Repository<Client>) {
         this.repository = repository;
     }
 

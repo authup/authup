@@ -5,11 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Policy, Role } from '@authup/core-kit';
+import type { Policy } from '@authup/core-kit';
 import type {
     IdentityPolicyData,
     PermissionPolicyBinding,
 } from '@authup/access';
+import type { IClientRepository } from '../../entities/client/types.ts';
+import type { IRobotRepository } from '../../entities/robot/types.ts';
+import type { IRoleRepository } from '../../entities/role/types.ts';
+import type { IUserRepository } from '../../entities/user/types.ts';
+import type { IIdentityRoleProvider } from '../role/types.ts';
 
 export type ResolveJunctionPolicyOptions = {
     name: string;
@@ -23,23 +28,10 @@ export interface IIdentityPermissionProvider {
     resolveJunctionPolicy(identity: IdentityPolicyData, options: ResolveJunctionPolicyOptions): Promise<Policy | undefined>;
 }
 
-export interface IIdentityRoleProvider {
-    getRolesFor(identity: IdentityPolicyData): Promise<Role[]>;
-}
-
-export interface IIdentityBindingRepository {
-    getBoundPermissions(entity: string): Promise<PermissionPolicyBinding[]>;
-    getBoundRoles(entity: string): Promise<Role[]>;
-}
-
-export interface IRoleBindingRepository {
-    getBoundPermissions(entity: string | Role): Promise<PermissionPolicyBinding[]>;
-    getBoundPermissionsForMany(entities: (string | Role)[]): Promise<PermissionPolicyBinding[]>;
-}
-
 export type IdentityPermissionProviderContext = {
-    clientRepository: IIdentityBindingRepository;
-    userRepository: IIdentityBindingRepository;
-    robotRepository: IIdentityBindingRepository;
-    roleRepository: IRoleBindingRepository;
+    clientRepository: IClientRepository;
+    userRepository: IUserRepository;
+    robotRepository: IRobotRepository;
+    roleRepository: IRoleRepository;
+    roleProvider: IIdentityRoleProvider;
 };
