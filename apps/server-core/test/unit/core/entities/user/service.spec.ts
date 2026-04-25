@@ -97,7 +97,7 @@ describe('core/entities/user/service', () => {
         it('should call preCheckOneOf with read/update/delete permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.USER_READ,
                     PermissionName.USER_UPDATE,
@@ -157,7 +157,7 @@ describe('core/entities/user/service', () => {
 
             const result = await service.getOne(entity.id, actor);
             expect(result.id).toBe(entity.id);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).not.toHaveBeenCalled();
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
         });
 
         it('should allow self-access by name without permission check', async () => {
@@ -215,7 +215,7 @@ describe('core/entities/user/service', () => {
                 name: 'test-user',
                 email: 'test@example.com', 
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -407,7 +407,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser());
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_DELETE });
         });
 
         it('should throw when actor lacks permission', async () => {

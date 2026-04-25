@@ -42,11 +42,11 @@ describe('OAuth2AccessTokenIssuer', () => {
             });
 
             expect(token).toBe('signed-access-token');
-            expect(repository.insert).toHaveBeenCalledWith(
+            expect(repository.insertCalls).toContainEqual(
                 expect.objectContaining({ kind: OAuth2TokenKind.ACCESS }),
             );
-            expect(signer.sign).toHaveBeenCalledWith(payload);
-            expect(repository.saveWithSignature).toHaveBeenCalledWith(payload, 'signed-access-token');
+            expect(signer.signCalls).toContainEqual(payload);
+            expect(repository.saveWithSignatureCalls).toContainEqual({ payload, signature: 'signed-access-token' });
         });
 
         it('should not add access claims when no role provider is supplied', async () => {
@@ -58,7 +58,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                 realm_id: realmId,
             });
 
-            const insertCall = repository.insert.mock.calls[0][0];
+            const insertCall = repository.insertCalls[0];
             expect(insertCall.realm_access).toBeUndefined();
             expect(insertCall.global_access).toBeUndefined();
         });
@@ -69,10 +69,10 @@ describe('OAuth2AccessTokenIssuer', () => {
 
             await issuer.issue({ realm_id: realmId });
 
-            const insertCall = repository.insert.mock.calls[0][0];
+            const insertCall = repository.insertCalls[0];
             expect(insertCall.realm_access).toBeUndefined();
             expect(insertCall.global_access).toBeUndefined();
-            expect(provider.getRolesFor).not.toHaveBeenCalled();
+            expect(provider.getRolesForCalls).toHaveLength(0);
         });
 
         it('should split roles by realm_id into realm_access and global_access', async () => {
@@ -102,7 +102,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                 realm_id: realmId,
             });
 
-            const insertCall = repository.insert.mock.calls[0][0];
+            const insertCall = repository.insertCalls[0];
             expect(insertCall.realm_access).toEqual({ roles: ['editor', 'viewer'] });
             expect(insertCall.global_access).toEqual({ roles: ['admin'] });
         });
@@ -119,7 +119,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                 sub_kind: OAuth2SubKind.USER,
             });
 
-            const insertCall = repository.insert.mock.calls[0][0];
+            const insertCall = repository.insertCalls[0];
             expect(insertCall.global_access).toEqual({ roles: ['system'] });
             expect(insertCall.realm_access).toEqual({ roles: [] });
         });
@@ -152,7 +152,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                 realm_id: realmId,
             });
 
-            const insertCall = repository.insert.mock.calls[0][0];
+            const insertCall = repository.insertCalls[0];
             expect(insertCall.realm_access).toEqual({ roles: ['editor'] });
             expect(insertCall.global_access).toEqual({ roles: ['admin'] });
         });
@@ -178,7 +178,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                 sub_kind: OAuth2SubKind.USER,
             });
 
-            const insertCall = repository.insert.mock.calls[0][0];
+            const insertCall = repository.insertCalls[0];
             expect(insertCall.realm_access).toEqual({ roles: [] });
             expect(insertCall.global_access).toEqual({ roles: ['admin'] });
         });
@@ -193,7 +193,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                 realm_id: realmId,
             });
 
-            const insertCall = repository.insert.mock.calls[0][0];
+            const insertCall = repository.insertCalls[0];
             expect(insertCall.realm_access).toEqual({ roles: [] });
             expect(insertCall.global_access).toEqual({ roles: [] });
         });
@@ -211,7 +211,7 @@ describe('OAuth2AccessTokenIssuer', () => {
                 client_id: clientId,
             });
 
-            expect(provider.getRolesFor).toHaveBeenCalledWith({
+            expect(provider.getRolesForCalls).toContainEqual({
                 type: OAuth2SubKind.USER,
                 id: userId,
                 clientId,

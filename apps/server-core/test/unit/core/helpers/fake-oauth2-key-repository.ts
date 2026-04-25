@@ -6,17 +6,26 @@
  */
 
 import type { Key } from '@authup/core-kit';
-import { vi } from 'vitest';
 import type { IOAuth2KeyRepository } from '../../../../src/core/oauth2/key/types.ts';
 
 export class FakeOAuth2KeyRepository implements IOAuth2KeyRepository {
+    public findByRealmIdCalls: string[] = [];
+
+    public findByIdCalls: string[] = [];
+
     constructor(private key: Key | null = null) {}
 
     setKey(key: Key | null) {
         this.key = key;
     }
 
-    public readonly findByRealmId = vi.fn(async () => this.key);
+    async findByRealmId(realmId: string): Promise<Key | null> {
+        this.findByRealmIdCalls.push(realmId);
+        return this.key;
+    }
 
-    public readonly findById = vi.fn(async () => this.key);
+    async findById(id: string): Promise<Key | null> {
+        this.findByIdCalls.push(id);
+        return this.key;
+    }
 }

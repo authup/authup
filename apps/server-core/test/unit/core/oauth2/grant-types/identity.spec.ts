@@ -58,7 +58,7 @@ describe('IdentityGrantType', () => {
     it('should create session and issue both tokens with correct payload', async () => {
         const result = await grant.runWith(identity);
 
-        expect(sessionManager.create).toHaveBeenCalledWith(
+        expect(sessionManager.createCalls).toContainEqual(
             expect.objectContaining({
                 realm_id: realmId,
                 sub: userId,
@@ -74,8 +74,8 @@ describe('IdentityGrantType', () => {
             sub_kind: OAuth2SubKind.USER,
             session_id: expect.any(String),
         });
-        expect(accessTokenIssuer.issue).toHaveBeenCalledWith(expectedPayload);
-        expect(refreshTokenIssuer.issue).toHaveBeenCalledWith(expectedPayload);
+        expect(accessTokenIssuer.issueCalls).toContainEqual(expectedPayload);
+        expect(refreshTokenIssuer.issueCalls).toContainEqual(expectedPayload);
 
         expect(result).toHaveProperty('access_token');
         expect(result).toHaveProperty('token_type', 'Bearer');
@@ -89,7 +89,7 @@ describe('IdentityGrantType', () => {
             ipAddress: '10.0.0.1',
         });
 
-        expect(sessionManager.create).toHaveBeenCalledWith(
+        expect(sessionManager.createCalls).toContainEqual(
             expect.objectContaining({
                 user_agent: 'TestAgent',
                 ip_address: '10.0.0.1',

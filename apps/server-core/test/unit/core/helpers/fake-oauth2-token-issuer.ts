@@ -7,16 +7,20 @@
 
 import { randomUUID } from 'node:crypto';
 import type { OAuth2TokenPayload } from '@authup/specs';
-import { vi } from 'vitest';
 import type {
     IOAuth2TokenIssuer,
     OAuth2TokenIssuerResponse,
 } from '../../../../src/core/oauth2/token/issuer/types.ts';
 
 export class FakeOAuth2TokenIssuer implements IOAuth2TokenIssuer {
+    public issueCalls: OAuth2TokenPayload[] = [];
+
+    public buildExpCalls: (OAuth2TokenPayload | undefined)[] = [];
+
     constructor(private exp: number = Math.floor(Date.now() / 1000) + 3600) {}
 
-    public readonly issue = vi.fn(async (input: OAuth2TokenPayload): Promise<OAuth2TokenIssuerResponse> => {
+    async issue(input: OAuth2TokenPayload): Promise<OAuth2TokenIssuerResponse> {
+        this.issueCalls.push(input);
         const jti = randomUUID();
         const payload: OAuth2TokenPayload = {
             ...input,
@@ -24,7 +28,10 @@ export class FakeOAuth2TokenIssuer implements IOAuth2TokenIssuer {
             exp: this.exp,
         } as OAuth2TokenPayload;
         return [`signed-token-${jti}`, payload];
-    });
+    }
 
-    public readonly buildExp = vi.fn(() => this.exp);
+    buildExp(input?: OAuth2TokenPayload): number {
+        this.buildExpCalls.push(input);
+        return this.exp;
+    }
 }

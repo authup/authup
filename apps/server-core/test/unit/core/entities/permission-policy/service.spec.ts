@@ -35,7 +35,7 @@ describe('core/entities/permission-policy/service', () => {
         it('should call preEvaluateOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.PERMISSION_READ,
                     PermissionName.PERMISSION_UPDATE,
@@ -63,7 +63,7 @@ describe('core/entities/permission-policy/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.getOne(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.PERMISSION_READ,
                     PermissionName.PERMISSION_UPDATE,
@@ -104,7 +104,7 @@ describe('core/entities/permission-policy/service', () => {
                 permission_id: randomUUID(),
                 policy_id: randomUUID(),
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.PERMISSION_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PERMISSION_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -175,7 +175,7 @@ describe('core/entities/permission-policy/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.PERMISSION_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PERMISSION_UPDATE });
         });
     });
 });

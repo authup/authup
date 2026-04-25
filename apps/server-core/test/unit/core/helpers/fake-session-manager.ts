@@ -7,24 +7,45 @@
 
 import { randomUUID } from 'node:crypto';
 import type { Session } from '@authup/core-kit';
-import { vi } from 'vitest';
 import type { ISessionManager } from '../../../../src/core/authentication/session/types.ts';
 
 export class FakeSessionManager implements ISessionManager {
+    public createCalls: Partial<Session>[] = [];
+
+    public pingCalls: Session[] = [];
+
+    public refreshCalls: Session[] = [];
+
+    public verifyCalls: Session[] = [];
+
+    public findOneByIdCalls: string[] = [];
+
     private sessions = new Map<string, Session>();
 
-    public readonly create = vi.fn(async (session: Partial<Session>) => {
+    async create(session: Partial<Session>): Promise<Session> {
+        this.createCalls.push(session);
         const id = (session.id as string) || randomUUID();
         const created = { id, ...session } as Session;
         this.sessions.set(id, created);
         return created;
-    });
+    }
 
-    public readonly ping = vi.fn(async (session: Session) => session);
+    async ping(session: Session): Promise<Session> {
+        this.pingCalls.push(session);
+        return session;
+    }
 
-    public readonly refresh = vi.fn(async (session: Session) => session);
+    async refresh(session: Session): Promise<Session> {
+        this.refreshCalls.push(session);
+        return session;
+    }
 
-    public readonly verify = vi.fn(async () => {});
+    async verify(session: Session): Promise<void> {
+        this.verifyCalls.push(session);
+    }
 
-    public readonly findOneById = vi.fn(async (id: string) => this.sessions.get(id) ?? null);
+    async findOneById(id: string): Promise<Session | null> {
+        this.findOneByIdCalls.push(id);
+        return this.sessions.get(id) ?? null;
+    }
 }

@@ -7,15 +7,19 @@
 
 import type { Role } from '@authup/core-kit';
 import type { IdentityPolicyData } from '@authup/access';
-import { vi } from 'vitest';
 import type { IIdentityRoleProvider } from '../../../../src/core/identity/role/types.ts';
 
 export class FakeIdentityRoleProvider implements IIdentityRoleProvider {
+    public getRolesForCalls: IdentityPolicyData[] = [];
+
     constructor(private roles: Role[] = []) {}
 
     setRoles(roles: Role[]) {
         this.roles = roles;
     }
 
-    public readonly getRolesFor = vi.fn(async (_identity: IdentityPolicyData) => this.roles);
+    async getRolesFor(identity: IdentityPolicyData): Promise<Role[]> {
+        this.getRolesForCalls.push(identity);
+        return this.roles;
+    }
 }

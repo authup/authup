@@ -5,16 +5,28 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Identity } from '@authup/core-kit';
-import { vi } from 'vitest';
+import type { Identity, IdentityType } from '@authup/core-kit';
 import type { IIdentityResolver } from '../../../../src/core/identity/resolver/types.ts';
 
 export class FakeIdentityResolver implements IIdentityResolver {
+    public resolveCalls: {
+        type: `${IdentityType}`; 
+        key: string; 
+        realmKey?: string 
+    }[] = [];
+
     private identity: Identity | null = null;
 
     setIdentity(identity: Identity | null) {
         this.identity = identity;
     }
 
-    public readonly resolve = vi.fn(async () => this.identity);
+    async resolve(type: `${IdentityType}`, key: string, realmKey?: string): Promise<Identity | null> {
+        this.resolveCalls.push({
+            type, 
+            key, 
+            realmKey, 
+        });
+        return this.identity;
+    }
 }

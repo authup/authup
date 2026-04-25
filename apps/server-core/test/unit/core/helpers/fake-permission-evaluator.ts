@@ -7,7 +7,6 @@
 
 import type { IPermissionEvaluator, PermissionEvaluationContext } from '@authup/access';
 import { ForbiddenError } from '@ebec/http';
-import { vi } from 'vitest';
 
 export type EvaluatorMethodName = 'evaluate' | 'evaluateOneOf' | 'preEvaluate' | 'preEvaluateOneOf';
 
@@ -19,26 +18,38 @@ export type EvaluatorCall = {
 export type EvaluatorBehavior = (call: EvaluatorCall) => void | Promise<void>;
 
 export class FakePermissionEvaluator implements IPermissionEvaluator {
+    public evaluateCalls: PermissionEvaluationContext[] = [];
+
+    public evaluateOneOfCalls: PermissionEvaluationContext[] = [];
+
+    public preEvaluateCalls: PermissionEvaluationContext[] = [];
+
+    public preEvaluateOneOfCalls: PermissionEvaluationContext[] = [];
+
     private behavior: EvaluatorBehavior;
-
-    public readonly evaluate = vi.fn(
-        (ctx: PermissionEvaluationContext) => this.run('evaluate', ctx),
-    );
-
-    public readonly evaluateOneOf = vi.fn(
-        (ctx: PermissionEvaluationContext) => this.run('evaluateOneOf', ctx),
-    );
-
-    public readonly preEvaluate = vi.fn(
-        (ctx: PermissionEvaluationContext) => this.run('preEvaluate', ctx),
-    );
-
-    public readonly preEvaluateOneOf = vi.fn(
-        (ctx: PermissionEvaluationContext) => this.run('preEvaluateOneOf', ctx),
-    );
 
     constructor(behavior: EvaluatorBehavior = () => {}) {
         this.behavior = behavior;
+    }
+
+    async evaluate(ctx: PermissionEvaluationContext): Promise<void> {
+        this.evaluateCalls.push(ctx);
+        await this.behavior({ method: 'evaluate', ctx });
+    }
+
+    async evaluateOneOf(ctx: PermissionEvaluationContext): Promise<void> {
+        this.evaluateOneOfCalls.push(ctx);
+        await this.behavior({ method: 'evaluateOneOf', ctx });
+    }
+
+    async preEvaluate(ctx: PermissionEvaluationContext): Promise<void> {
+        this.preEvaluateCalls.push(ctx);
+        await this.behavior({ method: 'preEvaluate', ctx });
+    }
+
+    async preEvaluateOneOf(ctx: PermissionEvaluationContext): Promise<void> {
+        this.preEvaluateOneOfCalls.push(ctx);
+        await this.behavior({ method: 'preEvaluateOneOf', ctx });
     }
 
     setBehavior(behavior: EvaluatorBehavior) {
@@ -57,9 +68,5 @@ export class FakePermissionEvaluator implements IPermissionEvaluator {
             }
             return previous(call);
         };
-    }
-
-    private async run(method: EvaluatorMethodName, ctx: PermissionEvaluationContext): Promise<void> {
-        await this.behavior({ method, ctx });
     }
 }

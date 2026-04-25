@@ -110,7 +110,7 @@ describe('core/entities/role-attribute/service', () => {
                 role: { realm_id: null },
             }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -155,7 +155,7 @@ describe('core/entities/role-attribute/service', () => {
 
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_UPDATE });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {

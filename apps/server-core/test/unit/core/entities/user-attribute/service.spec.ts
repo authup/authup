@@ -190,7 +190,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createAllowAllActor();
             await service.update(entity.id, { value: 'new' }, actor);
 
-            expect(actor.permissionEvaluator.evaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.USER_UPDATE,
                     PermissionName.USER_SELF_MANAGE,

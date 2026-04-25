@@ -160,7 +160,7 @@ describe('core/entities/client/service', () => {
             const actor = createAllowAllActor();
             await service.getOne(entity.id, actor);
 
-            expect(actor.permissionEvaluator.evaluateOneOf).toHaveBeenCalled();
+            expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
         });
     });
 
@@ -203,7 +203,7 @@ describe('core/entities/client/service', () => {
         it('should call preCheck with CLIENT_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-client' }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -303,7 +303,7 @@ describe('core/entities/client/service', () => {
             const entity = repository.seed(createFakeClient());
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_DELETE });
         });
 
         it('should throw when actor lacks permission', async () => {

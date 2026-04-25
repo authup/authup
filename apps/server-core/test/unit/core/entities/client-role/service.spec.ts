@@ -40,7 +40,7 @@ describe('core/entities/client-role/service', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.CLIENT_ROLE_READ,
                     PermissionName.CLIENT_ROLE_UPDATE,
@@ -93,7 +93,7 @@ describe('core/entities/client-role/service', () => {
                 client_id: randomUUID(),
                 role_id: randomUUID(), 
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_ROLE_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_ROLE_CREATE });
         });
 
         it('should throw validation error when client_id is missing', async () => {
@@ -164,7 +164,7 @@ describe('core/entities/client-role/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_ROLE_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_ROLE_DELETE });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {

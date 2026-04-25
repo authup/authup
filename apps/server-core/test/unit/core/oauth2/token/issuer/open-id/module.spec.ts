@@ -109,7 +109,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 identity,
             );
 
-            const insertCall = repository.insert.mock.calls[0][0];
+            const insertCall = repository.insertCalls[0];
             expect(insertCall.kind).toBe(OAuth2TokenKind.ID_TOKEN);
             expect(insertCall.name).toBe('jdoe');
             expect(insertCall.given_name).toBe('John');
@@ -132,7 +132,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 identity,
             );
 
-            expect(repository.insert).toHaveBeenCalledWith(
+            expect(repository.insertCalls).toContainEqual(
                 expect.objectContaining({ iss: 'https://auth.example.com/realms/master' }),
             );
         });
@@ -149,7 +149,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 identity,
             );
 
-            expect(repository.insert).toHaveBeenCalledWith(
+            expect(repository.insertCalls).toContainEqual(
                 expect.objectContaining({ iss: 'https://auth.example.com' }),
             );
         });
@@ -166,7 +166,7 @@ describe('OAuth2OpenIDTokenIssuer', () => {
                 identity,
             );
 
-            expect(repository.insert).toHaveBeenCalledWith(
+            expect(repository.insertCalls).toContainEqual(
                 expect.objectContaining({ aud: clientId }),
             );
         });
@@ -183,8 +183,8 @@ describe('OAuth2OpenIDTokenIssuer', () => {
             );
 
             expect(token).toBe('signed-id-token');
-            expect(signer.sign).toHaveBeenCalledWith(payload);
-            expect(repository.saveWithSignature).toHaveBeenCalledWith(payload, 'signed-id-token');
+            expect(signer.signCalls).toContainEqual(payload);
+            expect(repository.saveWithSignatureCalls).toContainEqual({ payload, signature: 'signed-id-token' });
         });
     });
 });

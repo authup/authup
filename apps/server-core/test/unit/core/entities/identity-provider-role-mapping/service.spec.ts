@@ -44,7 +44,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         it('should call preEvaluateOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.IDENTITY_PROVIDER_READ,
                     PermissionName.IDENTITY_PROVIDER_UPDATE,
@@ -101,7 +101,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
                 provider_id: randomUUID(),
                 role_id: randomUUID(),
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -210,7 +210,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.update(entity.id, { name: 'test' }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -257,7 +257,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE });
         });
     });
 });

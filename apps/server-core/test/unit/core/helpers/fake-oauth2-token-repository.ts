@@ -7,52 +7,81 @@
 
 import { randomUUID } from 'node:crypto';
 import type { OAuth2TokenPayload } from '@authup/specs';
-import { vi } from 'vitest';
 import type { IOAuth2TokenRepository } from '../../../../src/core/oauth2/token/repository/types.ts';
 
 export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
+    public setInactiveCalls: { id: string; exp?: number }[] = [];
+
+    public isInactiveCalls: string[] = [];
+
+    public findOneByIdCalls: string[] = [];
+
+    public findOneBySignatureCalls: string[] = [];
+
+    public removeByIdCalls: string[] = [];
+
+    public insertCalls: OAuth2TokenPayload[] = [];
+
+    public saveCalls: OAuth2TokenPayload[] = [];
+
+    public saveWithSignatureCalls: { payload: OAuth2TokenPayload; signature: string }[] = [];
+
     private inactiveIds = new Set<string>();
 
     private bySignature = new Map<string, OAuth2TokenPayload>();
 
     private byId = new Map<string, OAuth2TokenPayload>();
 
-    public readonly setInactive = vi.fn(async (id: string) => {
+    async setInactive(id: string, exp?: number): Promise<void> {
+        this.setInactiveCalls.push({ id, exp });
         this.inactiveIds.add(id);
-    });
+    }
 
-    public readonly isInactive = vi.fn(async (id: string) => this.inactiveIds.has(id));
+    async isInactive(id: string): Promise<boolean> {
+        this.isInactiveCalls.push(id);
+        return this.inactiveIds.has(id);
+    }
 
-    public readonly findOneById = vi.fn(async (id: string) => this.byId.get(id) ?? null);
+    async findOneById(id: string): Promise<OAuth2TokenPayload | null> {
+        this.findOneByIdCalls.push(id);
+        return this.byId.get(id) ?? null;
+    }
 
-    public readonly findOneBySignature = vi.fn(async (token: string) => this.bySignature.get(token) ?? null);
+    async findOneBySignature(token: string): Promise<OAuth2TokenPayload | null> {
+        this.findOneBySignatureCalls.push(token);
+        return this.bySignature.get(token) ?? null;
+    }
 
-    public readonly removeById = vi.fn(async (id: string) => {
+    async removeById(id: string): Promise<void> {
+        this.removeByIdCalls.push(id);
         this.byId.delete(id);
-    });
+    }
 
-    public readonly insert = vi.fn(async (payload: OAuth2TokenPayload) => {
+    async insert(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
+        this.insertCalls.push(payload);
         const stored = { jti: randomUUID(), ...payload } as OAuth2TokenPayload;
         if (stored.jti) {
             this.byId.set(stored.jti, stored);
         }
         return stored;
-    });
+    }
 
-    public readonly save = vi.fn(async (payload: OAuth2TokenPayload) => {
+    async save(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
+        this.saveCalls.push(payload);
         if (payload.jti) {
             this.byId.set(payload.jti, payload);
         }
         return payload;
-    });
+    }
 
-    public readonly saveWithSignature = vi.fn(async (payload: OAuth2TokenPayload, signature: string) => {
+    async saveWithSignature(payload: OAuth2TokenPayload, signature: string): Promise<OAuth2TokenPayload> {
+        this.saveWithSignatureCalls.push({ payload, signature });
         this.bySignature.set(signature, payload);
         if (payload.jti) {
             this.byId.set(payload.jti, payload);
         }
         return payload;
-    });
+    }
 
     seedSignature(signature: string, payload: OAuth2TokenPayload) {
         this.bySignature.set(signature, payload);

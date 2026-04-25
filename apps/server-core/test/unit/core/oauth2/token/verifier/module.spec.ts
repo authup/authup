@@ -59,7 +59,7 @@ describe('OAuth2TokenVerifier', () => {
             const verifier = new OAuth2TokenVerifier(new FakeOAuth2KeyRepository(), tokenRepo);
 
             expect(await verifier.isInactive('some-jti')).toBe(true);
-            expect(tokenRepo.isInactive).toHaveBeenCalledWith('some-jti');
+            expect(tokenRepo.isInactiveCalls).toContainEqual('some-jti');
         });
     });
 
@@ -72,7 +72,7 @@ describe('OAuth2TokenVerifier', () => {
 
             const result = await verifier.verify('cached-token');
             expect(result).toBe(payload);
-            expect(tokenRepo.findOneBySignature).toHaveBeenCalledWith('cached-token');
+            expect(tokenRepo.findOneBySignatureCalls).toContainEqual('cached-token');
         });
 
         it('should throw JWTError when cached payload has no jti', async () => {
@@ -101,7 +101,7 @@ describe('OAuth2TokenVerifier', () => {
             const verifier = new OAuth2TokenVerifier(new FakeOAuth2KeyRepository(), tokenRepo);
 
             expect(await verifier.verify('cached-token', { skipActiveCheck: true })).toBe(payload);
-            expect(tokenRepo.isInactive).not.toHaveBeenCalled();
+            expect(tokenRepo.isInactiveCalls).toHaveLength(0);
         });
     });
 
@@ -129,7 +129,7 @@ describe('OAuth2TokenVerifier', () => {
 
             const verifier = new OAuth2TokenVerifier(new FakeOAuth2KeyRepository(key), tokenRepo);
             expect(await verifier.verify('raw-token')).toBe(payload);
-            expect(tokenRepo.saveWithSignature).toHaveBeenCalledWith(payload, 'raw-token');
+            expect(tokenRepo.saveWithSignatureCalls).toContainEqual({ payload, signature: 'raw-token' });
         });
 
         it('should throw JWKError when OCT key has no decryption_key', async () => {
@@ -193,7 +193,7 @@ describe('OAuth2TokenVerifier', () => {
 
             const verifier = new OAuth2TokenVerifier(new FakeOAuth2KeyRepository(key), tokenRepo);
             await expect(verifier.verify('raw-token')).rejects.toThrow(JWTError);
-            expect(tokenRepo.saveWithSignature).toHaveBeenCalled();
+            expect(tokenRepo.saveWithSignatureCalls.length).toBeGreaterThan(0);
         });
 
         it('should skip active check in crypto path when skipActiveCheck is true', async () => {
@@ -206,7 +206,7 @@ describe('OAuth2TokenVerifier', () => {
 
             const verifier = new OAuth2TokenVerifier(new FakeOAuth2KeyRepository(key), tokenRepo);
             expect(await verifier.verify('raw-token', { skipActiveCheck: true })).toBe(payload);
-            expect(tokenRepo.isInactive).not.toHaveBeenCalled();
+            expect(tokenRepo.isInactiveCalls).toHaveLength(0);
         });
     });
 });

@@ -146,7 +146,7 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot());
             const actor = createAllowAllActor();
             await service.getOne(entity.id, actor);
-            expect(actor.permissionEvaluator.evaluateOneOf).toHaveBeenCalled();
+            expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
@@ -188,7 +188,7 @@ describe('core/entities/robot/service', () => {
         it('should call preCheck with ROBOT_CREATE', async () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-robot' }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROBOT_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -243,7 +243,7 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot({ user_id: null }));
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROBOT_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_DELETE });
         });
 
         it('should not call preCheck for owner delete', async () => {
@@ -255,7 +255,7 @@ describe('core/entities/robot/service', () => {
 
             const actor = createUserActorAsOwner(userId);
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).not.toHaveBeenCalled();
+            expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(0);
         });
 
         it('should allow owner to delete without permission check', async () => {

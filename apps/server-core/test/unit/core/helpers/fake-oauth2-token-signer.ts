@@ -5,11 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { vi } from 'vitest';
+import type { OAuth2TokenPayload } from '@authup/specs';
 import type { IOAuth2TokenSigner } from '../../../../src/core/oauth2/token/signer/types.ts';
 
 export class FakeOAuth2TokenSigner implements IOAuth2TokenSigner {
+    public signCalls: OAuth2TokenPayload[] = [];
+
     constructor(private signature = 'signed-token') {}
 
-    public readonly sign = vi.fn(async () => this.signature);
+    async sign<T extends OAuth2TokenPayload>(payload: T): Promise<string> {
+        this.signCalls.push(payload);
+        return this.signature;
+    }
 }

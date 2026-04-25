@@ -35,7 +35,7 @@ describe('core/entities/user-permission/service', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.USER_PERMISSION_CREATE,
                     PermissionName.USER_PERMISSION_DELETE,
@@ -93,7 +93,7 @@ describe('core/entities/user-permission/service', () => {
                 permission_id: randomUUID(),
             }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({
                 name: 'custom-perm',
                 realmId: null,
                 clientId: undefined,
@@ -165,7 +165,7 @@ describe('core/entities/user-permission/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.update(entity.id, { policy_id: null }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_PERMISSION_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_PERMISSION_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -205,7 +205,7 @@ describe('core/entities/user-permission/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_PERMISSION_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_PERMISSION_DELETE });
         });
     });
 });
