@@ -57,25 +57,15 @@ Integration tests that spin up the full application (database, HTTP server). Tes
 - `suite.client` — a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
 - `suite.baseURL` — the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
 
-### Testing UI / SSR with a fake HTTP client
+### Testing the SSR'd consent UI is not yet supported
 
-For tests that exercise the SSR'd consent UI at `/authorize` (or any future code path that mounts the bundled Vue app), you cannot let the SSR's internal HTTP calls reach a real server — `config.publicUrl` defaults to `:3001` while the test server runs on a random port, and the dangling fetches leak unhandled rejections.
+`GET /authorize` returns SSR'd HTML built from the bundled Vue app under `apps/server-core/ui/`. The SSR fires several unawaited HTTP calls during render against `config.publicUrl` (`store.resolve()` for session hydration, `IdentityProviderAPI.getMany()`, `AuthorizeScopes.vue`'s scope fetch). In a test environment where `publicUrl` doesn't reach a live server, those fetches `ECONNREFUSE` and leak unhandled rejections that fail vitest.
 
-The supported pattern (see plan 003 once implemented) is:
+Workarounds that don't work:
+- Suppressing `unhandledRejection` — vitest catches them through its own infrastructure.
+- Pinning `config.port` to match `publicUrl` — breaks parallel runs.
 
-```ts
-import { createFakeClient } from '@authup/core-http-kit/testing';
-
-const fakeHttpClient = createFakeClient({
-    handlers: {
-        'GET /clients/:id': ({ params }) => ({ id: params.id, name: 'Test' }),
-        'GET /scopes': () => ({ data: [], meta: { total: 0 } }),
-        '*': () => ({ data: [], meta: { total: 0 } }),
-    },
-});
-```
-
-The fake is wired into the SSR via the optional `httpClient` parameter on `@authup/client-web-kit`'s `install()`. Production code never imports from `@authup/core-http-kit/testing`.
+The right fix is an injectable HTTP client so tests can stub the SSR's outbound calls. Until that lands, `GET /authorize` is covered indirectly: the assets middleware unit tests assert path resolution, and `apps/server-core` ships a self-contained tarball whose SSR `render()` is verified manually via `npm pack` smoke testing.
 
 ## Code Coverage
 

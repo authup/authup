@@ -356,10 +356,6 @@ export default defineConfig({
                                 },
                             ],
                         },
-                        {
-                            text: 'Testing',
-                            link: '/sdks/javascript/client-web-kit/testing',
-                        },
                     ],
                 },
                 {
