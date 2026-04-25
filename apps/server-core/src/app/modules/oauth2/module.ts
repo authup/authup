@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DataSource, Repository  } from 'typeorm';
+import type { DataSource, Repository } from 'typeorm';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IContainer } from 'eldin';
 import type { IModule } from 'orkos';

@@ -70,10 +70,10 @@ export class OAuth2AccessTokenIssuer extends OAuth2BaseTokenIssuer implements IO
         const globalRoles: string[] = [];
 
         for (const role of roles) {
-            if (role.realm_id) {
-                realmRoles.push(role.name);
-            } else {
+            if (!role.realm_id) {
                 globalRoles.push(role.name);
+            } else if (input.realm_id && role.realm_id === input.realm_id) {
+                realmRoles.push(role.name);
             }
         }
 

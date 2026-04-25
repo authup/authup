@@ -71,7 +71,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             expect(repository.saveWithSignature).toHaveBeenCalledWith(payload, 'signed-access-token');
         });
 
-        it('should not add access claims when no permission provider is supplied', async () => {
+        it('should not add access claims when no role provider is supplied', async () => {
             const issuer = new OAuth2AccessTokenIssuer(repository, signer);
 
             await issuer.issue({
@@ -129,7 +129,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             expect(insertCall.global_access).toEqual({ roles: ['admin'] });
         });
 
-        it('should treat undefined realm_id as global', async () => {
+        it('should treat a role with no realm_id as global', async () => {
             const roles: Role[] = [
                 { id: randomUUID(), name: 'system' } as Role,
             ];
@@ -144,6 +144,65 @@ describe('OAuth2AccessTokenIssuer', () => {
             const insertCall = (repository.insert as ReturnType<typeof vi.fn>).mock.calls[0][0];
             expect(insertCall.global_access).toEqual({ roles: ['system'] });
             expect(insertCall.realm_access).toEqual({ roles: [] });
+        });
+
+        it('should drop roles bound to a different realm', async () => {
+            const otherRealmId = randomUUID();
+            const roles: Role[] = [
+                {
+                    id: randomUUID(),
+                    name: 'editor',
+                    realm_id: realmId,
+                } as Role,
+                {
+                    id: randomUUID(),
+                    name: 'foreign',
+                    realm_id: otherRealmId,
+                } as Role,
+                {
+                    id: randomUUID(),
+                    name: 'admin',
+                    realm_id: null,
+                } as Role,
+            ];
+            const provider = createRoleProvider(roles);
+            const issuer = new OAuth2AccessTokenIssuer(repository, signer, {}, provider);
+
+            await issuer.issue({
+                sub: userId,
+                sub_kind: OAuth2SubKind.USER,
+                realm_id: realmId,
+            });
+
+            const insertCall = (repository.insert as ReturnType<typeof vi.fn>).mock.calls[0][0];
+            expect(insertCall.realm_access).toEqual({ roles: ['editor'] });
+            expect(insertCall.global_access).toEqual({ roles: ['admin'] });
+        });
+
+        it('should drop realm-bound roles when input has no realm_id', async () => {
+            const roles: Role[] = [
+                {
+                    id: randomUUID(),
+                    name: 'editor',
+                    realm_id: realmId,
+                } as Role,
+                {
+                    id: randomUUID(),
+                    name: 'admin',
+                    realm_id: null,
+                } as Role,
+            ];
+            const provider = createRoleProvider(roles);
+            const issuer = new OAuth2AccessTokenIssuer(repository, signer, {}, provider);
+
+            await issuer.issue({
+                sub: userId,
+                sub_kind: OAuth2SubKind.USER,
+            });
+
+            const insertCall = (repository.insert as ReturnType<typeof vi.fn>).mock.calls[0][0];
+            expect(insertCall.realm_access).toEqual({ roles: [] });
+            expect(insertCall.global_access).toEqual({ roles: ['admin'] });
         });
 
         it('should produce empty role arrays when identity has no roles', async () => {
@@ -161,7 +220,7 @@ describe('OAuth2AccessTokenIssuer', () => {
             expect(insertCall.global_access).toEqual({ roles: [] });
         });
 
-        it('should pass identity context to the permission provider', async () => {
+        it('should pass identity context to the role provider', async () => {
             const provider = createRoleProvider([]);
             const issuer = new OAuth2AccessTokenIssuer(repository, signer, {}, provider);
             const clientId = randomUUID();

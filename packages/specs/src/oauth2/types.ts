@@ -85,7 +85,7 @@ export type OAuth2TokenPayload = JWTClaims & {
     realm_access?: OAuth2AccessGrantClaim,
 
     /**
-     * Global role claims (roles with realm_id = null).
+     * Global role claims (roles whose realm_id is null or missing).
      */
     global_access?: OAuth2AccessGrantClaim
 };
