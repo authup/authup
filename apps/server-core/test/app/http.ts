@@ -24,13 +24,14 @@ export class TestHTTPApplication extends TestApplication {
         return this._client;
     }
 
-    protected createClient() {
+    get baseURL(): string {
         const httpServer = this.container.resolve<IServer>(HTTPInjectionKey.Server);
-
         const address = httpServer.address() as AddressInfo;
-        const baseURL = `http://localhost:${address.port}`;
+        return `http://localhost:${address.port}`;
+    }
 
-        const client = new Client({ baseURL });
+    protected createClient() {
+        const client = new Client({ baseURL: this.baseURL });
 
         client.setAuthorizationHeader({
             type: 'Basic',

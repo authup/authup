@@ -6,7 +6,7 @@
 |------------------|---------------------------------------------------|
 | NX               | Monorepo task runner (dependency-ordered builds)   |
 | tsdown           | Package JS bundling (rolldown-based)               |
-| Vite             | client-web-slim builds                            |
+| Vite             | server-core embedded UI builds (`apps/server-core/ui/`) |
 | Nuxt             | client-web builds                                 |
 | Vitest + SWC     | Test runner with fast compilation                  |
 | ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
@@ -25,6 +25,12 @@
 - Build: `npm run build -w <workspace>` (from repo root, e.g. `-w apps/server-core`, `-w packages/kit`)
 - Lint: `npx eslint --fix path/to/changed/file1.ts path/to/changed/file2.ts`
 - Fix any build or lint errors before considering a task complete.
+
+## Testing
+
+- **Service-level tests** isolate domain logic with in-memory fakes from `test/unit/core/helpers/` (`FakeEntityRepository`, `FakeRealmRepository`, `createAllowAllActor()` etc.). No HTTP, no Docker.
+- **HTTP-level tests** spin up the real server on a random port. Use `suite.client` (typed `@authup/core-http-kit` Client) for API calls; `suite.baseURL` for raw `fetch()` (e.g., asserting HTML response bodies).
+- **UI/SSR tests** are not yet supported. The bundled SSR Vue app fires unawaited HTTP calls during render against `config.publicUrl`, which leak unhandled rejections in any test environment where that URL doesn't reach a live server. Adding HTTP-level tests for `/authorize` requires an injectable HTTP client; design work is tracked outside this file.
 
 ## File Organization
 

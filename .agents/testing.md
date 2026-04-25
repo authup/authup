@@ -53,6 +53,20 @@ Location: `test/unit/http/controllers/entities/{entity}.spec.ts`
 
 Integration tests that spin up the full application (database, HTTP server). Test HTTP client compatibility (`core-http-kit`), request/response shaping, middleware pipeline, and end-to-end wiring. Require Docker services.
 
+`test/app/http.ts` exposes:
+- `suite.client` — a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
+- `suite.baseURL` — the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
+
+### Testing the SSR'd consent UI is not yet supported
+
+`GET /authorize` returns SSR'd HTML built from the bundled Vue app under `apps/server-core/ui/`. The SSR fires several unawaited HTTP calls during render against `config.publicUrl` (`store.resolve()` for session hydration, `IdentityProviderAPI.getMany()`, `AuthorizeScopes.vue`'s scope fetch). In a test environment where `publicUrl` doesn't reach a live server, those fetches `ECONNREFUSE` and leak unhandled rejections that fail vitest.
+
+Workarounds that don't work:
+- Suppressing `unhandledRejection` — vitest catches them through its own infrastructure.
+- Pinning `config.port` to match `publicUrl` — breaks parallel runs.
+
+The right fix is an injectable HTTP client so tests can stub the SSR's outbound calls. Until that lands, `GET /authorize` is covered indirectly: the assets middleware unit tests assert path resolution, and `apps/server-core` ships a self-contained tarball whose SSR `render()` is verified manually via `npm pack` smoke testing.
+
 ## Code Coverage
 
 ### Generate coverage report

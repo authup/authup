@@ -11,7 +11,7 @@ import { createHandler } from '@routup/assets';
 import path from 'node:path';
 import type { Router } from 'routup';
 import { coreHandler, setRequestParam } from 'routup';
-import { CLIENT_WEB_SLIM_PACKAGE_PATH, DIST_PATH, PACKAGE_PATH } from '../../../../path.ts';
+import { PACKAGE_PATH, UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../path.ts';
 
 export async function registerAssetsMiddleware(router: Router) {
     if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
@@ -24,7 +24,7 @@ export async function registerAssetsMiddleware(router: Router) {
         ));
 
         router.use('public', createHandler(
-            path.posix.join(DIST_PATH, 'client'),
+            path.posix.join(UI_DIST_PATH, 'client'),
             {
                 fallthrough: false,
                 scan: false,
@@ -42,7 +42,7 @@ export async function registerAssetsMiddleware(router: Router) {
      * @type {import('vite').ViteDevServer}
      */
     const server = await vite.createServer({
-        root: CLIENT_WEB_SLIM_PACKAGE_PATH,
+        root: UI_SOURCE_PATH,
         base: '/public/',
         logLevel: 'error',
         server: {

@@ -7,7 +7,6 @@
 
         "apps/authup": {"component": "authup"},
         "apps/client-web": {"component": "client-web"},
-        "apps/client-web-slim": {"component": "client-web-slim"},
         "apps/server-core": {"component": "server-core"},
 
         "packages/access": {"component": "access"},
@@ -38,7 +37,6 @@
 
                 "authup",
                 "client-web",
-                "client-web-slim",
                 "server-core",
 
                 "access",
