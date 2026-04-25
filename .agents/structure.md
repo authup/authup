@@ -9,8 +9,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 |-------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](../apps/authup)                  | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
 | [client-web](../apps/client-web)          | Application | A Nuxt-based web application interface for end users.                                                 |
-| [client-web-slim](../apps/client-web-slim)| Application | A lightweight Vue 3 + Vite web application, alternative to the Nuxt-based client-web.                |
-| [server-core](../apps/server-core)        | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
+| [server-core](../apps/server-core)        | Service     | A service that forms the backbone of the server-side ecosystem. Embeds a Vite-built Vue 3 consent UI for the OAuth2 `/authorize` endpoint under `ui/`, emitted to `dist/ui/` at build time. |
 
 ## Packages & Libraries
 
@@ -61,9 +60,9 @@ Application libraries:
   client-web-nuxt   → access, kit, client-web-kit
 
 Apps:
-  server-core       → access, kit, core-kit, core-http-kit, errors, server-kit, specs (dev: client-web-slim)
+  server-core       → access, kit, core-kit, core-http-kit, errors, server-kit, specs
+                      (embedded consent UI under ui/ uses client-web-kit, kit, core-kit, core-http-kit — build-time only)
   client-web        → client-web-kit, kit, core-kit, core-http-kit, client-web-nuxt
-  client-web-slim   → client-web-kit, kit, core-kit, core-http-kit
   authup (CLI)      → client-web, kit, core-kit, server-core
 ```
 

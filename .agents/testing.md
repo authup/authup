@@ -53,6 +53,30 @@ Location: `test/unit/http/controllers/entities/{entity}.spec.ts`
 
 Integration tests that spin up the full application (database, HTTP server). Test HTTP client compatibility (`core-http-kit`), request/response shaping, middleware pipeline, and end-to-end wiring. Require Docker services.
 
+`test/app/http.ts` exposes:
+- `suite.client` — a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
+- `suite.baseURL` — the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
+
+### Testing UI / SSR with a fake HTTP client
+
+For tests that exercise the SSR'd consent UI at `/authorize` (or any future code path that mounts the bundled Vue app), you cannot let the SSR's internal HTTP calls reach a real server — `config.publicUrl` defaults to `:3001` while the test server runs on a random port, and the dangling fetches leak unhandled rejections.
+
+The supported pattern (see plan 003 once implemented) is:
+
+```ts
+import { createFakeClient } from '@authup/core-http-kit/testing';
+
+const fakeHttpClient = createFakeClient({
+    handlers: {
+        'GET /clients/:id': ({ params }) => ({ id: params.id, name: 'Test' }),
+        'GET /scopes': () => ({ data: [], meta: { total: 0 } }),
+        '*': () => ({ data: [], meta: { total: 0 } }),
+    },
+});
+```
+
+The fake is wired into the SSR via the optional `httpClient` parameter on `@authup/client-web-kit`'s `install()`. Production code never imports from `@authup/core-http-kit/testing`.
+
 ## Code Coverage
 
 ### Generate coverage report

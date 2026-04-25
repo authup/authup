@@ -8,6 +8,10 @@ export default defineConfig({
     dts: false,
     sourcemap: true,
     shims: true,
+    // The Vite-built UI lives at dist/ui/. tsdown's default `clean: true` would
+    // wipe it on every server-only rebuild. Top-level `npm run build` does the
+    // full clean via `rimraf ./dist` before this runs.
+    clean: false,
     plugins: [
         swc.rolldown({
             jsc: {

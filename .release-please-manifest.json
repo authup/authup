@@ -2,7 +2,6 @@
     ".": "1.0.0-beta.37",
     "apps/authup": "1.0.0-beta.37",
     "apps/client-web": "1.0.0-beta.37",
-    "apps/client-web-slim": "1.0.0-beta.37",
     "apps/server-core": "1.0.0-beta.37",
     "packages/access": "1.0.0-beta.37",
     "packages/client-web-kit": "1.0.0-beta.37",

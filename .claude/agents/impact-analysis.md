@@ -49,9 +49,8 @@ packages/server-kit      — Server utilities
 packages/server-adapter-kit — Token verification core
 packages/server-adapter-http — HTTP middleware adapter
 packages/server-adapter-socket-io — Socket.io adapter
-apps/server-core         — Main server application
+apps/server-core         — Main server application (with embedded Vite UI at ui/)
 apps/client-web          — Nuxt web app
-apps/client-web-slim     — Vite web app
 apps/authup              — CLI
 ```
 

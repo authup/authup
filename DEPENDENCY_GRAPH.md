@@ -38,7 +38,6 @@ graph TD
     subgraph Apps
         server-core
         client-web
-        client-web-slim
         authup
     end
 
@@ -100,16 +99,11 @@ graph TD
     server-core --> kit
     server-core --> server-kit
     server-core --> specs
-    server-core --> client-web-slim
     client-web --> client-web-kit
     client-web --> kit
     client-web --> core-kit
     client-web --> core-http-kit
     client-web --> client-web-nuxt
-    client-web-slim --> client-web-kit
-    client-web-slim --> kit
-    client-web-slim --> core-kit
-    client-web-slim --> core-http-kit
     authup --> client-web
     authup --> kit
     authup --> core-kit

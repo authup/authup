@@ -6,7 +6,7 @@
 |------------------|---------------------------------------------------|
 | NX               | Monorepo task runner (dependency-ordered builds)   |
 | tsdown           | Package JS bundling (rolldown-based)               |
-| Vite             | client-web-slim builds                            |
+| Vite             | server-core embedded UI builds (`apps/server-core/ui/`) |
 | Nuxt             | client-web builds                                 |
 | Vitest + SWC     | Test runner with fast compilation                  |
 | ESLint           | Linting (`@tada5hi/eslint-config-vue-typescript`) |
@@ -25,6 +25,12 @@
 - Build: `npm run build -w <workspace>` (from repo root, e.g. `-w apps/server-core`, `-w packages/kit`)
 - Lint: `npx eslint --fix path/to/changed/file1.ts path/to/changed/file2.ts`
 - Fix any build or lint errors before considering a task complete.
+
+## Testing
+
+- **Service-level tests** isolate domain logic with in-memory fakes from `test/unit/core/helpers/` (`FakeEntityRepository`, `FakeRealmRepository`, `createAllowAllActor()` etc.). No HTTP, no Docker.
+- **HTTP-level tests** spin up the real server on a random port. Use `suite.client` (typed `@authup/core-http-kit` Client) for API calls; `suite.baseURL` for raw `fetch()` (e.g., asserting HTML response bodies).
+- **UI/SSR tests** never let the bundled Vue app reach a real server. Inject `createFakeClient(handlers)` from `@authup/core-http-kit/testing` via `install({ httpClient })`. Production code must not import the `testing` subpath. (See `.agents/testing.md` and plan 003.)
 
 ## File Organization
 

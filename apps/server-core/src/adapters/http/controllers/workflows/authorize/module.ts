@@ -20,7 +20,7 @@ import { send, useRequestParam } from 'routup';
 import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
-import { CLIENT_WEB_SLIM_PACKAGE_PATH } from '../../../../../path.ts';
+import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../../path.ts';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
@@ -133,8 +133,6 @@ export class AuthorizeController {
         let manifest : Record<string, any>;
         let render : CallableFunction;
 
-        const clientWebSlimPackagePath = CLIENT_WEB_SLIM_PACKAGE_PATH;
-
         if (isJIT) {
             /**
              * @type {import('vite').ViteDevServer}
@@ -142,7 +140,7 @@ export class AuthorizeController {
             const vite = useRequestParam(req, 'viteServer');
 
             html = await fs.promises.readFile(
-                path.join(clientWebSlimPackagePath, 'index.html'),
+                path.join(UI_SOURCE_PATH, 'index.html'),
                 'utf-8',
             );
             html = await vite.transformIndexHtml('/', html);
@@ -150,16 +148,16 @@ export class AuthorizeController {
             render = (await vite.ssrLoadModule('/src/server.ts')).render;
         } else {
             html = await fs.promises.readFile(
-                path.join(clientWebSlimPackagePath, 'dist', 'client', 'index.html'),
+                path.join(UI_DIST_PATH, 'client', 'index.html'),
                 'utf-8',
             );
 
             manifest = JSON.parse(await fs.promises.readFile(
-                path.join(clientWebSlimPackagePath, 'dist', 'client', '.vite', 'ssr-manifest.json'),
+                path.join(UI_DIST_PATH, 'client', '.vite', 'ssr-manifest.json'),
                 'utf-8',
             ));
 
-            render = (await load(path.join(clientWebSlimPackagePath, 'dist', 'server', 'server.js'))).render;
+            render = (await load(path.join(UI_DIST_PATH, 'server', 'server.js'))).render;
         }
 
         const [appHtml, preloadLinks] = await render({

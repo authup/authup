@@ -344,17 +344,21 @@ export default defineConfig({
                             items: [
                                 {
                                     text: 'Records',
-                                    link: '/sdks/javascript/client-web-kit/records', 
+                                    link: '/sdks/javascript/client-web-kit/records',
                                 },
                                 {
                                     text: 'Forms',
-                                    link: '/sdks/javascript/client-web-kit/forms', 
+                                    link: '/sdks/javascript/client-web-kit/forms',
                                 },
                                 {
                                     text: 'Collections',
-                                    link: '/sdks/javascript/client-web-kit/collections', 
+                                    link: '/sdks/javascript/client-web-kit/collections',
                                 },
                             ],
+                        },
+                        {
+                            text: 'Testing',
+                            link: '/sdks/javascript/client-web-kit/testing',
                         },
                     ],
                 },

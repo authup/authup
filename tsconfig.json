@@ -9,7 +9,6 @@
             "@authup/authup": ["apps/authup/src"],
             "@authup/client-web-kit": ["packages/client-web-kit/src"],
             "@authup/client-web-nuxt": ["packages/client-web-nuxt/src"],
-            "@authup/client-web-slim": ["apps/client-web-slim/src"],
             "@authup/core-http-kit": ["packages/core-http-kit/src"],
             "@authup/core-kit": ["packages/core-kit/src"],
             "@authup/core-realtime-kit": ["packages/core-realtime-kit/src"],
