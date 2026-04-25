@@ -7,56 +7,26 @@
 
 import { randomUUID } from 'node:crypto';
 import type {
-    Identity, 
-    Realm, 
-    Session, 
+    Identity,
+    Realm,
     User,
 } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
-import type { OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
-    vi,
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { IdentityGrantType } from '../../../../../src/core/oauth2/grant-types/identity.ts';
-import type { IOAuth2TokenIssuer } from '../../../../../src/core/oauth2/token/issuer/types.ts';
-import type { ISessionManager } from '../../../../../src/core/authentication/session/types.ts';
-
-function createMockTokenIssuer(): IOAuth2TokenIssuer {
-    const tokenId = randomUUID();
-    return {
-        issue: vi.fn().mockImplementation(async (input: OAuth2TokenPayload) => {
-            const payload: OAuth2TokenPayload = {
-                ...input,
-                jti: tokenId,
-                exp: Math.floor(Date.now() / 1000) + 3600,
-            } as OAuth2TokenPayload;
-            return [`signed-token-${tokenId}`, payload];
-        }),
-        buildExp: vi.fn().mockReturnValue(Math.floor(Date.now() / 1000) + 3600),
-    };
-}
-
-function createMockSessionManager(): ISessionManager {
-    const sessionId = randomUUID();
-    return {
-        create: vi.fn().mockImplementation(async (session: Partial<Session>) => ({
-            id: sessionId,
-            ...session,
-        })),
-        touch: vi.fn(),
-        findById: vi.fn(),
-    } as unknown as ISessionManager;
-}
+import { FakeOAuth2TokenIssuer } from '../../helpers/fake-oauth2-token-issuer.ts';
+import { FakeSessionManager } from '../../helpers/fake-session-manager.ts';
 
 describe('IdentityGrantType', () => {
-    let accessTokenIssuer: IOAuth2TokenIssuer;
-    let refreshTokenIssuer: IOAuth2TokenIssuer;
-    let sessionManager: ISessionManager;
+    let accessTokenIssuer: FakeOAuth2TokenIssuer;
+    let refreshTokenIssuer: FakeOAuth2TokenIssuer;
+    let sessionManager: FakeSessionManager;
     let grant: IdentityGrantType;
 
     const realmId = randomUUID();
@@ -69,15 +39,15 @@ describe('IdentityGrantType', () => {
             realm_id: realmId,
             realm: {
                 id: realmId,
-                name: 'master', 
+                name: 'master',
             } as Realm,
         } as User,
     };
 
     beforeEach(() => {
-        accessTokenIssuer = createMockTokenIssuer();
-        refreshTokenIssuer = createMockTokenIssuer();
-        sessionManager = createMockSessionManager();
+        accessTokenIssuer = new FakeOAuth2TokenIssuer();
+        refreshTokenIssuer = new FakeOAuth2TokenIssuer();
+        sessionManager = new FakeSessionManager();
         grant = new IdentityGrantType({
             accessTokenIssuer,
             refreshTokenIssuer,

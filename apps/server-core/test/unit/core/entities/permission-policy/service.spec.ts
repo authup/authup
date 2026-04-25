@@ -20,7 +20,7 @@ import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 
 describe('core/entities/permission-policy/service', () => {
     let repository: FakeEntityRepository<PermissionPolicy>;

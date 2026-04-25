@@ -10,11 +10,10 @@ import { PermissionName } from '@authup/core-kit';
 import type { Client, Role } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
-    vi,
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientService } from '../../../../../src/core/entities/client/service.ts';
@@ -25,7 +24,7 @@ import {
     createAllowAllActor,
     createDenyAllActor,
     createNonMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 import { createFakeClient } from '../../../../utils/domains/index.ts';
 
 class FakeClientRepository extends FakeEntityRepository<Client> implements IClientRepository {
@@ -82,7 +81,7 @@ describe('core/entities/client/service', () => {
             ]);
 
             const actor = createAllowAllActor();
-            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);

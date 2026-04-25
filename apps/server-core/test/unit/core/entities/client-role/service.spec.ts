@@ -13,31 +13,26 @@ import {
     describe,
     expect,
     it,
-    vi,
 } from 'vitest';
 import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientRoleService } from '../../../../../src/core/entities/client-role/service.ts';
-import type { IIdentityPermissionProvider } from '../../../../../src/core/identity/permission/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
     createMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 
 describe('core/entities/client-role/service', () => {
     let repository: FakeEntityRepository<ClientRole>;
     let service: ClientRoleService;
 
-    let identityPermissionProvider: IIdentityPermissionProvider;
+    let identityPermissionProvider: FakeIdentityPermissionProvider;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<ClientRole>();
-        identityPermissionProvider = {
-            getFor: vi.fn(),
-            isSuperset: vi.fn().mockResolvedValue(true),
-            resolveJunctionPolicy: vi.fn(),
-        };
+        identityPermissionProvider = new FakeIdentityPermissionProvider();
         service = new ClientRoleService({ repository, identityPermissionProvider });
     });
 
@@ -129,11 +124,8 @@ describe('core/entities/client-role/service', () => {
         });
 
         it('should throw ForbiddenError when actor does not own role permissions (superset check)', async () => {
-            const identityPermissionProviderDeny: IIdentityPermissionProvider = {
-                getFor: vi.fn(),
-                isSuperset: vi.fn().mockResolvedValue(false),
-                resolveJunctionPolicy: vi.fn(),
-            };
+            const identityPermissionProviderDeny = new FakeIdentityPermissionProvider();
+            identityPermissionProviderDeny.setSuperset(false);
             const svc = new ClientRoleService({ repository, identityPermissionProvider: identityPermissionProviderDeny });
 
             repository.onValidateJoinColumns((data: any) => {

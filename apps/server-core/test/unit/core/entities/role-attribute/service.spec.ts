@@ -9,11 +9,10 @@ import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
-    vi,
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RoleAttributeService } from '../../../../../src/core/entities/role-attribute/service.ts';
@@ -21,7 +20,7 @@ import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 import { createFakeRoleAttribute } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/role-attribute/service', () => {
@@ -55,9 +54,9 @@ describe('core/entities/role-attribute/service', () => {
             ]);
 
             const actor = createAllowAllActor();
-            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockImplementation(async (ctx: any) => {
-                if (ctx.input) {
-                    const entity = ctx.input.get('attributes');
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'evaluateOneOf' && call.ctx.input) {
+                    const entity = call.ctx.input.get('attributes');
                     if (entity && entity.id === denied.id) {
                         throw new ForbiddenError();
                     }

@@ -24,7 +24,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 import { createFakeScope } from '../../../../utils/domains/index.ts';
 
 class FakeScopeRepository extends FakeEntityRepository<Scope> implements IScopeRepository {

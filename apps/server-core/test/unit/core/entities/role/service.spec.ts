@@ -25,7 +25,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 import { createFakeRole } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/role/service', () => {

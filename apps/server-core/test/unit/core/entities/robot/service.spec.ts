@@ -18,11 +18,10 @@ import type {
 } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
-    vi,
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RobotService } from '../../../../../src/core/entities/robot/service.ts';
@@ -33,8 +32,9 @@ import {
     createAllowAllActor,
     createDenyAllActor,
     createNonMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
-import type { ActorContext } from '../../../../../src/core/entities/actor/types.ts';
+} from '../../helpers/fake-actor.ts';
+import type { FakeActorContext } from '../../helpers/fake-actor.ts';
+import { FakePermissionEvaluator } from '../../helpers/fake-permission-evaluator.ts';
 import { createFakeRobot } from '../../../../utils/domains/index.ts';
 
 class FakeRobotRepository extends FakeEntityRepository<Robot> implements IRobotRepository {
@@ -55,15 +55,10 @@ class FakeRobotRepository extends FakeEntityRepository<Robot> implements IRobotR
     }
 }
 
-function createUserActorAsOwner(userId: string): ActorContext {
+function createUserActorAsOwner(userId: string): FakeActorContext {
     const realmId = randomUUID();
     return {
-        permissionEvaluator: {
-            evaluate: vi.fn().mockResolvedValue(undefined),
-            evaluateOneOf: vi.fn().mockResolvedValue(undefined),
-            preEvaluate: vi.fn().mockResolvedValue(undefined),
-            preEvaluateOneOf: vi.fn().mockResolvedValue(undefined),
-        },
+        permissionEvaluator: new FakePermissionEvaluator(),
         identity: {
             type: IdentityType.USER,
             data: {
@@ -71,7 +66,7 @@ function createUserActorAsOwner(userId: string): ActorContext {
                 realm_id: realmId,
                 realm: {
                     id: realmId,
-                    name: 'test', 
+                    name: 'test',
                 } as Realm,
             } as User,
         },
@@ -107,13 +102,8 @@ describe('core/entities/robot/service', () => {
                 createFakeRobot({ name: 'other-robot' }),
             ]);
 
-            const actor: ActorContext = {
-                permissionEvaluator: {
-                    evaluate: vi.fn().mockResolvedValue(undefined),
-                    evaluateOneOf: vi.fn().mockResolvedValue(undefined),
-                    preEvaluate: vi.fn().mockResolvedValue(undefined),
-                    preEvaluateOneOf: vi.fn().mockResolvedValue(undefined),
-                },
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
                 identity: {
                     type: IdentityType.ROBOT,
                     data: {
@@ -121,13 +111,13 @@ describe('core/entities/robot/service', () => {
                         realm_id: realmId,
                         realm: {
                             id: realmId,
-                            name: 'test', 
+                            name: 'test',
                         } as Realm,
                     } as Robot,
                 },
             };
 
-            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
@@ -273,8 +263,8 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot({ user_id: userId }));
 
             const actor = createUserActorAsOwner(userId);
-            vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
-            vi.mocked(actor.permissionEvaluator.preEvaluate).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('evaluate');
+            actor.permissionEvaluator.deny('preEvaluate');
 
             const result = await service.delete(entity.id, actor);
             expect(result.id).toBe(entity.id);
@@ -284,7 +274,7 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot({ user_id: randomUUID() }));
 
             const actor = createUserActorAsOwner(randomUUID());
-            vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('evaluate');
 
             await expect(service.delete(entity.id, actor)).rejects.toThrow(ForbiddenError);
         });
@@ -293,7 +283,7 @@ describe('core/entities/robot/service', () => {
             const entity = repository.seed(createFakeRobot({ user_id: null }));
 
             const actor = createUserActorAsOwner(randomUUID());
-            vi.mocked(actor.permissionEvaluator.evaluate).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('evaluate');
 
             await expect(service.delete(entity.id, actor)).rejects.toThrow(ForbiddenError);
         });
