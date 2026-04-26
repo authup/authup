@@ -59,10 +59,8 @@ export class FakeOAuth2TokenRepository implements IOAuth2TokenRepository {
 
     async insert(payload: OAuth2TokenPayload): Promise<OAuth2TokenPayload> {
         this.insertCalls.push(payload);
-        const stored = { jti: randomUUID(), ...payload } as OAuth2TokenPayload;
-        if (stored.jti) {
-            this.byId.set(stored.jti, stored);
-        }
+        const stored = { ...payload, jti: payload.jti ?? randomUUID() } as OAuth2TokenPayload;
+        this.byId.set(stored.jti, stored);
         return stored;
     }
 
