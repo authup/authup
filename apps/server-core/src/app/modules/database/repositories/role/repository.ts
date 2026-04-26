@@ -13,7 +13,7 @@ import { applyQuery, isEntityUnique, validateEntityJoinColumns } from 'typeorm-e
 import type { EntityRepositoryFindManyResult, IRealmRepository, IRoleRepository } from '../../../../../core/index.ts';
 import { DatabaseConflictError } from '../../../../../adapters/database/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
-import { loadBoundPermissions } from '../bindings.ts';
+import { loadBoundPermissions, loadBoundPermissionsForMany } from '../bindings.ts';
 import {
     CachePrefix,
     RoleEntity,
@@ -150,7 +150,12 @@ export class RoleRepositoryAdapter implements IRoleRepository {
     }
 
     async getBoundPermissionsForMany(entities: (string | Role)[]): Promise<PermissionPolicyBinding[]> {
-        const results = await Promise.all(entities.map((entity) => this.getBoundPermissions(entity)));
-        return results.flat();
+        const ids = entities.map((entity) => (typeof entity === 'string' ? entity : entity.id));
+        return loadBoundPermissionsForMany({
+            manager: this.repository.manager,
+            junctionTarget: RolePermissionEntity,
+            column: 'role_id',
+            ids,
+        });
     }
 }

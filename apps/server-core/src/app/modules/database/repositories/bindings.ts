@@ -5,6 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import {
+    In,
+} from 'typeorm';
 import type {
     EntityManager,
     EntityTarget,
@@ -30,6 +33,8 @@ type PermissionJunction = {
     policy_id?: string | null;
 };
 
+const IN_CLAUSE_CHUNK_SIZE = 500;
+
 export async function loadBoundPermissions<E extends PermissionJunction & ObjectLiteral>(
     options: LoadBoundPermissionsOptions<E>,
 ): Promise<PermissionPolicyBinding[]> {
@@ -45,6 +50,47 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
         },
     });
 
+    return mapEntriesToBindings(options.manager, entries);
+}
+
+export type LoadBoundPermissionsForManyOptions<E extends ObjectLiteral> = {
+    manager: EntityManager;
+    junctionTarget: EntityTarget<E>;
+    column: keyof E & string;
+    ids: string[];
+    chunkSize?: number;
+};
+
+export async function loadBoundPermissionsForMany<E extends PermissionJunction & ObjectLiteral>(
+    options: LoadBoundPermissionsForManyOptions<E>,
+): Promise<PermissionPolicyBinding[]> {
+    if (options.ids.length === 0) {
+        return [];
+    }
+
+    const repository = options.manager.getRepository(options.junctionTarget);
+    const relations = { permission: true } as FindOptionsRelations<E>;
+    const chunkSize = options.chunkSize ?? IN_CLAUSE_CHUNK_SIZE;
+
+    const chunks: string[][] = [];
+    for (let i = 0; i < options.ids.length; i += chunkSize) {
+        chunks.push(options.ids.slice(i, i + chunkSize));
+    }
+
+    const results = await Promise.all(
+        chunks.map((chunk) => repository.find({
+            where: { [options.column]: In(chunk) } as FindOptionsWhere<E>,
+            relations,
+        })),
+    );
+
+    return mapEntriesToBindings(options.manager, results.flat());
+}
+
+async function mapEntriesToBindings<E extends PermissionJunction & ObjectLiteral>(
+    manager: EntityManager,
+    entries: E[],
+): Promise<PermissionPolicyBinding[]> {
     const policyIds = new Set<string>();
     for (const entry of entries) {
         if (entry.policy_id) {
@@ -52,7 +98,7 @@ export async function loadBoundPermissions<E extends PermissionJunction & Object
         }
     }
 
-    const policyTrees = await loadPolicyTrees(options.manager, [...policyIds]);
+    const policyTrees = await loadPolicyTrees(manager, [...policyIds]);
 
     return entries.map((entry) => {
         const policies: BasePolicy[] = [];
