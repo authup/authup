@@ -20,7 +20,7 @@ import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 
 describe('core/entities/client-scope/service', () => {
     let repository: FakeEntityRepository<ClientScope>;
@@ -35,7 +35,7 @@ describe('core/entities/client-scope/service', () => {
         it('should call preCheckOneOf with client permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.CLIENT_READ,
                     PermissionName.CLIENT_UPDATE,
@@ -88,7 +88,7 @@ describe('core/entities/client-scope/service', () => {
                 client_id: randomUUID(),
                 scope_id: randomUUID(), 
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_SCOPE_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_SCOPE_CREATE });
         });
 
         it('should throw validation error when client_id is missing', async () => {
@@ -145,7 +145,7 @@ describe('core/entities/client-scope/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.CLIENT_SCOPE_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_SCOPE_DELETE });
         });
     });
 });

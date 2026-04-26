@@ -25,7 +25,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 import { createFakeRole } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/role/service', () => {
@@ -59,7 +59,7 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
 
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.ROLE_READ,
                     PermissionName.ROLE_UPDATE,
@@ -123,14 +123,14 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'new-role' }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_CREATE });
         });
 
         it('should call check with ROLE_CREATE and PolicyData on create', async () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'policy-role' }, actor);
 
-            expect(actor.permissionEvaluator.evaluate).toHaveBeenCalledWith(
+            expect(actor.permissionEvaluator.evaluateCalls).toContainEqual(
                 expect.objectContaining({
                     name: PermissionName.ROLE_CREATE,
                     input: expect.anything(),
@@ -184,7 +184,7 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.update(entity.id, { name: 'new-name' }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_UPDATE });
         });
     });
 
@@ -340,7 +340,7 @@ describe('core/entities/role/service', () => {
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_DELETE });
         });
 
         it('should prevent deletion of the admin role', async () => {

@@ -21,7 +21,7 @@ import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 import { createFakeRealm } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/realm/service', () => {
@@ -74,7 +74,7 @@ describe('core/entities/realm/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-realm' }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.REALM_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.REALM_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -206,7 +206,7 @@ describe('core/entities/realm/service', () => {
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.REALM_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.REALM_DELETE });
         });
 
         it('should throw when actor lacks permission', async () => {

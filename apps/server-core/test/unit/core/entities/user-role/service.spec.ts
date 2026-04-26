@@ -13,31 +13,26 @@ import {
     describe,
     expect,
     it,
-    vi,
 } from 'vitest';
 import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { UserRoleService } from '../../../../../src/core/entities/user-role/service.ts';
-import type { IIdentityPermissionProvider } from '../../../../../src/core/identity/permission/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
     createMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 
 describe('core/entities/user-role/service', () => {
     let repository: FakeEntityRepository<UserRole>;
     let service: UserRoleService;
 
-    let identityPermissionProvider: IIdentityPermissionProvider;
+    let identityPermissionProvider: FakeIdentityPermissionProvider;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<UserRole>();
-        identityPermissionProvider = {
-            getFor: vi.fn(),
-            isSuperset: vi.fn().mockResolvedValue(true),
-            resolveJunctionPolicy: vi.fn(),
-        };
+        identityPermissionProvider = new FakeIdentityPermissionProvider();
         service = new UserRoleService({ repository, identityPermissionProvider });
     });
 
@@ -45,7 +40,7 @@ describe('core/entities/user-role/service', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.USER_ROLE_READ,
                     PermissionName.USER_ROLE_CREATE,
@@ -98,7 +93,7 @@ describe('core/entities/user-role/service', () => {
                 user_id: randomUUID(),
                 role_id: randomUUID(), 
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_ROLE_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_ROLE_CREATE });
         });
 
         it('should throw validation error when user_id is missing', async () => {
@@ -129,11 +124,8 @@ describe('core/entities/user-role/service', () => {
         });
 
         it('should throw ForbiddenError when actor does not own role permissions (superset check)', async () => {
-            const identityPermissionProviderDeny: IIdentityPermissionProvider = {
-                getFor: vi.fn(),
-                isSuperset: vi.fn().mockResolvedValue(false),
-                resolveJunctionPolicy: vi.fn(),
-            };
+            const identityPermissionProviderDeny = new FakeIdentityPermissionProvider();
+            identityPermissionProviderDeny.setSuperset(false);
             const svc = new UserRoleService({ repository, identityPermissionProvider: identityPermissionProviderDeny });
 
             repository.onValidateJoinColumns((data: any) => {
@@ -172,7 +164,7 @@ describe('core/entities/user-role/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_ROLE_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_ROLE_DELETE });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {

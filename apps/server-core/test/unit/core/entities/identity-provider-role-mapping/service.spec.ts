@@ -13,38 +13,30 @@ import {
     describe,
     expect,
     it,
-    vi,
 } from 'vitest';
-import { 
-    BadRequestError, 
-    ConflictError, 
-    ForbiddenError, 
-    NotFoundError, 
+import {
+    BadRequestError,
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
 } from '@ebec/http';
 import { IdentityProviderRoleMappingService } from '../../../../../src/core/entities/identity-provider-role-mapping/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
     createMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 
 describe('core/entities/identity-provider-role-mapping/service', () => {
     let repository: FakeEntityRepository<IdentityProviderRoleMapping>;
-    let identityPermissionProvider: {
-        getFor: ReturnType<typeof vi.fn>;
-        isSuperset: ReturnType<typeof vi.fn>;
-        resolveJunctionPolicy: ReturnType<typeof vi.fn>;
-    };
+    let identityPermissionProvider: FakeIdentityPermissionProvider;
     let service: IdentityProviderRoleMappingService;
 
     beforeEach(() => {
         repository = new FakeEntityRepository<IdentityProviderRoleMapping>();
-        identityPermissionProvider = {
-            getFor: vi.fn(),
-            isSuperset: vi.fn().mockResolvedValue(true),
-            resolveJunctionPolicy: vi.fn(),
-        };
+        identityPermissionProvider = new FakeIdentityPermissionProvider();
         service = new IdentityProviderRoleMappingService({ repository, identityPermissionProvider });
     });
 
@@ -52,7 +44,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         it('should call preEvaluateOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.IDENTITY_PROVIDER_READ,
                     PermissionName.IDENTITY_PROVIDER_UPDATE,
@@ -109,7 +101,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
                 provider_id: randomUUID(),
                 role_id: randomUUID(),
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -183,7 +175,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
                 data.role = { realm_id: realmId, client_id: null };
             });
 
-            identityPermissionProvider.isSuperset.mockResolvedValueOnce(false);
+            identityPermissionProvider.setSuperset(false);
 
             await expect(
                 service.create({
@@ -218,7 +210,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.update(entity.id, { name: 'test' }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -265,7 +257,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.IDENTITY_PROVIDER_ROLE_DELETE });
         });
     });
 });

@@ -23,7 +23,7 @@ import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 
 describe('core/entities/role-permission/service', () => {
     let repository: FakeEntityRepository<RolePermission>;
@@ -44,7 +44,7 @@ describe('core/entities/role-permission/service', () => {
         it('should call preCheckOneOf with correct permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.ROLE_PERMISSION_DELETE,
                     PermissionName.ROLE_PERMISSION_READ,
@@ -96,7 +96,7 @@ describe('core/entities/role-permission/service', () => {
                 role_id: randomUUID(),
                 permission_id: randomUUID(),
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_PERMISSION_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_PERMISSION_CREATE });
         });
 
         it('should preCheck permission name when permission is provided', async () => {
@@ -110,7 +110,7 @@ describe('core/entities/role-permission/service', () => {
                 permission_id: randomUUID(),
             }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({
                 name: 'custom-perm',
                 realmId: null,
                 clientId: undefined,
@@ -129,7 +129,7 @@ describe('core/entities/role-permission/service', () => {
                 permission_id: randomUUID(),
             }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).not.toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateCalls).not.toContainEqual({
                 name: 'custom-perm',
                 realmId: null,
                 clientId: undefined,
@@ -202,7 +202,7 @@ describe('core/entities/role-permission/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.update(entity.id, { policy_id: null }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_PERMISSION_UPDATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_PERMISSION_UPDATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -243,7 +243,7 @@ describe('core/entities/role-permission/service', () => {
             const entity = repository.seed({});
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.ROLE_PERMISSION_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROLE_PERMISSION_DELETE });
         });
     });
 });

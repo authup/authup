@@ -13,11 +13,10 @@ import {
 import type { Realm, Role, User } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
-    vi,
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
 import { UserService } from '../../../../../src/core/entities/user/service.ts';
@@ -28,8 +27,9 @@ import {
     createAllowAllActor,
     createDenyAllActor,
     createNonMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
-import type { ActorContext } from '../../../../../src/core/entities/actor/types.ts';
+} from '../../helpers/fake-actor.ts';
+import type { FakeActorContext } from '../../helpers/fake-actor.ts';
+import { FakePermissionEvaluator } from '../../helpers/fake-permission-evaluator.ts';
 import { createFakeUser } from '../../../../utils/domains/index.ts';
 
 class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepository {
@@ -54,15 +54,10 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
     }
 }
 
-function createSelfActor(userId: string, userName?: string, realmId?: string): ActorContext {
+function createSelfActor(userId: string, userName?: string, realmId?: string): FakeActorContext {
     const rId = realmId || randomUUID();
     return {
-        permissionEvaluator: {
-            evaluate: vi.fn().mockResolvedValue(undefined),
-            evaluateOneOf: vi.fn().mockResolvedValue(undefined),
-            preEvaluate: vi.fn().mockResolvedValue(undefined),
-            preEvaluateOneOf: vi.fn().mockResolvedValue(undefined),
-        },
+        permissionEvaluator: new FakePermissionEvaluator(),
         identity: {
             type: IdentityType.USER,
             data: {
@@ -71,7 +66,7 @@ function createSelfActor(userId: string, userName?: string, realmId?: string): A
                 realm_id: rId,
                 realm: {
                     id: rId,
-                    name: 'test-realm', 
+                    name: 'test-realm',
                 } as Realm,
             } as User,
         },
@@ -102,7 +97,7 @@ describe('core/entities/user/service', () => {
         it('should call preCheckOneOf with read/update/delete permissions', async () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.USER_READ,
                     PermissionName.USER_UPDATE,
@@ -122,7 +117,7 @@ describe('core/entities/user/service', () => {
             ]);
 
             const actor = createSelfActor(selfUser.id);
-            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(1);
@@ -133,7 +128,7 @@ describe('core/entities/user/service', () => {
             repository.seed([createFakeUser({ name: 'other' })]);
 
             const actor = createSelfActor(randomUUID());
-            vi.mocked(actor.permissionEvaluator.evaluateOneOf).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('evaluateOneOf');
 
             const result = await service.getMany({}, actor);
             expect(result.data).toHaveLength(0);
@@ -158,11 +153,11 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
-            vi.mocked(actor.permissionEvaluator.preEvaluateOneOf).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             const result = await service.getOne(entity.id, actor);
             expect(result.id).toBe(entity.id);
-            expect(actor.permissionEvaluator.preEvaluateOneOf).not.toHaveBeenCalled();
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
         });
 
         it('should allow self-access by name without permission check', async () => {
@@ -170,7 +165,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: userName }));
 
             const actor = createSelfActor(entity.id, userName);
-            vi.mocked(actor.permissionEvaluator.preEvaluateOneOf).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             const result = await service.getOne(userName, actor);
             expect(result.id).toBe(entity.id);
@@ -220,7 +215,7 @@ describe('core/entities/user/service', () => {
                 name: 'test-user',
                 email: 'test@example.com', 
             }, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -271,7 +266,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
-            vi.mocked(actor.permissionEvaluator.preEvaluate).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('preEvaluate');
 
             const result = await service.update(entity.id, { display_name: 'Updated' }, actor);
             expect(result.display_name).toBe('Updated');
@@ -287,7 +282,7 @@ describe('core/entities/user/service', () => {
             }));
 
             const actor = createSelfActor(entity.id);
-            vi.mocked(actor.permissionEvaluator.preEvaluate).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('preEvaluate');
 
             const result = await service.update(entity.id, {
                 display_name: 'Updated',
@@ -308,7 +303,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser({ name: 'other-user' }));
 
             const actor = createSelfActor(randomUUID());
-            vi.mocked(actor.permissionEvaluator.preEvaluate).mockRejectedValue(new ForbiddenError());
+            actor.permissionEvaluator.deny('preEvaluate');
 
             await expect(
                 service.update(entity.id, { display_name: 'x' }, actor),
@@ -412,7 +407,7 @@ describe('core/entities/user/service', () => {
             const entity = repository.seed(createFakeUser());
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.USER_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_DELETE });
         });
 
         it('should throw when actor lacks permission', async () => {

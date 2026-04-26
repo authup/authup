@@ -34,7 +34,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 import { createFakePermission } from '../../../../utils/domains/index.ts';
 
 class FakePermissionRepository extends FakeEntityRepository<Permission> implements IPermissionRepository {
@@ -92,7 +92,7 @@ describe('core/entities/permission/service', () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
 
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.PERMISSION_READ,
                     PermissionName.PERMISSION_UPDATE,
@@ -138,7 +138,7 @@ describe('core/entities/permission/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'test-perm' }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.PERMISSION_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PERMISSION_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -309,7 +309,7 @@ describe('core/entities/permission/service', () => {
             const actor = createAllowAllActor();
             await service.delete(entity.id, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.PERMISSION_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.PERMISSION_DELETE });
         });
 
         it('should throw when actor lacks permission', async () => {

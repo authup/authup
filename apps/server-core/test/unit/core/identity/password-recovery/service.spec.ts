@@ -7,20 +7,19 @@
 
 import { faker } from '@faker-js/faker';
 import {
-    beforeEach, 
-    describe, 
-    expect, 
-    it, 
-    vi,
+    beforeEach,
+    describe,
+    expect,
+    it,
 } from 'vitest';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { Role, User } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { PasswordRecoveryService } from '../../../../../src/core/identity/password-recovery/service.ts';
-import type { IMailClient } from '../../../../../src/core/mail/types.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import type { IUserRepository } from '../../../../../src/core/entities/user/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { FakeMailClient } from '../../helpers/fake-mail-client.ts';
 import { createFakeUser } from '../../../../utils/domains/index.ts';
 
 class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepository {
@@ -45,19 +44,15 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
     }
 }
 
-function createMockMailClient(): IMailClient {
-    return { send: vi.fn().mockResolvedValue(undefined) };
-}
-
 describe('core/identity/password-recovery/service', () => {
     let repository: FakeUserRepository;
     let realmRepository: FakeRealmRepository;
-    let mailClient: IMailClient;
+    let mailClient: FakeMailClient;
 
     beforeEach(() => {
         repository = new FakeUserRepository();
         realmRepository = new FakeRealmRepository();
-        mailClient = createMockMailClient();
+        mailClient = new FakeMailClient();
     });
 
     describe('forgotPassword', () => {
@@ -128,13 +123,9 @@ describe('core/identity/password-recovery/service', () => {
             const result = await service.forgotPassword({ email });
 
             expect(result.reset_expires).toBeDefined();
-            expect(mailClient.send).toHaveBeenCalledTimes(1);
-            expect(mailClient.send).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    to: email,
-                    subject: expect.stringContaining('Reset'),
-                }),
-            );
+            expect(mailClient.sent).toHaveLength(1);
+            expect(mailClient.sent[0]).toMatchObject({ to: email });
+            expect(mailClient.sent[0].subject).toContain('Reset');
 
             const user = await repository.findOneBy({
                 email,
@@ -204,7 +195,7 @@ describe('core/identity/password-recovery/service', () => {
                 realm_id: masterRealm.id,
             }));
 
-            vi.mocked(mailClient.send).mockRejectedValue(new Error('SMTP error'));
+            mailClient.failNext(new Error('SMTP error'));
 
             const service = new PasswordRecoveryService({
                 options: {

@@ -24,7 +24,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../helpers/mock-actor.ts';
+} from '../../helpers/fake-actor.ts';
 import { createFakeScope } from '../../../../utils/domains/index.ts';
 
 class FakeScopeRepository extends FakeEntityRepository<Scope> implements IScopeRepository {
@@ -61,7 +61,7 @@ describe('core/entities/scope/service', () => {
             const actor = createAllowAllActor();
             await service.getMany({}, actor);
 
-            expect(actor.permissionEvaluator.preEvaluateOneOf).toHaveBeenCalledWith({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.SCOPE_READ,
                     PermissionName.SCOPE_UPDATE,
@@ -107,7 +107,7 @@ describe('core/entities/scope/service', () => {
             const actor = createAllowAllActor();
             await service.create({ name: 'new-scope' }, actor);
 
-            expect(actor.permissionEvaluator.preEvaluate).toHaveBeenCalledWith({ name: PermissionName.SCOPE_CREATE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.SCOPE_CREATE });
         });
 
         it('should throw when actor lacks permission', async () => {
