@@ -7,6 +7,15 @@
 import type { Permission } from '@authup/core-kit';
 import type { BaseProvisioningEntity } from '../types.ts';
 
+export type PermissionProvisioningRelations = {
+    /**
+     * Policy names to attach to this permission via auth_permission_policies.
+     * Resolved to IDs and inserted as junction rows during provisioning.
+     */
+    policies?: string[],
+};
+
 export type PermissionProvisioningEntity = BaseProvisioningEntity<Permission> & {
-    attributes: Partial<Permission>
+    attributes: Partial<Permission>,
+    relations?: PermissionProvisioningRelations,
 };

@@ -35,6 +35,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
     ): Promise<EntityRepositoryFindManyResult<ClientScope>> {
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
+                PermissionName.CLIENT_SCOPE_READ,
                 PermissionName.CLIENT_READ,
                 PermissionName.CLIENT_UPDATE,
                 PermissionName.CLIENT_DELETE,
@@ -50,6 +51,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
     ): Promise<ClientScope> {
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
+                PermissionName.CLIENT_SCOPE_READ,
                 PermissionName.CLIENT_READ,
                 PermissionName.CLIENT_UPDATE,
                 PermissionName.CLIENT_DELETE,

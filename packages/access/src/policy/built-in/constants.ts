@@ -52,4 +52,8 @@ export const SystemPolicyName = {
     REALM_MATCH: 'system.realm-match',
     REALM_BOUND: 'system.realm-bound',
     REALM_OR_GLOBAL: 'system.realm-or-global',
+    CLIENT_SELF_MANAGE_FIELDS: 'system.client-self-manage-fields',
+    ROBOT_SELF_MANAGE_FIELDS: 'system.robot-self-manage-fields',
+    USER_SELF_MANAGE_FIELDS: 'system.user-self-manage-fields',
+    USER_ATTRIBUTE_SELF_MANAGE_FIELDS: 'system.user-attribute-self-manage-fields',
 } as const;

@@ -200,8 +200,21 @@ export class ClientService extends AbstractEntityService implements IClientServi
             throw new NotFoundError();
         }
 
+        let isSelfEdit = false;
         if (entity) {
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
+            try {
+                await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
+            } catch (e) {
+                if (
+                    !actor.identity ||
+                    actor.identity.type !== 'client' ||
+                    actor.identity.data.id !== entity.id
+                ) {
+                    throw e;
+                }
+                isSelfEdit = true;
+                await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SELF_MANAGE });
+            }
             group = ValidatorGroup.UPDATE;
         } else {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_CREATE });
@@ -217,6 +230,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
 
         if (entity) {
             if (
+                !isSelfEdit &&
                 !validated.realm_id &&
                 !entity.realm_id
             ) {
@@ -226,12 +240,21 @@ export class ClientService extends AbstractEntityService implements IClientServi
                 }
             }
 
+            if (isSelfEdit) {
+                await actor.permissionEvaluator.evaluate({
+                    name: PermissionName.CLIENT_SELF_MANAGE,
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+                });
+            }
+
             entity = this.repository.merge(entity, validated);
 
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.CLIENT_UPDATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
-            });
+            if (!isSelfEdit) {
+                await actor.permissionEvaluator.evaluate({
+                    name: PermissionName.CLIENT_UPDATE,
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+                });
+            }
 
             if (entity.is_confidential) {
                 if (!validated.secret && !entity.secret) {

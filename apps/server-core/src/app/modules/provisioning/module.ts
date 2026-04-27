@@ -140,7 +140,11 @@ export class ProvisionerModule implements IModule {
             realmRepository,
         });
 
-        const permissionSynchronizer = new PermissionProvisioningSynchronizer({ repository: permissionRepository });
+        const permissionSynchronizer = new PermissionProvisioningSynchronizer({
+            repository: permissionRepository,
+            policyRepository,
+            permissionPolicyRepository,
+        });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,

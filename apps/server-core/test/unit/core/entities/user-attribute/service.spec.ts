@@ -181,7 +181,7 @@ describe('core/entities/user-attribute/service', () => {
             expect(result.value).toBe('new-val');
         });
 
-        it('should use checkOneOf (not preCheckOneOf) for permission check', async () => {
+        it('should use preEvaluateOneOf to gate access', async () => {
             const entity = repository.seed(createFakeUserAttribute({
                 value: 'val',
                 user_id: randomUUID(),
@@ -190,10 +190,10 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createAllowAllActor();
             await service.update(entity.id, { value: 'new' }, actor);
 
-            expect(actor.permissionEvaluator.evaluateOneOfCalls).toContainEqual({
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.USER_UPDATE,
-                    PermissionName.USER_SELF_MANAGE,
+                    PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
                 ],
             });
         });

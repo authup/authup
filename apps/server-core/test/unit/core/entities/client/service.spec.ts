@@ -6,8 +6,9 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { PermissionName } from '@authup/core-kit';
-import type { Client, Role } from '@authup/core-kit';
+import { IdentityType, PermissionName } from '@authup/core-kit';
+import type { Client, Realm, Role } from '@authup/core-kit';
+import { BuiltInPolicyType } from '@authup/access';
 import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach,
@@ -20,11 +21,13 @@ import { ClientService } from '../../../../../src/core/entities/client/service.t
 import type { IClientRepository } from '../../../../../src/core/entities/client/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
+import type { FakeActorContext } from '../../helpers/fake-actor.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
     createNonMasterRealmActor,
 } from '../../helpers/fake-actor.ts';
+import { FakePermissionEvaluator } from '../../helpers/fake-permission-evaluator.ts';
 import { createFakeClient } from '../../../../utils/domains/index.ts';
 
 class FakeClientRepository extends FakeEntityRepository<Client> implements IClientRepository {
@@ -285,6 +288,114 @@ describe('core/entities/client/service', () => {
             await expect(
                 service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
             ).rejects.toThrow(NotFoundError);
+        });
+    });
+
+    describe('self-edit fallback', () => {
+        const buildSelfActor = (clientId: string): FakeActorContext => {
+            const realmId = randomUUID();
+            return {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: {
+                        id: clientId,
+                        realm_id: realmId,
+                        realm: {
+                            id: realmId,
+                            name: 'test',
+                        } as Realm,
+                    } as Client,
+                },
+            };
+        };
+
+        it('should allow self-edit without CLIENT_UPDATE when actor is the client itself', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'self-client' }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            const result = await service.update(entity.id, { display_name: 'Self Updated' }, actor);
+            expect(result.display_name).toBe('Self Updated');
+
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.CLIENT_SELF_MANAGE });
+            expect(actor.permissionEvaluator.evaluateCalls).toContainEqual(
+                expect.objectContaining({ name: PermissionName.CLIENT_SELF_MANAGE }),
+            );
+        });
+
+        it('should evaluate CLIENT_SELF_MANAGE against the validated input data, not the merged entity', async () => {
+            const entity = repository.seed(createFakeClient({
+                name: 'self-client',
+                description: 'old',
+            }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            await service.update(entity.id, { description: 'updated-desc' }, actor);
+
+            const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
+                (c) => c.name === PermissionName.CLIENT_SELF_MANAGE,
+            );
+            expect(selfManageCall).toBeDefined();
+            const attrs = selfManageCall!.input!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            expect(attrs).toHaveProperty('description', 'updated-desc');
+            expect(attrs).not.toHaveProperty('id');
+            expect(attrs).not.toHaveProperty('built_in');
+        });
+
+        it('should throw when actor lacks CLIENT_UPDATE and is not the client itself', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'other-client' }));
+
+            const actor = buildSelfActor(randomUUID());
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            await expect(
+                service.update(entity.id, { display_name: 'forbidden' }, actor),
+            ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw when actor lacks both CLIENT_UPDATE and CLIENT_SELF_MANAGE', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'self-client' }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.denyAll();
+
+            await expect(
+                service.update(entity.id, { display_name: 'forbidden' }, actor),
+            ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should NOT default realm_id from actor on self-edit', async () => {
+            const realmId = randomUUID();
+            const entity = repository.seed(createFakeClient({
+                name: 'self-client',
+                realm_id: realmId,
+            }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            const result = await service.update(entity.id, { display_name: 'kept' }, actor);
+            expect(result.realm_id).toBe(realmId);
         });
     });
 

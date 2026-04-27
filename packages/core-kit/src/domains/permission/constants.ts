@@ -24,6 +24,7 @@ export enum PermissionName {
 
     CLIENT_SCOPE_CREATE = 'client_scope_create',
     CLIENT_SCOPE_DELETE = 'client_scope_delete',
+    CLIENT_SCOPE_READ = 'client_scope_read',
 
     IDENTITY_PROVIDER_CREATE = 'identity_provider_create',
     IDENTITY_PROVIDER_DELETE = 'identity_provider_delete',
@@ -33,6 +34,7 @@ export enum PermissionName {
     IDENTITY_PROVIDER_ROLE_CREATE = 'identity_provider_role_create',
     IDENTITY_PROVIDER_ROLE_DELETE = 'identity_provider_role_delete',
     IDENTITY_PROVIDER_ROLE_UPDATE = 'identity_provider_role_update',
+    IDENTITY_PROVIDER_ROLE_READ = 'identity_provider_role_read',
 
     PERMISSION_CREATE = 'permission_create',
     PERMISSION_DELETE = 'permission_delete',
@@ -79,7 +81,9 @@ export enum PermissionName {
     USER_DELETE = 'user_delete',
     USER_UPDATE = 'user_update',
     USER_READ = 'user_read',
-    USER_SELF_MANAGE = 'user_self_update',
+    USER_SELF_MANAGE = 'user_self_manage',
+
+    USER_ATTRIBUTE_SELF_MANAGE = 'user_attribute_self_manage',
 
     USER_PERMISSION_CREATE = 'user_permission_create',
     USER_PERMISSION_DELETE = 'user_permission_delete',

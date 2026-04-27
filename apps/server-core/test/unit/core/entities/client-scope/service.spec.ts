@@ -37,6 +37,7 @@ describe('core/entities/client-scope/service', () => {
             await service.getMany({}, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
+                    PermissionName.CLIENT_SCOPE_READ,
                     PermissionName.CLIENT_READ,
                     PermissionName.CLIENT_UPDATE,
                     PermissionName.CLIENT_DELETE,

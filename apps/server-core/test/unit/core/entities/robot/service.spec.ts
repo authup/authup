@@ -16,6 +16,7 @@ import type {
     Role, 
     User, 
 } from '@authup/core-kit';
+import { BuiltInPolicyType } from '@authup/access';
 import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach,
@@ -225,6 +226,111 @@ describe('core/entities/robot/service', () => {
 
             const result = await service.update(entity.id, { secret: 'new-secret-value' }, createAllowAllActor());
             expect(result.secret).toBe('new-secret-value');
+        });
+    });
+
+    describe('self-edit fallback', () => {
+        const buildSelfActor = (robotId: string): FakeActorContext => {
+            const realmId = randomUUID();
+            return {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.ROBOT,
+                    data: {
+                        id: robotId,
+                        realm_id: realmId,
+                        realm: {
+                            id: realmId,
+                            name: 'test',
+                        } as Realm,
+                    } as Robot,
+                },
+            };
+        };
+
+        it('should allow self-edit without ROBOT_UPDATE when actor is the robot itself', async () => {
+            const entity = repository.seed(createFakeRobot({ name: 'self-robot' }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.ROBOT_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            const result = await service.update(entity.id, { display_name: 'Self Updated' }, actor);
+            expect(result.display_name).toBe('Self Updated');
+
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_SELF_MANAGE });
+            expect(actor.permissionEvaluator.evaluateCalls).toContainEqual(
+                expect.objectContaining({ name: PermissionName.ROBOT_SELF_MANAGE }),
+            );
+        });
+
+        it('should evaluate ROBOT_SELF_MANAGE against the validated input data only', async () => {
+            const entity = repository.seed(createFakeRobot({
+                name: 'self-robot',
+                description: 'old',
+            }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.ROBOT_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            await service.update(entity.id, { description: 'updated-desc' }, actor);
+
+            const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
+                (c) => c.name === PermissionName.ROBOT_SELF_MANAGE,
+            );
+            expect(selfManageCall).toBeDefined();
+            const attrs = selfManageCall!.input!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            expect(attrs).toHaveProperty('description', 'updated-desc');
+            expect(attrs).not.toHaveProperty('id');
+            expect(attrs).not.toHaveProperty('user_id');
+            expect(attrs).not.toHaveProperty('client_id');
+        });
+
+        it('should allow self-rotation of secret', async () => {
+            const entity = repository.seed(createFakeRobot({ name: 'self-robot' }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.ROBOT_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            const result = await service.update(entity.id, { secret: 'rotated-secret' }, actor);
+            expect(result.secret).toBe('rotated-secret');
+        });
+
+        it('should throw when actor lacks ROBOT_UPDATE and is not the robot itself', async () => {
+            const entity = repository.seed(createFakeRobot({ name: 'other-robot' }));
+
+            const actor = buildSelfActor(randomUUID());
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.ROBOT_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            await expect(
+                service.update(entity.id, { display_name: 'forbidden' }, actor),
+            ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw when actor lacks both ROBOT_UPDATE and ROBOT_SELF_MANAGE', async () => {
+            const entity = repository.seed(createFakeRobot({ name: 'self-robot' }));
+
+            const actor = buildSelfActor(entity.id);
+            actor.permissionEvaluator.denyAll();
+
+            await expect(
+                service.update(entity.id, { display_name: 'forbidden' }, actor),
+            ).rejects.toThrow(ForbiddenError);
         });
     });
 

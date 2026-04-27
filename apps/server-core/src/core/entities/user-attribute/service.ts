@@ -34,21 +34,21 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
+                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
             ],
         });
 
         const {
-            data: entities, 
-            meta, 
+            data: entities,
+            meta,
         } = await this.repository.findMany(query);
 
         const data: UserAttribute[] = [];
         let { total } = meta;
 
         for (const entity of entities) {
-            const canManage = await this.canManageUserAttribute(actor, entity);
-            if (canManage) {
+            const canRead = await this.canReadUserAttribute(actor, entity);
+            if (canRead) {
                 data.push(entity);
             } else {
                 total--;
@@ -59,8 +59,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             data,
             meta: {
                 ...meta,
-                total, 
-            }, 
+                total,
+            },
         };
     }
 
@@ -71,7 +71,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
+                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
             ],
         });
 
@@ -80,8 +80,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new NotFoundError();
         }
 
-        const canManage = await this.canManageUserAttribute(actor, entity);
-        if (!canManage) {
+        const canRead = await this.canReadUserAttribute(actor, entity);
+        if (!canRead) {
             throw new ForbiddenError();
         }
 
@@ -95,11 +95,23 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
+                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
             ],
         });
 
         await this.repository.validateJoinColumns(data);
+
+        const isSelfCreate = !!actor.identity &&
+            actor.identity.type === 'user' &&
+            (!data.user_id || data.user_id === actor.identity.data.id) &&
+            (!data.user || data.user.id === actor.identity.data.id);
+
+        if (isSelfCreate) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+            });
+        }
 
         if (data.user) {
             data.realm_id = data.user.realm_id;
@@ -115,9 +127,11 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         const entity = this.repository.create(data);
 
-        const canManage = await this.canManageUserAttribute(actor, entity);
-        if (!canManage) {
-            throw new ForbiddenError();
+        if (!isSelfCreate) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_UPDATE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            });
         }
 
         await this.repository.save(entity);
@@ -130,10 +144,10 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionEvaluator.evaluateOneOf({
+        await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
+                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
             ],
         });
 
@@ -144,11 +158,24 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new NotFoundError();
         }
 
+        const isSelfUpdate = !!actor.identity &&
+            actor.identity.type === 'user' &&
+            actor.identity.data.id === entity.user_id;
+
+        if (isSelfUpdate) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+            });
+        }
+
         entity = this.repository.merge(entity, data);
 
-        const canManage = await this.canManageUserAttribute(actor, entity);
-        if (!canManage) {
-            throw new ForbiddenError();
+        if (!isSelfUpdate) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_UPDATE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            });
         }
 
         await this.repository.save(entity);
@@ -163,7 +190,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
+                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
             ],
         });
 
@@ -172,8 +199,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new NotFoundError();
         }
 
-        const canManage = await this.canManageUserAttribute(actor, entity);
-        if (!canManage) {
+        const canRead = await this.canReadUserAttribute(actor, entity);
+        if (!canRead) {
             throw new ForbiddenError();
         }
 
@@ -184,7 +211,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         return entity;
     }
 
-    private async canManageUserAttribute(
+    private async canReadUserAttribute(
         actor: ActorContext,
         entity: UserAttribute,
     ): Promise<boolean> {
@@ -193,16 +220,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             actor.identity.data.id === entity.user_id;
 
         if (isMe) {
-            try {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.USER_SELF_MANAGE,
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
-                });
-
-                return true;
-            } catch {
-                return false;
-            }
+            return true;
         }
 
         try {

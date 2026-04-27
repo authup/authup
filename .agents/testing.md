@@ -57,6 +57,33 @@ Integration tests that spin up the full application (database, HTTP server). Tes
 - `suite.client` — a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
 - `suite.baseURL` — the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
 
+### Non-admin identity tests
+
+To test policies/permissions under a non-admin identity (e.g. `*_SELF_MANAGE` flows), grant the relevant permission to a freshly-created identity and authenticate against the server with its own bearer token:
+
+```typescript
+const created = await suite.client.client.create({
+    ...createFakeClient(),
+    secret: knownSecret,
+    secret_hashed: false,
+    secret_encrypted: false,
+});
+const permission = await suite.client.permission.getOne(PermissionName.CLIENT_SELF_MANAGE);
+await suite.client.clientPermission.create({
+    client_id: created.id,
+    permission_id: permission.id,
+});
+const token = await suite.client.token.createWithClientCredentials({
+    client_id: created.id,
+    client_secret: knownSecret,
+});
+
+const selfClient = new HTTPClient({ baseURL: suite.baseURL });
+selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token });
+```
+
+`suite.client.permission.getOne(name)` resolves the provisioned permission by name. See `test/unit/http/controllers/entities/client-self-manage.spec.ts` for a working example asserting both allowed-field updates and ATTRIBUTE_NAMES policy rejections.
+
 ### Testing the SSR'd consent UI is not yet supported
 
 `GET /authorize` returns SSR'd HTML built from the bundled Vue app under `apps/server-core/ui/`. The SSR fires several unawaited HTTP calls during render against `config.publicUrl` (`store.resolve()` for session hydration, `IdentityProviderAPI.getMany()`, `AuthorizeScopes.vue`'s scope fetch). In a test environment where `publicUrl` doesn't reach a live server, those fetches `ECONNREFUSE` and leak unhandled rejections that fail vitest.

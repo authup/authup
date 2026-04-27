@@ -112,21 +112,109 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     identity_master_match_all: false,
                 },
             },
+            {
+                attributes: {
+                    name: SystemPolicyName.CLIENT_SELF_MANAGE_FIELDS,
+                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    names: [
+                        'name',
+                        'display_name',
+                        'description',
+                        'secret',
+                        'redirect_uri',
+                        'grant_types',
+                        'scope',
+                        'base_url',
+                        'root_url',
+                        'is_confidential',
+                    ],
+                },
+            },
+            {
+                attributes: {
+                    name: SystemPolicyName.ROBOT_SELF_MANAGE_FIELDS,
+                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    names: [
+                        'name',
+                        'display_name',
+                        'description',
+                        'secret',
+                    ],
+                },
+            },
+            {
+                attributes: {
+                    name: SystemPolicyName.USER_SELF_MANAGE_FIELDS,
+                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    names: [
+                        'name',
+                        'first_name',
+                        'last_name',
+                        'display_name',
+                        'email',
+                        'password',
+                        'avatar',
+                        'cover',
+                    ],
+                },
+            },
+            {
+                attributes: {
+                    name: SystemPolicyName.USER_ATTRIBUTE_SELF_MANAGE_FIELDS,
+                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    names: [
+                        'name',
+                        'value',
+                    ],
+                },
+            },
         ];
     }
 
     buildPermissions(): PermissionProvisioningEntity[] {
+        const policiesByPermission: Partial<Record<string, string[]>> = {
+            [PermissionName.CLIENT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.CLIENT_SELF_MANAGE_FIELDS],
+            [PermissionName.ROBOT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.ROBOT_SELF_MANAGE_FIELDS],
+            [PermissionName.USER_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.USER_SELF_MANAGE_FIELDS],
+            [PermissionName.USER_ATTRIBUTE_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.USER_ATTRIBUTE_SELF_MANAGE_FIELDS],
+        };
+
         return Object.values(PermissionName)
-            .map((name) => ({
-                strategy: {
-                    type: ProvisioningEntityStrategyType.MERGE,
-                    attributes: ['built_in'] as (keyof Permission)[],
-                },
-                attributes: {
-                    name,
-                    built_in: true,
-                },
-            }));
+            .map((name) => {
+                const entity: PermissionProvisioningEntity = {
+                    strategy: {
+                        type: ProvisioningEntityStrategyType.MERGE,
+                        attributes: ['built_in'] as (keyof Permission)[],
+                    },
+                    attributes: {
+                        name,
+                        built_in: true,
+                    },
+                };
+
+                const policies = policiesByPermission[name];
+                if (policies) {
+                    entity.relations = { policies };
+                }
+
+                return entity;
+            });
     }
 
     buildScopes(): ScopeProvisioningEntity[] {

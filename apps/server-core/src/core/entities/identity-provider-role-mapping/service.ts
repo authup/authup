@@ -45,6 +45,7 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
     ): Promise<EntityRepositoryFindManyResult<IdentityProviderRoleMapping>> {
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
+                PermissionName.IDENTITY_PROVIDER_ROLE_READ,
                 PermissionName.IDENTITY_PROVIDER_READ,
                 PermissionName.IDENTITY_PROVIDER_UPDATE,
                 PermissionName.IDENTITY_PROVIDER_DELETE,
@@ -60,6 +61,7 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
     ): Promise<IdentityProviderRoleMapping> {
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
+                PermissionName.IDENTITY_PROVIDER_ROLE_READ,
                 PermissionName.IDENTITY_PROVIDER_READ,
                 PermissionName.IDENTITY_PROVIDER_UPDATE,
                 PermissionName.IDENTITY_PROVIDER_DELETE,
