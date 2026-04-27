@@ -114,7 +114,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             },
             {
                 attributes: {
-                    name: SystemPolicyName.CLIENT_SELF_MANAGE_FIELDS,
+                    name: SystemPolicyName.CLIENT_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
                     built_in: true,
                     realm_id: null,
@@ -136,7 +136,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             },
             {
                 attributes: {
-                    name: SystemPolicyName.ROBOT_SELF_MANAGE_FIELDS,
+                    name: SystemPolicyName.ROBOT_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
                     built_in: true,
                     realm_id: null,
@@ -152,7 +152,7 @@ export class DefaultProvisioningSource implements IProvisioningSource {
             },
             {
                 attributes: {
-                    name: SystemPolicyName.USER_SELF_MANAGE_FIELDS,
+                    name: SystemPolicyName.USER_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
                     built_in: true,
                     realm_id: null,
@@ -170,29 +170,14 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     ],
                 },
             },
-            {
-                attributes: {
-                    name: SystemPolicyName.USER_ATTRIBUTE_SELF_MANAGE_FIELDS,
-                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
-                    built_in: true,
-                    realm_id: null,
-                },
-                extraAttributes: {
-                    names: [
-                        'name',
-                        'value',
-                    ],
-                },
-            },
         ];
     }
 
     buildPermissions(): PermissionProvisioningEntity[] {
         const policiesByPermission: Partial<Record<string, string[]>> = {
-            [PermissionName.CLIENT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.CLIENT_SELF_MANAGE_FIELDS],
-            [PermissionName.ROBOT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.ROBOT_SELF_MANAGE_FIELDS],
-            [PermissionName.USER_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.USER_SELF_MANAGE_FIELDS],
-            [PermissionName.USER_ATTRIBUTE_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.USER_ATTRIBUTE_SELF_MANAGE_FIELDS],
+            [PermissionName.CLIENT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.CLIENT_NAMES_SELF_MANAGE],
+            [PermissionName.ROBOT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.ROBOT_NAMES_SELF_MANAGE],
+            [PermissionName.USER_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.USER_NAMES_SELF_MANAGE],
         };
 
         return Object.values(PermissionName)

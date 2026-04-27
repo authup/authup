@@ -50,6 +50,7 @@ import {
     RolePermissionEntity,
     ScopeEntity,
     UserAttributeEntity,
+    UserEntity,
     UserPermissionEntity,
     UserRepository,
     UserRoleEntity,
@@ -547,10 +548,14 @@ export class HTTPControllerModule {
     }
 
     createRoleAttributeController(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const repository = new RoleAttributeRepositoryAdapter(
             container.resolve<Repository<RoleAttribute>>(RoleAttributeEntity),
         );
-        const service = new RoleAttributeService({ repository });
+        const reservedNames = new Set(
+            dataSource.getMetadata(RoleEntity).columns.map((c) => c.propertyName),
+        );
+        const service = new RoleAttributeService({ repository, reservedNames });
         return new RoleAttributeController({ service });
     }
 
@@ -605,10 +610,14 @@ export class HTTPControllerModule {
     }
 
     createUserAttributeController(container: IContainer) {
+        const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
         const repository = new UserAttributeRepositoryAdapter(
             container.resolve<Repository<UserAttribute>>(UserAttributeEntity),
         );
-        const service = new UserAttributeService({ repository });
+        const reservedNames = new Set(
+            dataSource.getMetadata(UserEntity).columns.map((c) => c.propertyName),
+        );
+        const service = new UserAttributeService({ repository, reservedNames });
         return new UserAttributeController({ service });
     }
 

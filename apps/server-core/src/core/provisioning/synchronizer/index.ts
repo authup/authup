@@ -8,6 +8,7 @@
 export * from './client/index.ts';
 export * from './entity-resolver.ts';
 export * from './junction-synchronizer.ts';
+export * from './orphan-sweep/index.ts';
 export * from './permission/index.ts';
 export * from './policy/index.ts';
 export * from './realm/index.ts';

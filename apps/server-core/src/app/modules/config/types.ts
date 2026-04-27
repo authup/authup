@@ -245,6 +245,14 @@ export type Config = {
      * @deprecated Will be removed in v2.0.0. External systems should assign policies explicitly.
      */
     permissionsDefaultPolicyAssignment: boolean,
+
+    /**
+     * Remove `built_in: true` policies, permissions, roles, and scopes that
+     * are no longer declared by any provisioning source. Keeps the database
+     * converged with the declared shape across renames and removals.
+     * default: true
+     */
+    provisioningPruneOrphans: boolean,
 };
 
 export type ConfigInput = Partial<Config>;

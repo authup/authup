@@ -17,14 +17,18 @@ import type { IUserAttributeRepository, IUserAttributeService } from './types.ts
 
 export type UserAttributeServiceContext = {
     repository: IUserAttributeRepository;
+    reservedNames?: ReadonlySet<string>;
 };
 
 export class UserAttributeService extends AbstractEntityService implements IUserAttributeService {
     protected repository: IUserAttributeRepository;
 
+    protected reservedNames: ReadonlySet<string>;
+
     constructor(ctx: UserAttributeServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.reservedNames = ctx.reservedNames ?? new Set();
     }
 
     async getMany(
@@ -34,7 +38,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
+                PermissionName.USER_SELF_MANAGE,
             ],
         });
 
@@ -71,7 +75,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
+                PermissionName.USER_SELF_MANAGE,
             ],
         });
 
@@ -95,21 +99,27 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
+                PermissionName.USER_SELF_MANAGE,
             ],
         });
 
         await this.repository.validateJoinColumns(data);
 
+        if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
+            throw new BadRequestError(`The user-attribute name '${data.name}' collides with a User entity column.`);
+        }
+
+        const targetUserId: string | undefined = data.user_id ||
+            (data.user && data.user.id);
+
         const isSelfCreate = !!actor.identity &&
             actor.identity.type === 'user' &&
-            (!data.user_id || data.user_id === actor.identity.data.id) &&
-            (!data.user || data.user.id === actor.identity.data.id);
+            (!targetUserId || targetUserId === actor.identity.data.id);
 
         if (isSelfCreate) {
             await actor.permissionEvaluator.evaluate({
-                name: PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+                name: PermissionName.USER_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
             });
         }
 
@@ -147,11 +157,15 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
+                PermissionName.USER_SELF_MANAGE,
             ],
         });
 
         await this.repository.validateJoinColumns(data);
+
+        if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
+            throw new BadRequestError(`The user-attribute name '${data.name}' collides with a User entity column.`);
+        }
 
         let entity = await this.repository.findOneBy({ id });
         if (!entity) {
@@ -163,9 +177,11 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             actor.identity.data.id === entity.user_id;
 
         if (isSelfUpdate) {
+            const finalName = data.name ?? entity.name;
+            const finalValue = data.value ?? entity.value;
             await actor.permissionEvaluator.evaluate({
-                name: PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: data }),
+                name: PermissionName.USER_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [finalName]: finalValue } }),
             });
         }
 
@@ -190,7 +206,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         await actor.permissionEvaluator.preEvaluateOneOf({
             name: [
                 PermissionName.USER_UPDATE,
-                PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
+                PermissionName.USER_SELF_MANAGE,
             ],
         });
 

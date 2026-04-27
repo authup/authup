@@ -83,8 +83,6 @@ export enum PermissionName {
     USER_READ = 'user_read',
     USER_SELF_MANAGE = 'user_self_manage',
 
-    USER_ATTRIBUTE_SELF_MANAGE = 'user_attribute_self_manage',
-
     USER_PERMISSION_CREATE = 'user_permission_create',
     USER_PERMISSION_DELETE = 'user_permission_delete',
     USER_PERMISSION_READ = 'user_permission_read',

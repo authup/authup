@@ -163,9 +163,65 @@ describe('core/entities/user-attribute/service', () => {
             await expect(
                 service.create({
                     name: 'attr',
-                    value: 'val', 
+                    value: 'val',
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should evaluate USER_SELF_MANAGE with key-value mapping on self-create', async () => {
+            const userId = randomUUID();
+            const realmId = randomUUID();
+            const actor = createUserActor(userId, realmId);
+
+            await service.create({
+                name: 'theme',
+                value: 'dark',
+                user_id: userId,
+            }, actor);
+
+            const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCalls).toHaveLength(1);
+            const attributes = selfManageCalls[0].input?.get('attributes');
+            expect(attributes).toEqual({ theme: 'dark' });
+        });
+
+        it('should treat data.user.id as target user for self-create detection', async () => {
+            const userId = randomUUID();
+            const realmId = randomUUID();
+            const actor = createUserActor(userId, realmId);
+
+            await service.create({
+                name: 'theme',
+                value: 'dark',
+                user: {
+                    id: userId,
+                    realm_id: realmId,
+                },
+            }, actor);
+
+            const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCalls).toHaveLength(1);
+            const attributes = selfManageCalls[0].input?.get('attributes');
+            expect(attributes).toEqual({ theme: 'dark' });
+        });
+
+        it('should reject creating user-attribute with name colliding with User column', async () => {
+            const reservedNames = new Set(['email', 'password', 'first_name']);
+            const localService = new UserAttributeService({
+                repository,
+                reservedNames,
+            });
+
+            await expect(
+                localService.create({
+                    name: 'email',
+                    value: 'foo@bar.com',
+                }, createAllowAllActor()),
+            ).rejects.toThrow(/collides with a User entity column/);
         });
     });
 
@@ -193,7 +249,7 @@ describe('core/entities/user-attribute/service', () => {
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
                     PermissionName.USER_UPDATE,
-                    PermissionName.USER_ATTRIBUTE_SELF_MANAGE,
+                    PermissionName.USER_SELF_MANAGE,
                 ],
             });
         });
