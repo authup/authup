@@ -58,7 +58,11 @@ export class IdentityPolicyEvaluator implements IPolicyEvaluator {
         }
 
         if (!policy.types || policy.types.length === 0) {
-            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            // Empty types is a configuration shorthand for "no type
+            // restriction" — every identity passes. Do NOT apply `invert`;
+            // inverting an empty config would silently deny all identities,
+            // which is almost never the user's intent.
+            return { success: true };
         }
 
         const typeAllowed = policy.types.includes(data.type);

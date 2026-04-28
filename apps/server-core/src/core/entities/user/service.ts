@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { isUUID, removeObjectProperty } from '@authup/kit';
+import { isUUID } from '@authup/kit';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import {
     PermissionName,
@@ -194,11 +194,10 @@ export class UserService extends AbstractEntityService implements IUserService {
             throw new NotFoundError();
         }
 
-        let hasAbility: boolean | undefined;
+        let isSelfEdit = false;
         if (entity) {
             try {
                 await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
-                hasAbility = true;
             } catch (e) {
                 if (
                     !actor.identity ||
@@ -207,12 +206,13 @@ export class UserService extends AbstractEntityService implements IUserService {
                 ) {
                     throw e;
                 }
+                isSelfEdit = true;
+                await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
             }
 
             group = ValidatorGroup.UPDATE;
         } else {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_CREATE });
-            hasAbility = true;
 
             group = ValidatorGroup.CREATE;
         }
@@ -221,18 +221,18 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         await this.repository.validateJoinColumns(validated);
 
-        if (!hasAbility) {
-            removeObjectProperty(validated, 'name_locked');
-            removeObjectProperty(validated, 'active');
-            removeObjectProperty(validated, 'status');
-            removeObjectProperty(validated, 'status_message');
-        }
-
         const credentialsService = new UserCredentialsService();
 
         if (entity) {
             const originalName = entity.name;
             const originalNameLocked = entity.name_locked;
+
+            if (isSelfEdit) {
+                await actor.permissionEvaluator.evaluate({
+                    name: PermissionName.USER_SELF_MANAGE,
+                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+                });
+            }
 
             entity = this.repository.merge(entity, validated);
 
@@ -249,7 +249,7 @@ export class UserService extends AbstractEntityService implements IUserService {
                 }
             }
 
-            if (hasAbility) {
+            if (!isSelfEdit) {
                 await actor.permissionEvaluator.evaluate({
                     name: PermissionName.USER_UPDATE,
                     input: new PolicyData({
@@ -282,12 +282,10 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         entity = this.repository.create(validated);
 
-        if (hasAbility) {
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.USER_CREATE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
-            });
-        }
+        await actor.permissionEvaluator.evaluate({
+            name: PermissionName.USER_CREATE,
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+        });
 
         if (validated.password) {
             entity.password = await credentialsService.protect(validated.password);

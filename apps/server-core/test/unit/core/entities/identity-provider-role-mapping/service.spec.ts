@@ -46,6 +46,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             await service.getMany({}, actor);
             expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toContainEqual({
                 name: [
+                    PermissionName.IDENTITY_PROVIDER_ROLE_READ,
                     PermissionName.IDENTITY_PROVIDER_READ,
                     PermissionName.IDENTITY_PROVIDER_UPDATE,
                     PermissionName.IDENTITY_PROVIDER_DELETE,

@@ -261,7 +261,7 @@ Service responsibility:
 | **Junction with superset check** | client-role, robot-role, user-role, identity-provider-role-mapping | Same as junction + `identityPermissionProvider.isSuperset()` in service to verify actor owns all permissions in target role |
 | **Attribute** | role-attribute, user-attribute | Per-record permission filtering in `getMany`, managed under parent entity's UPDATE permission |
 | **Complex with secrets** | client, robot | Uses `{Entity}CredentialsService` for secret handling, per-record secret filtering in `getMany` |
-| **Complex with self-access** | user | Self-edit fallback (strips restricted fields), self-access detection in `getOne`, name-lock protection |
+| **Complex with self-access** | client, robot, user | Self-edit fallback via `{ENTITY}_SELF_MANAGE` permission with ATTRIBUTE_NAMES policy, self-access detection in `getOne`, name-lock protection (user) |
 | **Policy** | policy | Built-in protection, parent type validation, uses PERMISSION_* permissions (intentional — policies are managed under permission domain) |
 
 #### Workflow Services
@@ -390,7 +390,7 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 
 ### Synchronization Order
 
-`ProvisionerModule` delegates to `GraphProvisioningSynchronizer`, then runs backfill (config-gated).
+`ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
 
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
 `RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → robots → scopes.
@@ -553,4 +553,96 @@ This prevents privilege escalation: a `realm_admin` cannot create unrestricted p
 When merging duplicate permission bindings (same `name + client_id + realm_id`):
 
 - If **any** binding has no policies → merged result has **no policies** (unrestricted)
-- If all bindings have policies → each binding's policies are wrapped in a composite with that binding's `decision_strategy`, then all composites are combined under an outer AFFIRMATIVE composite (any-one-passes)
+- If all bindings have policies → each binding's policies are wrapped in a composite with that binding's `decision_strategy` (defaulting to `UNANIMOUS` when `null`/`undefined`), then all composites are combined under an outer AFFIRMATIVE composite (any-one-passes)
+
+## Self-Edit Pattern (declarative field denylists)
+
+Identities (clients, robots, users) can update their own properties via dedicated `*_SELF_MANAGE` permissions, with admin-only fields constrained by an inverted ATTRIBUTE_NAMES policy attached to each permission. There is no hardcoded field-stripping in the services — the access decision is fully data-driven.
+
+### Permissions
+
+| Permission | Identity type | Denylist policy |
+|---|---|---|
+| `client_self_manage` | client | `system.client-names-self-manage` (`invert: true`) |
+| `robot_self_manage` | robot | `system.robot-names-self-manage` (`invert: true`) |
+| `user_self_manage` | user (own User columns and own UserAttribute rows) | `system.user-names-self-manage` (`invert: true`) |
+
+Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `names` enumerates fields a self-edit must REJECT; everything else is permitted. The defaults:
+
+| Policy | Denylist `names` |
+|---|---|
+| `system.client-names-self-manage` | `active, realm_id` |
+| `system.robot-names-self-manage` | `active, realm_id, user_id` |
+| `system.user-names-self-manage` | `active, name_locked, status, status_message, realm_id` |
+
+Self-editable fields (e.g. `name`, `display_name`, `email`, `password`, `secret`, `redirect_uri`, etc.) are NOT enumerated — they're permitted by virtue of being absent from the denylist. The validator already strips system-managed columns (`built_in`, `id`, `created_at`, `updated_at`) before they reach the policy, so the denylist only needs to cover what validators let through but admin-only state should still block.
+
+**Trade-off:** denylist semantics are fail-open. A new column added to the entity (e.g. a new `User.role_metadata` field mounted in the validator) is self-editable by default until added to the denylist. When adding admin-only state to an entity, extend the relevant denylist alongside the migration.
+
+### Unified user-namespace policy
+
+`USER_SELF_MANAGE` governs both User column edits and UserAttribute writes. Rationale: a `UserAttribute` row is semantically a single key-value declaration about the user, so its `(name, value)` is mapped to `{ [name]: value }` in `UserAttributeService.create/update` before policy evaluation. The denylist semantic means a user can self-create UserAttributes with arbitrary keys (e.g. `theme`, `language`, `timezone`) — only attribute names that match the denylist are blocked. `UserAttributeService` only takes the self-manage path when the actor lacks `USER_UPDATE`; an admin or other user with `USER_UPDATE` evaluates against `USER_UPDATE` instead and is not subject to the denylist.
+
+UserAttribute names are still filtered against User entity columns by `UserAttributeService.create/update` — any `data.name` that matches a reserved User entity column raises a `BadRequestError`. This prevents confusing rows like `UserAttribute(name='email', value='x')` coexisting with `User.email='y'`. The reserved-name filter and the policy denylist are layered: the policy stops admin-only field names from being declared as UserAttribute keys; the validator-level rejection stops shadowing of normal User columns even when those columns aren't in the denylist.
+
+### Service flow
+
+In `{Client,Robot,User}Service.save()`:
+
+```typescript
+let isSelfEdit = false;
+if (entity) {
+    try {
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_UPDATE });
+    } catch (e) {
+        if (
+            !actor.identity ||
+            actor.identity.type !== 'client' ||
+            actor.identity.data.id !== entity.id
+        ) {
+            throw e;
+        }
+        isSelfEdit = true;
+        await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SELF_MANAGE });
+    }
+}
+
+// ... validation runs ...
+
+if (isSelfEdit) {
+    await actor.permissionEvaluator.evaluate({
+        name: PermissionName.CLIENT_SELF_MANAGE,
+        input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: validated }),
+    });
+}
+```
+
+Two-layer rejection:
+1. **Validator** silently strips fields it doesn't mount (e.g. `built_in`, `realm_id` on UPDATE) — these never reach the policy.
+2. **ATTRIBUTE_NAMES policy** rejects validated fields not in the allowlist (e.g. `active` on a client) — produces a `value_invalid` issue and the request fails.
+
+### preEvaluate auto-exclusion
+
+`preEvaluate` (no input data) automatically skips evaluators that require attributes — `ATTRIBUTES`, `ATTRIBUTE_NAMES`, `REALM_MATCH`. This means binding ATTRIBUTE_NAMES policies to a permission does **not** break gate checks in pre-flight scenarios. The full check happens in the second `evaluate()` call where `validated` data is supplied.
+
+### EA loading on tree roots
+
+`AttributeNamesPolicyValidator` reads the policy's `names` field from extra-attributes (`policy_attributes`). For top-level policies bound directly to permissions, the policy is loaded as the root of a closure-table descendants tree. `EATreeRepository.findDescendantsTree()` calls `extendOneWithEA(entity)` after building the children — without that, the root entity's EA fields stay unloaded and the validator fails with "value_invalid". Both Layer 1 (`PermissionDatabaseProvider`) and Layer 2 (`bindings.ts`) depend on this fix.
+
+## Provisioning Permissions With Policies
+
+`PermissionProvisioningEntity.relations.policies` is a list of policy names to attach to the permission via the `auth_permission_policies` junction. Used by the default provisioning source to wire `system.default` (security baseline) plus the optional ATTRIBUTE_NAMES allowlist:
+
+```typescript
+{
+    attributes: { name: PermissionName.CLIENT_SELF_MANAGE, built_in: true },
+    relations: {
+        policies: [
+            SystemPolicyName.DEFAULT,
+            SystemPolicyName.CLIENT_NAMES_SELF_MANAGE,
+        ],
+    },
+}
+```
+
+`PermissionProvisioningSynchronizer.synchronizePolicies()` resolves each name to a policy ID and inserts the junction. Idempotent — re-runs do not create duplicates. Throws `policy '<name>' not found` if a referenced policy is not provisioned, and `repositories must be wired` if relations are declared but the synchronizer was constructed without `policyRepository`/`permissionPolicyRepository`.

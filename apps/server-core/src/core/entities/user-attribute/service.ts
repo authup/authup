@@ -17,14 +17,18 @@ import type { IUserAttributeRepository, IUserAttributeService } from './types.ts
 
 export type UserAttributeServiceContext = {
     repository: IUserAttributeRepository;
+    reservedNames?: ReadonlySet<string>;
 };
 
 export class UserAttributeService extends AbstractEntityService implements IUserAttributeService {
     protected repository: IUserAttributeRepository;
 
+    protected reservedNames: ReadonlySet<string>;
+
     constructor(ctx: UserAttributeServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.reservedNames = ctx.reservedNames ?? new Set();
     }
 
     async getMany(
@@ -39,16 +43,16 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         });
 
         const {
-            data: entities, 
-            meta, 
+            data: entities,
+            meta,
         } = await this.repository.findMany(query);
 
         const data: UserAttribute[] = [];
         let { total } = meta;
 
         for (const entity of entities) {
-            const canManage = await this.canManageUserAttribute(actor, entity);
-            if (canManage) {
+            const canRead = await this.canReadUserAttribute(actor, entity);
+            if (canRead) {
                 data.push(entity);
             } else {
                 total--;
@@ -59,8 +63,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             data,
             meta: {
                 ...meta,
-                total, 
-            }, 
+                total,
+            },
         };
     }
 
@@ -80,8 +84,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new NotFoundError();
         }
 
-        const canManage = await this.canManageUserAttribute(actor, entity);
-        if (!canManage) {
+        const canRead = await this.canReadUserAttribute(actor, entity);
+        if (!canRead) {
             throw new ForbiddenError();
         }
 
@@ -92,14 +96,29 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
-            ],
-        });
+        const targetUserId: string | undefined = data.user_id ||
+            (data.user && data.user.id);
+
+        const isSelfTarget = !!actor.identity &&
+            actor.identity.type === 'user' &&
+            (!targetUserId || targetUserId === actor.identity.data.id);
+
+        let isSelfFallback = false;
+        try {
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
+        } catch (e) {
+            if (!isSelfTarget) {
+                throw e;
+            }
+            isSelfFallback = true;
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
+        }
 
         await this.repository.validateJoinColumns(data);
+
+        if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
+            throw new BadRequestError(`The user-attribute name '${data.name}' collides with a User entity column.`);
+        }
 
         if (data.user) {
             data.realm_id = data.user.realm_id;
@@ -115,9 +134,16 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         const entity = this.repository.create(data);
 
-        const canManage = await this.canManageUserAttribute(actor, entity);
-        if (!canManage) {
-            throw new ForbiddenError();
+        if (isSelfFallback) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
+            });
+        } else {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_UPDATE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            });
         }
 
         await this.repository.save(entity);
@@ -130,25 +156,44 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionEvaluator.evaluateOneOf({
-            name: [
-                PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
-            ],
-        });
-
         await this.repository.validateJoinColumns(data);
+
+        if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
+            throw new BadRequestError(`The user-attribute name '${data.name}' collides with a User entity column.`);
+        }
 
         let entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
         }
 
+        const isSelfTarget = !!actor.identity &&
+            actor.identity.type === 'user' &&
+            actor.identity.data.id === entity.user_id;
+
+        let isSelfFallback = false;
+        try {
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
+        } catch (e) {
+            if (!isSelfTarget) {
+                throw e;
+            }
+            isSelfFallback = true;
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
+        }
+
         entity = this.repository.merge(entity, data);
 
-        const canManage = await this.canManageUserAttribute(actor, entity);
-        if (!canManage) {
-            throw new ForbiddenError();
+        if (isSelfFallback) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
+            });
+        } else {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_UPDATE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            });
         }
 
         await this.repository.save(entity);
@@ -172,8 +217,8 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new NotFoundError();
         }
 
-        const canManage = await this.canManageUserAttribute(actor, entity);
-        if (!canManage) {
+        const canRead = await this.canReadUserAttribute(actor, entity);
+        if (!canRead) {
             throw new ForbiddenError();
         }
 
@@ -184,7 +229,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         return entity;
     }
 
-    private async canManageUserAttribute(
+    private async canReadUserAttribute(
         actor: ActorContext,
         entity: UserAttribute,
     ): Promise<boolean> {
@@ -193,16 +238,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             actor.identity.data.id === entity.user_id;
 
         if (isMe) {
-            try {
-                await actor.permissionEvaluator.evaluate({
-                    name: PermissionName.USER_SELF_MANAGE,
-                    input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
-                });
-
-                return true;
-            } catch {
-                return false;
-            }
+            return true;
         }
 
         try {

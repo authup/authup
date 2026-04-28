@@ -112,21 +112,97 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     identity_master_match_all: false,
                 },
             },
+            // Self-manage policies use ATTRIBUTE_NAMES + invert: true (denylist).
+            // Each `names` entry is what self-edit must REJECT; everything else
+            // is permitted. New columns added to the entity are self-editable
+            // by default — extend the denylist when adding admin-only state.
+            {
+                attributes: {
+                    name: SystemPolicyName.CLIENT_NAMES_SELF_MANAGE,
+                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    invert: true,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    names: [
+                        // FK + lifecycle
+                        'active',
+                        'realm_id',
+                        // Security-critical: a self-edit must not change the
+                        // client's confidentiality (toggling this clears the
+                        // secret) or downgrade the secret-storage format
+                        // (which would persist the secret in plaintext).
+                        'is_confidential',
+                        'secret_hashed',
+                        'secret_encrypted',
+                    ],
+                },
+            },
+            {
+                attributes: {
+                    name: SystemPolicyName.ROBOT_NAMES_SELF_MANAGE,
+                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    invert: true,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    names: [
+                        'active',
+                        'realm_id',
+                        'user_id',
+                    ],
+                },
+            },
+            {
+                attributes: {
+                    name: SystemPolicyName.USER_NAMES_SELF_MANAGE,
+                    type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    invert: true,
+                    built_in: true,
+                    realm_id: null,
+                },
+                extraAttributes: {
+                    names: [
+                        'active',
+                        'name_locked',
+                        'status',
+                        'status_message',
+                        'realm_id',
+                    ],
+                },
+            },
         ];
     }
 
     buildPermissions(): PermissionProvisioningEntity[] {
+        const policiesByPermission: Partial<Record<string, string[]>> = {
+            [PermissionName.CLIENT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.CLIENT_NAMES_SELF_MANAGE],
+            [PermissionName.ROBOT_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.ROBOT_NAMES_SELF_MANAGE],
+            [PermissionName.USER_SELF_MANAGE]: [SystemPolicyName.DEFAULT, SystemPolicyName.USER_NAMES_SELF_MANAGE],
+        };
+
         return Object.values(PermissionName)
-            .map((name) => ({
-                strategy: {
-                    type: ProvisioningEntityStrategyType.MERGE,
-                    attributes: ['built_in'] as (keyof Permission)[],
-                },
-                attributes: {
-                    name,
-                    built_in: true,
-                },
-            }));
+            .map((name) => {
+                const entity: PermissionProvisioningEntity = {
+                    strategy: {
+                        type: ProvisioningEntityStrategyType.MERGE,
+                        attributes: ['built_in'] as (keyof Permission)[],
+                    },
+                    attributes: {
+                        name,
+                        built_in: true,
+                    },
+                };
+
+                const policies = policiesByPermission[name];
+                if (policies) {
+                    entity.relations = { policies };
+                }
+
+                return entity;
+            });
     }
 
     buildScopes(): ScopeProvisioningEntity[] {

@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { NotFoundError } from '@ebec/http';
+import { BadRequestError, NotFoundError } from '@ebec/http';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -16,14 +16,18 @@ import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts
 
 export type RoleAttributeServiceContext = {
     repository: IRoleAttributeRepository;
+    reservedNames?: ReadonlySet<string>;
 };
 
 export class RoleAttributeService extends AbstractEntityService implements IRoleAttributeService {
     protected repository: IRoleAttributeRepository;
 
+    protected reservedNames: ReadonlySet<string>;
+
     constructor(ctx: RoleAttributeServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.reservedNames = ctx.reservedNames ?? new Set();
     }
 
     async getMany(
@@ -108,13 +112,17 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await this.repository.validateJoinColumns(data);
 
+        if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
+            throw new BadRequestError(`The role-attribute name '${data.name}' collides with a Role entity column.`);
+        }
+
         data.realm_id = data.role.realm_id;
 
         const entity = this.repository.create(data);
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
         });
 
         await this.repository.save(entity);
@@ -131,6 +139,10 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await this.repository.validateJoinColumns(data);
 
+        if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
+            throw new BadRequestError(`The role-attribute name '${data.name}' collides with a Role entity column.`);
+        }
+
         let entity = await this.repository.findOneBy({ id });
         if (!entity) {
             throw new NotFoundError();
@@ -140,7 +152,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         await actor.permissionEvaluator.evaluate({
             name: PermissionName.ROLE_UPDATE,
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
         });
 
         await this.repository.save(entity);

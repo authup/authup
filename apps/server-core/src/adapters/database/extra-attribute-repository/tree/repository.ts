@@ -201,6 +201,12 @@ export class EATreeRepository<
             },
         );
 
+        // The descendants closure may include the root, but `entity` here is a
+        // different reference than the one in `entities.entities`, so its own EA
+        // fields are not populated. Load them explicitly so leaf-as-root callers
+        // (e.g. policies bound directly to permissions/junctions) see EA.
+        await this.extendOneWithEA(entity);
+
         return entity;
     }
 

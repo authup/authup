@@ -11,6 +11,7 @@ import {
     PermissionName,
 } from '@authup/core-kit';
 import type { Realm, Role, User } from '@authup/core-kit';
+import { BuiltInPolicyType } from '@authup/access';
 import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach,
@@ -262,51 +263,67 @@ describe('core/entities/user/service', () => {
     });
 
     describe('self-edit fallback', () => {
+        const denyOnlyUserUpdate = (actor: FakeActorContext) => {
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.USER_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+        };
+
         it('should allow self-edit without USER_UPDATE permission', async () => {
             const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
-            actor.permissionEvaluator.deny('preEvaluate');
+            denyOnlyUserUpdate(actor);
 
             const result = await service.update(entity.id, { display_name: 'Updated' }, actor);
             expect(result.display_name).toBe('Updated');
+
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_SELF_MANAGE });
+            expect(actor.permissionEvaluator.evaluateCalls).toContainEqual(
+                expect.objectContaining({ name: PermissionName.USER_SELF_MANAGE }),
+            );
         });
 
-        it('should strip restricted fields on self-edit without USER_UPDATE', async () => {
-            const entity = repository.seed(createFakeUser({
-                name: 'self-user',
-                active: true,
-                status: null,
-                status_message: null,
-                name_locked: false,
-            }));
+        it('should evaluate USER_SELF_MANAGE against the validated input data only', async () => {
+            const entity = repository.seed(createFakeUser({ name: 'self-user' }));
 
             const actor = createSelfActor(entity.id);
-            actor.permissionEvaluator.deny('preEvaluate');
+            denyOnlyUserUpdate(actor);
 
-            const result = await service.update(entity.id, {
-                display_name: 'Updated',
-                active: false,
-                status: 'banned',
-                status_message: 'test',
-                name_locked: true,
-            }, actor);
+            await service.update(entity.id, { display_name: 'Updated' }, actor);
 
-            expect(result.display_name).toBe('Updated');
-            expect(result.active).toBe(true);
-            expect(result.status).toBeNull();
-            expect(result.status_message).toBeNull();
-            expect(result.name_locked).toBe(false);
+            const selfManageCall = actor.permissionEvaluator.evaluateCalls.find(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCall).toBeDefined();
+            const attrs = selfManageCall!.input!.get<Record<string, any>>(BuiltInPolicyType.ATTRIBUTES);
+            expect(attrs).toHaveProperty('display_name', 'Updated');
+            expect(attrs).not.toHaveProperty('id');
+            expect(attrs).not.toHaveProperty('active');
+            expect(attrs).not.toHaveProperty('realm_id');
         });
 
         it('should throw when non-self user lacks USER_UPDATE', async () => {
             const entity = repository.seed(createFakeUser({ name: 'other-user' }));
 
             const actor = createSelfActor(randomUUID());
-            actor.permissionEvaluator.deny('preEvaluate');
+            denyOnlyUserUpdate(actor);
 
             await expect(
-                service.update(entity.id, { display_name: 'x' }, actor),
+                service.update(entity.id, { display_name: 'forbidden' }, actor),
+            ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should throw when actor lacks both USER_UPDATE and USER_SELF_MANAGE', async () => {
+            const entity = repository.seed(createFakeUser({ name: 'self-user' }));
+
+            const actor = createSelfActor(entity.id);
+            actor.permissionEvaluator.denyAll();
+
+            await expect(
+                service.update(entity.id, { display_name: 'forbidden' }, actor),
             ).rejects.toThrow(ForbiddenError);
         });
     });

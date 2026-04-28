@@ -62,9 +62,13 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
                 }
 
                 if (decision_strategy === DecisionStrategy.UNANIMOUS) {
+                    const success = maybeInvertPolicyOutcome(false, policy.invert);
                     return {
-                        success: maybeInvertPolicyOutcome(false, policy.invert),
-                        issues: [
+                        success,
+                        // When `invert` flips a child-failure into success,
+                        // suppress the issue list — surfacing failure issues
+                        // alongside `success: true` is misleading.
+                        issues: success ? [] : [
                             defineIssueGroup({
                                 message: `The evaluation of composite policy failed (${DecisionStrategy.UNANIMOUS})`,
                                 issues,
@@ -82,9 +86,10 @@ export class CompositePolicyEvaluator implements IPolicyEvaluator {
             return { success: maybeInvertPolicyOutcome(true, policy.invert) };
         }
 
+        const success = maybeInvertPolicyOutcome(false, policy.invert);
         return {
-            success: maybeInvertPolicyOutcome(false, policy.invert),
-            issues: [
+            success,
+            issues: success ? [] : [
                 defineIssueGroup({
                     message: `The evaluation of composite policy failed (${DecisionStrategy.CONSENSUS})`,
                     issues: issues || [],

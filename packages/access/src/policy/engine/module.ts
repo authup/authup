@@ -13,11 +13,25 @@ import type {
     PolicyEvaluationResult,
     PolicyEvaluators,
 } from '../evaluation';
-import { maybeInvertPolicyOutcome } from '../helpers';
 import type { PolicyIssue } from '../issue';
 import type { IPolicyEngine } from './types.ts';
-import { PolicyError } from '../error';
+import { PolicyError, isPolicyError } from '../error';
 import type { BasePolicy } from '../types.ts';
+
+// Cross-realm-safe extraction of an error message from an unknown thrown
+// value. `instanceof Error` is unreliable across module boundaries (different
+// realms, dual-bundled packages), so we duck-type on the `message` shape.
+function errorMessage(value: unknown): string {
+    if (
+        typeof value === 'object' &&
+        value !== null &&
+        'message' in value &&
+        typeof (value as { message: unknown }).message === 'string'
+    ) {
+        return (value as { message: string }).message;
+    }
+    return String(value);
+}
 
 /**
  * The policy engine is a component that interprets defined policies and makes decisions
@@ -49,9 +63,13 @@ export class PolicyEngine implements IPolicyEngine {
      * @param ctx
      */
     async evaluate(policy: BasePolicy, ctx: PolicyEvaluationContext) : Promise<PolicyEvaluationResult> {
+        // Infrastructure errors (no type, no evaluator, evaluator threw) MUST
+        // fail closed regardless of `policy.invert`. Inverting an error path
+        // would silently grant access on misconfiguration — with `invert: true`
+        // an unregistered policy type would return success: true.
         if (!policy.type) {
             return {
-                success: maybeInvertPolicyOutcome(false, policy.invert),
+                success: false,
                 issues: [
                     defineIssueItem({
                         path: [],
@@ -61,12 +79,16 @@ export class PolicyEngine implements IPolicyEngine {
                 ],
             };
         }
+        // When a policy is filtered out via include/exclude, treat it as a
+        // neutral pass — do NOT apply `invert`. Inversion only makes sense
+        // for an actual evaluation outcome; skipping a policy because it's
+        // outside the current context's scope is not an outcome.
         if (
             ctx.exclude &&
             ctx.exclude.length > 0 &&
             ctx.exclude.includes(policy.type)
         ) {
-            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            return { success: true };
         }
 
         if (
@@ -74,14 +96,13 @@ export class PolicyEngine implements IPolicyEngine {
             ctx.include.length > 0 &&
             !ctx.include.includes(policy.type)
         ) {
-            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            return { success: true };
         }
 
         const issues : PolicyIssue[] = [];
 
         const evaluator = this.evaluators[policy.type];
         if (!evaluator) {
-            // todo: add issue here instead + return false ?
             issues.push(defineIssueItem({
                 path: [policy.type],
                 message: `The policy ${policy.type} can not be handled by any evaluator.`,
@@ -89,7 +110,7 @@ export class PolicyEngine implements IPolicyEngine {
             }));
 
             return {
-                success: maybeInvertPolicyOutcome(false, policy.invert),
+                success: false,
                 issues,
             };
         }
@@ -102,15 +123,15 @@ export class PolicyEngine implements IPolicyEngine {
                     ...(ctx.evaluators || {}),
                 },
             });
-        } catch {
+        } catch (e) {
             issues.push(defineIssueItem({
                 path: [policy.type],
-                message: `The ${policy.type} evaluator can not process the policy specification.`,
+                message: `The ${policy.type} evaluator threw: ${errorMessage(e)}`,
                 code: ErrorCode.POLICY_EVALUATOR_NOT_PROCESSABLE,
             }));
 
             return {
-                success: maybeInvertPolicyOutcome(false, policy.invert),
+                success: false,
                 issues,
             };
         }
@@ -129,9 +150,18 @@ export class PolicyEngine implements IPolicyEngine {
                 issues.push(...outcome.issues);
             }
         } catch (e) {
-            if (e instanceof PolicyError) {
+            if (isPolicyError(e)) {
                 throw e;
             }
+
+            // Surface non-PolicyError throws (DB failures, validator crashes, etc.)
+            // as issues so the root cause is visible instead of being swallowed
+            // behind a generic policy failure.
+            issues.push(defineIssueItem({
+                path: policy.type ? [policy.type] : [],
+                message: errorMessage(e),
+                code: ErrorCode.POLICY_EVALUATOR_NOT_PROCESSABLE,
+            }));
         }
 
         const error = new PolicyError(`The policy ${policy.type} evaluation failed.`);

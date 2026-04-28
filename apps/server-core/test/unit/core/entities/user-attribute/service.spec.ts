@@ -163,9 +163,99 @@ describe('core/entities/user-attribute/service', () => {
             await expect(
                 service.create({
                     name: 'attr',
-                    value: 'val', 
+                    value: 'val',
                 }, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should evaluate USER_SELF_MANAGE with key-value mapping when actor lacks USER_UPDATE on self-create', async () => {
+            const userId = randomUUID();
+            const realmId = randomUUID();
+            const actor = createUserActor(userId, realmId);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.ctx.name === PermissionName.USER_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            await service.create({
+                name: 'theme',
+                value: 'dark',
+                user_id: userId,
+            }, actor);
+
+            const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCalls).toHaveLength(1);
+            const attributes = selfManageCalls[0].input?.get('attributes');
+            expect(attributes).toEqual({ theme: 'dark' });
+        });
+
+        it('should treat data.user.id as target user for self-create detection', async () => {
+            const userId = randomUUID();
+            const realmId = randomUUID();
+            const actor = createUserActor(userId, realmId);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.ctx.name === PermissionName.USER_UPDATE) {
+                    throw new ForbiddenError();
+                }
+            });
+
+            await service.create({
+                name: 'theme',
+                value: 'dark',
+                user: {
+                    id: userId,
+                    realm_id: realmId,
+                },
+            }, actor);
+
+            const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCalls).toHaveLength(1);
+            const attributes = selfManageCalls[0].input?.get('attributes');
+            expect(attributes).toEqual({ theme: 'dark' });
+        });
+
+        it('should evaluate USER_UPDATE for non-self-create even with user identity', async () => {
+            const userId = randomUUID();
+            const otherUserId = randomUUID();
+            const realmId = randomUUID();
+            const actor = createUserActor(userId, realmId);
+
+            await service.create({
+                name: 'theme',
+                value: 'dark',
+                user_id: otherUserId,
+                user: { realm_id: realmId },
+            }, actor);
+
+            const updateCalls = actor.permissionEvaluator.evaluateCalls.filter(
+                (c) => c.name === PermissionName.USER_UPDATE,
+            );
+            expect(updateCalls).toHaveLength(1);
+
+            const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCalls).toHaveLength(0);
+        });
+
+        it('should reject creating user-attribute with name colliding with User column', async () => {
+            const reservedNames = new Set(['email', 'password', 'first_name']);
+            const localService = new UserAttributeService({
+                repository,
+                reservedNames,
+            });
+
+            await expect(
+                localService.create({
+                    name: 'email',
+                    value: 'foo@bar.com',
+                }, createAllowAllActor()),
+            ).rejects.toThrow(/collides with a User entity column/);
         });
     });
 
@@ -181,7 +271,7 @@ describe('core/entities/user-attribute/service', () => {
             expect(result.value).toBe('new-val');
         });
 
-        it('should use checkOneOf (not preCheckOneOf) for permission check', async () => {
+        it('should preEvaluate USER_UPDATE to gate access', async () => {
             const entity = repository.seed(createFakeUserAttribute({
                 value: 'val',
                 user_id: randomUUID(),
@@ -190,12 +280,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createAllowAllActor();
             await service.update(entity.id, { value: 'new' }, actor);
 
-            expect(actor.permissionEvaluator.evaluateOneOfCalls).toContainEqual({
-                name: [
-                    PermissionName.USER_UPDATE,
-                    PermissionName.USER_SELF_MANAGE,
-                ],
-            });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.USER_UPDATE });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {

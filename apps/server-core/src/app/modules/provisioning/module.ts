@@ -140,7 +140,11 @@ export class ProvisionerModule implements IModule {
             realmRepository,
         });
 
-        const permissionSynchronizer = new PermissionProvisioningSynchronizer({ repository: permissionRepository });
+        const permissionSynchronizer = new PermissionProvisioningSynchronizer({
+            repository: permissionRepository,
+            policyRepository,
+            permissionPolicyRepository,
+        });
 
         const roleSynchronizer = new RoleProvisioningSynchronizer({
             repository: roleRepository,
@@ -200,12 +204,12 @@ export class ProvisionerModule implements IModule {
             permissionRepository,
         });
 
-        const scopeSynchronizer = new ScopeProvisioningSynchronizer({
-            repository: new ScopeRepositoryAdapter({
-                repository: container.resolve<Repository<Scope>>(ScopeEntity),
-                realmRepository,
-            }),
+        const scopeRepository = new ScopeRepositoryAdapter({
+            repository: container.resolve<Repository<Scope>>(ScopeEntity),
+            realmRepository,
         });
+
+        const scopeSynchronizer = new ScopeProvisioningSynchronizer({ repository: scopeRepository });
 
         const realmSynchronizer = new RealmProvisioningSynchronizer({
             repository: new RealmRepositoryAdapter(realmRepository),
