@@ -297,9 +297,25 @@ export class RobotService extends AbstractEntityService implements IRobotService
             actor.identity.type === 'user' &&
             actor.identity.data.id === entity.user_id;
 
-        if (!isOwner) {
+        let isSelfDelete = false;
+        try {
             await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_DELETE });
+        } catch (e) {
+            if (!isOwner) {
+                throw e;
+            }
+            isSelfDelete = true;
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_SELF_MANAGE });
+        }
 
+        if (isSelfDelete) {
+            // Delete carries no attributes to validate; pass an empty input so
+            // the ATTRIBUTE_NAMES denylist has no keys to reject.
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.ROBOT_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: {} }),
+            });
+        } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.ROBOT_DELETE,
                 input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),

@@ -65,7 +65,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
             identity.realmName &&
             identity.realmName === 'master'
         ) {
-            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            // Master-match-all is a privileged-actor override — do NOT apply
+            // `invert`. Inverting would deny master access whenever the policy
+            // is configured as a denylist, which is the opposite of the flag's
+            // intent.
+            return { success: true };
         }
 
         let keys : string[];
@@ -155,7 +159,11 @@ export class RealmMatchPolicyEvaluator implements IPolicyEvaluator {
         }
 
         if (!evaluated) {
-            return { success: maybeInvertPolicyOutcome(true, policy.invert) };
+            // No realm key found in attributes — the policy's match logic
+            // didn't run. This is a "non-evaluation", not an outcome; treat
+            // as a neutral pass without applying `invert`. Inverting here
+            // would conflate "policy doesn't apply" with "policy denies".
+            return { success: true };
         }
 
         return { success: maybeInvertPolicyOutcome(count > 0, policy.invert) };

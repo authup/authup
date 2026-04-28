@@ -555,28 +555,35 @@ When merging duplicate permission bindings (same `name + client_id + realm_id`):
 - If **any** binding has no policies → merged result has **no policies** (unrestricted)
 - If all bindings have policies → each binding's policies are wrapped in a composite with that binding's `decision_strategy`, then all composites are combined under an outer AFFIRMATIVE composite (any-one-passes)
 
-## Self-Edit Pattern (declarative field allowlists)
+## Self-Edit Pattern (declarative field denylists)
 
-Identities (clients, robots, users) can update their own properties via dedicated `*_SELF_MANAGE` permissions, with editable fields constrained by an ATTRIBUTE_NAMES policy attached to each permission. There is no hardcoded field-stripping in the services — the access decision is fully data-driven.
+Identities (clients, robots, users) can update their own properties via dedicated `*_SELF_MANAGE` permissions, with admin-only fields constrained by an inverted ATTRIBUTE_NAMES policy attached to each permission. There is no hardcoded field-stripping in the services — the access decision is fully data-driven.
 
 ### Permissions
 
-| Permission | Identity type | Allowlist policy |
+| Permission | Identity type | Denylist policy |
 |---|---|---|
-| `client_self_manage` | client | `system.client-names-self-manage` |
-| `robot_self_manage` | robot | `system.robot-names-self-manage` |
-| `user_self_manage` | user (own User columns and own UserAttribute rows) | `system.user-names-self-manage` |
+| `client_self_manage` | client | `system.client-names-self-manage` (`invert: true`) |
+| `robot_self_manage` | robot | `system.robot-names-self-manage` (`invert: true`) |
+| `user_self_manage` | user (own User columns and own UserAttribute rows) | `system.user-names-self-manage` (`invert: true`) |
 
-The allowlist is provisioned as a built-in `ATTRIBUTE_NAMES` policy whose `names` field enumerates the editable columns (e.g. for clients: `name, display_name, description, secret, redirect_uri, grant_types, scope, base_url, root_url, is_confidential`). FK fields (`realm_id`, `user_id`, `client_id`) and lifecycle flags (`active`, `built_in`, `name_locked`) are excluded.
+Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `names` enumerates fields a self-edit must REJECT; everything else is permitted. The defaults:
+
+| Policy | Denylist `names` |
+|---|---|
+| `system.client-names-self-manage` | `active, realm_id` |
+| `system.robot-names-self-manage` | `active, realm_id, user_id` |
+| `system.user-names-self-manage` | `active, name_locked, status, status_message, realm_id` |
+
+Self-editable fields (e.g. `name`, `display_name`, `email`, `password`, `secret`, `redirect_uri`, etc.) are NOT enumerated — they're permitted by virtue of being absent from the denylist. The validator already strips system-managed columns (`built_in`, `id`, `created_at`, `updated_at`) before they reach the policy, so the denylist only needs to cover what validators let through but admin-only state should still block.
+
+**Trade-off:** denylist semantics are fail-open. A new column added to the entity (e.g. a new `User.role_metadata` field mounted in the validator) is self-editable by default until added to the denylist. When adding admin-only state to an entity, extend the relevant denylist alongside the migration.
 
 ### Unified user-namespace policy
 
-`USER_SELF_MANAGE` governs both User column edits and UserAttribute writes. Rationale: a `UserAttribute` row is semantically a single key-value declaration about the user, so its `(name, value)` is mapped to `{ [name]: value }` in `UserAttributeService.create/update` before policy evaluation. The `system.user-names-self-manage` allowlist then governs both User column edits and UserAttribute key writes — one administrative surface for "what a user can declare about themself". `UserAttributeService` only takes the self-manage path when the actor lacks `USER_UPDATE`; an admin or other user with `USER_UPDATE` evaluates against `USER_UPDATE` instead and is not subject to the allowlist.
+`USER_SELF_MANAGE` governs both User column edits and UserAttribute writes. Rationale: a `UserAttribute` row is semantically a single key-value declaration about the user, so its `(name, value)` is mapped to `{ [name]: value }` in `UserAttributeService.create/update` before policy evaluation. The denylist semantic means a user can self-create UserAttributes with arbitrary keys (e.g. `theme`, `language`, `timezone`) — only attribute names that match the denylist are blocked. `UserAttributeService` only takes the self-manage path when the actor lacks `USER_UPDATE`; an admin or other user with `USER_UPDATE` evaluates against `USER_UPDATE` instead and is not subject to the denylist.
 
-Two important consequences:
-
-1. **Default UserAttribute self-management is effectively empty.** The default allowlist contains User entity columns (`name`, `first_name`, `last_name`, `display_name`, `email`, `password`, `avatar`, `cover`). None of these are useful as UserAttribute keys (they overlap with real User columns). Deployments that want users to self-manage attribute keys like `theme`, `language`, `notifications` must extend `USER_NAMES_SELF_MANAGE` accordingly.
-2. **UserAttribute names are filtered against User columns.** `UserAttributeService.create/update` rejects any `data.name` that matches a reserved User entity column (see `RESERVED_USER_ATTRIBUTE_NAMES`) with a `BadRequestError`. This prevents confusing rows like `UserAttribute(name='email', value='x')` coexisting with `User.email='y'`. A name can be in the policy allowlist *and* be a reserved column — the validator-level rejection still wins for UserAttribute writes.
+UserAttribute names are still filtered against User entity columns by `UserAttributeService.create/update` — any `data.name` that matches a reserved User entity column raises a `BadRequestError`. This prevents confusing rows like `UserAttribute(name='email', value='x')` coexisting with `User.email='y'`. The reserved-name filter and the policy denylist are layered: the policy stops admin-only field names from being declared as UserAttribute keys; the validator-level rejection stops shadowing of normal User columns even when those columns aren't in the denylist.
 
 ### Service flow
 

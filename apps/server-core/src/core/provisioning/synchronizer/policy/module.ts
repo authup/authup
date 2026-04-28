@@ -31,12 +31,20 @@ export class PolicyProvisioningSynchronizer extends BaseProvisioningSynchronizer
         });
 
         if (entity) {
-            entity = this.repository.merge(entity, {
+            // Only assign `invert` when the source declares it explicitly.
+            // TypeORM's `merge` is a plain assign and would otherwise clobber
+            // an existing flag with `undefined` (turning `invert: true` into
+            // `null`/`false` on every reprovisioning pass).
+            const mergeData: Partial<Policy> = {
                 type: input.attributes.type,
                 built_in: input.attributes.built_in,
                 parent_id: input.attributes.parent_id,
                 parent: input.attributes.parent,
-            });
+            };
+            if (typeof input.attributes.invert !== 'undefined') {
+                mergeData.invert = input.attributes.invert;
+            }
+            entity = this.repository.merge(entity, mergeData);
             await this.repository.saveWithEA(entity, input.extraAttributes);
         } else {
             entity = this.repository.create(input.attributes);

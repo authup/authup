@@ -8,11 +8,24 @@
 import { AuthupError, ErrorCode } from '@authup/errors';
 import type { PolicyIssue } from '../issue';
 
+// Symbol used by `isPolicyError` for duck-type detection across realm/bundler
+// boundaries where `instanceof` is unreliable. Mirrors the routup convention:
+// instances carry an `@instanceof` property pointing to this symbol.
+const POLICY_ERROR_INSTANCE = Symbol.for('@authup/access/PolicyError');
+
+export function isPolicyError(value: unknown): value is PolicyError {
+    return typeof value === 'object' &&
+        value !== null &&
+        (value as Record<string, unknown>)['@instanceof'] === POLICY_ERROR_INSTANCE;
+}
+
 export class PolicyError extends AuthupError {
+    readonly '@instanceof' = POLICY_ERROR_INSTANCE;
+
     constructor(message?: string, code?: string | null) {
         super({
             message,
-            code, 
+            code,
         });
     }
 

@@ -112,25 +112,30 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                     identity_master_match_all: false,
                 },
             },
+            // Self-manage policies use ATTRIBUTE_NAMES + invert: true (denylist).
+            // Each `names` entry is what self-edit must REJECT; everything else
+            // is permitted. New columns added to the entity are self-editable
+            // by default — extend the denylist when adding admin-only state.
             {
                 attributes: {
                     name: SystemPolicyName.CLIENT_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    invert: true,
                     built_in: true,
                     realm_id: null,
                 },
                 extraAttributes: {
                     names: [
-                        'name',
-                        'display_name',
-                        'description',
-                        'secret',
-                        'redirect_uri',
-                        'grant_types',
-                        'scope',
-                        'base_url',
-                        'root_url',
+                        // FK + lifecycle
+                        'active',
+                        'realm_id',
+                        // Security-critical: a self-edit must not change the
+                        // client's confidentiality (toggling this clears the
+                        // secret) or downgrade the secret-storage format
+                        // (which would persist the secret in plaintext).
                         'is_confidential',
+                        'secret_hashed',
+                        'secret_encrypted',
                     ],
                 },
             },
@@ -138,15 +143,15 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 attributes: {
                     name: SystemPolicyName.ROBOT_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    invert: true,
                     built_in: true,
                     realm_id: null,
                 },
                 extraAttributes: {
                     names: [
-                        'name',
-                        'display_name',
-                        'description',
-                        'secret',
+                        'active',
+                        'realm_id',
+                        'user_id',
                     ],
                 },
             },
@@ -154,19 +159,17 @@ export class DefaultProvisioningSource implements IProvisioningSource {
                 attributes: {
                     name: SystemPolicyName.USER_NAMES_SELF_MANAGE,
                     type: BuiltInPolicyType.ATTRIBUTE_NAMES,
+                    invert: true,
                     built_in: true,
                     realm_id: null,
                 },
                 extraAttributes: {
                     names: [
-                        'name',
-                        'first_name',
-                        'last_name',
-                        'display_name',
-                        'email',
-                        'password',
-                        'avatar',
-                        'cover',
+                        'active',
+                        'name_locked',
+                        'status',
+                        'status_message',
+                        'realm_id',
                     ],
                 },
             },

@@ -352,28 +352,49 @@ describe('core/entities/robot/service', () => {
             expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_DELETE });
         });
 
-        it('should not call preCheck for owner delete', async () => {
+        it('should fall back to ROBOT_SELF_MANAGE preCheck when owner lacks ROBOT_DELETE', async () => {
             const userId = randomUUID();
             const entity = repository.seed(createFakeRobot({
                 name: 'owned',
-                user_id: userId, 
+                user_id: userId,
             }));
 
             const actor = createUserActorAsOwner(userId);
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.ROBOT_DELETE) {
+                    throw new ForbiddenError();
+                }
+            });
+
             await service.delete(entity.id, actor);
-            expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(0);
+
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_DELETE });
+            expect(actor.permissionEvaluator.preEvaluateCalls).toContainEqual({ name: PermissionName.ROBOT_SELF_MANAGE });
         });
 
-        it('should allow owner to delete without permission check', async () => {
+        it('should allow owner to delete with ROBOT_SELF_MANAGE when ROBOT_DELETE is denied', async () => {
             const userId = randomUUID();
             const entity = repository.seed(createFakeRobot({ user_id: userId }));
 
             const actor = createUserActorAsOwner(userId);
-            actor.permissionEvaluator.deny('evaluate');
-            actor.permissionEvaluator.deny('preEvaluate');
+            actor.permissionEvaluator.setBehavior((call) => {
+                if (call.ctx.name === PermissionName.ROBOT_DELETE) {
+                    throw new ForbiddenError();
+                }
+            });
 
             const result = await service.delete(entity.id, actor);
             expect(result.id).toBe(entity.id);
+        });
+
+        it('should reject owner delete when both ROBOT_DELETE and ROBOT_SELF_MANAGE are denied', async () => {
+            const userId = randomUUID();
+            const entity = repository.seed(createFakeRobot({ user_id: userId }));
+
+            const actor = createUserActorAsOwner(userId);
+            actor.permissionEvaluator.deny('preEvaluate');
+
+            await expect(service.delete(entity.id, actor)).rejects.toThrow(ForbiddenError);
         });
 
         it('should require permission check for robots not owned by actor', async () => {
