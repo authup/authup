@@ -28,11 +28,16 @@ export abstract class OAuth2BaseTokenIssuer implements IOAuth2TokenIssuer {
             return undefined;
         }
 
+        // Strip a trailing slash so a configured issuer like
+        // `https://auth.example.com/` doesn't produce a malformed
+        // `https://auth.example.com//realms/master`.
+        const base = this.options.issuer.replace(/\/+$/, '');
+
         if (input.realm_name) {
-            return `${this.options.issuer}/realms/${input.realm_name}`;
+            return `${base}/realms/${input.realm_name}`;
         }
 
-        return this.options.issuer;
+        return base;
     }
 
     /**
