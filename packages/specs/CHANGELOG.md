@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-beta.38](https://github.com/authup/authup/compare/v1.0.0-beta.37...v1.0.0-beta.38) (2026-04-28)
+
+
+### Features
+
+* include realm_access and global_access role claims in access to… ([#3013](https://github.com/authup/authup/issues/3013)) ([5a1d322](https://github.com/authup/authup/commit/5a1d322092a6d2cbffc9091b1a06295cee0ec772))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.37 to ^1.0.0-beta.38
+    * @authup/kit bumped from ^1.0.0-beta.37 to ^1.0.0-beta.38
+  * peerDependencies
+    * @authup/errors bumped from ^1.0.0-beta.37 to ^1.0.0-beta.38
+    * @authup/kit bumped from ^1.0.0-beta.37 to ^1.0.0-beta.38
+
 ## [1.0.0-beta.37](https://github.com/authup/authup/compare/v1.0.0-beta.36...v1.0.0-beta.37) (2026-04-23)
 
 
