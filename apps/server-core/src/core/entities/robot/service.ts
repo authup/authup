@@ -98,43 +98,45 @@ export class RobotService extends AbstractEntityService implements IRobotService
     async getOne(
         idOrName: string,
         actor: ActorContext,
+        query?: Record<string, any>,
         realmId?: string,
     ): Promise<Robot> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.ROBOT_READ,
-                PermissionName.ROBOT_UPDATE,
-                PermissionName.ROBOT_DELETE,
-            ],
-        });
-
-        let entity: Robot | null;
-        if (isUUID(idOrName)) {
-            entity = await this.repository.findOneById(idOrName);
-        } else if (realmId) {
-            const realm = await this.realmRepository.resolve(realmId);
-            entity = realm ?
-                await this.repository.findOneBy({
-                    name: idOrName,
-                    realm_id: realm.id, 
-                }) :
-                null;
-        } else {
-            entity = await this.repository.findOneByName(idOrName);
-        }
-
+        const entity = await this.repository.findOne(idOrName, query, realmId);
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluateOneOf({
-            name: [
-                PermissionName.ROBOT_READ,
-                PermissionName.ROBOT_UPDATE,
-                PermissionName.ROBOT_DELETE,
-            ],
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
-        });
+        let isSelfAccess = false;
+        try {
+            await actor.permissionEvaluator.preEvaluateOneOf({
+                name: [
+                    PermissionName.ROBOT_READ,
+                    PermissionName.ROBOT_UPDATE,
+                    PermissionName.ROBOT_DELETE,
+                ],
+            });
+        } catch (e) {
+            if (
+                !actor.identity ||
+                actor.identity.type !== 'robot' ||
+                actor.identity.data.id !== entity.id
+            ) {
+                throw e;
+            }
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_SELF_MANAGE });
+            isSelfAccess = true;
+        }
+
+        if (!isSelfAccess) {
+            await actor.permissionEvaluator.evaluateOneOf({
+                name: [
+                    PermissionName.ROBOT_READ,
+                    PermissionName.ROBOT_UPDATE,
+                    PermissionName.ROBOT_DELETE,
+                ],
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            });
+        }
 
         return entity;
     }

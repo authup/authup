@@ -107,6 +107,48 @@ export class RobotRepositoryAdapter implements IRobotRepository {
             this.findOneByName(idOrName, realm);
     }
 
+    async findOne(id: string, query?: Record<string, any>, realmKey?: string): Promise<Robot | null> {
+        const qb = this.repository.createQueryBuilder('robot');
+
+        if (isUUID(id)) {
+            qb.where('robot.id = :id', { id });
+        } else {
+            qb.where('robot.name LIKE :name', { name: id });
+
+            if (realmKey) {
+                const realm = await this.realmRepository.resolve(realmKey);
+                if (!realm) {
+                    return null;
+                }
+                qb.andWhere('robot.realm_id = :realmId', { realmId: realm.id });
+            }
+        }
+
+        applyQuery(qb, query || {}, {
+            defaultAlias: 'robot',
+            fields: {
+                default: [
+                    'id',
+                    'name',
+                    'display_name',
+                    'description',
+                    'active',
+                    'user_id',
+                    'realm_id',
+                    'created_at',
+                    'updated_at',
+                ],
+                allowed: ['secret'],
+            },
+            relations: {
+                // @ts-expect-error 'user' is a valid relation but not in the type definition
+                allowed: ['realm', 'user'],
+            },
+        });
+
+        return qb.getOne();
+    }
+
     async findManyBy(where: Record<string, any>): Promise<Robot[]> {
         return this.repository.findBy(translateWhereConditions(where));
     }

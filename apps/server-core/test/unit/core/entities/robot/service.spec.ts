@@ -23,6 +23,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { RobotService } from '../../../../../src/core/entities/robot/service.ts';
@@ -41,6 +42,10 @@ import { createFakeRobot } from '../../../../utils/domains/index.ts';
 class FakeRobotRepository extends FakeEntityRepository<Robot> implements IRobotRepository {
     async checkUniqueness(): Promise<void> {
         // no-op
+    }
+
+    async findOne(id: string, _query?: Record<string, any>, realm?: string): Promise<Robot | null> {
+        return this.findOneByIdOrName(id, realm);
     }
 
     async findOneWithSecret(where: Record<string, any>): Promise<Robot | null> {
@@ -152,6 +157,63 @@ describe('core/entities/robot/service', () => {
 
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+        });
+
+        it('should forward query and realmId to repository.findOne', async () => {
+            const entity = repository.seed(createFakeRobot({ name: 'queried-robot' }));
+            const findOneSpy = vi.spyOn(repository, 'findOne');
+
+            await service.getOne(entity.id, createAllowAllActor(), { fields: '+secret' });
+
+            expect(findOneSpy).toHaveBeenCalledWith(entity.id, { fields: '+secret' }, undefined);
+        });
+
+        it('should fall back to ROBOT_SELF_MANAGE when actor is the robot itself', async () => {
+            const entity = repository.seed(createFakeRobot({ name: 'self-robot' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.ROBOT,
+                    data: { id: entity.id } as any,
+                },
+            };
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
+
+            const result = await service.getOne(entity.id, actor);
+            expect(result.id).toBe(entity.id);
+            expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(1);
+            expect(actor.permissionEvaluator.preEvaluateCalls[0].name).toBe(PermissionName.ROBOT_SELF_MANAGE);
+        });
+
+        it('should rethrow upfront error when ROBOT_SELF_MANAGE actor looks at a different robot', async () => {
+            const target = repository.seed(createFakeRobot({ name: 'other-robot' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.ROBOT,
+                    data: { id: randomUUID() } as any,
+                },
+            };
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
+
+            await expect(service.getOne(target.id, actor)).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should skip post-load attribute evaluation on self-access', async () => {
+            const entity = repository.seed(createFakeRobot({ name: 'self-robot' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.ROBOT,
+                    data: { id: entity.id } as any,
+                },
+            };
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
+            actor.permissionEvaluator.deny('evaluateOneOf');
+
+            const result = await service.getOne(entity.id, actor);
+            expect(result.id).toBe(entity.id);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
     });
 

@@ -163,6 +163,7 @@ export class RobotController {
             entity = await this.service.getOne(
                 id,
                 actor,
+                useRequestQuery(req),
                 useRequestParam(req, 'realmId'),
             );
 
