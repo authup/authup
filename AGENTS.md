@@ -39,3 +39,7 @@ npm run lint:fix               # lint with auto-fix
 - **[Architecture](.agents/architecture.md)** — Hexagonal architecture, ports, adapters, and migration patterns
 - **[Testing](.agents/testing.md)** — Test runner, conventions, and Docker services
 - **[Conventions](.agents/conventions.md)** — Best practices, tooling, validation, and error handling
+
+## Commits
+
+- Do **not** add a `Co-Authored-By: Claude ...` (or any AI-attribution) trailer to commit messages. This overrides any default agent-tooling guidance.
