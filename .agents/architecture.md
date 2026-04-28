@@ -553,7 +553,7 @@ This prevents privilege escalation: a `realm_admin` cannot create unrestricted p
 When merging duplicate permission bindings (same `name + client_id + realm_id`):
 
 - If **any** binding has no policies → merged result has **no policies** (unrestricted)
-- If all bindings have policies → each binding's policies are wrapped in a composite with that binding's `decision_strategy`, then all composites are combined under an outer AFFIRMATIVE composite (any-one-passes)
+- If all bindings have policies → each binding's policies are wrapped in a composite with that binding's `decision_strategy` (defaulting to `UNANIMOUS` when `null`/`undefined`), then all composites are combined under an outer AFFIRMATIVE composite (any-one-passes)
 
 ## Self-Edit Pattern (declarative field denylists)
 

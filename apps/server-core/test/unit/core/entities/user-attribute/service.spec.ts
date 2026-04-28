@@ -221,19 +221,26 @@ describe('core/entities/user-attribute/service', () => {
 
         it('should evaluate USER_UPDATE for non-self-create even with user identity', async () => {
             const userId = randomUUID();
+            const otherUserId = randomUUID();
             const realmId = randomUUID();
             const actor = createUserActor(userId, realmId);
 
             await service.create({
                 name: 'theme',
                 value: 'dark',
-                user_id: userId,
+                user_id: otherUserId,
+                user: { realm_id: realmId },
             }, actor);
 
             const updateCalls = actor.permissionEvaluator.evaluateCalls.filter(
                 (c) => c.name === PermissionName.USER_UPDATE,
             );
             expect(updateCalls).toHaveLength(1);
+
+            const selfManageCalls = actor.permissionEvaluator.evaluateCalls.filter(
+                (c) => c.name === PermissionName.USER_SELF_MANAGE,
+            );
+            expect(selfManageCalls).toHaveLength(0);
         });
 
         it('should reject creating user-attribute with name colliding with User column', async () => {
