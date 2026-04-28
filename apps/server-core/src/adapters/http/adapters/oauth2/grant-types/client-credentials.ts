@@ -6,16 +6,15 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2Error } from '@authup/specs';
 import { useRequestBody } from '@routup/basic/body';
 import type { Client } from '@authup/core-kit';
 import { ClientError } from '@authup/core-kit';
-import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { Request } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
 import { ClientCredentialsGrant } from '../../../../../core/index.ts';
 import type { HTTPOAuth2ClientCredentialsGrantContext, IHTTPOAuth2Grant } from './types.ts';
+import { extractClientCredentialsFromRequest } from './utils/index.ts';
 
 export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implements IHTTPOAuth2Grant {
     protected authenticator : ICredentialsAuthenticator<Client>;
@@ -27,28 +26,14 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
     }
 
     async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
-        let clientId = useRequestBody(req, 'client_id');
-        let clientSecret = useRequestBody(req, 'client_secret');
+        const { clientId, clientSecret } = extractClientCredentialsFromRequest(req);
         const realmId = useRequestBody(req, 'realm_id');
 
-        if (!clientId && !clientSecret) {
-            const { authorization: headerValue } = req.headers;
-
-            if (typeof headerValue !== 'string') {
-                throw ClientError.credentialsInvalid();
-            }
-
-            const header = parseAuthorizationHeader(headerValue);
-
-            if (header.type !== AuthorizationHeaderType.BASIC) {
-                throw OAuth2Error.requestInvalid();
-            }
-
-            clientId = header.username;
-            clientSecret = header.password;
+        if (!clientId) {
+            throw ClientError.credentialsInvalid();
         }
 
-        const client = await this.authenticator.authenticate(clientId, clientSecret, realmId);
+        const client = await this.authenticator.authenticate(clientId, clientSecret ?? '', realmId);
 
         return this.runWith(client, {
             ipAddress: getRequestIP(req, { trustProxy: true }),

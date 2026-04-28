@@ -12,9 +12,10 @@ import type {
     IIdentityResolver,
     IOAuth2AuthorizationCodeVerifier,
     IOAuth2TokenIssuer,
-    IOAuth2TokenRevoker, 
-    IOAuth2TokenVerifier, 
-    ISessionManager, 
+    IOAuth2TokenRevoker,
+    IOAuth2TokenVerifier,
+    ISessionManager,
+    OAuth2ClientAuthenticator,
 } from '../../../../../core/index.ts';
 
 export type TokenControllerContext = {
@@ -33,4 +34,6 @@ export type TokenControllerContext = {
     clientAuthenticator: ICredentialsAuthenticator<Client>
     robotAuthenticator: ICredentialsAuthenticator<Robot>
     userAuthenticator: ICredentialsAuthenticator<User>
+
+    oauth2ClientAuthenticator: OAuth2ClientAuthenticator
 };

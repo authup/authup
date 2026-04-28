@@ -51,5 +51,7 @@ export enum OAuth2ErrorCode {
 
     UNSUPPORTED_GRANT_TYPE = 'unsupported_grant_type',
 
+    UNSUPPORTED_RESPONSE_TYPE = 'unsupported_response_type',
+
     INVALID_SCOPE = 'invalid_scope',
 }

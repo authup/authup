@@ -9,7 +9,9 @@ import type { OAuth2AuthorizationCode } from '@authup/core-kit';
 
 export type IOAuth2AuthorizationCodeVerifyOptions = {
     redirectUri?: string,
-    codeVerifier?: string
+    codeVerifier?: string,
+    clientId?: string,
+    clientIsPublic?: boolean,
 };
 
 export interface IOAuth2AuthorizationCodeVerifier {

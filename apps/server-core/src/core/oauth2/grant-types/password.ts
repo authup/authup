@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -7,7 +7,7 @@
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenPayload } from '@authup/specs';
 import { OAuth2SubKind } from '@authup/specs';
-import type { User } from '@authup/core-kit';
+import type { Client, User } from '@authup/core-kit';
 import {
     IdentityType,
     ScopeName,
@@ -17,7 +17,12 @@ import type { IOAuth2TokenIssuer } from '../token/index.ts';
 import { OAuth2BaseGrant } from './base.ts';
 import type { OAuth2GrantRunWIthOptions, OAuth2PasswordGrantContext } from './types.ts';
 
-export class PasswordGrantType extends OAuth2BaseGrant<User> {
+export type OAuth2PasswordGrantInput = {
+    user: User,
+    client?: Client,
+};
+
+export class PasswordGrantType extends OAuth2BaseGrant<OAuth2PasswordGrantInput> {
     protected refreshTokenIssuer : IOAuth2TokenIssuer;
 
     constructor(ctx: OAuth2PasswordGrantContext) {
@@ -29,26 +34,29 @@ export class PasswordGrantType extends OAuth2BaseGrant<User> {
         this.refreshTokenIssuer = ctx.refreshTokenIssuer;
     }
 
-    async runWith(input: User, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
+    async runWith(input: OAuth2PasswordGrantInput, options: OAuth2GrantRunWIthOptions = {}) : Promise<OAuth2TokenGrantResponse> {
+        const { user, client } = input;
+        const clientId = client?.id;
+
         const session = await this.sessionManager.create({
             user_agent: options.userAgent,
             ip_address: options.ipAddress,
-            realm_id: input.realm_id,
-            client_id: input.client_id || undefined,
-            sub: input.id,
+            realm_id: user.realm_id,
+            client_id: clientId,
+            sub: user.id,
             sub_kind: IdentityType.USER,
         });
 
         const issuePayload : Partial<OAuth2TokenPayload> = {
-            client_id: input.client_id || undefined,
+            client_id: clientId,
             session_id: session.id,
             user_agent: session.user_agent,
             remote_address: session.ip_address,
             scope: ScopeName.GLOBAL,
-            sub: input.id,
+            sub: user.id,
             sub_kind: OAuth2SubKind.USER,
-            realm_id: input.realm_id,
-            realm_name: input.realm?.name,
+            realm_id: user.realm_id,
+            realm_name: user.realm?.name,
         };
 
         const [accessToken, accessTokenPayload] = await this.accessTokenIssuer.issue(issuePayload);
