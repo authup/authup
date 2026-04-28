@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { flattenObject } from '@authup/kit';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import type { PolicyIssue } from '../../issue';
 import { PolicyIssueCode, definePolicyIssueItem } from '../../issue';
@@ -39,12 +40,15 @@ export class AttributeNamesPolicyEvaluator implements IPolicyEvaluator {
             };
         }
 
-        // Top-level keys only — do NOT flatten nested objects. Flattening
-        // would emit dotted paths like `user.id` for a nested value, which
-        // wouldn't match a top-level denylist entry like `user_id` and would
-        // bypass the policy. Validators today emit only flat fields, so the
-        // top-level keys are the right granularity.
-        const keys = Object.keys(data);
+        // Nested paths are a deliberate feature: an attribute object like
+        // `{user: {name: 'x'}}` flattens to `{'user.name': 'x'}` and is matched
+        // against `names` entries with dotted notation. Allowlists/denylists
+        // that need to govern nested fields must use the dotted-path form
+        // (e.g. `'user.realm_id'`); a top-level entry like `'realm_id'` will
+        // NOT catch a nested `user.realm_id` write — that's by design, the
+        // policy is precise about which path it covers.
+        const attributes = flattenObject(data);
+        const keys = Object.keys(attributes);
 
         // `invert` is consumed per-key, NOT at the result level:
         //   - allowlist (default): a key NOT in `names` is denied
