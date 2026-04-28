@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.38](https://github.com/authup/authup/compare/v1.0.0-beta.37...v1.0.0-beta.38) (2026-04-28)
+
+
+### Features
+
+* declarative self-manage permissions via ATTRIBUTE_NAMES policies ([#3019](https://github.com/authup/authup/issues/3019)) ([240eb45](https://github.com/authup/authup/commit/240eb45c0be5eb02adefbfe8306e3a134e91b0d4))
+* include realm_access and global_access role claims in access to… ([#3013](https://github.com/authup/authup/issues/3013)) ([5a1d322](https://github.com/authup/authup/commit/5a1d322092a6d2cbffc9091b1a06295cee0ec772))
+
+
+### Bug Fixes
+
+* set next version to v1.0.0-beta.38 ([2fab83c](https://github.com/authup/authup/commit/2fab83c61194cd1c6011e7d2d04a9e7333eb3ff0))
+
 ## [1.0.0-beta.37](https://github.com/authup/authup/compare/v1.0.0-beta.36...v1.0.0-beta.37) (2026-04-23)
 
 
