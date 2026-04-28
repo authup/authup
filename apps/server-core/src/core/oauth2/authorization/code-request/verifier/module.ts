@@ -67,6 +67,14 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             throw OAuth2Error.requestInvalid('PKCE code_challenge is required for public clients.');
         }
 
+        // Public clients SHOULD include state to bind the redirect to the
+        // initiating session and prevent CSRF (RFC 6749 §10.12). Confidential
+        // clients are exempt because the /token exchange already authenticates
+        // them via client_secret.
+        if (!client.is_confidential && !data.state && willIssueCode(data.response_type)) {
+            throw OAuth2Error.requestInvalid('state is required for public clients in the code flow.');
+        }
+
         data.client_id = client.id;
         data.realm_id = client.realm_id;
 

@@ -49,6 +49,67 @@ describe('OAuth2AccessTokenIssuer', () => {
             expect(repository.saveWithSignatureCalls).toContainEqual({ payload, signature: 'signed-access-token' });
         });
 
+        it('should set iss to "<issuer>/realms/<realm_name>" when realm_name is present', async () => {
+            const issuer = new OAuth2AccessTokenIssuer(repository, signer, { issuer: 'https://auth.example.com' });
+
+            await issuer.issue({
+                sub: userId,
+                sub_kind: OAuth2SubKind.USER,
+                realm_id: realmId,
+                realm_name: 'master',
+            });
+
+            expect(repository.insertCalls[0].iss).toEqual('https://auth.example.com/realms/master');
+        });
+
+        it('should set iss to the configured issuer when no realm_name is given', async () => {
+            const issuer = new OAuth2AccessTokenIssuer(repository, signer, { issuer: 'https://auth.example.com' });
+
+            await issuer.issue({
+                sub: userId,
+                sub_kind: OAuth2SubKind.USER,
+            });
+
+            expect(repository.insertCalls[0].iss).toEqual('https://auth.example.com');
+        });
+
+        it('should strip a trailing slash from the configured issuer', async () => {
+            const issuer = new OAuth2AccessTokenIssuer(repository, signer, { issuer: 'https://auth.example.com/' });
+
+            await issuer.issue({
+                sub: userId,
+                sub_kind: OAuth2SubKind.USER,
+                realm_id: realmId,
+                realm_name: 'master',
+            });
+
+            expect(repository.insertCalls[0].iss).toEqual('https://auth.example.com/realms/master');
+        });
+
+        it('should strip a trailing slash from a sub-path issuer', async () => {
+            const issuer = new OAuth2AccessTokenIssuer(repository, signer, { issuer: 'https://example.com/auth/' });
+
+            await issuer.issue({
+                sub: userId,
+                sub_kind: OAuth2SubKind.USER,
+                realm_name: 'master',
+            });
+
+            expect(repository.insertCalls[0].iss).toEqual('https://example.com/auth/realms/master');
+        });
+
+        it('should omit iss when no issuer is configured', async () => {
+            const issuer = new OAuth2AccessTokenIssuer(repository, signer);
+
+            await issuer.issue({
+                sub: userId,
+                sub_kind: OAuth2SubKind.USER,
+                realm_name: 'master',
+            });
+
+            expect(repository.insertCalls[0].iss).toBeUndefined();
+        });
+
         it('should not add access claims when no role provider is supplied', async () => {
             const issuer = new OAuth2AccessTokenIssuer(repository, signer);
 
