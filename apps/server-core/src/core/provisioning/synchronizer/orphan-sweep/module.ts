@@ -160,7 +160,8 @@ export class OrphanSweepSynchronizer {
         const declaredByName = new Map<string, string[]>();
         if (declaredPermissions) {
             for (const entry of declaredPermissions) {
-                if (entry.attributes?.name && entry.relations?.policies) {
+                // Empty `relations.policies: []` is treated as missing → falls back to defaultPolicyName.
+                if (entry.attributes?.name && entry.relations?.policies && entry.relations.policies.length > 0) {
                     declaredByName.set(entry.attributes.name, entry.relations.policies);
                 }
             }
@@ -181,7 +182,16 @@ export class OrphanSweepSynchronizer {
                 (this.defaultPolicyName ? [this.defaultPolicyName] : []);
 
             for (const policyName of policyNames) {
-                const policy = await this.policyRepository.findOneByName(policyName);
+                // Restrict lookup to global built-in policies. The affected
+                // permissions themselves are filtered to `{ built_in: true,
+                // realm_id: null }`, so the policies they bind to must be
+                // similarly constrained — otherwise we'd risk attaching a
+                // user-defined realm-scoped policy that shares the same name.
+                const policy = await this.policyRepository.findOneBy({
+                    name: policyName,
+                    realm_id: null,
+                    built_in: true,
+                });
                 if (!policy) {
                     continue;
                 }

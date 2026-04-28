@@ -991,6 +991,114 @@ describe('core/provisioning/synchronizer/orphan-sweep', () => {
         });
     });
 
+    describe('reassignment lookup safety', () => {
+        it('should treat empty `relations.policies: []` as missing and fall back to defaultPolicyName', async () => {
+            const orphan = policyRepository.seed({
+                name: 'system.removed',
+                built_in: true,
+                realm_id: null,
+                parent_id: null,
+            });
+            const defaultPolicy = policyRepository.seed({
+                name: 'system.default',
+                built_in: true,
+                realm_id: null,
+                parent_id: null,
+            });
+            const permission = permissionRepository.seed({
+                name: 'something_action',
+                built_in: true,
+                realm_id: null,
+                client_id: null,
+            });
+            permissionPolicyRepository.seed({
+                permission_id: permission.id,
+                policy_id: orphan.id,
+                permission_realm_id: null,
+                policy_realm_id: null,
+            });
+
+            await build('system.default').sweep(declared({
+                policies: [{
+                    strategy: { type: ProvisioningEntityStrategyType.MERGE },
+                    attributes: {
+                        name: 'system.default', 
+                        built_in: true, 
+                        realm_id: null, 
+                    },
+                }],
+                permissions: [{
+                    strategy: { type: ProvisioningEntityStrategyType.MERGE },
+                    attributes: { name: 'something_action', built_in: true },
+                    relations: { policies: [] }, // explicit empty
+                }],
+            }));
+
+            const remaining = permissionPolicyRepository.getAll()
+                .filter((j) => j.permission_id === permission.id);
+            expect(remaining).toHaveLength(1);
+            expect(remaining[0].policy_id).toBe(defaultPolicy.id);
+        });
+
+        it('should not attach a same-named user-defined or realm-scoped policy during reassignment', async () => {
+            const orphan = policyRepository.seed({
+                name: 'system.removed',
+                built_in: true,
+                realm_id: null,
+                parent_id: null,
+            });
+            // user-defined non-built-in policy with same name as the declared one
+            policyRepository.seed({
+                name: 'system.default',
+                built_in: false,
+                realm_id: null,
+                parent_id: null,
+            });
+            // realm-scoped built-in policy with same name as the declared one
+            policyRepository.seed({
+                name: 'system.default',
+                built_in: true,
+                realm_id: 'realm-A',
+                parent_id: null,
+            });
+            // the actual global built-in we want
+            const correctDefault = policyRepository.seed({
+                name: 'system.default',
+                built_in: true,
+                realm_id: null,
+                parent_id: null,
+            });
+            const permission = permissionRepository.seed({
+                name: 'something_action',
+                built_in: true,
+                realm_id: null,
+                client_id: null,
+            });
+            permissionPolicyRepository.seed({
+                permission_id: permission.id,
+                policy_id: orphan.id,
+                permission_realm_id: null,
+                policy_realm_id: null,
+            });
+
+            await build('system.default').sweep(declared({
+                policies: [{
+                    strategy: { type: ProvisioningEntityStrategyType.MERGE },
+                    attributes: {
+                        name: 'system.default', 
+                        built_in: true, 
+                        realm_id: null, 
+                    },
+                }],
+            }));
+
+            const remaining = permissionPolicyRepository.getAll()
+                .filter((j) => j.permission_id === permission.id);
+            expect(remaining).toHaveLength(1);
+            expect(remaining[0].policy_id).toBe(correctDefault.id);
+        });
+    });
+
     describe('Layer 2 reference safety', () => {
         it('should refuse to delete an orphan policy that is referenced by role-permission.policy_id', async () => {
             const orphan = policyRepository.seed({
