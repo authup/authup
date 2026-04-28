@@ -114,7 +114,12 @@ export class ClientController {
         }
 
         const actor = buildActorContext(req);
-        const entity = await this.service.getOne(id, actor, useRequestParam(req, 'realmId'));
+        const entity = await this.service.getOne(
+            id,
+            actor,
+            useRequestQuery(req),
+            useRequestParam(req, 'realmId'),
+        );
 
         return send(res, entity);
     }

@@ -97,39 +97,37 @@ export class ClientService extends AbstractEntityService implements IClientServi
     async getOne(
         idOrName: string,
         actor: ActorContext,
+        query?: Record<string, any>,
         realmId?: string,
     ): Promise<Client> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.CLIENT_READ,
-                PermissionName.CLIENT_UPDATE,
-                PermissionName.CLIENT_DELETE,
-            ],
-        });
-
-        let entity: Client | null;
-
-        if (isUUID(idOrName)) {
-            entity = await this.repository.findOneByIdOrName(idOrName, realmId);
-        } else if (realmId) {
-            const realm = await this.realmRepository.resolve(realmId);
-            if (realm) {
-                entity = await this.repository.findOneBy({
-                    name: idOrName,
-                    realm_id: realm.id,
-                });
-            } else {
-                entity = null;
-            }
-        } else {
-            entity = await this.repository.findOneByName(idOrName);
-        }
-
+        const entity = await this.repository.findOne(idOrName, query, realmId);
         if (!entity) {
             throw new NotFoundError();
         }
 
+        let isSelfAccess = false;
+        try {
+            await actor.permissionEvaluator.preEvaluateOneOf({
+                name: [
+                    PermissionName.CLIENT_READ,
+                    PermissionName.CLIENT_UPDATE,
+                    PermissionName.CLIENT_DELETE,
+                ],
+            });
+        } catch (e) {
+            if (
+                !actor.identity ||
+                actor.identity.type !== 'client' ||
+                actor.identity.data.id !== entity.id
+            ) {
+                throw e;
+            }
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SELF_MANAGE });
+            isSelfAccess = true;
+        }
+
         if (
+            !isSelfAccess &&
             entity.secret &&
             !entity.secret_encrypted &&
             !entity.secret_hashed
