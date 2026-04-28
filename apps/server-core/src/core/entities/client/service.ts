@@ -100,13 +100,17 @@ export class ClientService extends AbstractEntityService implements IClientServi
         query?: Record<string, any>,
         realmId?: string,
     ): Promise<Client> {
-        const entity = await this.repository.findOne(idOrName, query, realmId);
-        if (!entity) {
-            throw new NotFoundError();
+        let isMe = false;
+        if (actor.identity && actor.identity.type === 'client') {
+            if (
+                actor.identity.data.id === idOrName ||
+                actor.identity.data.name === idOrName
+            ) {
+                isMe = true;
+            }
         }
 
-        let isSelfAccess = false;
-        try {
+        if (!isMe) {
             await actor.permissionEvaluator.preEvaluateOneOf({
                 name: [
                     PermissionName.CLIENT_READ,
@@ -114,20 +118,16 @@ export class ClientService extends AbstractEntityService implements IClientServi
                     PermissionName.CLIENT_DELETE,
                 ],
             });
-        } catch (e) {
-            if (
-                !actor.identity ||
-                actor.identity.type !== 'client' ||
-                actor.identity.data.id !== entity.id
-            ) {
-                throw e;
-            }
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.CLIENT_SELF_MANAGE });
-            isSelfAccess = true;
+        }
+
+        const resolvedId = isMe ? actor.identity!.data.id : idOrName;
+        const entity = await this.repository.findOne(resolvedId, query, realmId);
+        if (!entity) {
+            throw new NotFoundError();
         }
 
         if (
-            !isSelfAccess &&
+            !isMe &&
             entity.secret &&
             !entity.secret_encrypted &&
             !entity.secret_hashed

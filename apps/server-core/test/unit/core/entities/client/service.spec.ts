@@ -180,30 +180,46 @@ describe('core/entities/client/service', () => {
             expect(findOneSpy).toHaveBeenCalledWith(entity.id, { fields: '+secret' }, undefined);
         });
 
-        it('should fall back to CLIENT_SELF_MANAGE when actor is the client itself', async () => {
+        it('should bypass the permission gate when actor is the client itself', async () => {
             const entity = repository.seed(createFakeClient({ name: 'self-client' }));
             const actor: FakeActorContext = {
                 permissionEvaluator: new FakePermissionEvaluator(),
                 identity: {
                     type: IdentityType.CLIENT,
-                    data: { id: entity.id } as any,
+                    data: { id: entity.id, name: 'self-client' } as any,
                 },
             };
-            actor.permissionEvaluator.deny('preEvaluateOneOf');
+            actor.permissionEvaluator.denyAll();
 
             const result = await service.getOne(entity.id, actor);
             expect(result.id).toBe(entity.id);
-            expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(1);
-            expect(actor.permissionEvaluator.preEvaluateCalls[0].name).toBe(PermissionName.CLIENT_SELF_MANAGE);
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
+            expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(0);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
-        it('should rethrow upfront error when CLIENT_SELF_MANAGE actor looks at a different client', async () => {
+        it('should detect self-access by name lookup', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'self-client' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: entity.id, name: 'self-client' } as any,
+                },
+            };
+            actor.permissionEvaluator.denyAll();
+
+            const result = await service.getOne('self-client', actor);
+            expect(result.id).toBe(entity.id);
+        });
+
+        it('should require permission when client actor looks at a different client', async () => {
             const target = repository.seed(createFakeClient({ name: 'other-client' }));
             const actor: FakeActorContext = {
                 permissionEvaluator: new FakePermissionEvaluator(),
                 identity: {
                     type: IdentityType.CLIENT,
-                    data: { id: randomUUID() } as any,
+                    data: { id: randomUUID(), name: 'self-client' } as any,
                 },
             };
             actor.permissionEvaluator.deny('preEvaluateOneOf');
@@ -222,11 +238,10 @@ describe('core/entities/client/service', () => {
                 permissionEvaluator: new FakePermissionEvaluator(),
                 identity: {
                     type: IdentityType.CLIENT,
-                    data: { id: entity.id } as any,
+                    data: { id: entity.id, name: 'self-secret' } as any,
                 },
             };
-            actor.permissionEvaluator.deny('preEvaluateOneOf');
-            actor.permissionEvaluator.deny('evaluateOneOf');
+            actor.permissionEvaluator.denyAll();
 
             const result = await service.getOne(entity.id, actor);
             expect(result.id).toBe(entity.id);

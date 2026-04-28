@@ -168,52 +168,51 @@ describe('core/entities/robot/service', () => {
             expect(findOneSpy).toHaveBeenCalledWith(entity.id, { fields: '+secret' }, undefined);
         });
 
-        it('should fall back to ROBOT_SELF_MANAGE when actor is the robot itself', async () => {
+        it('should bypass the permission gate when actor is the robot itself', async () => {
             const entity = repository.seed(createFakeRobot({ name: 'self-robot' }));
             const actor: FakeActorContext = {
                 permissionEvaluator: new FakePermissionEvaluator(),
                 identity: {
                     type: IdentityType.ROBOT,
-                    data: { id: entity.id } as any,
+                    data: { id: entity.id, name: 'self-robot' } as any,
                 },
             };
-            actor.permissionEvaluator.deny('preEvaluateOneOf');
+            actor.permissionEvaluator.denyAll();
 
             const result = await service.getOne(entity.id, actor);
             expect(result.id).toBe(entity.id);
-            expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(1);
-            expect(actor.permissionEvaluator.preEvaluateCalls[0].name).toBe(PermissionName.ROBOT_SELF_MANAGE);
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
+            expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(0);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
-        it('should rethrow upfront error when ROBOT_SELF_MANAGE actor looks at a different robot', async () => {
+        it('should detect self-access by name lookup', async () => {
+            const entity = repository.seed(createFakeRobot({ name: 'self-robot' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.ROBOT,
+                    data: { id: entity.id, name: 'self-robot' } as any,
+                },
+            };
+            actor.permissionEvaluator.denyAll();
+
+            const result = await service.getOne('self-robot', actor);
+            expect(result.id).toBe(entity.id);
+        });
+
+        it('should require permission when robot actor looks at a different robot', async () => {
             const target = repository.seed(createFakeRobot({ name: 'other-robot' }));
             const actor: FakeActorContext = {
                 permissionEvaluator: new FakePermissionEvaluator(),
                 identity: {
                     type: IdentityType.ROBOT,
-                    data: { id: randomUUID() } as any,
+                    data: { id: randomUUID(), name: 'self-robot' } as any,
                 },
             };
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
             await expect(service.getOne(target.id, actor)).rejects.toThrow(ForbiddenError);
-        });
-
-        it('should skip post-load attribute evaluation on self-access', async () => {
-            const entity = repository.seed(createFakeRobot({ name: 'self-robot' }));
-            const actor: FakeActorContext = {
-                permissionEvaluator: new FakePermissionEvaluator(),
-                identity: {
-                    type: IdentityType.ROBOT,
-                    data: { id: entity.id } as any,
-                },
-            };
-            actor.permissionEvaluator.deny('preEvaluateOneOf');
-            actor.permissionEvaluator.deny('evaluateOneOf');
-
-            const result = await service.getOne(entity.id, actor);
-            expect(result.id).toBe(entity.id);
-            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
     });
 

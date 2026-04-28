@@ -101,13 +101,17 @@ export class RobotService extends AbstractEntityService implements IRobotService
         query?: Record<string, any>,
         realmId?: string,
     ): Promise<Robot> {
-        const entity = await this.repository.findOne(idOrName, query, realmId);
-        if (!entity) {
-            throw new NotFoundError();
+        let isMe = false;
+        if (actor.identity && actor.identity.type === 'robot') {
+            if (
+                actor.identity.data.id === idOrName ||
+                actor.identity.data.name === idOrName
+            ) {
+                isMe = true;
+            }
         }
 
-        let isSelfAccess = false;
-        try {
+        if (!isMe) {
             await actor.permissionEvaluator.preEvaluateOneOf({
                 name: [
                     PermissionName.ROBOT_READ,
@@ -115,19 +119,15 @@ export class RobotService extends AbstractEntityService implements IRobotService
                     PermissionName.ROBOT_DELETE,
                 ],
             });
-        } catch (e) {
-            if (
-                !actor.identity ||
-                actor.identity.type !== 'robot' ||
-                actor.identity.data.id !== entity.id
-            ) {
-                throw e;
-            }
-            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.ROBOT_SELF_MANAGE });
-            isSelfAccess = true;
         }
 
-        if (!isSelfAccess) {
+        const resolvedId = isMe ? actor.identity!.data.id : idOrName;
+        const entity = await this.repository.findOne(resolvedId, query, realmId);
+        if (!entity) {
+            throw new NotFoundError();
+        }
+
+        if (!isMe) {
             await actor.permissionEvaluator.evaluateOneOf({
                 name: [
                     PermissionName.ROBOT_READ,
