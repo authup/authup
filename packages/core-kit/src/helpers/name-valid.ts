@@ -19,12 +19,12 @@ export function isNameValid(input: string, options: NameValidOptions = {}): bool
         return false;
     }
 
-    if (/^[A-Za-z0-9-_.]+$/.test(input)) {
+    if (/^[a-z0-9-_.]+$/.test(input)) {
         return true;
     }
 
     if (options.throwOnFailure) {
-        throw new AuthupError('Only the characters [A-Za-z0-9-_.]+ are allowed.');
+        throw new AuthupError('Only the characters [a-z0-9-_.]+ are allowed.');
     }
 
     return false;

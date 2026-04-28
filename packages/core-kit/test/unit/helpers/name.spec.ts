@@ -20,8 +20,8 @@ describe('src/helpers/name', () => {
         expect(isNameValid('foo_bar')).toBeTruthy();
     });
 
-    it('should be a valid name (uppercase character)', () => {
-        expect(isNameValid('FOO')).toBeTruthy();
+    it('should not be a valid name (uppercase character)', () => {
+        expect(isNameValid('FOO')).toBeFalsy();
     });
 
     it('should not be a valid name ("!" character)', () => {
