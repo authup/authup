@@ -98,43 +98,42 @@ export class RobotService extends AbstractEntityService implements IRobotService
     async getOne(
         idOrName: string,
         actor: ActorContext,
+        query?: Record<string, any>,
         realmId?: string,
     ): Promise<Robot> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.ROBOT_READ,
-                PermissionName.ROBOT_UPDATE,
-                PermissionName.ROBOT_DELETE,
-            ],
-        });
+        const permissionNames = [
+            PermissionName.ROBOT_READ,
+            PermissionName.ROBOT_UPDATE,
+            PermissionName.ROBOT_DELETE,
+        ];
 
-        let entity: Robot | null;
-        if (isUUID(idOrName)) {
-            entity = await this.repository.findOneById(idOrName);
-        } else if (realmId) {
-            const realm = await this.realmRepository.resolve(realmId);
-            entity = realm ?
-                await this.repository.findOneBy({
-                    name: idOrName,
-                    realm_id: realm.id, 
-                }) :
-                null;
-        } else {
-            entity = await this.repository.findOneByName(idOrName);
+        let isMe = !!actor.identity &&
+            actor.identity.type === 'robot' &&
+            (
+                actor.identity.data.id === idOrName ||
+                actor.identity.data.name === idOrName
+            );
+
+        if (!isMe) {
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
         }
 
+        const entity = await this.repository.findOne(idOrName, query, realmId);
         if (!entity) {
             throw new NotFoundError();
         }
 
-        await actor.permissionEvaluator.evaluateOneOf({
-            name: [
-                PermissionName.ROBOT_READ,
-                PermissionName.ROBOT_UPDATE,
-                PermissionName.ROBOT_DELETE,
-            ],
-            input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
-        });
+        if (isMe && actor.identity!.data.id !== entity.id) {
+            isMe = false;
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
+        }
+
+        if (!isMe) {
+            await actor.permissionEvaluator.evaluateOneOf({
+                name: permissionNames,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
+            });
+        }
 
         return entity;
     }

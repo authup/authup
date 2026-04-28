@@ -106,6 +106,53 @@ export class ClientRepositoryAdapter implements IClientRepository {
         return qb.getOne();
     }
 
+    async findOne(id: string, query?: Record<string, any>, realmKey?: string): Promise<Client | null> {
+        const qb = this.repository.createQueryBuilder('client');
+
+        if (isUUID(id)) {
+            qb.where('client.id = :id', { id });
+        } else {
+            qb.where('client.name LIKE :name', { name: id });
+
+            if (realmKey) {
+                const realm = await this.realmRepository.resolve(realmKey);
+                if (!realm) {
+                    return null;
+                }
+                qb.andWhere('client.realm_id = :realmId', { realmId: realm.id });
+            }
+        }
+
+        applyQuery(qb, query || {}, {
+            defaultAlias: 'client',
+            fields: {
+                default: [
+                    'id',
+                    'active',
+                    'built_in',
+                    'name',
+                    'display_name',
+                    'description',
+                    'secret_hashed',
+                    'secret_encrypted',
+                    'base_url',
+                    'root_url',
+                    'redirect_uri',
+                    'grant_types',
+                    'scope',
+                    'is_confidential',
+                    'realm_id',
+                    'updated_at',
+                    'created_at',
+                ],
+                allowed: ['secret'],
+            },
+            relations: { allowed: ['realm'] },
+        });
+
+        return qb.getOne();
+    }
+
     async findOneByIdOrName(idOrName: string, realm?: string): Promise<Client | null> {
         return isUUID(idOrName) ?
             this.findOneById(idOrName) :

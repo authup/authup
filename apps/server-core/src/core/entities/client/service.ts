@@ -97,49 +97,44 @@ export class ClientService extends AbstractEntityService implements IClientServi
     async getOne(
         idOrName: string,
         actor: ActorContext,
+        query?: Record<string, any>,
         realmId?: string,
     ): Promise<Client> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.CLIENT_READ,
-                PermissionName.CLIENT_UPDATE,
-                PermissionName.CLIENT_DELETE,
-            ],
-        });
+        const permissionNames = [
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
+        ];
 
-        let entity: Client | null;
+        let isMe = !!actor.identity &&
+            actor.identity.type === 'client' &&
+            (
+                actor.identity.data.id === idOrName ||
+                actor.identity.data.name === idOrName
+            );
 
-        if (isUUID(idOrName)) {
-            entity = await this.repository.findOneByIdOrName(idOrName, realmId);
-        } else if (realmId) {
-            const realm = await this.realmRepository.resolve(realmId);
-            if (realm) {
-                entity = await this.repository.findOneBy({
-                    name: idOrName,
-                    realm_id: realm.id,
-                });
-            } else {
-                entity = null;
-            }
-        } else {
-            entity = await this.repository.findOneByName(idOrName);
+        if (!isMe) {
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
         }
 
+        const entity = await this.repository.findOne(idOrName, query, realmId);
         if (!entity) {
             throw new NotFoundError();
         }
 
+        if (isMe && actor.identity!.data.id !== entity.id) {
+            isMe = false;
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
+        }
+
         if (
+            !isMe &&
             entity.secret &&
             !entity.secret_encrypted &&
             !entity.secret_hashed
         ) {
             await actor.permissionEvaluator.evaluateOneOf({
-                name: [
-                    PermissionName.CLIENT_READ,
-                    PermissionName.CLIENT_UPDATE,
-                    PermissionName.CLIENT_DELETE,
-                ],
+                name: permissionNames,
                 input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
         }

@@ -15,6 +15,7 @@ import {
     describe,
     expect,
     it,
+    vi,
 } from 'vitest';
 import { ForbiddenError, NotFoundError } from '@ebec/http';
 import { ClientService } from '../../../../../src/core/entities/client/service.ts';
@@ -33,6 +34,10 @@ import { createFakeClient } from '../../../../utils/domains/index.ts';
 class FakeClientRepository extends FakeEntityRepository<Client> implements IClientRepository {
     async checkUniqueness(): Promise<void> {
         // no-op
+    }
+
+    async findOne(id: string, _query?: Record<string, any>, realm?: string): Promise<Client | null> {
+        return this.findOneByIdOrName(id, realm);
     }
 
     async findOneWithSecret(where: Record<string, any>): Promise<Client | null> {
@@ -133,10 +138,10 @@ describe('core/entities/client/service', () => {
             }]);
             repository.seed([createFakeClient({
                 name: 'scoped-client',
-                realm_id: realmId, 
+                realm_id: realmId,
             })]);
 
-            const result = await service.getOne('scoped-client', createAllowAllActor(), realmId);
+            const result = await service.getOne('scoped-client', createAllowAllActor(), undefined, realmId);
             expect(result.name).toBe('scoped-client');
         });
 
@@ -144,7 +149,7 @@ describe('core/entities/client/service', () => {
             repository.seed([createFakeClient({ name: 'some-client' })]);
 
             await expect(
-                service.getOne('some-client', createAllowAllActor(), randomUUID()),
+                service.getOne('some-client', createAllowAllActor(), undefined, randomUUID()),
             ).rejects.toThrow(NotFoundError);
         });
 
@@ -164,6 +169,99 @@ describe('core/entities/client/service', () => {
             await service.getOne(entity.id, actor);
 
             expect(actor.permissionEvaluator.evaluateOneOfCalls.length).toBeGreaterThan(0);
+        });
+
+        it('should forward query and realmId to repository.findOne', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'queried-client' }));
+            const findOneSpy = vi.spyOn(repository, 'findOne');
+
+            await service.getOne(entity.id, createAllowAllActor(), { fields: '+secret' });
+
+            expect(findOneSpy).toHaveBeenCalledWith(entity.id, { fields: '+secret' }, undefined);
+        });
+
+        it('should bypass the permission gate when actor is the client itself', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'self-client' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: entity.id, name: 'self-client' } as any,
+                },
+            };
+            actor.permissionEvaluator.denyAll();
+
+            const result = await service.getOne(entity.id, actor);
+            expect(result.id).toBe(entity.id);
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
+            expect(actor.permissionEvaluator.preEvaluateCalls).toHaveLength(0);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('should bypass permission when self-by-name resolves to actor\'s own record', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'self-client' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: entity.id, name: 'self-client' } as any,
+                },
+            };
+            actor.permissionEvaluator.denyAll();
+
+            const result = await service.getOne('self-client', actor);
+            expect(result.id).toBe(entity.id);
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('should require permission when self-by-name resolves to a different entity', async () => {
+            const otherEntity = repository.seed(createFakeClient({ name: 'shared-name' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: randomUUID(), name: 'shared-name' } as any,
+                },
+            };
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
+
+            await expect(service.getOne('shared-name', actor)).rejects.toThrow(ForbiddenError);
+            expect(otherEntity.name).toBe('shared-name');
+        });
+
+        it('should require permission when client actor looks at a different client', async () => {
+            const target = repository.seed(createFakeClient({ name: 'other-client' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: randomUUID(), name: 'self-client' } as any,
+                },
+            };
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
+
+            await expect(service.getOne(target.id, actor)).rejects.toThrow(ForbiddenError);
+        });
+
+        it('should skip post-load secret evaluation on self-access', async () => {
+            const entity = repository.seed(createFakeClient({
+                name: 'self-secret',
+                secret: 'plain',
+                secret_encrypted: false,
+                secret_hashed: false,
+            }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: entity.id, name: 'self-secret' } as any,
+                },
+            };
+            actor.permissionEvaluator.denyAll();
+
+            const result = await service.getOne(entity.id, actor);
+            expect(result.id).toBe(entity.id);
+            expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
     });
 
