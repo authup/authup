@@ -101,39 +101,36 @@ export class UserService extends AbstractEntityService implements IUserService {
         query?: Record<string, any>,
         realmId?: string,
     ): Promise<User> {
-        let isMe = false;
-        if (actor.identity && actor.identity.type === 'user') {
-            if (
+        const permissionNames = [
+            PermissionName.USER_READ,
+            PermissionName.USER_UPDATE,
+            PermissionName.USER_DELETE,
+        ];
+
+        let isMe = !!actor.identity &&
+            actor.identity.type === 'user' &&
+            (
                 actor.identity.data.id === idOrName ||
                 actor.identity.data.name === idOrName
-            ) {
-                isMe = true;
-            }
-        }
+            );
 
         if (!isMe) {
-            await actor.permissionEvaluator.preEvaluateOneOf({
-                name: [
-                    PermissionName.USER_READ,
-                    PermissionName.USER_UPDATE,
-                    PermissionName.USER_DELETE,
-                ],
-            });
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
         }
 
-        const resolvedId = isMe ? actor.identity!.data.id : idOrName;
-        const entity = await this.repository.findOne(resolvedId, query, realmId);
+        const entity = await this.repository.findOne(idOrName, query, realmId);
         if (!entity) {
             throw new NotFoundError();
         }
 
+        if (isMe && actor.identity!.data.id !== entity.id) {
+            isMe = false;
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
+        }
+
         if (!isMe) {
             await actor.permissionEvaluator.evaluateOneOf({
-                name: [
-                    PermissionName.USER_READ,
-                    PermissionName.USER_UPDATE,
-                    PermissionName.USER_DELETE,
-                ],
+                name: permissionNames,
                 input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
         }

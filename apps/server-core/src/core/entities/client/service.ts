@@ -100,30 +100,31 @@ export class ClientService extends AbstractEntityService implements IClientServi
         query?: Record<string, any>,
         realmId?: string,
     ): Promise<Client> {
-        let isMe = false;
-        if (actor.identity && actor.identity.type === 'client') {
-            if (
+        const permissionNames = [
+            PermissionName.CLIENT_READ,
+            PermissionName.CLIENT_UPDATE,
+            PermissionName.CLIENT_DELETE,
+        ];
+
+        let isMe = !!actor.identity &&
+            actor.identity.type === 'client' &&
+            (
                 actor.identity.data.id === idOrName ||
                 actor.identity.data.name === idOrName
-            ) {
-                isMe = true;
-            }
-        }
+            );
 
         if (!isMe) {
-            await actor.permissionEvaluator.preEvaluateOneOf({
-                name: [
-                    PermissionName.CLIENT_READ,
-                    PermissionName.CLIENT_UPDATE,
-                    PermissionName.CLIENT_DELETE,
-                ],
-            });
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
         }
 
-        const resolvedId = isMe ? actor.identity!.data.id : idOrName;
-        const entity = await this.repository.findOne(resolvedId, query, realmId);
+        const entity = await this.repository.findOne(idOrName, query, realmId);
         if (!entity) {
             throw new NotFoundError();
+        }
+
+        if (isMe && actor.identity!.data.id !== entity.id) {
+            isMe = false;
+            await actor.permissionEvaluator.preEvaluateOneOf({ name: permissionNames });
         }
 
         if (
@@ -133,11 +134,7 @@ export class ClientService extends AbstractEntityService implements IClientServi
             !entity.secret_hashed
         ) {
             await actor.permissionEvaluator.evaluateOneOf({
-                name: [
-                    PermissionName.CLIENT_READ,
-                    PermissionName.CLIENT_UPDATE,
-                    PermissionName.CLIENT_DELETE,
-                ],
+                name: permissionNames,
                 input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
             });
         }

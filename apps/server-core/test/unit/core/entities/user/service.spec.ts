@@ -179,6 +179,15 @@ describe('core/entities/user/service', () => {
                 service.getOne(entity.id, createDenyAllActor()),
             ).rejects.toThrow(ForbiddenError);
         });
+
+        it('should require permission when self-by-name resolves to a different user', async () => {
+            const otherEntity = repository.seed(createFakeUser({ name: 'shared-name' }));
+            const actor = createSelfActor(randomUUID(), 'shared-name');
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
+
+            await expect(service.getOne('shared-name', actor)).rejects.toThrow(ForbiddenError);
+            expect(otherEntity.name).toBe('shared-name');
+        });
     });
 
     describe('create', () => {

@@ -198,7 +198,7 @@ describe('core/entities/client/service', () => {
             expect(actor.permissionEvaluator.evaluateOneOfCalls).toHaveLength(0);
         });
 
-        it('should detect self-access by name lookup', async () => {
+        it('should bypass permission when self-by-name resolves to actor\'s own record', async () => {
             const entity = repository.seed(createFakeClient({ name: 'self-client' }));
             const actor: FakeActorContext = {
                 permissionEvaluator: new FakePermissionEvaluator(),
@@ -211,6 +211,22 @@ describe('core/entities/client/service', () => {
 
             const result = await service.getOne('self-client', actor);
             expect(result.id).toBe(entity.id);
+            expect(actor.permissionEvaluator.preEvaluateOneOfCalls).toHaveLength(0);
+        });
+
+        it('should require permission when self-by-name resolves to a different entity', async () => {
+            const otherEntity = repository.seed(createFakeClient({ name: 'shared-name' }));
+            const actor: FakeActorContext = {
+                permissionEvaluator: new FakePermissionEvaluator(),
+                identity: {
+                    type: IdentityType.CLIENT,
+                    data: { id: randomUUID(), name: 'shared-name' } as any,
+                },
+            };
+            actor.permissionEvaluator.deny('preEvaluateOneOf');
+
+            await expect(service.getOne('shared-name', actor)).rejects.toThrow(ForbiddenError);
+            expect(otherEntity.name).toBe('shared-name');
         });
 
         it('should require permission when client actor looks at a different client', async () => {
