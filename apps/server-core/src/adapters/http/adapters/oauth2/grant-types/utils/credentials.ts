@@ -37,6 +37,12 @@ export function extractClientCredentialsFromRequest(req: Request): ExtractedClie
     }
 
     if (hasBodyCredentials) {
+        // Reject stray client_secret without client_id — otherwise grants
+        // that gate auth on `if (clientId)` would silently skip
+        // authentication and leak through with the secret discarded.
+        if (!bodyClientId) {
+            throw OAuth2Error.requestInvalid('client_secret was provided without client_id.');
+        }
         return { clientId: bodyClientId, clientSecret: bodyClientSecret };
     }
 
@@ -71,5 +77,25 @@ function parseBasicCredentials(req: Request): ExtractedClientCredentials | undef
         return undefined;
     }
 
-    return { clientId: header.username, clientSecret: header.password };
+    // RFC 6749 §2.3.1 + Appendix B: client_id and client_secret are
+    // application/x-www-form-urlencoded BEFORE base64 encoding in the
+    // Authorization header. hapic only base64-decodes; we form-decode here
+    // so credentials containing reserved characters (`:`, `+`, `%`, `&`,
+    // `=`, etc.) round-trip correctly.
+    return {
+        clientId: formDecode(header.username),
+        clientSecret: formDecode(header.password),
+    };
+}
+
+function formDecode(value: string): string {
+    try {
+        // application/x-www-form-urlencoded: '+' represents space; %XX is
+        // percent-encoded UTF-8.
+        return decodeURIComponent(value.replace(/\+/g, ' '));
+    } catch {
+        // Malformed percent-encoding — return raw value rather than
+        // throwing; the caller will still validate via authentication.
+        return value;
+    }
 }

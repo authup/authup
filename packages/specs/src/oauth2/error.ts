@@ -130,6 +130,12 @@ export class OAuth2Error extends AuthupError {
     }
 
     static signingKeyMissing() {
-        return new OAuth2Error({ message: 'A token signing key could not be retrieved.' });
+        // Server-side misconfiguration — the client did nothing wrong.
+        // Surface as 500 so clients back off rather than retrying with
+        // the same payload.
+        return new OAuth2Error({
+            message: 'A token signing key could not be retrieved.',
+            statusCode: 500,
+        });
     }
 }

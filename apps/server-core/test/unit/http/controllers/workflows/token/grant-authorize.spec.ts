@@ -323,6 +323,94 @@ describe('grant-authorize', () => {
         }
     });
 
+    it('should reject token exchange when client_secret is provided without client_id', async () => {
+        const state = generateOAuth2CodeVerifier();
+        const response = await suite.client
+            .authorize
+            .confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: confidentialClient.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: `${ScopeName.GLOBAL}`,
+                state,
+            });
+
+        const url = new URL(response.url);
+        const code = url.searchParams.get('code')!;
+
+        const tokenResponse = await fetch(`${suite.baseURL}/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: 'https://example.com/redirect',
+                client_secret: confidentialSecret,
+            }).toString(),
+        });
+
+        expect(tokenResponse.status).toEqual(400);
+        const body = await tokenResponse.json() as { error?: string };
+        expect(body.error).toEqual(OAuth2ErrorCode.INVALID_REQUEST);
+    });
+
+    it('should accept Basic auth credentials with URL-encoded special characters', async () => {
+        const specialSecret = 'secret with spaces & + : %';
+        const specialClient = await suite.client
+            .client
+            .create(createFakeClient({
+                secret: specialSecret,
+                secret_hashed: false,
+                secret_encrypted: false,
+                is_confidential: true,
+            }));
+
+        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({
+            scope_id: scope.id,
+            client_id: specialClient.id,
+        });
+
+        const state = generateOAuth2CodeVerifier();
+        const response = await suite.client
+            .authorize
+            .confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: specialClient.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: `${ScopeName.GLOBAL}`,
+                state,
+            });
+
+        const url = new URL(response.url);
+        const code = url.searchParams.get('code')!;
+
+        // RFC 6749 §2.3.1 + Appendix B: form-urlencode credentials before
+        // base64. encodeURIComponent matches the percent-encoding part;
+        // hapic doesn't apply form-encoding from the client side, but a
+        // spec-compliant client would send it this way.
+        const encodedId = encodeURIComponent(specialClient.id);
+        const encodedSecret = encodeURIComponent(specialSecret);
+        const basic = Buffer.from(`${encodedId}:${encodedSecret}`).toString('base64');
+
+        const tokenResponse = await fetch(`${suite.baseURL}/token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                Authorization: `Basic ${basic}`,
+            },
+            body: new URLSearchParams({
+                grant_type: 'authorization_code',
+                code,
+                redirect_uri: 'https://example.com/redirect',
+            }).toString(),
+        });
+
+        expect(tokenResponse.status).toEqual(200);
+        const body = await tokenResponse.json() as { access_token?: string };
+        expect(body.access_token).toBeDefined();
+    });
+
     it('should reject token exchange when client credentials are sent via both Basic header and body', async () => {
         const state = generateOAuth2CodeVerifier();
         const response = await suite.client

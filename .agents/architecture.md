@@ -571,9 +571,11 @@ Each policy is a built-in `ATTRIBUTE_NAMES` policy with `invert: true`, where `n
 
 | Policy | Denylist `names` |
 |---|---|
-| `system.client-names-self-manage` | `active, realm_id` |
+| `system.client-names-self-manage` | `active, realm_id, is_confidential, secret_hashed, secret_encrypted` |
 | `system.robot-names-self-manage` | `active, realm_id, user_id` |
 | `system.user-names-self-manage` | `active, name_locked, status, status_message, realm_id` |
+
+The client denylist additionally blocks `is_confidential` (toggling clears the secret) and the `secret_hashed` / `secret_encrypted` storage flags (downgrading either would persist the secret in plaintext). FK fields like `realm_id` are usually validator-stripped on UPDATE already, but stay in the denylist as defense in depth.
 
 Self-editable fields (e.g. `name`, `display_name`, `email`, `password`, `secret`, `redirect_uri`, etc.) are NOT enumerated — they're permitted by virtue of being absent from the denylist. The validator already strips system-managed columns (`built_in`, `id`, `created_at`, `updated_at`) before they reach the policy, so the denylist only needs to cover what validators let through but admin-only state should still block.
 
@@ -628,6 +630,44 @@ Two-layer rejection:
 ### EA loading on tree roots
 
 `AttributeNamesPolicyValidator` reads the policy's `names` field from extra-attributes (`policy_attributes`). For top-level policies bound directly to permissions, the policy is loaded as the root of a closure-table descendants tree. `EATreeRepository.findDescendantsTree()` calls `extendOneWithEA(entity)` after building the children — without that, the root entity's EA fields stay unloaded and the validator fails with "value_invalid". Both Layer 1 (`PermissionDatabaseProvider`) and Layer 2 (`bindings.ts`) depend on this fix.
+
+## OAuth2 Token Endpoint Authentication
+
+The `/token` endpoint authenticates the calling client according to RFC 6749. Confidential clients MUST present a `client_secret`; public clients identify with `client_id` only.
+
+### Per-grant requirements
+
+| Grant | Client auth requirement |
+|---|---|
+| `client_credentials` | Authentication is the grant's purpose. Confidential client only — public clients are rejected. |
+| `authorization_code` | Confidential client MUST authenticate (RFC §4.1.3). Authenticated `client_id` MUST match the auth code's bound `client_id` — mismatch = `invalid_grant`. |
+| `refresh_token` | Confidential client MUST authenticate (RFC §6). If the refresh token's payload has `client_id`, the request MUST authenticate as that client. Authenticated `client_id` MUST match — mismatch = `invalid_grant`. Tokens with no bound client may refresh without auth (legacy/no-client flow). |
+| `password` | Confidential client MUST authenticate (RFC §4.3.2). The token's `client_id` claim and the OpenID `aud` claim use the **authenticated** client's id, not any user-side association. |
+| `robot_credentials` | Authentication is the grant's purpose (Authup-specific extension). |
+
+### Credential transport
+
+Per RFC 6749 §2.3.1, the server MUST NOT support multiple authentication methods in one request. Authup enforces this:
+
+- Body: `client_id` and `client_secret` form parameters
+- Header: `Authorization: Basic base64(client_id:client_secret)`
+- Both at once → `invalid_request`
+
+`extractClientCredentialsFromRequest` (`adapters/http/adapters/oauth2/grant-types/utils/credentials.ts`) is the shared helper enforcing this. Used by all grants that authenticate clients.
+
+### `OAuth2ClientAuthenticator`
+
+Single core class (`core/oauth2/client/authenticator.ts`) used by `authorization_code`, `refresh_token`, and `password` grants. Resolves the client by id/name, verifies `is_confidential`, and:
+- Confidential: requires `client_secret` and verifies via `ClientCredentialsService.verify`
+- Public: returns the client without secret check
+
+Distinct from `ClientAuthenticator` (`core/authentication/entities/client/module.ts`) which is used for `client_credentials` grant — that one rejects public clients outright since they can't authenticate themselves with credentials.
+
+### PKCE for public clients
+
+`/authorize` rejects public clients without `code_challenge` when an authorization code will be issued (RFC 7636 §4.4.1, OAuth 2.1). At `/token`, the code verifier double-checks: if the resolved client is public and the auth code has no challenge stored, reject. Defense in depth in case the authorize-side check was bypassed or the client's `is_confidential` flag changed mid-flow.
+
+`code_challenge_method` defaults to `plain` per RFC 7636 §4.3 — only `S256` triggers SHA-256 verification.
 
 ## Provisioning Permissions With Policies
 
