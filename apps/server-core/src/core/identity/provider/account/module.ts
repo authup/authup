@@ -154,7 +154,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                         }
                     }
                 } else {
-                    output.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_', 10);
+                    output.name = createNanoID('0123456789abcdefghijklmnopqrstuvwxyz-_', 10);
                 }
 
                 if (isUserFakeEmail(output.email)) {

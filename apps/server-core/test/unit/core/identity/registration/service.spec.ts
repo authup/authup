@@ -46,8 +46,8 @@ class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepo
 
 function createValidRegistrationData() {
     return {
-        name: faker.internet.username(),
-        email: faker.internet.email(),
+        name: faker.internet.username().toLowerCase(),
+        email: faker.internet.email().toLowerCase(),
         password: faker.string.alphanumeric({ length: 16 }),
     };
 }
@@ -146,8 +146,8 @@ describe('core/identity/registration/service', () => {
             });
 
             const data = {
-                name: faker.internet.username(),
-                email: faker.internet.email(),
+                name: faker.internet.username().toLowerCase(),
+                email: faker.internet.email().toLowerCase(),
             };
             await service.register(data);
 
@@ -219,9 +219,9 @@ describe('core/identity/registration/service', () => {
 
             await expect(
                 service.register({
-                    name: faker.internet.username(),
+                    name: faker.internet.username().toLowerCase(),
                     email: 'not-an-email',
-                    password: 'securepass123', 
+                    password: 'securepass123',
                 }),
             ).rejects.toThrow(/email/i);
         });

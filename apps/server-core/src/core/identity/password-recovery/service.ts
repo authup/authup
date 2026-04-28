@@ -142,7 +142,9 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             return chain
                 .exists()
                 .notEmpty()
-                .isEmail();
+                .isEmail()
+                .matches(/^[^A-Z]+$/)
+                .withMessage('Email must be lowercase.');
         }));
 
         oneOfContainer.mount(

@@ -78,7 +78,7 @@ describe('core/identity/provider/account', () => {
         identity = {
             id: 'foo',
             data: claims,
-            attributeCandidates: { name: ['fooBarBaz'] },
+            attributeCandidates: { name: ['foobarbaz'] },
             provider,
         };
 
@@ -121,8 +121,8 @@ describe('core/identity/provider/account', () => {
 
         expect(account.id).toBeDefined();
         expect(account.user.id).toBeDefined();
-        expect(account.user.name).toEqual('fooBarBaz');
-        expect(account.user.email).toEqual(buildUserFakeEmail('fooBarBaz'));
+        expect(account.user.name).toEqual('foobarbaz');
+        expect(account.user.email).toEqual(buildUserFakeEmail('foobarbaz'));
     });
 
     it('should create user with alternative name', async () => {

@@ -78,7 +78,9 @@ export class UserValidator extends Container<User> {
 
         // ----------------------------------------------
 
-        const emailValidator = createValidator(z.email());
+        const emailValidator = createValidator(
+            z.email().regex(/^[^A-Z]+$/, 'Email must be lowercase.'),
+        );
 
         this.mount(
             'email',

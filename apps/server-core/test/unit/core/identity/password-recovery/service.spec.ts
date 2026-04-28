@@ -65,7 +65,7 @@ describe('core/identity/password-recovery/service', () => {
             });
 
             await expect(
-                service.forgotPassword({ email: faker.internet.email() }),
+                service.forgotPassword({ email: faker.internet.email().toLowerCase() }),
             ).rejects.toThrow(BadRequestError);
         });
 
@@ -81,7 +81,7 @@ describe('core/identity/password-recovery/service', () => {
             });
 
             await expect(
-                service.forgotPassword({ email: faker.internet.email() }),
+                service.forgotPassword({ email: faker.internet.email().toLowerCase() }),
             ).rejects.toThrow(BadRequestError);
         });
 
@@ -102,7 +102,7 @@ describe('core/identity/password-recovery/service', () => {
         });
 
         it('should set reset_hash and reset_expires and send email', async () => {
-            const email = faker.internet.email();
+            const email = faker.internet.email().toLowerCase();
             const masterRealm = realmRepository.getMasterRealm();
             repository.seed([createFakeUser({
                 name: 'test-user',
@@ -158,7 +158,7 @@ describe('core/identity/password-recovery/service', () => {
         });
 
         it('should set reset_expires to ~30 minutes from now', async () => {
-            const email = faker.internet.email();
+            const email = faker.internet.email().toLowerCase();
             const masterRealm = realmRepository.getMasterRealm();
             repository.seed([createFakeUser({
                 name: 'timer-user',
@@ -187,7 +187,7 @@ describe('core/identity/password-recovery/service', () => {
         });
 
         it('should rollback reset fields on mail failure', async () => {
-            const email = faker.internet.email();
+            const email = faker.internet.email().toLowerCase();
             const masterRealm = realmRepository.getMasterRealm();
             const entity = repository.seed(createFakeUser({
                 name: 'mail-fail-user',
@@ -226,7 +226,7 @@ describe('core/identity/password-recovery/service', () => {
 
             await expect(
                 service.resetPassword({
-                    email: faker.internet.email(),
+                    email: faker.internet.email().toLowerCase(),
                     token: 'abc',
                     password: 'newpass123',
                 }),
