@@ -96,31 +96,28 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
-            ],
-        });
+        const targetUserId: string | undefined = data.user_id ||
+            (data.user && data.user.id);
+
+        const isSelfTarget = !!actor.identity &&
+            actor.identity.type === 'user' &&
+            (!targetUserId || targetUserId === actor.identity.data.id);
+
+        let isSelfFallback = false;
+        try {
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
+        } catch (e) {
+            if (!isSelfTarget) {
+                throw e;
+            }
+            isSelfFallback = true;
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
+        }
 
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
             throw new BadRequestError(`The user-attribute name '${data.name}' collides with a User entity column.`);
-        }
-
-        const targetUserId: string | undefined = data.user_id ||
-            (data.user && data.user.id);
-
-        const isSelfCreate = !!actor.identity &&
-            actor.identity.type === 'user' &&
-            (!targetUserId || targetUserId === actor.identity.data.id);
-
-        if (isSelfCreate) {
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.USER_SELF_MANAGE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
-            });
         }
 
         if (data.user) {
@@ -137,7 +134,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         const entity = this.repository.create(data);
 
-        if (!isSelfCreate) {
+        if (isSelfFallback) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [data.name]: data.value } }),
+            });
+        } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
                 input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
@@ -154,13 +156,6 @@ export class UserAttributeService extends AbstractEntityService implements IUser
         data: Record<string, any>,
         actor: ActorContext,
     ): Promise<UserAttribute> {
-        await actor.permissionEvaluator.preEvaluateOneOf({
-            name: [
-                PermissionName.USER_UPDATE,
-                PermissionName.USER_SELF_MANAGE,
-            ],
-        });
-
         await this.repository.validateJoinColumns(data);
 
         if (typeof data.name === 'string' && this.reservedNames.has(data.name)) {
@@ -172,22 +167,29 @@ export class UserAttributeService extends AbstractEntityService implements IUser
             throw new NotFoundError();
         }
 
-        const isSelfUpdate = !!actor.identity &&
+        const isSelfTarget = !!actor.identity &&
             actor.identity.type === 'user' &&
             actor.identity.data.id === entity.user_id;
 
-        if (isSelfUpdate) {
-            const finalName = data.name ?? entity.name;
-            const finalValue = data.value ?? entity.value;
-            await actor.permissionEvaluator.evaluate({
-                name: PermissionName.USER_SELF_MANAGE,
-                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [finalName]: finalValue } }),
-            });
+        let isSelfFallback = false;
+        try {
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_UPDATE });
+        } catch (e) {
+            if (!isSelfTarget) {
+                throw e;
+            }
+            isSelfFallback = true;
+            await actor.permissionEvaluator.preEvaluate({ name: PermissionName.USER_SELF_MANAGE });
         }
 
         entity = this.repository.merge(entity, data);
 
-        if (!isSelfUpdate) {
+        if (isSelfFallback) {
+            await actor.permissionEvaluator.evaluate({
+                name: PermissionName.USER_SELF_MANAGE,
+                input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: { [entity.name]: entity.value } }),
+            });
+        } else {
             await actor.permissionEvaluator.evaluate({
                 name: PermissionName.USER_UPDATE,
                 input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),

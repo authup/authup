@@ -79,8 +79,6 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
 
         permissions: [],
         permissionsDefaultPolicyAssignment: true,
-
-        provisioningPruneOrphans: true,
         ...parsed,
     };
 }

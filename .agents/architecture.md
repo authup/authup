@@ -390,28 +390,10 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 
 ### Synchronization Order
 
-`ProvisionerModule` runs (1) `OrphanSweepSynchronizer` if `config.provisioningPruneOrphans` is enabled, (2) `GraphProvisioningSynchronizer`, (3) backfill via `assignDefaultPolicy` (config-gated, deprecated).
+`ProvisionerModule` runs (1) `GraphProvisioningSynchronizer`, (2) backfill via `assignDefaultPolicy` (config-gated, deprecated).
 
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
 `RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → robots → scopes.
-
-### Orphan Sweep
-
-`OrphanSweepSynchronizer` runs **before** the main synchronizer. It compares the DB against the declared composite source and removes built-in entities that are no longer declared. This keeps the database converged with the declared shape across renames and removals (default top-level system policies/permissions/roles/scopes).
-
-**Scope:** Only `built_in: true` entities at the global level (`realm_id: null`, `client_id: null` for permissions/roles, `parent_id: null` for policies). Realm-scoped and child policies are not swept; child cleanup is handled per-tree by `PolicyProvisioningSynchronizer.cleanupStaleChildren`.
-
-**Safety guards:**
-- Empty-source guard: if the declared set for a type is empty, that type is skipped (prevents config bugs from wiping the DB).
-- Built-in only: non-built-in (admin-created) entities are never touched.
-- Default value for `provisioningPruneOrphans` is `true`; admins can opt out via env `PROVISIONING_PRUNE_ORPHANS=false`.
-
-**Layer 1 policy reassignment:** When the sweep removes a policy, it explicitly deletes the affected `auth_permission_policies` junctions (rather than relying on FK CASCADE, for portability). For each affected permission whose junction count drops to zero, the sweep then re-attaches the policy set declared in the source's `relations.policies` (e.g. `[system.default, system.user-names-self-manage]` for `user_self_manage`). Falls back to `system.default` if the affected permission has no declared `relations.policies`.
-
-**Known limitations:**
-- Not transactional. Partial failure mid-sweep leaves the DB in an inconsistent state. (Acceptable for now since the synchronizer itself isn't transactional either.)
-- Layer 2 junction policies (`role_permission.policy_id` etc.) are governed by the FK rule (`SET NULL` on policy delete), not by the sweep. A removed policy that was bound at Layer 2 leaves the junction with `policy_id: null` (unrestricted).
-- Realm-scoped built-in entities are not swept; they would need a separate per-realm sweep.
 
 ### File Structure
 
@@ -583,14 +565,13 @@ Identities (clients, robots, users) can update their own properties via dedicate
 |---|---|---|
 | `client_self_manage` | client | `system.client-names-self-manage` |
 | `robot_self_manage` | robot | `system.robot-names-self-manage` |
-| `user_self_manage` | user | `system.user-names-self-manage` |
-| `user_attribute_self_manage` | user (own user-attributes) | `system.user-names-self-manage` *(shared)* |
+| `user_self_manage` | user (own User columns and own UserAttribute rows) | `system.user-names-self-manage` |
 
 The allowlist is provisioned as a built-in `ATTRIBUTE_NAMES` policy whose `names` field enumerates the editable columns (e.g. for clients: `name, display_name, description, secret, redirect_uri, grant_types, scope, base_url, root_url, is_confidential`). FK fields (`realm_id`, `user_id`, `client_id`) and lifecycle flags (`active`, `built_in`, `name_locked`) are excluded.
 
 ### Unified user-namespace policy
 
-`USER_SELF_MANAGE` and `USER_ATTRIBUTE_SELF_MANAGE` share a single policy `system.user-names-self-manage`. Rationale: a `UserAttribute` row is semantically a single key-value declaration about the user, so its `(name, value)` is mapped to `{ [name]: value }` in `UserAttributeService.create/update` before policy evaluation. The same allowlist then governs both User column edits and UserAttribute key writes — one administrative surface for "what a user can declare about themself".
+`USER_SELF_MANAGE` governs both User column edits and UserAttribute writes. Rationale: a `UserAttribute` row is semantically a single key-value declaration about the user, so its `(name, value)` is mapped to `{ [name]: value }` in `UserAttributeService.create/update` before policy evaluation. The `system.user-names-self-manage` allowlist then governs both User column edits and UserAttribute key writes — one administrative surface for "what a user can declare about themself". `UserAttributeService` only takes the self-manage path when the actor lacks `USER_UPDATE`; an admin or other user with `USER_UPDATE` evaluates against `USER_UPDATE` instead and is not subject to the allowlist.
 
 Two important consequences:
 

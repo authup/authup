@@ -178,10 +178,5 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.permissionsDefaultPolicyAssignment = permissionsDefaultPolicyAssignment;
     }
 
-    const provisioningPruneOrphans = readBool(ConfigEnvironmentVariableName.PROVISIONING_PRUNE_ORPHANS);
-    if (typeof provisioningPruneOrphans !== 'undefined') {
-        options.provisioningPruneOrphans = provisioningPruneOrphans;
-    }
-
     return options;
 }

@@ -45,7 +45,6 @@ import type { IContainer } from 'eldin';
 import {
     ClientProvisioningSynchronizer,
     GraphProvisioningSynchronizer,
-    OrphanSweepSynchronizer,
     PermissionProvisioningSynchronizer,
     PolicyProvisioningSynchronizer,
     RealmProvisioningSynchronizer,
@@ -230,30 +229,6 @@ export class ProvisionerModule implements IModule {
             realmSynchronizer,
             scopeSynchronizer,
         });
-
-        if (config.provisioningPruneOrphans) {
-            const orphanSweep = new OrphanSweepSynchronizer({
-                policyRepository,
-                permissionRepository,
-                permissionPolicyRepository,
-                rolePermissionRepository: new RolePermissionRepositoryAdapter(
-                    container.resolve<Repository<RolePermission>>(RolePermissionEntity),
-                ),
-                userPermissionRepository: new UserPermissionRepositoryAdapter(
-                    container.resolve<Repository<UserPermission>>(UserPermissionEntity),
-                ),
-                clientPermissionRepository: new ClientPermissionRepositoryAdapter(
-                    container.resolve<Repository<ClientPermission>>(ClientPermissionEntity),
-                ),
-                robotPermissionRepository: new RobotPermissionRepositoryAdapter(
-                    container.resolve<Repository<RobotPermission>>(RobotPermissionEntity),
-                ),
-                roleRepository,
-                scopeRepository,
-                defaultPolicyName: SystemPolicyName.DEFAULT,
-            });
-            await orphanSweep.sweep(data);
-        }
 
         await rootSynchronizer.synchronize(data);
 
