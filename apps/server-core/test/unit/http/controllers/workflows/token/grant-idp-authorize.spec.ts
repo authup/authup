@@ -5,20 +5,23 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { createServer } from 'node:http';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import type { Client } from '@authup/core-kit';
 import {
+    ScopeName,
     buildIdentityProviderAuthorizeCallbackPath,
     buildIdentityProviderAuthorizePath,
 } from '@authup/core-kit';
-import { createFakeOAuth2IdentityProvider } from '../../../../../utils';
+import { base64URLEncode } from '@authup/kit';
+import { createFakeClient, createFakeOAuth2IdentityProvider } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 function buildFakeAccessToken(claims: Record<string, unknown>): string {
@@ -81,6 +84,9 @@ describe('identity-provider authorization code grant', () => {
     const fakeIdp = createFakeIdpServer();
     let fakeIdpBaseURL: string;
     let providerId: string;
+    let client: Client;
+    let clientSecret: string;
+    let encodedCodeRequest: string;
 
     beforeAll(async () => {
         await suite.setup();
@@ -94,6 +100,29 @@ describe('identity-provider authorization code grant', () => {
             }));
 
         providerId = provider.id;
+
+        clientSecret = 'idp-test-secret';
+        client = await suite.client
+            .client
+            .create(createFakeClient({
+                secret: clientSecret,
+                secret_hashed: false,
+                secret_encrypted: false,
+                is_confidential: true,
+            }));
+
+        const scope = await suite.client.scope.getOne(ScopeName.GLOBAL);
+        await suite.client.clientScope.create({
+            scope_id: scope.id,
+            client_id: client.id,
+        });
+
+        encodedCodeRequest = base64URLEncode(JSON.stringify({
+            response_type: 'code',
+            client_id: client.id,
+            redirect_uri: 'https://example.com/redirect',
+            scope: ScopeName.GLOBAL,
+        }));
     });
 
     afterAll(async () => {
@@ -104,7 +133,7 @@ describe('identity-provider authorization code grant', () => {
     it('should redirect to external IDP with state on authorize-out', async () => {
         const response = await suite.client
             .get(
-                buildIdentityProviderAuthorizePath(providerId),
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -121,7 +150,7 @@ describe('identity-provider authorization code grant', () => {
     it('should exchange IDP code for authup authorization code via authorize-in, then for tokens', async () => {
         const authorizeOutResponse = await suite.client
             .get(
-                buildIdentityProviderAuthorizePath(providerId),
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -149,7 +178,12 @@ describe('identity-provider authorization code grant', () => {
 
         const tokenResponse = await suite.client
             .token
-            .createWithAuthorizationCode({ code: authupCode! });
+            .createWithAuthorizationCode({
+                client_id: client.id,
+                client_secret: clientSecret,
+                redirect_uri: 'https://example.com/redirect',
+                code: authupCode!,
+            });
 
         expect(tokenResponse).toBeDefined();
         expect(tokenResponse.access_token).toBeDefined();
@@ -160,7 +194,7 @@ describe('identity-provider authorization code grant', () => {
     it('should reject reuse of authorization code (single-use)', async () => {
         const authorizeOutResponse = await suite.client
             .get(
-                buildIdentityProviderAuthorizePath(providerId),
+                `${buildIdentityProviderAuthorizePath(providerId)}?codeRequest=${encodedCodeRequest}`,
                 { redirect: 'manual' },
             );
 
@@ -178,14 +212,24 @@ describe('identity-provider authorization code grant', () => {
 
         await suite.client
             .token
-            .createWithAuthorizationCode({ code: authupCode! });
+            .createWithAuthorizationCode({
+                client_id: client.id,
+                client_secret: clientSecret,
+                redirect_uri: 'https://example.com/redirect',
+                code: authupCode!,
+            });
 
         let error: any;
 
         try {
             await suite.client
                 .token
-                .createWithAuthorizationCode({ code: authupCode! });
+                .createWithAuthorizationCode({
+                    client_id: client.id,
+                    client_secret: clientSecret,
+                    redirect_uri: 'https://example.com/redirect',
+                    code: authupCode!,
+                });
         } catch (e) {
             error = e;
         }

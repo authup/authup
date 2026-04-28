@@ -13,11 +13,14 @@ import type {
     ICredentialsAuthenticator,
     IOAuth2AuthorizationCodeVerifier,
     OAuth2AuthorizeGrantContext,
+    OAuth2ClientAuthenticator,
     OAuth2PasswordGrantContext,
+    OAuth2RefreshTokenGrantContext,
 } from '../../../../../core/index.ts';
 
 export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
-    codeVerifier: IOAuth2AuthorizationCodeVerifier
+    codeVerifier: IOAuth2AuthorizationCodeVerifier,
+    clientAuthenticator: OAuth2ClientAuthenticator,
 };
 
 export interface IHTTPOAuth2Grant {
@@ -25,7 +28,12 @@ export interface IHTTPOAuth2Grant {
 }
 
 export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {
-    authenticator : ICredentialsAuthenticator<User>
+    authenticator : ICredentialsAuthenticator<User>,
+    clientAuthenticator: OAuth2ClientAuthenticator,
+};
+
+export type HTTPOAuth2RefreshTokenGrantContext = OAuth2RefreshTokenGrantContext & {
+    clientAuthenticator: OAuth2ClientAuthenticator,
 };
 
 export type HTTPOAuth2ClientCredentialsGrantContext = BaseGrantContext & {

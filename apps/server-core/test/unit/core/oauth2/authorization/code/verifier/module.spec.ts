@@ -75,8 +75,29 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
                 client_id: 'client-1',
                 scope: 'openid',
             });
-            const result = await verifier.verify(code.id, {});
+            const result = await verifier.verify(code.id, { clientId: 'client-1' });
             expect(result.id).toBe(code.id);
+        });
+
+        it('should throw grantInvalid when clientId does not match the code', async () => {
+            const code = repository.seed({ client_id: 'client-1' });
+            await expect(
+                verifier.verify(code.id, { clientId: 'client-2' }),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
+        });
+
+        it('should throw grantInvalid when clientId is missing but code has one', async () => {
+            const code = repository.seed({ client_id: 'client-1' });
+            await expect(
+                verifier.verify(code.id, {}),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
+        });
+
+        it('should throw grantInvalid when public client omits PKCE', async () => {
+            const code = repository.seed({ client_id: 'client-1' });
+            await expect(
+                verifier.verify(code.id, { clientId: 'client-1', clientIsPublic: true }),
+            ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
         });
 
         it('should throw grantInvalid for non-existent code', async () => {
@@ -111,6 +132,13 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
                 code_challenge: codeVerifier,
                 code_challenge_method: OAuth2AuthorizationCodeChallengeMethod.PLAIN,
             });
+            const result = await verifier.verify(code.id, { codeVerifier });
+            expect(result.id).toBe(code.id);
+        });
+
+        it('should verify PKCE plain challenge when method is omitted (RFC 7636 default)', async () => {
+            const codeVerifier = 'my-plain-verifier-no-method';
+            const code = repository.seed({ code_challenge: codeVerifier });
             const result = await verifier.verify(code.id, { codeVerifier });
             expect(result.id).toBe(code.id);
         });
@@ -162,15 +190,15 @@ describe('OAuth2AuthorizationCodeVerifier', () => {
     describe('atomic consumption', () => {
         it('should consume code on verify (single-use)', async () => {
             const code = repository.seed({ client_id: 'c' });
-            await verifier.verify(code.id, {});
+            await verifier.verify(code.id, { clientId: 'c' });
             expect(repository.has(code.id)).toBe(false);
         });
 
         it('should reject second verify of same code', async () => {
             const code = repository.seed({ client_id: 'c' });
-            await verifier.verify(code.id, {});
+            await verifier.verify(code.id, { clientId: 'c' });
             await expect(
-                verifier.verify(code.id, {}),
+                verifier.verify(code.id, { clientId: 'c' }),
             ).rejects.toThrow(expect.objectContaining({ code: ErrorCode.OAUTH_GRANT_INVALID }));
         });
     });

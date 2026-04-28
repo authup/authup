@@ -12,8 +12,8 @@ import { OAuth2ErrorCode } from './constants';
 export class OAuth2Error extends AuthupError {
     constructor(...input: AuthupErrorOptionsInput[]) {
         super({
-            code: ErrorCode.JWT_INVALID,
-            message: 'The Token is invalid',
+            code: ErrorCode.OAUTH_REQUEST_INVALID,
+            message: 'OAuth2 request invalid',
             statusCode: 400,
             data: { error: OAuth2ErrorCode.INVALID_REQUEST },
         }, ...input);
@@ -61,6 +61,7 @@ export class OAuth2Error extends AuthupError {
     static identityInvalid() {
         return new OAuth2Error({
             message: 'The identity is not valid.',
+            code: ErrorCode.OAUTH_REQUEST_INVALID,
             data: { error: OAuth2ErrorCode.INVALID_REQUEST },
         });
     }
@@ -68,6 +69,7 @@ export class OAuth2Error extends AuthupError {
     static codeRequestInvalid() {
         return new OAuth2Error({
             message: 'The authorization code request is invalid.',
+            code: ErrorCode.OAUTH_REQUEST_INVALID,
             data: {
                 hint: 'Check if the code request is valid and contains all required parameters',
                 error: OAuth2ErrorCode.INVALID_REQUEST,
@@ -79,6 +81,7 @@ export class OAuth2Error extends AuthupError {
         return new OAuth2Error({
             message: message || 'The request is missing a required parameter, includes an unsupported parameter value, ' +
                 'repeats a parameter, or is otherwise malformed.',
+            code: ErrorCode.OAUTH_REQUEST_INVALID,
             data: {
                 hint: 'Check that all parameters have been provided correctly',
                 error: OAuth2ErrorCode.INVALID_REQUEST,
@@ -89,6 +92,7 @@ export class OAuth2Error extends AuthupError {
     static stateInvalid() {
         return new OAuth2Error({
             message: 'The request state is invalid, unknown or malformed.',
+            code: ErrorCode.OAUTH_REQUEST_INVALID,
             data: { error: OAuth2ErrorCode.INVALID_REQUEST },
         });
     }
@@ -118,7 +122,11 @@ export class OAuth2Error extends AuthupError {
     }
 
     static responseTypeUnsupported() {
-        return new OAuth2Error({ message: 'The authorization server does not support obtaining an access token using this method.' });
+        return new OAuth2Error({
+            message: 'The authorization server does not support obtaining an access token using this method.',
+            code: ErrorCode.OAUTH_RESPONSE_TYPE_UNSUPPORTED,
+            data: { error: OAuth2ErrorCode.UNSUPPORTED_RESPONSE_TYPE },
+        });
     }
 
     static signingKeyMissing() {

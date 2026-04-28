@@ -8,7 +8,11 @@
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { ScopeName } from '@authup/core-kit';
 import { isSimpleMatch } from '@authup/kit';
-import { OAuth2Error, hasOAuth2Scopes } from '@authup/specs';
+import {
+    OAuth2AuthorizationResponseType,
+    OAuth2Error,
+    hasOAuth2Scopes,
+} from '@authup/specs';
 import type { IOAuth2ClientRepository } from '../../../client/index.ts';
 import type { IOAuth2ScopeRepository } from '../../../scope/index.ts';
 import type {
@@ -16,6 +20,13 @@ import type {
     OAuth2AuthorizationCodeRequestVerificationResult,
     OAuth2AuthorizationCodeRequestVerifierContext,
 } from './types.ts';
+
+function willIssueCode(responseType: string | undefined): boolean {
+    if (!responseType) {
+        return false;
+    }
+    return responseType.split(' ').includes(OAuth2AuthorizationResponseType.CODE);
+}
 
 export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2AuthorizationCodeRequestVerifier {
     protected clientRepository: IOAuth2ClientRepository;
@@ -45,6 +56,15 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
 
         if (!client.active) {
             throw OAuth2Error.clientInactive();
+        }
+
+        // Public clients MUST use PKCE for the code flow (RFC 7636 §4.4.1,
+        // OAuth 2.1). Without PKCE a public client's code flow has no second
+        // factor — anyone who intercepts the redirect can redeem the code at
+        // /token. Only enforce when an authorization code will actually be
+        // issued; implicit/id_token-only flows don't involve a code.
+        if (!client.is_confidential && !data.code_challenge && willIssueCode(data.response_type)) {
+            throw OAuth2Error.requestInvalid('PKCE code_challenge is required for public clients.');
         }
 
         data.client_id = client.id;

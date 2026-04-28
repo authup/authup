@@ -69,6 +69,7 @@ export class TokenController {
         this.tokenGrants = {
             [OAuth2TokenGrant.AUTHORIZATION_CODE]: new HTTPOAuth2AuthorizeGrant({
                 codeVerifier: ctx.codeVerifier,
+                clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 sessionManager: ctx.sessionManager,
@@ -87,6 +88,7 @@ export class TokenController {
                 accessTokenIssuer: ctx.accessTokenIssuer,
                 refreshTokenIssuer: ctx.refreshTokenIssuer,
                 authenticator: ctx.userAuthenticator,
+                clientAuthenticator: ctx.oauth2ClientAuthenticator,
                 sessionManager: ctx.sessionManager,
             }),
             [OAuth2TokenGrant.REFRESH_TOKEN]: new HTTPOAuth2RefreshTokenGrant({
@@ -95,6 +97,7 @@ export class TokenController {
                 tokenVerifier: ctx.tokenVerifier,
                 tokenRevoker: ctx.tokenRevoker,
                 sessionManager: ctx.sessionManager,
+                clientAuthenticator: ctx.oauth2ClientAuthenticator,
             }),
         };
     }

@@ -123,6 +123,7 @@ import {
     ClientService,
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
+    OAuth2ClientAuthenticator,
     PasswordRecoveryService,
     PermissionPolicyService,
     PermissionService,
@@ -282,6 +283,8 @@ export class HTTPControllerModule {
             new UserAuthenticator(identityResolver),
         ]);
 
+        const oauth2ClientAuthenticator = new OAuth2ClientAuthenticator(identityResolver);
+
         return new TokenController({
             codeVerifier,
 
@@ -297,6 +300,8 @@ export class HTTPControllerModule {
             clientAuthenticator,
             robotAuthenticator,
             userAuthenticator,
+
+            oauth2ClientAuthenticator,
 
             sessionManager,
         });
