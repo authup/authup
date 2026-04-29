@@ -686,3 +686,37 @@ Distinct from `ClientAuthenticator` (`core/authentication/entities/client/module
 ```
 
 `PermissionProvisioningSynchronizer.synchronizePolicies()` resolves each name to a policy ID and inserts the junction. Idempotent — re-runs do not create duplicates. Throws `policy '<name>' not found` if a referenced policy is not provisioned, and `repositories must be wired` if relations are declared but the synchronizer was constructed without `policyRepository`/`permissionPolicyRepository`.
+
+## Canonical Identifier Form
+
+Identifier-style columns are stored in canonical form: `LOWER(TRIM(value))`. This applies to:
+
+- `name` on every named entity (`client`, `robot`, `user`, `role`, `scope`, `permission`, `policy`, `realm`, `identity-provider`)
+- `email` on `user`
+
+`display_name` and other free-form labels (`description`, `first_name`, `last_name`) preserve original casing — the canonical-form rule is only for columns used as identifiers in lookups / unique constraints.
+
+### Why canonical form
+
+Cross-DB collation behavior diverges:
+
+- MySQL with `utf8mb4_*_ci` (default) treats `'foo'` and `'Foo'` as duplicates in `=` comparisons and `UNIQUE` constraints
+- PostgreSQL with `en_US.UTF-8` (default) treats them as distinct rows
+
+Without canonicalization, the same code base produces different uniqueness behavior on each DB. Canonicalizing identifier columns at write time eliminates the divergence: `=` is sufficient for lookups across both DBs, `UNIQUE` constraints behave identically.
+
+### Three layers of enforcement
+
+Canonical form is enforced at three boundaries (defense-in-depth):
+
+1. **Validator transform** — every `name` / `email` validator chains `.trim().toLowerCase()` before its format check (Zod path) or `.matches(...)` (validup path). Mixed-case input is silently lowercased; callers see canonical form in the response.
+2. **Validator regex** — the format check (`isNameValid` for names: `/^[a-z0-9-_.]+$/`; emails: `/^[^A-Z]+$/`) operates on the post-transform value. After `.toLowerCase()` the regex always passes; it remains as documentation of the contract and as a catch for code paths that bypass the transform.
+3. **External boundary canonicalization** — when an identifier enters Authup outside the validator chain (currently: `IdentityProviderAccountManager` taking attribute candidates from external IdPs), it is lowercased at the ingress so external mixed-case usernames don't fall through to the random-nanoid fallback.
+
+### Adding a new identifier column
+
+When adding a `name`-style column on a new entity (or extending an existing one):
+
+1. **Validator** — chain `.trim().toLowerCase()` after `z.string()` (Zod) or before the format check (validup) and before any length / pattern check.
+2. **Repository** — use `=` for name lookups, never `LIKE :name`.
+3. **Migration** — include the new column in the canonical-name data migration (see `.agents/plans/008-canonical-name-migration-ledger.md`) with an up-front collision pre-check.
