@@ -94,7 +94,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<Client | null> {
         const qb = this.repository.createQueryBuilder('client');
-        qb.where('client.name LIKE :name', { name });
+        qb.where('client.name = :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
@@ -112,7 +112,7 @@ export class ClientRepositoryAdapter implements IClientRepository {
         if (isUUID(id)) {
             qb.where('client.id = :id', { id });
         } else {
-            qb.where('client.name LIKE :name', { name: id });
+            qb.where('client.name = :name', { name: id });
 
             if (realmKey) {
                 const realm = await this.realmRepository.resolve(realmKey);

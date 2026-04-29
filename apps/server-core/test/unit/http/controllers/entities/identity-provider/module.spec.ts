@@ -101,7 +101,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should update resource', async () => {
-        oAuth2IdentityProvider.name = 'TestA';
+        oAuth2IdentityProvider.name = 'testa';
         oAuth2IdentityProvider.client_secret = 'start1234';
 
         const response = await suite.client

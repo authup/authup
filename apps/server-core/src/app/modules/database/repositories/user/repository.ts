@@ -96,7 +96,7 @@ export class UserRepositoryAdapter implements IUserRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<User | null> {
         const qb = this.repository.createQueryBuilder('user');
-        qb.where('user.name LIKE :name', { name });
+        qb.where('user.name = :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
@@ -124,7 +124,7 @@ export class UserRepositoryAdapter implements IUserRepository {
         if (isUUID(id)) {
             qb.where('user.id = :id', { id });
         } else {
-            qb.where('user.name LIKE :name', { name: id });
+            qb.where('user.name = :name', { name: id });
 
             if (realmKey) {
                 const realm = await this.realmRepository.resolve(realmKey);

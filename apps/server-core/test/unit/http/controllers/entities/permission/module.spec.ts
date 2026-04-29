@@ -93,12 +93,12 @@ describe('src/http/controllers/permission', () => {
             .permission
             .update(details.id, {
                 ...details,
-                name: 'TestA',
+                name: 'testa',
             });
 
         expect(response).toBeDefined();
-        expect(response.name).toEqual('TestA');
-        details.name = 'TestA';
+        expect(response.name).toEqual('testa');
+        details.name = 'testa';
 
         expectPropertiesEqualToSrc(details, response);
     });
@@ -108,13 +108,13 @@ describe('src/http/controllers/permission', () => {
             .permission
             .update(details.name, {
                 ...details,
-                name: 'TestB',
+                name: 'testb',
             });
 
         expect(response).toBeDefined();
-        expect(response.name).toEqual('TestB');
+        expect(response.name).toEqual('testb');
 
-        details.name = 'TestB';
+        details.name = 'testb';
         expectPropertiesEqualToSrc(details, response);
     });
 

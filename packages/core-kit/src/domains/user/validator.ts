@@ -19,6 +19,8 @@ export class UserValidator extends Container<User> {
         const nameValidator = createValidator(
             z
                 .string()
+                .trim()
+                .toLowerCase()
                 .min(3)
                 .max(128)
                 .check((ctx) => {
@@ -78,7 +80,12 @@ export class UserValidator extends Container<User> {
 
         // ----------------------------------------------
 
-        const emailValidator = createValidator(z.email());
+        const emailValidator = createValidator(
+            z.email()
+                .trim()
+                .toLowerCase()
+                .regex(/^[^A-Z]+$/, 'Email must be lowercase.'),
+        );
 
         this.mount(
             'email',

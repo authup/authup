@@ -22,6 +22,8 @@ export class PermissionValidator extends Container<
         const nameValidator = createValidator(
             z
                 .string()
+                .trim()
+                .toLowerCase()
                 .min(3)
                 .max(128)
                 .check((ctx) => {

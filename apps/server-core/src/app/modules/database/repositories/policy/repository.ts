@@ -89,7 +89,7 @@ export class PolicyRepositoryAdapter implements IPolicyRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<Policy | null> {
         const qb = this.repository.createQueryBuilder('policy');
-        qb.where('policy.name LIKE :name', { name });
+        qb.where('policy.name = :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);

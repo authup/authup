@@ -142,7 +142,11 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
             return chain
                 .exists()
                 .notEmpty()
-                .isEmail();
+                .trim()
+                .toLowerCase()
+                .isEmail()
+                .matches(/^[^A-Z]+$/)
+                .withMessage('Email must be lowercase.');
         }));
 
         oneOfContainer.mount(
@@ -152,7 +156,9 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
                 return chain
                     .exists()
                     .notEmpty()
-                    .isString();
+                    .isString()
+                    .trim()
+                    .toLowerCase();
             }),
         );
 
@@ -183,7 +189,11 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
                 return chain
                     .exists()
                     .notEmpty()
-                    .isEmail();
+                    .trim()
+                    .toLowerCase()
+                    .isEmail()
+                    .matches(/^[^A-Z]+$/)
+                    .withMessage('Email must be lowercase.');
             }),
         );
         oneOfContainer.mount(
@@ -193,7 +203,9 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
                 return chain
                     .exists()
                     .notEmpty()
-                    .isString();
+                    .isString()
+                    .trim()
+                    .toLowerCase();
             }),
         );
 

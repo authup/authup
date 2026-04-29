@@ -25,6 +25,8 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
                 .exists()
                 .notEmpty()
                 .isString()
+                .trim()
+                .toLowerCase()
                 .isLength({
                     min: 3,
                     max: 128,

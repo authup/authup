@@ -35,6 +35,8 @@ export class ClientValidator extends Container<Client> {
         const nameValidator = createValidator(
             z
                 .string()
+                .trim()
+                .toLowerCase()
                 .min(3)
                 .max(128)
                 .check((ctx) => {

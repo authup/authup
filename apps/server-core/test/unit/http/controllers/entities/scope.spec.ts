@@ -86,12 +86,12 @@ describe('src/http/controllers/scope', () => {
             .scope
             .update(details.id, {
                 ...details,
-                name: 'TestA',
+                name: 'testa',
             });
 
-        expect(response.name).toEqual('TestA');
+        expect(response.name).toEqual('testa');
 
-        details.name = 'TestA';
+        details.name = 'testa';
         expectPropertiesEqualToSrc(details, response);
     });
 
@@ -100,13 +100,13 @@ describe('src/http/controllers/scope', () => {
             .scope
             .update(details.name, {
                 ...details,
-                name: 'TestB',
+                name: 'testb',
             });
 
         expect(response).toBeDefined();
-        expect(response.name).toEqual('TestB');
+        expect(response.name).toEqual('testb');
 
-        details.name = 'TestB';
+        details.name = 'testb';
         expectPropertiesEqualToSrc(details, response);
     });
 

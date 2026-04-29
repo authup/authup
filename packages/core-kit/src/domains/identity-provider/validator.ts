@@ -20,6 +20,8 @@ export class IdentityProviderValidator extends Container<IdentityProvider> {
 
         const nameValidator = createValidator(
             zod.string()
+                .trim()
+                .toLowerCase()
                 .min(3)
                 .max(128)
                 .check((ctx) => {

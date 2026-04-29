@@ -27,7 +27,7 @@ export class RealmRepositoryAdapter implements IRealmRepository {
 
     findOneByName(name: string): Promise<Realm | null> {
         const qb = this.repository.createQueryBuilder('realm');
-        qb.where('realm.name LIKE :name', { name });
+        qb.where('realm.name = :name', { name });
 
         return qb.getOne();
     }
