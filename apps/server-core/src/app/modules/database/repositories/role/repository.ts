@@ -76,7 +76,7 @@ export class RoleRepositoryAdapter implements IRoleRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<Role | null> {
         const qb = this.repository.createQueryBuilder('role');
-        qb.where('role.name LIKE :name', { name });
+        qb.where('role.name = :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);

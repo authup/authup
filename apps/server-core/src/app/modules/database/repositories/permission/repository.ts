@@ -59,7 +59,7 @@ export class PermissionRepositoryAdapter implements IPermissionRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<Permission | null> {
         const qb = this.repository.createQueryBuilder('permission');
-        qb.where('permission.name LIKE :name', { name });
+        qb.where('permission.name = :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);

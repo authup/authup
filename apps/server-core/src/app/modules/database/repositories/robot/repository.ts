@@ -89,7 +89,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<Robot | null> {
         const qb = this.repository.createQueryBuilder('robot');
-        qb.where('robot.name LIKE :name', { name });
+        qb.where('robot.name = :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
@@ -113,7 +113,7 @@ export class RobotRepositoryAdapter implements IRobotRepository {
         if (isUUID(id)) {
             qb.where('robot.id = :id', { id });
         } else {
-            qb.where('robot.name LIKE :name', { name: id });
+            qb.where('robot.name = :name', { name: id });
 
             if (realmKey) {
                 const realm = await this.realmRepository.resolve(realmKey);

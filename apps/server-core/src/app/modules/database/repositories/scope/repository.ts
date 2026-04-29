@@ -70,7 +70,7 @@ export class ScopeRepositoryAdapter implements IScopeRepository {
 
     async findOneByName(name: string, realmKey?: string): Promise<Scope | null> {
         const qb = this.repository.createQueryBuilder('scope');
-        qb.where('scope.name LIKE :name', { name });
+        qb.where('scope.name = :name', { name });
 
         if (realmKey) {
             const realm = await this.realmRepository.resolve(realmKey);
