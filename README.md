@@ -21,6 +21,7 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 - [Usage](#usage)
   - [Production](#production)
   - [Development](#development)
+- [Applications](#applications)
 - [Packages](#packages)
 - [Contributing](#contributing)
 - [License](#license)
@@ -83,7 +84,7 @@ $ npx authup@latest start
 
 To find out how to configure and set up the bare metal variant in detail, click here.
 
-This will lunch the following application with default settings:
+This will launch the following application with default settings:
 - Frontend Application: `http://localhost:3000/`
 - Backend Application: `http://localhost:3001/`
 
@@ -103,32 +104,41 @@ $ npm run build
 
 **Backend**
 ```shell
-$ npm run cli-dev --workspace=pacakges/server-core -- start
+$ npm run cli-dev --workspace=apps/server-core -- start
 ```
 
 **Frontend**
 ```shell
-$ npm run dev --workspace=packages/client-web
+$ npm run dev --workspace=apps/client-web
 ```
+
+## Applications
+The repository contains the following runnable applications:
+
+| Name                              | Type        | Description                                                                                           |
+|-----------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
+| [authup](apps/authup)             | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
+| [client-web](apps/client-web)     | Application | A Nuxt-based web application interface for end users.                                                 |
+| [server-core](apps/server-core)   | Service     | A service that forms the backbone of the server-side ecosystem.                                       |
 
 ## Packages
 The repository contains the following packages:
 
-| Name                                            | Type        | Description                                                                                               |
-|-------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------------------|
-| [access](packages/access)                       | Library     | A package for evaluating permissions and policies.                                                        |
-| [authup](packages/authup)                       | CLI         | A command line interface for interacting with various applications and services within the ecosystem.     |
-| [client-web](packages/client-web)               | Application | A web application interface for end users.                                                                |
-| [client-web-kit](packages/client-web-kit)       | Library     | A package containing reusable components, composition aids and utilities for the web application.         |
-| [client-web-nuxt](packages/client-web-nuxt)     | Library     | A package for the integration in a nuxt web application.                                                  |
-| [core-kit](packages/core-kit)                   | Library     | A package providing functions, interfaces and utilities for the core service.                             |
-| [core-http-kit](packages/core-http-kit)         | Library     | A package providing a http client with different sub api clients for resources and workflows.             |
-| [core-realtime-kit](packages/core-realtime-kit) | Library     | A package for the core socket service.                                                                    |
-| [errors](packages/errors)                       | Library     | A package containing error codes and a basic error class.                                                 |
-| [kit](packages/kit)                             | Library     | A package containing general (context independent) utilities.                                             |
-| [specs](packages/specs)                         | Library     | A package containing constants, interfaces, utils, ... for different specifications.                      |
-| [server-core](packages/server-core)             | Service     | A service that forms the backbone of the server-side ecosystem.                                           |
-| [server-kit](packages/server-kit)               | Library     | A package containing cryptographic algorithms, reusable abstractions for interacting with services, etc.. |
+| Name                                                            | Type        | Description                                                                                               |
+|-----------------------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------------------|
+| [access](packages/access)                                       | Library     | A package for evaluating permissions and policies.                                                        |
+| [client-web-kit](packages/client-web-kit)                       | Library     | A package containing reusable components, composition aids and utilities for the web application.         |
+| [client-web-nuxt](packages/client-web-nuxt)                     | Library     | A package for the integration in a nuxt web application.                                                  |
+| [core-kit](packages/core-kit)                                   | Library     | A package providing functions, interfaces and utilities for the core service.                             |
+| [core-http-kit](packages/core-http-kit)                         | Library     | A package providing a http client with different sub api clients for resources and workflows.             |
+| [core-realtime-kit](packages/core-realtime-kit)                 | Library     | A package for the core socket service.                                                                    |
+| [errors](packages/errors)                                       | Library     | A package containing error codes and a basic error class.                                                 |
+| [kit](packages/kit)                                             | Library     | A package containing general (context independent) utilities.                                             |
+| [server-adapter-http](packages/server-adapter-http)             | Library     | An HTTP middleware adapter for token verification.                                                        |
+| [server-adapter-kit](packages/server-adapter-kit)               | Library     | Core token verification logic, caching, and shared types for server adapters.                             |
+| [server-adapter-socket-io](packages/server-adapter-socket-io)   | Library     | A socket.io middleware adapter for token verification.                                                    |
+| [server-kit](packages/server-kit)                               | Library     | A package containing cryptographic algorithms, reusable abstractions for interacting with services, etc.. |
+| [specs](packages/specs)                                         | Library     | A package containing constants, interfaces, utils, ... for different specifications.                      |
 
 ## Contributing
 
