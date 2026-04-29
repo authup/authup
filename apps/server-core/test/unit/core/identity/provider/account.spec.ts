@@ -78,7 +78,7 @@ describe('core/identity/provider/account', () => {
         identity = {
             id: 'foo',
             data: claims,
-            attributeCandidates: { name: ['foobarbaz'] },
+            attributeCandidates: { name: ['fooBarBaz'] },
             provider,
         };
 

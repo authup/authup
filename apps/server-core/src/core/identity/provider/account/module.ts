@@ -131,6 +131,10 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
             output = attributesSelf;
         }
 
+        if (typeof output.name === 'string') {
+            output.name = output.name.trim().toLowerCase();
+        }
+
         let attempts = Math.max((identity.attributeCandidates?.name?.length || 0) + 1, 10);
         while (attempts > 0) {
             try {
@@ -140,7 +144,7 @@ export class IdentityProviderAccountManager implements IIdentityProviderAccountM
                 const names = identity.attributeCandidates?.name || [];
                 if (names.length > 0) {
                     while (names.length > 0) {
-                        output.name = `${names.shift()}`;
+                        output.name = `${names.shift()}`.trim().toLowerCase();
 
                         try {
                             await this.userValidator.run(output, {
