@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0-beta.39](https://github.com/authup/authup/compare/v1.0.0-beta.38...v1.0.0-beta.39) (2026-04-29)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([2cad5ac](https://github.com/authup/authup/commit/2cad5acd83d3c1ed9973be7c5a90dfa59a8c782a))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/core-kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+
 ## [1.0.0-beta.38](https://github.com/authup/authup/compare/v1.0.0-beta.37...v1.0.0-beta.38) (2026-04-28)
 
 
