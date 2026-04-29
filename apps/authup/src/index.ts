@@ -6,3 +6,4 @@ import { createCLIEntryPointCommand } from './module';
 Promise.resolve()
     .then(() => createCLIEntryPointCommand())
     .then((command) => runMain(command));
+
