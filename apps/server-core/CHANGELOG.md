@@ -1,5 +1,34 @@
 # Change Log
 
+## [1.0.0-beta.39](https://github.com/authup/authup/compare/v1.0.0-beta.38...v1.0.0-beta.39) (2026-04-29)
+
+
+### Features
+
+* restrict entity names to lowercase characters ([#3024](https://github.com/authup/authup/issues/3024)) ([6b6be70](https://github.com/authup/authup/commit/6b6be70e8a499c5b6ed958d0fa432648c6afd652))
+
+
+### Bug Fixes
+
+* enforce OAuth2 client authentication and PKCE per RFC 6749/7636 ([#3020](https://github.com/authup/authup/issues/3020)) ([bac38b1](https://github.com/authup/authup/commit/bac38b1f0c9368b6190fc872f146c4c4dae1b3fe))
+* enforce state for public clients in code flow at /authorize ([#3022](https://github.com/authup/authup/issues/3022)) ([5d8c0bf](https://github.com/authup/authup/commit/5d8c0bf91398d2982481a5b0063d0707c0eb2aea))
+* restore +secret field selection on GET /clients/:id ([#3023](https://github.com/authup/authup/issues/3023)) ([cc789a9](https://github.com/authup/authup/commit/cc789a94029e37dc91ef11b80c488b43de2bac27))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/core-http-kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/core-kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/errors bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/server-kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/specs bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+
 ## [1.0.0-beta.38](https://github.com/authup/authup/compare/v1.0.0-beta.37...v1.0.0-beta.38) (2026-04-28)
 
 

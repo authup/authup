@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.39](https://github.com/authup/authup/compare/v1.0.0-beta.38...v1.0.0-beta.39) (2026-04-29)
+
+
+### Features
+
+* restrict entity names to lowercase characters ([#3024](https://github.com/authup/authup/issues/3024)) ([6b6be70](https://github.com/authup/authup/commit/6b6be70e8a499c5b6ed958d0fa432648c6afd652))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/errors bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/specs bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+
 ## [1.0.0-beta.38](https://github.com/authup/authup/compare/v1.0.0-beta.37...v1.0.0-beta.38) (2026-04-28)
 
 

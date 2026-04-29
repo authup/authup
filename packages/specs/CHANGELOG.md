@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.0.0-beta.39](https://github.com/authup/authup/compare/v1.0.0-beta.38...v1.0.0-beta.39) (2026-04-29)
+
+
+### Bug Fixes
+
+* enforce OAuth2 client authentication and PKCE per RFC 6749/7636 ([#3020](https://github.com/authup/authup/issues/3020)) ([bac38b1](https://github.com/authup/authup/commit/bac38b1f0c9368b6190fc872f146c4c4dae1b3fe))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+  * peerDependencies
+    * @authup/errors bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+    * @authup/kit bumped from ^1.0.0-beta.38 to ^1.0.0-beta.39
+
 ## [1.0.0-beta.38](https://github.com/authup/authup/compare/v1.0.0-beta.37...v1.0.0-beta.38) (2026-04-28)
 
 
