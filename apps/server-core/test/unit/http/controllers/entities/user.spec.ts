@@ -71,7 +71,7 @@ describe('src/http/controllers/user', () => {
     });
 
     it('should update resource', async () => {
-        details.name = 'TestA';
+        details.name = 'testa';
         details.first_name = 'bar';
         details.last_name = 'baz';
 
