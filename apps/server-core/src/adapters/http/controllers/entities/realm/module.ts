@@ -100,12 +100,14 @@ export class RealmController {
     ): Promise<OpenIDProviderMetadata> {
         const entity = await this.service.getOne(id);
 
+        const baseURL = this.options.baseURL.replace(/\/+$/, '');
+
         return {
-            issuer: this.options.baseURL,
+            issuer: `${baseURL}/realms/${entity.name}`,
 
             authorization_endpoint: new URL('authorize', this.options.baseURL).href,
 
-            jwks_uri: new URL(`realms/${entity.id}/jwks`, this.options.baseURL).href,
+            jwks_uri: new URL(`realms/${entity.name}/jwks`, this.options.baseURL).href,
 
             response_types_supported: [
                 OAuth2AuthorizationResponseType.CODE,
@@ -144,20 +146,20 @@ export class RealmController {
     @DGet('/:id/jwks', [])
     async getCerts(
         @DPath('id') id: string,
-        @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey[]> {
-        return getJwksRouteHandler(req, res, this.keyRepository, 'id');
+        const entity = await this.service.getOne(id);
+        return getJwksRouteHandler(res, this.keyRepository, entity.id);
     }
 
     @DGet('/:id/jwks/:keyId', [])
     async getCert(
         @DPath('id') id: string,
         @DPath('keyId') keyId: string,
-        @DRequest() req: any,
         @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey> {
-        return getJwkRouteHandler(req, res, this.keyRepository, 'keyId');
+        const entity = await this.service.getOne(id);
+        return getJwkRouteHandler(res, this.keyRepository, keyId, entity.id);
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

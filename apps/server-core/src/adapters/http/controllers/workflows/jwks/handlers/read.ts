@@ -7,22 +7,18 @@
 
 import { AsymmetricKey } from '@authup/server-kit';
 import { JWKType } from '@authup/specs';
-import type { Request, Response } from 'routup';
+import type { Response } from 'routup';
 import { send } from 'routup';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { KeyEntity } from '../../../../../database/domains/index.ts';
-import { getRequestStringParam, getRequestStringParamOrFail } from '../../../../request/index.ts';
 
 export async function getJwksRouteHandler(
-    req: Request,
     res: Response,
     repository: Repository<KeyEntity>,
-    realmIdParamKey?: string,
+    realmId?: string,
 ) : Promise<any> {
-    const realmId = getRequestStringParam(req, realmIdParamKey || 'realmId');
-
     const entities = await repository.find({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
@@ -54,17 +50,16 @@ export async function getJwksRouteHandler(
 }
 
 export async function getJwkRouteHandler(
-    req: Request,
     res: Response,
     repository: Repository<KeyEntity>,
-    idParamKey?: string,
+    keyId: string,
+    realmId?: string,
 ) : Promise<any> {
-    const id = getRequestStringParamOrFail(req, idParamKey || 'id');
-
     const entity = await repository.findOne({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
-            id,
+            id: keyId,
+            ...(realmId ? { realm_id: realmId } : {}),
         },
     });
 
