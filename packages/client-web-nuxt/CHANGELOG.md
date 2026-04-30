@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.40](https://github.com/authup/authup/compare/v1.0.0-beta.39...v1.0.0-beta.40) (2026-04-30)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([c8da21d](https://github.com/authup/authup/commit/c8da21d2db725ab437dc3f5a976f8ea453014cbc))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+    * @authup/client-web-kit bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+    * @authup/kit bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+
 ## [1.0.0-beta.39](https://github.com/authup/authup/compare/v1.0.0-beta.38...v1.0.0-beta.39) (2026-04-29)
 
 
