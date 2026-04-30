@@ -10,3 +10,4 @@ export * from './types';
 export { install };
 
 export default { install } satisfies Plugin<Options | undefined>;
+
