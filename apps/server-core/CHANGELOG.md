@@ -1,5 +1,27 @@
 # Change Log
 
+## [1.0.0-beta.40](https://github.com/authup/authup/compare/v1.0.0-beta.39...v1.0.0-beta.40) (2026-04-30)
+
+
+### Bug Fixes
+
+* align openid issuer with jwt iss claim across realms ([#3025](https://github.com/authup/authup/issues/3025)) ([5acfba3](https://github.com/authup/authup/commit/5acfba338fdf7e8a74164b510109fd0075545f08))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+    * @authup/core-http-kit bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+    * @authup/core-kit bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+    * @authup/errors bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+    * @authup/kit bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+    * @authup/server-kit bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+    * @authup/specs bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.39 to ^1.0.0-beta.40
+
 ## [1.0.0-beta.39](https://github.com/authup/authup/compare/v1.0.0-beta.38...v1.0.0-beta.39) (2026-04-29)
 
 

@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-socket-io",
     "type": "module",
-    "version": "1.0.0-beta.39",
+    "version": "1.0.0-beta.40",
     "description": "A socket.io server adapter for authup",
     "exports": {
         "./package.json": "./package.json",
@@ -49,8 +49,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core-kit": "^1.0.0-beta.39",
-        "@authup/server-adapter-kit": "^1.0.0-beta.39"
+        "@authup/core-kit": "^1.0.0-beta.40",
+        "@authup/server-adapter-kit": "^1.0.0-beta.40"
     },
     "devDependencies": {
         "vitest": "^4.0.18"
