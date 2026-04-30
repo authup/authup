@@ -34,7 +34,7 @@ export class ClientCredentialsGrant extends OAuth2BaseGrant<Client> {
             sub: input.id,
             sub_kind: OAuth2SubKind.CLIENT,
             realm_id: input.realm.id,
-            realm_name: input.realm.id,
+            realm_name: input.realm.name,
             client_id: input.id,
         });
 
