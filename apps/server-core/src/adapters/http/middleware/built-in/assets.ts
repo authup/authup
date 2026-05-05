@@ -11,6 +11,7 @@ import { createHandler } from '@routup/assets';
 import path from 'node:path';
 import type { Router } from 'routup';
 import { defineCoreHandler } from 'routup';
+import { fromNodeMiddleware } from 'routup/node';
 import { PACKAGE_PATH, UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../path.ts';
 
 export const VITE_SERVER_STORE_KEY = Symbol('ViteServer');
@@ -57,25 +58,7 @@ export async function registerAssetsMiddleware(router: Router) {
         appType: 'custom',
     });
 
-    router.use('public', defineCoreHandler(async (event) => {
-        const node = event.request.runtime?.node;
-        if (!node?.req || !node?.res) {
-            return event.next();
-        }
-
-        await new Promise<void>((resolve, reject) => {
-            server.middlewares(node.req as any, node.res as any, (err: any) => {
-                if (err) reject(err);
-                else resolve();
-            });
-        });
-
-        if (node.res.writableEnded) {
-            return null;
-        }
-
-        return event.next();
-    }));
+    router.use('public', fromNodeMiddleware(server.middlewares));
     router.use(defineCoreHandler((event) => {
         event.store[VITE_SERVER_STORE_KEY] = server;
         return event.next();

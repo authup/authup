@@ -5,10 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Version, generate } from '@routup/swagger';
+import { generateMetadata } from '@trapi/metadata';
+import { Version, generateSwagger, saveSwagger } from '@trapi/swagger';
 import fs from 'node:fs';
 import path from 'node:path';
-import { DIST_PATH, SRC_PATH } from '../../../path.ts';
+import { DIST_PATH, PACKAGE_PATH, SRC_PATH } from '../../../path.ts';
 import type { SwaggerOptions } from './type.ts';
 
 export class Swagger {
@@ -50,45 +51,53 @@ export class Swagger {
     }
 
     async generate() {
-        return generate({
-            version: Version.V2,
-            options: {
-                metadata: {
-                    cache: false,
-                    entryPoint: {
-                        cwd: this.entrypointPath,
-                        pattern: '**/*{.ts,.js,.d.ts}',
-                    },
-                    ignore: [
-                        '**/node_modules/**',
-                    ],
-                    allow: [
-                        '**/@authup/**',
-                    ],
-                },
-                servers: [
-                    this.options.baseURL,
-                ],
+        const metadata = await generateMetadata({
+            preset: '@routup/decorators/preset',
+            tsconfig: path.join(PACKAGE_PATH, 'tsconfig.json'),
+            entryPoint: {
+                cwd: this.entrypointPath,
+                pattern: '**/*{.ts,.js,.d.ts}',
+            },
+            ignore: [
+                '**/node_modules/**',
+            ],
+            allow: [
+                '**/@authup/**',
+            ],
+        });
+
+        const spec = await generateSwagger({
+            version: Version.V3_2,
+            metadata,
+            data: {
                 name: 'API Documentation',
-                outputDirectory: this.distPath,
+                servers: [this.options.baseURL],
                 securityDefinitions: {
                     bearer: {
-                        name: 'Bearer',
                         type: 'apiKey',
+                        name: 'Authorization',
                         in: 'header',
-                    },
-                    oauth2: {
-                        type: 'oauth2',
-                        flows: { password: { tokenUrl: `${new URL('token', this.options.baseURL).href}` } },
                     },
                     basicAuth: {
                         type: 'http',
-                        schema: 'basic',
+                        scheme: 'basic',
+                    },
+                    oauth2: {
+                        type: 'oauth2',
+                        flows: {
+                            password: {
+                                tokenUrl: new URL('token', this.options.baseURL).href,
+                                scopes: {},
+                            },
+                        },
                     },
                 },
-                consumes: [],
-                produces: [],
             },
+        });
+
+        await saveSwagger(spec, {
+            cwd: this.distPath,
+            name: 'swagger',
         });
     }
 

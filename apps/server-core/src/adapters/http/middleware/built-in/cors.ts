@@ -8,7 +8,7 @@
 import type { CorsOptions } from 'cors';
 import cors from 'cors';
 import type { Router } from 'routup';
-import { defineCoreHandler } from 'routup';
+import { fromNodeMiddleware } from 'routup/node';
 import { merge } from 'smob';
 
 export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
@@ -19,25 +19,5 @@ export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
         credentials: true,
     } satisfies CorsOptions);
 
-    const handler = cors(options);
-
-    router.use(defineCoreHandler(async (event) => {
-        const node = event.request.runtime?.node;
-        if (!node?.req || !node?.res) {
-            return event.next();
-        }
-
-        await new Promise<void>((resolve, reject) => {
-            handler(node.req as any, node.res as any, (err: any) => {
-                if (err) reject(err);
-                else resolve();
-            });
-        });
-
-        if (node.res.writableEnded) {
-            return null;
-        }
-
-        return event.next();
-    }));
+    router.use(fromNodeMiddleware(cors(options)));
 }
