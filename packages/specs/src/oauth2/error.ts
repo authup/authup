@@ -6,17 +6,30 @@
  */
 
 import { AuthupError, ErrorCode } from '@authup/errors';
-import type { AuthupErrorOptionsInput } from '@authup/errors';
+import type { AuthupErrorOptions } from '@authup/errors';
 import { OAuth2ErrorCode } from './constants';
 
+type OAuth2ErrorOptions = AuthupErrorOptions & {
+    data?: Record<string, any>
+};
+
 export class OAuth2Error extends AuthupError {
-    constructor(...input: AuthupErrorOptionsInput[]) {
+    constructor(input?: OAuth2ErrorOptions | string) {
+        const options : OAuth2ErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         super({
             code: ErrorCode.OAUTH_REQUEST_INVALID,
             message: 'OAuth2 request invalid',
             statusCode: 400,
-            data: { error: OAuth2ErrorCode.INVALID_REQUEST },
-        }, ...input);
+            ...options,
+        });
+        this.data = options.data ?? { error: OAuth2ErrorCode.INVALID_REQUEST };
+    }
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            ...(this.data ?? {}),
+        };
     }
 
     // -------------------------------------------------
@@ -130,9 +143,6 @@ export class OAuth2Error extends AuthupError {
     }
 
     static signingKeyMissing() {
-        // Server-side misconfiguration — the client did nothing wrong.
-        // Surface as 500 so clients back off rather than retrying with
-        // the same payload.
         return new OAuth2Error({
             message: 'A token signing key could not be retrieved.',
             statusCode: 500,

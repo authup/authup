@@ -5,21 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
 import type { Router } from 'routup';
 import { defineErrorHandler } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import type { AuthupError } from '@authup/errors';
-import type { Issue } from 'validup';
 import { sanitizeError } from '../../../../utils/index.ts';
-
-type ErrorResponsePayload = {
-    statusCode: number,
-    code: string,
-    message: string,
-    issues: Issue[],
-    [key: string]: any
-};
 
 export function registerErrorMiddleware(router: Router) {
     router.use(defineErrorHandler((error, event) => {
@@ -30,7 +20,8 @@ export function registerErrorMiddleware(router: Router) {
             next = sanitizeError(error);
         }
 
-        const payload : ErrorResponsePayload = {
+        const payload : Record<string, any> = {
+            ...next.toJSON(),
             statusCode: next.statusCode,
             code: `${next.code}`,
             message: next.message,
@@ -42,11 +33,6 @@ export function registerErrorMiddleware(router: Router) {
             useLogger().error(next);
 
             payload.message = 'An internal server error occurred.';
-        } else if (isObject(next.data)) {
-            const keys = Object.keys(next.data);
-            for (const key of keys) {
-                payload[key] = next.data[key];
-            }
         }
 
         event.response.status = payload.statusCode;

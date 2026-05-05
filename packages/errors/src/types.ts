@@ -8,7 +8,6 @@
 import type { HTTPErrorOptions } from '@ebec/http';
 
 export type AuthupErrorOptions = HTTPErrorOptions & {
-    codePrefix?: string,
     data?: Record<string, any>
 };
 

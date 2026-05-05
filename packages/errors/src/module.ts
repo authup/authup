@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { AuthupErrorOptionsInput } from './types.ts';
 import { BadRequestError } from '@ebec/http';
 import type { Issue } from 'validup';
-import type { AuthupErrorOptionsInput } from './types.ts';
 
 export class AuthupError extends BadRequestError {
     public readonly issues : Issue[];
@@ -19,8 +19,11 @@ export class AuthupError extends BadRequestError {
 
         this.issues = [];
 
-        if (typeof input === 'object' && input !== null && 'data' in input) {
-            this.data = (input as { data?: Record<string, any> }).data;
+        if (input && typeof input === 'object' && !(input instanceof Error)) {
+            const { data } = (input as { data?: Record<string, any> });
+            if (data) {
+                this.data = data;
+            }
         }
     }
 }

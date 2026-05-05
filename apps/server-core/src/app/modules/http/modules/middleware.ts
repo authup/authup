@@ -31,11 +31,14 @@ import {
 
 export class HTTPMiddlewareModule {
     async mountBefore(router: Router, container: IContainer): Promise<void> {
+        // @routup/prometheus must be installed before any other plugin or
+        // route so that its onion middleware can observe the full request
+        // lifecycle (the v3 README is explicit on this).
+        await this.mountPrometheus(router, container);
         await this.mountLogger(router, container);
         await this.mountCors(router, container);
         await this.mountAssets(router);
         await this.mountBasic(router);
-        await this.mountPrometheus(router, container);
         await this.mountRateLimit(router, container);
 
         await this.mountSwagger(router, container);

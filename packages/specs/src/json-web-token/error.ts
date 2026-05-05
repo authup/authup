@@ -5,15 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError, type AuthupErrorOptionsInput, ErrorCode } from '@authup/errors';
+import { AuthupError, type AuthupErrorOptions, ErrorCode } from '@authup/errors';
+
+type JWTErrorOptions = AuthupErrorOptions & {
+    data?: Record<string, any>
+};
 
 export class JWTError extends AuthupError {
-    constructor(...input: AuthupErrorOptionsInput[]) {
+    constructor(input?: JWTErrorOptions | string) {
+        const options : JWTErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         super({
             code: ErrorCode.JWT_INVALID,
             message: 'The JWT is invalid.',
             statusCode: 400,
-        }, ...input);
+            ...options,
+        });
+        if (options.data) {
+            this.data = options.data;
+        }
+    }
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            ...(this.data ?? {}),
+        };
     }
 
     static invalid() {
