@@ -57,7 +57,7 @@
         "@validup/adapter-zod": "^0.2.4",
         "pathtrace": "^2.2.0",
         "validup": "^0.2.2",
-        "zod": "^4.3.6"
+        "zod": "^4.4.3"
     },
     "devDependencies": {
         "@authup/errors": "^1.0.0-beta.40",
