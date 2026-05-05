@@ -9,5 +9,4 @@ export * from './adapters/index.ts';
 export * from './controllers/index.ts';
 export * from './middleware/index.ts';
 export * from './request/index.ts';
-export * from './server/index.ts';
 export * from './swagger/index.ts';

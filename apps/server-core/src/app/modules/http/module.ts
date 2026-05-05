@@ -6,11 +6,11 @@
  */
 
 import { Router } from 'routup';
-import type { IServer } from '../../../adapters/http/index.ts';
-import { createHttpServer } from '../../../adapters/http/index.ts';
+import { serve } from 'routup/node';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
+import type { HTTPServer } from './constants.ts';
 import { HTTPInjectionKey } from './constants.ts';
 import type { IContainer } from 'eldin';
 import { HTTPControllerModule, HTTPMiddlewareModule } from './modules/index.ts';
@@ -21,7 +21,7 @@ export class HTTPModule implements IModule {
 
     readonly dependencies: string[];
 
-    protected instance : IServer | undefined;
+    protected instance : HTTPServer | undefined;
 
     protected middleware : HTTPMiddlewareModule;
 
@@ -48,30 +48,18 @@ export class HTTPModule implements IModule {
         await this.controller.mount(router, container);
         await this.middleware.mountAfter(router, container);
 
-        const server = createHttpServer({ router });
-
-        await new Promise<void>((resolve, reject) => {
-            const errorHandler = (err?: null | Error) => {
-                reject(err);
-            };
-
-            server.once('error', errorHandler);
-            server.once('listening', () => {
-                server.removeListener('error', errorHandler);
-
-                resolve();
-            });
-
-            server.listen(config.port, config.host);
+        const server = serve(router, {
+            port: config.port,
+            hostname: config.host,
+            silent: true,
         });
 
-        const address = server.address();
-        if (address) {
-            if (typeof address === 'string') {
-                logger.debug(`Listening on ${address}`);
-            } else {
-                logger.debug(`Listening on ${address.address}:${address.port}`);
-            }
+        await server.ready();
+
+        this.instance = server;
+
+        if (server.url) {
+            logger.debug(`Listening on ${server.url}`);
         }
 
         container.register(HTTPInjectionKey.Server, { useValue: server });
@@ -86,7 +74,7 @@ export class HTTPModule implements IModule {
 
         container.unregister(HTTPInjectionKey.Server);
 
-        this.instance.close();
+        await this.instance.close();
         this.instance = undefined;
     }
 }

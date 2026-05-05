@@ -6,8 +6,7 @@
  */
 
 import { Client } from '@authup/core-http-kit';
-import type { AddressInfo } from 'node:net';
-import type { IServer } from '../../src';
+import type { HTTPServer } from '../../src/app';
 import { HTTPInjectionKey } from '../../src/app';
 import { TestApplication } from './module.ts';
 
@@ -25,9 +24,11 @@ export class TestHTTPApplication extends TestApplication {
     }
 
     get baseURL(): string {
-        const httpServer = this.container.resolve<IServer>(HTTPInjectionKey.Server);
-        const address = httpServer.address() as AddressInfo;
-        return `http://localhost:${address.port}`;
+        const httpServer = this.container.resolve<HTTPServer>(HTTPInjectionKey.Server);
+        if (!httpServer.url) {
+            throw new Error('HTTP server has no URL — was it started?');
+        }
+        return httpServer.url.replace(/\/$/, '');
     }
 
     protected createClient() {
