@@ -11,16 +11,16 @@ import type {
     PermissionEvaluationContext,
 } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import type { Request } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
 export class RequestPermissionEvaluator implements IPermissionEvaluator {
-    protected req: Request;
+    protected event: IRoutupEvent;
 
     protected evaluator: IPermissionEvaluator;
 
-    constructor(req: Request, evaluator: IPermissionEvaluator) {
-        this.req = req;
+    constructor(event: IRoutupEvent, evaluator: IPermissionEvaluator) {
+        this.event = event;
         this.evaluator = evaluator;
     }
 
@@ -47,10 +47,10 @@ export class RequestPermissionEvaluator implements IPermissionEvaluator {
     // --------------------------------------------------------------
 
     protected extendContext(ctx: PermissionEvaluationContext) {
-        const scopes = useRequestScopes(this.req);
+        const scopes = useRequestScopes(this.event);
         if (scopes.includes(ScopeName.GLOBAL)) {
             ctx.input = ctx.input || new PolicyData();
-            ctx.input.set(BuiltInPolicyType.IDENTITY, useRequestIdentity(this.req));
+            ctx.input.set(BuiltInPolicyType.IDENTITY, useRequestIdentity(this.event));
         }
 
         return ctx;

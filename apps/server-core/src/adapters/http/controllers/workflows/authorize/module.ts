@@ -16,13 +16,13 @@ import { load } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
-import { send, useRequestParam } from 'routup';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
+import { useRequestParam } from 'routup';
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../../path.ts';
 import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
+import { readFromLocations } from '../../../request/index.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
 import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
 import { sanitizeError } from '../../../../../utils/index.ts';
@@ -37,7 +37,7 @@ export class AuthorizeController {
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
-    protected codeRequestValidator : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
+    protected codeRequestValidator : OAuth2AuthorizationCodeRequestValidator;
 
     protected authorizer: HTTPOAuth2Authorizer;
 
@@ -48,8 +48,7 @@ export class AuthorizeController {
 
         this.codeRequestVerifier = ctx.codeRequestVerifier;
 
-        const validator = new OAuth2AuthorizationCodeRequestValidator();
-        this.codeRequestValidator = new RoutupContainerAdapter(validator);
+        this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
 
         this.authorizer = new HTTPOAuth2Authorizer({
             codeRequestVerifier: this.codeRequestVerifier,
@@ -102,7 +101,8 @@ export class AuthorizeController {
         let error : Error | undefined;
 
         try {
-            const data = await this.codeRequestValidator.run(req, { locations: ['body', 'query'] });
+            const merged = await readFromLocations(req, ['body', 'query']);
+            const data = await this.codeRequestValidator.run(merged);
 
             const result = await this.codeRequestVerifier.verify(data);
             client = result.client;

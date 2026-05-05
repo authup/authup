@@ -8,8 +8,7 @@
 import type { Identity } from '@authup/core-kit';
 import { IdentityType, REALM_MASTER_NAME } from '@authup/core-kit';
 import { UnauthorizedError } from '@ebec/http';
-import type { Request } from 'routup';
-import { setRequestEnv, useRequestEnv } from 'routup';
+import type { IRoutupEvent } from 'routup';
 
 const sym = Symbol('RIdentity');
 
@@ -50,11 +49,11 @@ export class RequestIdentity {
     }
 }
 
-export function useRequestIdentity(req: Request) : RequestIdentity | undefined {
-    return useRequestEnv(req, sym) as RequestIdentity | undefined;
+export function useRequestIdentity(event: IRoutupEvent) : RequestIdentity | undefined {
+    return event.store[sym] as RequestIdentity | undefined;
 }
 
-export function setRequestIdentity(req: Request, input: Identity | RequestIdentity) : void {
+export function setRequestIdentity(event: IRoutupEvent, input: Identity | RequestIdentity) : void {
     let data : RequestIdentity;
 
     if (input instanceof RequestIdentity) {
@@ -63,11 +62,11 @@ export function setRequestIdentity(req: Request, input: Identity | RequestIdenti
         data = new RequestIdentity(input);
     }
 
-    setRequestEnv(req, sym, data);
+    event.store[sym] = data;
 }
 
-export function useRequestIdentityOrFail(req: Request) : RequestIdentity {
-    const identity = useRequestIdentity(req);
+export function useRequestIdentityOrFail(event: IRoutupEvent) : RequestIdentity {
+    const identity = useRequestIdentity(event);
     if (!identity) {
         throw new UnauthorizedError();
     }

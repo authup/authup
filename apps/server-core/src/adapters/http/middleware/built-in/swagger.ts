@@ -5,39 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import process from 'node:process';
-import type { UIOptions } from '@routup/swagger';
-import { swaggerUI } from '@routup/swagger';
 import type { Plugin } from 'routup';
-import { buildFilePath, load, locate } from 'locter';
-import { AuthupError } from '@authup/errors';
+import { defineCoreHandler } from 'routup';
 
 type SwaggerMiddlewareOptions = {
     documentPath: string,
-    options?: UIOptions
 };
-export async function createSwaggerMiddleware(input: Partial<SwaggerMiddlewareOptions> = {}) : Promise<Plugin> {
-    let documentPath : string;
-    if (input.documentPath) {
-        documentPath = path.isAbsolute(input.documentPath) ?
-            input.documentPath :
-            path.join(process.cwd(), input.documentPath);
-    } else {
-        const locatorInfo = await locate('**/swagger.json');
-        if (!locatorInfo) {
-            throw new AuthupError('Swagger file not found.');
-        }
 
-        documentPath = buildFilePath(locatorInfo);
-    }
-
-    if (!fs.existsSync(documentPath)) {
-        throw new AuthupError(`Swagger file ( ${documentPath} ) does not exist.`);
-    }
-
-    const document = await load(documentPath);
-
-    return swaggerUI(document, input.options);
+/**
+ * Phase 5 of the routup v5 migration restores the swagger UI via
+ * `@routup/swagger-ui` + `@trapi/swagger`. Until then this plugin
+ * mounts a 501 handler so the binary boots without the deleted
+ * `@routup/swagger` import.
+ */
+export async function createSwaggerMiddleware(_input: Partial<SwaggerMiddlewareOptions> = {}) : Promise<Plugin> {
+    return {
+        name: '@authup/swagger-stub',
+        install(router) {
+            router.use(defineCoreHandler((event) => {
+                event.response.status = 501;
+                return {
+                    statusCode: 501,
+                    code: 'NOT_IMPLEMENTED',
+                    message: 'Swagger UI is being migrated to routup v5. Re-enable in phase 5.',
+                };
+            }));
+        },
+    };
 }

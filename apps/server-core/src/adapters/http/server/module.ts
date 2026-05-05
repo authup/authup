@@ -6,9 +6,10 @@
  */
 
 import http from 'node:http';
-import { createNodeDispatcher } from 'routup';
+import type { RequestListener } from 'node:http';
+import { toNodeHandler } from 'routup/node';
 import type { HttpServerContext, IServer } from './type.ts';
 
 export function createHttpServer({ router } : HttpServerContext) : IServer {
-    return new http.Server(createNodeDispatcher(router));
+    return new http.Server(toNodeHandler(router) as unknown as RequestListener);
 }

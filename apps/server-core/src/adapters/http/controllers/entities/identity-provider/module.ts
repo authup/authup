@@ -43,9 +43,9 @@ import {
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
+import { readRequestBody } from '@routup/basic/body';
 import { OAuth2Error } from '@authup/specs';
 import { URL } from 'node:url';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type {
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
@@ -60,7 +60,7 @@ import {
     createIdentityProviderOAuth2Authenticator,
 } from '../../../../../core/index.ts';
 import {
-    getRequestBodyRealmID,
+    getBodyRealmID,
     getRequestParamID,
     useRequestIdentityOrFail,
     useRequestParamID,
@@ -364,7 +364,8 @@ export class IdentityProviderController {
     } = {}): Promise<any> {
         let group: string;
         const id = getRequestParamID(req, { isUUID: false });
-        const realmId = getRequestBodyRealmID(req);
+        const body = await readRequestBody(req);
+        const realmId = getBodyRealmID(body);
 
         let entity: IdentityProvider | null | undefined;
         if (id) {
@@ -398,11 +399,11 @@ export class IdentityProviderController {
             group = ValidatorGroup.CREATE;
         }
 
-        const validator = new RoutupContainerAdapter(new IdentityProviderValidator());
-        const data = await validator.run(req, { group });
+        const validator = new IdentityProviderValidator();
+        const data = await validator.run(body, { group });
 
-        const attributesValidator = new RoutupContainerAdapter(new IdentityProviderAttributesValidator());
-        const attributes = await attributesValidator.run(req);
+        const attributesValidator = new IdentityProviderAttributesValidator();
+        const attributes = await attributesValidator.run(body);
 
         await this.repository.validateJoinColumns(data);
 

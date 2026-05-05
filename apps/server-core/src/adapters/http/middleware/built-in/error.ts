@@ -7,7 +7,7 @@
 
 import { isObject } from '@authup/kit';
 import type { Router } from 'routup';
-import { errorHandler, send } from 'routup';
+import { defineErrorHandler } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import type { AuthupError } from '@authup/errors';
 import type { Issue } from 'validup';
@@ -22,11 +22,7 @@ type ErrorResponsePayload = {
 };
 
 export function registerErrorMiddleware(router: Router) {
-    router.use(errorHandler((
-        error,
-        request,
-        response,
-    ) => {
+    router.use(defineErrorHandler((error, event) => {
         let next : AuthupError;
         if (error.cause) {
             next = sanitizeError(error.cause);
@@ -53,7 +49,7 @@ export function registerErrorMiddleware(router: Router) {
             }
         }
 
-        response.statusCode = payload.statusCode;
-        return send(response, payload);
+        event.response.status = payload.statusCode;
+        return payload;
     }));
 }

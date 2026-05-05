@@ -5,14 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Request } from 'routup';
-import { setRequestEnv, useRequestEnv } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import type { RequestPermissionEvaluator } from './module.ts';
 
 const sym = Symbol('RequestPermissionEvaluator');
 
-export function useRequestPermissionEvaluator(req: Request) : RequestPermissionEvaluator {
-    const instance = useRequestEnv(req, sym);
+export function useRequestPermissionEvaluator(event: IRoutupEvent) : RequestPermissionEvaluator {
+    const instance = event.store[sym];
     if (!instance) {
         throw new Error('The request permission evaluator is not initialised.');
     }
@@ -20,6 +19,6 @@ export function useRequestPermissionEvaluator(req: Request) : RequestPermissionE
     return instance as RequestPermissionEvaluator;
 }
 
-export function setRequestPermissionEvaluator(req: Request, ctx: RequestPermissionEvaluator) {
-    setRequestEnv(req, sym, ctx);
+export function setRequestPermissionEvaluator(event: IRoutupEvent, ctx: RequestPermissionEvaluator) {
+    event.store[sym] = ctx;
 }

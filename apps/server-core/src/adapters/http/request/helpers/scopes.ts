@@ -5,17 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Request } from 'routup';
-import { setRequestEnv, useRequestEnv } from 'routup';
+import type { IRoutupEvent } from 'routup';
 
 const sym = Symbol('Scopes');
 
-export function useRequestScopes(req: Request) : string[] {
-    const scopes = useRequestEnv(req, sym) as string[];
+export function useRequestScopes(event: IRoutupEvent) : string[] {
+    const scopes = event.store[sym] as string[] | undefined;
 
     return scopes || [];
 }
 
-export function setRequestScopes(req: Request, scopes: string[]) {
-    setRequestEnv(req, sym, scopes);
+export function setRequestScopes(event: IRoutupEvent, scopes: string[]) {
+    event.store[sym] = scopes;
 }

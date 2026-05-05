@@ -6,8 +6,7 @@
  */
 
 import { isUUID } from '@authup/kit';
-import type { Request } from 'routup';
-import { useRequestParam } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { ValidupError, buildErrorMessageForAttribute, defineIssueItem } from 'validup';
 
 type RequestIDParamOptions = {
@@ -17,8 +16,8 @@ type RequestIDParamOptions = {
     isUUID?: boolean
 };
 
-export function useRequestParamID(req: Request, options: RequestIDParamOptions = {}) : string {
-    const id = getRequestParamID(req, options);
+export function useRequestParamID(event: IRoutupEvent, options: RequestIDParamOptions = {}) : string {
+    const id = getRequestParamID(event, options);
     if (typeof id === 'undefined') {
         throw new ValidupError([
             defineIssueItem({
@@ -31,8 +30,8 @@ export function useRequestParamID(req: Request, options: RequestIDParamOptions =
     return id;
 }
 
-export function getRequestParamID(req: Request, options: RequestIDParamOptions = {}) : string | undefined {
-    const id = getRequestStringParam(req, 'id');
+export function getRequestParamID(event: IRoutupEvent, options: RequestIDParamOptions = {}) : string | undefined {
+    const id = getRequestStringParam(event, 'id');
     if (!id) {
         return undefined;
     }
@@ -45,8 +44,8 @@ export function getRequestParamID(req: Request, options: RequestIDParamOptions =
     return id;
 }
 
-export function getRequestStringParam(req: Request, key: string) : string | undefined {
-    const value = useRequestParam(req, key);
+export function getRequestStringParam(event: IRoutupEvent, key: string) : string | undefined {
+    const value = event.params[key];
     if (typeof value !== 'string' || value.length === 0) {
         return undefined;
     }
@@ -54,8 +53,8 @@ export function getRequestStringParam(req: Request, key: string) : string | unde
     return value;
 }
 
-export function getRequestStringParamOrFail(req: Request, key: string) : string | undefined {
-    const value = getRequestStringParam(req, key);
+export function getRequestStringParamOrFail(event: IRoutupEvent, key: string) : string | undefined {
+    const value = getRequestStringParam(event, key);
     if (typeof value === 'undefined') {
         throw new ValidupError([
             defineIssueItem({

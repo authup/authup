@@ -7,17 +7,17 @@
 
 import { UnauthorizedError } from '@ebec/http';
 import type { HandlerInterface } from '@routup/decorators';
-import type { Next, Request, Response } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { useRequestIdentity } from '../../../request/index.ts';
 
 export class ForceUserLoggedInMiddleware implements HandlerInterface {
-    public run(request: Request, response: Response, next: Next) {
-        const identity = useRequestIdentity(request);
+    public run(event: IRoutupEvent) {
+        const identity = useRequestIdentity(event);
 
         if (!identity || identity.type !== 'user') {
             throw new UnauthorizedError();
         }
 
-        next();
+        return event.next();
     }
 }
