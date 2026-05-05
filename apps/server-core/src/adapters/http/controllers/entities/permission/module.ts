@@ -13,25 +13,20 @@ import {
     PolicyData,
 } from '@authup/access';
 import {
-    DBody, 
-    DController, 
-    DDelete, 
-    DGet, 
-    DPath, 
-    DPost, 
-    DPut, 
-    DRequest, 
-    DResponse, 
+    DBody,
+    DContext,
+    DController,
+    DDelete,
+    DGet,
+    DPath,
+    DPost,
+    DPut,
     DTags,
 } from '@routup/decorators';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
-import {
-    send, 
-    sendAccepted, 
-    sendCreated, 
-    useRequestParam,
-} from 'routup';
+import type { IRoutupEvent } from 'routup';
+import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
  
@@ -78,46 +73,43 @@ export class PermissionController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const {
             data, 
             meta, 
-        } = await this.service.getMany(useRequestQuery(req), actor);
+        } = await this.service.getMany(useRequestQuery(event), actor);
 
-        return send(res, {
+        return {
             data,
             meta, 
-        });
+        };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(res, entity);
+        return sendCreated(event, entity);
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
     async check(
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const id = useRequestParam(req, 'id');
+        const { id } = event.params;
 
         let criteria: Record<string, any>;
         if (isUUID(id)) {
             criteria = { id };
         } else {
-            const realm = await this.realmRepository.resolve(useRequestParam(req, 'realmId'));
+            const realm = await this.realmRepository.resolve(event.params.realmId);
             criteria = {
                 name: id,
                 ...(realm ? { realm_id: realm.id } : {}),
@@ -130,7 +122,7 @@ export class PermissionController {
         }
 
         if (typeof data[BuiltInPolicyType.IDENTITY] === 'undefined') {
-            data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(req);
+            data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(event);
         }
 
         const ctx: PermissionEvaluationContext = {
@@ -162,50 +154,47 @@ export class PermissionController {
             };
         }
 
-        return sendAccepted(res, output);
+        return sendAccepted(event, output);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.getOne(
             id,
             actor,
-            useRequestParam(req, 'realmId'),
+            event.params.realmId,
         );
 
-        return send(res, entity);
+        return entity;
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
             data,
             actor,
         );
 
-        return sendAccepted(res, entity);
+        return sendAccepted(event, entity);
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const {
             entity, 
             created, 
@@ -216,21 +205,20 @@ export class PermissionController {
         );
 
         if (created) {
-            return sendCreated(res, entity);
+            return sendCreated(event, entity);
         }
 
-        return sendAccepted(res, entity);
+        return sendAccepted(event, entity);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(res, entity);
+        return sendAccepted(event, entity);
     }
 }

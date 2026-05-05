@@ -8,14 +8,13 @@
 import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
 import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
 import {
+    DContext,
     DController,
     DGet,
     DPost,
-    DRequest,
-    DResponse,
     DTags,
 } from '@routup/decorators';
-import type { Request, Response } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { sendAccepted } from 'routup';
 import { buildPermissionKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
@@ -105,18 +104,16 @@ export class TokenController {
     // -------------------------------------------
 
     @DGet('/introspect', [])
-    async getIntrospect(
-        @DRequest() req: Request,
-    ): Promise<OAuth2TokenIntrospectionResponse> {
-        return this.postIntrospect(req);
+    async getIntrospect(@DContext() event: IRoutupEvent): Promise<OAuth2TokenIntrospectionResponse> {
+        return this.postIntrospect(event);
     }
 
     @DPost('/introspect', [])
     async postIntrospect(
-        @DRequest() req: Request,
+        @DContext() event: IRoutupEvent,
     ): Promise<OAuth2TokenIntrospectionResponse> {
         try {
-            const token = await extractTokenFromRequest(req);
+            const token = await extractTokenFromRequest(event);
             const payload = await this.tokenVerifier.verify(token, { skipActiveCheck: true });
             if (!payload.sub || !payload.sub_kind) {
                 throw OAuth2Error.identityInvalid();
@@ -175,17 +172,16 @@ export class TokenController {
 
     @DPost('/revoke', [])
     async revokeToken(
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+        @DContext() event: IRoutupEvent,
     ) {
         try {
-            const token = await extractTokenFromRequest(req);
+            const token = await extractTokenFromRequest(event);
 
             const payload = await this.tokenVerifier.verify(token);
 
             await this.tokenRevoker.revoke(payload);
 
-            return await sendAccepted(res);
+            return await sendAccepted(event);
         } catch (e) {
             throw toOAuth2Error(e);
         }
@@ -194,10 +190,8 @@ export class TokenController {
     // ----------------------------------------------------------
 
     @DPost('', [])
-    async createToken(
-        @DRequest() req: Request,
-    ): Promise<OAuth2TokenGrantResponse> {
-        const grantType = guessOauth2GrantTypeByRequest(req);
+    async createToken(@DContext() event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+        const grantType = await guessOauth2GrantTypeByRequest(event);
         if (!grantType) {
             throw OAuth2Error.grantInvalid();
         }
@@ -207,6 +201,6 @@ export class TokenController {
             throw OAuth2Error.grantInvalid();
         }
 
-        return grant.runWithRequest(req);
+        return grant.runWithRequest(event);
     }
 }

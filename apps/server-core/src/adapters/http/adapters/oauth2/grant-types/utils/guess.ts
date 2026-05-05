@@ -6,23 +6,28 @@
  */
 
 import { OAuth2TokenGrant } from '@authup/specs';
-import { useRequestBody } from '@routup/basic/body';
+import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
-import type { Request } from 'routup';
+import type { IRoutupEvent } from 'routup';
 
-export function guessOauth2GrantTypeByRequest(
-    request: Request,
-) : `${OAuth2TokenGrant}` | undefined {
-    const grantType = useRequestBody(request, 'grant_type') || useRequestQuery(request, 'grant_type');
+export async function guessOauth2GrantTypeByRequest(
+    event: IRoutupEvent,
+) : Promise<`${OAuth2TokenGrant}` | undefined> {
+    const body = await readRequestBody(event);
+    const query = useRequestQuery(event);
+
+    const pick = (key: string): any => body?.[key] ?? query?.[key];
+
+    const grantType = pick('grant_type');
 
     const validGrantTypes = Object.values(OAuth2TokenGrant);
     if (validGrantTypes.includes(grantType)) {
         return grantType;
     }
 
-    const username = useRequestBody(request, 'username') || useRequestQuery(request, 'username');
-    const password = useRequestBody(request, 'password') || useRequestQuery(request, 'password');
+    const username = pick('username');
+    const password = pick('password');
 
     if (username && password) {
         return OAuth2TokenGrant.PASSWORD;
@@ -30,8 +35,8 @@ export function guessOauth2GrantTypeByRequest(
 
     // ------------------------------------------------------------------
 
-    const robotId = useRequestBody(request, 'id') || useRequestQuery(request, 'id');
-    const robotSecret = useRequestBody(request, 'secret') || useRequestQuery(request, 'secret');
+    const robotId = pick('id');
+    const robotSecret = pick('secret');
 
     if (robotId && robotSecret) {
         return OAuth2TokenGrant.ROBOT_CREDENTIALS;
@@ -39,25 +44,25 @@ export function guessOauth2GrantTypeByRequest(
 
     // ------------------------------------------------------------------
 
-    const refreshToken = useRequestBody(request, 'refresh_token') || useRequestQuery(request, 'refresh_token');
+    const refreshToken = pick('refresh_token');
     if (refreshToken) {
         return OAuth2TokenGrant.REFRESH_TOKEN;
     }
 
     // ------------------------------------------------------------------
 
-    const code = useRequestBody(request, 'code') || useRequestQuery(request, 'code');
+    const code = pick('code');
     if (code) {
         return OAuth2TokenGrant.AUTHORIZATION_CODE;
     }
 
     // ------------------------------------------------------------------
 
-    let clientId = useRequestBody(request, 'client_id') || useRequestQuery(request, 'client_id');
-    let clientSecret = useRequestBody(request, 'client_secret') || useRequestQuery(request, 'client_secret');
+    let clientId = pick('client_id');
+    let clientSecret = pick('client_secret');
 
     if (!clientId && !clientSecret) {
-        const { authorization: headerValue } = request.headers;
+        const headerValue = event.headers.get('authorization');
 
         if (headerValue) {
             const header = parseAuthorizationHeader(headerValue);

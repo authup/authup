@@ -7,15 +7,12 @@
 
 import { AsymmetricKey } from '@authup/server-kit';
 import { JWKType } from '@authup/specs';
-import type { Response } from 'routup';
-import { send } from 'routup';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { KeyEntity } from '../../../../../database/domains/index.ts';
 
 export async function getJwksRouteHandler(
-    res: Response,
     repository: Repository<KeyEntity>,
     realmId?: string,
 ) : Promise<any> {
@@ -46,11 +43,10 @@ export async function getJwksRouteHandler(
 
     const keys = await Promise.all(promises);
 
-    return send(res, { keys });
+    return { keys };
 }
 
 export async function getJwkRouteHandler(
-    res: Response,
     repository: Repository<KeyEntity>,
     keyId: string,
     realmId?: string,
@@ -81,8 +77,8 @@ export async function getJwkRouteHandler(
     const jsonWebKey = await container.toJWK();
     jsonWebKey.alg = entity.signature_algorithm;
 
-    return send(res, {
+    return {
         ...jsonWebKey,
         kid: entity.id,
-    });
+    };
 }

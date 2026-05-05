@@ -7,13 +7,12 @@
 
 import type { PasswordForgotResponse } from '@authup/core-http-kit';
 import {
-    DBody, 
-    DController, 
-    DPost, 
-    DRequest, 
-    DResponse,
+    DBody,
+    DContext,
+    DController,
+    DPost,
 } from '@routup/decorators';
-import type { Request, Response } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { sendAccepted } from 'routup';
 import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
 
@@ -32,13 +31,12 @@ export class PasswordForgotController {
     @DPost('', [])
     async execute(
         @DBody() data: any,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+        @DContext() event: IRoutupEvent,
     ): Promise<PasswordForgotResponse> {
         const result = await this.service.forgotPassword(data);
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        return sendAccepted(res, result);
+        return sendAccepted(event, result);
     }
 }

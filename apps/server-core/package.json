@@ -22,7 +22,7 @@
         "build:server:js": "tsdown",
         "build:server": "npm run build:server:js && npm run build:server:types",
         "build:swagger": "npm run cli -- swagger generate",
-        "build": "rimraf ./dist && npm run build:server && npm run build:ui && npm run build:swagger",
+        "build": "rimraf ./dist && npm run build:server && npm run build:ui",
         "test": "cross-env NODE_ENV=test vitest run --config test/vitest.config.ts",
         "test:mysql": "cross-env DB_TYPE=mysql DB_HOST=127.0.0.1 DB_USERNAME=root DB_PASSWORD=start123 DB_DATABASE=app vitest run --config test/vitest.config.ts",
         "test:psql": "cross-env DB_TYPE=postgres DB_HOST=127.0.0.1 DB_USERNAME=postgres DB_PASSWORD=start123 DB_DATABASE=app vitest run --config test/vitest.config.ts",

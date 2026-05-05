@@ -6,17 +6,17 @@
  */
 
 import {
-    DBody, 
-    DController, 
-    DDelete, 
-    DGet, 
-    DPath, 
-    DPost, 
-    DRequest, 
-    DResponse, 
+    DBody,
+    DContext,
+    DController,
+    DDelete,
+    DGet,
+    DPath,
+    DPost,
     DTags,
 } from '@routup/decorators';
-import { send, sendAccepted, sendCreated } from 'routup';
+import type { IRoutupEvent } from 'routup';
+import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IUserRoleService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -39,54 +39,50 @@ export class UserRoleController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const {
             data, 
             meta, 
-        } = await this.service.getMany(useRequestQuery(req), actor);
+        } = await this.service.getMany(useRequestQuery(event), actor);
 
-        return send(res, {
+        return {
             data,
             meta, 
-        });
+        };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(res, entity);
+        return sendCreated(event, entity);
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
-        return send(res, entity);
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(res, entity);
+        return sendAccepted(event, entity);
     }
 }

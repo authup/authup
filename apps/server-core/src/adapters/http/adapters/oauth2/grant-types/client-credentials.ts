@@ -6,10 +6,10 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { useRequestBody } from '@routup/basic/body';
+import { readRequestBody } from '@routup/basic/body';
 import type { Client } from '@authup/core-kit';
 import { ClientError } from '@authup/core-kit';
-import type { Request } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
 import { ClientCredentialsGrant } from '../../../../../core/index.ts';
@@ -25,9 +25,10 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
         this.authenticator = ctx.authenticator;
     }
 
-    async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
-        const { clientId, clientSecret } = extractClientCredentialsFromRequest(req);
-        const realmId = useRequestBody(req, 'realm_id');
+    async runWithRequest(event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+        const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
+        const body = await readRequestBody(event);
+        const realmId = body?.realm_id;
 
         if (!clientId) {
             throw ClientError.credentialsInvalid();
@@ -36,8 +37,8 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
         const client = await this.authenticator.authenticate(clientId, clientSecret ?? '', realmId);
 
         return this.runWith(client, {
-            ipAddress: getRequestIP(req, { trustProxy: true }),
-            userAgent: getRequestHeader(req, 'user-agent'),
+            ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
+            userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
 }

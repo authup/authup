@@ -6,8 +6,8 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { useRequestBody } from '@routup/basic/body';
-import type { Request } from 'routup';
+import { readRequestBody } from '@routup/basic/body';
+import type { IRoutupEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { Robot } from '@authup/core-kit';
 import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
@@ -23,19 +23,20 @@ export class HTTPRobotCredentialsGrant extends RobotCredentialsGrant implements 
         this.authenticator = ctx.authenticator;
     }
 
-    async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
+    async runWithRequest(event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+        const body = await readRequestBody(event);
         const {
             id,
             secret,
             realm_id: realmId,
-        } = useRequestBody(req);
+        } = body || {};
         const entity = await this.authenticator.authenticate(id, secret, realmId);
 
         return this.runWith(
             entity,
             {
-                ipAddress: getRequestIP(req, { trustProxy: true }),
-                userAgent: getRequestHeader(req, 'user-agent'),
+                ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
+                userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
             },
         );
     }

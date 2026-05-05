@@ -7,9 +7,9 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2Error } from '@authup/specs';
-import { useRequestBody } from '@routup/basic/body';
+import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
-import type { Request } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2AuthorizeGrant } from '../../../../../core/index.ts';
 import type {
@@ -31,16 +31,19 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         this.clientAuthenticator = ctx.clientAuthenticator;
     }
 
-    async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
-        const code = this.extractParam(req, 'code');
-        const redirectUri = this.extractParam(req, 'redirect_uri');
-        const codeVerifier = this.extractParam(req, 'code_verifier');
+    async runWithRequest(event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+        const body = await readRequestBody(event);
+        const query = useRequestQuery(event);
+
+        const code = pickStringParam(body, query, 'code');
+        const redirectUri = pickStringParam(body, query, 'redirect_uri');
+        const codeVerifier = pickStringParam(body, query, 'code_verifier');
         if (!code) {
             throw OAuth2Error.requestInvalid();
         }
 
-        const { clientId, clientSecret } = extractClientCredentialsFromRequest(req);
-        const realmId = this.extractParam(req, 'realm_id');
+        const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
+        const realmId = pickStringParam(body, query, 'realm_id');
 
         const client = await this.clientAuthenticator.authenticate(clientId, clientSecret, realmId);
 
@@ -52,19 +55,17 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         });
 
         return this.runWith(entity, {
-            ipAddress: getRequestIP(req, { trustProxy: true }),
-            userAgent: getRequestHeader(req, 'user-agent'),
+            ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
+            userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
+}
 
-    protected extractParam(req: Request, key: string) : string | undefined {
-        let value : unknown = useRequestBody(req, key);
-        if (!value) {
-            value = useRequestQuery(req, key);
-        }
-
-        return typeof value === 'string' && value.length > 0 ?
-            value :
-            undefined;
-    }
+function pickStringParam(
+    body: Record<string, any> | undefined,
+    query: Record<string, any> | undefined,
+    key: string,
+): string | undefined {
+    const value = body?.[key] ?? query?.[key];
+    return typeof value === 'string' && value.length > 0 ? value : undefined;
 }

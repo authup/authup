@@ -7,9 +7,6 @@
 
 import type { Router } from 'routup';
 import { decorators } from '@routup/decorators';
-import { useRequestBody } from '@routup/basic/body';
-import { useRequestCookie, useRequestCookies } from '@routup/basic/cookie';
-import { useRequestQuery } from '@routup/basic/query';
 import type {
     Client,
     ClientPermission,
@@ -208,29 +205,6 @@ export class HTTPControllerModule {
                 userPermissionController,
                 userRoleController,
             ],
-            parameter: {
-                body: (context, name) => {
-                    if (name) {
-                        return useRequestBody(context.request, name);
-                    }
-
-                    return useRequestBody(context.request);
-                },
-                cookie: (context, name) => {
-                    if (name) {
-                        return useRequestCookie(context.request, name);
-                    }
-
-                    return useRequestCookies(context.request);
-                },
-                query: (context, name) => {
-                    if (name) {
-                        return useRequestQuery(context.request, name);
-                    }
-
-                    return useRequestQuery(context.request);
-                },
-            },
         }));
     }
 

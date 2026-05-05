@@ -8,14 +8,12 @@
 import { JWKType } from '@authup/specs';
 import { AsymmetricKey } from '@authup/server-kit';
 import {
-    DController, 
-    DGet, 
-    DPath, 
-    DRequest, 
-    DResponse,
+    DContext,
+    DController,
+    DGet,
+    DPath,
 } from '@routup/decorators';
-import type { Request, Response } from 'routup';
-import { send } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@ebec/http';
@@ -36,10 +34,9 @@ export class JwkController {
 
     @DGet('/jwks', [])
     async getManyJwks(
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const realmId = getRequestStringParam(req, 'realmId');
+        const realmId = getRequestStringParam(event, 'realmId');
 
         const entities = await this.repository.find({
             where: {
@@ -68,15 +65,11 @@ export class JwkController {
 
         const keys = await Promise.all(promises);
 
-        return send(res, { keys });
+        return { keys };
     }
 
     @DGet('/jwks/:id', [])
-    async getOneJwks(
-        @DPath('id') id: string,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
-    ): Promise<any> {
+    async getOneJwks(@DPath('id') id: string): Promise<any> {
         const entity = await this.repository.findOne({
             where: {
                 type: In([JWKType.RSA, JWKType.EC]),
@@ -102,9 +95,9 @@ export class JwkController {
         const jsonWebKey = await container.toJWK();
         jsonWebKey.alg = entity.signature_algorithm;
 
-        return send(res, {
+        return {
             ...jsonWebKey,
             kid: entity.id,
-        });
+        };
     }
 }

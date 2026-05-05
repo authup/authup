@@ -7,8 +7,8 @@
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2Error } from '@authup/specs';
-import { useRequestBody } from '@routup/basic/body';
-import type { Request } from 'routup';
+import { readRequestBody } from '@routup/basic/body';
+import type { IRoutupEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2RefreshTokenGrant } from '../../../../../core/index.ts';
 import type {
@@ -30,14 +30,15 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         this.refreshTokenVerifier = ctx.tokenVerifier;
     }
 
-    async runWithRequest(req: Request): Promise<OAuth2TokenGrantResponse> {
-        const refreshToken = useRequestBody(req, 'refresh_token');
+    async runWithRequest(event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+        const body = await readRequestBody(event);
+        const refreshToken = body?.refresh_token;
         if (typeof refreshToken !== 'string' || refreshToken.length === 0) {
             throw OAuth2Error.requestInvalid();
         }
 
-        const { clientId, clientSecret } = extractClientCredentialsFromRequest(req);
-        const realmId = useRequestBody(req, 'realm_id');
+        const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
+        const realmId = body?.realm_id;
 
         // RFC 6749 §6: verify the refresh token first to learn its bound
         // client (if any), then enforce binding. Authenticate the requesting
@@ -62,8 +63,8 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         }
 
         return this.runWith(payload, {
-            ipAddress: getRequestIP(req, { trustProxy: true }),
-            userAgent: getRequestHeader(req, 'user-agent'),
+            ipAddress: getRequestIP(event, { trustProxy: true }) ?? undefined,
+            userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
 }
