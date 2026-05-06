@@ -17,15 +17,18 @@ type LoggerMiddlewareOptions = {
 
 export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handler {
     const formatter = morgan(
-        (tokens, req, res) => [
-            req.socket?.remoteAddress || '-',
-            '-',
-            tokens.method(req, res),
-            tokens.url(req, res),
-            tokens.status(req, res),
-            '-',
-            `${tokens['response-time'](req, res)}ms`,
-        ].join(' '),
+        (tokens, req, res) => {
+            const responseTime = tokens['response-time'](req, res);
+            return [
+                req.socket?.remoteAddress || '-',
+                '-',
+                tokens.method(req, res) ?? '-',
+                tokens.url(req, res) ?? '-',
+                tokens.status(req, res) ?? '-',
+                '-',
+                responseTime ? `${responseTime}ms` : '-',
+            ].join(' ');
+        },
         {
             stream: {
                 write(message) {

@@ -7,3 +7,4 @@
 
 export * from './error.ts';
 export * from './self-id.ts';
+export * from './url.ts';

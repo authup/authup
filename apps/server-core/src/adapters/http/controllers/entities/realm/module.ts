@@ -23,6 +23,7 @@ import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
 import type { IRealmService } from '../../../../../core/index.ts';
+import { resolveURL } from '../../../../../utils/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -90,14 +91,14 @@ export class RealmController {
     ): Promise<OpenIDProviderMetadata> {
         const entity = await this.service.getOne(id);
 
-        const baseURL = this.options.baseURL.replace(/\/+$/, '');
+        const { baseURL } = this.options;
 
         return {
-            issuer: `${baseURL}/realms/${entity.name}`,
+            issuer: resolveURL(baseURL, `realms/${entity.name}`).replace(/\/+$/, ''),
 
-            authorization_endpoint: new URL('authorize', this.options.baseURL).href,
+            authorization_endpoint: resolveURL(baseURL, 'authorize'),
 
-            jwks_uri: new URL(`realms/${entity.name}/jwks`, this.options.baseURL).href,
+            jwks_uri: resolveURL(baseURL, `realms/${entity.name}/jwks`),
 
             response_types_supported: [
                 OAuth2AuthorizationResponseType.CODE,
@@ -110,26 +111,26 @@ export class RealmController {
             ],
 
             id_token_signing_alg_values_supported: [
-                'HS256', 
-                'HS384', 
-                'HS512', 
-                'RS256', 
-                'RS384', 
-                'RS512', 
+                'HS256',
+                'HS384',
+                'HS512',
+                'RS256',
+                'RS384',
+                'RS512',
                 'none',
             ],
 
-            token_endpoint: new URL('token', this.options.baseURL).href,
+            token_endpoint: resolveURL(baseURL, 'token'),
 
-            introspection_endpoint: new URL('token/introspect', this.options.baseURL).href,
+            introspection_endpoint: resolveURL(baseURL, 'token/introspect'),
 
-            revocation_endpoint: new URL('token', this.options.baseURL).href,
+            revocation_endpoint: resolveURL(baseURL, 'token'),
 
             // -----------------------------------------------------------
 
             service_documentation: 'https://authup.org/',
 
-            userinfo_endpoint: new URL('users/@me', this.options.baseURL).href,
+            userinfo_endpoint: resolveURL(baseURL, 'users/@me'),
         };
     }
 

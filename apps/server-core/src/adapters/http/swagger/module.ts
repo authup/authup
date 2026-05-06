@@ -10,6 +10,7 @@ import { Version, generateSwagger, saveSwagger } from '@trapi/swagger';
 import fs from 'node:fs';
 import path from 'node:path';
 import { DIST_PATH, PACKAGE_PATH, SRC_PATH } from '../../../path.ts';
+import { resolveURL } from '../../../utils/index.ts';
 import type { SwaggerOptions } from './type.ts';
 
 export class Swagger {
@@ -86,7 +87,7 @@ export class Swagger {
                         type: 'oauth2',
                         flows: {
                             password: {
-                                tokenUrl: new URL('token', this.options.baseURL).href,
+                                tokenUrl: resolveURL(this.options.baseURL, 'token'),
                                 scopes: {},
                             },
                         },

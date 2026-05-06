@@ -64,6 +64,7 @@ import {
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import { resolveURL } from '../../../../../utils/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
@@ -327,7 +328,7 @@ export class IdentityProviderController {
         if (data.codeRequest) {
             const codeRequestKeys = Object.keys(data.codeRequest);
 
-            const url = new URL('/authorize', this.options.baseURL);
+            const url = new URL(resolveURL(this.options.baseURL, 'authorize'));
             for (const codeRequestKey_ of codeRequestKeys) {
                 const codeRequestKey = codeRequestKey_ as keyof OAuth2AuthorizationCodeRequest;
                 if (data.codeRequest[codeRequestKey]) {
