@@ -20,7 +20,7 @@ import {
 } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
 import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { createFakeClient, expectClientError } from '../../../../../utils';
+import { createFakeClient, expectClientError, httpRequest } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('grant-authorize', () => {
@@ -304,15 +304,13 @@ describe('grant-authorize', () => {
         const url = new URL(response.url);
         const code = url.searchParams.get('code')!;
 
-        const tokenResponse = await fetch(`${suite.baseURL}/token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
+        const tokenResponse = await httpRequest(suite, 'POST', '/token', {
+            form: {
                 grant_type: 'authorization_code',
                 code,
                 redirect_uri: 'https://example.com/redirect',
                 client_secret: confidentialSecret,
-            }).toString(),
+            },
         });
 
         expect(tokenResponse.status).toEqual(400);
@@ -359,17 +357,13 @@ describe('grant-authorize', () => {
         const encodedSecret = encodeURIComponent(specialSecret);
         const basic = Buffer.from(`${encodedId}:${encodedSecret}`).toString('base64');
 
-        const tokenResponse = await fetch(`${suite.baseURL}/token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Authorization: `Basic ${basic}`,
-            },
-            body: new URLSearchParams({
+        const tokenResponse = await httpRequest(suite, 'POST', '/token', {
+            headers: { Authorization: `Basic ${basic}` },
+            form: {
                 grant_type: 'authorization_code',
                 code,
                 redirect_uri: 'https://example.com/redirect',
-            }).toString(),
+            },
         });
 
         expect(tokenResponse.status).toEqual(200);
@@ -397,19 +391,15 @@ describe('grant-authorize', () => {
         const basic = Buffer
             .from(`${confidentialClient.id}:${confidentialSecret}`)
             .toString('base64');
-        const tokenResponse = await fetch(`${suite.baseURL}/token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Authorization: `Basic ${basic}`,
-            },
-            body: new URLSearchParams({
+        const tokenResponse = await httpRequest(suite, 'POST', '/token', {
+            headers: { Authorization: `Basic ${basic}` },
+            form: {
                 grant_type: 'authorization_code',
                 code,
                 redirect_uri: 'https://example.com/redirect',
                 client_id: confidentialClient.id,
                 client_secret: confidentialSecret,
-            }).toString(),
+            },
         });
 
         expect(tokenResponse.status).toEqual(400);

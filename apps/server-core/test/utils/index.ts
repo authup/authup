@@ -7,4 +7,5 @@
 
 export * from './assertions';
 export * from './domains';
+export * from './http';
 export * from './properties';
