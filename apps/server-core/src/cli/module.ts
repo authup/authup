@@ -16,7 +16,6 @@ import {
     defineCLIMigrationCommand,
     defineCLIResetCommand,
     defineCLIStartCommand,
-    defineCLISwaggerCommand,
 } from './commands/index.ts';
 
 export async function createCLIEntryPointCommand() {
@@ -37,7 +36,6 @@ export async function createCLIEntryPointCommand() {
             migration: defineCLIMigrationCommand(),
             reset: defineCLIResetCommand(),
             start: defineCLIStartCommand(),
-            swagger: defineCLISwaggerCommand(),
         },
         args: {
             configDirectory: {

@@ -102,7 +102,10 @@ export class HTTPMiddlewareModule {
             return;
         }
 
-        const middleware = await createSwaggerMiddleware({ documentPath: path.join(DIST_PATH, 'swagger.json') });
+        const middleware = await createSwaggerMiddleware({
+            documentPath: path.join(DIST_PATH, 'swagger.json'),
+            baseURL: config.publicUrl,
+        });
 
         router.use('/docs', middleware);
     }

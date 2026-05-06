@@ -25,7 +25,6 @@ import {
     OAuth2Module,
     ProvisionerModule,
     RuntimeModule,
-    SwaggerModule,
 } from './modules/index.ts';
 
 type ModuleSlot = IModule | false | undefined;
@@ -38,7 +37,6 @@ const defaultFactories: Record<string, ModuleFactory> = {
     [ModuleName.CACHE]: () => new CacheModule(),
     [ModuleName.MAIL]: () => new MailModule(),
     [ModuleName.RUNTIME]: () => new RuntimeModule(),
-    [ModuleName.SWAGGER]: () => new SwaggerModule(),
     [ModuleName.DATABASE]: () => new DatabaseModule(),
     [ModuleName.PROVISIONING]: () => new ProvisionerModule(),
     [ModuleName.LDAP]: () => new LdapModule(),
@@ -76,10 +74,6 @@ export class ApplicationBuilder {
 
     withRuntime(instance?: RuntimeModule | false): this {
         return this.set(ModuleName.RUNTIME, instance);
-    }
-
-    withSwagger(instance?: SwaggerModule | false): this {
-        return this.set(ModuleName.SWAGGER, instance);
     }
 
     withDatabase(instance?: DatabaseModule | false): this {
