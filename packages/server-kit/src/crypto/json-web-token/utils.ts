@@ -49,7 +49,6 @@ export function createErrorForJWTError(e: unknown) : JWTError {
 
     return new JWTError({
         cause: e as Error,
-        logMessage: true,
         message: 'The JWT error could not be determined.',
     });
 }
