@@ -14,7 +14,7 @@ export class JWKError extends AuthupError {
         super({
             code: ErrorCode.JWK_INVALID,
             message: 'The JWK is invalid.',
-            statusCode: 400,
+            status: 400,
             ...options,
         });
     }

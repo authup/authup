@@ -18,7 +18,7 @@ type LoggerMiddlewareOptions = {
 export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handler {
     const formatter = morgan(
         (tokens, req, res) => [
-            req.socket.remoteAddress || '-',
+            req.socket?.remoteAddress || '-',
             '-',
             tokens.method(req, res),
             tokens.url(req, res),

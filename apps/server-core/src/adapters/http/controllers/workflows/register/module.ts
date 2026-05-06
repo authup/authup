@@ -13,7 +13,6 @@ import {
     DPost,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted } from 'routup';
 import type { IRegistrationService } from '../../../../../core/index.ts';
 
 export type RegisterControllerContext = {
@@ -35,8 +34,8 @@ export class RegisterController {
     ): Promise<RegisterResponse> {
         const result = await this.service.register(data);
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        return sendAccepted(event, result);
+        event.response.status = 202;
+
+        return result;
     }
 }

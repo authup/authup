@@ -13,22 +13,17 @@ import { sanitizeError } from '../../../../utils/index.ts';
 
 export function registerErrorMiddleware(router: Router) {
     router.use(defineErrorHandler((error, event) => {
-        let next : AuthupError;
-        if (error.cause) {
-            next = sanitizeError(error.cause);
-        } else {
-            next = sanitizeError(error);
-        }
+        const next : AuthupError = sanitizeError(error.cause ?? error);
 
         const payload : Record<string, any> = {
             ...next.toJSON(),
-            statusCode: next.statusCode,
+            statusCode: next.status,
             code: `${next.code}`,
             message: next.message,
             issues: next.issues,
         };
 
-        const isServerError = next.statusCode >= 500 && next.statusCode < 600;
+        const isServerError = next.status >= 500 && next.status < 600;
         if (isServerError) {
             useLogger().error(next);
 

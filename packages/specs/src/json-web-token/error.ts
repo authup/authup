@@ -17,7 +17,7 @@ export class JWTError extends AuthupError {
         super({
             code: ErrorCode.JWT_INVALID,
             message: 'The JWT is invalid.',
-            statusCode: 400,
+            status: 400,
             ...options,
         });
         if (options.data) {

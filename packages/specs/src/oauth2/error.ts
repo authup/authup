@@ -19,10 +19,13 @@ export class OAuth2Error extends AuthupError {
         super({
             code: ErrorCode.OAUTH_REQUEST_INVALID,
             message: 'OAuth2 request invalid',
-            statusCode: 400,
+            status: 400,
             ...options,
         });
-        this.data = options.data ?? { error: OAuth2ErrorCode.INVALID_REQUEST };
+        this.data = {
+            error: OAuth2ErrorCode.INVALID_REQUEST,
+            ...(options.data ?? {}),
+        };
     }
 
     override toJSON() {
@@ -145,7 +148,7 @@ export class OAuth2Error extends AuthupError {
     static signingKeyMissing() {
         return new OAuth2Error({
             message: 'A token signing key could not be retrieved.',
-            statusCode: 500,
+            status: 500,
         });
     }
 }

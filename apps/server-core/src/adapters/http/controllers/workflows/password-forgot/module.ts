@@ -13,7 +13,6 @@ import {
     DPost,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted } from 'routup';
 import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
 
 export type PasswordForgotControllerContext = {
@@ -35,8 +34,8 @@ export class PasswordForgotController {
     ): Promise<PasswordForgotResponse> {
         const result = await this.service.forgotPassword(data);
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        return sendAccepted(event, result);
+        event.response.status = 202;
+
+        return result;
     }
 }

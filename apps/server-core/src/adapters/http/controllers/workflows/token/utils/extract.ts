@@ -6,7 +6,12 @@
  */
 
 import type { IRoutupEvent } from 'routup';
-import { ValidupError, buildErrorMessageForAttribute, defineIssueItem } from 'validup';
+import {
+    ValidupError, 
+    buildErrorMessageForAttribute, 
+    defineIssueItem, 
+    isValidupError,
+} from 'validup';
 import { readFromLocations, useRequestToken } from '../../../../request/index.ts';
 import { TokenRequestValidator } from './validator.ts';
 
@@ -20,7 +25,10 @@ export async function extractTokenFromRequest(event: IRoutupEvent) : Promise<str
         );
 
         token = data.token;
-    } catch {
+    } catch (e) {
+        if (!isValidupError(e)) {
+            throw e;
+        }
         token = useRequestToken(event);
     }
 
