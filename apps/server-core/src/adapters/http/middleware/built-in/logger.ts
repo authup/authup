@@ -5,9 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import morgan from 'morgan';
+import { logger } from '@routup/logger';
 import type { Handler } from 'routup';
-import { fromNodeMiddleware } from 'routup/node';
+import { getRequestIP } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import { EnvironmentName } from '@authup/kit';
 
@@ -16,41 +16,32 @@ type LoggerMiddlewareOptions = {
 };
 
 export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handler {
-    const formatter = morgan(
-        (tokens, req, res) => {
-            const responseTime = tokens['response-time'](req, res);
-            return [
-                req.socket?.remoteAddress || '-',
-                '-',
-                tokens.method(req, res) ?? '-',
-                tokens.url(req, res) ?? '-',
-                tokens.status(req, res) ?? '-',
-                '-',
-                responseTime ? `${responseTime}ms` : '-',
-            ].join(' ');
+    return logger({
+        format: (tokens, event, response) => [
+            getRequestIP(event) || '-',
+            '-',
+            tokens.method(event, response) ?? '-',
+            tokens.url(event, response) ?? '-',
+            tokens.status(event, response) ?? '-',
+            '-',
+            tokens['response-time'](event, response) ?? '-',
+        ].join(' '),
+        write(line) {
+            if (options.env !== EnvironmentName.TEST) {
+                useLogger().http(line);
+            }
         },
-        {
-            stream: {
-                write(message) {
-                    if (options.env !== EnvironmentName.TEST) {
-                        useLogger().http(message.replace('\n', ''));
-                    }
-                },
-            },
-            skip(req, res): boolean {
-                const url = req.url || '';
-                if (url.length === 0 || url === '/') {
-                    return true;
-                }
+        skip(event, response): boolean {
+            const path = event.path || '';
+            if (path.length === 0 || path === '/') {
+                return true;
+            }
 
-                if (options.env === EnvironmentName.PRODUCTION) {
-                    return res.statusCode < 400;
-                }
+            if (options.env === EnvironmentName.PRODUCTION) {
+                return (response?.status ?? 0) < 400;
+            }
 
-                return false;
-            },
+            return false;
         },
-    );
-
-    return fromNodeMiddleware(formatter);
+    });
 }

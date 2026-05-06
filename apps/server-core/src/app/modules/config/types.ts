@@ -7,12 +7,12 @@
 
 import type { RedisClient, RedisClientOptions } from '@authup/server-kit';
 import type { ParseOptions as CookieOptions } from '@routup/basic/cookie';
+import type { Options as CorsOptions } from '@routup/cors';
 import type { OptionsInput as PrometheusOptions } from '@routup/prometheus';
 import type { ParseOptions as QueryOptions } from '@routup/basic/query';
 import type { OptionsInput as RateLimitOptions } from '@routup/rate-limit';
 import type { UIOptions as SwaggerUIOptions } from '@routup/swagger-ui';
 import type { Options as BodyOptions } from '@routup/basic/body';
-import type { CorsOptions } from 'cors';
 import type { DataSourceOptions } from 'typeorm';
 import type { SMTPOptions } from '../mail/adapter/smtp/types.ts';
 

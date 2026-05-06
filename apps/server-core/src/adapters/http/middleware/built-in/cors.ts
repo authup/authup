@@ -5,19 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { CorsOptions } from 'cors';
-import cors from 'cors';
+import type { Options as CorsOptions } from '@routup/cors';
+import { cors } from '@routup/cors';
 import type { Router } from 'routup';
-import { fromNodeMiddleware } from 'routup/node';
-import { merge } from 'smob';
 
 export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
-    const options : CorsOptions = merge(input || {}, {
-        origin(_origin, callback) {
-            callback(null, true);
-        },
+    router.use(cors({
+        origin: true,
         credentials: true,
-    } satisfies CorsOptions);
-
-    router.use(fromNodeMiddleware(cors(options)));
+        ...(input ?? {}),
+    }));
 }
