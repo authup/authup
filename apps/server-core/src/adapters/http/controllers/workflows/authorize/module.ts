@@ -17,6 +17,7 @@ import path from 'node:path';
 import { URL } from 'node:url';
 
 import type { IRoutupEvent } from 'routup';
+import type { ViteDevServer } from 'vite';
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../../path.ts';
@@ -128,10 +129,7 @@ export class AuthorizeController {
         let render : CallableFunction;
 
         if (isJIT) {
-            /**
-             * @type {import('vite').ViteDevServer}
-             */
-            const vite = event.store[VITE_SERVER_STORE_KEY] as any;
+            const vite = event.store[VITE_SERVER_STORE_KEY] as ViteDevServer;
 
             html = await fs.promises.readFile(
                 path.join(UI_SOURCE_PATH, 'index.html'),
