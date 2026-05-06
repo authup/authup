@@ -12,7 +12,6 @@ import {
     DPost,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted } from 'routup';
 import type { IRegistrationService } from '../../../../../core/index.ts';
 import { ActivateRequestValidator } from './validator.ts';
 
@@ -38,6 +37,7 @@ export class ActivateController {
 
         await this.service.activate(validated);
 
-        return sendAccepted(event);
+        event.response.status = 202;
+        return null;
     }
 }

@@ -17,7 +17,6 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IRoleService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -47,7 +46,8 @@ export class RoleController {
     async add(@DBody() data: any, @DContext() event: IRoutupEvent): Promise<any> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-        return sendCreated(event, entity);
+        event.response.status = 201;
+        return entity;
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -64,7 +64,8 @@ export class RoleController {
     ): Promise<any> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -76,16 +77,15 @@ export class RoleController {
         const actor = buildActorContext(event);
         const { entity, created } = await this.service.save(id || undefined, data, actor);
 
-        if (created) {
-            return sendCreated(event, entity);
-        }
-        return sendAccepted(event, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(@DPath('id') id: string, @DContext() event: IRoutupEvent): Promise<any> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+        return entity;
     }
 }

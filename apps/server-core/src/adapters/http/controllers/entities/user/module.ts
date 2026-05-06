@@ -17,7 +17,6 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IUserService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -87,7 +86,9 @@ export class UserController {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -103,7 +104,9 @@ export class UserController {
             actor,
         );
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -122,11 +125,8 @@ export class UserController {
             actor,
         );
 
-        if (created) {
-            return sendCreated(event, entity);
-        }
-
-        return sendAccepted(event, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -137,6 +137,8 @@ export class UserController {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

@@ -20,7 +20,6 @@ import {
 import { NotFoundError } from '@ebec/http';
 import type { Client } from '@authup/core-kit';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
 import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
@@ -125,7 +124,9 @@ export class ClientController {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -137,7 +138,9 @@ export class ClientController {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -156,11 +159,8 @@ export class ClientController {
             actor,
         );
 
-        if (created) {
-            return sendCreated(event, entity);
-        }
-
-        return sendAccepted(event, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -171,6 +171,8 @@ export class ClientController {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

@@ -15,7 +15,6 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted } from 'routup';
 import { buildPermissionKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
@@ -181,7 +180,8 @@ export class TokenController {
 
             await this.tokenRevoker.revoke(payload);
 
-            return await sendAccepted(event);
+            event.response.status = 202;
+            return null;
         } catch (e) {
             throw toOAuth2Error(e);
         }

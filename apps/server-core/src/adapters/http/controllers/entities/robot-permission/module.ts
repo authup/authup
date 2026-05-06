@@ -16,7 +16,6 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IRobotPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -60,7 +59,9 @@ export class RobotPermissionController {
 
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -72,7 +73,9 @@ export class RobotPermissionController {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -97,6 +100,8 @@ export class RobotPermissionController {
             actor,
         );
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

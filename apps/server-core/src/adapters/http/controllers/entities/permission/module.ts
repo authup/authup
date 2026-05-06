@@ -26,7 +26,6 @@ import {
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
  
@@ -95,7 +94,9 @@ export class PermissionController {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
@@ -154,7 +155,8 @@ export class PermissionController {
             };
         }
 
-        return sendAccepted(event, output);
+        event.response.status = 202;
+        return output;
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -185,7 +187,9 @@ export class PermissionController {
             actor,
         );
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -204,11 +208,8 @@ export class PermissionController {
             actor,
         );
 
-        if (created) {
-            return sendCreated(event, entity);
-        }
-
-        return sendAccepted(event, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -219,6 +220,8 @@ export class PermissionController {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

@@ -19,12 +19,10 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { 
-    getRequestHeader, 
-    getRequestIP, 
-    sendAccepted, 
-    sendCreated, 
-    sendRedirect, 
+import {
+    getRequestHeader,
+    getRequestIP,
+    sendRedirect,
 } from 'routup';
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
@@ -208,7 +206,9 @@ export class IdentityProviderController {
 
         entity.id = entityId;
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -425,13 +425,17 @@ export class IdentityProviderController {
             entity = this.repository.merge(entity, data);
             await this.repository.saveWithEA(entity, attributes);
 
-            return sendAccepted(event, entity);
+            event.response.status = 202;
+
+            return entity;
         }
 
         entity = this.repository.create(data);
         await this.repository.saveWithEA(entity, attributes);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     // ---------------------------------------------------------

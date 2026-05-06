@@ -16,7 +16,6 @@ import {
     DTags,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IPermissionPolicyService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -60,7 +59,9 @@ export class PermissionPolicyController {
 
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -82,6 +83,8 @@ export class PermissionPolicyController {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

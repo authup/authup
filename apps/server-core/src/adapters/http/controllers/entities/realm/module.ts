@@ -19,7 +19,6 @@ import {
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
 import type { IRealmService } from '../../../../../core/index.ts';
@@ -77,7 +76,9 @@ export class RealmController {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DGet('/:id', [])
@@ -162,7 +163,9 @@ export class RealmController {
             actor,
         );
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -181,11 +184,8 @@ export class RealmController {
             actor,
         );
 
-        if (created) {
-            return sendCreated(event, entity);
-        }
-
-        return sendAccepted(event, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -196,6 +196,8 @@ export class RealmController {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

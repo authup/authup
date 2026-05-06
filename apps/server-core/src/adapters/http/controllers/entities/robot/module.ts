@@ -21,7 +21,6 @@ import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
 import type { Robot } from '@authup/core-kit';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { DataSource } from 'typeorm';
 import type { IRealmRepository, IRobotRepository, IRobotService } from '../../../../../core/index.ts';
@@ -84,7 +83,9 @@ export class RobotController {
         const actor = buildActorContext(event);
         const { entity } = await this.service.save(undefined, data, actor);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
@@ -183,7 +184,9 @@ export class RobotController {
             { updateOnly: true },
         );
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -202,11 +205,8 @@ export class RobotController {
             actor,
         );
 
-        if (created) {
-            return sendCreated(event, entity);
-        }
-
-        return sendAccepted(event, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -217,6 +217,8 @@ export class RobotController {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

@@ -22,7 +22,6 @@ import {
 } from '@routup/decorators';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IRoutupEvent } from 'routup';
-import { sendAccepted, sendCreated } from 'routup';
 import type {
  
     IIdentityPermissionProvider, 
@@ -148,7 +147,8 @@ export class PolicyController {
             };
         }
 
-        return sendAccepted(event, output);
+        event.response.status = 202;
+        return output;
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
@@ -164,7 +164,9 @@ export class PolicyController {
             actor,
         );
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
@@ -184,11 +186,8 @@ export class PolicyController {
             actor,
         );
 
-        if (created) {
-            return sendCreated(event, entity);
-        }
-
-        return sendAccepted(event, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
@@ -199,7 +198,9 @@ export class PolicyController {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPost('', [ForceLoggedInMiddleware])
@@ -210,6 +211,8 @@ export class PolicyController {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(event, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 }

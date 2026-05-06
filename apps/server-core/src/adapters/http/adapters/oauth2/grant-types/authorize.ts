@@ -35,15 +35,15 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         const body = await readRequestBody(event);
         const query = useRequestQuery(event);
 
-        const code = pickStringParam(body, query, 'code');
-        const redirectUri = pickStringParam(body, query, 'redirect_uri');
-        const codeVerifier = pickStringParam(body, query, 'code_verifier');
+        const code = this.pickStringParam(body, query, 'code');
+        const redirectUri = this.pickStringParam(body, query, 'redirect_uri');
+        const codeVerifier = this.pickStringParam(body, query, 'code_verifier');
         if (!code) {
             throw OAuth2Error.requestInvalid();
         }
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
-        const realmId = pickStringParam(body, query, 'realm_id');
+        const realmId = this.pickStringParam(body, query, 'realm_id');
 
         const client = await this.clientAuthenticator.authenticate(clientId, clientSecret, realmId);
 
@@ -59,13 +59,13 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
             userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
-}
 
-function pickStringParam(
-    body: Record<string, any> | undefined,
-    query: Record<string, any> | undefined,
-    key: string,
-): string | undefined {
-    const value = body?.[key] ?? query?.[key];
-    return typeof value === 'string' && value.length > 0 ? value : undefined;
+    protected pickStringParam(
+        body: Record<string, any> | undefined,
+        query: Record<string, any> | undefined,
+        key: string,
+    ): string | undefined {
+        const value = body?.[key] ?? query?.[key];
+        return typeof value === 'string' && value.length > 0 ? value : undefined;
+    }
 }
