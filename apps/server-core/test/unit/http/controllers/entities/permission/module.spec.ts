@@ -12,9 +12,9 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { isClientError } from 'hapic';
 import {
     createFakePermission,
+    expectClientError,
     expectPropertiesEqualToSrc,
 } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
@@ -43,17 +43,10 @@ describe('src/http/controllers/permission', () => {
     });
 
     it('should not create same resource', async () => {
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .permission
-                .create({ name: details.name });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.statusCode).toEqual(409);
-            }
-        }
+        await expectClientError(
+            () => suite.client.permission.create({ name: details.name }),
+            { status: 409 },
+        );
     });
 
     it('should read collection', async () => {
