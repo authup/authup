@@ -13,7 +13,7 @@ type SwaggerMiddlewareOptions = SwaggerUIOptions & {
     documentPath: string,
 };
 
-export async function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Promise<Plugin> {
+export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugin {
     const { documentPath, ...options } = input;
 
     return swaggerUI(documentPath, options);

@@ -6,33 +6,22 @@
  */
 
 import { AuthupError, ErrorCode } from '@authup/errors';
-import type { AuthupErrorOptions } from '@authup/errors';
+import type { AuthupErrorInput, AuthupErrorOptions } from '@authup/errors';
 import { OAuth2ErrorCode } from './constants';
 
-type OAuth2ErrorOptions = AuthupErrorOptions & {
-    data?: Record<string, any>
-};
-
 export class OAuth2Error extends AuthupError {
-    constructor(input?: OAuth2ErrorOptions | string) {
-        const options : OAuth2ErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+    constructor(input?: AuthupErrorInput) {
+        const options : AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         super({
             code: ErrorCode.OAUTH_REQUEST_INVALID,
             message: 'OAuth2 request invalid',
             status: 400,
             ...options,
+            data: {
+                error: OAuth2ErrorCode.INVALID_REQUEST,
+                ...(options.data ?? {}),
+            },
         });
-        this.data = {
-            error: OAuth2ErrorCode.INVALID_REQUEST,
-            ...(options.data ?? {}),
-        };
-    }
-
-    override toJSON() {
-        return {
-            ...super.toJSON(),
-            ...(this.data ?? {}),
-        };
     }
 
     // -------------------------------------------------

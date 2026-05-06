@@ -15,22 +15,15 @@ export function registerErrorMiddleware(router: Router) {
     router.use(defineErrorHandler((error, event) => {
         const next : AuthupError = sanitizeError(error.cause ?? error);
 
-        const payload : Record<string, any> = {
-            ...next.toJSON(),
-            statusCode: next.status,
-            code: `${next.code}`,
-            message: next.message,
-            issues: next.issues,
-        };
+        const payload = next.toJSON();
 
         const isServerError = next.status >= 500 && next.status < 600;
         if (isServerError) {
             useLogger().error(next);
-
             payload.message = 'An internal server error occurred.';
         }
 
-        event.response.status = payload.statusCode;
+        event.response.status = next.status;
         return payload;
     }));
 }

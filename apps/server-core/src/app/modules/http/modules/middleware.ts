@@ -102,7 +102,7 @@ export class HTTPMiddlewareModule {
             return;
         }
 
-        const middleware = await createSwaggerMiddleware({
+        const middleware = createSwaggerMiddleware({
             documentPath: path.join(DIST_PATH, 'swagger.json'),
             baseURL: config.publicUrl,
         });

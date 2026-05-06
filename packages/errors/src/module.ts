@@ -5,25 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthupErrorOptionsInput } from './types.ts';
+import type { AuthupErrorInput } from './types.ts';
 import { BadRequestError } from '@ebec/http';
 import type { Issue } from 'validup';
+import { isObject } from '@authup/kit';
 
 export class AuthupError extends BadRequestError {
     public readonly issues : Issue[];
 
-    public data?: Record<string, any>;
+    public readonly data?: Record<string, any>;
 
-    constructor(input?: AuthupErrorOptionsInput) {
+    constructor(input?: AuthupErrorInput) {
         super(input);
 
         this.issues = [];
 
-        if (input && typeof input === 'object' && !(input instanceof Error)) {
-            const { data } = (input as { data?: Record<string, any> });
-            if (data) {
-                this.data = data;
-            }
+        if (isObject(input) && input.data) {
+            this.data = input.data;
         }
+    }
+
+    override toJSON() {
+        return {
+            ...super.toJSON(),
+            issues: this.issues,
+            ...(this.data ?? {}),
+        };
     }
 }

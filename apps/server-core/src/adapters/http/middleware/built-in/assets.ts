@@ -12,6 +12,8 @@ import path from 'node:path';
 import type { Router } from 'routup';
 import { defineCoreHandler } from 'routup';
 import { fromNodeMiddleware } from 'routup/node';
+import type * as Vite from 'vite';
+import type { ViteDevServer } from 'vite';
 import { PACKAGE_PATH, UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../path.ts';
 
 export const VITE_SERVER_STORE_KEY = Symbol('ViteServer');
@@ -36,15 +38,9 @@ export async function registerAssetsMiddleware(router: Router) {
         return;
     }
 
-    /**
-     * @type import('vite')
-     */
-    const vite = await load('vite');
+    const vite = await load('vite') as typeof Vite;
 
-    /**
-     * @type {import('vite').ViteDevServer}
-     */
-    const server = await vite.createServer({
+    const server: ViteDevServer = await vite.createServer({
         root: UI_SOURCE_PATH,
         base: '/public/',
         logLevel: 'error',

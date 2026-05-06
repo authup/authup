@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthupErrorOptions } from '@authup/errors';
+import type { AuthupErrorInput, AuthupErrorOptions } from '@authup/errors';
 import { AuthupError, ErrorCode } from '@authup/errors';
 
 export class JWKError extends AuthupError {
-    constructor(input?: AuthupErrorOptions | string) {
+    constructor(input?: AuthupErrorInput) {
         const options : AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         super({
             code: ErrorCode.JWK_INVALID,

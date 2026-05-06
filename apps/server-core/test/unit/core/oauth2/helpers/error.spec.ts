@@ -21,11 +21,10 @@ describe('toOAuth2Error', () => {
     it('should wrap AuthupError with OAuth2 data', () => {
         const err = new AuthupError({
             message: 'something failed',
-            statusCode: 400, 
+            status: 400,
         });
         const result = toOAuth2Error(err);
-        expect(result).toBe(err);
-        expect(result).toBeInstanceOf(AuthupError);
+        expect(result).toBeInstanceOf(OAuth2Error);
         expect(result.data).toEqual(expect.objectContaining({
             error: OAuth2ErrorCode.INVALID_REQUEST,
             error_description: 'something failed',
@@ -35,7 +34,7 @@ describe('toOAuth2Error', () => {
     it('should preserve existing data on AuthupError', () => {
         const err = new AuthupError({
             message: 'test',
-            statusCode: 400,
+            status: 400,
             data: { hint: 'some hint' },
         });
         const result = toOAuth2Error(err);
@@ -49,13 +48,13 @@ describe('toOAuth2Error', () => {
     it('should sanitize unknown errors and wrap with OAuth2 data', () => {
         const err = new Error('unknown failure');
         const result = toOAuth2Error(err);
-        expect(result).toBeInstanceOf(AuthupError);
+        expect(result).toBeInstanceOf(OAuth2Error);
         expect(result.data).toEqual(expect.objectContaining({ error: OAuth2ErrorCode.INVALID_REQUEST }));
     });
 
     it('should handle non-object errors', () => {
         const result = toOAuth2Error('string error');
-        expect(result).toBeInstanceOf(AuthupError);
+        expect(result).toBeInstanceOf(OAuth2Error);
         expect(result.data).toEqual(expect.objectContaining({ error: OAuth2ErrorCode.INVALID_REQUEST }));
     });
 });

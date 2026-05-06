@@ -7,7 +7,6 @@
 
 import { OAuth2Error, OAuth2ErrorCode } from '@authup/specs';
 import { AuthupError } from '@authup/errors';
-import { isObject } from '@authup/kit';
 import { sanitizeError } from '../../../utils/index.ts';
 
 /**
@@ -15,23 +14,21 @@ import { sanitizeError } from '../../../utils/index.ts';
  *
  * @param err
  */
-export function toOAuth2Error(err: unknown) : AuthupError | OAuth2Error {
+export function toOAuth2Error(err: unknown) : OAuth2Error {
     if (err instanceof OAuth2Error) {
         return err;
     }
 
-    let next : AuthupError;
-    if (err instanceof AuthupError) {
-        next = err;
-    } else {
-        next = sanitizeError(err);
-    }
+    const source : AuthupError = err instanceof AuthupError ? err : sanitizeError(err);
 
-    next.data = {
-        error: OAuth2ErrorCode.INVALID_REQUEST,
-        error_description: next.message,
-        ...(isObject(next.data) ? next.data : {}),
-    };
-
-    return next;
+    return new OAuth2Error({
+        message: source.message,
+        code: source.code,
+        status: source.status,
+        data: {
+            error: OAuth2ErrorCode.INVALID_REQUEST,
+            error_description: source.message,
+            ...(source.data ?? {}),
+        },
+    });
 }

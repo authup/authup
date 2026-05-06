@@ -25,12 +25,12 @@ export async function getJwksRouteHandler(
     });
 
     const promises = entities
-        .filter((entity) => !!entity.encryption_key)
+        .filter((entity): entity is KeyEntity & { encryption_key: string } => !!entity.encryption_key)
         .map(
             (entity) => AsymmetricKey
                 .fromBase64({
                     format: 'spki',
-                    key: entity.encryption_key!,
+                    key: entity.encryption_key,
                     options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
                 })
                 .then((container) => container.toJWK())
@@ -70,7 +70,7 @@ export async function getJwkRouteHandler(
     const container = await AsymmetricKey
         .fromBase64({
             format: 'spki',
-            key: entity.encryption_key!,
+            key: entity.encryption_key,
             options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
         });
 

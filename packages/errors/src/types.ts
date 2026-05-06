@@ -11,6 +11,4 @@ export type AuthupErrorOptions = HTTPErrorOptions & {
     data?: Record<string, any>
 };
 
-export type AuthupErrorOptionsInput = AuthupErrorOptions |
-string |
-Error;
+export type AuthupErrorInput = string | AuthupErrorOptions;
