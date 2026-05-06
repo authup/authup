@@ -5,16 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import type { Robot } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { isClientError } from 'hapic';
-import { createFakeRobot } from '../../../../../utils';
+import { createFakeRobot, expectClientError } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('refresh-token', () => {
@@ -48,37 +47,21 @@ describe('refresh-token', () => {
     it('should not grant with robot-credentials (inactive)', async () => {
         await suite.client.robot.update(robot.id, { active: false });
 
-        expect.assertions(2);
-
-        try {
-            await suite.client
-                .token
-                .createWithRobotCredentials(robot);
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.status).toEqual(400);
-                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_INACTIVE);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithRobotCredentials(robot),
+            { status: 400, code: ErrorCode.ENTITY_INACTIVE },
+        );
     });
 
     it('should not grant with robot-credentials (invalid credentials)', async () => {
         await suite.client.robot.update(robot.id, { active: true });
 
-        expect.assertions(2);
-
-        try {
-            await suite.client
-                .token
-                .createWithRobotCredentials({
-                    ...robot,
-                    secret: 'foo',
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.status).toEqual(400);
-                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithRobotCredentials({
+                ...robot,
+                secret: 'foo',
+            }),
+            { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+        );
     });
 });

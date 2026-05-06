@@ -13,9 +13,8 @@ import {
     it,
 } from 'vitest';
 import type { Scope } from '@authup/core-kit';
-import { isClientError } from 'hapic';
 import { createTestApplication } from '../../../../app';
-import { createFakeScope, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createFakeScope, expectClientError, expectPropertiesEqualToSrc } from '../../../../utils';
 
 describe('src/http/controllers/scope', () => {
     const suite = createTestApplication();
@@ -41,17 +40,10 @@ describe('src/http/controllers/scope', () => {
     });
 
     it('should not create same resource', async () => {
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .scope
-                .create({ name: details.name } satisfies Partial<Scope>);
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.statusCode).toEqual(409);
-            }
-        }
+        await expectClientError(
+            () => suite.client.scope.create({ name: details.name } satisfies Partial<Scope>),
+            { status: 409 },
+        );
     });
 
     it('should read collection', async () => {

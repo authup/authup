@@ -13,8 +13,7 @@ import {
 } from 'vitest';
 import type { Client } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { isClientError } from 'hapic';
-import { createFakeClient } from '../../../../../utils';
+import { createFakeClient, expectClientError } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('refresh-token', () => {
@@ -105,17 +104,10 @@ describe('refresh-token', () => {
                 client_secret: confidentialSecret,
             });
 
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .token
-                .createWithRefreshToken({ refresh_token: passwordResponse.refresh_token });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data?.code).toEqual(ErrorCode.OAUTH_CLIENT_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({ refresh_token: passwordResponse.refresh_token }),
+            { status: 400, code: ErrorCode.OAUTH_CLIENT_INVALID },
+        );
     });
 
     it('should reject refresh when authenticated client_id does not match token client_id', async () => {
@@ -138,21 +130,14 @@ describe('refresh-token', () => {
                 client_secret: confidentialSecret,
             });
 
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .token
-                .createWithRefreshToken({
-                    refresh_token: passwordResponse.refresh_token,
-                    client_id: otherClient.id,
-                    client_secret: otherSecret,
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data?.code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({
+                refresh_token: passwordResponse.refresh_token,
+                client_id: otherClient.id,
+                client_secret: otherSecret,
+            }),
+            { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
+        );
     });
 
     it('should reject refresh when client provides wrong secret', async () => {
@@ -165,20 +150,13 @@ describe('refresh-token', () => {
                 client_secret: confidentialSecret,
             });
 
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .token
-                .createWithRefreshToken({
-                    refresh_token: passwordResponse.refresh_token,
-                    client_id: confidentialClient.id,
-                    client_secret: 'wrong-secret',
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data?.code).toEqual(ErrorCode.OAUTH_CLIENT_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithRefreshToken({
+                refresh_token: passwordResponse.refresh_token,
+                client_id: confidentialClient.id,
+                client_secret: 'wrong-secret',
+            }),
+            { status: 400, code: ErrorCode.OAUTH_CLIENT_INVALID },
+        );
     });
 });

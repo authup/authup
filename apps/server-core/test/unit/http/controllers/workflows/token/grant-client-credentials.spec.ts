@@ -5,16 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import type { Client } from '@authup/core-kit';
 import { ErrorCode } from '@authup/errors';
-import { isClientError } from 'hapic';
-import { createFakeClient } from '../../../../../utils';
+import { createFakeClient, expectClientError } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('refresh-token', () => {
@@ -54,40 +53,26 @@ describe('refresh-token', () => {
     it('should not grant with client-credentials (inactive)', async () => {
         await suite.client.client.update(entity.id, { active: false });
 
-        expect.assertions(2);
-
         try {
-            await suite.client
-                .token
-                .createWithClientCredentials({
+            await expectClientError(
+                () => suite.client.token.createWithClientCredentials({
                     client_id: entity.id,
                     client_secret: entity.secret!,
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.status).toEqual(400);
-                expect(e?.response?.data?.code).toEqual(ErrorCode.ENTITY_INACTIVE);
-            }
+                }),
+                { status: 400, code: ErrorCode.ENTITY_INACTIVE },
+            );
         } finally {
             await suite.client.client.update(entity.id, { active: true });
         }
     });
 
     it('should not grant with client-credentials (invalid credentials)', async () => {
-        expect.assertions(2);
-
-        try {
-            await suite.client
-                .token
-                .createWithClientCredentials({
-                    client_id: entity.id,
-                    client_secret: 'foo',
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.status).toEqual(400);
-                expect(e?.response?.data?.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithClientCredentials({
+                client_id: entity.id,
+                client_secret: 'foo',
+            }),
+            { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+        );
     });
 });

@@ -14,16 +14,16 @@ import {
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
 import { createNanoID } from '@authup/kit';
-import { isClientError } from 'hapic';
 import type { UserEntity } from '../../../../../../src';
 import {
-    PermissionEntity, 
+    PermissionEntity,
     PermissionPolicyEntity,
-    PolicyRepository, 
-    UserPermissionEntity, 
+    PolicyRepository,
+    UserPermissionEntity,
     UserRepository,
 } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
+import { expectClientError } from '../../../../../utils';
 
 describe('src/security/permission/checker', () => {
     const suite = createTestApplication();
@@ -73,18 +73,11 @@ describe('src/security/permission/checker', () => {
      */
 
     it('should not verify invalid permission', async () => {
-        expect.assertions(1);
-
-        try {
-            const name = createNanoID();
-            await suite.client
-                .permission
-                .check(name);
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.statusCode).toEqual(404);
-            }
-        }
+        const name = createNanoID();
+        await expectClientError(
+            () => suite.client.permission.check(name),
+            { status: 404 },
+        );
     });
 
     it('should verify with permission-binding and existing relation', async () => {
