@@ -11,11 +11,17 @@ import type { Client } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    ClientCreateInput,
+    ClientResponse,
+    ClientSaveInput,
+    ClientUpdateInput,
+} from './types';
 
 export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
     async getMany(
         options?: BuildInput<Client>,
-    ): Promise<EntityCollectionResponse<Client>> {
+    ): Promise<EntityCollectionResponse<ClientResponse>> {
         const response = await this.client
             .get(`clients${buildQuery(options)}`);
 
@@ -25,7 +31,7 @@ export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
     async getOne(
         id: Client['id'],
         options?: BuildInput<Client>,
-    ): Promise<EntityRecordResponse<Client>> {
+    ): Promise<EntityRecordResponse<ClientResponse>> {
         const response = await this.client
             .get(`clients/${id}${buildQuery(options)}`);
 
@@ -34,7 +40,7 @@ export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
 
     async delete(
         id: Client['id'],
-    ): Promise<EntityRecordResponse<Client>> {
+    ): Promise<EntityRecordResponse<ClientResponse>> {
         const response = await this.client
             .delete(`clients/${id}`);
 
@@ -42,8 +48,8 @@ export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
     }
 
     async create(
-        data: Partial<Client>,
-    ): Promise<EntityRecordResponse<Client>> {
+        data: ClientCreateInput,
+    ): Promise<EntityRecordResponse<ClientResponse>> {
         const response = await this.client
             .post('clients', nullifyEmptyObjectProperties(data));
 
@@ -52,8 +58,8 @@ export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
 
     async update(
         id: Client['id'],
-        data: Partial<Client>,
-    ): Promise<EntityRecordResponse<Client>> {
+        data: ClientUpdateInput,
+    ): Promise<EntityRecordResponse<ClientResponse>> {
         const response = await this.client.post(`clients/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -61,8 +67,8 @@ export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<Client>,
-    ): Promise<EntityRecordResponse<Client>> {
+        data: ClientSaveInput,
+    ): Promise<EntityRecordResponse<ClientResponse>> {
         const response = await this.client.put(`clients/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

@@ -12,13 +12,19 @@ import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
 import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import { BaseAPI } from '../../base';
+import type {
+    IdentityProviderCreateInput,
+    IdentityProviderResponse,
+    IdentityProviderSaveInput,
+    IdentityProviderUpdateInput,
+} from './types';
 
 export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityProvider> {
     getAuthorizeUri(id: IdentityProvider['id']): string {
         return cleanDoubleSlashes(`${this.client.defaults.baseURL}/${buildIdentityProviderAuthorizePath(id)}`);
     }
 
-    async getMany(record?: BuildInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProvider>> {
+    async getMany(record?: BuildInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProviderResponse>> {
         const response = await this.client.get(`identity-providers${buildQuery(record)}`);
 
         return response.data;
@@ -27,25 +33,25 @@ export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityPr
     async getOne(
         id: IdentityProvider['id'],
         record?: BuildInput<IdentityProvider>,
-    ): Promise<EntityRecordResponse<IdentityProvider>> {
+    ): Promise<EntityRecordResponse<IdentityProviderResponse>> {
         const response = await this.client.get(`identity-providers/${id}${buildQuery(record)}`);
 
         return response.data;
     }
 
-    async delete(id: IdentityProvider['id']): Promise<EntityRecordResponse<IdentityProvider>> {
+    async delete(id: IdentityProvider['id']): Promise<EntityRecordResponse<IdentityProviderResponse>> {
         const response = await this.client.delete(`identity-providers/${id}`);
 
         return response.data;
     }
 
-    async create(data: Partial<IdentityProvider>): Promise<EntityRecordResponse<IdentityProvider>> {
+    async create(data: IdentityProviderCreateInput): Promise<EntityRecordResponse<IdentityProviderResponse>> {
         const response = await this.client.post('identity-providers', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: IdentityProvider['id'], data: Partial<IdentityProvider>): Promise<EntityRecordResponse<IdentityProvider>> {
+    async update(id: IdentityProvider['id'], data: IdentityProviderUpdateInput): Promise<EntityRecordResponse<IdentityProviderResponse>> {
         const response = await this.client.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -53,8 +59,8 @@ export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityPr
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<IdentityProvider>,
-    ): Promise<EntityRecordResponse<IdentityProvider>> {
+        data: IdentityProviderSaveInput,
+    ): Promise<EntityRecordResponse<IdentityProviderResponse>> {
         const response = await this.client.put(`identity-providers/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

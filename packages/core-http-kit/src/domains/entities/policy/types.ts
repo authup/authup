@@ -24,6 +24,7 @@ Partial<Pick<Policy, 'display_name' | 'description' | 'invert'>> & {
     parent_id?: string | null
 };
 export type PolicyCreateRequest = PolicyCreateSubset & Record<string, any>;
+export type PolicyCreateInput = PolicyCreateRequest;
 
 export type BuiltInPolicyCreateRequest<
     T extends Record<string, any> = Record<string, any>,
@@ -32,6 +33,8 @@ export type BuiltInPolicyCreateRequest<
 type PolicyUpdateSubset = Partial<PolicyCreateSubset>;
 
 export type PolicyUpdateRequest = PolicyUpdateSubset & Record<string, any>;
+export type PolicyUpdateInput = PolicyUpdateRequest;
+export type PolicySaveInput = PolicyCreateRequest;
 export type BuiltInPolicyUpdateRequest<
     T extends Record<string, any> = Record<string, any>,
 > = PolicyUpdateSubset & BuiltInPolicies<T>;

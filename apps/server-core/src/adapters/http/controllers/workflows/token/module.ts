@@ -172,7 +172,7 @@ export class TokenController {
     @DPost('/revoke', [])
     async revokeToken(
         @DContext() event: IRoutupEvent,
-    ) {
+    ): Promise<null> {
         try {
             const token = await extractTokenFromRequest(event);
 

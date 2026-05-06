@@ -21,6 +21,13 @@ import { NotFoundError } from '@ebec/http';
 import type { Client } from '@authup/core-kit';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
+import type {
+    ClientCreateInput,
+    ClientResponse,
+    ClientSaveInput,
+    ClientUpdateInput,
+    EntityCollectionResponse,
+} from '@authup/core-http-kit';
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
 import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -51,16 +58,16 @@ export class ClientController {
     @DGet('', [])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<EntityCollectionResponse<ClientResponse>> {
         const actor = buildActorContext(event);
         const {
-            data, 
-            meta, 
+            data,
+            meta,
         } = await this.service.getMany(useRequestQuery(event), actor);
 
         return {
             data,
-            meta, 
+            meta,
         };
     }
 
@@ -68,7 +75,7 @@ export class ClientController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<ClientResponse> {
         const identity = useRequestIdentity(event);
 
         let isMe = false;
@@ -118,9 +125,9 @@ export class ClientController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: any,
+        @DBody() data: ClientCreateInput,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<ClientResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -132,9 +139,9 @@ export class ClientController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: any,
+        @DBody() data: ClientUpdateInput,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<ClientResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -146,13 +153,13 @@ export class ClientController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-        @DBody() data: any,
+        @DBody() data: ClientSaveInput,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<ClientResponse> {
         const actor = buildActorContext(event);
         const {
-            entity, 
-            created, 
+            entity,
+            created,
         } = await this.service.save(
             id || undefined,
             data,
@@ -167,7 +174,7 @@ export class ClientController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<ClientResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

@@ -17,6 +17,11 @@ import {
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
+import type {
+    EntityCollectionResponse,
+    RobotRoleCreateInput,
+    RobotRoleResponse,
+} from '@authup/core-http-kit';
 import type { IRobotRoleService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
@@ -39,24 +44,24 @@ export class RobotRoleController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<EntityCollectionResponse<RobotRoleResponse>> {
         const actor = buildActorContext(event);
         const {
-            data, 
-            meta, 
+            data,
+            meta,
         } = await this.service.getMany(useRequestQuery(event), actor);
 
         return {
             data,
-            meta, 
+            meta,
         };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: any,
+        @DBody() data: RobotRoleCreateInput,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<RobotRoleResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -69,7 +74,7 @@ export class RobotRoleController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<RobotRoleResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -80,7 +85,7 @@ export class RobotRoleController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<RobotRoleResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

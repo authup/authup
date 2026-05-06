@@ -17,6 +17,11 @@ import {
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
+import type {
+    ClientScopeCreateInput,
+    ClientScopeResponse,
+    EntityCollectionResponse,
+} from '@authup/core-http-kit';
 import type { IClientScopeService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
@@ -37,24 +42,24 @@ export class ClientScopeController {
     @DGet('', [])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<EntityCollectionResponse<ClientScopeResponse>> {
         const actor = buildActorContext(event);
         const {
-            data, 
-            meta, 
+            data,
+            meta,
         } = await this.service.getMany(useRequestQuery(event), actor);
 
         return {
             data,
-            meta, 
+            meta,
         };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: any,
+        @DBody() data: ClientScopeCreateInput,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<ClientScopeResponse> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
@@ -68,7 +73,7 @@ export class ClientScopeController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<ClientScopeResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -79,7 +84,7 @@ export class ClientScopeController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<ClientScopeResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

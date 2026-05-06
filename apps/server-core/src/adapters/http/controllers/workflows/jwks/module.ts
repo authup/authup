@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { OAuth2JsonWebKey } from '@authup/specs';
 import { JWKType } from '@authup/specs';
 import { AsymmetricKey } from '@authup/server-kit';
 import {
@@ -35,7 +36,7 @@ export class JwkController {
     @DGet('/jwks', [])
     async getManyJwks(
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<{ keys: OAuth2JsonWebKey[] }> {
         const realmId = getRequestStringParam(event, 'realmId');
 
         const entities = await this.repository.find({
@@ -65,11 +66,11 @@ export class JwkController {
 
         const keys = await Promise.all(promises);
 
-        return { keys };
+        return { keys: keys as OAuth2JsonWebKey[] };
     }
 
     @DGet('/jwks/:id', [])
-    async getOneJwks(@DPath('id') id: string): Promise<any> {
+    async getOneJwks(@DPath('id') id: string): Promise<OAuth2JsonWebKey> {
         const entity = await this.repository.findOne({
             where: {
                 type: In([JWKType.RSA, JWKType.EC]),
@@ -98,6 +99,6 @@ export class JwkController {
         return {
             ...jsonWebKey,
             kid: entity.id,
-        };
+        } as OAuth2JsonWebKey;
     }
 }

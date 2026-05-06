@@ -295,9 +295,15 @@ Feature gates check these options before proceeding (e.g. `if (!this.options.reg
 
 ### Thin Controller Pattern (HTTP Adapter)
 
-Controllers are thin HTTP adapters. They extract input from the routup `IRoutupEvent`, build an `ActorContext`, delegate to the service, and format the HTTP response:
+Controllers are thin HTTP adapters. They extract input from the routup `IRoutupEvent`, build an `ActorContext`, delegate to the service, and format the HTTP response. Request body and response types are imported from `@authup/core-http-kit` so the same contract is shared between the typed Client, the controller, and `@trapi/swagger` schema generation:
 
 ```typescript
+import type {
+    EntityCollectionResponse,
+    RoleCreateInput,
+    RoleResponse,
+} from '@authup/core-http-kit';
+
 export type RoleControllerContext = {
     service: IRoleService,
 };
@@ -311,38 +317,41 @@ export class RoleController {
     }
 
     @DGet('')
-    async getMany(@DContext() event: IRoutupEvent): Promise<any> {
+    async getMany(@DContext() event: IRoutupEvent): Promise<EntityCollectionResponse<RoleResponse>> {
         const actor = buildActorContext(event);
         const { data, meta } = await this.service.getMany(useRequestQuery(event), actor);
         return { data, meta };
     }
 
     @DPost('')
-    async add(@DBody() data: any, @DContext() event: IRoutupEvent): Promise<any> {
+    async add(@DBody() data: RoleCreateInput, @DContext() event: IRoutupEvent): Promise<RoleResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
-        return sendCreated(event, entity);
+        event.response.status = 201;
+        return entity;
     }
 
     @DDelete('/:id')
-    async drop(@DPath('id') id: string, @DContext() event: IRoutupEvent): Promise<any> {
+    async drop(@DPath('id') id: string, @DContext() event: IRoutupEvent): Promise<RoleResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
-        return sendAccepted(event, entity);
+        event.response.status = 202;
+        return entity;
     }
 }
 ```
 
 Controller conventions:
-- Return type is always `Promise<any>`
+- Return type is the concrete response type (`Promise<RoleResponse>`, `Promise<EntityCollectionResponse<RoleResponse>>`) — sourced from `@authup/core-http-kit`. This lets `@trapi/swagger` extract the response schema from the method signature.
+- Body parameter type is the concrete request type (`@DBody() data: RoleCreateInput`) — also sourced from `@authup/core-http-kit`. Naming convention: `<Entity>CreateInput` for POST, `<Entity>UpdateInput` for POST `/:id`, `<Entity>SaveInput` for PUT `/:id`, `<Entity>Response` for the response shape.
 - **No business logic** — no permission checks, no validation, no entity manipulation
 - Read the routup event via `@DContext() event: IRoutupEvent`
-- Read the body via `@DBody() data: any` (decorator awaits `readRequestBody` internally)
+- Read the body via `@DBody() data: <RequestType>` (decorator awaits `readRequestBody` internally)
 - Read query via `useRequestQuery(event)` from `@routup/basic/query`
 - Read path params via `@DPath('id') id: string` or `event.params.id`
 - Build actor via `buildActorContext(event)`
 - Delegate all work to `this.service.*()` methods
-- Plain values from a handler are sent as the response body. For 201/202 use `sendCreated(event, entity)` / `sendAccepted(event, entity)` from `routup`. For typed-return ergonomics (so `@trapi/swagger` can extract the response shape from the method signature) prefer `event.response.status = 202; return entity;` over `sendAccepted` — see `register/password-forgot/password-reset` controllers for examples.
+- For non-200 statuses, set `event.response.status = 201/202` and return the value — never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
 
 Exceptions where controllers retain some logic:
 - **Self-access resolution** (client, robot, user): Resolve `@me`/`@self` tokens to actual IDs before delegating

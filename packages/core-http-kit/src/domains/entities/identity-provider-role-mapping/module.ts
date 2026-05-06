@@ -11,27 +11,32 @@ import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    IdentityProviderRoleMappingCreateInput,
+    IdentityProviderRoleMappingResponse,
+    IdentityProviderRoleMappingUpdateInput,
+} from './types';
 
 export class IdentityProviderRoleMappingAPI extends BaseAPI implements EntityAPI<IdentityProviderRoleMapping> {
-    async getMany(data: BuildInput<IdentityProviderRoleMapping>): Promise<EntityCollectionResponse<IdentityProviderRoleMapping>> {
+    async getMany(data: BuildInput<IdentityProviderRoleMapping>): Promise<EntityCollectionResponse<IdentityProviderRoleMappingResponse>> {
         const response = await this.client.get(`identity-provider-role-mappings${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: IdentityProviderRoleMapping['id']): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
+    async getOne(id: IdentityProviderRoleMapping['id']): Promise<EntityRecordResponse<IdentityProviderRoleMappingResponse>> {
         const response = await this.client.get(`identity-provider-role-mappings/${id}`);
 
         return response.data;
     }
 
-    async delete(id: IdentityProviderRoleMapping['id']): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
+    async delete(id: IdentityProviderRoleMapping['id']): Promise<EntityRecordResponse<IdentityProviderRoleMappingResponse>> {
         const response = await this.client.delete(`identity-provider-role-mappings/${id}`);
 
         return response.data;
     }
 
-    async create(data: Partial<IdentityProviderRoleMapping>): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
+    async create(data: IdentityProviderRoleMappingCreateInput): Promise<EntityRecordResponse<IdentityProviderRoleMappingResponse>> {
         const response = await this.client.post('identity-provider-role-mappings', nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -39,8 +44,8 @@ export class IdentityProviderRoleMappingAPI extends BaseAPI implements EntityAPI
 
     async update(
         id: IdentityProviderRoleMapping['id'],
-        data: Partial<IdentityProviderRoleMapping>,
-    ): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
+        data: IdentityProviderRoleMappingUpdateInput,
+    ): Promise<EntityRecordResponse<IdentityProviderRoleMappingResponse>> {
         const response = await this.client.post(`identity-provider-role-mappings/${id}`, data);
 
         return response.data;

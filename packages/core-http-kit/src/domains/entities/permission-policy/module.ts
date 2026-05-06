@@ -10,26 +10,27 @@ import { buildQuery } from 'rapiq';
 import type { PermissionPolicy } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { PermissionPolicyCreateInput, PermissionPolicyResponse } from './types';
 
 export class PermissionPolicyAPI extends BaseAPI implements EntityAPISlim<PermissionPolicy> {
-    async getMany(data?: BuildInput<PermissionPolicy>) : Promise<EntityCollectionResponse<PermissionPolicy>> {
+    async getMany(data?: BuildInput<PermissionPolicy>) : Promise<EntityCollectionResponse<PermissionPolicyResponse>> {
         const response = await this.client.get(`permission-policies${buildQuery(data)}`);
         return response.data;
     }
 
-    async getOne(id: PermissionPolicy['id']) : Promise<EntityRecordResponse<PermissionPolicy>> {
+    async getOne(id: PermissionPolicy['id']) : Promise<EntityRecordResponse<PermissionPolicyResponse>> {
         const response = await this.client.get(`permission-policies/${id}`);
 
         return response.data;
     }
 
-    async delete(id: PermissionPolicy['id']) : Promise<EntityRecordResponse<PermissionPolicy>> {
+    async delete(id: PermissionPolicy['id']) : Promise<EntityRecordResponse<PermissionPolicyResponse>> {
         const response = await this.client.delete(`permission-policies/${id}`);
 
         return response.data;
     }
 
-    async create(data: Partial<PermissionPolicy>) : Promise<EntityRecordResponse<PermissionPolicy>> {
+    async create(data: PermissionPolicyCreateInput) : Promise<EntityRecordResponse<PermissionPolicyResponse>> {
         const response = await this.client.post('permission-policies', data);
 
         return response.data;

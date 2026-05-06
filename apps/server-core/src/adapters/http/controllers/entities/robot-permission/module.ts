@@ -17,6 +17,12 @@ import {
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
+import type {
+    EntityCollectionResponse,
+    RobotPermissionCreateInput,
+    RobotPermissionResponse,
+    RobotPermissionUpdateInput,
+} from '@authup/core-http-kit';
 import type { IRobotPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
@@ -37,24 +43,24 @@ export class RobotPermissionController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<EntityCollectionResponse<RobotPermissionResponse>> {
         const actor = buildActorContext(event);
         const {
-            data, 
-            meta, 
+            data,
+            meta,
         } = await this.service.getMany(useRequestQuery(event), actor);
 
         return {
             data,
-            meta, 
+            meta,
         };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: any,
+        @DBody() data: RobotPermissionCreateInput,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<RobotPermissionResponse> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
@@ -67,9 +73,9 @@ export class RobotPermissionController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: any,
+        @DBody() data: RobotPermissionUpdateInput,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<RobotPermissionResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -82,7 +88,7 @@ export class RobotPermissionController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<RobotPermissionResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -93,7 +99,7 @@ export class RobotPermissionController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<RobotPermissionResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(
             id,

@@ -11,33 +11,38 @@ import type { UserAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    UserAttributeCreateInput,
+    UserAttributeResponse,
+    UserAttributeUpdateInput,
+} from './types';
 
 export class UserAttributeAPI extends BaseAPI implements EntityAPI<UserAttribute> {
-    async getMany(data?: BuildInput<UserAttribute>): Promise<EntityCollectionResponse<UserAttribute>> {
+    async getMany(data?: BuildInput<UserAttribute>): Promise<EntityCollectionResponse<UserAttributeResponse>> {
         const response = await this.client.get(`user-attributes${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttribute>> {
+    async getOne(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttributeResponse>> {
         const response = await this.client.get(`user-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async delete(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttribute>> {
+    async delete(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttributeResponse>> {
         const response = await this.client.delete(`user-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async create(data: Partial<UserAttribute>): Promise<EntityRecordResponse<UserAttribute>> {
+    async create(data: UserAttributeCreateInput): Promise<EntityRecordResponse<UserAttributeResponse>> {
         const response = await this.client.post('user-attributes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: UserAttribute['id'], data: Partial<UserAttribute>): Promise<EntityRecordResponse<UserAttribute>> {
+    async update(id: UserAttribute['id'], data: UserAttributeUpdateInput): Promise<EntityRecordResponse<UserAttributeResponse>> {
         const response = await this.client.post(`user-attributes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
