@@ -10,8 +10,13 @@ import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { createHandler } from '@routup/assets';
 import path from 'node:path';
 import type { Router } from 'routup';
-import { coreHandler, setRequestParam } from 'routup';
+import { defineCoreHandler } from 'routup';
+import { fromNodeMiddleware } from 'routup/node';
+import type * as Vite from 'vite';
+import type { ViteDevServer } from 'vite';
 import { PACKAGE_PATH, UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../path.ts';
+
+export const VITE_SERVER_STORE_KEY = Symbol('ViteServer');
 
 export async function registerAssetsMiddleware(router: Router) {
     if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
@@ -33,15 +38,9 @@ export async function registerAssetsMiddleware(router: Router) {
         return;
     }
 
-    /**
-     * @type import('vite')
-     */
-    const vite = await load('vite');
+    const vite = await load('vite') as typeof Vite;
 
-    /**
-     * @type {import('vite').ViteDevServer}
-     */
-    const server = await vite.createServer({
+    const server: ViteDevServer = await vite.createServer({
         root: UI_SOURCE_PATH,
         base: '/public/',
         logLevel: 'error',
@@ -55,10 +54,9 @@ export async function registerAssetsMiddleware(router: Router) {
         appType: 'custom',
     });
 
-    router.use('public', coreHandler((req, res, next) => server.middlewares(req, res, next)));
-    router.use(coreHandler((req, res, next) => {
-        setRequestParam(req, 'viteServer', server);
-
-        next();
+    router.use('public', fromNodeMiddleware(server.middlewares));
+    router.use(defineCoreHandler((event) => {
+        event.store[VITE_SERVER_STORE_KEY] = server;
+        return event.next();
     }));
 }

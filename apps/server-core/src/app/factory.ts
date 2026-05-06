@@ -18,7 +18,6 @@ export function createApplication() {
         .withCache()
         .withMail()
         .withRuntime()
-        .withSwagger()
         .withDatabase()
         .withProvisioning(new ProvisionerModule([
             new DefaultProvisioningSource(),

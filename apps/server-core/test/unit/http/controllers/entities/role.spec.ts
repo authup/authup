@@ -12,9 +12,8 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { isClientError } from 'hapic';
 import { createTestApplication } from '../../../../app';
-import { createFakeRole, expectPropertiesEqualToSrc } from '../../../../utils';
+import { createFakeRole, expectClientError, expectPropertiesEqualToSrc } from '../../../../utils';
 
 describe('src/http/controllers/role', () => {
     const suite = createTestApplication();
@@ -40,17 +39,10 @@ describe('src/http/controllers/role', () => {
     });
 
     it('should not create same resource', async () => {
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .role
-                .create({ name: details.name });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.statusCode).toEqual(409);
-            }
-        }
+        await expectClientError(
+            () => suite.client.role.create({ name: details.name }),
+            { status: 409 },
+        );
     });
 
     it('should read collection', async () => {

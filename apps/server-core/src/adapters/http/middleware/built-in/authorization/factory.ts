@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { coreHandler } from 'routup';
+import { defineCoreHandler } from 'routup';
 import type { Handler } from 'routup';
 import { AuthorizationMiddleware } from './module.ts';
 import type { HTTPAuthorizationMiddlewareContext } from './types.ts';
@@ -13,9 +13,8 @@ import type { HTTPAuthorizationMiddlewareContext } from './types.ts';
 export function createAuthorizationMiddleware(ctx: HTTPAuthorizationMiddlewareContext) : Handler {
     const middleware = new AuthorizationMiddleware(ctx);
 
-    return coreHandler(async (
-        request,
-        response,
-        next,
-    ) => middleware.run(request, response, next));
+    return defineCoreHandler(async (event) => {
+        await middleware.run(event);
+        return event.next();
+    });
 }

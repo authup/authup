@@ -14,7 +14,7 @@ export class PermissionError extends AuthupError {
         super({
             ...options,
             message: options.message || 'A permission error occurred.',
-            statusCode: options.statusCode || 403,
+            status: options.status || 403,
         });
     }
 

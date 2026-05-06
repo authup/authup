@@ -5,23 +5,31 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Request } from 'routup';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
-import { ValidupError, buildErrorMessageForAttribute, defineIssueItem } from 'validup';
-import { useRequestToken } from '../../../../request/index.ts';
+import type { IRoutupEvent } from 'routup';
+import {
+    ValidupError, 
+    buildErrorMessageForAttribute, 
+    defineIssueItem, 
+    isValidupError,
+} from 'validup';
+import { readFromLocations, useRequestToken } from '../../../../request/index.ts';
 import { TokenRequestValidator } from './validator.ts';
 
-export async function extractTokenFromRequest(req: Request) : Promise<string> {
+export async function extractTokenFromRequest(event: IRoutupEvent) : Promise<string> {
     let token : string | undefined;
 
     try {
         const validator = new TokenRequestValidator();
-        const validatorAdapter = new RoutupContainerAdapter(validator);
-        const data = await validatorAdapter.run(req, { locations: ['body', 'query', 'params'] });
+        const data = await validator.run(
+            await readFromLocations(event, ['body', 'query', 'params']),
+        );
 
         token = data.token;
-    } catch {
-        token = useRequestToken(req);
+    } catch (e) {
+        if (!isValidupError(e)) {
+            throw e;
+        }
+        token = useRequestToken(event);
     }
 
     if (!token) {

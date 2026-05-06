@@ -7,15 +7,12 @@
 
 import { AsymmetricKey } from '@authup/server-kit';
 import { JWKType } from '@authup/specs';
-import type { Response } from 'routup';
-import { send } from 'routup';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { KeyEntity } from '../../../../../database/domains/index.ts';
 
 export async function getJwksRouteHandler(
-    res: Response,
     repository: Repository<KeyEntity>,
     realmId?: string,
 ) : Promise<any> {
@@ -28,12 +25,12 @@ export async function getJwksRouteHandler(
     });
 
     const promises = entities
-        .filter((entity) => !!entity.encryption_key)
+        .filter((entity): entity is KeyEntity & { encryption_key: string } => !!entity.encryption_key)
         .map(
             (entity) => AsymmetricKey
                 .fromBase64({
                     format: 'spki',
-                    key: entity.encryption_key!,
+                    key: entity.encryption_key,
                     options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
                 })
                 .then((container) => container.toJWK())
@@ -46,11 +43,10 @@ export async function getJwksRouteHandler(
 
     const keys = await Promise.all(promises);
 
-    return send(res, { keys });
+    return { keys };
 }
 
 export async function getJwkRouteHandler(
-    res: Response,
     repository: Repository<KeyEntity>,
     keyId: string,
     realmId?: string,
@@ -74,15 +70,15 @@ export async function getJwkRouteHandler(
     const container = await AsymmetricKey
         .fromBase64({
             format: 'spki',
-            key: entity.encryption_key!,
+            key: entity.encryption_key,
             options: AsymmetricKey.buildImportOptionsForJWTAlgorithm(entity.signature_algorithm),
         });
 
     const jsonWebKey = await container.toJWK();
     jsonWebKey.alg = entity.signature_algorithm;
 
-    return send(res, {
+    return {
         ...jsonWebKey,
         kid: entity.id,
-    });
+    };
 }

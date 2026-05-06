@@ -5,55 +5,25 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { isObject } from '@authup/kit';
 import type { Router } from 'routup';
-import { errorHandler, send } from 'routup';
+import { defineErrorHandler } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import type { AuthupError } from '@authup/errors';
-import type { Issue } from 'validup';
 import { sanitizeError } from '../../../../utils/index.ts';
 
-type ErrorResponsePayload = {
-    statusCode: number,
-    code: string,
-    message: string,
-    issues: Issue[],
-    [key: string]: any
-};
-
 export function registerErrorMiddleware(router: Router) {
-    router.use(errorHandler((
-        error,
-        request,
-        response,
-    ) => {
-        let next : AuthupError;
-        if (error.cause) {
-            next = sanitizeError(error.cause);
-        } else {
-            next = sanitizeError(error);
-        }
+    router.use(defineErrorHandler((error, event) => {
+        const next : AuthupError = sanitizeError(error.cause ?? error);
 
-        const payload : ErrorResponsePayload = {
-            statusCode: next.statusCode,
-            code: `${next.code}`,
-            message: next.message,
-            issues: next.issues,
-        };
+        const payload = next.toJSON();
 
-        const isServerError = next.statusCode >= 500 && next.statusCode < 600;
+        const isServerError = next.status >= 500 && next.status < 600;
         if (isServerError) {
             useLogger().error(next);
-
             payload.message = 'An internal server error occurred.';
-        } else if (isObject(next.data)) {
-            const keys = Object.keys(next.data);
-            for (const key of keys) {
-                payload[key] = next.data[key];
-            }
         }
 
-        response.statusCode = payload.statusCode;
-        return send(response, payload);
+        event.response.status = next.status;
+        return payload;
     }));
 }

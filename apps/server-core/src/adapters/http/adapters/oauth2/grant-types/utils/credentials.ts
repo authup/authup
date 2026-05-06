@@ -6,9 +6,9 @@
  */
 
 import { OAuth2Error } from '@authup/specs';
-import { useRequestBody } from '@routup/basic/body';
+import { readRequestBody } from '@routup/basic/body';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
-import type { Request } from 'routup';
+import type { IRoutupEvent } from 'routup';
 
 export type ExtractedClientCredentials = {
     clientId?: string,
@@ -23,12 +23,13 @@ export type ExtractedClientCredentials = {
  * that present credentials in BOTH the Basic Authorization header and the
  * request body.
  */
-export function extractClientCredentialsFromRequest(req: Request): ExtractedClientCredentials {
-    const bodyClientId = readStringBody(req, 'client_id');
-    const bodyClientSecret = readStringBody(req, 'client_secret');
+export async function extractClientCredentialsFromRequest(event: IRoutupEvent): Promise<ExtractedClientCredentials> {
+    const body = await readRequestBody(event);
+    const bodyClientId = readStringField(body, 'client_id');
+    const bodyClientSecret = readStringField(body, 'client_secret');
     const hasBodyCredentials = !!bodyClientId || !!bodyClientSecret;
 
-    const basicCredentials = parseBasicCredentials(req);
+    const basicCredentials = parseBasicCredentials(event);
 
     if (hasBodyCredentials && basicCredentials) {
         throw OAuth2Error.requestInvalid(
@@ -53,14 +54,14 @@ export function extractClientCredentialsFromRequest(req: Request): ExtractedClie
     return {};
 }
 
-function readStringBody(req: Request, key: string): string | undefined {
-    const value = useRequestBody(req, key);
+function readStringField(body: Record<string, any> | undefined, key: string): string | undefined {
+    const value = body?.[key];
     return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
-function parseBasicCredentials(req: Request): ExtractedClientCredentials | undefined {
-    const headerValue = req.headers.authorization;
-    if (typeof headerValue !== 'string') {
+function parseBasicCredentials(event: IRoutupEvent): ExtractedClientCredentials | undefined {
+    const headerValue = event.headers.get('authorization');
+    if (!headerValue) {
         return undefined;
     }
 

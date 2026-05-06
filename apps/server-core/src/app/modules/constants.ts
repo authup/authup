@@ -11,7 +11,6 @@ export const ModuleName = {
     CACHE: 'cache',
     MAIL: 'mail',
     RUNTIME: 'runtime',
-    SWAGGER: 'swagger',
     DATABASE: 'database',
     PROVISIONING: 'provisioning',
     LDAP: 'ldap',

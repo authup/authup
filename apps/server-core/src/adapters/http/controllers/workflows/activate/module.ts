@@ -6,14 +6,12 @@
  */
 
 import {
-    DBody, 
-    DController, 
-    DPost, 
-    DRequest, 
-    DResponse,
+    DBody,
+    DContext,
+    DController,
+    DPost,
 } from '@routup/decorators';
-import type { Request, Response } from 'routup';
-import { sendAccepted } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import type { IRegistrationService } from '../../../../../core/index.ts';
 import { ActivateRequestValidator } from './validator.ts';
 
@@ -32,14 +30,14 @@ export class ActivateController {
     @DPost('', [])
     async execute(
         @DBody() data: any,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
         const validator = new ActivateRequestValidator();
         const validated = await validator.run(data);
 
         await this.service.activate(validated);
 
-        return sendAccepted(res);
+        event.response.status = 202;
+        return null;
     }
 }

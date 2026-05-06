@@ -6,23 +6,17 @@
  */
 
 import {
-    DBody, 
-    DController, 
-    DDelete, 
-    DGet, 
-    DPath, 
-    DPost, 
-    DPut, 
-    DRequest, 
-    DResponse, 
+    DBody,
+    DContext,
+    DController,
+    DDelete,
+    DGet,
+    DPath,
+    DPost,
+    DPut,
     DTags,
 } from '@routup/decorators';
-import {
-    send, 
-    sendAccepted, 
-    sendCreated, 
-    useRequestParam,
-} from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IUserService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -44,28 +38,26 @@ export class UserController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const {
             data, 
             meta, 
-        } = await this.service.getMany(useRequestQuery(req), actor);
+        } = await this.service.getMany(useRequestQuery(event), actor);
 
-        return send(res, {
+        return {
             data,
             meta, 
-        });
+        };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         let paramId = id;
 
         if (
@@ -79,50 +71,51 @@ export class UserController {
         const entity = await this.service.getOne(
             paramId,
             actor,
-            useRequestQuery(req),
-            useRequestParam(req, 'realmId'),
+            useRequestQuery(event),
+            event.params.realmId,
         );
 
-        return send(res, entity);
+        return entity;
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(res, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
             data,
             actor,
         );
 
-        return sendAccepted(res, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const {
             entity, 
             created, 
@@ -132,22 +125,20 @@ export class UserController {
             actor,
         );
 
-        if (created) {
-            return sendCreated(res, entity);
-        }
-
-        return sendAccepted(res, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(res, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

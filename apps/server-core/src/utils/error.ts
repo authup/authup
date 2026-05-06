@@ -24,7 +24,7 @@ export function sanitizeError(input: unknown) : AuthupError {
 
     if (input instanceof EntityRelationLookupError) {
         return new AuthupError({
-            statusCode: BadRequestErrorOptions.statusCode,
+            status: BadRequestErrorOptions.status,
             code: BadRequestErrorOptions.code,
             message: input.message,
             stack: input.stack,
@@ -34,7 +34,7 @@ export function sanitizeError(input: unknown) : AuthupError {
     if (isValidupError(input)) {
         const paths = input.issues.map((issue) => stringifyPath(issue.path));
         const error = new AuthupError({
-            statusCode: BadRequestErrorOptions.statusCode,
+            status: BadRequestErrorOptions.status,
             code: BadRequestErrorOptions.code,
             stack: input.stack,
             message: input.message || buildErrorMessageForAttributes(paths),
@@ -46,10 +46,9 @@ export function sanitizeError(input: unknown) : AuthupError {
 
     if (input instanceof HTTPError) {
         return new AuthupError({
-            statusCode: input.statusCode,
+            status: input.status,
             code: input.code,
             message: input.message,
-            data: input.data,
             stack: input.stack,
         });
     }
@@ -68,7 +67,7 @@ export function sanitizeError(input: unknown) : AuthupError {
             case 'ER_DUP_ENTRY':
             case 'SQLITE_CONSTRAINT_UNIQUE': {
                 return new AuthupError({
-                    statusCode: ConflictErrorOptions.statusCode,
+                    status: ConflictErrorOptions.status,
                     code: ConflictErrorOptions.code,
                     message: 'An entry with some unique attributes already exist.',
                     stack: input.stack,
@@ -76,7 +75,7 @@ export function sanitizeError(input: unknown) : AuthupError {
             }
             case 'ER_DISK_FULL':
                 return new AuthupError({
-                    statusCode: InsufficientStorageErrorOptions.statusCode,
+                    status: InsufficientStorageErrorOptions.status,
                     code: InsufficientStorageErrorOptions.code,
                     message: 'No database operation possible, due the leak of free disk space.',
                     stack: input.stack,
@@ -84,7 +83,7 @@ export function sanitizeError(input: unknown) : AuthupError {
         }
 
         return new AuthupError({
-            statusCode: InternalServerErrorOptions.statusCode,
+            status: InternalServerErrorOptions.status,
             code: InternalServerErrorOptions.code,
             message: input.message,
             stack: input.stack,
@@ -92,7 +91,7 @@ export function sanitizeError(input: unknown) : AuthupError {
     }
 
     return new AuthupError({
-        statusCode: InternalServerErrorOptions.statusCode,
+        status: InternalServerErrorOptions.status,
         code: InternalServerErrorOptions.code,
     });
 }

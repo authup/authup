@@ -7,14 +7,12 @@
 
 import type { PasswordResetResponse } from '@authup/core-http-kit';
 import {
-    DBody, 
-    DController, 
-    DPost, 
-    DRequest, 
-    DResponse,
+    DBody,
+    DContext,
+    DController,
+    DPost,
 } from '@routup/decorators';
-import type { Request, Response } from 'routup';
-import { sendAccepted } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
 
 export type PasswordResetControllerContext = {
@@ -32,13 +30,12 @@ export class PasswordResetController {
     @DPost('', [])
     async execute(
         @DBody() data: any,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+        @DContext() event: IRoutupEvent,
     ): Promise<PasswordResetResponse> {
         const result = await this.service.resetPassword(data);
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        return sendAccepted(res, result);
+        event.response.status = 202;
+
+        return result;
     }
 }

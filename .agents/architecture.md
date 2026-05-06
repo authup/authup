@@ -295,7 +295,7 @@ Feature gates check these options before proceeding (e.g. `if (!this.options.reg
 
 ### Thin Controller Pattern (HTTP Adapter)
 
-Controllers are thin HTTP adapters. They extract input from the request, build an `ActorContext`, delegate to the service, and format the HTTP response:
+Controllers are thin HTTP adapters. They extract input from the routup `IRoutupEvent`, build an `ActorContext`, delegate to the service, and format the HTTP response:
 
 ```typescript
 export type RoleControllerContext = {
@@ -311,24 +311,24 @@ export class RoleController {
     }
 
     @DGet('')
-    async getMany(@DRequest() req: any, @DResponse() res: any): Promise<any> {
-        const actor = buildActorContext(req);
-        const { data, meta } = await this.service.getMany(useRequestQuery(req), actor);
-        return send(res, { data, meta });
+    async getMany(@DContext() event: IRoutupEvent): Promise<any> {
+        const actor = buildActorContext(event);
+        const { data, meta } = await this.service.getMany(useRequestQuery(event), actor);
+        return { data, meta };
     }
 
     @DPost('')
-    async add(@DBody() data: any, @DRequest() req: any, @DResponse() res: any): Promise<any> {
-        const actor = buildActorContext(req);
-        const entity = await this.service.create(useRequestBody(req), actor);
-        return sendCreated(res, entity);
+    async add(@DBody() data: any, @DContext() event: IRoutupEvent): Promise<any> {
+        const actor = buildActorContext(event);
+        const entity = await this.service.create(data, actor);
+        return sendCreated(event, entity);
     }
 
     @DDelete('/:id')
-    async drop(@DPath('id') id: string, @DRequest() req: any, @DResponse() res: any): Promise<any> {
-        const actor = buildActorContext(req);
-        const entity = await this.service.delete(useRequestParamID(req), actor);
-        return sendAccepted(res, entity);
+    async drop(@DPath('id') id: string, @DContext() event: IRoutupEvent): Promise<any> {
+        const actor = buildActorContext(event);
+        const entity = await this.service.delete(id, actor);
+        return sendAccepted(event, entity);
     }
 }
 ```
@@ -336,11 +336,13 @@ export class RoleController {
 Controller conventions:
 - Return type is always `Promise<any>`
 - **No business logic** — no permission checks, no validation, no entity manipulation
-- Extract body via `useRequestBody(req)` from `@routup/basic/body`
-- Extract query via `useRequestQuery(req)` from `@routup/basic/query`
-- Build actor via `buildActorContext(req)`
+- Read the routup event via `@DContext() event: IRoutupEvent`
+- Read the body via `@DBody() data: any` (decorator awaits `readRequestBody` internally)
+- Read query via `useRequestQuery(event)` from `@routup/basic/query`
+- Read path params via `@DPath('id') id: string` or `event.params.id`
+- Build actor via `buildActorContext(event)`
 - Delegate all work to `this.service.*()` methods
-- Format response with `send()`, `sendCreated()`, `sendAccepted()` from `routup`
+- Plain values from a handler are sent as the response body. For 201/202 use `sendCreated(event, entity)` / `sendAccepted(event, entity)` from `routup`. For typed-return ergonomics (so `@trapi/swagger` can extract the response shape from the method signature) prefer `event.response.status = 202; return entity;` over `sendAccepted` — see `register/password-forgot/password-reset` controllers for examples.
 
 Exceptions where controllers retain some logic:
 - **Self-access resolution** (client, robot, user): Resolve `@me`/`@self` tokens to actual IDs before delegating

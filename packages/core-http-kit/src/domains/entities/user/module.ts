@@ -21,7 +21,7 @@ export type PasswordResetResponse = {
 };
 
 export type RegisterResponse = {
-    active: true
+    active: boolean
 };
 
 export class UserAPI extends BaseAPI implements EntityAPI<User> {

@@ -5,16 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthupErrorOptionsInput } from '@authup/errors';
+import type { AuthupErrorInput, AuthupErrorOptions } from '@authup/errors';
 import { AuthupError, ErrorCode } from '@authup/errors';
 
 export class JWKError extends AuthupError {
-    constructor(...input: AuthupErrorOptionsInput[]) {
+    constructor(input?: AuthupErrorInput) {
+        const options : AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         super({
             code: ErrorCode.JWK_INVALID,
             message: 'The JWK is invalid.',
-            statusCode: 400,
-        }, ...input);
+            status: 400,
+            ...options,
+        });
     }
 
     static notFound(id?: string) {

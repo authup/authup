@@ -6,23 +6,24 @@
  */
 
 import {
-    DController, 
-    DGet, 
-    DPost, 
-    DRequest, 
-    DResponse,
+    DContext,
+    DController,
+    DGet,
+    DPost,
 } from '@routup/decorators';
 import { load } from 'locter';
 import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
-import { send, useRequestParam } from 'routup';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
+
+import type { IRoutupEvent } from 'routup';
+import type { ViteDevServer } from 'vite';
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../../path.ts';
-import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
+import { ForceUserLoggedInMiddleware, VITE_SERVER_STORE_KEY } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
+import { readFromLocations } from '../../../request/index.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
 import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
 import { sanitizeError } from '../../../../../utils/index.ts';
@@ -37,7 +38,7 @@ export class AuthorizeController {
 
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
-    protected codeRequestValidator : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
+    protected codeRequestValidator : OAuth2AuthorizationCodeRequestValidator;
 
     protected authorizer: HTTPOAuth2Authorizer;
 
@@ -48,8 +49,7 @@ export class AuthorizeController {
 
         this.codeRequestVerifier = ctx.codeRequestVerifier;
 
-        const validator = new OAuth2AuthorizationCodeRequestValidator();
-        this.codeRequestValidator = new RoutupContainerAdapter(validator);
+        this.codeRequestValidator = new OAuth2AuthorizationCodeRequestValidator();
 
         this.authorizer = new HTTPOAuth2Authorizer({
             codeRequestVerifier: this.codeRequestVerifier,
@@ -63,11 +63,8 @@ export class AuthorizeController {
     // ---------------------------------------------------------
 
     @DPost('', [ForceUserLoggedInMiddleware])
-    async confirm(
-        @DRequest() req: any,
-        @DResponse() res: any,
-    ): Promise<void> {
-        const result = await this.authorizer.authorizeWithRequest(req);
+    async confirm(@DContext() event: IRoutupEvent): Promise<any> {
+        const result = await this.authorizer.authorizeWithRequest(event);
 
         const url = new URL(result.redirectUri);
         if (result.state) {
@@ -86,14 +83,11 @@ export class AuthorizeController {
             url.searchParams.set('id_token', result.idToken);
         }
 
-        return send(res, { url: url.href });
+        return { url: url.href };
     }
 
     @DGet('', [])
-    async serve(
-        @DRequest() req: any,
-        @DResponse() res: any,
-    ): Promise<void> {
+    async serve(@DContext() event: IRoutupEvent): Promise<any> {
         let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
 
         let client : Client | undefined;
@@ -102,7 +96,8 @@ export class AuthorizeController {
         let error : Error | undefined;
 
         try {
-            const data = await this.codeRequestValidator.run(req, { locations: ['body', 'query'] });
+            const merged = await readFromLocations(event, ['body', 'query']);
+            const data = await this.codeRequestValidator.run(merged);
 
             const result = await this.codeRequestVerifier.verify(data);
             client = result.client;
@@ -134,10 +129,7 @@ export class AuthorizeController {
         let render : CallableFunction;
 
         if (isJIT) {
-            /**
-             * @type {import('vite').ViteDevServer}
-             */
-            const vite = useRequestParam(req, 'viteServer');
+            const vite = event.store[VITE_SERVER_STORE_KEY] as ViteDevServer;
 
             html = await fs.promises.readFile(
                 path.join(UI_SOURCE_PATH, 'index.html'),
@@ -166,11 +158,11 @@ export class AuthorizeController {
             payload,
         });
 
-        return send(
-            res,
-            html
-                .replace('<!--preload-links-->', preloadLinks)
-                .replace('<!--app-html-->', appHtml),
-        );
+        const body = html
+            .replace('<!--preload-links-->', preloadLinks)
+            .replace('<!--app-html-->', appHtml);
+
+        event.response.headers.set('content-type', 'text/html; charset=utf-8');
+        return body;
     }
 }

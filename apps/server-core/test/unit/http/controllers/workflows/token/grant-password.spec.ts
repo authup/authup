@@ -12,8 +12,7 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import { isClientError } from 'hapic';
-import { createFakeClient, createFakeUser } from '../../../../../utils';
+import { createFakeClient, createFakeUser, expectClientError } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('src/http/controllers/token', () => {
@@ -42,23 +41,13 @@ describe('src/http/controllers/token', () => {
     });
 
     it('should not grant token with password grant (credentials invalid)', async () => {
-        const credentials = {
-            username: 'admin',
-            password: 'foo-bar-baz',
-        };
-
-        try {
-            await suite.client
-                .token
-                .createWithPassword(credentials);
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.status)
-                    .toEqual(400);
-                expect(e.response.data.code)
-                    .toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithPassword({
+                username: 'admin',
+                password: 'foo-bar-baz',
+            }),
+            { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+        );
     });
 
     it('should grant token with password and confidential client authentication', async () => {
@@ -96,22 +85,15 @@ describe('src/http/controllers/token', () => {
                 is_confidential: true,
             }));
 
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .token
-                .createWithPassword({
-                    username: 'admin',
-                    password: 'start123',
-                    client_id: client.id,
-                    client_secret: 'wrong-secret',
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data?.code).toEqual(ErrorCode.OAUTH_CLIENT_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithPassword({
+                username: 'admin',
+                password: 'start123',
+                client_id: client.id,
+                client_secret: 'wrong-secret',
+            }),
+            { status: 400, code: ErrorCode.OAUTH_CLIENT_INVALID },
+        );
     });
 
     it('should not grant token with password grant (inactive)', async () => {
@@ -120,19 +102,13 @@ describe('src/http/controllers/token', () => {
             active: false,
         }));
 
-        try {
-            await suite.client
-                .token
-                .createWithPassword({
-                    username: entity.name,
-                    password: 'foo-bar-baz',
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.status).toEqual(400);
-                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_INACTIVE);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithPassword({
+                username: entity.name,
+                password: 'foo-bar-baz',
+            }),
+            { status: 400, code: ErrorCode.ENTITY_INACTIVE },
+        );
 
         await suite.client.user.update(entity.id, { active: true });
 
@@ -145,18 +121,12 @@ describe('src/http/controllers/token', () => {
 
         expect(response).toBeDefined();
 
-        try {
-            await suite.client
-                .token
-                .createWithPassword({
-                    username: entity.name,
-                    password: 'foo',
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.status).toEqual(400);
-                expect(e.response.data.code).toEqual(ErrorCode.ENTITY_CREDENTIALS_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithPassword({
+                username: entity.name,
+                password: 'foo',
+            }),
+            { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+        );
     });
 });

@@ -14,7 +14,7 @@ import {
 } from '@authup/core-kit';
 import { HTTPError } from '@authup/errors';
 import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
-import type { Next, Request, Response } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import {
     AuthorizationHeaderType,
     type BasicAuthorizationHeader,
@@ -89,50 +89,38 @@ export class AuthorizationMiddleware {
 
     // --------------------------------------
 
-    async run(request: Request, response: Response, next: Next) {
+    async run(event: IRoutupEvent) {
         const requestAccessContext = new RequestPermissionEvaluator(
-            request,
+            event,
             this.permissionEvaluator,
         );
-        setRequestPermissionEvaluator(request, requestAccessContext);
+        setRequestPermissionEvaluator(event, requestAccessContext);
 
-        const { authorization: headerValue } = request.headers;
-
-        try {
-            if (typeof headerValue !== 'string') {
-                next();
-                return;
-            }
-
-            const header = parseAuthorizationHeader(headerValue);
-
-            if (header.type === AuthorizationHeaderType.BEARER) {
-                await this.verifyBearerAuthorizationHeader(request, header);
-                next();
-                return;
-            } if (header.type === AuthorizationHeaderType.BASIC) {
-                await this.verifyBasicAuthorizationHeader(request, header);
-                next();
-                return;
-            }
-
-            next(HTTPError.unsupportedHeaderType(header.type));
-        } catch (e) {
-            next(e as Error);
+        const headerValue = event.headers.get('authorization');
+        if (!headerValue) {
+            return;
         }
+
+        const header = parseAuthorizationHeader(headerValue);
+
+        if (header.type === AuthorizationHeaderType.BEARER) {
+            await this.verifyBearerAuthorizationHeader(event, header);
+            return;
+        }
+
+        if (header.type === AuthorizationHeaderType.BASIC) {
+            await this.verifyBasicAuthorizationHeader(event, header);
+            return;
+        }
+
+        throw HTTPError.unsupportedHeaderType(header.type);
     }
 
     /**
-     *
      * @throws JWTError
-     *
-     * @param request
-     * @param header
-     *
-     * @protected
      */
     protected async verifyBearerAuthorizationHeader(
-        request: Request,
+        event: IRoutupEvent,
         header: BearerAuthorizationHeader,
     ) {
         const payload = await this.oauth2TokenVerifier.verify(header.token);
@@ -144,10 +132,10 @@ export class AuthorizationMiddleware {
             throw JWTError.payloadPropertyInvalid('realm_id');
         }
 
-        setRequestToken(request, header.token);
+        setRequestToken(event, header.token);
 
         if (payload.scope) {
-            setRequestScopes(request, deserializeOAuth2Scope(payload.scope));
+            setRequestScopes(event, deserializeOAuth2Scope(payload.scope));
         }
 
         // -------------------------------------------------------
@@ -185,12 +173,12 @@ export class AuthorizationMiddleware {
         );
 
         if (identity) {
-            setRequestIdentity(request, identity);
+            setRequestIdentity(event, identity);
         }
     }
 
     protected async verifyBasicAuthorizationHeader(
-        request: Request,
+        event: IRoutupEvent,
         header: BasicAuthorizationHeader,
     ) {
         if (this.options.clientAuthBasic) {
@@ -199,8 +187,8 @@ export class AuthorizationMiddleware {
                 header.password,
             );
             if (authenticator.success) {
-                setRequestScopes(request, [ScopeName.GLOBAL]);
-                setRequestIdentity(request, {
+                setRequestScopes(event, [ScopeName.GLOBAL]);
+                setRequestIdentity(event, {
                     type: IdentityType.CLIENT,
                     data: authenticator.data,
                 });
@@ -214,8 +202,8 @@ export class AuthorizationMiddleware {
             );
 
             if (authenticated.success) {
-                setRequestScopes(request, [ScopeName.GLOBAL]);
-                setRequestIdentity(request, {
+                setRequestScopes(event, [ScopeName.GLOBAL]);
+                setRequestIdentity(event, {
                     type: IdentityType.USER,
                     data: authenticated.data,
                 });
@@ -230,8 +218,8 @@ export class AuthorizationMiddleware {
                 header.password,
             );
             if (authenticated.success) {
-                setRequestScopes(request, [ScopeName.GLOBAL]);
-                setRequestIdentity(request, {
+                setRequestScopes(event, [ScopeName.GLOBAL]);
+                setRequestIdentity(event, {
                     type: IdentityType.ROBOT,
                     data: authenticated.data,
                 });

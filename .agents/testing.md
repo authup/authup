@@ -57,6 +57,48 @@ Integration tests that spin up the full application (database, HTTP server). Tes
 - `suite.client` — a typed `@authup/core-http-kit` `Client` pointed at the running test server with admin Basic auth.
 - `suite.baseURL` — the `http://localhost:<random-port>` URL of the test server, useful for raw `fetch()` calls when the typed client doesn't fit (e.g., asserting on HTML response bodies).
 
+### HTTP test helpers
+
+`test/utils/` exports two helpers tuned for HTTP integration tests:
+
+**`expectClientError(fn, { status?, code?, data? })`** — asserts the supplied async call rejects with a hapic `ClientError` matching the given shape. Replaces the `expect.assertions(N) + try/catch + isClientError` boilerplate. `code` is shorthand for `data.code`; pass `data` for arbitrary `response.data` field assertions (e.g. OAuth2 errors carrying both `code` and `error`).
+
+```typescript
+import { expectClientError } from '../../../utils';
+
+await expectClientError(
+    () => suite.client.token.createWithClientCredentials({ client_id, client_secret: 'foo' }),
+    { status: 400, code: ErrorCode.ENTITY_CREDENTIALS_INVALID },
+);
+
+// OAuth2 error with both code and error fields
+await expectClientError(
+    () => suite.client.token.createWithAuthorizationCode({...}),
+    {
+        status: 400,
+        code: ErrorCode.OAUTH_CLIENT_INVALID,
+        data: { error: OAuth2ErrorCode.INVALID_CLIENT },
+    },
+);
+```
+
+**`httpRequest(suite, method, path, { form?, body?, headers? })`** — raw `fetch()` against the test server, for tests that need to bypass the typed `Client` (raw HTML bodies, OAuth2 redirect payloads, RFC 6749 edge cases the typed client deletes). Returns the native `Response`; caller controls status / body parsing. `form: Record<string, string>` is shorthand for urlencoded body + auto Content-Type.
+
+```typescript
+import { httpRequest } from '../../../utils';
+
+const response = await httpRequest(suite, 'POST', '/token', {
+    headers: { Authorization: `Basic ${basic}` },
+    form: {
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: 'https://example.com/redirect',
+    },
+});
+expect(response.status).toEqual(200);
+const body = await response.json();
+```
+
 ### Non-admin identity tests
 
 To test policies/permissions under a non-admin identity (e.g. `*_SELF_MANAGE` flows), grant the relevant permission to a freshly-created identity and authenticate against the server with its own bearer token:

@@ -5,39 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import process from 'node:process';
-import type { UIOptions } from '@routup/swagger';
-import { swaggerUI } from '@routup/swagger';
+import type { UIOptions as SwaggerUIOptions } from '@routup/swagger-ui';
+import { swaggerUI } from '@routup/swagger-ui';
 import type { Plugin } from 'routup';
-import { buildFilePath, load, locate } from 'locter';
-import { AuthupError } from '@authup/errors';
 
-type SwaggerMiddlewareOptions = {
+type SwaggerMiddlewareOptions = SwaggerUIOptions & {
     documentPath: string,
-    options?: UIOptions
 };
-export async function createSwaggerMiddleware(input: Partial<SwaggerMiddlewareOptions> = {}) : Promise<Plugin> {
-    let documentPath : string;
-    if (input.documentPath) {
-        documentPath = path.isAbsolute(input.documentPath) ?
-            input.documentPath :
-            path.join(process.cwd(), input.documentPath);
-    } else {
-        const locatorInfo = await locate('**/swagger.json');
-        if (!locatorInfo) {
-            throw new AuthupError('Swagger file not found.');
-        }
 
-        documentPath = buildFilePath(locatorInfo);
-    }
+export function createSwaggerMiddleware(input: SwaggerMiddlewareOptions) : Plugin {
+    const { documentPath, ...options } = input;
 
-    if (!fs.existsSync(documentPath)) {
-        throw new AuthupError(`Swagger file ( ${documentPath} ) does not exist.`);
-    }
-
-    const document = await load(documentPath);
-
-    return swaggerUI(document, input.options);
+    return swaggerUI(documentPath, options);
 }

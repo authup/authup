@@ -6,11 +6,9 @@
  */
 
 import { isUUID } from '@authup/kit';
-import { useRequestBody } from '@routup/basic/body';
-import type { Request } from 'routup';
 
-export function getRequestBodyRealmID(req: Request) : string | undefined {
-    const realmId = useRequestBody(req, 'realm_id');
+export function getBodyRealmID(body: Record<string, any> | undefined) : string | undefined {
+    const realmId = body?.realm_id;
     if (typeof realmId !== 'string') {
         return undefined;
     }

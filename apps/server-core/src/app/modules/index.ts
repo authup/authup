@@ -17,7 +17,6 @@ export * from './oauth2/index.ts';
 export * from './cache/index.ts';
 export * from './provisioning/index.ts';
 export * from './runtime/index.ts';
-export * from './swagger/index.ts';
 export * from './mail/index.ts';
 
 export * from './constants.ts';

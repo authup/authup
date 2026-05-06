@@ -8,26 +8,21 @@
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { base64URLDecode, isUUID } from '@authup/kit';
 import {
-    DBody, 
-    DController, 
-    DDelete, 
-    DGet, 
-    DPath, 
-    DPost, 
-    DPut, 
-    DRequest, 
-    DResponse, 
+    DBody,
+    DContext,
+    DController,
+    DDelete,
+    DGet,
+    DPath,
+    DPost,
+    DPut,
     DTags,
 } from '@routup/decorators';
-import type { Request, Response } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import {
-    getRequestHeader, 
-    getRequestIP, 
-    send, 
-    sendAccepted, 
-    sendCreated, 
-    sendRedirect, 
-    useRequestParam,
+    getRequestHeader,
+    getRequestIP,
+    sendRedirect,
 } from 'routup';
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
@@ -43,9 +38,9 @@ import {
 import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
+import { readRequestBody } from '@routup/basic/body';
 import { OAuth2Error } from '@authup/specs';
 import { URL } from 'node:url';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type {
     IIdentityProviderAccountManager,
     IIdentityProviderRepository,
@@ -60,13 +55,14 @@ import {
     createIdentityProviderOAuth2Authenticator,
 } from '../../../../../core/index.ts';
 import {
-    getRequestBodyRealmID,
+    getBodyRealmID,
     getRequestParamID,
     useRequestIdentityOrFail,
     useRequestParamID,
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
+import { resolveURL } from '../../../../../utils/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
@@ -105,16 +101,15 @@ export class IdentityProviderController {
 
     @DGet('', [])
     async getProviders(
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
         const {
             data, 
             meta, 
-        } = await this.repository.findMany(useRequestQuery(req));
+        } = await this.repository.findMany(useRequestQuery(event));
 
         try {
-            const permissionEvaluator = useRequestPermissionEvaluator(req);
+            const permissionEvaluator = useRequestPermissionEvaluator(event);
             await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_READ });
 
             for (const datum of data) {
@@ -131,23 +126,22 @@ export class IdentityProviderController {
             // do nothing
         }
 
-        return send(res, {
+        return {
             data,
             meta,
-        });
+        };
     }
 
     @DGet('/:id', [])
     async getProvider(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
-        const paramId = useRequestParamID(req, { isUUID: false });
+        const paramId = useRequestParamID(event, { isUUID: false });
 
         const entity = await this.repository.findOneByIdOrName(
             paramId,
-            useRequestParam(req, 'realmId'),
+            event.params.realmId,
         );
 
         if (!entity) {
@@ -155,7 +149,7 @@ export class IdentityProviderController {
         }
 
         try {
-            const permissionEvaluator = useRequestPermissionEvaluator(req);
+            const permissionEvaluator = useRequestPermissionEvaluator(event);
             await permissionEvaluator.evaluate({
                 name: PermissionName.IDENTITY_PROVIDER_READ,
                 input: new PolicyData({ [BuiltInPolicyType.ATTRIBUTES]: entity }),
@@ -164,38 +158,35 @@ export class IdentityProviderController {
             // do nothing
         }
 
-        return send(res, entity);
+        return entity;
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
         @DPath('id') id: string,
         @DBody() user: NonNullable<IdentityProvider>,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) : Promise<any> {
-        return this.write(req, res, { updateOnly: true });
+        return this.write(event, { updateOnly: true });
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
         @DBody() user: NonNullable<IdentityProvider>,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) : Promise<any> {
-        return this.write(req, res);
+        return this.write(event);
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropProvider(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) : Promise<any> {
-        const paramId = useRequestParamID(req);
+        const paramId = useRequestParamID(event);
 
-        const permissionEvaluator = useRequestPermissionEvaluator(req);
+        const permissionEvaluator = useRequestPermissionEvaluator(event);
         await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_DELETE });
 
         const entity = await this.repository.findOneBy({ id: paramId });
@@ -215,16 +206,17 @@ export class IdentityProviderController {
 
         entity.id = entityId;
 
-        return sendAccepted(res, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
         @DBody() user: NonNullable<IdentityProvider>,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) : Promise<any> {
-        return this.write(req, res);
+        return this.write(event);
     }
 
     // ---------------------------------------------------------
@@ -232,10 +224,9 @@ export class IdentityProviderController {
     @DGet('/:id/authorize-out', [])
     async authorizeOut(
         @DPath('id') _id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) {
-        const id = useRequestParamID(req);
+        const id = useRequestParamID(event);
         const entity = await this.resolve(id);
 
         if (!isOAuth2IdentityProvider(entity) && !isOpenIDIdentityProvider(entity)) {
@@ -251,7 +242,7 @@ export class IdentityProviderController {
         const parameters : AuthorizeParameters = {};
 
         let codeRequest: OAuth2AuthorizationCodeRequest | undefined;
-        const query = useRequestQuery(req);
+        const query = useRequestQuery(event);
         if (typeof query.codeRequest === 'string') {
             let codeRequestDecoded: OAuth2AuthorizationCodeRequest;
 
@@ -275,18 +266,17 @@ export class IdentityProviderController {
             codeRequest = data.data;
         }
 
-        parameters.state = await this.saveAuthorizationState(req, codeRequest);
+        parameters.state = await this.saveAuthorizationState(event, codeRequest);
 
-        return sendRedirect(res, authenticator.buildRedirectURL(parameters));
+        return sendRedirect(event, authenticator.buildRedirectURL(parameters));
     }
 
     @DGet('/:id/authorize-in', [])
     async authorizeIn(
         @DPath('id') _id: string,
-        @DRequest() req: Request,
-        @DResponse() res: Response,
+        @DContext() event: IRoutupEvent,
     ) {
-        const id = useRequestParamID(req);
+        const id = useRequestParamID(event);
 
         const entity = await this.resolve(id);
 
@@ -294,7 +284,7 @@ export class IdentityProviderController {
             throw new Error(`The provider protocol ${entity.protocol} is not valid.`);
         }
 
-        const data = await this.verifyAuthorizationState(req);
+        const data = await this.verifyAuthorizationState(event);
         if (
             entity.realm_id &&
             data.codeRequest &&
@@ -304,7 +294,7 @@ export class IdentityProviderController {
             throw OAuth2Error.requestInvalid('The provider and client realm do not match.');
         }
 
-        const { code } = useRequestQuery(req);
+        const { code } = useRequestQuery(event);
 
         const authenticator = createIdentityProviderOAuth2Authenticator({
             accountManager: this.accountManager,
@@ -338,7 +328,7 @@ export class IdentityProviderController {
         if (data.codeRequest) {
             const codeRequestKeys = Object.keys(data.codeRequest);
 
-            const url = new URL('/authorize', this.options.baseURL);
+            const url = new URL(resolveURL(this.options.baseURL, 'authorize'));
             for (const codeRequestKey_ of codeRequestKeys) {
                 const codeRequestKey = codeRequestKey_ as keyof OAuth2AuthorizationCodeRequest;
                 if (data.codeRequest[codeRequestKey]) {
@@ -348,23 +338,24 @@ export class IdentityProviderController {
 
             url.searchParams.set('code', authorizationCode.id);
 
-            return sendRedirect(res, url.href);
+            return sendRedirect(event, url.href);
         }
 
         const url = new URL(this.options.baseURL);
         url.searchParams.set('code', authorizationCode.id);
 
-        return sendRedirect(res, url.href);
+        return sendRedirect(event, url.href);
     }
 
     // ---------------------------------------------------------
 
-    private async write(req: Request, res: Response, options: {
+    private async write(event: IRoutupEvent, options: {
         updateOnly?: boolean
     } = {}): Promise<any> {
         let group: string;
-        const id = getRequestParamID(req, { isUUID: false });
-        const realmId = getRequestBodyRealmID(req);
+        const id = getRequestParamID(event, { isUUID: false });
+        const body = await readRequestBody(event);
+        const realmId = getBodyRealmID(body);
 
         let entity: IdentityProvider | null | undefined;
         if (id) {
@@ -387,7 +378,7 @@ export class IdentityProviderController {
             throw new NotFoundError();
         }
 
-        const permissionEvaluator = useRequestPermissionEvaluator(req);
+        const permissionEvaluator = useRequestPermissionEvaluator(event);
         if (entity) {
             await permissionEvaluator.preEvaluate({ name: PermissionName.IDENTITY_PROVIDER_UPDATE });
 
@@ -398,11 +389,11 @@ export class IdentityProviderController {
             group = ValidatorGroup.CREATE;
         }
 
-        const validator = new RoutupContainerAdapter(new IdentityProviderValidator());
-        const data = await validator.run(req, { group });
+        const validator = new IdentityProviderValidator();
+        const data = await validator.run(body, { group });
 
-        const attributesValidator = new RoutupContainerAdapter(new IdentityProviderAttributesValidator());
-        const attributes = await attributesValidator.run(req);
+        const attributesValidator = new IdentityProviderAttributesValidator();
+        const attributes = await attributesValidator.run(body);
 
         await this.repository.validateJoinColumns(data);
 
@@ -418,7 +409,7 @@ export class IdentityProviderController {
             });
         } else {
             if (!data.realm_id) {
-                const identity = useRequestIdentityOrFail(req);
+                const identity = useRequestIdentityOrFail(event);
                 data.realm_id = identity.realmId;
             }
 
@@ -434,13 +425,17 @@ export class IdentityProviderController {
             entity = this.repository.merge(entity, data);
             await this.repository.saveWithEA(entity, attributes);
 
-            return sendAccepted(res, entity);
+            event.response.status = 202;
+
+            return entity;
         }
 
         entity = this.repository.create(data);
         await this.repository.saveWithEA(entity, attributes);
 
-        return sendCreated(res, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     // ---------------------------------------------------------
@@ -458,25 +453,25 @@ export class IdentityProviderController {
     // ---------------------------------------------------------
 
     private async saveAuthorizationState(
-        req: Request,
+        event: IRoutupEvent,
         codeRequest?: OAuth2AuthorizationCodeRequest,
     ) : Promise<string> {
         return this.stateManager.save({
             codeRequest,
-            ip: getRequestIP(req, { trustProxy: true }),
-            userAgent: getRequestHeader(req, 'user-agent'),
+            ip: getRequestIP(event, { trustProxy: true }) ?? '',
+            userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
 
-    private async verifyAuthorizationState(req: Request): Promise<OAuth2AuthorizationState> {
-        const query = useRequestQuery(req);
+    private async verifyAuthorizationState(event: IRoutupEvent): Promise<OAuth2AuthorizationState> {
+        const query = useRequestQuery(event);
         if (typeof query.state !== 'string') {
             throw OAuth2Error.stateInvalid();
         }
 
         return this.stateManager.verify(query.state, {
-            ip: getRequestIP(req, { trustProxy: true }),
-            userAgent: getRequestHeader(req, 'user-agent'),
+            ip: getRequestIP(event, { trustProxy: true }) ?? '',
+            userAgent: getRequestHeader(event, 'user-agent') ?? undefined,
         });
     }
 }

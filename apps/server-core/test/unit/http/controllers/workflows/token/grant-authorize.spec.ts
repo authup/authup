@@ -19,9 +19,8 @@ import {
     OAuth2ErrorCode,
 } from '@authup/specs';
 import { ErrorCode } from '@authup/errors';
-import { isClientError } from 'hapic';
 import { buildOAuth2CodeChallenge, generateOAuth2CodeVerifier } from '../../../../../../src/core';
-import { createFakeClient } from '../../../../../utils';
+import { createFakeClient, expectClientError, httpRequest } from '../../../../../utils';
 import { createTestApplication } from '../../../../../app';
 
 describe('grant-authorize', () => {
@@ -172,24 +171,16 @@ describe('grant-authorize', () => {
         const url = new URL(response.url);
         const code = url.searchParams.get('code')!;
 
-        expect.assertions(3);
-
-        try {
-            await suite.client
-                .token
-                .createWithAuthorizationCode({
-                    client_id: confidentialClient.id,
-                    client_secret: confidentialSecret,
-                    redirect_uri: 'https://example.com/redirect',
-                    code,
-                    code_verifier: generateOAuth2CodeVerifier(),
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data).toBeDefined();
-                expect(e.response?.data?.code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithAuthorizationCode({
+                client_id: confidentialClient.id,
+                client_secret: confidentialSecret,
+                redirect_uri: 'https://example.com/redirect',
+                code,
+                code_verifier: generateOAuth2CodeVerifier(),
+            }),
+            { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
+        );
     });
 
     it('should reject token exchange when confidential client omits client_secret', async () => {
@@ -207,22 +198,18 @@ describe('grant-authorize', () => {
         const url = new URL(response.url);
         const code = url.searchParams.get('code')!;
 
-        expect.assertions(2);
-
-        try {
-            await suite.client
-                .token
-                .createWithAuthorizationCode({
-                    client_id: confidentialClient.id,
-                    redirect_uri: 'https://example.com/redirect',
-                    code,
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data?.code).toEqual(ErrorCode.OAUTH_CLIENT_INVALID);
-                expect(e.response?.data?.error).toEqual(OAuth2ErrorCode.INVALID_CLIENT);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithAuthorizationCode({
+                client_id: confidentialClient.id,
+                redirect_uri: 'https://example.com/redirect',
+                code,
+            }),
+            {
+                status: 400,
+                code: ErrorCode.OAUTH_CLIENT_INVALID,
+                data: { error: OAuth2ErrorCode.INVALID_CLIENT },
+            },
+        );
     });
 
     it('should reject token exchange when confidential client provides wrong client_secret', async () => {
@@ -240,22 +227,15 @@ describe('grant-authorize', () => {
         const url = new URL(response.url);
         const code = url.searchParams.get('code')!;
 
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .token
-                .createWithAuthorizationCode({
-                    client_id: confidentialClient.id,
-                    client_secret: 'wrong-secret',
-                    redirect_uri: 'https://example.com/redirect',
-                    code,
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data?.code).toEqual(ErrorCode.OAUTH_CLIENT_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithAuthorizationCode({
+                client_id: confidentialClient.id,
+                client_secret: 'wrong-secret',
+                redirect_uri: 'https://example.com/redirect',
+                code,
+            }),
+            { status: 400, code: ErrorCode.OAUTH_CLIENT_INVALID },
+        );
     });
 
     it('should reject token exchange when authenticated client_id does not match the code', async () => {
@@ -283,44 +263,30 @@ describe('grant-authorize', () => {
                 is_confidential: true,
             }));
 
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .token
-                .createWithAuthorizationCode({
-                    client_id: otherClient.id,
-                    client_secret: otherSecret,
-                    redirect_uri: 'https://example.com/redirect',
-                    code,
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data?.code).toEqual(ErrorCode.OAUTH_GRANT_INVALID);
-            }
-        }
+        await expectClientError(
+            () => suite.client.token.createWithAuthorizationCode({
+                client_id: otherClient.id,
+                client_secret: otherSecret,
+                redirect_uri: 'https://example.com/redirect',
+                code,
+            }),
+            { status: 400, code: ErrorCode.OAUTH_GRANT_INVALID },
+        );
     });
 
     it('should reject /authorize for public client without code_challenge', async () => {
         const state = generateOAuth2CodeVerifier();
 
-        expect.assertions(1);
-
-        try {
-            await suite.client
-                .authorize
-                .confirm({
-                    response_type: OAuth2AuthorizationResponseType.CODE,
-                    client_id: publicClient.id,
-                    redirect_uri: 'https://example.com/redirect',
-                    scope: `${ScopeName.GLOBAL}`,
-                    state,
-                });
-        } catch (e) {
-            if (isClientError(e)) {
-                expect(e.response?.data?.error).toEqual(OAuth2ErrorCode.INVALID_REQUEST);
-            }
-        }
+        await expectClientError(
+            () => suite.client.authorize.confirm({
+                response_type: OAuth2AuthorizationResponseType.CODE,
+                client_id: publicClient.id,
+                redirect_uri: 'https://example.com/redirect',
+                scope: `${ScopeName.GLOBAL}`,
+                state,
+            }),
+            { data: { error: OAuth2ErrorCode.INVALID_REQUEST } },
+        );
     });
 
     it('should reject token exchange when client_secret is provided without client_id', async () => {
@@ -338,15 +304,13 @@ describe('grant-authorize', () => {
         const url = new URL(response.url);
         const code = url.searchParams.get('code')!;
 
-        const tokenResponse = await fetch(`${suite.baseURL}/token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
+        const tokenResponse = await httpRequest(suite, 'POST', '/token', {
+            form: {
                 grant_type: 'authorization_code',
                 code,
                 redirect_uri: 'https://example.com/redirect',
                 client_secret: confidentialSecret,
-            }).toString(),
+            },
         });
 
         expect(tokenResponse.status).toEqual(400);
@@ -393,17 +357,13 @@ describe('grant-authorize', () => {
         const encodedSecret = encodeURIComponent(specialSecret);
         const basic = Buffer.from(`${encodedId}:${encodedSecret}`).toString('base64');
 
-        const tokenResponse = await fetch(`${suite.baseURL}/token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Authorization: `Basic ${basic}`,
-            },
-            body: new URLSearchParams({
+        const tokenResponse = await httpRequest(suite, 'POST', '/token', {
+            headers: { Authorization: `Basic ${basic}` },
+            form: {
                 grant_type: 'authorization_code',
                 code,
                 redirect_uri: 'https://example.com/redirect',
-            }).toString(),
+            },
         });
 
         expect(tokenResponse.status).toEqual(200);
@@ -431,19 +391,15 @@ describe('grant-authorize', () => {
         const basic = Buffer
             .from(`${confidentialClient.id}:${confidentialSecret}`)
             .toString('base64');
-        const tokenResponse = await fetch(`${suite.baseURL}/token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                Authorization: `Basic ${basic}`,
-            },
-            body: new URLSearchParams({
+        const tokenResponse = await httpRequest(suite, 'POST', '/token', {
+            headers: { Authorization: `Basic ${basic}` },
+            form: {
                 grant_type: 'authorization_code',
                 code,
                 redirect_uri: 'https://example.com/redirect',
                 client_id: confidentialClient.id,
                 client_secret: confidentialSecret,
-            }).toString(),
+            },
         });
 
         expect(tokenResponse.status).toEqual(400);

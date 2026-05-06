@@ -6,23 +6,23 @@
  */
 
 import {
-    DBody, 
-    DController, 
-    DDelete, 
-    DGet, 
-    DPath, 
-    DPost, 
-    DPut, 
-    DRequest, 
-    DResponse, 
+    DBody,
+    DContext,
+    DController,
+    DDelete,
+    DGet,
+    DPath,
+    DPost,
+    DPut,
     DTags,
 } from '@routup/decorators';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import { send, sendAccepted, sendCreated } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
 import type { IRealmService } from '../../../../../core/index.ts';
+import { resolveURL } from '../../../../../utils/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
@@ -55,43 +55,35 @@ export class RealmController {
 
     @DGet('', [])
     async getMany(
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ): Promise<any> {
         const {
             data, 
             meta, 
-        } = await this.service.getMany(useRequestQuery(req));
+        } = await this.service.getMany(useRequestQuery(event));
 
-        return send(res, {
+        return {
             data,
             meta, 
-        });
+        };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) : Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
-        return sendCreated(res, entity);
+        event.response.status = 201;
+
+        return entity;
     }
 
     @DGet('/:id', [])
-    async get(
-        @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
-    ): Promise<any> {
-        const entity = await this.service.getOne(
-            id,
-        );
-
-        return send(res, entity);
+    async get(@DPath('id') id: string): Promise<any> {
+        return this.service.getOne(id);
     }
 
     @DGet('/:id/.well-known/openid-configuration', [])
@@ -100,14 +92,14 @@ export class RealmController {
     ): Promise<OpenIDProviderMetadata> {
         const entity = await this.service.getOne(id);
 
-        const baseURL = this.options.baseURL.replace(/\/+$/, '');
+        const { baseURL } = this.options;
 
         return {
-            issuer: `${baseURL}/realms/${entity.name}`,
+            issuer: resolveURL(baseURL, `realms/${entity.name}`).replace(/\/+$/, ''),
 
-            authorization_endpoint: new URL('authorize', this.options.baseURL).href,
+            authorization_endpoint: resolveURL(baseURL, 'authorize'),
 
-            jwks_uri: new URL(`realms/${entity.name}/jwks`, this.options.baseURL).href,
+            jwks_uri: resolveURL(baseURL, `realms/${entity.name}/jwks`),
 
             response_types_supported: [
                 OAuth2AuthorizationResponseType.CODE,
@@ -120,73 +112,69 @@ export class RealmController {
             ],
 
             id_token_signing_alg_values_supported: [
-                'HS256', 
-                'HS384', 
-                'HS512', 
-                'RS256', 
-                'RS384', 
-                'RS512', 
+                'HS256',
+                'HS384',
+                'HS512',
+                'RS256',
+                'RS384',
+                'RS512',
                 'none',
             ],
 
-            token_endpoint: new URL('token', this.options.baseURL).href,
+            token_endpoint: resolveURL(baseURL, 'token'),
 
-            introspection_endpoint: new URL('token/introspect', this.options.baseURL).href,
+            introspection_endpoint: resolveURL(baseURL, 'token/introspect'),
 
-            revocation_endpoint: new URL('token', this.options.baseURL).href,
+            revocation_endpoint: resolveURL(baseURL, 'token'),
 
             // -----------------------------------------------------------
 
             service_documentation: 'https://authup.org/',
 
-            userinfo_endpoint: new URL('users/@me', this.options.baseURL).href,
+            userinfo_endpoint: resolveURL(baseURL, 'users/@me'),
         };
     }
 
     @DGet('/:id/jwks', [])
-    async getCerts(
-        @DPath('id') id: string,
-        @DResponse() res: any,
-    ): Promise<OAuth2JsonWebKey[]> {
+    async getCerts(@DPath('id') id: string): Promise<OAuth2JsonWebKey[]> {
         const entity = await this.service.getOne(id);
-        return getJwksRouteHandler(res, this.keyRepository, entity.id);
+        return getJwksRouteHandler(this.keyRepository, entity.id);
     }
 
     @DGet('/:id/jwks/:keyId', [])
     async getCert(
         @DPath('id') id: string,
         @DPath('keyId') keyId: string,
-        @DResponse() res: any,
     ): Promise<OAuth2JsonWebKey> {
         const entity = await this.service.getOne(id);
-        return getJwkRouteHandler(res, this.keyRepository, keyId, entity.id);
+        return getJwkRouteHandler(this.keyRepository, keyId, entity.id);
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) : Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
             data,
             actor,
         );
 
-        return sendAccepted(res, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
         @DBody() data: any,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) : Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const {
             entity, 
             created, 
@@ -196,22 +184,20 @@ export class RealmController {
             actor,
         );
 
-        if (created) {
-            return sendCreated(res, entity);
-        }
-
-        return sendAccepted(res, entity);
+        event.response.status = created ? 201 : 202;
+        return entity;
     }
 
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DRequest() req: any,
-        @DResponse() res: any,
+        @DContext() event: IRoutupEvent,
     ) : Promise<any> {
-        const actor = buildActorContext(req);
+        const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
-        return sendAccepted(res, entity);
+        event.response.status = 202;
+
+        return entity;
     }
 }

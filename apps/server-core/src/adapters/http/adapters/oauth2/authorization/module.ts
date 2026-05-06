@@ -5,34 +5,32 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Request } from 'routup';
+import type { IRoutupEvent } from 'routup';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
-import { RoutupContainerAdapter } from '@validup/adapter-routup';
 import type { IOAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationResult } from '../../../../../core/index.ts';
 import { OAuth2Authorization, OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
-import { useRequestIdentityOrFail } from '../../../request/index.ts';
+import { readFromLocations, useRequestIdentityOrFail } from '../../../request/index.ts';
 import type { HTTPOAuth2AuthorizationManagerContext } from './types.ts';
 
 export class HTTPOAuth2Authorizer extends OAuth2Authorization {
     protected codeRequestVerifier : IOAuth2AuthorizationCodeRequestVerifier;
 
-    protected requestValidator : RoutupContainerAdapter<OAuth2AuthorizationCodeRequest>;
+    protected requestValidator : OAuth2AuthorizationCodeRequestValidator;
 
     constructor(ctx: HTTPOAuth2AuthorizationManagerContext) {
         super(ctx);
 
         this.codeRequestVerifier = ctx.codeRequestVerifier;
 
-        const validator = new OAuth2AuthorizationCodeRequestValidator();
-        this.requestValidator = new RoutupContainerAdapter(validator);
+        this.requestValidator = new OAuth2AuthorizationCodeRequestValidator();
     }
 
-    async authorizeWithRequest(req: Request) : Promise<OAuth2AuthorizationResult> {
-        const codeRequestValidated = await this.validateWithRequest(req);
+    async authorizeWithRequest(event: IRoutupEvent) : Promise<OAuth2AuthorizationResult> {
+        const codeRequestValidated = await this.validateWithRequest(event);
 
         const { data } = await this.codeRequestVerifier.verify(codeRequestValidated);
 
-        const identity = useRequestIdentityOrFail(req);
+        const identity = useRequestIdentityOrFail(event);
 
         return this.authorize(data, identity.raw);
     }
@@ -41,12 +39,11 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
      * Validate authorization request.
      *
      * @throws OAuth2Error
-     *
-     * @param req
      */
     async validateWithRequest(
-        req: Request,
+        event: IRoutupEvent,
     ) : Promise<OAuth2AuthorizationCodeRequest> {
-        return this.requestValidator.run(req, { locations: ['body', 'query'] });
+        const data = await readFromLocations(event, ['body', 'query']);
+        return this.requestValidator.run(data);
     }
 }

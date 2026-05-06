@@ -10,6 +10,7 @@ import { ModuleName } from '../constants.ts';
 import type { IContainer } from 'eldin';
 import { LoggerInjectionKey } from '../logger/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
+import { resolveURL } from '../../../utils/index.ts';
 
 export class RuntimeModule implements IModule {
     readonly name: string;
@@ -30,7 +31,7 @@ export class RuntimeModule implements IModule {
         logger.debug(`Port: ${config.port}`);
         logger.debug(`Host: ${config.host}`);
         logger.debug(`Base-URL: ${config.publicUrl}`);
-        logger.debug(`Docs-URL: ${new URL('docs', config.publicUrl).href}`);
+        logger.debug(`Docs-URL: ${resolveURL(config.publicUrl, 'docs')}`);
     }
 
     // ----------------------------------------------------
