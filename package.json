@@ -64,8 +64,7 @@
         "test": "npx nx run-many -t test",
         "lint": "eslint --ext .ts ./packages ./apps",
         "lint:fix": "npm run lint -- --fix",
-        "prepare": "husky",
-        "postinstall": "node scripts/patch-trapi-metadata.mjs"
+        "prepare": "husky"
     },
     "engines": {
         "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
