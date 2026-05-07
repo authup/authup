@@ -9,7 +9,7 @@ import type { UserAttribute } from '@authup/core-kit';
 
 // `UserAttribute` has no dedicated validator class — `UserAttributeService` validates
 // inline and accepts `name`, `value`, and `user_id` (defaulted to the actor on self-edit).
-export type UserAttributeCreatePayload =    & Pick<UserAttribute, 'name'> &
+export type UserAttributeCreatePayload = Pick<UserAttribute, 'name'> &
     Partial<Pick<UserAttribute, 'value' | 'user_id'>>;
 export type UserAttributeUpdatePayload = Partial<UserAttributeCreatePayload>;
 export type UserAttributeSavePayload = UserAttributeCreatePayload;

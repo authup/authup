@@ -13,7 +13,7 @@ export type PermissionAPICheckResponse = {
 };
 
 // Mirrors `PermissionValidator` mounts in @authup/core-kit.
-export type PermissionCreatePayload =    & Pick<Permission, 'name'> &
+export type PermissionCreatePayload = Pick<Permission, 'name'> &
     Partial<Pick<Permission, 'display_name' | 'description' | 'client_id' | 'realm_id' | 'decision_strategy'>>;
 export type PermissionUpdatePayload = Partial<PermissionCreatePayload>;
 export type PermissionSavePayload = PermissionCreatePayload;

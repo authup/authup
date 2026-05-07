@@ -8,6 +8,6 @@
 import type { ClientPermission } from '@authup/core-kit';
 
 // Mirrors `ClientPermissionValidator` mounts in @authup/core-kit.
-export type ClientPermissionCreatePayload =    & Pick<ClientPermission, 'client_id' | 'permission_id'> &
+export type ClientPermissionCreatePayload = Pick<ClientPermission, 'client_id' | 'permission_id'> &
     Partial<Pick<ClientPermission, 'policy_id'>>;
 export type ClientPermissionUpdatePayload = Partial<ClientPermissionCreatePayload>;

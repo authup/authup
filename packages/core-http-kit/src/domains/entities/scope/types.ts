@@ -8,7 +8,7 @@
 import type { Scope } from '@authup/core-kit';
 
 // Mirrors `ScopeValidator` mounts in @authup/core-kit.
-export type ScopeCreatePayload =    & Pick<Scope, 'name'> &
+export type ScopeCreatePayload = Pick<Scope, 'name'> &
     Partial<Pick<Scope, 'display_name' | 'description' | 'realm_id'>>;
 export type ScopeUpdatePayload = Partial<ScopeCreatePayload>;
 export type ScopeSavePayload = ScopeCreatePayload;

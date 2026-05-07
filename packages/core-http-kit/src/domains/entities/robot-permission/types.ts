@@ -8,6 +8,6 @@
 import type { RobotPermission } from '@authup/core-kit';
 
 // Mirrors `RobotPermissionValidator` mounts in @authup/core-kit.
-export type RobotPermissionCreatePayload =    & Pick<RobotPermission, 'robot_id' | 'permission_id'> &
+export type RobotPermissionCreatePayload = Pick<RobotPermission, 'robot_id' | 'permission_id'> &
     Partial<Pick<RobotPermission, 'policy_id'>>;
 export type RobotPermissionUpdatePayload = Partial<RobotPermissionCreatePayload>;

@@ -13,10 +13,10 @@ import type { IdentityProvider } from '@authup/core-kit';
 //
 // `protocol` is mounted unconditionally (no group filter, no `optional: true`), so the
 // validator demands it on both CREATE and UPDATE — UpdatePayload reflects that.
-export type IdentityProviderCreatePayload =    & Pick<IdentityProvider, 'name' | 'enabled' | 'protocol'> &
+export type IdentityProviderCreatePayload = Pick<IdentityProvider, 'name' | 'enabled' | 'protocol'> &
     Partial<Pick<IdentityProvider, 'display_name' | 'realm_id' | 'preset'>> &
     Record<string, any>;
-export type IdentityProviderUpdatePayload =    & Pick<IdentityProvider, 'protocol'> &
+export type IdentityProviderUpdatePayload = Pick<IdentityProvider, 'protocol'> &
     Partial<Pick<IdentityProvider, 'name' | 'enabled' | 'display_name' | 'realm_id' | 'preset'>> &
     Record<string, any>;
 export type IdentityProviderSavePayload = IdentityProviderCreatePayload;

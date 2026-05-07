@@ -20,7 +20,7 @@ type UserOptionalFields = Pick<User, 'name_locked' |
     'status' |
     'status_message'>;
 
-export type UserCreatePayload =    & Pick<User, 'name' | 'email'> &
+export type UserCreatePayload = Pick<User, 'name' | 'email'> &
     Partial<UserOptionalFields>;
 
 export type UserUpdatePayload = Partial<UserCreatePayload> & { password_repeat?: User['password'] };

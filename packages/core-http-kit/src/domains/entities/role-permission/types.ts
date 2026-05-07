@@ -8,6 +8,6 @@
 import type { RolePermission } from '@authup/core-kit';
 
 // Mirrors `RolePermissionValidator` mounts in @authup/core-kit.
-export type RolePermissionCreatePayload =    & Pick<RolePermission, 'role_id' | 'permission_id'> &
+export type RolePermissionCreatePayload = Pick<RolePermission, 'role_id' | 'permission_id'> &
     Partial<Pick<RolePermission, 'policy_id'>>;
 export type RolePermissionUpdatePayload = Partial<RolePermissionCreatePayload>;

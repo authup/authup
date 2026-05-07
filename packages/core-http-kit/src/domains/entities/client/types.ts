@@ -8,7 +8,7 @@
 import type { Client } from '@authup/core-kit';
 
 // Mirrors `ClientValidator` mounts in @authup/core-kit.
-export type ClientCreatePayload =    & Pick<Client, 'name'> &
+export type ClientCreatePayload = Pick<Client, 'name'> &
     Partial<Pick<Client, 'active' |
         'is_confidential' |
         'display_name' |

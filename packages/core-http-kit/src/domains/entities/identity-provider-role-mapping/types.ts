@@ -8,6 +8,6 @@
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 
 // Mirrors `IdentityProviderRoleMappingValidator` mounts in @authup/core-kit.
-export type IdentityProviderRoleMappingCreatePayload =    & Pick<IdentityProviderRoleMapping, 'provider_id' | 'role_id'> &
+export type IdentityProviderRoleMappingCreatePayload = Pick<IdentityProviderRoleMapping, 'provider_id' | 'role_id'> &
     Partial<Pick<IdentityProviderRoleMapping, 'name' | 'value' | 'value_is_regex' | 'synchronization_mode'>>;
 export type IdentityProviderRoleMappingUpdatePayload = Partial<IdentityProviderRoleMappingCreatePayload>;
