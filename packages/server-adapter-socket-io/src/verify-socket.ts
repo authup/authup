@@ -7,12 +7,7 @@
 
 import { extractBearerToken } from '@authup/server-adapter-kit';
 import type { TokenVerificationData } from '@authup/server-adapter-kit';
-import type {
-    MiddlewareOptions,
-    Next,
-    Socket,
-    VerifySocketOptions,
-} from './types';
+import type { Socket, VerifySocketOptions } from './types';
 
 export async function verifySocket(
     socket: Socket,
@@ -32,20 +27,5 @@ export async function verifySocket(
         token = extractBearerToken(token)!;
     }
 
-    return options.tokenVerifier.verify(token);
-}
-
-export function createMiddleware(context: MiddlewareOptions) {
-    return async (socket: Socket, next: Next) => {
-        try {
-            const data = await verifySocket(socket, context);
-            if (data) {
-                context.tokenVerifierHandler(socket, data);
-            }
-        } catch (e) {
-            return next(e as Error);
-        }
-
-        return next();
-    };
+    return options.tokenVerifier.verify(token as string);
 }
