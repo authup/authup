@@ -6,7 +6,10 @@
  */
 
 import { defineCommand } from 'citty';
+import process from 'node:process';
 import { createApplication } from '../../app/index.ts';
+
+const FORCE_EXIT_TIMEOUT_MS = 10_000;
 
 export function defineCLIStartCommand() {
     return defineCommand({
@@ -15,6 +18,31 @@ export function defineCLIStartCommand() {
             const app = createApplication();
 
             await app.setup();
+
+            let shuttingDown = false;
+            const shutdown = async (signal: NodeJS.Signals) => {
+                if (shuttingDown) {
+                    process.exit(1);
+                }
+                shuttingDown = true;
+
+                const force = setTimeout(() => {
+                    process.stderr.write(`\n${signal} teardown timed out after ${FORCE_EXIT_TIMEOUT_MS}ms — forcing exit.\n`);
+                    process.exit(1);
+                }, FORCE_EXIT_TIMEOUT_MS);
+                force.unref();
+
+                try {
+                    await app.teardown();
+                    process.exit(0);
+                } catch (err) {
+                    process.stderr.write(`Error during ${signal} teardown: ${(err as Error).stack ?? String(err)}\n`);
+                    process.exit(1);
+                }
+            };
+
+            process.on('SIGINT', shutdown);
+            process.on('SIGTERM', shutdown);
         },
     });
 }

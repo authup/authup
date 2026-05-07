@@ -13,6 +13,17 @@ export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
     router.use(cors({
         origin: true,
         credentials: true,
+        // `credentials: true` is incompatible with the `*` wildcard for
+        // exposeHeaders, so enumerate the response headers JS clients need:
+        // - ratelimit-* / retry-after: emitted by @routup/rate-limit
+        // - etag: emitted by routup when router-level etag is enabled
+        exposeHeaders: [
+            'ratelimit-limit',
+            'ratelimit-remaining',
+            'ratelimit-reset',
+            'retry-after',
+            'etag',
+        ],
         ...(input ?? {}),
     }));
 }

@@ -52,6 +52,9 @@ export class HTTPModule implements IModule {
             port: config.port,
             hostname: config.host,
             silent: true,
+            // Shutdown is driven by the orkos teardown chain (see cli/commands/start.ts);
+            // srvx's plugin would only close the HTTP server, leaving DB / cache / etc. open.
+            gracefulShutdown: false,
         });
 
         await server.ready();
