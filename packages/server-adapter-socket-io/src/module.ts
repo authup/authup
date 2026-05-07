@@ -6,22 +6,42 @@
  */
 
 import { extractBearerToken } from '@authup/server-adapter-kit';
-import type { MiddlewareOptions, Next, Socket } from './types';
+import type { TokenVerificationData } from '@authup/server-adapter-kit';
+import type {
+    MiddlewareOptions,
+    Next,
+    Socket,
+    VerifySocketOptions,
+} from './types';
+
+export async function verifySocket(
+    socket: Socket,
+    options: VerifySocketOptions,
+): Promise<TokenVerificationData | undefined> {
+    let { token } = socket.handshake.auth;
+
+    if ((!token || typeof token !== 'string') && options.tokenBySocket) {
+        token = options.tokenBySocket(socket);
+    }
+
+    if (!token || typeof token !== 'string') {
+        return undefined;
+    }
+
+    if (token.startsWith('Bearer ')) {
+        token = extractBearerToken(token)!;
+    }
+
+    return options.tokenVerifier.verify(token);
+}
 
 export function createMiddleware(context: MiddlewareOptions) {
     return async (socket: Socket, next: Next) => {
-        let { token } = socket.handshake.auth;
-
-        if (!token || typeof token !== 'string') {
-            return next();
-        }
-
         try {
-            if (token.startsWith('Bearer ')) {
-                token = extractBearerToken(token)!;
+            const data = await verifySocket(socket, context);
+            if (data) {
+                context.tokenVerifierHandler(socket, data);
             }
-            const data = await context.tokenVerifier.verify(token);
-            context.tokenVerifierHandler(socket, data);
         } catch (e) {
             return next(e as Error);
         }
