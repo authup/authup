@@ -22,8 +22,7 @@ export type BuiltInPolicyResponse<
 // Mirrors `PolicyValidator` mounts in @authup/core-kit. Policies carry dynamic per-type
 // attributes loaded as extra-attributes; the `& Record<string, any>` keeps those open.
 type PolicyValidatedFields =    & Pick<Policy, 'name' | 'type'> &
-    Partial<Pick<Policy, 'display_name' | 'invert' | 'realm_id'>> &
-    { parent_id?: string | null };
+    Partial<Pick<Policy, 'display_name' | 'invert' | 'parent_id' | 'realm_id'>>;
 export type PolicyCreatePayload = PolicyValidatedFields & Record<string, any>;
 export type PolicyUpdatePayload = Partial<PolicyValidatedFields> & Record<string, any>;
 export type PolicySavePayload = PolicyCreatePayload;
