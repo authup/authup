@@ -17,12 +17,14 @@ export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
         // exposeHeaders, so enumerate the response headers JS clients need:
         // - ratelimit-* / retry-after: emitted by @routup/rate-limit
         // - etag: emitted by routup when router-level etag is enabled
+        // - content-disposition: emitted by routup's sendFile for downloads
         exposeHeaders: [
             'ratelimit-limit',
             'ratelimit-remaining',
             'ratelimit-reset',
             'retry-after',
             'etag',
+            'content-disposition',
         ],
         ...(input ?? {}),
     }));
