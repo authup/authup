@@ -13,8 +13,8 @@ export type EntityRecordResponse<R> = R;
 export type EntityCollectionResponse<R> = {
     data: R[],
     meta: {
-        limit: number,
-        offset: number,
+        limit?: number,
+        offset?: number,
         total: number
     }
 };

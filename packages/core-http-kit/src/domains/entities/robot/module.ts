@@ -11,6 +11,11 @@ import type { Robot } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    RobotCreatePayload,
+    RobotSavePayload,
+    RobotUpdatePayload,
+} from './types';
 
 export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
     async getMany(
@@ -42,7 +47,7 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
     }
 
     async create(
-        data: Partial<Robot>,
+        data: RobotCreatePayload,
     ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client
             .post('robots', nullifyEmptyObjectProperties(data));
@@ -52,7 +57,7 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
 
     async update(
         id: Robot['id'],
-        data: Partial<Robot>,
+        data: RobotUpdatePayload,
     ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client.post(`robots/${id}`, nullifyEmptyObjectProperties(data));
 
@@ -61,7 +66,7 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<Robot>,
+        data: RobotSavePayload,
     ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client.put(`robots/${idOrName}`, nullifyEmptyObjectProperties(data));
 

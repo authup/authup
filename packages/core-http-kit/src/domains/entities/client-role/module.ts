@@ -10,6 +10,7 @@ import { buildQuery } from 'rapiq';
 import type { ClientRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { ClientRoleCreatePayload } from './types';
 
 export class ClientRoleAPI extends BaseAPI implements EntityAPISlim<ClientRole> {
     async getMany(data: BuildInput<ClientRole> = {}): Promise<EntityCollectionResponse<ClientRole>> {
@@ -30,7 +31,7 @@ export class ClientRoleAPI extends BaseAPI implements EntityAPISlim<ClientRole> 
         return response.data;
     }
 
-    async create(data: Partial<ClientRole>): Promise<EntityRecordResponse<ClientRole>> {
+    async create(data: ClientRoleCreatePayload): Promise<EntityRecordResponse<ClientRole>> {
         const response = await this.client.post('client-roles', data);
 
         return response.data;

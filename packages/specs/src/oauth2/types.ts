@@ -113,18 +113,18 @@ export type OAuth2TokenIntrospectionResponse = OAuth2TokenPayload & {
 export type OAuth2JsonWebKey = {
     alg: string,
     kid: string,
-    crv?: string | undefined;
-    d?: string | undefined;
-    dp?: string | undefined;
-    dq?: string | undefined;
-    e: string | undefined;
-    k?: string | undefined;
-    kty: string | undefined;
-    n: string | undefined;
-    p?: string | undefined;
-    q?: string | undefined;
-    qi?: string | undefined;
-    x?: string | undefined;
-    y?: string | undefined;
+    crv?: string;
+    d?: string;
+    dp?: string;
+    dq?: string;
+    e?: string;
+    k?: string;
+    kty?: string;
+    n?: string;
+    p?: string;
+    q?: string;
+    qi?: string;
+    x?: string;
+    y?: string;
     [key: string]: unknown;
 };

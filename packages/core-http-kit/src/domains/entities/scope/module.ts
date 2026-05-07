@@ -11,6 +11,11 @@ import type { Scope } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    ScopeCreatePayload,
+    ScopeSavePayload,
+    ScopeUpdatePayload,
+} from './types';
 
 export class ScopeAPI extends BaseAPI implements EntityAPI<Scope> {
     async getMany(data?: BuildInput<Scope>): Promise<EntityCollectionResponse<Scope>> {
@@ -31,13 +36,13 @@ export class ScopeAPI extends BaseAPI implements EntityAPI<Scope> {
         return response.data;
     }
 
-    async create(data: Partial<Scope>): Promise<EntityRecordResponse<Scope>> {
+    async create(data: ScopeCreatePayload): Promise<EntityRecordResponse<Scope>> {
         const response = await this.client.post('scopes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Scope['id'], data: Partial<Scope>): Promise<EntityRecordResponse<Scope>> {
+    async update(id: Scope['id'], data: ScopeUpdatePayload): Promise<EntityRecordResponse<Scope>> {
         const response = await this.client.post(`scopes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -45,7 +50,7 @@ export class ScopeAPI extends BaseAPI implements EntityAPI<Scope> {
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<Scope>,
+        data: ScopeSavePayload,
     ): Promise<EntityRecordResponse<Scope>> {
         const response = await this.client.put(`scopes/${idOrName}`, nullifyEmptyObjectProperties(data));
 

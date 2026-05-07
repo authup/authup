@@ -10,6 +10,7 @@ import { buildQuery } from 'rapiq';
 import type { ClientScope } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { ClientScopeCreatePayload } from './types';
 
 export class ClientScopeAPI extends BaseAPI implements EntityAPISlim<ClientScope> {
     async getMany(data?: BuildInput<ClientScope>) : Promise<EntityCollectionResponse<ClientScope>> {
@@ -29,7 +30,7 @@ export class ClientScopeAPI extends BaseAPI implements EntityAPISlim<ClientScope
         return response.data;
     }
 
-    async create(data: Partial<ClientScope>) : Promise<EntityRecordResponse<ClientScope>> {
+    async create(data: ClientScopeCreatePayload) : Promise<EntityRecordResponse<ClientScope>> {
         const response = await this.client.post('client-scopes', data);
 
         return response.data;

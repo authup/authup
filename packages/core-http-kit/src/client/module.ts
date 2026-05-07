@@ -164,7 +164,7 @@ export class Client extends BaseClient {
         }));
     }
 
-    async getJwks() : Promise<OAuth2JsonWebKey[]> {
+    async getJwks() : Promise<{ keys: OAuth2JsonWebKey[] }> {
         const response = await this.get('jwks');
 
         return response.data;

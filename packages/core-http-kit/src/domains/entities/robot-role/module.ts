@@ -10,6 +10,7 @@ import { buildQuery } from 'rapiq';
 import type { RobotRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { RobotRoleCreatePayload } from './types';
 
 export class RobotRoleAPI extends BaseAPI implements EntityAPISlim<RobotRole> {
     async getMany(data: BuildInput<RobotRole> = {}): Promise<EntityCollectionResponse<RobotRole>> {
@@ -30,7 +31,7 @@ export class RobotRoleAPI extends BaseAPI implements EntityAPISlim<RobotRole> {
         return response.data;
     }
 
-    async create(data: Partial<RobotRole>): Promise<EntityRecordResponse<RobotRole>> {
+    async create(data: RobotRoleCreatePayload): Promise<EntityRecordResponse<RobotRole>> {
         const response = await this.client.post('robot-roles', data);
 
         return response.data;

@@ -11,7 +11,12 @@ import type { Permission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { PermissionAPICheckResponse } from './types';
+import type {
+    PermissionAPICheckResponse,
+    PermissionCreatePayload,
+    PermissionSavePayload,
+    PermissionUpdatePayload,
+} from './types';
 
 export class PermissionAPI extends BaseAPI implements EntityAPI<Permission> {
     async getMany(data?: BuildInput<Permission>): Promise<EntityCollectionResponse<Permission>> {
@@ -25,19 +30,19 @@ export class PermissionAPI extends BaseAPI implements EntityAPI<Permission> {
         return response.data;
     }
 
-    async getOne(id: Permission['id'], record?: BuildInput<Permission>) {
+    async getOne(id: Permission['id'], record?: BuildInput<Permission>): Promise<EntityRecordResponse<Permission>> {
         const response = await this.client.get(`permissions/${id}${buildQuery(record)}`);
 
         return response.data;
     }
 
-    async create(data: Partial<Permission>): Promise<EntityRecordResponse<Permission>> {
+    async create(data: PermissionCreatePayload): Promise<EntityRecordResponse<Permission>> {
         const response = await this.client.post('permissions', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Permission['id'], data: Partial<Permission>): Promise<EntityRecordResponse<Permission>> {
+    async update(id: Permission['id'], data: PermissionUpdatePayload): Promise<EntityRecordResponse<Permission>> {
         const response = await this.client.post(`permissions/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -45,7 +50,7 @@ export class PermissionAPI extends BaseAPI implements EntityAPI<Permission> {
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<Permission>,
+        data: PermissionSavePayload,
     ): Promise<EntityRecordResponse<Permission>> {
         const response = await this.client.put(`permissions/${idOrName}`, nullifyEmptyObjectProperties(data));
 

@@ -12,6 +12,11 @@ import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
 import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import { BaseAPI } from '../../base';
+import type {
+    IdentityProviderCreatePayload,
+    IdentityProviderSavePayload,
+    IdentityProviderUpdatePayload,
+} from './types';
 
 export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityProvider> {
     getAuthorizeUri(id: IdentityProvider['id']): string {
@@ -39,13 +44,13 @@ export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityPr
         return response.data;
     }
 
-    async create(data: Partial<IdentityProvider>): Promise<EntityRecordResponse<IdentityProvider>> {
+    async create(data: IdentityProviderCreatePayload): Promise<EntityRecordResponse<IdentityProvider>> {
         const response = await this.client.post('identity-providers', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: IdentityProvider['id'], data: Partial<IdentityProvider>): Promise<EntityRecordResponse<IdentityProvider>> {
+    async update(id: IdentityProvider['id'], data: IdentityProviderUpdatePayload): Promise<EntityRecordResponse<IdentityProvider>> {
         const response = await this.client.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -53,7 +58,7 @@ export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityPr
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<IdentityProvider>,
+        data: IdentityProviderSavePayload,
     ): Promise<EntityRecordResponse<IdentityProvider>> {
         const response = await this.client.put(`identity-providers/${idOrName}`, nullifyEmptyObjectProperties(data));
 

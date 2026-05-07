@@ -11,6 +11,10 @@ import type { RoleAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    RoleAttributeCreatePayload,
+    RoleAttributeUpdatePayload,
+} from './types';
 
 export class RoleAttributeAPI extends BaseAPI implements EntityAPI<RoleAttribute> {
     async getMany(data?: BuildInput<RoleAttribute>): Promise<EntityCollectionResponse<RoleAttribute>> {
@@ -31,13 +35,13 @@ export class RoleAttributeAPI extends BaseAPI implements EntityAPI<RoleAttribute
         return response.data;
     }
 
-    async create(data: Partial<RoleAttribute>): Promise<EntityRecordResponse<RoleAttribute>> {
+    async create(data: RoleAttributeCreatePayload): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.post('role-attributes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: RoleAttribute['id'], data: Partial<RoleAttribute>): Promise<EntityRecordResponse<RoleAttribute>> {
+    async update(id: RoleAttribute['id'], data: RoleAttributeUpdatePayload): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.post(`role-attributes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

@@ -11,6 +11,10 @@ import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    IdentityProviderRoleMappingCreatePayload,
+    IdentityProviderRoleMappingUpdatePayload,
+} from './types';
 
 export class IdentityProviderRoleMappingAPI extends BaseAPI implements EntityAPI<IdentityProviderRoleMapping> {
     async getMany(data: BuildInput<IdentityProviderRoleMapping>): Promise<EntityCollectionResponse<IdentityProviderRoleMapping>> {
@@ -31,7 +35,7 @@ export class IdentityProviderRoleMappingAPI extends BaseAPI implements EntityAPI
         return response.data;
     }
 
-    async create(data: Partial<IdentityProviderRoleMapping>): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
+    async create(data: IdentityProviderRoleMappingCreatePayload): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
         const response = await this.client.post('identity-provider-role-mappings', nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -39,7 +43,7 @@ export class IdentityProviderRoleMappingAPI extends BaseAPI implements EntityAPI
 
     async update(
         id: IdentityProviderRoleMapping['id'],
-        data: Partial<IdentityProviderRoleMapping>,
+        data: IdentityProviderRoleMappingUpdatePayload,
     ): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
         const response = await this.client.post(`identity-provider-role-mappings/${id}`, data);
 

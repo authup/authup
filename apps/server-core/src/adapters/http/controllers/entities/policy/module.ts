@@ -5,7 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PolicyAPICheckResponse } from '@authup/core-http-kit';
+import type {
+    EntityCollectionResponse,
+    PolicyAPICheckResponse,
+    PolicyCreatePayload,
+    PolicyResponse,
+    PolicySavePayload,
+    PolicyUpdatePayload,
+} from '@authup/core-http-kit';
 import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 import { isUUID } from '@authup/kit';
 import { NotFoundError } from '@ebec/http';
@@ -64,16 +71,16 @@ export class PolicyController {
     @DGet('', [])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<EntityCollectionResponse<PolicyResponse>> {
         const actor = buildActorContext(event);
         const {
-            data, 
-            meta, 
+            data,
+            meta,
         } = await this.service.getMany(useRequestQuery(event), actor);
 
         return {
             data,
-            meta, 
+            meta,
         };
     }
 
@@ -81,7 +88,7 @@ export class PolicyController {
     async getOneExpanded(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<PolicyResponse> {
         return this.getOne(id, event, { expanded: true });
     }
 
@@ -91,7 +98,7 @@ export class PolicyController {
         @DContext() event: IRoutupEvent,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options: { expanded?: boolean } = {},
-    ): Promise<any> {
+    ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
             id,
@@ -107,7 +114,7 @@ export class PolicyController {
         @DPath('id') id: string,
         @DBody() data: any,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<PolicyAPICheckResponse> {
         const paramId = event.params.id;
 
         let criteria: Record<string, any>;
@@ -154,9 +161,9 @@ export class PolicyController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async update(
         @DPath('id') id: string,
-        @DBody() data: any,
+        @DBody() data: PolicyUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -172,14 +179,14 @@ export class PolicyController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async replace(
         @DPath('id') id: string,
-        @DBody() data: any,
+        @DBody() data: PolicySavePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);
 
         const {
-            entity, 
-            created, 
+            entity,
+            created,
         } = await this.service.save(
             id || undefined,
             data,
@@ -194,7 +201,7 @@ export class PolicyController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
@@ -205,9 +212,9 @@ export class PolicyController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async create(
-        @DBody() data: any,
+        @DBody() data: PolicyCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 

@@ -12,13 +12,13 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
-    BuiltInPolicyCreateRequest,
-    BuiltInPolicyResponse, 
-    BuiltInPolicyUpdateRequest, 
-    PolicyAPICheckResponse, 
-    PolicyCreateRequest, 
-    PolicyResponse, 
-    PolicyUpdateRequest,
+    BuiltInPolicyCreatePayload,
+    BuiltInPolicyResponse,
+    BuiltInPolicyUpdatePayload,
+    PolicyAPICheckResponse,
+    PolicyCreatePayload,
+    PolicyResponse,
+    PolicyUpdatePayload,
 } from './types';
 
 export class PolicyAPI extends BaseAPI implements EntityAPI<Policy> {
@@ -54,7 +54,7 @@ export class PolicyAPI extends BaseAPI implements EntityAPI<Policy> {
     }
 
     async create<
-        INPUT extends PolicyCreateRequest = PolicyCreateRequest,
+        INPUT extends PolicyCreatePayload = PolicyCreatePayload,
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(data: INPUT): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.post('policies', nullifyEmptyObjectProperties(data));
@@ -63,13 +63,13 @@ export class PolicyAPI extends BaseAPI implements EntityAPI<Policy> {
     }
 
     async createBuiltIn(
-        data: BuiltInPolicyCreateRequest,
+        data: BuiltInPolicyCreatePayload,
     ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.create(data);
     }
 
     async update<
-        INPUT extends PolicyUpdateRequest = PolicyUpdateRequest,
+        INPUT extends PolicyUpdatePayload = PolicyUpdatePayload,
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(id: Policy['id'], data: INPUT): Promise<EntityRecordResponse<OUTPUT>> {
         const response = await this.client.post(`policies/${id}`, nullifyEmptyObjectProperties(data));
@@ -79,13 +79,13 @@ export class PolicyAPI extends BaseAPI implements EntityAPI<Policy> {
 
     async updateBuiltIn(
         id: Policy['id'],
-        data: BuiltInPolicyUpdateRequest,
+        data: BuiltInPolicyUpdatePayload,
     ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.update(id, data);
     }
 
     async createOrUpdate<
-        INPUT extends PolicyCreateRequest = PolicyCreateRequest,
+        INPUT extends PolicyCreatePayload = PolicyCreatePayload,
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(
         idOrName: string,
@@ -98,7 +98,7 @@ export class PolicyAPI extends BaseAPI implements EntityAPI<Policy> {
 
     async createOrUpdateBuiltin(
         idOrName: string,
-        data: BuiltInPolicyCreateRequest,
+        data: BuiltInPolicyCreatePayload,
     ): Promise<EntityRecordResponse<BuiltInPolicyResponse>> {
         return this.createOrUpdate(idOrName, data);
     }

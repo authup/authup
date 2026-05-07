@@ -6,6 +6,7 @@
  */
 
 import { AsymmetricKey } from '@authup/server-kit';
+import type { OAuth2JsonWebKey } from '@authup/specs';
 import { JWKType } from '@authup/specs';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
@@ -15,7 +16,7 @@ import type { KeyEntity } from '../../../../../database/domains/index.ts';
 export async function getJwksRouteHandler(
     repository: Repository<KeyEntity>,
     realmId?: string,
-) : Promise<any> {
+) : Promise<{ keys: OAuth2JsonWebKey[] }> {
     const entities = await repository.find({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
@@ -50,7 +51,7 @@ export async function getJwkRouteHandler(
     repository: Repository<KeyEntity>,
     keyId: string,
     realmId?: string,
-) : Promise<any> {
+) : Promise<OAuth2JsonWebKey> {
     const entity = await repository.findOne({
         where: {
             type: In([JWKType.RSA, JWKType.EC]),
@@ -75,10 +76,10 @@ export async function getJwkRouteHandler(
         });
 
     const jsonWebKey = await container.toJWK();
-    jsonWebKey.alg = entity.signature_algorithm;
 
     return {
         ...jsonWebKey,
         kid: entity.id,
+        alg: entity.signature_algorithm,
     };
 }

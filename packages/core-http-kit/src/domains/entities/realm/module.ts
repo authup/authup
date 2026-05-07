@@ -11,6 +11,11 @@ import type { Realm } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    RealmCreatePayload,
+    RealmSavePayload,
+    RealmUpdatePayload,
+} from './types';
 
 export class RealmAPI extends BaseAPI implements EntityAPI<Realm> {
     async getMany(data?: BuildInput<Realm>): Promise<EntityCollectionResponse<Realm>> {
@@ -31,13 +36,13 @@ export class RealmAPI extends BaseAPI implements EntityAPI<Realm> {
         return response.data;
     }
 
-    async create(data: Partial<Realm>): Promise<EntityRecordResponse<Realm>> {
+    async create(data: RealmCreatePayload): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.post('realms', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(realmId: Realm['id'], data: Partial<Realm>): Promise<EntityRecordResponse<Realm>> {
+    async update(realmId: Realm['id'], data: RealmUpdatePayload): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.post(`realms/${realmId}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -45,7 +50,7 @@ export class RealmAPI extends BaseAPI implements EntityAPI<Realm> {
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<Realm>,
+        data: RealmSavePayload,
     ): Promise<EntityRecordResponse<Realm>> {
         const response = await this.client.put(`realms/${idOrName}`, nullifyEmptyObjectProperties(data));
 

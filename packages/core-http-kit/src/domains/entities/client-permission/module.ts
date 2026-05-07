@@ -10,6 +10,10 @@ import { buildQuery } from 'rapiq';
 import type { ClientPermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    ClientPermissionCreatePayload,
+    ClientPermissionUpdatePayload,
+} from './types';
 
 export class ClientPermissionAPI extends BaseAPI implements EntityAPI<ClientPermission> {
     async getMany(data?: BuildInput<ClientPermission>) : Promise<EntityCollectionResponse<ClientPermission>> {
@@ -29,13 +33,13 @@ export class ClientPermissionAPI extends BaseAPI implements EntityAPI<ClientPerm
         return response.data;
     }
 
-    async create(data: Partial<ClientPermission>) : Promise<EntityRecordResponse<ClientPermission>> {
+    async create(data: ClientPermissionCreatePayload) : Promise<EntityRecordResponse<ClientPermission>> {
         const response = await this.client.post('client-permissions', data);
 
         return response.data;
     }
 
-    async update(id: ClientPermission['id'], data: Partial<ClientPermission>) : Promise<EntityRecordResponse<ClientPermission>> {
+    async update(id: ClientPermission['id'], data: ClientPermissionUpdatePayload) : Promise<EntityRecordResponse<ClientPermission>> {
         const response = await this.client.post(`client-permissions/${id}`, data);
 
         return response.data;

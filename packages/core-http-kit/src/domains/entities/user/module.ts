@@ -11,18 +11,18 @@ import type { User } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-
-export type PasswordForgotResponse = {
-    reset_expires: string;
-};
-
-export type PasswordResetResponse = {
-    reset_at: string;
-};
-
-export type RegisterResponse = {
-    active: boolean
-};
+import type {
+    ActivateResponse,
+    PasswordForgotPayload,
+    PasswordForgotResponse,
+    PasswordResetPayload,
+    PasswordResetResponse,
+    RegisterPayload,
+    RegisterResponse,
+    UserCreatePayload,
+    UserSavePayload,
+    UserUpdatePayload,
+} from './types';
 
 export class UserAPI extends BaseAPI implements EntityAPI<User> {
     async getMany(
@@ -54,7 +54,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     }
 
     async create(
-        data: Partial<User>,
+        data: UserCreatePayload,
     ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .post('users', nullifyEmptyObjectProperties(data));
@@ -64,7 +64,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
 
     async update(
         id: User['id'],
-        data: Partial<User> & { password_repeat?: User['password'] },
+        data: UserUpdatePayload,
     ): Promise<EntityRecordResponse<User>> {
         const response = await this.client.post(`users/${id}`, nullifyEmptyObjectProperties(data));
 
@@ -73,7 +73,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<User> & { password_repeat?: User['password'] },
+        data: UserSavePayload,
     ): Promise<EntityRecordResponse<User>> {
         const response = await this.client.put(`users/${idOrName}`, nullifyEmptyObjectProperties(data));
 
@@ -84,14 +84,14 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
 
     async activate(
         token: string,
-    ): Promise<User> {
+    ): Promise<ActivateResponse> {
         const response = await this.client.post('activate', { token });
 
         return response.data;
     }
 
     async register(
-        data: Partial<Pick<User, 'email' | 'name' | 'password' | 'realm_id'>>,
+        data: RegisterPayload,
     ): Promise<RegisterResponse> {
         const response = await this.client.post('register', nullifyEmptyObjectProperties(data));
 
@@ -99,7 +99,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     }
 
     async passwordForgot(
-        data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>>,
+        data: PasswordForgotPayload,
     ) : Promise<PasswordForgotResponse> {
         const response = await this.client.post('password-forgot', nullifyEmptyObjectProperties(data));
 
@@ -107,11 +107,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     }
 
     async passwordReset(
-        data: Partial<Pick<User, 'email' | 'name' | 'realm_id'>> &
-        {
-            token: string,
-            password: string 
-        },
+        data: PasswordResetPayload,
     ) : Promise<PasswordResetResponse> {
         const response = await this.client.post('password-reset', nullifyEmptyObjectProperties(data));
 

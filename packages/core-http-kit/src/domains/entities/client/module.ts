@@ -11,6 +11,11 @@ import type { Client } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    ClientCreatePayload,
+    ClientSavePayload,
+    ClientUpdatePayload,
+} from './types';
 
 export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
     async getMany(
@@ -42,7 +47,7 @@ export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
     }
 
     async create(
-        data: Partial<Client>,
+        data: ClientCreatePayload,
     ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client
             .post('clients', nullifyEmptyObjectProperties(data));
@@ -52,7 +57,7 @@ export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
 
     async update(
         id: Client['id'],
-        data: Partial<Client>,
+        data: ClientUpdatePayload,
     ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client.post(`clients/${id}`, nullifyEmptyObjectProperties(data));
 
@@ -61,7 +66,7 @@ export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
 
     async createOrUpdate(
         idOrName: string,
-        data: Partial<Client>,
+        data: ClientSavePayload,
     ): Promise<EntityRecordResponse<Client>> {
         const response = await this.client.put(`clients/${idOrName}`, nullifyEmptyObjectProperties(data));
 

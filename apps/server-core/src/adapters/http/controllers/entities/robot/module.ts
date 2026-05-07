@@ -23,6 +23,12 @@ import type { Robot } from '@authup/core-kit';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { DataSource } from 'typeorm';
+import type {
+    EntityCollectionResponse,
+    RobotCreatePayload,
+    RobotSavePayload,
+    RobotUpdatePayload,
+} from '@authup/core-http-kit';
 import type { IRealmRepository, IRobotRepository, IRobotService } from '../../../../../core/index.ts';
 import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
 import { RobotEntity } from '../../../../database/domains/index.ts';
@@ -62,24 +68,24 @@ export class RobotController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<EntityCollectionResponse<Robot>> {
         const actor = buildActorContext(event);
         const {
-            data, 
-            meta, 
+            data,
+            meta,
         } = await this.service.getMany(useRequestQuery(event), actor);
 
         return {
             data,
-            meta, 
+            meta,
         };
     }
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: any,
+        @DBody() data: RobotCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<Robot> {
         const actor = buildActorContext(event);
         const { entity } = await this.service.save(undefined, data, actor);
 
@@ -92,7 +98,7 @@ export class RobotController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<Robot> {
         const identity = useRequestIdentity(event);
         let isMe = false;
 
@@ -173,9 +179,9 @@ export class RobotController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: any,
+        @DBody() data: RobotUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<Robot> {
         const actor = buildActorContext(event);
         const { entity } = await this.service.save(
             id,
@@ -192,13 +198,13 @@ export class RobotController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-        @DBody() data: any,
+        @DBody() data: RobotSavePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<Robot> {
         const actor = buildActorContext(event);
         const {
-            entity, 
-            created, 
+            entity,
+            created,
         } = await this.service.save(
             id || undefined,
             data,
@@ -213,7 +219,7 @@ export class RobotController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<any> {
+    ): Promise<Robot> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

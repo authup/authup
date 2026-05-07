@@ -6,20 +6,20 @@
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
-import type { LdapIdentityProvider } from '@authup/core-kit';
+import type { IdentityProviderCreatePayload } from '@authup/core-http-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { createTestApplication } from '../../../../../app';
 import { createFakeLdapIdentityProvider } from '../../../../../utils/index.ts';
 import {
-    createLdapTestClient, 
-    createLdapTestClientURL, 
-    createLdapTestUserAccount, 
+    createLdapTestClient,
+    createLdapTestClientURL,
+    createLdapTestUserAccount,
     dropLdapTestUserAccount,
 } from '../../../../adapters/ldap/helpers';
 
@@ -45,7 +45,7 @@ describe('src/http/controllers/identity-provider', () => {
     });
 
     it('should use ldap provider for login', async () => {
-        const data : Partial<LdapIdentityProvider> = createFakeLdapIdentityProvider({
+        const data : IdentityProviderCreatePayload = createFakeLdapIdentityProvider({
             enabled: true,
             protocol: IdentityProviderProtocol.LDAP,
             url: createLdapTestClientURL(),

@@ -63,7 +63,7 @@ export class AuthorizeController {
     // ---------------------------------------------------------
 
     @DPost('', [ForceUserLoggedInMiddleware])
-    async confirm(@DContext() event: IRoutupEvent): Promise<any> {
+    async confirm(@DContext() event: IRoutupEvent): Promise<{ url: string }> {
         const result = await this.authorizer.authorizeWithRequest(event);
 
         const url = new URL(result.redirectUri);
@@ -87,7 +87,7 @@ export class AuthorizeController {
     }
 
     @DGet('', [])
-    async serve(@DContext() event: IRoutupEvent): Promise<any> {
+    async serve(@DContext() event: IRoutupEvent): Promise<string> {
         let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
 
         let client : Client | undefined;

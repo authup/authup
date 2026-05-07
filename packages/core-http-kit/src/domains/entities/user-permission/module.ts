@@ -11,6 +11,10 @@ import type { UserPermission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    UserPermissionCreatePayload,
+    UserPermissionUpdatePayload,
+} from './types';
 
 export class UserPermissionAPI extends BaseAPI implements EntityAPI<UserPermission> {
     async getMany(data?: BuildInput<UserPermission>) : Promise<EntityCollectionResponse<UserPermission>> {
@@ -30,13 +34,13 @@ export class UserPermissionAPI extends BaseAPI implements EntityAPI<UserPermissi
         return response.data;
     }
 
-    async create(data: Partial<UserPermission>) : Promise<EntityRecordResponse<UserPermission>> {
+    async create(data: UserPermissionCreatePayload) : Promise<EntityRecordResponse<UserPermission>> {
         const response = await this.client.post('user-permissions', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: UserPermission['id'], data: Partial<UserPermission>) : Promise<EntityRecordResponse<UserPermission>> {
+    async update(id: UserPermission['id'], data: UserPermissionUpdatePayload) : Promise<EntityRecordResponse<UserPermission>> {
         const response = await this.client.post(`user-permissions/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
