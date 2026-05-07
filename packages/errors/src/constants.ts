@@ -8,6 +8,7 @@
 export enum ErrorCode {
     // HTTP Codes
     HTTP_HEADER_AUTH_TYPE_UNSUPPORTED = 'unsupported_auth_header_type',
+    HTTP_BEARER_TOKEN_MALFORMED = 'bearer_token_malformed',
 
     // Entity Codes
     ENTITY_CREDENTIALS_INVALID = 'invalid_credentials',

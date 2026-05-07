@@ -17,9 +17,10 @@
         "packages/core-realtime-kit": {"component": "core-realtime-kit"},
         "packages/errors": {"component": "errors"},
         "packages/kit": {"component": "kit"},
-        "packages/server-adapter-http": {"component": "server-adapter-http"},
         "packages/server-adapter-kit": {"component": "server-adapter-kit"},
+        "packages/server-adapter-node": {"component": "server-adapter-node"},
         "packages/server-adapter-socket-io": {"component": "server-adapter-socket-io"},
+        "packages/server-adapter-web": {"component": "server-adapter-web"},
         "packages/server-kit": {"component": "server-kit"},
         "packages/specs": {"component": "specs"}
     },
@@ -48,9 +49,10 @@
                 "errors",
                 "kit",
 
-                "server-adapter-http",
                 "server-adapter-kit",
+                "server-adapter-node",
                 "server-adapter-socket-io",
+                "server-adapter-web",
                 "server-kit",
                 "specs"
             ]

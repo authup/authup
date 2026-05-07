@@ -47,8 +47,9 @@ packages/client-web-kit  — Vue components and store
 packages/client-web-nuxt — Nuxt integration
 packages/server-kit      — Server utilities
 packages/server-adapter-kit — Token verification core
-packages/server-adapter-http — HTTP middleware adapter
+packages/server-adapter-node — Node `IncomingMessage` middleware adapter
 packages/server-adapter-socket-io — Socket.io adapter
+packages/server-adapter-web — Web Request adapter primitive (transport-neutral)
 apps/server-core         — Main server application (with embedded Vite UI at ui/)
 apps/client-web          — Nuxt web app
 apps/authup              — CLI

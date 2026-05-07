@@ -26,8 +26,9 @@ graph TD
     end
 
     subgraph Layer 4
-        server-adapter-http
+        server-adapter-node
         server-adapter-socket-io
+        server-adapter-web
     end
 
     subgraph Application Libraries
@@ -44,20 +45,20 @@ graph TD
     %% Foundation has no internal deps
 
     %% Layer 1
-    specs --> kit
     specs --> errors
+    specs --> kit
     core-realtime-kit --> kit
 
     %% Layer 2
-    access --> kit
     access --> errors
+    access --> kit
     core-kit --> kit
     core-kit --> errors
     core-kit --> specs
+    server-kit --> core-realtime-kit
     server-kit --> kit
     server-kit --> errors
     server-kit --> specs
-    server-kit --> core-realtime-kit
 
     %% Layer 3
     core-http-kit --> access
@@ -73,11 +74,11 @@ graph TD
     server-adapter-kit --> server-kit
 
     %% Layer 4
-    server-adapter-http --> server-adapter-kit
-    server-adapter-http --> core-kit
-    server-adapter-http --> core-http-kit
+    server-adapter-node --> server-adapter-kit
     server-adapter-socket-io --> core-kit
     server-adapter-socket-io --> server-adapter-kit
+    server-adapter-web --> errors
+    server-adapter-web --> server-adapter-kit
 
     %% Application Libraries
     client-web-kit --> access
@@ -88,8 +89,8 @@ graph TD
     client-web-kit --> errors
     client-web-kit --> specs
     client-web-nuxt --> access
-    client-web-nuxt --> kit
     client-web-nuxt --> client-web-kit
+    client-web-nuxt --> kit
 
     %% Apps
     server-core --> access
@@ -99,6 +100,7 @@ graph TD
     server-core --> kit
     server-core --> server-kit
     server-core --> specs
+    server-core --> client-web-kit
     client-web --> client-web-kit
     client-web --> kit
     client-web --> core-kit

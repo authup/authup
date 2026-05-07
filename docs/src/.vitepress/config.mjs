@@ -420,36 +420,26 @@ export default defineConfig({
                     ],
                 },
                 {
-                    text: 'Server-Adapter-HTTP',
+                    text: 'Server-Adapters',
                     items: [
                         {
                             text: 'Introduction',
-                            link: '/sdks/javascript/server-adapter-http/', 
+                            link: '/sdks/javascript/server-adapter/',
                         },
                         {
-                            text: 'Concepts',
+                            text: 'Adapters',
                             items: [
                                 {
-                                    text: 'Middleware',
-                                    link: '/sdks/javascript/server-adapter-http/middleware', 
+                                    text: 'Node',
+                                    link: '/sdks/javascript/server-adapter/node-middleware',
                                 },
-                            ],
-                        },
-                    ],
-                },
-                {
-                    text: 'Server-Adapter-Socket-IO',
-                    items: [
-                        {
-                            text: 'Introduction',
-                            link: '/sdks/javascript/server-adapter-socket/', 
-                        },
-                        {
-                            text: 'Concepts',
-                            items: [
                                 {
-                                    text: 'Middleware',
-                                    link: '/sdks/javascript/server-adapter-socket/middleware', 
+                                    text: 'Socket.IO',
+                                    link: '/sdks/javascript/server-adapter/socket-middleware',
+                                },
+                                {
+                                    text: 'Web',
+                                    link: '/sdks/javascript/server-adapter/web-middleware',
                                 },
                             ],
                         },
