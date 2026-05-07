@@ -72,4 +72,3 @@ const data = await verifyRequest(req, { tokenVerifier });
 `createMiddleware` is a thin wrapper around `verifyRequest` that calls your `tokenVerifierHandler` on success
 and forwards errors via `next(err)`.
 
-For more details check out, the [API Reference]().

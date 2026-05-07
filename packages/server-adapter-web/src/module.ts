@@ -18,7 +18,7 @@ export async function verifyRequest(
     if (!authorization && options.tokenByRequest) {
         const fallbackToken = options.tokenByRequest(request);
         if (fallbackToken) {
-            authorization = fallbackToken.startsWith('Bearer') ?
+            authorization = fallbackToken.startsWith('Bearer ') ?
                 fallbackToken :
                 `Bearer ${fallbackToken}`;
         }

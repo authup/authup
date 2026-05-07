@@ -126,4 +126,16 @@ describe('verifyRequest (node)', () => {
 
         expect(verify).toHaveBeenCalledWith('cookie-token');
     });
+
+    it('treats opaque tokens that share the "Bearer" prefix-letters as bare tokens', async () => {
+        const verify = vi.fn(async () => sampleData);
+        const tokenByRequest = vi.fn(() => 'BearerLooksFakeButOpaque');
+
+        await verifyRequest(createRequest(), {
+            tokenVerifier: createVerifier(verify),
+            tokenByRequest,
+        });
+
+        expect(verify).toHaveBeenCalledWith('BearerLooksFakeButOpaque');
+    });
 });

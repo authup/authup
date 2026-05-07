@@ -79,4 +79,3 @@ app.use('*', async (c, next) => {
 });
 ```
 
-For more details check out, the [API Reference]().

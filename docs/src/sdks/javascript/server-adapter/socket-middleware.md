@@ -70,4 +70,3 @@ The optional `tokenBySocket` callback runs when `socket.handshake.auth.token` is
 when you want to pull the token from `socket.handshake.headers.authorization`, the query string,
 or any other source.
 
-For more details check out, the [API Reference]().
