@@ -7,4 +7,5 @@
 
 import type { UserRole } from '@authup/core-kit';
 
-export type UserRoleCreatePayload = Partial<UserRole>;
+// Mirrors `UserRoleValidator` mounts in @authup/core-kit.
+export type UserRoleCreatePayload = Pick<UserRole, 'user_id' | 'role_id'>;

@@ -7,6 +7,9 @@
 
 import type { RoleAttribute } from '@authup/core-kit';
 
-export type RoleAttributeCreatePayload = Partial<RoleAttribute>;
-export type RoleAttributeUpdatePayload = Partial<RoleAttribute>;
-export type RoleAttributeSavePayload = Partial<RoleAttribute>;
+// `RoleAttribute` has no dedicated validator class — `RoleAttributeService` validates
+// inline and accepts `name`, `value`, and `role_id` (or a populated `role` relation).
+export type RoleAttributeCreatePayload =    & Pick<RoleAttribute, 'name'> &
+    Partial<Pick<RoleAttribute, 'value' | 'role_id'>>;
+export type RoleAttributeUpdatePayload = Partial<RoleAttributeCreatePayload>;
+export type RoleAttributeSavePayload = RoleAttributeCreatePayload;

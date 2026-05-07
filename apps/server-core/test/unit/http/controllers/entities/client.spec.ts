@@ -6,6 +6,7 @@
  */
 
 import type { Client } from '@authup/core-kit';
+import type { ClientCreatePayload } from '@authup/core-http-kit';
 import {
     afterAll, 
     beforeAll, 
@@ -50,7 +51,7 @@ describe('http/controllers/client', () => {
             redirect_uri: redirectUri,
         } = createFakeClient();
 
-        const input : Partial<Client> = {
+        const input: Partial<Client> = {
             name,
             display_name: displayName,
             redirect_uri: redirectUri,
@@ -61,7 +62,7 @@ describe('http/controllers/client', () => {
 
         const response = await suite.client
             .client
-            .create(input);
+            .create(input as ClientCreatePayload);
 
         expect(response).toBeDefined();
         expect(response.secret).toBeDefined();
@@ -76,7 +77,7 @@ describe('http/controllers/client', () => {
             redirect_uri: redirectUri,
         } = createFakeClient();
 
-        const input : Partial<Client> = {
+        const input: Partial<Client> = {
             name,
             display_name: displayName,
             redirect_uri: redirectUri,
@@ -88,7 +89,7 @@ describe('http/controllers/client', () => {
 
         const response = await suite.client
             .client
-            .create(input);
+            .create(input as ClientCreatePayload);
 
         expect(response).toBeDefined();
 

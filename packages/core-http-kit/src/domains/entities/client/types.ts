@@ -7,6 +7,20 @@
 
 import type { Client } from '@authup/core-kit';
 
-export type ClientCreatePayload = Partial<Client>;
-export type ClientUpdatePayload = Partial<Client>;
-export type ClientSavePayload = Partial<Client>;
+// Mirrors `ClientValidator` mounts in @authup/core-kit.
+export type ClientCreatePayload =    & Pick<Client, 'name'> &
+    Partial<Pick<Client, 'active' |
+        'is_confidential' |
+        'display_name' |
+        'description' |
+        'secret' |
+        'secret_encrypted' |
+        'secret_hashed' |
+        'redirect_uri' |
+        'base_url' |
+        'root_url' |
+        'grant_types' |
+        'scope' |
+        'realm_id'>>;
+export type ClientUpdatePayload = Partial<ClientCreatePayload>;
+export type ClientSavePayload = ClientCreatePayload;

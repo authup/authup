@@ -7,4 +7,5 @@
 
 import type { RobotRole } from '@authup/core-kit';
 
-export type RobotRoleCreatePayload = Partial<RobotRole>;
+// Mirrors `RobotRoleValidator` mounts in @authup/core-kit.
+export type RobotRoleCreatePayload = Pick<RobotRole, 'robot_id' | 'role_id'>;

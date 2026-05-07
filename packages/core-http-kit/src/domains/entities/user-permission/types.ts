@@ -7,5 +7,7 @@
 
 import type { UserPermission } from '@authup/core-kit';
 
-export type UserPermissionCreatePayload = Partial<UserPermission>;
-export type UserPermissionUpdatePayload = Partial<UserPermission>;
+// Mirrors `UserPermissionValidator` mounts in @authup/core-kit.
+export type UserPermissionCreatePayload =    & Pick<UserPermission, 'user_id' | 'permission_id'> &
+    Partial<Pick<UserPermission, 'policy_id'>>;
+export type UserPermissionUpdatePayload = Partial<UserPermissionCreatePayload>;

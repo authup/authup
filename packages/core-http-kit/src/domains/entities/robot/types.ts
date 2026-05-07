@@ -7,6 +7,13 @@
 
 import type { Robot } from '@authup/core-kit';
 
-export type RobotCreatePayload = Partial<Robot>;
-export type RobotUpdatePayload = Partial<Robot>;
-export type RobotSavePayload = Partial<Robot>;
+// Mirrors `RobotValidator` mounts in @authup/core-kit.
+export type RobotCreatePayload =    & Pick<Robot, 'name'> &
+    Partial<Pick<Robot, 'secret' |
+        'active' |
+        'display_name' |
+        'description' |
+        'user_id' |
+        'realm_id'>>;
+export type RobotUpdatePayload = Partial<RobotCreatePayload>;
+export type RobotSavePayload = RobotCreatePayload;

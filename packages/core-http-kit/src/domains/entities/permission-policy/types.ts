@@ -7,5 +7,6 @@
 
 import type { PermissionPolicy } from '@authup/core-kit';
 
-export type PermissionPolicyCreatePayload = Partial<PermissionPolicy>;
-export type PermissionPolicyUpdatePayload = Partial<PermissionPolicy>;
+// Mirrors `PermissionPolicyValidator` mounts in @authup/core-kit.
+export type PermissionPolicyCreatePayload = Pick<PermissionPolicy, 'permission_id' | 'policy_id'>;
+export type PermissionPolicyUpdatePayload = Partial<PermissionPolicyCreatePayload>;

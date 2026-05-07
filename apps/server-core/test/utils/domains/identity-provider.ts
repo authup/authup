@@ -26,11 +26,11 @@ export function createFakeOAuth2IdentityProvider(data: Partial<OAuth2IdentityPro
     } satisfies Partial<OAuth2IdentityProvider>;
 }
 
-export function createFakeLdapIdentityProvider(data: Partial<LdapIdentityProvider> = {}): Partial<LdapIdentityProvider> {
+export function createFakeLdapIdentityProvider(data: Partial<LdapIdentityProvider> = {}) {
     return {
         name: faker.string.alpha({
             length: 16,
-            casing: 'lower', 
+            casing: 'lower',
         }),
         display_name: faker.internet.displayName(),
         enabled: true,
@@ -41,5 +41,5 @@ export function createFakeLdapIdentityProvider(data: Partial<LdapIdentityProvide
         base_dn: 'dc=example,dc=com',
         user_name_attribute: 'cn',
         ...data,
-    };
+    } satisfies Partial<LdapIdentityProvider>;
 }

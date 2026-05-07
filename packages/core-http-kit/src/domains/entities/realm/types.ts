@@ -7,6 +7,8 @@
 
 import type { Realm } from '@authup/core-kit';
 
-export type RealmCreatePayload = Partial<Realm>;
-export type RealmUpdatePayload = Partial<Realm>;
-export type RealmSavePayload = Partial<Realm>;
+// Mirrors `RealmValidator` mounts in @authup/core-kit.
+export type RealmCreatePayload =    & Pick<Realm, 'name'> &
+    Partial<Pick<Realm, 'display_name' | 'description'>>;
+export type RealmUpdatePayload = Partial<RealmCreatePayload>;
+export type RealmSavePayload = RealmCreatePayload;

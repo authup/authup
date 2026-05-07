@@ -19,20 +19,18 @@ export type BuiltInPolicyResponse<
     T extends Record<string, any> = Record<string, any>,
 > = Omit<Policy, 'type'> & BuiltInPolicies<T>;
 
-type PolicyCreateSubset = Pick<Policy, 'name'> &
-Partial<Pick<Policy, 'display_name' | 'description' | 'invert'>> & {
-    parent_id?: string | null
-};
-export type PolicyCreatePayload = PolicyCreateSubset & Record<string, any>;
+// Mirrors `PolicyValidator` mounts in @authup/core-kit. Policies carry dynamic per-type
+// attributes loaded as extra-attributes; the `& Record<string, any>` keeps those open.
+type PolicyValidatedFields =    & Pick<Policy, 'name' | 'type'> &
+    Partial<Pick<Policy, 'display_name' | 'invert' | 'realm_id'>> &
+    { parent_id?: string | null };
+export type PolicyCreatePayload = PolicyValidatedFields & Record<string, any>;
+export type PolicyUpdatePayload = Partial<PolicyValidatedFields> & Record<string, any>;
 export type PolicySavePayload = PolicyCreatePayload;
 
 export type BuiltInPolicyCreatePayload<
     T extends Record<string, any> = Record<string, any>,
-> = PolicyCreateSubset & BuiltInPolicies<T>;
-
-type PolicyUpdateSubset = Partial<PolicyCreateSubset>;
-
-export type PolicyUpdatePayload = PolicyUpdateSubset & Record<string, any>;
+> = Omit<PolicyValidatedFields, 'type'> & BuiltInPolicies<T>;
 export type BuiltInPolicyUpdatePayload<
     T extends Record<string, any> = Record<string, any>,
-> = PolicyUpdateSubset & BuiltInPolicies<T>;
+> = Partial<Omit<PolicyValidatedFields, 'type'>> & BuiltInPolicies<T>;

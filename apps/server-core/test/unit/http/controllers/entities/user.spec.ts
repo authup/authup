@@ -13,6 +13,7 @@ import {
     it,
 } from 'vitest';
 import type { User } from '@authup/core-kit';
+import type { UserCreatePayload } from '@authup/core-http-kit';
 import { createTestApplication } from '../../../../app';
 import { createFakeUser, expectPropertiesEqualToSrc } from '../../../../utils';
 
@@ -27,12 +28,12 @@ describe('src/http/controllers/user', () => {
         await suite.teardown();
     });
 
-    const details : Partial<User> = createFakeUser();
+    const details: Partial<User> = createFakeUser();
 
     it('should create resource', async () => {
         const response = await suite.client
             .user
-            .create(details);
+            .create(details as UserCreatePayload);
 
         expect(response).toBeDefined();
 

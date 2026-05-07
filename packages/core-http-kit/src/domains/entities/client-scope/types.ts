@@ -7,4 +7,5 @@
 
 import type { ClientScope } from '@authup/core-kit';
 
-export type ClientScopeCreatePayload = Partial<ClientScope>;
+// Mirrors `ClientScopeValidator` mounts in @authup/core-kit.
+export type ClientScopeCreatePayload = Pick<ClientScope, 'client_id' | 'scope_id'>;

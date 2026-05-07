@@ -7,9 +7,24 @@
 
 import type { User } from '@authup/core-kit';
 
-export type UserCreatePayload = Partial<User>;
-export type UserUpdatePayload = Partial<User> & { password_repeat?: User['password'] };
-export type UserSavePayload = Partial<User> & { password_repeat?: User['password'] };
+// Mirrors `UserValidator` mounts in @authup/core-kit.
+// `password_repeat` is NOT validator-mounted but is accepted by the controller for password
+// confirmation; it is only carried on update/save shapes.
+type UserOptionalFields = Pick<User, 'name_locked' |
+    'first_name' |
+    'last_name' |
+    'display_name' |
+    'password' |
+    'active' |
+    'realm_id' |
+    'status' |
+    'status_message'>;
+
+export type UserCreatePayload =    & Pick<User, 'name' | 'email'> &
+    Partial<UserOptionalFields>;
+
+export type UserUpdatePayload = Partial<UserCreatePayload> & { password_repeat?: User['password'] };
+export type UserSavePayload = UserCreatePayload & { password_repeat?: User['password'] };
 
 export type RegisterPayload = Partial<Pick<User, 'email' | 'name' | 'password' | 'realm_id'>>;
 export type RegisterResponse = {
