@@ -14,10 +14,7 @@ export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
         origin: true,
         credentials: true,
         // `credentials: true` is incompatible with the `*` wildcard for
-        // exposeHeaders, so enumerate the response headers JS clients need:
-        // - ratelimit-* / retry-after: emitted by @routup/rate-limit
-        // - etag: emitted by routup when router-level etag is enabled
-        // - content-disposition: emitted by routup's sendFile for downloads
+        // exposeHeaders, so enumerate the response headers JS clients need.
         exposeHeaders: [
             'ratelimit-limit',
             'ratelimit-remaining',
@@ -25,6 +22,10 @@ export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
             'retry-after',
             'etag',
             'content-disposition',
+            'content-range',
+            'accept-ranges',
+            'location',
+            'www-authenticate',
         ],
         ...(input ?? {}),
     }));
