@@ -54,4 +54,22 @@ router.use(createMiddleware({
 router.listen(3000);
 ```
 
+## verifyRequest primitive
+
+If you need direct control over the response — for example to short-circuit unauthenticated requests with a custom
+error body — `createMiddleware` is also available as a transport-neutral primitive. It mirrors the
+`@authup/server-adapter-web` shape:
+
+```typescript
+import { verifyRequest } from '@authup/server-adapter-node';
+
+const data = await verifyRequest(req, { tokenVerifier });
+// data is `TokenVerificationData` when a valid Bearer token was present,
+// `undefined` when no token was provided, or rejects with `BearerTokenMalformedError`
+// (malformed Authorization header) / the underlying verifier error.
+```
+
+`createMiddleware` is a thin wrapper around `verifyRequest` that calls your `tokenVerifierHandler` on success
+and forwards errors via `next(err)`.
+
 For more details check out, the [API Reference]().

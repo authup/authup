@@ -21,7 +21,9 @@
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "tsdown",
-        "build": "rimraf ./dist && npm run build:js && npm run build:types"
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "test": "cross-env NODE_ENV=test vitest run test/unit",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
     "keywords": [
         "auth",

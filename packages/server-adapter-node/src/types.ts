@@ -8,9 +8,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { ITokenVerifier, TokenVerificationData } from '@authup/server-adapter-kit';
 
-export type MiddlewareOptions = {
-    tokenByRequest?: (req: IncomingMessage) => string | undefined,
+export type VerifyRequestOptions = {
     tokenVerifier: ITokenVerifier,
+    tokenByRequest?: (req: IncomingMessage) => string | undefined,
+};
+
+export type MiddlewareOptions = VerifyRequestOptions & {
     tokenVerifierHandler: (req: IncomingMessage, data: TokenVerificationData) => void
 };
 
