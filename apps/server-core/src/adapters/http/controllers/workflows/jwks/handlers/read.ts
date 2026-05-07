@@ -44,7 +44,7 @@ export async function getJwksRouteHandler(
 
     const keys = await Promise.all(promises);
 
-    return { keys: keys as OAuth2JsonWebKey[] };
+    return { keys };
 }
 
 export async function getJwkRouteHandler(
@@ -76,10 +76,10 @@ export async function getJwkRouteHandler(
         });
 
     const jsonWebKey = await container.toJWK();
-    jsonWebKey.alg = entity.signature_algorithm;
 
     return {
         ...jsonWebKey,
         kid: entity.id,
-    } as OAuth2JsonWebKey;
+        alg: entity.signature_algorithm,
+    };
 }

@@ -28,12 +28,12 @@ describe('src/http/controllers/user', () => {
         await suite.teardown();
     });
 
-    const details: Partial<User> = createFakeUser();
+    const details: UserCreatePayload & { id?: User['id'] } = createFakeUser();
 
     it('should create resource', async () => {
         const response = await suite.client
             .user
-            .create(details as UserCreatePayload);
+            .create(details);
 
         expect(response).toBeDefined();
 

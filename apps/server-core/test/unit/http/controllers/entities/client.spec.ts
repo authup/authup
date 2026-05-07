@@ -51,7 +51,7 @@ describe('http/controllers/client', () => {
             redirect_uri: redirectUri,
         } = createFakeClient();
 
-        const input: Partial<Client> = {
+        const input: ClientCreatePayload = {
             name,
             display_name: displayName,
             redirect_uri: redirectUri,
@@ -62,7 +62,7 @@ describe('http/controllers/client', () => {
 
         const response = await suite.client
             .client
-            .create(input as ClientCreatePayload);
+            .create(input);
 
         expect(response).toBeDefined();
         expect(response.secret).toBeDefined();
@@ -77,7 +77,7 @@ describe('http/controllers/client', () => {
             redirect_uri: redirectUri,
         } = createFakeClient();
 
-        const input: Partial<Client> = {
+        const input: ClientCreatePayload = {
             name,
             display_name: displayName,
             redirect_uri: redirectUri,
@@ -89,15 +89,11 @@ describe('http/controllers/client', () => {
 
         const response = await suite.client
             .client
-            .create(input as ClientCreatePayload);
+            .create(input);
 
         expect(response).toBeDefined();
 
-        expectPropertiesEqualToSrc(input, response, [
-            'secret',
-            'created_at',
-            'updated_at',
-        ]);
+        expectPropertiesEqualToSrc(input, response, ['secret']);
 
         const credentialsService = new ClientCredentialsService();
         const verified = await credentialsService.verify(input.secret!, response);
