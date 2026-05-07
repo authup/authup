@@ -7,7 +7,6 @@
 
 import type { Scope } from '@authup/core-kit';
 
-export type ScopeCreateInput = Partial<Scope>;
-export type ScopeUpdateInput = Partial<Scope>;
-export type ScopeSaveInput = Partial<Scope>;
-export type ScopeResponse = Scope;
+export type ScopeCreatePayload = Partial<Scope>;
+export type ScopeUpdatePayload = Partial<Scope>;
+export type ScopeSavePayload = Partial<Scope>;

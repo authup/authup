@@ -12,7 +12,7 @@ import {
     DPost,
 } from '@routup/decorators';
 import type { IRoutupEvent } from 'routup';
-import type { ActivateInput } from '@authup/core-http-kit';
+import type { ActivatePayload } from '@authup/core-http-kit';
 import type { IRegistrationService } from '../../../../../core/index.ts';
 import { ActivateRequestValidator } from './validator.ts';
 
@@ -30,7 +30,7 @@ export class ActivateController {
 
     @DPost('', [])
     async execute(
-        @DBody() data: ActivateInput,
+        @DBody() data: ActivatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<null> {
         const validator = new ActivateRequestValidator();

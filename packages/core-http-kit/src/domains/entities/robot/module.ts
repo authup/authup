@@ -12,16 +12,15 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
-    RobotCreateInput,
-    RobotResponse,
-    RobotSaveInput,
-    RobotUpdateInput,
+    RobotCreatePayload,
+    RobotSavePayload,
+    RobotUpdatePayload,
 } from './types';
 
 export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
     async getMany(
         options?: BuildInput<Robot>,
-    ): Promise<EntityCollectionResponse<RobotResponse>> {
+    ): Promise<EntityCollectionResponse<Robot>> {
         const response = await this.client
             .get(`robots${buildQuery(options)}`);
 
@@ -31,7 +30,7 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
     async getOne(
         id: Robot['id'],
         options?: BuildInput<Robot>,
-    ): Promise<EntityRecordResponse<RobotResponse>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client
             .get(`robots/${id}${buildQuery(options)}`);
 
@@ -40,7 +39,7 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
 
     async delete(
         id: Robot['id'],
-    ): Promise<EntityRecordResponse<RobotResponse>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client
             .delete(`robots/${id}`);
 
@@ -48,8 +47,8 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
     }
 
     async create(
-        data: RobotCreateInput,
-    ): Promise<EntityRecordResponse<RobotResponse>> {
+        data: RobotCreatePayload,
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client
             .post('robots', nullifyEmptyObjectProperties(data));
 
@@ -58,8 +57,8 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
 
     async update(
         id: Robot['id'],
-        data: RobotUpdateInput,
-    ): Promise<EntityRecordResponse<RobotResponse>> {
+        data: RobotUpdatePayload,
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client.post(`robots/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -67,8 +66,8 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
 
     async createOrUpdate(
         idOrName: string,
-        data: RobotSaveInput,
-    ): Promise<EntityRecordResponse<RobotResponse>> {
+        data: RobotSavePayload,
+    ): Promise<EntityRecordResponse<Robot>> {
         const response = await this.client.put(`robots/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -76,7 +75,7 @@ export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
 
     async integrity(
         id: Robot['id'] | Robot['name'],
-    ): Promise<EntityRecordResponse<RobotResponse>> {
+    ): Promise<EntityRecordResponse<Robot>> {
         const { data: response } = await this.client
             .get(`robots/${id}/integrity`);
 

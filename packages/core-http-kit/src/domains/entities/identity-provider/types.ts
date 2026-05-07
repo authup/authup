@@ -7,7 +7,6 @@
 
 import type { IdentityProvider } from '@authup/core-kit';
 
-export type IdentityProviderCreateInput = Partial<IdentityProvider>;
-export type IdentityProviderUpdateInput = Partial<IdentityProvider>;
-export type IdentityProviderSaveInput = Partial<IdentityProvider>;
-export type IdentityProviderResponse = IdentityProvider;
+export type IdentityProviderCreatePayload = Partial<IdentityProvider>;
+export type IdentityProviderUpdatePayload = Partial<IdentityProvider>;
+export type IdentityProviderSavePayload = Partial<IdentityProvider>;

@@ -7,7 +7,6 @@
 
 import type { Realm } from '@authup/core-kit';
 
-export type RealmCreateInput = Partial<Realm>;
-export type RealmUpdateInput = Partial<Realm>;
-export type RealmSaveInput = Partial<Realm>;
-export type RealmResponse = Realm;
+export type RealmCreatePayload = Partial<Realm>;
+export type RealmUpdatePayload = Partial<Realm>;
+export type RealmSavePayload = Partial<Realm>;

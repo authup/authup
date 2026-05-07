@@ -7,6 +7,5 @@
 
 import type { UserPermission } from '@authup/core-kit';
 
-export type UserPermissionCreateInput = Partial<UserPermission>;
-export type UserPermissionUpdateInput = Partial<UserPermission>;
-export type UserPermissionResponse = UserPermission;
+export type UserPermissionCreatePayload = Partial<UserPermission>;
+export type UserPermissionUpdatePayload = Partial<UserPermission>;

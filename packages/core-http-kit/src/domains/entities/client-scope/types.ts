@@ -7,5 +7,4 @@
 
 import type { ClientScope } from '@authup/core-kit';
 
-export type ClientScopeCreateInput = Partial<ClientScope>;
-export type ClientScopeResponse = ClientScope;
+export type ClientScopeCreatePayload = Partial<ClientScope>;

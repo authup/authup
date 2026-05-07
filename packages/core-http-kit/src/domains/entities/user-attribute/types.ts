@@ -7,7 +7,6 @@
 
 import type { UserAttribute } from '@authup/core-kit';
 
-export type UserAttributeCreateInput = Partial<UserAttribute>;
-export type UserAttributeUpdateInput = Partial<UserAttribute>;
-export type UserAttributeSaveInput = Partial<UserAttribute>;
-export type UserAttributeResponse = UserAttribute;
+export type UserAttributeCreatePayload = Partial<UserAttribute>;
+export type UserAttributeUpdatePayload = Partial<UserAttribute>;
+export type UserAttributeSavePayload = Partial<UserAttribute>;

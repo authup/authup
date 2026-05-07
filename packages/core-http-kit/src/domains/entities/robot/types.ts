@@ -7,7 +7,6 @@
 
 import type { Robot } from '@authup/core-kit';
 
-export type RobotCreateInput = Partial<Robot>;
-export type RobotUpdateInput = Partial<Robot>;
-export type RobotSaveInput = Partial<Robot>;
-export type RobotResponse = Robot;
+export type RobotCreatePayload = Partial<Robot>;
+export type RobotUpdatePayload = Partial<Robot>;
+export type RobotSavePayload = Partial<Robot>;

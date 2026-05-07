@@ -7,6 +7,5 @@
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 
-export type IdentityProviderRoleMappingCreateInput = Partial<IdentityProviderRoleMapping>;
-export type IdentityProviderRoleMappingUpdateInput = Partial<IdentityProviderRoleMapping>;
-export type IdentityProviderRoleMappingResponse = IdentityProviderRoleMapping;
+export type IdentityProviderRoleMappingCreatePayload = Partial<IdentityProviderRoleMapping>;
+export type IdentityProviderRoleMappingUpdatePayload = Partial<IdentityProviderRoleMapping>;

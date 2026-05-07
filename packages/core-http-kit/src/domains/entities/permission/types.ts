@@ -12,7 +12,6 @@ export type PermissionAPICheckResponse = {
     data?: Record<string, any>
 };
 
-export type PermissionCreateInput = Partial<Permission>;
-export type PermissionUpdateInput = Partial<Permission>;
-export type PermissionSaveInput = Partial<Permission>;
-export type PermissionResponse = Permission;
+export type PermissionCreatePayload = Partial<Permission>;
+export type PermissionUpdatePayload = Partial<Permission>;
+export type PermissionSavePayload = Partial<Permission>;

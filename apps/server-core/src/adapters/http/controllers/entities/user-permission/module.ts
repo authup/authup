@@ -19,10 +19,10 @@ import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    UserPermissionCreateInput,
-    UserPermissionResponse,
-    UserPermissionUpdateInput,
+    UserPermissionCreatePayload,
+    UserPermissionUpdatePayload,
 } from '@authup/core-http-kit';
+import type { UserPermission } from '@authup/core-kit';
 import type { IUserPermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
@@ -43,7 +43,7 @@ export class UserPermissionController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<UserPermissionResponse>> {
+    ): Promise<EntityCollectionResponse<UserPermission>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -58,9 +58,9 @@ export class UserPermissionController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: UserPermissionCreateInput,
+        @DBody() data: UserPermissionCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserPermissionResponse> {
+    ): Promise<UserPermission> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
@@ -73,9 +73,9 @@ export class UserPermissionController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: UserPermissionUpdateInput,
+        @DBody() data: UserPermissionUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserPermissionResponse> {
+    ): Promise<UserPermission> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -88,7 +88,7 @@ export class UserPermissionController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserPermissionResponse> {
+    ): Promise<UserPermission> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -99,7 +99,7 @@ export class UserPermissionController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserPermissionResponse> {
+    ): Promise<UserPermission> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

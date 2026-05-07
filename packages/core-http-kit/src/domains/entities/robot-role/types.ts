@@ -7,5 +7,4 @@
 
 import type { RobotRole } from '@authup/core-kit';
 
-export type RobotRoleCreateInput = Partial<RobotRole>;
-export type RobotRoleResponse = RobotRole;
+export type RobotRoleCreatePayload = Partial<RobotRole>;

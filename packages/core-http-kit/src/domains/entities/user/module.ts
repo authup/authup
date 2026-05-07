@@ -13,22 +13,21 @@ import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ActivateResponse,
-    PasswordForgotInput,
+    PasswordForgotPayload,
     PasswordForgotResponse,
-    PasswordResetInput,
+    PasswordResetPayload,
     PasswordResetResponse,
-    RegisterInput,
+    RegisterPayload,
     RegisterResponse,
-    UserCreateInput,
-    UserResponse,
-    UserSaveInput,
-    UserUpdateInput,
+    UserCreatePayload,
+    UserSavePayload,
+    UserUpdatePayload,
 } from './types';
 
 export class UserAPI extends BaseAPI implements EntityAPI<User> {
     async getMany(
         options?: BuildInput<User>,
-    ): Promise<EntityCollectionResponse<UserResponse>> {
+    ): Promise<EntityCollectionResponse<User>> {
         const response = await this.client
             .get(`users${buildQuery(options)}`);
 
@@ -38,7 +37,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     async getOne(
         id: User['id'],
         options?: BuildInput<User>,
-    ): Promise<EntityRecordResponse<UserResponse>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .get(`users/${id}${buildQuery(options)}`);
 
@@ -47,7 +46,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
 
     async delete(
         id: User['id'],
-    ): Promise<EntityRecordResponse<UserResponse>> {
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .delete(`users/${id}`);
 
@@ -55,8 +54,8 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     }
 
     async create(
-        data: UserCreateInput,
-    ): Promise<EntityRecordResponse<UserResponse>> {
+        data: UserCreatePayload,
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client
             .post('users', nullifyEmptyObjectProperties(data));
 
@@ -65,8 +64,8 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
 
     async update(
         id: User['id'],
-        data: UserUpdateInput,
-    ): Promise<EntityRecordResponse<UserResponse>> {
+        data: UserUpdatePayload,
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client.post(`users/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -74,8 +73,8 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
 
     async createOrUpdate(
         idOrName: string,
-        data: UserSaveInput,
-    ): Promise<EntityRecordResponse<UserResponse>> {
+        data: UserSavePayload,
+    ): Promise<EntityRecordResponse<User>> {
         const response = await this.client.put(`users/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -92,7 +91,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     }
 
     async register(
-        data: RegisterInput,
+        data: RegisterPayload,
     ): Promise<RegisterResponse> {
         const response = await this.client.post('register', nullifyEmptyObjectProperties(data));
 
@@ -100,7 +99,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     }
 
     async passwordForgot(
-        data: PasswordForgotInput,
+        data: PasswordForgotPayload,
     ) : Promise<PasswordForgotResponse> {
         const response = await this.client.post('password-forgot', nullifyEmptyObjectProperties(data));
 
@@ -108,7 +107,7 @@ export class UserAPI extends BaseAPI implements EntityAPI<User> {
     }
 
     async passwordReset(
-        data: PasswordResetInput,
+        data: PasswordResetPayload,
     ) : Promise<PasswordResetResponse> {
         const response = await this.client.post('password-reset', nullifyEmptyObjectProperties(data));
 

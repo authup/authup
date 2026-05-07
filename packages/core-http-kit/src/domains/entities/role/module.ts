@@ -12,38 +12,37 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
-    RoleCreateInput,
-    RoleResponse,
-    RoleSaveInput,
-    RoleUpdateInput,
+    RoleCreatePayload,
+    RoleSavePayload,
+    RoleUpdatePayload,
 } from './types';
 
 export class RoleAPI extends BaseAPI implements EntityAPI<Role> {
-    async getMany(data?: BuildInput<Role>): Promise<EntityCollectionResponse<RoleResponse>> {
+    async getMany(data?: BuildInput<Role>): Promise<EntityCollectionResponse<Role>> {
         const response = await this.client.get(`roles${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: Role['id']): Promise<EntityRecordResponse<RoleResponse>> {
+    async getOne(roleId: Role['id']): Promise<EntityRecordResponse<Role>> {
         const response = await this.client.get(`roles/${roleId}`);
 
         return response.data;
     }
 
-    async delete(roleId: Role['id']): Promise<EntityRecordResponse<RoleResponse>> {
+    async delete(roleId: Role['id']): Promise<EntityRecordResponse<Role>> {
         const response = await this.client.delete(`roles/${roleId}`);
 
         return response.data;
     }
 
-    async create(data: RoleCreateInput): Promise<EntityRecordResponse<RoleResponse>> {
+    async create(data: RoleCreatePayload): Promise<EntityRecordResponse<Role>> {
         const response = await this.client.post('roles', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Role['id'], data: RoleUpdateInput): Promise<EntityRecordResponse<RoleResponse>> {
+    async update(id: Role['id'], data: RoleUpdatePayload): Promise<EntityRecordResponse<Role>> {
         const response = await this.client.post(`roles/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -51,8 +50,8 @@ export class RoleAPI extends BaseAPI implements EntityAPI<Role> {
 
     async createOrUpdate(
         idOrName: string,
-        data: RoleSaveInput,
-    ): Promise<EntityRecordResponse<RoleResponse>> {
+        data: RoleSavePayload,
+    ): Promise<EntityRecordResponse<Role>> {
         const response = await this.client.put(`roles/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

@@ -19,10 +19,10 @@ import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    RolePermissionCreateInput,
-    RolePermissionResponse,
-    RolePermissionUpdateInput,
+    RolePermissionCreatePayload,
+    RolePermissionUpdatePayload,
 } from '@authup/core-http-kit';
+import type { RolePermission } from '@authup/core-kit';
 import type { IRolePermissionService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
@@ -43,7 +43,7 @@ export class RolePermissionController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<RolePermissionResponse>> {
+    ): Promise<EntityCollectionResponse<RolePermission>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -58,9 +58,9 @@ export class RolePermissionController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: RolePermissionCreateInput,
+        @DBody() data: RolePermissionCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<RolePermissionResponse> {
+    ): Promise<RolePermission> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
@@ -73,9 +73,9 @@ export class RolePermissionController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: RolePermissionUpdateInput,
+        @DBody() data: RolePermissionUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<RolePermissionResponse> {
+    ): Promise<RolePermission> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -88,7 +88,7 @@ export class RolePermissionController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<RolePermissionResponse> {
+    ): Promise<RolePermission> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -99,7 +99,7 @@ export class RolePermissionController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<RolePermissionResponse> {
+    ): Promise<RolePermission> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

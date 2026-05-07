@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { RegisterInput, RegisterResponse } from '@authup/core-http-kit';
+import type { RegisterPayload, RegisterResponse } from '@authup/core-http-kit';
 import {
     DBody,
     DContext,
@@ -29,7 +29,7 @@ export class RegisterController {
 
     @DPost('', [])
     async execute(
-        @DBody() data: RegisterInput,
+        @DBody() data: RegisterPayload,
         @DContext() event: IRoutupEvent,
     ): Promise<RegisterResponse> {
         const result = await this.service.register(data);

@@ -19,9 +19,9 @@ import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    PermissionPolicyCreateInput,
-    PermissionPolicyResponse,
+    PermissionPolicyCreatePayload,
 } from '@authup/core-http-kit';
+import type { PermissionPolicy } from '@authup/core-kit';
 import type { IPermissionPolicyService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
@@ -42,7 +42,7 @@ export class PermissionPolicyController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<PermissionPolicyResponse>> {
+    ): Promise<EntityCollectionResponse<PermissionPolicy>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -57,9 +57,9 @@ export class PermissionPolicyController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: PermissionPolicyCreateInput,
+        @DBody() data: PermissionPolicyCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<PermissionPolicyResponse> {
+    ): Promise<PermissionPolicy> {
         const actor = buildActorContext(event);
 
         const entity = await this.service.create(data, actor);
@@ -73,7 +73,7 @@ export class PermissionPolicyController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<PermissionPolicyResponse> {
+    ): Promise<PermissionPolicy> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -84,7 +84,7 @@ export class PermissionPolicyController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<PermissionPolicyResponse> {
+    ): Promise<PermissionPolicy> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

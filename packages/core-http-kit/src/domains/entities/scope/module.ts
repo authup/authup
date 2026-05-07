@@ -12,38 +12,37 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
-    ScopeCreateInput,
-    ScopeResponse,
-    ScopeSaveInput,
-    ScopeUpdateInput,
+    ScopeCreatePayload,
+    ScopeSavePayload,
+    ScopeUpdatePayload,
 } from './types';
 
 export class ScopeAPI extends BaseAPI implements EntityAPI<Scope> {
-    async getMany(data?: BuildInput<Scope>): Promise<EntityCollectionResponse<ScopeResponse>> {
+    async getMany(data?: BuildInput<Scope>): Promise<EntityCollectionResponse<Scope>> {
         const response = await this.client.get(`scopes${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: Scope['id']): Promise<EntityRecordResponse<ScopeResponse>> {
+    async getOne(id: Scope['id']): Promise<EntityRecordResponse<Scope>> {
         const response = await this.client.get(`scopes/${id}`);
 
         return response.data;
     }
 
-    async delete(id: Scope['id']): Promise<EntityRecordResponse<ScopeResponse>> {
+    async delete(id: Scope['id']): Promise<EntityRecordResponse<Scope>> {
         const response = await this.client.delete(`scopes/${id}`);
 
         return response.data;
     }
 
-    async create(data: ScopeCreateInput): Promise<EntityRecordResponse<ScopeResponse>> {
+    async create(data: ScopeCreatePayload): Promise<EntityRecordResponse<Scope>> {
         const response = await this.client.post('scopes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: Scope['id'], data: ScopeUpdateInput): Promise<EntityRecordResponse<ScopeResponse>> {
+    async update(id: Scope['id'], data: ScopeUpdatePayload): Promise<EntityRecordResponse<Scope>> {
         const response = await this.client.post(`scopes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -51,8 +50,8 @@ export class ScopeAPI extends BaseAPI implements EntityAPI<Scope> {
 
     async createOrUpdate(
         idOrName: string,
-        data: ScopeSaveInput,
-    ): Promise<EntityRecordResponse<ScopeResponse>> {
+        data: ScopeSavePayload,
+    ): Promise<EntityRecordResponse<Scope>> {
         const response = await this.client.put(`scopes/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

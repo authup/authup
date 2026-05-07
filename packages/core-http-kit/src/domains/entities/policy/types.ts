@@ -23,18 +23,16 @@ type PolicyCreateSubset = Pick<Policy, 'name'> &
 Partial<Pick<Policy, 'display_name' | 'description' | 'invert'>> & {
     parent_id?: string | null
 };
-export type PolicyCreateRequest = PolicyCreateSubset & Record<string, any>;
-export type PolicyCreateInput = PolicyCreateRequest;
+export type PolicyCreatePayload = PolicyCreateSubset & Record<string, any>;
+export type PolicySavePayload = PolicyCreatePayload;
 
-export type BuiltInPolicyCreateRequest<
+export type BuiltInPolicyCreatePayload<
     T extends Record<string, any> = Record<string, any>,
 > = PolicyCreateSubset & BuiltInPolicies<T>;
 
 type PolicyUpdateSubset = Partial<PolicyCreateSubset>;
 
-export type PolicyUpdateRequest = PolicyUpdateSubset & Record<string, any>;
-export type PolicyUpdateInput = PolicyUpdateRequest;
-export type PolicySaveInput = PolicyCreateRequest;
-export type BuiltInPolicyUpdateRequest<
+export type PolicyUpdatePayload = PolicyUpdateSubset & Record<string, any>;
+export type BuiltInPolicyUpdatePayload<
     T extends Record<string, any> = Record<string, any>,
 > = PolicyUpdateSubset & BuiltInPolicies<T>;

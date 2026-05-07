@@ -23,11 +23,11 @@ import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
 import type {
     EntityCollectionResponse,
-    RealmCreateInput,
-    RealmResponse,
-    RealmSaveInput,
-    RealmUpdateInput,
+    RealmCreatePayload,
+    RealmSavePayload,
+    RealmUpdatePayload,
 } from '@authup/core-http-kit';
+import type { Realm } from '@authup/core-kit';
 import type { IRealmService } from '../../../../../core/index.ts';
 import { resolveURL } from '../../../../../utils/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
@@ -63,7 +63,7 @@ export class RealmController {
     @DGet('', [])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<RealmResponse>> {
+    ): Promise<EntityCollectionResponse<Realm>> {
         const {
             data,
             meta,
@@ -77,9 +77,9 @@ export class RealmController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: RealmCreateInput,
+        @DBody() data: RealmCreatePayload,
         @DContext() event: IRoutupEvent,
-    ) : Promise<RealmResponse> {
+    ) : Promise<Realm> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -89,7 +89,7 @@ export class RealmController {
     }
 
     @DGet('/:id', [])
-    async get(@DPath('id') id: string): Promise<RealmResponse> {
+    async get(@DPath('id') id: string): Promise<Realm> {
         return this.service.getOne(id);
     }
 
@@ -160,9 +160,9 @@ export class RealmController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: RealmUpdateInput,
+        @DBody() data: RealmUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ) : Promise<RealmResponse> {
+    ) : Promise<Realm> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -178,9 +178,9 @@ export class RealmController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-        @DBody() data: RealmSaveInput,
+        @DBody() data: RealmSavePayload,
         @DContext() event: IRoutupEvent,
-    ) : Promise<RealmResponse> {
+    ) : Promise<Realm> {
         const actor = buildActorContext(event);
         const {
             entity,
@@ -199,7 +199,7 @@ export class RealmController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ) : Promise<RealmResponse> {
+    ) : Promise<Realm> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

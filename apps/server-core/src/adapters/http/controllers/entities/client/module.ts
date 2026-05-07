@@ -22,10 +22,9 @@ import type { Client } from '@authup/core-kit';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
-    ClientCreateInput,
-    ClientResponse,
-    ClientSaveInput,
-    ClientUpdateInput,
+    ClientCreatePayload,
+    ClientSavePayload,
+    ClientUpdatePayload,
     EntityCollectionResponse,
 } from '@authup/core-http-kit';
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
@@ -58,7 +57,7 @@ export class ClientController {
     @DGet('', [])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<ClientResponse>> {
+    ): Promise<EntityCollectionResponse<Client>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -75,7 +74,7 @@ export class ClientController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<ClientResponse> {
+    ): Promise<Client> {
         const identity = useRequestIdentity(event);
 
         let isMe = false;
@@ -125,9 +124,9 @@ export class ClientController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: ClientCreateInput,
+        @DBody() data: ClientCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<ClientResponse> {
+    ): Promise<Client> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -139,9 +138,9 @@ export class ClientController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: ClientUpdateInput,
+        @DBody() data: ClientUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<ClientResponse> {
+    ): Promise<Client> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -153,9 +152,9 @@ export class ClientController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-        @DBody() data: ClientSaveInput,
+        @DBody() data: ClientSavePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<ClientResponse> {
+    ): Promise<Client> {
         const actor = buildActorContext(event);
         const {
             entity,
@@ -174,7 +173,7 @@ export class ClientController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<ClientResponse> {
+    ): Promise<Client> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

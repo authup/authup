@@ -13,10 +13,9 @@ import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import { BaseAPI } from '../../base';
 import type {
-    IdentityProviderCreateInput,
-    IdentityProviderResponse,
-    IdentityProviderSaveInput,
-    IdentityProviderUpdateInput,
+    IdentityProviderCreatePayload,
+    IdentityProviderSavePayload,
+    IdentityProviderUpdatePayload,
 } from './types';
 
 export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityProvider> {
@@ -24,7 +23,7 @@ export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityPr
         return cleanDoubleSlashes(`${this.client.defaults.baseURL}/${buildIdentityProviderAuthorizePath(id)}`);
     }
 
-    async getMany(record?: BuildInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProviderResponse>> {
+    async getMany(record?: BuildInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProvider>> {
         const response = await this.client.get(`identity-providers${buildQuery(record)}`);
 
         return response.data;
@@ -33,25 +32,25 @@ export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityPr
     async getOne(
         id: IdentityProvider['id'],
         record?: BuildInput<IdentityProvider>,
-    ): Promise<EntityRecordResponse<IdentityProviderResponse>> {
+    ): Promise<EntityRecordResponse<IdentityProvider>> {
         const response = await this.client.get(`identity-providers/${id}${buildQuery(record)}`);
 
         return response.data;
     }
 
-    async delete(id: IdentityProvider['id']): Promise<EntityRecordResponse<IdentityProviderResponse>> {
+    async delete(id: IdentityProvider['id']): Promise<EntityRecordResponse<IdentityProvider>> {
         const response = await this.client.delete(`identity-providers/${id}`);
 
         return response.data;
     }
 
-    async create(data: IdentityProviderCreateInput): Promise<EntityRecordResponse<IdentityProviderResponse>> {
+    async create(data: IdentityProviderCreatePayload): Promise<EntityRecordResponse<IdentityProvider>> {
         const response = await this.client.post('identity-providers', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: IdentityProvider['id'], data: IdentityProviderUpdateInput): Promise<EntityRecordResponse<IdentityProviderResponse>> {
+    async update(id: IdentityProvider['id'], data: IdentityProviderUpdatePayload): Promise<EntityRecordResponse<IdentityProvider>> {
         const response = await this.client.post(`identity-providers/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;
@@ -59,8 +58,8 @@ export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityPr
 
     async createOrUpdate(
         idOrName: string,
-        data: IdentityProviderSaveInput,
-    ): Promise<EntityRecordResponse<IdentityProviderResponse>> {
+        data: IdentityProviderSavePayload,
+    ): Promise<EntityRecordResponse<IdentityProvider>> {
         const response = await this.client.put(`identity-providers/${idOrName}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

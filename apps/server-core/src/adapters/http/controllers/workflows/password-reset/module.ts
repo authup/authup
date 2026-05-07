@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PasswordResetInput, PasswordResetResponse } from '@authup/core-http-kit';
+import type { PasswordResetPayload, PasswordResetResponse } from '@authup/core-http-kit';
 import {
     DBody,
     DContext,
@@ -29,7 +29,7 @@ export class PasswordResetController {
 
     @DPost('', [])
     async execute(
-        @DBody() data: PasswordResetInput,
+        @DBody() data: PasswordResetPayload,
         @DContext() event: IRoutupEvent,
     ): Promise<PasswordResetResponse> {
         const result = await this.service.resetPassword(data);

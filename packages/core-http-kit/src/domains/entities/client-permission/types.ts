@@ -7,6 +7,5 @@
 
 import type { ClientPermission } from '@authup/core-kit';
 
-export type ClientPermissionCreateInput = Partial<ClientPermission>;
-export type ClientPermissionUpdateInput = Partial<ClientPermission>;
-export type ClientPermissionResponse = ClientPermission;
+export type ClientPermissionCreatePayload = Partial<ClientPermission>;
+export type ClientPermissionUpdatePayload = Partial<ClientPermission>;

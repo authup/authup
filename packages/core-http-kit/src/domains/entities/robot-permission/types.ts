@@ -7,6 +7,5 @@
 
 import type { RobotPermission } from '@authup/core-kit';
 
-export type RobotPermissionCreateInput = Partial<RobotPermission>;
-export type RobotPermissionUpdateInput = Partial<RobotPermission>;
-export type RobotPermissionResponse = RobotPermission;
+export type RobotPermissionCreatePayload = Partial<RobotPermission>;
+export type RobotPermissionUpdatePayload = Partial<RobotPermission>;

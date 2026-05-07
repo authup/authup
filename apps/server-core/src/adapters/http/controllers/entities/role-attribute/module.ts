@@ -19,10 +19,10 @@ import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    RoleAttributeCreateInput,
-    RoleAttributeResponse,
-    RoleAttributeUpdateInput,
+    RoleAttributeCreatePayload,
+    RoleAttributeUpdatePayload,
 } from '@authup/core-http-kit';
+import type { RoleAttribute } from '@authup/core-kit';
 import type { IRoleAttributeService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
@@ -43,7 +43,7 @@ export class RoleAttributeController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<RoleAttributeResponse>> {
+    ): Promise<EntityCollectionResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -58,9 +58,9 @@ export class RoleAttributeController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: RoleAttributeCreateInput,
+        @DBody() data: RoleAttributeCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<RoleAttributeResponse> {
+    ): Promise<RoleAttribute> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -73,7 +73,7 @@ export class RoleAttributeController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<RoleAttributeResponse> {
+    ): Promise<RoleAttribute> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -83,9 +83,9 @@ export class RoleAttributeController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: RoleAttributeUpdateInput,
+        @DBody() data: RoleAttributeUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<RoleAttributeResponse> {
+    ): Promise<RoleAttribute> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -98,7 +98,7 @@ export class RoleAttributeController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<RoleAttributeResponse> {
+    ): Promise<RoleAttribute> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

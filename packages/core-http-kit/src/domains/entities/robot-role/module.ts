@@ -10,28 +10,28 @@ import { buildQuery } from 'rapiq';
 import type { RobotRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
 import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { RobotRoleCreateInput, RobotRoleResponse } from './types';
+import type { RobotRoleCreatePayload } from './types';
 
 export class RobotRoleAPI extends BaseAPI implements EntityAPISlim<RobotRole> {
-    async getMany(data: BuildInput<RobotRole> = {}): Promise<EntityCollectionResponse<RobotRoleResponse>> {
+    async getMany(data: BuildInput<RobotRole> = {}): Promise<EntityCollectionResponse<RobotRole>> {
         const response = await this.client.get(`robot-roles${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: RobotRole['id']): Promise<EntityRecordResponse<RobotRoleResponse>> {
+    async getOne(id: RobotRole['id']): Promise<EntityRecordResponse<RobotRole>> {
         const response = await this.client.get(`robot-roles/${id}`);
 
         return response.data;
     }
 
-    async delete(id: RobotRole['id']): Promise<EntityRecordResponse<RobotRoleResponse>> {
+    async delete(id: RobotRole['id']): Promise<EntityRecordResponse<RobotRole>> {
         const response = await this.client.delete(`robot-roles/${id}`);
 
         return response.data;
     }
 
-    async create(data: RobotRoleCreateInput): Promise<EntityRecordResponse<RobotRoleResponse>> {
+    async create(data: RobotRoleCreatePayload): Promise<EntityRecordResponse<RobotRole>> {
         const response = await this.client.post('robot-roles', data);
 
         return response.data;

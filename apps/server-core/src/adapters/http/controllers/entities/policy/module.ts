@@ -8,10 +8,10 @@
 import type {
     EntityCollectionResponse,
     PolicyAPICheckResponse,
-    PolicyCreateInput,
+    PolicyCreatePayload,
     PolicyResponse,
-    PolicySaveInput,
-    PolicyUpdateInput,
+    PolicySavePayload,
+    PolicyUpdatePayload,
 } from '@authup/core-http-kit';
 import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 import { isUUID } from '@authup/kit';
@@ -161,7 +161,7 @@ export class PolicyController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async update(
         @DPath('id') id: string,
-        @DBody() data: PolicyUpdateInput,
+        @DBody() data: PolicyUpdatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);
@@ -179,7 +179,7 @@ export class PolicyController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async replace(
         @DPath('id') id: string,
-        @DBody() data: PolicySaveInput,
+        @DBody() data: PolicySavePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);
@@ -212,7 +212,7 @@ export class PolicyController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async create(
-        @DBody() data: PolicyCreateInput,
+        @DBody() data: PolicyCreatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);

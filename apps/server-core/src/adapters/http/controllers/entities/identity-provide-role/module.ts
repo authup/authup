@@ -19,10 +19,10 @@ import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    IdentityProviderRoleMappingCreateInput,
-    IdentityProviderRoleMappingResponse,
-    IdentityProviderRoleMappingUpdateInput,
+    IdentityProviderRoleMappingCreatePayload,
+    IdentityProviderRoleMappingUpdatePayload,
 } from '@authup/core-http-kit';
+import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import type {
     IIdentityProviderRoleMappingService,
 } from '../../../../../core/index.ts';
@@ -47,7 +47,7 @@ export class IdentityProviderRoleMappingController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<IdentityProviderRoleMappingResponse>> {
+    ): Promise<EntityCollectionResponse<IdentityProviderRoleMapping>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -64,7 +64,7 @@ export class IdentityProviderRoleMappingController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<IdentityProviderRoleMappingResponse> {
+    ): Promise<IdentityProviderRoleMapping> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -73,9 +73,9 @@ export class IdentityProviderRoleMappingController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: IdentityProviderRoleMappingCreateInput,
+        @DBody() data: IdentityProviderRoleMappingCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<IdentityProviderRoleMappingResponse> {
+    ): Promise<IdentityProviderRoleMapping> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -87,9 +87,9 @@ export class IdentityProviderRoleMappingController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: IdentityProviderRoleMappingUpdateInput,
+        @DBody() data: IdentityProviderRoleMappingUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<IdentityProviderRoleMappingResponse> {
+    ): Promise<IdentityProviderRoleMapping> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -102,7 +102,7 @@ export class IdentityProviderRoleMappingController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<IdentityProviderRoleMappingResponse> {
+    ): Promise<IdentityProviderRoleMapping> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

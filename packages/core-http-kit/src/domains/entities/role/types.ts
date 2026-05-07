@@ -7,7 +7,6 @@
 
 import type { Role } from '@authup/core-kit';
 
-export type RoleCreateInput = Partial<Role>;
-export type RoleUpdateInput = Partial<Role>;
-export type RoleSaveInput = Partial<Role>;
-export type RoleResponse = Role;
+export type RoleCreatePayload = Partial<Role>;
+export type RoleUpdatePayload = Partial<Role>;
+export type RoleSavePayload = Partial<Role>;

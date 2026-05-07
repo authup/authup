@@ -295,13 +295,13 @@ Feature gates check these options before proceeding (e.g. `if (!this.options.reg
 
 ### Thin Controller Pattern (HTTP Adapter)
 
-Controllers are thin HTTP adapters. They extract input from the routup `IRoutupEvent`, build an `ActorContext`, delegate to the service, and format the HTTP response. Request body and response types are imported from `@authup/core-http-kit` so the same contract is shared between the typed Client, the controller, and `@trapi/swagger` schema generation:
+Controllers are thin HTTP adapters. They extract input from the routup `IRoutupEvent`, build an `ActorContext`, delegate to the service, and format the HTTP response. Request body payload types come from `@authup/core-http-kit` (shared between the typed Client, the controller, and `@trapi/swagger` schema generation); response types are the domain entity from `@authup/core-kit` directly:
 
 ```typescript
+import type { Role } from '@authup/core-kit';
 import type {
     EntityCollectionResponse,
-    RoleCreateInput,
-    RoleResponse,
+    RoleCreatePayload,
 } from '@authup/core-http-kit';
 
 export type RoleControllerContext = {
@@ -317,14 +317,14 @@ export class RoleController {
     }
 
     @DGet('')
-    async getMany(@DContext() event: IRoutupEvent): Promise<EntityCollectionResponse<RoleResponse>> {
+    async getMany(@DContext() event: IRoutupEvent): Promise<EntityCollectionResponse<Role>> {
         const actor = buildActorContext(event);
         const { data, meta } = await this.service.getMany(useRequestQuery(event), actor);
         return { data, meta };
     }
 
     @DPost('')
-    async add(@DBody() data: RoleCreateInput, @DContext() event: IRoutupEvent): Promise<RoleResponse> {
+    async add(@DBody() data: RoleCreatePayload, @DContext() event: IRoutupEvent): Promise<Role> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
         event.response.status = 201;
@@ -332,7 +332,7 @@ export class RoleController {
     }
 
     @DDelete('/:id')
-    async drop(@DPath('id') id: string, @DContext() event: IRoutupEvent): Promise<RoleResponse> {
+    async drop(@DPath('id') id: string, @DContext() event: IRoutupEvent): Promise<Role> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
         event.response.status = 202;
@@ -342,8 +342,8 @@ export class RoleController {
 ```
 
 Controller conventions:
-- Return type is the concrete response type (`Promise<RoleResponse>`, `Promise<EntityCollectionResponse<RoleResponse>>`) — sourced from `@authup/core-http-kit`. This lets `@trapi/swagger` extract the response schema from the method signature.
-- Body parameter type is the concrete request type (`@DBody() data: RoleCreateInput`) — also sourced from `@authup/core-http-kit`. Naming convention: `<Entity>CreateInput` for POST, `<Entity>UpdateInput` for POST `/:id`, `<Entity>SaveInput` for PUT `/:id`, `<Entity>Response` for the response shape.
+- Return type is the domain entity directly (`Promise<Role>`, `Promise<EntityCollectionResponse<Role>>`). This lets `@trapi/swagger` extract the response schema from the method signature.
+- Body parameter type is the concrete payload type (`@DBody() data: RoleCreatePayload`) — sourced from `@authup/core-http-kit`. Naming convention: `<Entity>CreatePayload` for POST, `<Entity>UpdatePayload` for POST `/:id`, `<Entity>SavePayload` for PUT `/:id`. Response shapes that genuinely diverge from the domain entity (e.g. `PolicyResponse`, `RegisterResponse`, `PasswordForgotResponse`) keep a named alias; trivial passthrough aliases are not introduced.
 - **No business logic** — no permission checks, no validation, no entity manipulation
 - Read the routup event via `@DContext() event: IRoutupEvent`
 - Read the body via `@DBody() data: <RequestType>` (decorator awaits `readRequestBody` internally)

@@ -12,37 +12,36 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
-    RoleAttributeCreateInput,
-    RoleAttributeResponse,
-    RoleAttributeUpdateInput,
+    RoleAttributeCreatePayload,
+    RoleAttributeUpdatePayload,
 } from './types';
 
 export class RoleAttributeAPI extends BaseAPI implements EntityAPI<RoleAttribute> {
-    async getMany(data?: BuildInput<RoleAttribute>): Promise<EntityCollectionResponse<RoleAttributeResponse>> {
+    async getMany(data?: BuildInput<RoleAttribute>): Promise<EntityCollectionResponse<RoleAttribute>> {
         const response = await this.client.get(`role-attributes${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: RoleAttribute['id']): Promise<EntityRecordResponse<RoleAttributeResponse>> {
+    async getOne(roleId: RoleAttribute['id']): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.get(`role-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async delete(roleId: RoleAttribute['id']): Promise<EntityRecordResponse<RoleAttributeResponse>> {
+    async delete(roleId: RoleAttribute['id']): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.delete(`role-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async create(data: RoleAttributeCreateInput): Promise<EntityRecordResponse<RoleAttributeResponse>> {
+    async create(data: RoleAttributeCreatePayload): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.post('role-attributes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: RoleAttribute['id'], data: RoleAttributeUpdateInput): Promise<EntityRecordResponse<RoleAttributeResponse>> {
+    async update(id: RoleAttribute['id'], data: RoleAttributeUpdatePayload): Promise<EntityRecordResponse<RoleAttribute>> {
         const response = await this.client.post(`role-attributes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

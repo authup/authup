@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PasswordForgotInput, PasswordForgotResponse } from '@authup/core-http-kit';
+import type { PasswordForgotPayload, PasswordForgotResponse } from '@authup/core-http-kit';
 import {
     DBody,
     DContext,
@@ -29,7 +29,7 @@ export class PasswordForgotController {
 
     @DPost('', [])
     async execute(
-        @DBody() data: PasswordForgotInput,
+        @DBody() data: PasswordForgotPayload,
         @DContext() event: IRoutupEvent,
     ): Promise<PasswordForgotResponse> {
         const result = await this.service.forgotPassword(data);

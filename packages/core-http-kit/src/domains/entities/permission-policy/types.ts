@@ -7,6 +7,5 @@
 
 import type { PermissionPolicy } from '@authup/core-kit';
 
-export type PermissionPolicyCreateInput = Partial<PermissionPolicy>;
-export type PermissionPolicyUpdateInput = Partial<PermissionPolicy>;
-export type PermissionPolicyResponse = PermissionPolicy;
+export type PermissionPolicyCreatePayload = Partial<PermissionPolicy>;
+export type PermissionPolicyUpdatePayload = Partial<PermissionPolicy>;

@@ -20,11 +20,11 @@ import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    ScopeCreateInput,
-    ScopeResponse,
-    ScopeSaveInput,
-    ScopeUpdateInput,
+    ScopeCreatePayload,
+    ScopeSavePayload,
+    ScopeUpdatePayload,
 } from '@authup/core-http-kit';
+import type { Scope } from '@authup/core-kit';
 import type { IScopeService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
@@ -45,7 +45,7 @@ export class ScopeController {
     @DGet('', [])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<ScopeResponse>> {
+    ): Promise<EntityCollectionResponse<Scope>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -60,9 +60,9 @@ export class ScopeController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: ScopeCreateInput,
+        @DBody() data: ScopeCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<ScopeResponse> {
+    ): Promise<Scope> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -75,7 +75,7 @@ export class ScopeController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<ScopeResponse> {
+    ): Promise<Scope> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
             id,
@@ -88,9 +88,9 @@ export class ScopeController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: ScopeUpdateInput,
+        @DBody() data: ScopeUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<ScopeResponse> {
+    ): Promise<Scope> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -106,9 +106,9 @@ export class ScopeController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-        @DBody() data: ScopeSaveInput,
+        @DBody() data: ScopeSavePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<ScopeResponse> {
+    ): Promise<Scope> {
         const actor = buildActorContext(event);
         const {
             entity,
@@ -127,7 +127,7 @@ export class ScopeController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<ScopeResponse> {
+    ): Promise<Scope> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

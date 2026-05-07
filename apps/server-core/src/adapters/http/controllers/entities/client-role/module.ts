@@ -18,10 +18,10 @@ import {
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
-    ClientRoleCreateInput,
-    ClientRoleResponse,
+    ClientRoleCreatePayload,
     EntityCollectionResponse,
 } from '@authup/core-http-kit';
+import type { ClientRole } from '@authup/core-kit';
 import type { IClientRoleService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
@@ -44,7 +44,7 @@ export class ClientRoleController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<ClientRoleResponse>> {
+    ): Promise<EntityCollectionResponse<ClientRole>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -59,9 +59,9 @@ export class ClientRoleController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: ClientRoleCreateInput,
+        @DBody() data: ClientRoleCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<ClientRoleResponse> {
+    ): Promise<ClientRole> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -74,7 +74,7 @@ export class ClientRoleController {
     async getOne(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<ClientRoleResponse> {
+    ): Promise<ClientRole> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
 
@@ -85,7 +85,7 @@ export class ClientRoleController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<ClientRoleResponse> {
+    ): Promise<ClientRole> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 

@@ -7,6 +7,5 @@
 
 import type { RolePermission } from '@authup/core-kit';
 
-export type RolePermissionCreateInput = Partial<RolePermission>;
-export type RolePermissionUpdateInput = Partial<RolePermission>;
-export type RolePermissionResponse = RolePermission;
+export type RolePermissionCreatePayload = Partial<RolePermission>;
+export type RolePermissionUpdatePayload = Partial<RolePermission>;

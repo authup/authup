@@ -7,5 +7,4 @@
 
 import type { ClientRole } from '@authup/core-kit';
 
-export type ClientRoleCreateInput = Partial<ClientRole>;
-export type ClientRoleResponse = ClientRole;
+export type ClientRoleCreatePayload = Partial<ClientRole>;

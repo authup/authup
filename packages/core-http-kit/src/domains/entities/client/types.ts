@@ -7,7 +7,6 @@
 
 import type { Client } from '@authup/core-kit';
 
-export type ClientCreateInput = Partial<Client>;
-export type ClientUpdateInput = Partial<Client>;
-export type ClientSaveInput = Partial<Client>;
-export type ClientResponse = Client;
+export type ClientCreatePayload = Partial<Client>;
+export type ClientUpdatePayload = Partial<Client>;
+export type ClientSavePayload = Partial<Client>;

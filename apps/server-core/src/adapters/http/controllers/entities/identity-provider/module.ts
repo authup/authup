@@ -42,10 +42,9 @@ import { readRequestBody } from '@routup/basic/body';
 import { OAuth2Error } from '@authup/specs';
 import type {
     EntityCollectionResponse,
-    IdentityProviderCreateInput,
-    IdentityProviderResponse,
-    IdentityProviderSaveInput,
-    IdentityProviderUpdateInput,
+    IdentityProviderCreatePayload,
+    IdentityProviderSavePayload,
+    IdentityProviderUpdatePayload,
 } from '@authup/core-http-kit';
 import { URL } from 'node:url';
 import type {
@@ -109,7 +108,7 @@ export class IdentityProviderController {
     @DGet('', [])
     async getProviders(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<IdentityProviderResponse>> {
+    ): Promise<EntityCollectionResponse<IdentityProvider>> {
         const {
             data, 
             meta, 
@@ -143,7 +142,7 @@ export class IdentityProviderController {
     async getProvider(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<IdentityProviderResponse> {
+    ): Promise<IdentityProvider> {
         const paramId = useRequestParamID(event, { isUUID: false });
 
         const entity = await this.repository.findOneByIdOrName(
@@ -171,18 +170,18 @@ export class IdentityProviderController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async editProvider(
         @DPath('id') id: string,
-        @DBody() user: IdentityProviderUpdateInput,
+        @DBody() user: IdentityProviderUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ) : Promise<IdentityProviderResponse> {
+    ) : Promise<IdentityProvider> {
         return this.write(event, { updateOnly: true });
     }
 
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-        @DBody() user: IdentityProviderSaveInput,
+        @DBody() user: IdentityProviderSavePayload,
         @DContext() event: IRoutupEvent,
-    ) : Promise<IdentityProviderResponse> {
+    ) : Promise<IdentityProvider> {
         return this.write(event);
     }
 
@@ -190,7 +189,7 @@ export class IdentityProviderController {
     async dropProvider(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ) : Promise<IdentityProviderResponse> {
+    ) : Promise<IdentityProvider> {
         const paramId = useRequestParamID(event);
 
         const permissionEvaluator = useRequestPermissionEvaluator(event);
@@ -220,9 +219,9 @@ export class IdentityProviderController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
-        @DBody() user: IdentityProviderCreateInput,
+        @DBody() user: IdentityProviderCreatePayload,
         @DContext() event: IRoutupEvent,
-    ) : Promise<IdentityProviderResponse> {
+    ) : Promise<IdentityProvider> {
         return this.write(event);
     }
 
@@ -358,7 +357,7 @@ export class IdentityProviderController {
 
     private async write(event: IRoutupEvent, options: {
         updateOnly?: boolean
-    } = {}): Promise<IdentityProviderResponse> {
+    } = {}): Promise<IdentityProvider> {
         let group: string;
         const id = getRequestParamID(event, { isUUID: false });
         const body = await readRequestBody(event);

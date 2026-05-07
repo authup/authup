@@ -12,37 +12,36 @@ import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
 import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
-    UserAttributeCreateInput,
-    UserAttributeResponse,
-    UserAttributeUpdateInput,
+    UserAttributeCreatePayload,
+    UserAttributeUpdatePayload,
 } from './types';
 
 export class UserAttributeAPI extends BaseAPI implements EntityAPI<UserAttribute> {
-    async getMany(data?: BuildInput<UserAttribute>): Promise<EntityCollectionResponse<UserAttributeResponse>> {
+    async getMany(data?: BuildInput<UserAttribute>): Promise<EntityCollectionResponse<UserAttribute>> {
         const response = await this.client.get(`user-attributes${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttributeResponse>> {
+    async getOne(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttribute>> {
         const response = await this.client.get(`user-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async delete(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttributeResponse>> {
+    async delete(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttribute>> {
         const response = await this.client.delete(`user-attributes/${roleId}`);
 
         return response.data;
     }
 
-    async create(data: UserAttributeCreateInput): Promise<EntityRecordResponse<UserAttributeResponse>> {
+    async create(data: UserAttributeCreatePayload): Promise<EntityRecordResponse<UserAttribute>> {
         const response = await this.client.post('user-attributes', nullifyEmptyObjectProperties(data));
 
         return response.data;
     }
 
-    async update(id: UserAttribute['id'], data: UserAttributeUpdateInput): Promise<EntityRecordResponse<UserAttributeResponse>> {
+    async update(id: UserAttribute['id'], data: UserAttributeUpdatePayload): Promise<EntityRecordResponse<UserAttribute>> {
         const response = await this.client.post(`user-attributes/${id}`, nullifyEmptyObjectProperties(data));
 
         return response.data;

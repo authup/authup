@@ -20,11 +20,11 @@ import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
-    UserCreateInput,
-    UserResponse,
-    UserSaveInput,
-    UserUpdateInput,
+    UserCreatePayload,
+    UserSavePayload,
+    UserUpdatePayload,
 } from '@authup/core-http-kit';
+import type { User } from '@authup/core-kit';
 import type { IUserService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
@@ -46,7 +46,7 @@ export class UserController {
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
         @DContext() event: IRoutupEvent,
-    ): Promise<EntityCollectionResponse<UserResponse>> {
+    ): Promise<EntityCollectionResponse<User>> {
         const actor = buildActorContext(event);
         const {
             data,
@@ -63,7 +63,7 @@ export class UserController {
     async get(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserResponse> {
+    ): Promise<User> {
         const actor = buildActorContext(event);
         let paramId = id;
 
@@ -87,9 +87,9 @@ export class UserController {
 
     @DPost('', [ForceLoggedInMiddleware])
     async add(
-        @DBody() data: UserCreateInput,
+        @DBody() data: UserCreatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserResponse> {
+    ): Promise<User> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -101,9 +101,9 @@ export class UserController {
     @DPost('/:id', [ForceLoggedInMiddleware])
     async edit(
         @DPath('id') id: string,
-        @DBody() data: UserUpdateInput,
+        @DBody() data: UserUpdatePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserResponse> {
+    ): Promise<User> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -119,9 +119,9 @@ export class UserController {
     @DPut('/:id', [ForceLoggedInMiddleware])
     async put(
         @DPath('id') id: string,
-        @DBody() data: UserSaveInput,
+        @DBody() data: UserSavePayload,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserResponse> {
+    ): Promise<User> {
         const actor = buildActorContext(event);
         const {
             entity,
@@ -140,7 +140,7 @@ export class UserController {
     async drop(
         @DPath('id') id: string,
         @DContext() event: IRoutupEvent,
-    ): Promise<UserResponse> {
+    ): Promise<User> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
 
