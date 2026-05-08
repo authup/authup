@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-adapter:** rename http→node, add web with verify primitives ([#3038](https://github.com/authup/authup/issues/3038))
+
+### Bug Fixes
+
+* ensure consistent version for release ([18bbe73](https://github.com/authup/authup/commit/18bbe73c332f19d388536b801ddfa88241df762e))
+
+
+### Code Refactoring
+
+* **server-adapter:** rename http→node, add web with verify primitives ([#3038](https://github.com/authup/authup/issues/3038)) ([f66347a](https://github.com/authup/authup/commit/f66347a4d0d8c87f484796831b1ae02d92eecabe))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/server-adapter-kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+
 ## [1.0.0-beta.40](https://github.com/authup/authup/compare/v1.0.0-beta.39...v1.0.0-beta.40) (2026-04-30)
 
 
