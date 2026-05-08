@@ -13,7 +13,7 @@ export function createMiddleware(context: MiddlewareOptions) {
         try {
             const data = await verifySocket(socket, context);
             if (data) {
-                context.tokenVerifierHandler(socket, data);
+                await context.tokenVerifierHandler(socket, data);
             }
         } catch (e) {
             return next(e as Error);

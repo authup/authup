@@ -58,4 +58,10 @@ describe('extractBearerToken', () => {
 
         expect(caught).toBeInstanceOf(BearerTokenMalformedError);
     });
+
+    it('should accept the Bearer scheme case-insensitively', () => {
+        expect(extractBearerToken('bearer abc.def.ghi')).toBe('abc.def.ghi');
+        expect(extractBearerToken('BEARER abc.def.ghi')).toBe('abc.def.ghi');
+        expect(extractBearerToken('BeArEr abc.def.ghi')).toBe('abc.def.ghi');
+    });
 });

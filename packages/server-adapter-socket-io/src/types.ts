@@ -25,7 +25,7 @@ export type VerifySocketOptions = {
 };
 
 export type MiddlewareOptions = VerifySocketOptions & {
-    tokenVerifierHandler: (socket: Socket, data: TokenVerificationData) => void
+    tokenVerifierHandler: (socket: Socket, data: TokenVerificationData) => void | Promise<void>
 };
 
 export type Next = (err?: Error) => void;

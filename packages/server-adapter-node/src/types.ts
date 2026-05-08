@@ -14,7 +14,7 @@ export type VerifyRequestOptions = {
 };
 
 export type MiddlewareOptions = VerifyRequestOptions & {
-    tokenVerifierHandler: (req: IncomingMessage, data: TokenVerificationData) => void
+    tokenVerifierHandler: (req: IncomingMessage, data: TokenVerificationData) => void | Promise<void>
 };
 
 export type Next = (err?: Error) => void;

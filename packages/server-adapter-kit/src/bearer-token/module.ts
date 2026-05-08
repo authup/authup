@@ -18,7 +18,7 @@ export function extractBearerToken(authorization: string | undefined): string | 
     }
 
     const scheme = authorization.substring(0, spaceIndex);
-    if (scheme !== 'Bearer') {
+    if (scheme.toLowerCase() !== 'bearer') {
         throw new BearerTokenMalformedError(
             'Only Bearer tokens are accepted as authentication method.',
         );

@@ -14,7 +14,7 @@ export function createMiddleware(context: MiddlewareOptions): Middleware {
         try {
             const data = await verifyRequest(req, context);
             if (data) {
-                context.tokenVerifierHandler(req, data);
+                await context.tokenVerifierHandler(req, data);
             }
         } catch (e) {
             next(e as Error);

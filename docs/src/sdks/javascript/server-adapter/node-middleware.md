@@ -57,7 +57,7 @@ router.listen(3000);
 ## verifyRequest primitive
 
 If you need direct control over the response — for example to short-circuit unauthenticated requests with a custom
-error body — `createMiddleware` is also available as a transport-neutral primitive. It mirrors the
+error body — `verifyRequest` is available as a transport-neutral primitive. It mirrors the
 `@authup/server-adapter-web` shape:
 
 ```typescript
