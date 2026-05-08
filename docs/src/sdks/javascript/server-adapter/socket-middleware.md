@@ -50,4 +50,23 @@ server.use(createMiddleware({
 // ...
 ```
 
-For more details check out, the [API Reference]().
+The middleware also tolerates `Bearer <token>` formatted values (the prefix is stripped via
+`extractBearerToken`); bare tokens are passed through unchanged.
+
+## verifySocket primitive
+
+`createMiddleware` is a thin wrapper around the underlying primitive:
+
+```typescript
+import { verifySocket } from '@authup/server-adapter-socket-io';
+
+const data = await verifySocket(socket, { tokenVerifier });
+// data is `TokenVerificationData` when a valid token was present,
+// `undefined` when no token was provided, or rejects with `BearerTokenMalformedError` /
+// the underlying verifier error.
+```
+
+The optional `tokenBySocket` callback runs when `socket.handshake.auth.token` is missing — useful
+when you want to pull the token from `socket.handshake.headers.authorization`, the query string,
+or any other source.
+

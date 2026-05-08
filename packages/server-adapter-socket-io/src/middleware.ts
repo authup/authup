@@ -6,18 +6,15 @@
  */
 
 import type { MiddlewareOptions, Next, Socket } from './types';
+import { verifySocket } from './verify-socket';
 
 export function createMiddleware(context: MiddlewareOptions) {
     return async (socket: Socket, next: Next) => {
-        const { token } = socket.handshake.auth;
-
-        if (!token || typeof token !== 'string') {
-            return next();
-        }
-
         try {
-            const data = await context.tokenVerifier.verify(token);
-            context.tokenVerifierHandler(socket, data);
+            const data = await verifySocket(socket, context);
+            if (data) {
+                await context.tokenVerifierHandler(socket, data);
+            }
         } catch (e) {
             return next(e as Error);
         }

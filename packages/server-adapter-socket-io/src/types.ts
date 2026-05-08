@@ -7,13 +7,6 @@
 
 import type { ITokenVerifier, TokenVerificationData } from '@authup/server-adapter-kit';
 
-export type MiddlewareOptions = {
-    tokenVerifier: ITokenVerifier,
-    tokenVerifierHandler: (socket: Socket, data: TokenVerificationData) => void
-};
-
-export type Next = (err?: Error) => void;
-
 export type Handshake = {
     auth: {
         [key: string]: any;
@@ -25,3 +18,14 @@ export type Socket = {
     handshake: Handshake,
     [key: string]: any
 };
+
+export type VerifySocketOptions = {
+    tokenVerifier: ITokenVerifier,
+    tokenBySocket?: (socket: Socket) => string | undefined,
+};
+
+export type MiddlewareOptions = VerifySocketOptions & {
+    tokenVerifierHandler: (socket: Socket, data: TokenVerificationData) => void | Promise<void>
+};
+
+export type Next = (err?: Error) => void;

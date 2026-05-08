@@ -5,7 +5,5 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './middleware';
 export * from './types';
-export * from './verify-socket';
-
+export * from './verify-request';

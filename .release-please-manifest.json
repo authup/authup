@@ -11,9 +11,10 @@
     "packages/core-realtime-kit": "1.0.0-beta.40",
     "packages/errors": "1.0.0-beta.40",
     "packages/kit": "1.0.0-beta.40",
-    "packages/server-adapter-http": "1.0.0-beta.40",
     "packages/server-adapter-kit": "1.0.0-beta.40",
+    "packages/server-adapter-node": "1.0.0-beta.40",
     "packages/server-adapter-socket-io": "1.0.0-beta.40",
+    "packages/server-adapter-web": "1.0.0-beta.40",
     "packages/server-kit": "1.0.0-beta.40",
     "packages/specs": "1.0.0-beta.40"
 }

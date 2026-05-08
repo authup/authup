@@ -24,9 +24,10 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | [errors](../packages/errors)                    | Library     | A package containing error codes and a basic error class via `@ebec/http`.                                |
 | [kit](../packages/kit)                          | Library     | A package containing general (context independent) utilities.                                             |
 | [specs](../packages/specs)                      | Library     | A package containing constants, interfaces, utils, ... for different specifications.                      |
-| [server-adapter-http](../packages/server-adapter-http)| Library | An HTTP middleware adapter for token verification.                                                        |
 | [server-adapter-kit](../packages/server-adapter-kit)| Library   | Core token verification logic, caching, and shared types for server adapters.                             |
+| [server-adapter-node](../packages/server-adapter-node)| Library | A Node `IncomingMessage` middleware adapter for token verification.                                       |
 | [server-adapter-socket-io](../packages/server-adapter-socket-io)| Library | A socket.io middleware adapter for token verification.                                                |
+| [server-adapter-web](../packages/server-adapter-web)| Library   | A transport-neutral Web `Request` adapter primitive for token verification.                                |
 | [server-kit](../packages/server-kit)            | Library     | A package containing cryptographic algorithms, reusable abstractions for interacting with services, etc.. |
 
 ## Package Dependency Layers
@@ -52,8 +53,9 @@ Layer 3:
   server-adapter-kit → kit, errors, specs, core-kit, core-http-kit, server-kit
 
 Layer 4:
-  server-adapter-http      → core-kit, core-http-kit, server-adapter-kit
+  server-adapter-node      → server-adapter-kit
   server-adapter-socket-io → core-kit, server-adapter-kit
+  server-adapter-web       → errors, server-adapter-kit
 
 Application libraries:
   client-web-kit    → access, kit, core-kit, core-http-kit, core-realtime-kit, errors, specs

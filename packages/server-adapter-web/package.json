@@ -1,8 +1,8 @@
 {
-    "name": "@authup/server-adapter-socket-io",
+    "name": "@authup/server-adapter-web",
     "type": "module",
     "version": "1.0.0-beta.40",
-    "description": "A socket.io server adapter for authup",
+    "description": "A Web Request adapter primitive for authup.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
@@ -15,6 +15,9 @@
     "files": [
         "dist/"
     ],
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "tsdown",
@@ -22,18 +25,15 @@
         "test": "cross-env NODE_ENV=test vitest run test/unit",
         "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
-    "engines": {
-        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
-    },
     "keywords": [
         "auth",
         "authentication",
-        "middleware",
-        "socket-io",
-        "websocket",
-        "token-verification",
+        "web",
+        "fetch",
+        "request",
         "bearer-token",
-        "realtime"
+        "token-verification",
+        "authorization"
     ],
     "author": {
         "name": "Peter Placzek",
@@ -44,14 +44,14 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/server-adapter-socket-io"
+        "directory": "packages/server-adapter-web"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/core-kit": "^1.0.0-beta.40",
+        "@authup/errors": "^1.0.0-beta.40",
         "@authup/server-adapter-kit": "^1.0.0-beta.40"
     },
     "devDependencies": {

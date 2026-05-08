@@ -7,5 +7,5 @@
 
 export * from './middleware';
 export * from './types';
-export * from './verify-socket';
+export * from './verify-request';
 

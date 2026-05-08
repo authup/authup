@@ -1,8 +1,8 @@
 {
-    "name": "@authup/server-adapter-http",
+    "name": "@authup/server-adapter-node",
     "type": "module",
     "version": "1.0.0-beta.40",
-    "description": "A http adapter plugin for authup",
+    "description": "A Node http (req/res) adapter plugin for authup.",
     "exports": {
         "./package.json": "./package.json",
         ".": {
@@ -21,12 +21,15 @@
     "scripts": {
         "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
         "build:js": "tsdown",
-        "build": "rimraf ./dist && npm run build:js && npm run build:types"
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "test": "cross-env NODE_ENV=test vitest run test/unit",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
     },
     "keywords": [
         "auth",
         "authentication",
         "middleware",
+        "node",
         "http",
         "express",
         "bearer-token",
@@ -42,22 +45,19 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/server-adapter-http"
+        "directory": "packages/server-adapter-node"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/server-adapter-kit": "^1.0.0-beta.40",
-        "@authup/core-kit": "^1.0.0-beta.40",
-        "@authup/core-http-kit": "^1.0.0-beta.40"
+        "@authup/server-adapter-kit": "^1.0.0-beta.40"
     },
     "devDependencies": {
         "vitest": "^4.0.18"
     },
     "publishConfig": {
         "access": "public"
-    },
-    "gitHead": "ed48328bdd01d844915c26c6fcfb7fdcc1f33396"
+    }
 }
