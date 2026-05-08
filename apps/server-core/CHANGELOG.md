@@ -1,5 +1,37 @@
 # Change Log
 
+## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
+
+
+### Features
+
+* **core-http-kit, server-core:** typed request/response signatures f… ([#3036](https://github.com/authup/authup/issues/3036)) ([b111d66](https://github.com/authup/authup/commit/b111d66212be41f97116b2eb83f9cbf1e3808dd3))
+* **server-core:** migrate to routup v5 + swagger split ([#3030](https://github.com/authup/authup/issues/3030)) ([d14ae3a](https://github.com/authup/authup/commit/d14ae3a1b333ece7093a4275d6028a024d98307b))
+* **server-core:** restore swagger security schemes via trapi config file ([5486cc5](https://github.com/authup/authup/commit/5486cc57edddb3a133094fd71dcf263152874ea1))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 15 updates ([#3028](https://github.com/authup/authup/issues/3028)) ([45a5732](https://github.com/authup/authup/commit/45a57324183ef849ab5fddea60dc11d3723b926c))
+* **server-core:** expose content-disposition via cors ([44a4b2c](https://github.com/authup/authup/commit/44a4b2ca465276b9f5a9cd202546802144d081c4))
+* **server-core:** expose location / content-range / accept-ranges / www-authenticate via cors ([7576120](https://github.com/authup/authup/commit/757612041a8f27fd79198d2f8df5884adfb580c4))
+* **server-core:** graceful shutdown via app.teardown on SIGINT/SIGTERM ([8b629b4](https://github.com/authup/authup/commit/8b629b44600475550bea00968d7a324a69770b26))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/core-http-kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/core-kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/errors bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/server-kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/specs bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+
 ## [1.0.0-beta.40](https://github.com/authup/authup/compare/v1.0.0-beta.39...v1.0.0-beta.40) (2026-04-30)
 
 

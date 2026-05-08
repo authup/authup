@@ -3,6 +3,34 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-adapter:** rename http→node, add web with verify primitives ([#3038](https://github.com/authup/authup/issues/3038))
+
+### Features
+
+* **core-http-kit, server-core:** typed request/response signatures f… ([#3036](https://github.com/authup/authup/issues/3036)) ([b111d66](https://github.com/authup/authup/commit/b111d66212be41f97116b2eb83f9cbf1e3808dd3))
+* **server-core:** migrate to routup v5 + swagger split ([#3030](https://github.com/authup/authup/issues/3030)) ([d14ae3a](https://github.com/authup/authup/commit/d14ae3a1b333ece7093a4275d6028a024d98307b))
+* **server-core:** restore swagger security schemes via trapi config file ([5486cc5](https://github.com/authup/authup/commit/5486cc57edddb3a133094fd71dcf263152874ea1))
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 15 updates ([#3028](https://github.com/authup/authup/issues/3028)) ([45a5732](https://github.com/authup/authup/commit/45a57324183ef849ab5fddea60dc11d3723b926c))
+* ensure consistent version for release ([e2a078f](https://github.com/authup/authup/commit/e2a078f0573a5316c7206dda8cba58cbd59d77f9))
+* ensure consistent version for release ([18bbe73](https://github.com/authup/authup/commit/18bbe73c332f19d388536b801ddfa88241df762e))
+* **server-core:** expose content-disposition via cors ([44a4b2c](https://github.com/authup/authup/commit/44a4b2ca465276b9f5a9cd202546802144d081c4))
+* **server-core:** expose location / content-range / accept-ranges / www-authenticate via cors ([7576120](https://github.com/authup/authup/commit/757612041a8f27fd79198d2f8df5884adfb580c4))
+* **server-core:** graceful shutdown via app.teardown on SIGINT/SIGTERM ([8b629b4](https://github.com/authup/authup/commit/8b629b44600475550bea00968d7a324a69770b26))
+
+
+### Code Refactoring
+
+* **server-adapter:** rename http→node, add web with verify primitives ([#3038](https://github.com/authup/authup/issues/3038)) ([f66347a](https://github.com/authup/authup/commit/f66347a4d0d8c87f484796831b1ae02d92eecabe))
+
 ## [1.0.0-beta.40](https://github.com/authup/authup/compare/v1.0.0-beta.39...v1.0.0-beta.40) (2026-04-30)
 
 

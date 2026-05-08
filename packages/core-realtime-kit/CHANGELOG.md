@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([e2a078f](https://github.com/authup/authup/commit/e2a078f0573a5316c7206dda8cba58cbd59d77f9))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+  * peerDependencies
+    * @authup/kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+
 ## [1.0.0-beta.40](https://github.com/authup/authup/compare/v1.0.0-beta.39...v1.0.0-beta.40) (2026-04-30)
 
 

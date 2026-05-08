@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
+
+
+### Features
+
+* **core-http-kit, server-core:** typed request/response signatures f… ([#3036](https://github.com/authup/authup/issues/3036)) ([b111d66](https://github.com/authup/authup/commit/b111d66212be41f97116b2eb83f9cbf1e3808dd3))
+* **server-core:** migrate to routup v5 + swagger split ([#3030](https://github.com/authup/authup/issues/3030)) ([d14ae3a](https://github.com/authup/authup/commit/d14ae3a1b333ece7093a4275d6028a024d98307b))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/errors bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/core-kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/specs bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/errors bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/core-kit bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+    * @authup/specs bumped from ^1.0.0-beta.40 to ^1.0.0-beta.41
+
 ## [1.0.0-beta.40](https://github.com/authup/authup/compare/v1.0.0-beta.39...v1.0.0-beta.40) (2026-04-30)
 
 
