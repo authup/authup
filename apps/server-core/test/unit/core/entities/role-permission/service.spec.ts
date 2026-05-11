@@ -19,11 +19,7 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { RolePermissionService } from '../../../../../src/core/entities/role-permission/service.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
-import {
-    createAllowAllActor,
-    createDenyAllActor,
-} from '../../helpers/fake-actor.ts';
+import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
 
 describe('core/entities/role-permission/service', () => {
     let repository: FakeEntityRepository<RolePermission>;

@@ -5,12 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './fake-repository.ts';
+export * from '@authup/server-test-kit';
 export * from './fake-policy-repository.ts';
 export * from './fake-realm-repository.ts';
 export * from './fake-role-repository.ts';
-export * from './fake-permission-evaluator.ts';
-export * from './fake-actor.ts';
 export * from './fake-mail-client.ts';
 export * from './fake-identity-permission-provider.ts';
 export * from './fake-identity-resolver.ts';

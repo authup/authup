@@ -17,14 +17,14 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { ScopeService } from '../../../../../src/core/entities/scope/service.ts';
 import type { IScopeRepository } from '../../../../../src/core/entities/scope/types.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { 
+    FakeEntityRepository, 
+    createAllowAllActor, 
+    createDenyAllActor, 
+    createMasterRealmActor, 
+    createNonMasterRealmActor, 
+} from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
-import {
-    createAllowAllActor,
-    createDenyAllActor,
-    createMasterRealmActor,
-    createNonMasterRealmActor,
-} from '../../helpers/fake-actor.ts';
 import { createFakeScope } from '../../../../utils/domains/index.ts';
 
 class FakeScopeRepository extends FakeEntityRepository<Scope> implements IScopeRepository {

@@ -21,7 +21,7 @@ import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
-} from '../../helpers/fake-actor.ts';
+} from '@authup/server-test-kit';
 import { createFakeRealm } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/realm/service', () => {

@@ -16,13 +16,13 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { ClientRoleService } from '../../../../../src/core/entities/client-role/service.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { 
+    FakeEntityRepository, 
+    createAllowAllActor, 
+    createDenyAllActor, 
+    createMasterRealmActor, 
+} from '@authup/server-test-kit';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
-import {
-    createAllowAllActor,
-    createDenyAllActor,
-    createMasterRealmActor,
-} from '../../helpers/fake-actor.ts';
 
 describe('core/entities/client-role/service', () => {
     let repository: FakeEntityRepository<ClientRole>;

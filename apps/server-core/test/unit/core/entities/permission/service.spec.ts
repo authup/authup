@@ -34,7 +34,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../helpers/fake-actor.ts';
+} from '@authup/server-test-kit';
 import { createFakePermission } from '../../../../utils/domains/index.ts';
 
 class FakePermissionRepository extends FakeEntityRepository<Permission> implements IPermissionRepository {

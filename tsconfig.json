@@ -20,6 +20,7 @@
             "@authup/server-adapter-web": ["packages/server-adapter-web/src"],
             "@authup/server-core": ["apps/server-core/src"],
             "@authup/server-kit": ["packages/server-kit/src"],
+            "@authup/server-test-kit": ["packages/server-test-kit/src"],
             "@authup/specs": ["packages/specs/src"]
         }
     }

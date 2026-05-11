@@ -18,7 +18,7 @@ import type { PermissionPolicyBinding } from '@authup/access';
 import { RegistrationService } from '../../../../../src/core/identity/registration/service.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import type { IUserRepository } from '../../../../../src/core/entities/user/types.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { FakeEntityRepository } from '@authup/server-test-kit';
 import { FakeMailClient } from '../../helpers/fake-mail-client.ts';
 import { createFakeUser } from '../../../../utils/domains/index.ts';
 

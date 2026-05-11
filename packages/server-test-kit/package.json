@@ -1,0 +1,67 @@
+{
+    "name": "@authup/server-test-kit",
+    "type": "module",
+    "version": "1.0.0-beta.41",
+    "description": "Shared test fakes for server-side packages and apps.",
+    "license": "Apache-2.0",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs"
+        }
+    },
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "tsdown",
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "test": "cross-env NODE_ENV=test vitest run test/unit",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
+    },
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
+    "keywords": [
+        "auth",
+        "test",
+        "testing",
+        "fakes",
+        "test-doubles",
+        "vitest"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/server-test-kit"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "devDependencies": {
+        "@authup/access": "^1.0.0-beta.41",
+        "@authup/core-kit": "^1.0.0-beta.41",
+        "@authup/kit": "^1.0.0-beta.41",
+        "@authup/server-kit": "^1.0.0-beta.41",
+        "vitest": "^4.0.14"
+    },
+    "peerDependencies": {
+        "@authup/access": "^1.0.0-beta.41",
+        "@authup/core-kit": "^1.0.0-beta.41",
+        "@authup/kit": "^1.0.0-beta.41",
+        "@authup/server-kit": "^1.0.0-beta.41"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

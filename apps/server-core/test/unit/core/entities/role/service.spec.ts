@@ -25,7 +25,7 @@ import {
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../helpers/fake-actor.ts';
+} from '@authup/server-test-kit';
 import { createFakeRole } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/role/service', () => {

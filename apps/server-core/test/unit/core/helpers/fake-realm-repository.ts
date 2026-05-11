@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import type { Realm } from '@authup/core-kit';
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { IRealmRepository } from '../../../../src/core/entities/realm/types.ts';
-import { FakeEntityRepository } from './fake-repository.ts';
+import { FakeEntityRepository } from '@authup/server-test-kit';
 
 export class FakeRealmRepository extends FakeEntityRepository<Realm> implements IRealmRepository {
     private masterRealm: Realm;

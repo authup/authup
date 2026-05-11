@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025.
+ * Copyright (c) 2025-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -9,7 +9,7 @@ import { randomUUID } from 'node:crypto';
 import type { Realm, User } from '@authup/core-kit';
 import { IdentityType, REALM_MASTER_NAME } from '@authup/core-kit';
 import type { ActorContext } from '@authup/server-kit';
-import { FakePermissionEvaluator } from './fake-permission-evaluator.ts';
+import { FakePermissionEvaluator } from './fake-permission-evaluator';
 
 export type FakeActorContext = ActorContext & {
     permissionEvaluator: FakePermissionEvaluator;

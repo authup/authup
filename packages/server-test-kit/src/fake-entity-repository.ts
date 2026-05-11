@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025.
+ * Copyright (c) 2025-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -60,8 +60,8 @@ export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRep
     create(data: Partial<T>): T {
         return {
             id: randomUUID(),
-            ...data, 
-        } as T;
+            ...data,
+        } as unknown as T;
     }
 
     merge(entity: T, data: Partial<T>): T {

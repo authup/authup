@@ -20,15 +20,15 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { ClientService } from '../../../../../src/core/entities/client/service.ts';
 import type { IClientRepository } from '../../../../../src/core/entities/client/types.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { 
+    FakeEntityRepository, 
+    FakePermissionEvaluator, 
+    createAllowAllActor, 
+    createDenyAllActor, 
+    createNonMasterRealmActor,  
+} from '@authup/server-test-kit';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
-import type { FakeActorContext } from '../../helpers/fake-actor.ts';
-import {
-    createAllowAllActor,
-    createDenyAllActor,
-    createNonMasterRealmActor,
-} from '../../helpers/fake-actor.ts';
-import { FakePermissionEvaluator } from '../../helpers/fake-permission-evaluator.ts';
+import type { FakeActorContext } from '@authup/server-test-kit';
 import { createFakeClient } from '../../../../utils/domains/index.ts';
 
 class FakeClientRepository extends FakeEntityRepository<Client> implements IClientRepository {

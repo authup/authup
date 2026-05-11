@@ -16,11 +16,7 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { PermissionPolicyService } from '../../../../../src/core/entities/permission-policy/service.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
-import {
-    createAllowAllActor,
-    createDenyAllActor,
-} from '../../helpers/fake-actor.ts';
+import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
 
 describe('core/entities/permission-policy/service', () => {
     let repository: FakeEntityRepository<PermissionPolicy>;
