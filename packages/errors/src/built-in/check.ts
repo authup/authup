@@ -12,6 +12,8 @@ import { AUTH_HEADER_ERROR_INSTANCE, type AuthHeaderError } from './auth-header.
 import { BAD_REQUEST_ERROR_INSTANCE, type BadRequestError } from './bad-request.ts';
 import { BEARER_TOKEN_MALFORMED_ERROR_INSTANCE, type BearerTokenMalformedError } from './bearer-token.ts';
 import { ENTITY_CONFLICT_ERROR_INSTANCE, type EntityConflictError } from './entity-conflict.ts';
+import { ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE, type EntityCredentialsInvalidError } from './entity-credentials-invalid.ts';
+import { ENTITY_INACTIVE_ERROR_INSTANCE, type EntityInactiveError } from './entity-inactive.ts';
 import { ENTITY_NOT_FOUND_ERROR_INSTANCE, type EntityNotFoundError } from './entity-not-found.ts';
 import { INTERNAL_ERROR_INSTANCE, type InternalError } from './internal.ts';
 import { UNAUTHORIZED_ERROR_INSTANCE, type UnauthorizedError } from './unauthorized.ts';
@@ -50,6 +52,18 @@ export function isEntityConflictError(input: unknown): input is EntityConflictEr
     if (hasInstanceof(input, ENTITY_CONFLICT_ERROR_INSTANCE)) return true;
     if (!isAuthupError(input)) return false;
     return input.code === ErrorCode.ENTITY_CONFLICT;
+}
+
+export function isEntityInactiveError(input: unknown): input is EntityInactiveError {
+    if (hasInstanceof(input, ENTITY_INACTIVE_ERROR_INSTANCE)) return true;
+    if (!isAuthupError(input)) return false;
+    return input.code === ErrorCode.ENTITY_INACTIVE;
+}
+
+export function isEntityCredentialsInvalidError(input: unknown): input is EntityCredentialsInvalidError {
+    if (hasInstanceof(input, ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE)) return true;
+    if (!isAuthupError(input)) return false;
+    return input.code === ErrorCode.ENTITY_CREDENTIALS_INVALID;
 }
 
 export function isInternalError(input: unknown): input is InternalError {

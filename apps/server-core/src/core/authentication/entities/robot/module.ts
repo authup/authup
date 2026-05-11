@@ -6,7 +6,8 @@
  */
 
 import type { Robot } from '@authup/core-kit';
-import { IdentityType, RobotError } from '@authup/core-kit';
+import { IdentityType } from '@authup/core-kit';
+import { EntityCredentialsInvalidError, EntityInactiveError } from '@authup/errors';
 import type { IIdentityResolver } from '../../../identity/index.ts';
 import { RobotCredentialsService } from '../../credential/index.ts';
 import { BaseCredentialsAuthenticator } from '../../base.ts';
@@ -26,16 +27,16 @@ export class RobotAuthenticator extends BaseCredentialsAuthenticator<Robot> {
     async authenticate(key: string, secret: string, realmId?: string): Promise<Robot> {
         const identity = await this.identityResolver.resolve(IdentityType.ROBOT, key, realmId);
         if (!identity || identity.type !== IdentityType.ROBOT) {
-            throw RobotError.credentialsInvalid();
+            throw new EntityCredentialsInvalidError('The robot credentials are invalid.');
         }
 
         const verified = await this.credentialsService.verify(secret, identity.data);
         if (!verified) {
-            throw RobotError.credentialsInvalid();
+            throw new EntityCredentialsInvalidError('The robot credentials are invalid.');
         }
 
         if (!identity.data.active) {
-            throw RobotError.inactive();
+            throw new EntityInactiveError('The robot account is inactive.');
         }
 
         return identity.data;

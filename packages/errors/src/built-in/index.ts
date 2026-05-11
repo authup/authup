@@ -10,6 +10,8 @@ export * from './bad-request';
 export * from './bearer-token';
 export * from './check';
 export * from './entity-conflict';
+export * from './entity-credentials-invalid';
+export * from './entity-inactive';
 export * from './entity-not-found';
 export * from './internal';
 export * from './unauthorized';

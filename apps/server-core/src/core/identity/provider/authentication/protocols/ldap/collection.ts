@@ -6,7 +6,8 @@
  */
 
 import type { User } from '@authup/core-kit';
-import { IdentityProviderProtocol, UserError, isLdapIdentityProvider } from '@authup/core-kit';
+import { IdentityProviderProtocol, isLdapIdentityProvider } from '@authup/core-kit';
+import { EntityCredentialsInvalidError } from '@authup/errors';
 import type { IIdentityProviderRepository } from '../../../../../entities/index.ts';
 import type { IIdentityProviderAccountManager } from '../../../account/index.ts';
 import { IdentityProviderLdapAuthenticator } from './module.ts';
@@ -56,6 +57,6 @@ export class IdentityProviderLdapCollectionAuthenticator extends BaseCredentials
             throw error;
         }
 
-        throw UserError.credentialsInvalid();
+        throw new EntityCredentialsInvalidError('The user credentials are invalid.');
     }
 }
