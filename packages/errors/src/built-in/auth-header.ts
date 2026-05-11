@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode } from '../constants.ts';
-import { markInstanceof } from '../instanceof.ts';
+import { markInstanceof } from '@ebec/core';
 import { UnauthorizedError } from './unauthorized.ts';
 
 export const AUTH_HEADER_ERROR_INSTANCE = Symbol.for('@authup/errors/AuthHeaderError');
