@@ -21,7 +21,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | [core-kit](../packages/core-kit)                | Library     | A package providing functions, interfaces and utilities for the core service.                             |
 | [core-http-kit](../packages/core-http-kit)      | Library     | A package providing a http client with different sub api clients for resources and workflows.             |
 | [core-realtime-kit](../packages/core-realtime-kit)| Library   | A package for the core socket service.                                                                    |
-| [errors](../packages/errors)                    | Library     | A package containing error codes and a basic error class via `@ebec/http`.                                |
+| [errors](../packages/errors)                    | Library     | `AuthupError` (extends `BaseError` from `@ebec/core`), error-code constants, built-in subclasses (`BadRequestError`, `EntityNotFoundError`, ...), code→HTTP-status mapping, and `Symbol.for(...)`-keyed duck guards. |
 | [kit](../packages/kit)                          | Library     | A package containing general (context independent) utilities.                                             |
 | [specs](../packages/specs)                      | Library     | A package containing constants, interfaces, utils, ... for different specifications.                      |
 | [server-adapter-kit](../packages/server-adapter-kit)| Library   | Core token verification logic, caching, and shared types for server adapters.                             |
