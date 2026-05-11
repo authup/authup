@@ -8,8 +8,6 @@
 import { randomUUID } from 'node:crypto';
 import { PermissionName } from '@authup/core-kit';
 import type {
-
-    Permission,
     PermissionPolicy,
     RolePermission,
 } from '@authup/core-kit';
@@ -22,26 +20,18 @@ import {
 import { SystemPolicyName } from '@authup/access';
 import { ErrorCode } from '@authup/errors';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
-import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
 import {
     FakeEntityRepository,
-    FakePolicyRepository,
-    FakeRealmRepository,
-    FakeRoleRepository,
-} from '../../helpers/index.ts';
-import {
     createAllowAllActor,
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
 } from '@authup/server-test-kit';
+import { FakePolicyRepository } from '../policy/fake-repository.ts';
+import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { FakeRoleRepository } from '../role/fake-repository.ts';
+import { FakePermissionRepository } from './fake-repository.ts';
 import { createFakePermission } from '../../../../utils/domains/index.ts';
-
-class FakePermissionRepository extends FakeEntityRepository<Permission> implements IPermissionRepository {
-    async checkUniqueness(): Promise<void> {
-        // no-op
-    }
-}
 
 const defaultPolicyId = randomUUID();
 

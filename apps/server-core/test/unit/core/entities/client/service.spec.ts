@@ -7,9 +7,8 @@
 
 import { randomUUID } from 'node:crypto';
 import { IdentityType, PermissionName } from '@authup/core-kit';
-import type { Client, Realm, Role } from '@authup/core-kit';
+import type { Client, Realm } from '@authup/core-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
-import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach,
     describe,
@@ -19,39 +18,16 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { ClientService } from '../../../../../src/core/entities/client/service.ts';
-import type { IClientRepository } from '../../../../../src/core/entities/client/types.ts';
-import { 
-    FakeEntityRepository, 
-    FakePermissionEvaluator, 
-    createAllowAllActor, 
-    createDenyAllActor, 
-    createNonMasterRealmActor,  
+import {
+    FakePermissionEvaluator,
+    createAllowAllActor,
+    createDenyAllActor,
+    createNonMasterRealmActor,
 } from '@authup/server-test-kit';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import type { FakeActorContext } from '@authup/server-test-kit';
+import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { FakeClientRepository } from './fake-repository.ts';
 import { createFakeClient } from '../../../../utils/domains/index.ts';
-
-class FakeClientRepository extends FakeEntityRepository<Client> implements IClientRepository {
-    async checkUniqueness(): Promise<void> {
-        // no-op
-    }
-
-    async findOne(id: string, _query?: Record<string, any>, realm?: string): Promise<Client | null> {
-        return this.findOneByIdOrName(id, realm);
-    }
-
-    async findOneWithSecret(where: Record<string, any>): Promise<Client | null> {
-        return this.findOneBy(where);
-    }
-
-    async getBoundRoles(_entity: string | Client): Promise<Role[]> {
-        return [];
-    }
-
-    async getBoundPermissions(_entity: string | Client): Promise<PermissionPolicyBinding[]> {
-        return [];
-    }
-}
 
 describe('core/entities/client/service', () => {
     let repository: FakeClientRepository;

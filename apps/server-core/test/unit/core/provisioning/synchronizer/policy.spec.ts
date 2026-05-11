@@ -15,7 +15,7 @@ import {
 } from 'vitest';
 import { PolicyProvisioningSynchronizer } from '../../../../../src/core/provisioning/synchronizer/policy/module.ts';
 import type { PolicyProvisioningEntity } from '../../../../../src/core/provisioning/entities/policy/types.ts';
-import { FakePolicyRepository } from '../../helpers/fake-policy-repository.ts';
+import { FakePolicyRepository } from '../../entities/policy/fake-repository.ts';
 import { FakeEntityRepository } from '@authup/server-test-kit';
 import type { IPermissionPolicyRepository } from '../../../../../src/core/entities/permission-policy/types.ts';
 

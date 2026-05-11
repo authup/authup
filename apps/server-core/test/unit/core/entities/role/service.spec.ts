@@ -18,8 +18,8 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { RoleService } from '../../../../../src/core/entities/role/service.ts';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
-import { FakeRoleRepository } from '../../helpers/fake-role-repository.ts';
+import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { FakeRoleRepository } from './fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,

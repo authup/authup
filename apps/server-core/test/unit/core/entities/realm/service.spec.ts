@@ -17,7 +17,7 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { RealmService } from '../../../../../src/core/entities/realm/service.ts';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
+import { FakeRealmRepository } from './fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,

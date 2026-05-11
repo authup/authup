@@ -10,14 +10,11 @@ import {
     IdentityType,
     PermissionName,
 } from '@authup/core-kit';
-import type { 
-    Realm, 
-    Robot, 
-    Role, 
-    User, 
+import type {
+    Realm,
+    User,
 } from '@authup/core-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
-import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach,
     describe,
@@ -27,39 +24,16 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { RobotService } from '../../../../../src/core/entities/robot/service.ts';
-import type { IRobotRepository } from '../../../../../src/core/entities/robot/types.ts';
-import { 
-    FakeEntityRepository, 
-    FakePermissionEvaluator, 
-    createAllowAllActor, 
-    createDenyAllActor, 
-    createNonMasterRealmActor,  
+import {
+    FakePermissionEvaluator,
+    createAllowAllActor,
+    createDenyAllActor,
+    createNonMasterRealmActor,
 } from '@authup/server-test-kit';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import type { FakeActorContext } from '@authup/server-test-kit';
+import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { FakeRobotRepository } from './fake-repository.ts';
 import { createFakeRobot } from '../../../../utils/domains/index.ts';
-
-class FakeRobotRepository extends FakeEntityRepository<Robot> implements IRobotRepository {
-    async checkUniqueness(): Promise<void> {
-        // no-op
-    }
-
-    async findOne(id: string, _query?: Record<string, any>, realm?: string): Promise<Robot | null> {
-        return this.findOneByIdOrName(id, realm);
-    }
-
-    async findOneWithSecret(where: Record<string, any>): Promise<Robot | null> {
-        return this.findOneBy(where);
-    }
-
-    async getBoundRoles(_entity: string | Robot): Promise<Role[]> {
-        return [];
-    }
-
-    async getBoundPermissions(_entity: string | Robot): Promise<PermissionPolicyBinding[]> {
-        return [];
-    }
-}
 
 function createUserActorAsOwner(userId: string): FakeActorContext {
     const realmId = randomUUID();

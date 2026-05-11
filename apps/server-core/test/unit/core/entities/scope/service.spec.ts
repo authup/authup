@@ -24,7 +24,7 @@ import {
     createMasterRealmActor, 
     createNonMasterRealmActor, 
 } from '@authup/server-test-kit';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
+import { FakeRealmRepository } from '../realm/fake-repository.ts';
 import { createFakeScope } from '../../../../utils/domains/index.ts';
 
 class FakeScopeRepository extends FakeEntityRepository<Scope> implements IScopeRepository {

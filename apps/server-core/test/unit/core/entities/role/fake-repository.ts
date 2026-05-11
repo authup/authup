@@ -7,7 +7,7 @@
 
 import type { Role } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
-import type { IRoleRepository } from '../../../../src/core/entities/role/types.ts';
+import type { IRoleRepository } from '../../../../../src/core/entities/role/types.ts';
 import { FakeEntityRepository } from '@authup/server-test-kit';
 
 export class FakeRoleRepository extends FakeEntityRepository<Role> implements IRoleRepository {

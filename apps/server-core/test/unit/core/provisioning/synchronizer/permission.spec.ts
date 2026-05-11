@@ -16,7 +16,7 @@ import { PermissionProvisioningSynchronizer } from '../../../../../src/core/prov
 import type { PermissionProvisioningEntity } from '../../../../../src/core/provisioning/entities/permission/types.ts';
 import { ProvisioningEntityStrategyType } from '../../../../../src/core/provisioning/strategy/index.ts';
 import { FakeEntityRepository } from '@authup/server-test-kit';
-import { FakePolicyRepository } from '../../helpers/fake-policy-repository.ts';
+import { FakePolicyRepository } from '../../entities/policy/fake-repository.ts';
 import type { IPermissionPolicyRepository } from '../../../../../src/core/entities/permission-policy/types.ts';
 import type { IPermissionRepository } from '../../../../../src/core/entities/index.ts';
 

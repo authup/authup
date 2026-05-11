@@ -6,9 +6,6 @@
  */
 
 export * from '@authup/server-test-kit';
-export * from './fake-policy-repository.ts';
-export * from './fake-realm-repository.ts';
-export * from './fake-role-repository.ts';
 export * from './fake-mail-client.ts';
 export * from './fake-identity-permission-provider.ts';
 export * from './fake-identity-resolver.ts';
