@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode } from '../constants.ts';
-import { markInstanceof } from '@ebec/core';
+import { markInstanceof } from '../instanceof.ts';
 import { UnauthorizedError } from './unauthorized.ts';
 
 export const BEARER_TOKEN_MALFORMED_ERROR_INSTANCE = Symbol.for('@authup/errors/BearerTokenMalformedError');

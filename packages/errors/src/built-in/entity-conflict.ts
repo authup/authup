@@ -6,7 +6,7 @@
  */
 
 import { ErrorCode } from '../constants.ts';
-import { markInstanceof } from '@ebec/core';
+import { markInstanceof } from '../instanceof.ts';
 import { AuthupError } from '../module.ts';
 import type { AuthupErrorOptions } from '../types.ts';
 

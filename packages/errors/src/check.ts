@@ -5,7 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasInstanceof, isBaseError, isObject } from '@ebec/core';
+import { isBaseError, isObject } from '@ebec/core';
+import { hasInstanceof } from './instanceof.ts';
 import type { AuthupError } from './module.ts';
 import { AUTHUP_ERROR_INSTANCE } from './module.ts';
 

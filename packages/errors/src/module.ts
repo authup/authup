@@ -6,8 +6,9 @@
  */
 
 import type { AuthupErrorInput } from './types.ts';
-import { BaseError, markInstanceof } from '@ebec/core';
+import { BaseError } from '@ebec/core';
 import type { Issue } from 'validup';
+import { markInstanceof } from './instanceof.ts';
 
 export const AUTHUP_ERROR_INSTANCE = Symbol.for('@authup/errors/AuthupError');
 
