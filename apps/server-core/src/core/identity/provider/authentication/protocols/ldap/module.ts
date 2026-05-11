@@ -50,6 +50,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
 
         const entity = await this.findOneByName(name);
         if (!entity) {
+            await this.safeUnbind();
             throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
