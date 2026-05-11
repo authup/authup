@@ -53,3 +53,23 @@ export const ERROR_CODE_TO_STATUS: Readonly<Partial<Record<`${ErrorCode}`, numbe
 export function httpStatusFromCode(code: string, fallback = 400): number {
     return ERROR_CODE_TO_STATUS[code as `${ErrorCode}`] ?? fallback;
 }
+
+/**
+ * Resolve a semantic `ErrorCode` for a foreign HTTP status. Used at the
+ * boundary where a non-AuthupError (e.g. `@ebec/http` HTTPError thrown by
+ * the framework, or a foreign service response) enters our system and
+ * needs to be normalized into an `AuthupError` with an authup-vocabulary
+ * code. Status is the only stable handshake across the two vocabularies.
+ *
+ * Default mapping covers the common HTTP statuses. Anything 5xx
+ * collapses to `INTERNAL_ERROR`; unknown 4xx collapses to `BAD_REQUEST`.
+ */
+export function codeFromHttpStatus(status: number): ErrorCode {
+    if (status === 404) return ErrorCode.ENTITY_NOT_FOUND;
+    if (status === 409) return ErrorCode.ENTITY_CONFLICT;
+    if (status === 401) return ErrorCode.IDENTITY_UNAUTHORIZED;
+    if (status === 403) return ErrorCode.PERMISSION_DENIED;
+    if (status === 507) return ErrorCode.STORAGE_INSUFFICIENT;
+    if (status >= 500) return ErrorCode.INTERNAL_ERROR;
+    return ErrorCode.BAD_REQUEST;
+}

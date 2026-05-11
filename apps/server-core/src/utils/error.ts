@@ -5,7 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError, ErrorCode, isAuthupError } from '@authup/errors';
+import { 
+    AuthupError, 
+    ErrorCode, 
+    codeFromHttpStatus, 
+    isAuthupError, 
+} from '@authup/errors';
 import { isHTTPError } from '@ebec/http';
 import { EntityRelationLookupError } from 'typeorm-extension';
 import { buildErrorMessageForAttributes, isValidupError, stringifyPath } from 'validup';
@@ -51,7 +56,7 @@ export function sanitizeError(input: unknown): AuthupError {
 
     if (isHTTPError(input)) {
         return new AuthupError({
-            code: codeForForeignHTTPStatus(input.status),
+            code: codeFromHttpStatus(input.status),
             message: input.message,
             stack: input.stack,
         });
@@ -92,13 +97,4 @@ export function sanitizeError(input: unknown): AuthupError {
     }
 
     return new AuthupError({ code: ErrorCode.INTERNAL_ERROR });
-}
-
-function codeForForeignHTTPStatus(status: number): ErrorCode {
-    if (status === 404) return ErrorCode.ENTITY_NOT_FOUND;
-    if (status === 409) return ErrorCode.ENTITY_CONFLICT;
-    if (status === 401) return ErrorCode.IDENTITY_UNAUTHORIZED;
-    if (status === 403) return ErrorCode.PERMISSION_DENIED;
-    if (status >= 500) return ErrorCode.INTERNAL_ERROR;
-    return ErrorCode.BAD_REQUEST;
 }
