@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData, SystemPolicyName } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
-import { AuthupError, BadRequestError, EntityNotFoundError  } from '@authup/errors';
+import { AuthupError, BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     PermissionValidator,

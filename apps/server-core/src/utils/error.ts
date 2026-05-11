@@ -72,14 +72,14 @@ export function sanitizeError(input: unknown): AuthupError {
             case 'SQLITE_CONSTRAINT_UNIQUE': {
                 return new AuthupError({
                     code: ErrorCode.ENTITY_CONFLICT,
-                    message: 'An entry with some unique attributes already exist.',
+                    message: 'An entry with some unique attributes already exists.',
                     stack: input.stack as string | undefined,
                 });
             }
             case 'ER_DISK_FULL':
                 return new AuthupError({
                     code: ErrorCode.STORAGE_INSUFFICIENT,
-                    message: 'No database operation possible, due the leak of free disk space.',
+                    message: 'No database operation possible, due to the lack of free disk space.',
                     stack: input.stack as string | undefined,
                 });
         }

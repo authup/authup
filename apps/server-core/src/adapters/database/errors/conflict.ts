@@ -11,7 +11,7 @@ export class DatabaseConflictError extends AuthupError {
     constructor() {
         super({
             code: ErrorCode.ENTITY_CONFLICT,
-            message: 'A db entry with some unique attributes already exist.',
+            message: 'A db entry with some unique attributes already exists.',
         });
     }
 }

@@ -144,6 +144,7 @@ export class OAuth2Error extends AuthupError {
         return new OAuth2Error({
             message: 'A token signing key could not be retrieved.',
             code: ErrorCode.INTERNAL_ERROR,
+            data: { error: OAuth2ErrorCode.SERVER_ERROR },
         });
     }
 }
