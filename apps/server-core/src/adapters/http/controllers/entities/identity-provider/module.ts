@@ -35,7 +35,8 @@ import {
     isOAuth2IdentityProvider, 
     isOpenIDIdentityProvider, 
 } from '@authup/core-kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { resolveURL } from '../../../../../utils/index.ts';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
@@ -68,7 +69,6 @@ import {
     useRequestPermissionEvaluator,
 } from '../../../request/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { resolveURL } from '../../../../../utils/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
@@ -151,7 +151,7 @@ export class IdentityProviderController {
         );
 
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         try {
@@ -198,7 +198,7 @@ export class IdentityProviderController {
         const entity = await this.repository.findOneBy({ id: paramId });
 
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await permissionEvaluator.evaluate({
@@ -378,10 +378,10 @@ export class IdentityProviderController {
 
             entity = await this.repository.findOneBy(where);
             if (!entity && options.updateOnly) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const permissionEvaluator = useRequestPermissionEvaluator(event);
@@ -450,7 +450,7 @@ export class IdentityProviderController {
         const entity = await this.repository.findOneById(id);
 
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;

@@ -5,10 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ConflictError } from '@ebec/http';
+import { AuthupError, ErrorCode } from '@authup/errors';
 
-export class DatabaseConflictError extends ConflictError {
+export class DatabaseConflictError extends AuthupError {
     constructor() {
-        super('A db entry with some unique attributes already exist.');
+        super({
+            code: ErrorCode.ENTITY_CONFLICT,
+            message: 'A db entry with some unique attributes already exist.',
+        });
     }
 }

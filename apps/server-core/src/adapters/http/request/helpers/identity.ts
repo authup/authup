@@ -7,7 +7,7 @@
 
 import type { Identity } from '@authup/core-kit';
 import { IdentityType, REALM_MASTER_NAME } from '@authup/core-kit';
-import { UnauthorizedError } from '@ebec/http';
+import { UnauthorizedError } from '@authup/errors';
 import type { IRoutupEvent } from 'routup';
 
 const sym = Symbol('RIdentity');

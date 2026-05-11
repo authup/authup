@@ -14,12 +14,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import {
-    BadRequestError,
-    ConflictError,
-    ForbiddenError,
-    NotFoundError,
-} from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { IdentityProviderRoleMappingService } from '../../../../../src/core/entities/identity-provider-role-mapping/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
@@ -55,7 +50,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -67,7 +62,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -111,7 +106,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
                     provider_id: randomUUID(),
                     role_id: randomUUID(),
                 }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should throw ConflictError on duplicate provider_id + role_id', async () => {
@@ -130,7 +125,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
                     provider_id: providerId,
                     role_id: roleId,
                 }, createAllowAllActor()),
-            ).rejects.toThrow(ConflictError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
 
         it('should throw BadRequestError when provider and role are in different realms', async () => {
@@ -147,7 +142,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
                     provider_id: randomUUID(),
                     role_id: randomUUID(),
                 }, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should throw validation error when provider_id is missing', async () => {
@@ -183,7 +178,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
                     provider_id: randomUUID(),
                     role_id: randomUUID(),
                 }, createMasterRealmActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -204,7 +199,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { name: 'test' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preEvaluate with IDENTITY_PROVIDER_ROLE_UPDATE', async () => {
@@ -218,7 +213,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
             const entity = repository.seed({});
             await expect(
                 service.update(entity.id, { name: 'test' }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should not allow changing provider_id or role_id', async () => {
@@ -251,7 +246,7 @@ describe('core/entities/identity-provider-role-mapping/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preEvaluate with IDENTITY_PROVIDER_ROLE_DELETE', async () => {

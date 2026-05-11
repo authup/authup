@@ -12,7 +12,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import type { Role, User } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { PasswordRecoveryService } from '../../../../../src/core/identity/password-recovery/service.ts';
@@ -66,7 +66,7 @@ describe('core/identity/password-recovery/service', () => {
 
             await expect(
                 service.forgotPassword({ email: faker.internet.email().toLowerCase() }),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.PASSWORD_RECOVERY_DISABLED });
         });
 
         it('should throw when email verification is not enabled', async () => {
@@ -82,7 +82,7 @@ describe('core/identity/password-recovery/service', () => {
 
             await expect(
                 service.forgotPassword({ email: faker.internet.email().toLowerCase() }),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.EMAIL_VERIFICATION_REQUIRED });
         });
 
         it('should throw NotFoundError when user does not exist', async () => {
@@ -98,7 +98,7 @@ describe('core/identity/password-recovery/service', () => {
 
             await expect(
                 service.forgotPassword({ email: 'nonexistent@example.com' }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should set reset_hash and reset_expires and send email', async () => {
@@ -207,7 +207,7 @@ describe('core/identity/password-recovery/service', () => {
                 realmRepository,
             });
 
-            await expect(service.forgotPassword({ email })).rejects.toThrow(BadRequestError);
+            await expect(service.forgotPassword({ email })).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
             const user = await repository.findOneById(entity.id);
             expect(user!.reset_hash).toBeNull();
@@ -230,7 +230,7 @@ describe('core/identity/password-recovery/service', () => {
                     token: 'abc',
                     password: 'newpass123',
                 }),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.PASSWORD_RECOVERY_DISABLED });
         });
 
         it('should throw NotFoundError when token does not match', async () => {
@@ -259,7 +259,7 @@ describe('core/identity/password-recovery/service', () => {
                     token: 'wrong-token',
                     password: 'newpass123',
                 }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should throw BadRequestError when token has expired', async () => {
@@ -288,7 +288,7 @@ describe('core/identity/password-recovery/service', () => {
                     token: 'expired-token',
                     password: 'newpass123',
                 }),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.RESET_TOKEN_EXPIRED });
         });
 
         it('should reset password, clear reset fields, and hash new password', async () => {

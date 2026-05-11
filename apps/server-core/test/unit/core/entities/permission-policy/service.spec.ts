@@ -14,7 +14,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { PermissionPolicyService } from '../../../../../src/core/entities/permission-policy/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -44,7 +44,7 @@ describe('core/entities/permission-policy/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -56,7 +56,7 @@ describe('core/entities/permission-policy/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preEvaluateOneOf with correct permissions', async () => {
@@ -113,7 +113,7 @@ describe('core/entities/permission-policy/service', () => {
                     permission_id: randomUUID(),
                     policy_id: randomUUID(),
                 }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should throw ConflictError on duplicate permission_id + policy_id', async () => {
@@ -132,7 +132,7 @@ describe('core/entities/permission-policy/service', () => {
                     permission_id: permissionId,
                     policy_id: policyId,
                 }, createAllowAllActor()),
-            ).rejects.toThrow(ConflictError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
 
         it('should throw validation error when permission_id is missing', async () => {
@@ -168,7 +168,7 @@ describe('core/entities/permission-policy/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preEvaluate with PERMISSION_UPDATE', async () => {

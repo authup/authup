@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     ROLE_ADMIN_NAME,
@@ -69,7 +69,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         const entity = await this.repository.findOneByIdOrName(idOrName);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -122,10 +122,10 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
             entity = await this.repository.findOneBy(where);
             if (!entity && options.updateOnly) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity) {
@@ -189,7 +189,7 @@ export class RoleService extends AbstractEntityService implements IRoleService {
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity.name === ROLE_ADMIN_NAME) {

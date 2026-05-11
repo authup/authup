@@ -6,14 +6,32 @@
  */
 
 export enum ErrorCode {
+    // Generic
+    BAD_REQUEST = 'bad_request',
+    INTERNAL_ERROR = 'internal_error',
+
     // HTTP Codes
     HTTP_HEADER_AUTH_TYPE_UNSUPPORTED = 'unsupported_auth_header_type',
     HTTP_BEARER_TOKEN_MALFORMED = 'bearer_token_malformed',
+
+    // Identity Auth
+    IDENTITY_UNAUTHORIZED = 'identity_unauthorized',
 
     // Entity Codes
     ENTITY_CREDENTIALS_INVALID = 'invalid_credentials',
     ENTITY_INACTIVE = 'entity_inactive',
     ENTITY_NOT_FOUND = 'entity_not_found',
+    ENTITY_CONFLICT = 'entity_conflict',
+    ENTITY_RELATION_INVALID = 'entity_relation_invalid',
+
+    // Identity Codes
+    REGISTRATION_DISABLED = 'registration_disabled',
+    PASSWORD_RECOVERY_DISABLED = 'password_recovery_disabled',
+    EMAIL_VERIFICATION_REQUIRED = 'email_verification_required',
+    RESET_TOKEN_EXPIRED = 'reset_token_expired',
+
+    // Storage Codes
+    STORAGE_INSUFFICIENT = 'storage_insufficient',
 
     // JWK Codes
     JWK_INVALID = 'jwk_invalid',

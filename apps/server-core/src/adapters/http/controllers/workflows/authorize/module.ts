@@ -26,8 +26,8 @@ import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
 import { readFromLocations } from '../../../request/index.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
 import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
-import { sanitizeError } from '../../../../../utils/index.ts';
 import type { AuthorizeControllerContext, AuthorizeControllerOptions } from './types.ts';
+import { sanitizeError } from '../../../../../utils/index.ts';
 
 @DController('/authorize')
 export class AuthorizeController {

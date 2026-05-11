@@ -7,7 +7,8 @@
 
 import { UserValidator } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { RegistrationDisabledError } from './error.ts';
 import { randomBytes } from 'node:crypto';
 import { Container } from 'validup';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
@@ -38,7 +39,7 @@ export class RegistrationService implements IRegistrationService {
 
     async register(data: Record<string, any>): Promise<RegistrationResult> {
         if (!this.options.registrationEnabled) {
-            throw new BadRequestError('User registration is not enabled.');
+            throw new RegistrationDisabledError();
         }
 
         const validator = new Container({});
@@ -88,7 +89,7 @@ export class RegistrationService implements IRegistrationService {
         const entity = await this.repository.findOneBy({ activate_hash: data.token });
 
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const merged = this.repository.merge(entity, {

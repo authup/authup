@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ConflictError, NotFoundError } from '@ebec/http';
+import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName, PermissionPolicyValidator, ValidatorGroup } from '@authup/core-kit';
 import type { PermissionPolicy } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -56,7 +56,7 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -77,7 +77,7 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
             policy_id: validated.policy_id,
         });
         if (existing) {
-            throw new ConflictError('The permission-policy assignment already exists.');
+            throw new EntityConflictError('The permission-policy assignment already exists.');
         }
 
         if (validated.permission) {
@@ -107,7 +107,7 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

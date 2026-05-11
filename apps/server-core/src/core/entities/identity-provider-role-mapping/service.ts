@@ -5,13 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { 
-    BadRequestError, 
-    ConflictError, 
-    ForbiddenError, 
-    NotFoundError, 
-} from '@ebec/http';
+import { BuiltInPolicyType, PermissionError, PolicyData } from '@authup/access';
+import { BadRequestError, EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { IdentityProviderRoleMappingValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -70,7 +65,7 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -91,7 +86,7 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
             role_id: validated.role_id,
         });
         if (existing) {
-            throw new ConflictError('The identity-provider-role-mapping already exists.');
+            throw new EntityConflictError('The identity-provider-role-mapping already exists.');
         }
 
         if (validated.provider) {
@@ -123,7 +118,7 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
                 },
             );
             if (!hasPermissions) {
-                throw new ForbiddenError('You don\'t own the required permissions.');
+                throw new PermissionError({ message: 'You don\'t own the required permissions.' });
             }
         }
 
@@ -147,7 +142,7 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const validated = await this.validator.run(data, { group: ValidatorGroup.UPDATE });
@@ -172,7 +167,7 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

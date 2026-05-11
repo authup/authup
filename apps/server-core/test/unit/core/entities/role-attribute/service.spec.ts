@@ -14,7 +14,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
+import { PermissionError } from '@authup/access';
 import { RoleAttributeService } from '../../../../../src/core/entities/role-attribute/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -58,7 +59,7 @@ describe('core/entities/role-attribute/service', () => {
                 if (call.method === 'evaluateOneOf' && call.ctx.input) {
                     const entity = call.ctx.input.get('attributes');
                     if (entity && entity.id === denied.id) {
-                        throw new ForbiddenError();
+                        throw PermissionError.denied('test');
                     }
                 }
             });
@@ -70,7 +71,7 @@ describe('core/entities/role-attribute/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -82,7 +83,7 @@ describe('core/entities/role-attribute/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -120,7 +121,7 @@ describe('core/entities/role-attribute/service', () => {
                     role_id: randomUUID(),
                     role: { realm_id: null }, 
                 }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -138,7 +139,7 @@ describe('core/entities/role-attribute/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { value: 'x' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -159,7 +160,7 @@ describe('core/entities/role-attribute/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 });

@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ConflictError, NotFoundError } from '@ebec/http';
+import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName, RobotPermissionValidator, ValidatorGroup } from '@authup/core-kit';
 import type { RobotPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
@@ -61,7 +61,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -82,7 +82,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             robot_id: validated.robot_id,
         });
         if (existing) {
-            throw new ConflictError('The robot-permission assignment already exists.');
+            throw new EntityConflictError('The robot-permission assignment already exists.');
         }
 
         if (validated.permission) {
@@ -140,7 +140,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const updateData: Record<string, any> = {};
@@ -168,7 +168,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

@@ -14,7 +14,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { ScopeService } from '../../../../../src/core/entities/scope/service.ts';
 import type { IScopeRepository } from '../../../../../src/core/entities/scope/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
@@ -73,7 +73,7 @@ describe('core/entities/scope/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -88,7 +88,7 @@ describe('core/entities/scope/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.getOne('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -113,7 +113,7 @@ describe('core/entities/scope/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-scope' }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should reject invalid name (too short)', async () => {
@@ -134,7 +134,7 @@ describe('core/entities/scope/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -168,7 +168,7 @@ describe('core/entities/scope/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -218,7 +218,7 @@ describe('core/entities/scope/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.delete('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -226,7 +226,7 @@ describe('core/entities/scope/service', () => {
 
             await expect(
                 service.delete(entity.id, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 });

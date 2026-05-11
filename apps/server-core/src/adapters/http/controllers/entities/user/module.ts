@@ -27,8 +27,8 @@ import type {
 import type { User } from '@authup/core-kit';
 import type { IUserService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { isSelfToken } from '../../../../../utils/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
+import { isSelfToken } from '../../../../../utils/index.ts';
 
 export type UserControllerContext = {
     service: IUserService,

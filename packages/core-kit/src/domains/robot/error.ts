@@ -5,9 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError, ErrorCode } from '@authup/errors';
+import type { AuthupErrorOptions } from '@authup/errors';
+import { AuthupError, ErrorCode, markInstanceof } from '@authup/errors';
+
+export const ROBOT_ERROR_INSTANCE = Symbol.for('@authup/core-kit/RobotError');
 
 export class RobotError extends AuthupError {
+    constructor(options: AuthupErrorOptions = {}) {
+        super(options);
+        markInstanceof(this, ROBOT_ERROR_INSTANCE);
+    }
+
     static credentialsInvalid() {
         return new RobotError({
             code: ErrorCode.ENTITY_CREDENTIALS_INVALID,

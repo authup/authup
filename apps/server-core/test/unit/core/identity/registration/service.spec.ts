@@ -12,7 +12,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import type { Role, User } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import { RegistrationService } from '../../../../../src/core/identity/registration/service.ts';
@@ -74,7 +74,7 @@ describe('core/identity/registration/service', () => {
 
             await expect(
                 service.register(createValidRegistrationData()),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.REGISTRATION_DISABLED });
         });
 
         it('should create an active user when email verification is disabled', async () => {
@@ -203,7 +203,7 @@ describe('core/identity/registration/service', () => {
 
             const data = createValidRegistrationData();
 
-            await expect(service.register(data)).rejects.toThrow(BadRequestError);
+            await expect(service.register(data)).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
 
             const saved = await repository.findOneByName(data.name);
             expect(saved).toBeNull();
@@ -266,7 +266,7 @@ describe('core/identity/registration/service', () => {
 
             await expect(
                 service.activate({ token: 'nonexistent-token' }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 });

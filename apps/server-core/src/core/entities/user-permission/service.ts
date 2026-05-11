@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ConflictError, NotFoundError } from '@ebec/http';
+import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName, UserPermissionValidator, ValidatorGroup } from '@authup/core-kit';
 import type { UserPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
@@ -63,7 +63,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -84,7 +84,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
             user_id: validated.user_id,
         });
         if (existing) {
-            throw new ConflictError('The user-permission assignment already exists.');
+            throw new EntityConflictError('The user-permission assignment already exists.');
         }
 
         if (validated.permission) {
@@ -142,7 +142,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const updateData: Record<string, any> = {};
@@ -170,7 +170,7 @@ export class UserPermissionService extends AbstractEntityService implements IUse
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

@@ -20,7 +20,7 @@ import {
     it,
 } from 'vitest';
 import { SystemPolicyName } from '@authup/access';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { PermissionService } from '../../../../../src/core/entities/permission/service.ts';
 import type { IPermissionRepository } from '../../../../../src/core/entities/permission/types.ts';
 import {
@@ -104,7 +104,7 @@ describe('core/entities/permission/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -119,7 +119,7 @@ describe('core/entities/permission/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.getOne('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -144,7 +144,7 @@ describe('core/entities/permission/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-perm' }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should assign default policy via junction on create', async () => {
@@ -178,7 +178,7 @@ describe('core/entities/permission/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { description: 'x' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should prevent renaming a built-in permission', async () => {
@@ -189,7 +189,7 @@ describe('core/entities/permission/service', () => {
 
             await expect(
                 service.update(entity.id, { name: 'renamed-perm' }, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should allow updating built-in permission fields other than name', async () => {
@@ -241,7 +241,7 @@ describe('core/entities/permission/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -292,7 +292,7 @@ describe('core/entities/permission/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.delete('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should prevent deletion of built-in permissions', async () => {
@@ -300,7 +300,7 @@ describe('core/entities/permission/service', () => {
 
             await expect(
                 service.delete(entity.id, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should call preCheck with PERMISSION_DELETE', async () => {
@@ -317,7 +317,7 @@ describe('core/entities/permission/service', () => {
 
             await expect(
                 service.delete(entity.id, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 });

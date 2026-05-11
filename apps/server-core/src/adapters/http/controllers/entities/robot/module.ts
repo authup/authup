@@ -18,7 +18,8 @@ import {
     DTags,
 } from '@routup/decorators';
 import { isUUID } from '@authup/kit';
-import { NotFoundError } from '@ebec/http';
+import { EntityNotFoundError } from '@authup/errors';
+import { isSelfToken } from '../../../../../utils/index.ts';
 import type { Robot } from '@authup/core-kit';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
@@ -33,7 +34,6 @@ import type { IRealmRepository, IRobotRepository, IRobotService } from '../../..
 import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
 import { RobotEntity } from '../../../../database/domains/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { isSelfToken } from '../../../../../utils/index.ts';
 import {
     buildActorContext,
     useRequestIdentity,
@@ -170,7 +170,7 @@ export class RobotController {
         }
 
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;

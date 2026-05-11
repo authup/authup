@@ -6,7 +6,7 @@
  */
 
 import type { IPermissionEvaluator, PermissionEvaluationContext } from '@authup/access';
-import { ForbiddenError } from '@ebec/http';
+import { PermissionError } from '@authup/access';
 
 export type EvaluatorMethodName = 'evaluate' | 'evaluateOneOf' | 'preEvaluate' | 'preEvaluateOneOf';
 
@@ -56,11 +56,11 @@ export class FakePermissionEvaluator implements IPermissionEvaluator {
         this.behavior = behavior;
     }
 
-    denyAll(error: Error = new ForbiddenError()) {
+    denyAll(error: Error = PermissionError.denied('test')) {
         this.behavior = () => { throw error; };
     }
 
-    deny(method: EvaluatorMethodName, error: Error = new ForbiddenError()) {
+    deny(method: EvaluatorMethodName, error: Error = PermissionError.denied('test')) {
         const previous = this.behavior;
         this.behavior = (call) => {
             if (call.method === method) {

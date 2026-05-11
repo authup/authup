@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -89,7 +89,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluateOneOf({
@@ -145,7 +145,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         let entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         entity = this.repository.merge(entity, data);
@@ -168,7 +168,7 @@ export class RoleAttributeService extends AbstractEntityService implements IRole
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

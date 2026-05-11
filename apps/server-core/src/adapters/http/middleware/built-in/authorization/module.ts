@@ -12,7 +12,7 @@ import {
     IdentityType,
     ScopeName,
 } from '@authup/core-kit';
-import { HTTPError } from '@authup/errors';
+import { AuthHeaderError } from '@authup/errors';
 import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
 import type { IRoutupEvent } from 'routup';
 import {
@@ -113,7 +113,7 @@ export class AuthorizationMiddleware {
             return;
         }
 
-        throw HTTPError.unsupportedHeaderType(header.type);
+        throw AuthHeaderError.unsupportedType(header.type);
     }
 
     /**

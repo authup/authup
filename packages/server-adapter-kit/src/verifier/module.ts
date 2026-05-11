@@ -167,7 +167,6 @@ export class TokenVerifier implements ITokenVerifier {
                     undefined;
 
                 throw new JWTError({
-                    statusCode: e.response.status,
                     code,
                     message,
                 });

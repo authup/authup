@@ -5,9 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError, ErrorCode } from '@authup/errors';
+import type { AuthupErrorOptions } from '@authup/errors';
+import { AuthupError, ErrorCode, markInstanceof } from '@authup/errors';
+
+export const CLIENT_ERROR_INSTANCE = Symbol.for('@authup/core-kit/ClientError');
 
 export class ClientError extends AuthupError {
+    constructor(options: AuthupErrorOptions = {}) {
+        super(options);
+        markInstanceof(this, CLIENT_ERROR_INSTANCE);
+    }
+
     static credentialsInvalid() {
         return new ClientError({
             code: ErrorCode.ENTITY_CREDENTIALS_INVALID,

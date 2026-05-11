@@ -15,7 +15,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { RealmService } from '../../../../../src/core/entities/realm/service.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import {
@@ -55,7 +55,7 @@ describe('core/entities/realm/service', () => {
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
                 service.getOne('non-existent-id'),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -80,7 +80,7 @@ describe('core/entities/realm/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-realm' }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should reject invalid name (too short)', async () => {
@@ -114,7 +114,7 @@ describe('core/entities/realm/service', () => {
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should prevent renaming the master realm', async () => {
@@ -122,7 +122,7 @@ describe('core/entities/realm/service', () => {
 
             await expect(
                 service.update(masterRealm.id, { name: 'renamed-master' }, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should allow updating master realm fields other than name', async () => {
@@ -171,7 +171,7 @@ describe('core/entities/realm/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -189,7 +189,7 @@ describe('core/entities/realm/service', () => {
         it('should throw NotFoundError when realm does not exist', async () => {
             await expect(
                 service.delete('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should prevent deletion of built-in realms', async () => {
@@ -197,7 +197,7 @@ describe('core/entities/realm/service', () => {
 
             await expect(
                 service.delete(masterRealm.id, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should call preCheck with REALM_DELETE permission', async () => {
@@ -214,7 +214,7 @@ describe('core/entities/realm/service', () => {
 
             await expect(
                 service.delete(entity.id, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 });

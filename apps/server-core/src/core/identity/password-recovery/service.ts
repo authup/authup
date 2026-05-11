@@ -5,7 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
+import { PasswordRecoveryDisabledError } from './disabled.ts';
+import { EmailVerificationRequiredError } from './email-verification-required.ts';
+import { ResetTokenExpiredError } from './token-expired.ts';
 import { createValidationChain, createValidator } from '@validup/adapter-validator';
 import { randomBytes } from 'node:crypto';
 import { Container } from 'validup';
@@ -38,11 +41,11 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
     async forgotPassword(data: Record<string, any>): Promise<PasswordForgotResult> {
         if (!this.options.passwordRecoveryEnabled) {
-            throw new BadRequestError('Password recovery is not enabled.');
+            throw new PasswordRecoveryDisabledError();
         }
 
         if (!this.options.emailVerificationEnabled) {
-            throw new BadRequestError('Email verification is not enabled, but required to reset a password.');
+            throw new EmailVerificationRequiredError('Email verification is not enabled, but required to reset a password.');
         }
 
         const validated = await this.runForgotPasswordValidator(data);
@@ -58,7 +61,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const entity = await this.repository.findOneByWithEmail(where);
 
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const merged = this.repository.merge(entity, {
@@ -92,7 +95,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
     async resetPassword(data: Record<string, any>): Promise<PasswordResetResult> {
         if (!this.options.passwordRecoveryEnabled) {
-            throw new BadRequestError('Password recovery is not enabled.');
+            throw new PasswordRecoveryDisabledError();
         }
 
         const validated = await this.runResetPasswordValidator(data);
@@ -110,11 +113,11 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         const entity = await this.repository.findOneBy(where);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (!entity.reset_expires || new Date(entity.reset_expires) < new Date()) {
-            throw new BadRequestError('Reset token has expired.');
+            throw new ResetTokenExpiredError();
         }
 
         const credentialsService = new UserCredentialsService();

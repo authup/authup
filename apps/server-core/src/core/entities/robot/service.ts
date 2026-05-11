@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
-import { NotFoundError } from '@ebec/http';
+import { EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     RobotValidator,
@@ -120,7 +120,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
 
         const entity = await this.repository.findOne(idOrName, query, realmId);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (isMe && actor.identity!.data.id !== entity.id) {
@@ -185,10 +185,10 @@ export class RobotService extends AbstractEntityService implements IRobotService
 
             entity = await this.repository.findOneBy(where);
             if (!entity && options.updateOnly) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         let isSelfEdit = false;
@@ -288,7 +288,7 @@ export class RobotService extends AbstractEntityService implements IRobotService
     ): Promise<Robot> {
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const isOwner = entity.user_id &&

@@ -17,7 +17,8 @@ import {
     DPut,
     DTags,
 } from '@routup/decorators';
-import { NotFoundError } from '@ebec/http';
+import { EntityNotFoundError } from '@authup/errors';
+import { isSelfToken } from '../../../../../utils/index.ts';
 import type { Client } from '@authup/core-kit';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
@@ -30,7 +31,6 @@ import type {
 import type { IClientRepository, IClientService } from '../../../../../core/index.ts';
 import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { isSelfToken } from '../../../../../utils/index.ts';
 import {
     buildActorContext,
     useRequestIdentity,
@@ -95,7 +95,7 @@ export class ClientController {
             );
 
             if (!entity) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
 
             for (const attribute of attributes) {

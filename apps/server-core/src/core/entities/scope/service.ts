@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
-import { NotFoundError } from '@ebec/http';
+import { EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     ScopeValidator,
@@ -68,7 +68,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
         const entity = await this.repository.findOneByIdOrName(idOrName);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -121,10 +121,10 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
             entity = await this.repository.findOneBy(where);
             if (!entity && options.updateOnly) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity) {
@@ -189,7 +189,7 @@ export class ScopeService extends AbstractEntityService implements IScopeService
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

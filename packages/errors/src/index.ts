@@ -5,8 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
 export * from './built-in';
+export * from './check';
+export * from './constants';
+export * from './instanceof';
 export * from './module';
+export * from './status';
 export * from './types';
-

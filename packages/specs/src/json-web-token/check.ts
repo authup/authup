@@ -5,10 +5,17 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode } from '@authup/errors';
+import { ErrorCode, hasInstanceof, isAuthupError } from '@authup/errors';
+import { type JWTError, JWT_ERROR_INSTANCE } from './error.ts';
 
 export function isJWTErrorCode(code: unknown) {
     return code === ErrorCode.JWT_EXPIRED ||
         code === ErrorCode.JWT_INVALID ||
         code === ErrorCode.JWT_INACTIVE;
+}
+
+export function isJWTError(input: unknown): input is JWTError {
+    if (hasInstanceof(input, JWT_ERROR_INSTANCE)) return true;
+    if (!isAuthupError(input)) return false;
+    return isJWTErrorCode(input.code);
 }

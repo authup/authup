@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { HTTPErrorOptions } from '@ebec/http';
+import type { ErrorOptions } from '@ebec/core';
 
-export type AuthupErrorOptions = HTTPErrorOptions & {
-    data?: Record<string, any>
+export type AuthupErrorOptions = ErrorOptions & {
+    data?: Record<string, any>,
 };
 
 export type AuthupErrorInput = string | AuthupErrorOptions;
