@@ -84,7 +84,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
             user_id: validated.user_id,
         });
         if (existing) {
-            throw new EntityConflictError('The user-role assignment already exists.');
+            throw new EntityConflictError({ entity: 'user-role' });
         }
 
         if (validated.role) {

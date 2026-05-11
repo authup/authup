@@ -31,7 +31,7 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
         const realmId = body?.realm_id;
 
         if (!clientId) {
-            throw new EntityCredentialsInvalidError('The client credentials are invalid.');
+            throw new EntityCredentialsInvalidError({ entity: 'client' });
         }
 
         const client = await this.authenticator.authenticate(clientId, clientSecret ?? '', realmId);

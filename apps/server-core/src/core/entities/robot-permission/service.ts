@@ -82,7 +82,7 @@ export class RobotPermissionService extends AbstractEntityService implements IRo
             robot_id: validated.robot_id,
         });
         if (existing) {
-            throw new EntityConflictError('The robot-permission assignment already exists.');
+            throw new EntityConflictError({ entity: 'robot-permission' });
         }
 
         if (validated.permission) {

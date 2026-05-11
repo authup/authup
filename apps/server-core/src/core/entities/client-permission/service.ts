@@ -82,7 +82,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             permission_id: validated.permission_id,
         });
         if (existing) {
-            throw new EntityConflictError('The client-permission assignment already exists.');
+            throw new EntityConflictError({ entity: 'client-permission' });
         }
 
         if (validated.permission) {

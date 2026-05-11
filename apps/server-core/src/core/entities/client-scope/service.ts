@@ -81,7 +81,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
             scope_id: validated.scope_id,
         });
         if (existing) {
-            throw new EntityConflictError('The client-scope assignment already exists.');
+            throw new EntityConflictError({ entity: 'client-scope' });
         }
 
         if (validated.client) {

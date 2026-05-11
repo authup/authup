@@ -8,17 +8,18 @@
 import { markInstanceof } from '@ebec/core';
 import { ErrorCode } from '../constants.ts';
 import { AuthupError } from '../module.ts';
-import type { AuthupErrorOptions } from '../types.ts';
+import type { AuthupEntityErrorOptions } from '../types.ts';
 
 export const ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE = Symbol.for('@authup/errors/EntityCredentialsInvalidError');
 
 export class EntityCredentialsInvalidError extends AuthupError {
-    constructor(input?: string | AuthupErrorOptions) {
-        const options: AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+    constructor(input?: string | AuthupEntityErrorOptions) {
+        const options: AuthupEntityErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+        const { entity, ...rest } = options;
         super({
             code: ErrorCode.ENTITY_CREDENTIALS_INVALID,
-            message: 'Credentials are invalid.',
-            ...options,
+            message: entity ? `The ${entity} credentials are invalid.` : 'Credentials are invalid.',
+            ...rest,
         });
         markInstanceof(this, ENTITY_CREDENTIALS_INVALID_ERROR_INSTANCE);
     }

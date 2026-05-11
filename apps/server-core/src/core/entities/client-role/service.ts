@@ -84,7 +84,7 @@ export class ClientRoleService extends AbstractEntityService implements IClientR
             client_id: validated.client_id,
         });
         if (existing) {
-            throw new EntityConflictError('The client-role assignment already exists.');
+            throw new EntityConflictError({ entity: 'client-role' });
         }
 
         if (validated.role) {

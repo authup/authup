@@ -84,7 +84,7 @@ export class RobotRoleService extends AbstractEntityService implements IRobotRol
             robot_id: validated.robot_id,
         });
         if (existing) {
-            throw new EntityConflictError('The robot-role assignment already exists.');
+            throw new EntityConflictError({ entity: 'robot-role' });
         }
 
         if (validated.role) {

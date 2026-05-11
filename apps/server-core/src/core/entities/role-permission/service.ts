@@ -87,7 +87,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             permission_id: validated.permission_id,
         });
         if (existing) {
-            throw new EntityConflictError('The role-permission assignment already exists.');
+            throw new EntityConflictError({ entity: 'role-permission' });
         }
 
         if (validated.permission) {

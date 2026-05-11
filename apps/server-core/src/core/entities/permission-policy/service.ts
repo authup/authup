@@ -77,7 +77,7 @@ export class PermissionPolicyService extends AbstractEntityService implements IP
             policy_id: validated.policy_id,
         });
         if (existing) {
-            throw new EntityConflictError('The permission-policy assignment already exists.');
+            throw new EntityConflictError({ entity: 'permission-policy' });
         }
 
         if (validated.permission) {

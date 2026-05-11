@@ -45,12 +45,12 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         if (!bind.success) {
             await this.safeUnbind();
 
-            throw new EntityCredentialsInvalidError('The user credentials are invalid.');
+            throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
         const entity = await this.findOneByName(name);
         if (!entity) {
-            throw new EntityCredentialsInvalidError('The user credentials are invalid.');
+            throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
         const identity : IdentityProviderIdentity = {
@@ -78,7 +78,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         await this.safeUnbind();
 
         if (!bind.success) {
-            throw new EntityCredentialsInvalidError('The user credentials are invalid.');
+            throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
         const account = await this.accountManager.save(identity);

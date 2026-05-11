@@ -28,17 +28,17 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
     async authenticate(key: string, secret: string, realmId?: string): Promise<Client> {
         const identity = await this.identityResolver.resolve(IdentityType.CLIENT, key, realmId);
         if (!identity || identity.type !== IdentityType.CLIENT) {
-            throw new EntityCredentialsInvalidError('The client credentials are invalid.');
+            throw new EntityCredentialsInvalidError({ entity: 'client' });
         }
 
         if (!identity.data.active) {
-            throw new EntityInactiveError('The client account is inactive.');
+            throw new EntityInactiveError({ entity: 'client' });
         }
 
         if (identity.data.is_confidential) {
             const verified = await this.credentialsService.verify(secret, identity.data);
             if (!verified) {
-                throw new EntityCredentialsInvalidError('The client credentials are invalid.');
+                throw new EntityCredentialsInvalidError({ entity: 'client' });
             }
         } else {
             throw OAuth2Error.clientInvalid();

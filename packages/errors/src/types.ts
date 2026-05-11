@@ -12,3 +12,9 @@ export type AuthupErrorOptions = ErrorOptions & {
 };
 
 export type AuthupErrorInput = string | AuthupErrorOptions;
+
+export type AuthupEntityErrorOptions = AuthupErrorOptions & {
+    entity?: string,
+};
+
+export type AuthupEntityErrorInput = string | AuthupEntityErrorOptions;

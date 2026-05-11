@@ -27,16 +27,16 @@ export class RobotAuthenticator extends BaseCredentialsAuthenticator<Robot> {
     async authenticate(key: string, secret: string, realmId?: string): Promise<Robot> {
         const identity = await this.identityResolver.resolve(IdentityType.ROBOT, key, realmId);
         if (!identity || identity.type !== IdentityType.ROBOT) {
-            throw new EntityCredentialsInvalidError('The robot credentials are invalid.');
+            throw new EntityCredentialsInvalidError({ entity: 'robot' });
         }
 
         const verified = await this.credentialsService.verify(secret, identity.data);
         if (!verified) {
-            throw new EntityCredentialsInvalidError('The robot credentials are invalid.');
+            throw new EntityCredentialsInvalidError({ entity: 'robot' });
         }
 
         if (!identity.data.active) {
-            throw new EntityInactiveError('The robot account is inactive.');
+            throw new EntityInactiveError({ entity: 'robot' });
         }
 
         return identity.data;

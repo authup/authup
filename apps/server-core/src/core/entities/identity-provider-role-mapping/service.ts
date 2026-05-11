@@ -86,7 +86,7 @@ export class IdentityProviderRoleMappingService extends AbstractEntityService im
             role_id: validated.role_id,
         });
         if (existing) {
-            throw new EntityConflictError('The identity-provider-role-mapping already exists.');
+            throw new EntityConflictError({ entity: 'identity-provider-role-mapping' });
         }
 
         if (validated.provider) {

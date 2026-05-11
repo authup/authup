@@ -57,6 +57,6 @@ export class IdentityProviderLdapCollectionAuthenticator extends BaseCredentials
             throw error;
         }
 
-        throw new EntityCredentialsInvalidError('The user credentials are invalid.');
+        throw new EntityCredentialsInvalidError({ entity: 'user' });
     }
 }
