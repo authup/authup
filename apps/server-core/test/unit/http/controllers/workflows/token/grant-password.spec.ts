@@ -92,7 +92,7 @@ describe('src/http/controllers/token', () => {
                 client_id: client.id,
                 client_secret: 'wrong-secret',
             }),
-            { status: 400, code: ErrorCode.OAUTH_CLIENT_INVALID },
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
     });
 
