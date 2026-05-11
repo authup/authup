@@ -7,12 +7,12 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
-import { ClientPermissionValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
+import { ValidatorGroup } from '@authup/kit';
+import { ClientPermissionValidator, PermissionName } from '@authup/core-kit';
 import type { ClientPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
-import type { ActorContext } from '../actor/types.ts';
-import { AbstractEntityService } from '../service.ts';
-import type { EntityRepositoryFindManyResult } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import { AbstractEntityService } from '@authup/server-kit';
 import type { IClientPermissionRepository, IClientPermissionService } from './types.ts';
 
 export type ClientPermissionServiceContext = {

@@ -7,23 +7,21 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import {
- 
-    extendObject, 
-    isPropertySet, 
-    isUUID, 
-    removeObjectProperty, 
+    ValidatorGroup,
+    extendObject,
+    isPropertySet,
+    isUUID,
+    removeObjectProperty,
 } from '@authup/kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     PolicyValidator,
-    ValidatorGroup,
 } from '@authup/core-kit';
 import type { Policy } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
-import { AbstractEntityService } from '../service.ts';
-import type { EntityRepositoryFindManyResult } from '../types.ts';
+import { AbstractEntityService } from '@authup/server-kit';
 import { PolicyAttributesValidator } from './attributes-validator.ts';
 import type { IPolicyRepository, IPolicyService } from './types.ts';
 

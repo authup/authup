@@ -9,9 +9,8 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { RoleAttribute } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
-import { AbstractEntityService } from '../service.ts';
-import type { EntityRepositoryFindManyResult } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import { AbstractEntityService } from '@authup/server-kit';
 import type { IRoleAttributeRepository, IRoleAttributeService } from './types.ts';
 
 export type RoleAttributeServiceContext = {

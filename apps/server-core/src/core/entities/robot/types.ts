@@ -7,8 +7,7 @@
 
 import type { Robot, Role } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
-import type { ActorContext } from '../actor/types.ts';
-import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 
 export interface IRobotRepository extends IEntityRepository<Robot> {
     checkUniqueness(data: Partial<Robot>, existing?: Robot): Promise<void>;

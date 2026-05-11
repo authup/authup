@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './actor/index.ts';
 export * from './client/index.ts';
 export * from './client-permission/index.ts';
 export * from './client-role/index.ts';
@@ -27,6 +26,3 @@ export * from './user-attribute/index.ts';
 export * from './user-permission/index.ts';
 export * from './user-role/index.ts';
 export * from './identity-provider-role-mapping/index.ts';
-
-export * from './service.ts';
-export * from './types.ts';

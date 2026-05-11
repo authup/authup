@@ -7,12 +7,11 @@
 
 import type { IdentityProviderAccount, User } from '@authup/core-kit';
 import {
-    UserValidator, 
-    ValidatorGroup,
-    buildUserFakeEmail, 
+    UserValidator,
+    buildUserFakeEmail,
     isUserFakeEmail,
 } from '@authup/core-kit';
-import { createNanoID, extendObject } from '@authup/kit';
+import { ValidatorGroup, createNanoID, extendObject } from '@authup/kit';
 import { isValidupError, stringifyPath } from 'validup';
 import type { IUserIdentityRepository } from '../../entities/index.ts';
 import { IdentityProviderIdentityOperation } from '../constants.ts';

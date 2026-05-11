@@ -7,8 +7,7 @@
 
 import type { Role } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
-import type { ActorContext } from '../actor/types.ts';
-import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 
 export interface IRoleRepository extends IEntityRepository<Role> {
     checkUniqueness(data: Partial<Role>, existing?: Role): Promise<void>;

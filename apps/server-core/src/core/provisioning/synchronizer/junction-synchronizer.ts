@@ -6,7 +6,7 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import type { IEntityRepository } from '../../entities/index.ts';
+import type { IEntityRepository } from '@authup/server-kit';
 
 export type ProvisioningJunctionSynchronizerContext<T extends ObjectLiteral = ObjectLiteral> = {
     repository: IEntityRepository<T>,

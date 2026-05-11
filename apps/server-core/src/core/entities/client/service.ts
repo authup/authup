@@ -6,18 +6,16 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { isUUID } from '@authup/kit';
+import { ValidatorGroup, isUUID } from '@authup/kit';
 import { EntityNotFoundError } from '@authup/errors';
 import {
     ClientValidator,
     PermissionName,
-    ValidatorGroup,
 } from '@authup/core-kit';
 import type { Client } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IRealmRepository } from '../realm/types.ts';
-import { AbstractEntityService } from '../service.ts';
-import type { EntityRepositoryFindManyResult } from '../types.ts';
+import { AbstractEntityService } from '@authup/server-kit';
 import { ClientCredentialsService } from '../../authentication/credential/entities/client/module.ts';
 import type { IClientRepository, IClientService } from './types.ts';
 

@@ -25,3 +25,8 @@ export enum EnvironmentName {
     TEST = 'test',
     DEVELOPMENT = 'development',
 }
+
+export enum ValidatorGroup {
+    CREATE = 'create',
+    UPDATE = 'update',
+}

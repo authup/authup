@@ -8,7 +8,7 @@
 import type { RobotPermission } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IRobotPermissionRepository } from '../../../../../core/entities/robot-permission/types.ts';
 import { RobotPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';

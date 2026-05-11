@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { ValidatorGroup } from '../../constants.ts';
+import { ValidatorGroup } from '@authup/kit';
 import type { Scope } from './entity.ts';
 import { isScopeNameValid } from './utils.ts';
 

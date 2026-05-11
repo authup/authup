@@ -10,7 +10,8 @@ import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { isUUID } from '@authup/kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IRealmRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { IRealmRepository } from '../../../../../core/index.ts';
 import { RealmEntity } from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
 

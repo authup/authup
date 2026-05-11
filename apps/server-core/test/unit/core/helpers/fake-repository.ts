@@ -11,7 +11,7 @@ import type { ObjectLiteral } from '@authup/kit';
 import type {
     EntityRepositoryFindManyResult,
     IEntityRepository,
-} from '../../../../src/core/entities/types.ts';
+} from '@authup/server-kit';
 
 export class FakeEntityRepository<T extends ObjectLiteral> implements IEntityRepository<T> {
     protected store: T[] = [];

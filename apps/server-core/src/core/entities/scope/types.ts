@@ -6,8 +6,7 @@
  */
 
 import type { Scope } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
-import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 
 export interface IScopeRepository extends IEntityRepository<Scope> {
     checkUniqueness(data: Partial<Scope>, existing?: Scope): Promise<void>;

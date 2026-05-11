@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025.
+ * Copyright (c) 2025-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -7,7 +7,7 @@
 
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import { isObject } from '@authup/kit';
-import type { ActorContext } from './actor/types.ts';
+import type { ActorContext } from './actor/types';
 
 export abstract class AbstractEntityService {
     protected isActorMasterRealmMember(actor: ActorContext): boolean {
@@ -33,7 +33,7 @@ export abstract class AbstractEntityService {
             return data.realm_id;
         }
 
-        if ('realm' in data && isObject(data.realm) && 'id' in data.realm) {
+        if (isObject(data.realm) && data.realm.id) {
             return data.realm.id;
         }
 

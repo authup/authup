@@ -8,7 +8,8 @@
 import type { UserAttribute } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IUserAttributeRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { IUserAttributeRepository } from '../../../../../core/index.ts';
 import { UserAttributeEntity } from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
 

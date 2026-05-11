@@ -8,7 +8,8 @@
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { IIdentityProviderRoleMappingRepository } from '../../../../../core/index.ts';
 import { IdentityProviderRoleMappingEntity } from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
 

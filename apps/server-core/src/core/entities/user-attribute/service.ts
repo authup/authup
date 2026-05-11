@@ -10,9 +10,8 @@ import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { UserAttribute } from '@authup/core-kit';
 import { buildErrorMessageForAttribute } from 'validup';
-import type { ActorContext } from '../actor/types.ts';
-import { AbstractEntityService } from '../service.ts';
-import type { EntityRepositoryFindManyResult } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import { AbstractEntityService } from '@authup/server-kit';
 import type { IUserAttributeRepository, IUserAttributeService } from './types.ts';
 
 export type UserAttributeServiceContext = {

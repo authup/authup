@@ -6,24 +6,22 @@
  */
 
 import { BuiltInPolicyType, PolicyData, SystemPolicyName } from '@authup/access';
-import { isPropertySet, isUUID } from '@authup/kit';
+import { ValidatorGroup, isPropertySet, isUUID } from '@authup/kit';
 import { AuthupError, BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     PermissionValidator,
     ROLE_ADMIN_NAME,
     ROLE_REALM_ADMIN_NAME,
-    ValidatorGroup,
 } from '@authup/core-kit';
 import type { Permission } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import type { IPermissionPolicyRepository } from '../permission-policy/types.ts';
 import type { IPolicyRepository } from '../policy/types.ts';
 import type { IRealmRepository } from '../realm/types.ts';
 import type { IRoleRepository } from '../role/types.ts';
 import type { IRolePermissionRepository } from '../role-permission/types.ts';
-import { AbstractEntityService } from '../service.ts';
-import type { EntityRepositoryFindManyResult } from '../types.ts';
+import { AbstractEntityService } from '@authup/server-kit';
 import type { IPermissionRepository, IPermissionService } from './types.ts';
 
 const REALM_ADMIN_EXCLUDED_PERMISSIONS = [

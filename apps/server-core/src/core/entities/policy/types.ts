@@ -6,8 +6,7 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
-import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 
 export interface IPolicyRepository extends IEntityRepository<Policy> {
     checkUniqueness(data: Partial<Policy>, existing?: Policy): Promise<void>;
