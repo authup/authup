@@ -7,7 +7,7 @@
 
 import { isAuthupError } from '../check.ts';
 import { ErrorCode } from '../constants.ts';
-import { hasInstanceof } from '../instanceof.ts';
+import { hasInstanceof } from '@ebec/core';
 import { AUTH_HEADER_ERROR_INSTANCE, type AuthHeaderError } from './auth-header.ts';
 import { BAD_REQUEST_ERROR_INSTANCE, type BadRequestError } from './bad-request.ts';
 import { BEARER_TOKEN_MALFORMED_ERROR_INSTANCE, type BearerTokenMalformedError } from './bearer-token.ts';

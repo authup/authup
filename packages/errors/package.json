@@ -49,7 +49,7 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@ebec/core": "^1.0.1",
+        "@ebec/core": "^1.1.0",
         "validup": "^0.2.1"
     },
     "publishConfig": {

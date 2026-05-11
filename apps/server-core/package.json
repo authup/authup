@@ -74,7 +74,7 @@
         "@authup/kit": "^1.0.0-beta.41",
         "@authup/server-kit": "^1.0.0-beta.41",
         "@authup/specs": "^1.0.0-beta.41",
-        "@ebec/http": "^4.0.0",
+        "@ebec/http": "^4.1.0",
         "@hapic/oauth2": "^3.2.0",
         "@routup/assets": "^4.1.0",
         "@routup/basic": "^2.1.0",
