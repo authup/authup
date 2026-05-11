@@ -8,7 +8,7 @@
 import { AuthupError } from '@authup/errors';
 import { OAuth2Error, OAuth2ErrorCode } from '@authup/specs';
 import { describe, expect, it } from 'vitest';
-import { toOAuth2Error } from '../../../../../src/core/oauth2/helpers/erorr.ts';
+import { toOAuth2Error } from '../../../../../src/core/oauth2/helpers/error.ts';
 
 describe('toOAuth2Error', () => {
     it('should pass through OAuth2Error unchanged', () => {

@@ -106,7 +106,7 @@ describe('refresh-token', () => {
 
         await expectClientError(
             () => suite.client.token.createWithRefreshToken({ refresh_token: passwordResponse.refresh_token }),
-            { status: 400, code: ErrorCode.OAUTH_CLIENT_INVALID },
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
     });
 
@@ -156,7 +156,7 @@ describe('refresh-token', () => {
                 client_id: confidentialClient.id,
                 client_secret: 'wrong-secret',
             }),
-            { status: 400, code: ErrorCode.OAUTH_CLIENT_INVALID },
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
     });
 });

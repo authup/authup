@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     REALM_MASTER_NAME,
@@ -46,7 +46,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
     ): Promise<Realm> {
         const entity = await this.repository.findOneByIdOrName(idOrName);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -91,10 +91,10 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
             entity = await this.repository.findOneBy(where);
             if (!entity && options.updateOnly) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity) {
@@ -155,7 +155,7 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity.built_in) {

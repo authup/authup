@@ -7,8 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData, SystemPolicyName } from '@authup/access';
 import { isPropertySet, isUUID } from '@authup/kit';
-import { AuthupError } from '@authup/errors';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { AuthupError, BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     PermissionValidator,
@@ -132,7 +131,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         const entity = await this.repository.findOneByIdOrName(idOrName, realm);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -185,10 +184,10 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
             entity = await this.repository.findOneBy(where);
             if (!entity && options.updateOnly) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity) {
@@ -266,7 +265,7 @@ export class PermissionService extends AbstractEntityService implements IPermiss
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity.built_in) {

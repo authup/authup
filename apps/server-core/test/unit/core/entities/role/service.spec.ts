@@ -16,7 +16,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { RoleService } from '../../../../../src/core/entities/role/service.ts';
 import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import { FakeRoleRepository } from '../../helpers/fake-role-repository.ts';
@@ -71,7 +71,7 @@ describe('core/entities/role/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.getMany({}, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -96,7 +96,7 @@ describe('core/entities/role/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.getOne('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -104,7 +104,7 @@ describe('core/entities/role/service', () => {
 
             await expect(
                 service.getOne('test-role', createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -141,7 +141,7 @@ describe('core/entities/role/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'new-role' }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should reject invalid name (too short)', async () => {
@@ -175,7 +175,7 @@ describe('core/entities/role/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { name: 'new-name' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preCheck with ROLE_UPDATE permission', async () => {
@@ -238,13 +238,13 @@ describe('core/entities/role/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should throw NotFoundError with updateOnly and no idOrName', async () => {
             await expect(
                 service.save(undefined, { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -323,7 +323,7 @@ describe('core/entities/role/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.delete('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -331,7 +331,7 @@ describe('core/entities/role/service', () => {
 
             await expect(
                 service.delete(entity.id, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should call preCheck with ROLE_DELETE permission', async () => {
@@ -348,7 +348,7 @@ describe('core/entities/role/service', () => {
 
             await expect(
                 service.delete(entity.id, createAllowAllActor()),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should preserve entity id after removal', async () => {

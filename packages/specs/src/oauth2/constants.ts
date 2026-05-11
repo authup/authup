@@ -54,4 +54,6 @@ export enum OAuth2ErrorCode {
     UNSUPPORTED_RESPONSE_TYPE = 'unsupported_response_type',
 
     INVALID_SCOPE = 'invalid_scope',
+
+    SERVER_ERROR = 'server_error',
 }

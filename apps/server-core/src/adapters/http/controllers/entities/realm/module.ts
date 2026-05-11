@@ -29,11 +29,11 @@ import type {
 } from '@authup/core-http-kit';
 import type { Realm } from '@authup/core-kit';
 import type { IRealmService } from '../../../../../core/index.ts';
-import { resolveURL } from '../../../../../utils/index.ts';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getJwkRouteHandler, getJwksRouteHandler } from '../../workflows/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import { buildActorContext } from '../../../request/index.ts';
+import { resolveURL } from '../../../../../utils/index.ts';
 
 export type RealmControllerOptions = {
     baseURL: string

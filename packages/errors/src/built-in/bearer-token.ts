@@ -5,8 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { UnauthorizedError } from '@ebec/http';
-import { ErrorCode } from '../constants';
+import { ErrorCode } from '../constants.ts';
+import { markInstanceof } from '@ebec/core';
+import { UnauthorizedError } from './unauthorized.ts';
+
+export const BEARER_TOKEN_MALFORMED_ERROR_INSTANCE = Symbol.for('@authup/errors/BearerTokenMalformedError');
 
 export class BearerTokenMalformedError extends UnauthorizedError {
     constructor(message?: string) {
@@ -14,5 +17,6 @@ export class BearerTokenMalformedError extends UnauthorizedError {
             code: ErrorCode.HTTP_BEARER_TOKEN_MALFORMED,
             message: message ?? 'The Authorization header is malformed.',
         });
+        markInstanceof(this, BEARER_TOKEN_MALFORMED_ERROR_INSTANCE);
     }
 }

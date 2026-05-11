@@ -5,9 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { ErrorCode } from '@authup/errors';
+import { ErrorCode, hasInstanceof, isAuthupError } from '@authup/errors';
+import { type JWKError, JWK_ERROR_INSTANCE } from './error.ts';
 
 export function isJWKErrorCode(code: unknown) {
     return code === ErrorCode.JWK_INVALID ||
         code === ErrorCode.JWK_NOT_FOUND;
+}
+
+export function isJWKError(input: unknown): input is JWKError {
+    if (hasInstanceof(input, JWK_ERROR_INSTANCE)) return true;
+    if (!isAuthupError(input)) return false;
+    return isJWKErrorCode(input.code);
 }

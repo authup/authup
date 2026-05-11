@@ -6,6 +6,5 @@
  */
 
 export * from './entity';
-export * from './error';
 export * from './helpers';
 export * from './validator';

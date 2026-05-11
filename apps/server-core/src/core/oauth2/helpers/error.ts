@@ -5,8 +5,9 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2Error, OAuth2ErrorCode } from '@authup/specs';
-import { AuthupError } from '@authup/errors';
+import { OAuth2Error, OAuth2ErrorCode, isOAuth2Error } from '@authup/specs';
+import type { AuthupError } from '@authup/errors';
+import { isAuthupError } from '@authup/errors';
 import { sanitizeError } from '../../../utils/index.ts';
 
 /**
@@ -14,17 +15,16 @@ import { sanitizeError } from '../../../utils/index.ts';
  *
  * @param err
  */
-export function toOAuth2Error(err: unknown) : OAuth2Error {
-    if (err instanceof OAuth2Error) {
+export function toOAuth2Error(err: unknown): OAuth2Error {
+    if (isOAuth2Error(err)) {
         return err;
     }
 
-    const source : AuthupError = err instanceof AuthupError ? err : sanitizeError(err);
+    const source: AuthupError = isAuthupError(err) ? err : sanitizeError(err);
 
     return new OAuth2Error({
         message: source.message,
         code: source.code,
-        status: source.status,
         data: {
             error: OAuth2ErrorCode.INVALID_REQUEST,
             error_description: source.message,

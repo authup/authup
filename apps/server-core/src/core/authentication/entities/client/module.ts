@@ -6,7 +6,9 @@
  */
 
 import type { Client } from '@authup/core-kit';
-import { ClientError, IdentityType } from '@authup/core-kit';
+import { IdentityType } from '@authup/core-kit';
+import { EntityCredentialsInvalidError, EntityInactiveError } from '@authup/errors';
+import { OAuth2Error } from '@authup/specs';
 import type { IIdentityResolver } from '../../../identity/index.ts';
 import { ClientCredentialsService } from '../../credential/index.ts';
 import { BaseCredentialsAuthenticator } from '../../base.ts';
@@ -26,20 +28,20 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
     async authenticate(key: string, secret: string, realmId?: string): Promise<Client> {
         const identity = await this.identityResolver.resolve(IdentityType.CLIENT, key, realmId);
         if (!identity || identity.type !== IdentityType.CLIENT) {
-            throw ClientError.credentialsInvalid();
+            throw new EntityCredentialsInvalidError({ entity: 'client' });
         }
 
         if (!identity.data.active) {
-            throw ClientError.inactive();
+            throw new EntityInactiveError({ entity: 'client' });
         }
 
         if (identity.data.is_confidential) {
             const verified = await this.credentialsService.verify(secret, identity.data);
             if (!verified) {
-                throw ClientError.credentialsInvalid();
+                throw new EntityCredentialsInvalidError({ entity: 'client' });
             }
         } else {
-            throw ClientError.invalid();
+            throw OAuth2Error.clientInvalid();
         }
 
         return identity.data;

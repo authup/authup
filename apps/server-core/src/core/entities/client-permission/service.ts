@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ConflictError, NotFoundError } from '@ebec/http';
+import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ClientPermissionValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { ClientPermission } from '@authup/core-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
@@ -61,7 +61,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -82,7 +82,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
             permission_id: validated.permission_id,
         });
         if (existing) {
-            throw new ConflictError('The client-permission assignment already exists.');
+            throw new EntityConflictError({ entity: 'client-permission' });
         }
 
         if (validated.permission) {
@@ -140,7 +140,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const updateData: Record<string, any> = {};
@@ -168,7 +168,7 @@ export class ClientPermissionService extends AbstractEntityService implements IC
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

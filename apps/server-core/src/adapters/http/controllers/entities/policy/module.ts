@@ -15,7 +15,7 @@ import type {
 } from '@authup/core-http-kit';
 import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 import { isUUID } from '@authup/kit';
-import { NotFoundError } from '@ebec/http';
+import { EntityNotFoundError } from '@authup/errors';
 import {
     DBody,
     DContext,
@@ -130,7 +130,7 @@ export class PolicyController {
 
         const entity = await this.repository.findOneBy(criteria);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (

@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ConflictError, NotFoundError } from '@ebec/http';
+import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { 
     PermissionName, 
     ROLE_ADMIN_NAME, 
@@ -66,7 +66,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -87,7 +87,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
             permission_id: validated.permission_id,
         });
         if (existing) {
-            throw new ConflictError('The role-permission assignment already exists.');
+            throw new EntityConflictError({ entity: 'role-permission' });
         }
 
         if (validated.permission) {
@@ -147,7 +147,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const updateData: Record<string, any> = {};
@@ -175,7 +175,7 @@ export class RolePermissionService extends AbstractEntityService implements IRol
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ConflictError, NotFoundError } from '@ebec/http';
+import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { ClientScopeValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -60,7 +60,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -81,7 +81,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
             scope_id: validated.scope_id,
         });
         if (existing) {
-            throw new ConflictError('The client-scope assignment already exists.');
+            throw new EntityConflictError({ entity: 'client-scope' });
         }
 
         if (validated.client) {
@@ -111,7 +111,7 @@ export class ClientScopeService extends AbstractEntityService implements IClient
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

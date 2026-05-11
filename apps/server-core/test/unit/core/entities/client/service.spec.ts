@@ -8,7 +8,7 @@
 import { randomUUID } from 'node:crypto';
 import { IdentityType, PermissionName } from '@authup/core-kit';
 import type { Client, Realm, Role } from '@authup/core-kit';
-import { BuiltInPolicyType } from '@authup/access';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach,
@@ -17,7 +17,7 @@ import {
     it,
     vi,
 } from 'vitest';
-import { ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { ClientService } from '../../../../../src/core/entities/client/service.ts';
 import type { IClientRepository } from '../../../../../src/core/entities/client/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
@@ -112,7 +112,7 @@ describe('core/entities/client/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -150,11 +150,11 @@ describe('core/entities/client/service', () => {
 
             await expect(
                 service.getOne('some-client', createAllowAllActor(), undefined, randomUUID()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should perform per-record check for plaintext secret entities', async () => {
@@ -225,7 +225,7 @@ describe('core/entities/client/service', () => {
             };
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
-            await expect(service.getOne('shared-name', actor)).rejects.toThrow(ForbiddenError);
+            await expect(service.getOne('shared-name', actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
             expect(otherEntity.name).toBe('shared-name');
         });
 
@@ -240,7 +240,7 @@ describe('core/entities/client/service', () => {
             };
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
-            await expect(service.getOne(target.id, actor)).rejects.toThrow(ForbiddenError);
+            await expect(service.getOne(target.id, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should skip post-load secret evaluation on self-access', async () => {
@@ -310,7 +310,7 @@ describe('core/entities/client/service', () => {
         it('should throw when actor lacks permission', async () => {
             await expect(
                 service.create({ name: 'test-client' }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should set realm_id from actor for non-master realm', async () => {
@@ -333,7 +333,7 @@ describe('core/entities/client/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should generate secret when confidential client has no secret', async () => {
@@ -385,7 +385,7 @@ describe('core/entities/client/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -414,7 +414,7 @@ describe('core/entities/client/service', () => {
             const actor = buildSelfActor(entity.id);
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
-                    throw new ForbiddenError();
+                    throw PermissionError.denied('test');
                 }
             });
 
@@ -436,7 +436,7 @@ describe('core/entities/client/service', () => {
             const actor = buildSelfActor(entity.id);
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
-                    throw new ForbiddenError();
+                    throw PermissionError.denied('test');
                 }
             });
 
@@ -458,13 +458,13 @@ describe('core/entities/client/service', () => {
             const actor = buildSelfActor(randomUUID());
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
-                    throw new ForbiddenError();
+                    throw PermissionError.denied('test');
                 }
             });
 
             await expect(
                 service.update(entity.id, { display_name: 'forbidden' }, actor),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should throw when actor lacks both CLIENT_UPDATE and CLIENT_SELF_MANAGE', async () => {
@@ -475,7 +475,7 @@ describe('core/entities/client/service', () => {
 
             await expect(
                 service.update(entity.id, { display_name: 'forbidden' }, actor),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should NOT default realm_id from actor on self-edit', async () => {
@@ -488,7 +488,7 @@ describe('core/entities/client/service', () => {
             const actor = buildSelfActor(entity.id);
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.CLIENT_UPDATE) {
-                    throw new ForbiddenError();
+                    throw PermissionError.denied('test');
                 }
             });
 
@@ -505,7 +505,7 @@ describe('core/entities/client/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preCheck with CLIENT_DELETE', async () => {
@@ -517,7 +517,7 @@ describe('core/entities/client/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed(createFakeClient());
-            await expect(service.delete(entity.id, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.delete(entity.id, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 });

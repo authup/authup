@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2JsonWebKey } from '@authup/specs';
-import { JWKType } from '@authup/specs';
+import { JWKError, JWKType } from '@authup/specs';
 import { AsymmetricKey } from '@authup/server-kit';
 import {
     DContext,
@@ -17,7 +17,6 @@ import {
 import type { IRoutupEvent } from 'routup';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
-import { BadRequestError, NotFoundError } from '@ebec/http';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
 import { getRequestStringParam } from '../../../request/index.ts';
 
@@ -79,11 +78,11 @@ export class JwkController {
         });
 
         if (!entity) {
-            throw new NotFoundError();
+            throw JWKError.notFound(id);
         }
 
         if (!entity.encryption_key) {
-            throw new BadRequestError('The encryption key does not exist');
+            throw JWKError.encryptionKeyMissing();
         }
 
         const container = await AsymmetricKey

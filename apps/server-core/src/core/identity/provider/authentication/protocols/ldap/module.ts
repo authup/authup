@@ -6,7 +6,7 @@
  */
 
 import type { LdapIdentityProvider, User } from '@authup/core-kit';
-import { UserError } from '@authup/core-kit';
+import { EntityCredentialsInvalidError } from '@authup/errors';
 import type { Result } from '@authup/kit';
 import { template } from '@authup/kit';
 import ldap from 'ldapjs';
@@ -45,12 +45,13 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         if (!bind.success) {
             await this.safeUnbind();
 
-            throw UserError.credentialsInvalid();
+            throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
         const entity = await this.findOneByName(name);
         if (!entity) {
-            throw UserError.credentialsInvalid();
+            await this.safeUnbind();
+            throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
         const identity : IdentityProviderIdentity = {
@@ -78,7 +79,7 @@ export class IdentityProviderLdapAuthenticator extends BaseCredentialsAuthentica
         await this.safeUnbind();
 
         if (!bind.success) {
-            throw UserError.credentialsInvalid();
+            throw new EntityCredentialsInvalidError({ entity: 'user' });
         }
 
         const account = await this.accountManager.save(identity);

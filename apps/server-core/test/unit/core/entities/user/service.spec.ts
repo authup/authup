@@ -11,7 +11,7 @@ import {
     PermissionName,
 } from '@authup/core-kit';
 import type { Realm, Role, User } from '@authup/core-kit';
-import { BuiltInPolicyType } from '@authup/access';
+import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach,
@@ -19,7 +19,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { UserService } from '../../../../../src/core/entities/user/service.ts';
 import type { IUserRepository } from '../../../../../src/core/entities/user/types.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
@@ -108,7 +108,7 @@ describe('core/entities/user/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should always include self in results without per-record check', async () => {
@@ -147,7 +147,7 @@ describe('core/entities/user/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.getOne('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should allow self-access by id without permission check', async () => {
@@ -177,7 +177,7 @@ describe('core/entities/user/service', () => {
 
             await expect(
                 service.getOne(entity.id, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should require permission when self-by-name resolves to a different user', async () => {
@@ -185,7 +185,7 @@ describe('core/entities/user/service', () => {
             const actor = createSelfActor(randomUUID(), 'shared-name');
             actor.permissionEvaluator.deny('preEvaluateOneOf');
 
-            await expect(service.getOne('shared-name', actor)).rejects.toThrow(ForbiddenError);
+            await expect(service.getOne('shared-name', actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
             expect(otherEntity.name).toBe('shared-name');
         });
     });
@@ -234,7 +234,7 @@ describe('core/entities/user/service', () => {
                     name: 'test-user',
                     email: 'test@example.com', 
                 }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should set realm_id from actor for non-master realm', async () => {
@@ -260,7 +260,7 @@ describe('core/entities/user/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { display_name: 'x' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should hash password on update', async () => {
@@ -275,7 +275,7 @@ describe('core/entities/user/service', () => {
         const denyOnlyUserUpdate = (actor: FakeActorContext) => {
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'preEvaluate' && call.ctx.name === PermissionName.USER_UPDATE) {
-                    throw new ForbiddenError();
+                    throw PermissionError.denied('test');
                 }
             });
         };
@@ -322,7 +322,7 @@ describe('core/entities/user/service', () => {
 
             await expect(
                 service.update(entity.id, { display_name: 'forbidden' }, actor),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should throw when actor lacks both USER_UPDATE and USER_SELF_MANAGE', async () => {
@@ -333,7 +333,7 @@ describe('core/entities/user/service', () => {
 
             await expect(
                 service.update(entity.id, { display_name: 'forbidden' }, actor),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -416,7 +416,7 @@ describe('core/entities/user/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.delete('non-existent-id', createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should prevent self-deletion', async () => {
@@ -426,7 +426,7 @@ describe('core/entities/user/service', () => {
 
             await expect(
                 service.delete(entity.id, actor),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should call preCheck with USER_DELETE', async () => {
@@ -438,7 +438,7 @@ describe('core/entities/user/service', () => {
 
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed(createFakeUser());
-            await expect(service.delete(entity.id, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.delete(entity.id, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -475,7 +475,7 @@ describe('core/entities/user/service', () => {
         it('should throw NotFoundError with updateOnly when entity missing', async () => {
             await expect(
                 service.save('non-existent-id', { name: 'test' }, createAllowAllActor(), { updateOnly: true }),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 });

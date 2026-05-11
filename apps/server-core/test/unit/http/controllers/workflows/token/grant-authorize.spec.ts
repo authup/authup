@@ -205,7 +205,7 @@ describe('grant-authorize', () => {
                 code,
             }),
             {
-                status: 400,
+                status: 401,
                 code: ErrorCode.OAUTH_CLIENT_INVALID,
                 data: { error: OAuth2ErrorCode.INVALID_CLIENT },
             },
@@ -234,7 +234,7 @@ describe('grant-authorize', () => {
                 redirect_uri: 'https://example.com/redirect',
                 code,
             }),
-            { status: 400, code: ErrorCode.OAUTH_CLIENT_INVALID },
+            { status: 401, code: ErrorCode.OAUTH_CLIENT_INVALID },
         );
     });
 

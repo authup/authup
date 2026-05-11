@@ -14,7 +14,7 @@ import {
     expect,
     it,
 } from 'vitest';
-import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { ClientRoleService } from '../../../../../src/core/entities/client-role/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import { FakeIdentityPermissionProvider } from '../../helpers/fake-identity-permission-provider.ts';
@@ -50,7 +50,7 @@ describe('core/entities/client-role/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -62,7 +62,7 @@ describe('core/entities/client-role/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -120,7 +120,7 @@ describe('core/entities/client-role/service', () => {
                     client_id: randomUUID(),
                     role_id: randomUUID(),
                 }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should throw ForbiddenError when actor does not own role permissions (superset check)', async () => {
@@ -138,7 +138,7 @@ describe('core/entities/client-role/service', () => {
                     client_id: randomUUID(),
                     role_id: randomUUID(),
                 }, createMasterRealmActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should throw ConflictError when assignment already exists', async () => {
@@ -149,7 +149,7 @@ describe('core/entities/client-role/service', () => {
 
             await expect(
                 service.create({ role_id: roleId, client_id: clientId }, createAllowAllActor()),
-            ).rejects.toThrow(ConflictError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
     });
 
@@ -168,7 +168,7 @@ describe('core/entities/client-role/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 });

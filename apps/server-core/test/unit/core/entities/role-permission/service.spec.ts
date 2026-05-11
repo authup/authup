@@ -17,7 +17,7 @@ import {
     expect, 
     it,
 } from 'vitest';
-import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
 import { RolePermissionService } from '../../../../../src/core/entities/role-permission/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -53,7 +53,7 @@ describe('core/entities/role-permission/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -65,7 +65,7 @@ describe('core/entities/role-permission/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -160,7 +160,7 @@ describe('core/entities/role-permission/service', () => {
                     role_id: randomUUID(),
                     permission_id: randomUUID(),
                 }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should throw ConflictError when assignment already exists', async () => {
@@ -171,7 +171,7 @@ describe('core/entities/role-permission/service', () => {
 
             await expect(
                 service.create({ role_id: roleId, permission_id: permissionId }, createAllowAllActor()),
-            ).rejects.toThrow(ConflictError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_CONFLICT });
         });
     });
 
@@ -195,7 +195,7 @@ describe('core/entities/role-permission/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { policy_id: randomUUID() }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preCheck with ROLE_PERMISSION_UPDATE', async () => {
@@ -209,7 +209,7 @@ describe('core/entities/role-permission/service', () => {
             const entity = repository.seed({});
             await expect(
                 service.update(entity.id, { policy_id: randomUUID() }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should only update policy_id and not other fields', async () => {
@@ -236,7 +236,7 @@ describe('core/entities/role-permission/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should call preCheck with ROLE_PERMISSION_DELETE', async () => {

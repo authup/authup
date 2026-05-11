@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { isUUID } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     UserValidator,
@@ -120,7 +120,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         const entity = await this.repository.findOne(idOrName, query, realmId);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (isMe && actor.identity!.data.id !== entity.id) {
@@ -185,10 +185,10 @@ export class UserService extends AbstractEntityService implements IUserService {
 
             entity = await this.repository.findOneBy(where);
             if (!entity && options.updateOnly) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         let isSelfEdit = false;
@@ -312,7 +312,7 @@ export class UserService extends AbstractEntityService implements IUserService {
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

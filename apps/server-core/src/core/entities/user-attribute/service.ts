@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BuiltInPolicyType, PermissionError, PolicyData } from '@authup/access';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName } from '@authup/core-kit';
 import type { UserAttribute } from '@authup/core-kit';
 import { buildErrorMessageForAttribute } from 'validup';
@@ -81,12 +81,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const canRead = await this.canReadUserAttribute(actor, entity);
         if (!canRead) {
-            throw new ForbiddenError();
+            throw new PermissionError();
         }
 
         return entity;
@@ -164,7 +164,7 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         let entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const isSelfTarget = !!actor.identity &&
@@ -214,12 +214,12 @@ export class UserAttributeService extends AbstractEntityService implements IUser
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         const canRead = await this.canReadUserAttribute(actor, entity);
         if (!canRead) {
-            throw new ForbiddenError();
+            throw new PermissionError();
         }
 
         const { id: entityId } = entity;

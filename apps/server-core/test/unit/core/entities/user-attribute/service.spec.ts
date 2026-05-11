@@ -17,7 +17,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BadRequestError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { ErrorCode } from '@authup/errors';
+import { PermissionError } from '@authup/access';
 import { UserAttributeService } from '../../../../../src/core/entities/user-attribute/service.ts';
 import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
 import {
@@ -82,7 +83,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(userId);
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.method === 'evaluate' && call.ctx.name === PermissionName.USER_UPDATE) {
-                    throw new ForbiddenError();
+                    throw PermissionError.denied('test');
                 }
             });
 
@@ -93,7 +94,7 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should throw when actor lacks permission', async () => {
-            await expect(service.getMany({}, createDenyAllActor())).rejects.toThrow(ForbiddenError);
+            await expect(service.getMany({}, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -110,11 +111,11 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(randomUUID());
             actor.permissionEvaluator.deny('evaluate');
 
-            await expect(service.getOne(entity.id, actor)).rejects.toThrow(ForbiddenError);
+            await expect(service.getOne(entity.id, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.getOne('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
     });
 
@@ -156,7 +157,7 @@ describe('core/entities/user-attribute/service', () => {
                     name: 'attr',
                     value: 'val', 
                 }, actor),
-            ).rejects.toThrow(BadRequestError);
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
         });
 
         it('should throw when actor lacks permission', async () => {
@@ -165,7 +166,7 @@ describe('core/entities/user-attribute/service', () => {
                     name: 'attr',
                     value: 'val',
                 }, createDenyAllActor()),
-            ).rejects.toThrow(ForbiddenError);
+            ).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
 
         it('should evaluate USER_SELF_MANAGE with key-value mapping when actor lacks USER_UPDATE on self-create', async () => {
@@ -174,7 +175,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(userId, realmId);
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.ctx.name === PermissionName.USER_UPDATE) {
-                    throw new ForbiddenError();
+                    throw PermissionError.denied('test');
                 }
             });
 
@@ -198,7 +199,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(userId, realmId);
             actor.permissionEvaluator.setBehavior((call) => {
                 if (call.ctx.name === PermissionName.USER_UPDATE) {
-                    throw new ForbiddenError();
+                    throw PermissionError.denied('test');
                 }
             });
 
@@ -286,7 +287,7 @@ describe('core/entities/user-attribute/service', () => {
         it('should throw NotFoundError when entity does not exist', async () => {
             await expect(
                 service.update('non-existent-id', { value: 'x' }, createAllowAllActor()),
-            ).rejects.toThrow(NotFoundError);
+            ).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should throw ForbiddenError when actor cannot manage', async () => {
@@ -298,7 +299,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(randomUUID());
             actor.permissionEvaluator.deny('evaluate');
 
-            await expect(service.update(entity.id, { value: 'new' }, actor)).rejects.toThrow(ForbiddenError);
+            await expect(service.update(entity.id, { value: 'new' }, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 
@@ -311,7 +312,7 @@ describe('core/entities/user-attribute/service', () => {
         });
 
         it('should throw NotFoundError when entity does not exist', async () => {
-            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toThrow(NotFoundError);
+            await expect(service.delete('non-existent-id', createAllowAllActor())).rejects.toMatchObject({ code: ErrorCode.ENTITY_NOT_FOUND });
         });
 
         it('should allow self-manage for own attributes', async () => {
@@ -332,7 +333,7 @@ describe('core/entities/user-attribute/service', () => {
             const actor = createUserActor(randomUUID());
             actor.permissionEvaluator.deny('evaluate');
 
-            await expect(service.delete(entity.id, actor)).rejects.toThrow(ForbiddenError);
+            await expect(service.delete(entity.id, actor)).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
         });
     });
 });

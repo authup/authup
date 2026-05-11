@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { ConflictError, ForbiddenError, NotFoundError } from '@ebec/http';
+import { BuiltInPolicyType, PermissionError, PolicyData } from '@authup/access';
+import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
 import { PermissionName, UserRoleValidator, ValidatorGroup } from '@authup/core-kit';
 import type { UserRole } from '@authup/core-kit';
 import type { ActorContext } from '../actor/types.ts';
@@ -63,7 +63,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -84,7 +84,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
             user_id: validated.user_id,
         });
         if (existing) {
-            throw new ConflictError('The user-role assignment already exists.');
+            throw new EntityConflictError({ entity: 'user-role' });
         }
 
         if (validated.role) {
@@ -108,7 +108,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
                 },
             );
             if (!hasPermissions) {
-                throw new ForbiddenError('You don\'t own the required permissions.');
+                throw new PermissionError({ message: 'You don\'t own the required permissions.' });
             }
         }
 
@@ -131,7 +131,7 @@ export class UserRoleService extends AbstractEntityService implements IUserRoleS
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         await actor.permissionEvaluator.evaluate({

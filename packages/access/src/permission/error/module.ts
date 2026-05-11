@@ -6,16 +6,19 @@
  */
 
 import type { AuthupErrorOptions } from '@authup/errors';
-import { AuthupError, ErrorCode } from '@authup/errors';
+import { AuthupError, ErrorCode, markInstanceof } from '@authup/errors';
 import type { PolicyIssue } from '../../policy';
+
+export const PERMISSION_ERROR_INSTANCE = Symbol.for('@authup/access/PermissionError');
 
 export class PermissionError extends AuthupError {
     constructor(options: AuthupErrorOptions = {}) {
         super({
             ...options,
             message: options.message || 'A permission error occurred.',
-            status: options.status || 403,
+            code: options.code || ErrorCode.PERMISSION_DENIED,
         });
+        markInstanceof(this, PERMISSION_ERROR_INSTANCE);
     }
 
     addIssue(data: PolicyIssue) {

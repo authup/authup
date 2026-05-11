@@ -5,23 +5,29 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { AuthupError, ErrorCode } from '@authup/errors';
+import {
+    AuthupError,
+    ErrorCode,
+    markInstanceof,
+} from '@authup/errors';
 import type { AuthupErrorInput, AuthupErrorOptions } from '@authup/errors';
 import { OAuth2ErrorCode } from './constants';
 
+export const OAUTH2_ERROR_INSTANCE = Symbol.for('@authup/specs/OAuth2Error');
+
 export class OAuth2Error extends AuthupError {
     constructor(input?: AuthupErrorInput) {
-        const options : AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
+        const options: AuthupErrorOptions = typeof input === 'string' ? { message: input } : (input ?? {});
         super({
             code: ErrorCode.OAUTH_REQUEST_INVALID,
             message: 'OAuth2 request invalid',
-            status: 400,
             ...options,
             data: {
                 error: OAuth2ErrorCode.INVALID_REQUEST,
                 ...(options.data ?? {}),
             },
         });
+        markInstanceof(this, OAUTH2_ERROR_INSTANCE);
     }
 
     // -------------------------------------------------
@@ -137,7 +143,8 @@ export class OAuth2Error extends AuthupError {
     static signingKeyMissing() {
         return new OAuth2Error({
             message: 'A token signing key could not be retrieved.',
-            status: 500,
+            code: ErrorCode.INTERNAL_ERROR,
+            data: { error: OAuth2ErrorCode.SERVER_ERROR },
         });
     }
 }

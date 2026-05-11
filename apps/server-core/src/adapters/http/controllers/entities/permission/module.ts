@@ -31,7 +31,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import { isUUID } from '@authup/kit';
-import { NotFoundError } from '@ebec/http';
+import { EntityNotFoundError } from '@authup/errors';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
@@ -126,7 +126,7 @@ export class PermissionController {
 
         const entity = await this.repository.findOneBy(criteria);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (typeof data[BuiltInPolicyType.IDENTITY] === 'undefined') {

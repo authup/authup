@@ -13,7 +13,7 @@ import {
     isUUID, 
     removeObjectProperty, 
 } from '@authup/kit';
-import { BadRequestError, NotFoundError } from '@ebec/http';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
     PermissionName,
     PolicyValidator,
@@ -79,7 +79,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         const entity = await this.repository.findOneByIdOrName(idOrName, realm);
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         return entity;
@@ -132,10 +132,10 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
             entity = await this.repository.findOneBy(where);
             if (!entity && options.updateOnly) {
-                throw new NotFoundError();
+                throw new EntityNotFoundError();
             }
         } else if (options.updateOnly) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity) {
@@ -233,7 +233,7 @@ export class PolicyService extends AbstractEntityService implements IPolicyServi
 
         const entity = await this.repository.findOneBy({ id });
         if (!entity) {
-            throw new NotFoundError();
+            throw new EntityNotFoundError();
         }
 
         if (entity.built_in) {

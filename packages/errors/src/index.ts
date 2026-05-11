@@ -5,8 +5,15 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from './constants';
+export {
+    BASE_ERROR_INSTANCE,
+    INSTANCEOF_PROPERTY,
+    hasInstanceof,
+    markInstanceof,
+} from '@ebec/core';
 export * from './built-in';
+export * from './check';
+export * from './constants';
 export * from './module';
+export * from './status';
 export * from './types';
-
