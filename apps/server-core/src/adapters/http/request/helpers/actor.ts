@@ -6,7 +6,7 @@
  */
 
 import type { IRoutupEvent } from 'routup';
-import type { ActorContext } from '../../../../core/index.ts';
+import type { ActorContext } from '@authup/server-kit';
 import { useRequestPermissionEvaluator } from '../permission/helper.ts';
 import { useRequestIdentity } from './identity.ts';
 

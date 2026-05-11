@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { ValidatorGroup } from '../../constants.ts';
+import { ValidatorGroup } from '@authup/kit';
 import type { RobotRole } from './entity.ts';
 
 export class RobotRoleValidator extends Container<

@@ -13,36 +13,11 @@ import {
     it,
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
-import type { Role, User } from '@authup/core-kit';
-import type { PermissionPolicyBinding } from '@authup/access';
 import { RegistrationService } from '../../../../../src/core/identity/registration/service.ts';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
-import type { IUserRepository } from '../../../../../src/core/entities/user/types.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
+import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
+import { FakeUserRepository } from '../../entities/user/fake-repository.ts';
 import { FakeMailClient } from '../../helpers/fake-mail-client.ts';
 import { createFakeUser } from '../../../../utils/domains/index.ts';
-
-class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepository {
-    async checkUniqueness(): Promise<void> {
-        // no-op
-    }
-
-    async findOne(id: string): Promise<User | null> {
-        return this.findOneByIdOrName(id);
-    }
-
-    async findOneByWithEmail(where: Record<string, any>): Promise<User | null> {
-        return this.findOneBy(where);
-    }
-
-    async getBoundRoles(_entity: string | User): Promise<Role[]> {
-        return [];
-    }
-
-    async getBoundPermissions(_entity: string | User): Promise<PermissionPolicyBinding[]> {
-        return [];
-    }
-}
 
 function createValidRegistrationData() {
     return {

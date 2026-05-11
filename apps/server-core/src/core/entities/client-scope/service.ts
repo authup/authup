@@ -7,11 +7,11 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
-import { ClientScopeValidator, PermissionName, ValidatorGroup } from '@authup/core-kit';
+import { ValidatorGroup } from '@authup/kit';
+import { ClientScopeValidator, PermissionName } from '@authup/core-kit';
 import type { ClientScope } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
-import { AbstractEntityService } from '../service.ts';
-import type { EntityRepositoryFindManyResult } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import { AbstractEntityService } from '@authup/server-kit';
 import type { IClientScopeRepository, IClientScopeService } from './types.ts';
 
 export type ClientScopeServiceContext = {

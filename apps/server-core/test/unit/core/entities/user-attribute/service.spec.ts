@@ -20,13 +20,13 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { PermissionError } from '@authup/access';
 import { UserAttributeService } from '../../../../../src/core/entities/user-attribute/service.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
-import {
-    createAllowAllActor,
-    createDenyAllActor,
-} from '../../helpers/fake-actor.ts';
-import type { FakeActorContext } from '../../helpers/fake-actor.ts';
-import { FakePermissionEvaluator } from '../../helpers/fake-permission-evaluator.ts';
+import { 
+    FakeEntityRepository, 
+    FakePermissionEvaluator, 
+    createAllowAllActor, 
+    createDenyAllActor,  
+} from '@authup/server-test-kit';
+import type { FakeActorContext } from '@authup/server-test-kit';
 import { createFakeUserAttribute } from '../../../../utils/domains/index.ts';
 
 function createUserActor(userId: string, realmId?: string): FakeActorContext {

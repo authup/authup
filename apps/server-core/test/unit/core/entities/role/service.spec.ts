@@ -18,14 +18,14 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { RoleService } from '../../../../../src/core/entities/role/service.ts';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
-import { FakeRoleRepository } from '../../helpers/fake-role-repository.ts';
+import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { FakeRoleRepository } from './fake-repository.ts';
 import {
     createAllowAllActor,
     createDenyAllActor,
     createMasterRealmActor,
     createNonMasterRealmActor,
-} from '../../helpers/fake-actor.ts';
+} from '@authup/server-test-kit';
 import { createFakeRole } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/role/service', () => {

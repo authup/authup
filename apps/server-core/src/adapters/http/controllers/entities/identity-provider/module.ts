@@ -6,7 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import { base64URLDecode, isUUID } from '@authup/kit';
+import { ValidatorGroup, base64URLDecode, isUUID } from '@authup/kit';
 import {
     DBody,
     DContext,
@@ -26,14 +26,13 @@ import {
 } from 'routup';
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
- 
-    IdentityProviderAttributesValidator, 
-    IdentityProviderValidator, 
-    IdentityType, 
-    PermissionName, 
-    ValidatorGroup, 
-    isOAuth2IdentityProvider, 
-    isOpenIDIdentityProvider, 
+
+    IdentityProviderAttributesValidator,
+    IdentityProviderValidator,
+    IdentityType,
+    PermissionName,
+    isOAuth2IdentityProvider,
+    isOpenIDIdentityProvider,
 } from '@authup/core-kit';
 import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { resolveURL } from '../../../../../utils/index.ts';

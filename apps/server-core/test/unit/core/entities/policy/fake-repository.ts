@@ -6,8 +6,8 @@
  */
 
 import type { Policy } from '@authup/core-kit';
-import type { IPolicyRepository } from '../../../../src/core/entities/policy/types.ts';
-import { FakeEntityRepository } from './fake-repository.ts';
+import type { IPolicyRepository } from '../../../../../src/core/entities/policy/types.ts';
+import { FakeEntityRepository } from '@authup/server-test-kit';
 
 export class FakePolicyRepository extends FakeEntityRepository<Policy> implements IPolicyRepository {
     async checkUniqueness(): Promise<void> {

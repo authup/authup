@@ -7,11 +7,11 @@
 
 import { BuiltInPolicyType, PermissionError, PolicyData } from '@authup/access';
 import { EntityConflictError, EntityNotFoundError } from '@authup/errors';
-import { PermissionName, RobotRoleValidator, ValidatorGroup } from '@authup/core-kit';
+import { ValidatorGroup } from '@authup/kit';
+import { PermissionName, RobotRoleValidator } from '@authup/core-kit';
 import type { RobotRole } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
-import { AbstractEntityService } from '../service.ts';
-import type { EntityRepositoryFindManyResult } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
+import { AbstractEntityService } from '@authup/server-kit';
 import type { IIdentityPermissionProvider } from '../../identity/permission/types.ts';
 import type { IRobotRoleRepository, IRobotRoleService } from './types.ts';
 

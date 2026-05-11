@@ -17,11 +17,7 @@ import {
 import { ErrorCode } from '@authup/errors';
 import { PermissionError } from '@authup/access';
 import { RoleAttributeService } from '../../../../../src/core/entities/role-attribute/service.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
-import {
-    createAllowAllActor,
-    createDenyAllActor,
-} from '../../helpers/fake-actor.ts';
+import { FakeEntityRepository, createAllowAllActor, createDenyAllActor } from '@authup/server-test-kit';
 import { createFakeRoleAttribute } from '../../../../utils/domains/index.ts';
 
 describe('core/entities/role-attribute/service', () => {

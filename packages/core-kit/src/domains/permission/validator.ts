@@ -5,11 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { DecisionStrategy } from '@authup/kit';
+import { DecisionStrategy, ValidatorGroup  } from '@authup/kit';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { ValidatorGroup } from '../../constants.ts';
 import type { Permission } from './entity.ts';
 import { isPermissionNameValid } from './helpers.ts';
 

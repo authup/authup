@@ -10,9 +10,8 @@ import {
     IdentityType,
     PermissionName,
 } from '@authup/core-kit';
-import type { Realm, Role, User } from '@authup/core-kit';
+import type { Realm, User } from '@authup/core-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
-import type { PermissionPolicyBinding } from '@authup/access';
 import {
     beforeEach,
     describe,
@@ -21,39 +20,16 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { UserService } from '../../../../../src/core/entities/user/service.ts';
-import type { IUserRepository } from '../../../../../src/core/entities/user/types.ts';
-import { FakeEntityRepository } from '../../helpers/fake-repository.ts';
-import { FakeRealmRepository } from '../../helpers/fake-realm-repository.ts';
 import {
+    FakePermissionEvaluator,
     createAllowAllActor,
     createDenyAllActor,
     createNonMasterRealmActor,
-} from '../../helpers/fake-actor.ts';
-import type { FakeActorContext } from '../../helpers/fake-actor.ts';
-import { FakePermissionEvaluator } from '../../helpers/fake-permission-evaluator.ts';
+} from '@authup/server-test-kit';
+import type { FakeActorContext } from '@authup/server-test-kit';
+import { FakeRealmRepository } from '../realm/fake-repository.ts';
+import { FakeUserRepository } from './fake-repository.ts';
 import { createFakeUser } from '../../../../utils/domains/index.ts';
-
-class FakeUserRepository extends FakeEntityRepository<User> implements IUserRepository {
-    async checkUniqueness(): Promise<void> {
-        // no-op
-    }
-
-    async findOne(id: string, _query?: Record<string, any>, _realm?: string): Promise<User | null> {
-        return this.findOneByIdOrName(id, _realm);
-    }
-
-    async findOneByWithEmail(where: Record<string, any>): Promise<User | null> {
-        return this.findOneBy(where);
-    }
-
-    async getBoundRoles(_entity: string | User): Promise<Role[]> {
-        return [];
-    }
-
-    async getBoundPermissions(_entity: string | User): Promise<PermissionPolicyBinding[]> {
-        return [];
-    }
-}
 
 function createSelfActor(userId: string, userName?: string, realmId?: string): FakeActorContext {
     const rId = realmId || randomUUID();

@@ -22,6 +22,7 @@
         "packages/server-adapter-socket-io": {"component": "server-adapter-socket-io"},
         "packages/server-adapter-web": {"component": "server-adapter-web"},
         "packages/server-kit": {"component": "server-kit"},
+        "packages/server-test-kit": {"component": "server-test-kit"},
         "packages/specs": {"component": "specs"}
     },
     "plugins": [
@@ -54,6 +55,7 @@
                 "server-adapter-socket-io",
                 "server-adapter-web",
                 "server-kit",
+                "server-test-kit",
                 "specs"
             ]
         }

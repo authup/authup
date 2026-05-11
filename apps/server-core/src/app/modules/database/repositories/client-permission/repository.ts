@@ -8,7 +8,7 @@
 import type { ClientPermission } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult } from '../../../../../core/entities/types.ts';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
 import type { IClientPermissionRepository } from '../../../../../core/entities/client-permission/types.ts';
 import { ClientPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';

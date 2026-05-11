@@ -6,7 +6,7 @@
  */
 
 import type { IdentityProvider, IdentityProviderProtocol } from '@authup/core-kit';
-import type { IEntityRepository } from '../types.ts';
+import type { IEntityRepository } from '@authup/server-kit';
 
 export interface IIdentityProviderRepository extends IEntityRepository<IdentityProvider> {
     checkUniqueness(data: Partial<IdentityProvider>, existing?: IdentityProvider): Promise<void>;

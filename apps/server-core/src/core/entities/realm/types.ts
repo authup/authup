@@ -6,8 +6,7 @@
  */
 
 import type { Realm } from '@authup/core-kit';
-import type { ActorContext } from '../actor/types.ts';
-import type { EntityRepositoryFindManyResult, IEntityRepository } from '../types.ts';
+import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
 
 export interface IRealmRepository extends IEntityRepository<Realm> {
     resolve(id: string | undefined, withFallback: true): Promise<Realm>;

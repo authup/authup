@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import zod from 'zod';
-import { ValidatorGroup } from '../../constants';
+import { ValidatorGroup } from '@authup/kit';
 import { IdentityProviderProtocol } from './constants';
 import type { IdentityProvider } from './entity';
 import { IdentityProviderPreset } from './preset';

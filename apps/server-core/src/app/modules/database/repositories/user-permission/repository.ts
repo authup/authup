@@ -8,7 +8,8 @@
 import type { UserPermission } from '@authup/core-kit';
 import type { Repository } from 'typeorm';
 import { applyQuery, validateEntityJoinColumns } from 'typeorm-extension';
-import type { EntityRepositoryFindManyResult, IUserPermissionRepository } from '../../../../../core/index.ts';
+import type { EntityRepositoryFindManyResult } from '@authup/server-kit';
+import type { IUserPermissionRepository } from '../../../../../core/index.ts';
 import { UserPermissionEntity } from '../../../../../adapters/database/domains/index.ts';
 import { translateWhereConditions } from '../helpers.ts';
 

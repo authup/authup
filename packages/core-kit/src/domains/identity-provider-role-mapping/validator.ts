@@ -9,7 +9,7 @@ import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { IdentityProviderMappingSyncMode } from '../identity-provider/constants.ts';
-import { ValidatorGroup } from '../../constants.ts';
+import { ValidatorGroup } from '@authup/kit';
 import type { IdentityProviderRoleMapping } from './entity.ts';
 
 export class IdentityProviderRoleMappingValidator extends Container<

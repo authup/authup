@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { ValidatorGroup } from '../../constants';
+import { ValidatorGroup } from '@authup/kit';
 import type { Client } from './entity';
 import { isClientNameValid } from './helpers';
 
