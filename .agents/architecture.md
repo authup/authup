@@ -63,7 +63,7 @@ Modules wire together adapters, ports, and core logic. Configure app startup, re
 
 ### Port Interfaces
 
-Defined in `core/entities/`, these are the contracts that adapters must implement:
+Defined in `@authup/server-kit` (re-exported from `@authup/server-kit/core`), these are the contracts that adapters must implement:
 
 ```typescript
 export type EntityRepositoryFindManyResult<T> = {
@@ -149,7 +149,7 @@ Each entity has a service that encapsulates all business logic: permission check
 Services receive an `ActorContext` instead of a raw HTTP request. This decouples business logic from HTTP:
 
 ```typescript
-// core/entities/actor/types.ts
+// @authup/server-kit (packages/server-kit/src/core/actor/types.ts)
 import type { IPermissionEvaluator } from '@authup/access';
 import type { Identity } from '@authup/core-kit';
 
@@ -409,11 +409,14 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 ### File Structure
 
 ```text
-core/entities/
+@authup/server-kit (packages/server-kit/src/core/)
   types.ts                          — IEntityRepository<T>, EntityRepositoryFindManyResult<T>
   service.ts                        — AbstractEntityService base class
   actor/types.ts                    — ActorContext type definition
   actor/index.ts                    — barrel export
+  index.ts                          — barrel export
+
+apps/server-core/src/core/entities/
   {entity}/types.ts                 — I{Entity}Repository, I{Entity}Service interfaces
   {entity}/service.ts               — {Entity}Service implements I{Entity}Service (business logic)
   {entity}/index.ts                 — barrel export

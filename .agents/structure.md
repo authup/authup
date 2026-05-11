@@ -28,7 +28,8 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | [server-adapter-node](../packages/server-adapter-node)| Library | A Node `IncomingMessage` middleware adapter for token verification.                                       |
 | [server-adapter-socket-io](../packages/server-adapter-socket-io)| Library | A socket.io middleware adapter for token verification.                                                |
 | [server-adapter-web](../packages/server-adapter-web)| Library   | A transport-neutral Web `Request` adapter primitive for token verification.                                |
-| [server-kit](../packages/server-kit)            | Library     | A package containing cryptographic algorithms, reusable abstractions for interacting with services, etc.. |
+| [server-kit](../packages/server-kit)            | Library     | Cryptographic algorithms, shared server-side primitives (`IEntityRepository`, `ActorContext`, `AbstractEntityService`), and reusable abstractions for interacting with services. |
+| [server-test-kit](../packages/server-test-kit)  | Library     | Generic server-side test fakes (`FakeEntityRepository`, `FakePermissionEvaluator`, actor factories). devDep-only; consumed by `apps/server-core`'s test suite and any future server-side app's tests. |
 
 ## Package Dependency Layers
 
@@ -46,11 +47,12 @@ Layer 1:
 Layer 2:
   access            → kit, errors
   core-kit          → kit, errors, specs
-  server-kit        → kit, errors, specs, core-realtime-kit
+  server-kit        → access, core-kit, kit, errors, specs, core-realtime-kit (+ rapiq peer)
 
 Layer 3:
   core-http-kit     → access, errors, kit, core-kit, specs
   server-adapter-kit → kit, errors, specs, core-kit, core-http-kit, server-kit
+  server-test-kit   → access, core-kit, kit, server-kit (devDep-only consumers)
 
 Layer 4:
   server-adapter-node      → server-adapter-kit

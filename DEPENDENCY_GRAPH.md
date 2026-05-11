@@ -23,6 +23,7 @@ graph TD
     subgraph Layer 3
         core-http-kit
         server-adapter-kit
+        server-test-kit
     end
 
     subgraph Layer 4
@@ -52,26 +53,32 @@ graph TD
     %% Layer 2
     access --> errors
     access --> kit
-    core-kit --> kit
     core-kit --> errors
+    core-kit --> kit
     core-kit --> specs
+    server-kit --> access
+    server-kit --> core-kit
     server-kit --> core-realtime-kit
-    server-kit --> kit
     server-kit --> errors
+    server-kit --> kit
     server-kit --> specs
 
     %% Layer 3
     core-http-kit --> access
+    core-http-kit --> core-kit
     core-http-kit --> errors
     core-http-kit --> kit
-    core-http-kit --> core-kit
     core-http-kit --> specs
-    server-adapter-kit --> kit
-    server-adapter-kit --> errors
-    server-adapter-kit --> specs
-    server-adapter-kit --> core-kit
     server-adapter-kit --> core-http-kit
+    server-adapter-kit --> core-kit
+    server-adapter-kit --> errors
+    server-adapter-kit --> kit
     server-adapter-kit --> server-kit
+    server-adapter-kit --> specs
+    server-test-kit --> access
+    server-test-kit --> core-kit
+    server-test-kit --> kit
+    server-test-kit --> server-kit
 
     %% Layer 4
     server-adapter-node --> server-adapter-kit
@@ -82,11 +89,11 @@ graph TD
 
     %% Application Libraries
     client-web-kit --> access
-    client-web-kit --> kit
-    client-web-kit --> core-kit
     client-web-kit --> core-http-kit
+    client-web-kit --> core-kit
     client-web-kit --> core-realtime-kit
     client-web-kit --> errors
+    client-web-kit --> kit
     client-web-kit --> specs
     client-web-nuxt --> access
     client-web-nuxt --> client-web-kit
@@ -94,20 +101,21 @@ graph TD
 
     %% Apps
     server-core --> access
+    server-core --> client-web-kit
     server-core --> core-http-kit
     server-core --> core-kit
     server-core --> errors
     server-core --> kit
     server-core --> server-kit
+    server-core --> server-test-kit
     server-core --> specs
-    server-core --> client-web-kit
     client-web --> client-web-kit
-    client-web --> kit
-    client-web --> core-kit
-    client-web --> core-http-kit
     client-web --> client-web-nuxt
+    client-web --> core-http-kit
+    client-web --> core-kit
+    client-web --> kit
     authup --> client-web
-    authup --> kit
     authup --> core-kit
+    authup --> kit
     authup --> server-core
 ```

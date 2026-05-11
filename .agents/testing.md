@@ -31,11 +31,18 @@ Location: `test/unit/core/entities/{entity}/service.spec.ts`
 
 Test business logic in isolation using fake repositories (in-memory) and mock permission checkers. No HTTP, database, or Docker required. Tests run in ~1ms each.
 
-Helpers in `test/unit/core/helpers/`:
+Generic fakes from `@authup/server-test-kit`:
 - `FakeEntityRepository<T>` — in-memory `IEntityRepository` backed by an array
-- `FakeRealmRepository` — in-memory `IRealmRepository` with `resolve()` and a pre-seeded master realm
-- `createAllowAllActor()` / `createDenyAllActor()` — mock `ActorContext` for permission testing
-- `createMasterRealmActor()` / `createNonMasterRealmActor(realmId)` — presets with identity for realm defaulting tests
+- `FakePermissionEvaluator` — `IPermissionEvaluator` implementation with call recording (`evaluateCalls`, `preEvaluateCalls`, etc.) and configurable behavior (`setBehavior(fn)`, `denyAll()`, `deny(method)`)
+- `createAllowAllActor()` / `createDenyAllActor()` — `FakeActorContext` for permission testing
+- `createMasterRealmActor(realmId?)` / `createNonMasterRealmActor(realmId?)` — presets with identity for realm defaulting tests
+
+Domain fakes colocated under each entity's test dir as `test/unit/core/entities/<entity>/fake-repository.ts`:
+- `FakeRoleRepository`, `FakeRealmRepository` (pre-seeds master realm + `resolve()` helper), `FakePolicyRepository`, `FakePermissionRepository`
+- `FakeUserRepository`, `FakeClientRepository`, `FakeRobotRepository`
+
+Workflow / orchestration helpers still in `test/unit/core/helpers/`:
+- `FakeMailClient`, `FakeIdentityPermissionProvider`, `FakeIdentityResolver`, `FakeIdentityRoleProvider`, `FakeOAuth2KeyRepository`, `FakeOAuth2TokenIssuer`, `FakeOAuth2TokenRepository`, `FakeOAuth2TokenSigner`, `FakeSessionManager`. `helpers/index.ts` also re-exports everything from `@authup/server-test-kit` for terse spec imports.
 
 What to test: permission gates, validation, realm defaulting, uniqueness, built-in entity protection, upsert behavior, error paths.
 
