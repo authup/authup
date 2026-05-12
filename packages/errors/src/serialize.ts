@@ -18,7 +18,7 @@ import { isObject } from '@authup/kit';
  * `name` / `message` pair, so caller-attached fields survive.
  *
  * Pair with `normalizeError` to handle arbitrary thrown values:
- * `errorToPlainObject(normalizeError(e))`.
+ * `serializeError(normalizeError(e))`.
  */
 export function serializeError(input: Error): Record<string, any> {
     if ('toJSON' in input && typeof input.toJSON === 'function') {
