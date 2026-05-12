@@ -12,9 +12,8 @@ import {
     expect,
     it,
 } from 'vitest';
-import { BuiltInPolicyType } from '@authup/access';
 import { createNanoID } from '@authup/kit';
-import { PermissionEntity, PolicyRepository } from '../../../../../../src';
+import { PermissionEntity } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
 import { expectClientError } from '../../../../../utils';
 
@@ -44,18 +43,10 @@ describe('http/controllers/entities/permission/checker', () => {
     });
 
     it('returns the checker result body with a 202 response', async () => {
-        const policyRepository = new PolicyRepository(suite.dataSource);
-        const policy = await policyRepository.save(policyRepository.create({
-            type: BuiltInPolicyType.IDENTITY,
-            name: BuiltInPolicyType.IDENTITY,
-            built_in: true,
-        }));
-
         const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
         const permission = await permissionRepository.save(permissionRepository.create({
             name: createNanoID(),
             built_in: true,
-            policy_id: policy.id,
         }));
 
         const response = await suite.client.permission.check(permission.id);

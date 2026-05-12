@@ -14,6 +14,7 @@ import {
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
 import { IdentityType } from '@authup/core-kit';
+import { EntityNotFoundError } from '@authup/errors';
 import { createNanoID } from '@authup/kit';
 import { createAllowAllActor } from '@authup/server-test-kit';
 import type { UserEntity } from '../../../../../src';
@@ -68,7 +69,9 @@ describe('core/identity/permission/checker', () => {
     });
 
     it('throws EntityNotFoundError for an unknown name', async () => {
-        await expect(service.check(createNanoID(), {}, createAllowAllActor())).rejects.toThrow();
+        await expect(
+            service.check(createNanoID(), {}, createAllowAllActor()),
+        ).rejects.toBeInstanceOf(EntityNotFoundError);
     });
 
     it('returns success for a binding-protected permission the actor owns', async () => {

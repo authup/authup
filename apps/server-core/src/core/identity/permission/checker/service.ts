@@ -76,8 +76,21 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         } catch (e) {
             return {
                 status: 'error',
-                data: e as Error,
+                data: serializeError(e),
             };
         }
     }
+}
+
+function serializeError(e: unknown): Record<string, any> {
+    if (e instanceof Error) {
+        return {
+            name: e.name,
+            message: e.message,
+        };
+    }
+    if (typeof e === 'string') {
+        return { message: e };
+    }
+    return { message: String(e) };
 }
