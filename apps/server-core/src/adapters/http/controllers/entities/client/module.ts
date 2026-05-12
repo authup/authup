@@ -32,7 +32,9 @@ import type { IClientRepository, IClientService } from '../../../../../core/inde
 import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
+    applyRouteRealmIDToBody,
     buildActorContext,
+    getRequestRealmID,
     useRequestIdentity,
     useRequestScopes,
 } from '../../../request/index.ts';
@@ -43,7 +45,7 @@ export type ClientControllerContext = {
 };
 
 @DTags('oauth2')
-@DController('/clients')
+@DController(['/clients', '/realms/:realmId/clients'])
 export class ClientController {
     protected service: IClientService;
 
@@ -91,7 +93,7 @@ export class ClientController {
 
             const entity = await this.repository.findOneByIdOrName(
                 identity!.id,
-                event.params.realmId,
+                getRequestRealmID(event),
             );
 
             if (!entity) {
@@ -116,7 +118,7 @@ export class ClientController {
             id,
             actor,
             useRequestQuery(event),
-            event.params.realmId,
+            getRequestRealmID(event),
         );
 
         return entity;
@@ -127,6 +129,7 @@ export class ClientController {
         @DBody() data: ClientCreatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Client> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -141,6 +144,7 @@ export class ClientController {
         @DBody() data: ClientUpdatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Client> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
 
@@ -155,6 +159,7 @@ export class ClientController {
         @DBody() data: ClientSavePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Client> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
             entity,

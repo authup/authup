@@ -61,8 +61,10 @@ import {
     createIdentityProviderOAuth2Authenticator,
 } from '../../../../../core/index.ts';
 import {
+    applyRouteRealmIDToBody,
     getBodyRealmID,
     getRequestParamID,
+    getRequestRealmID,
     useRequestIdentityOrFail,
     useRequestParamID,
     useRequestPermissionEvaluator,
@@ -71,7 +73,7 @@ import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import type { IdentityProviderControllerContext, IdentityProviderControllerOptions } from './types.ts';
 
 @DTags('identity')
-@DController('/identity-providers')
+@DController(['/identity-providers', '/realms/:realmId/identity-providers'])
 export class IdentityProviderController {
     protected options: IdentityProviderControllerOptions;
 
@@ -146,7 +148,7 @@ export class IdentityProviderController {
 
         const entity = await this.repository.findOneByIdOrName(
             paramId,
-            event.params.realmId,
+            getRequestRealmID(event),
         );
 
         if (!entity) {
@@ -360,7 +362,8 @@ export class IdentityProviderController {
         let group: string;
         const id = getRequestParamID(event, { isUUID: false });
         const body = await readRequestBody(event);
-        const realmId = getBodyRealmID(body);
+        applyRouteRealmIDToBody(event, body);
+        const realmId = getRequestRealmID(event) ?? getBodyRealmID(body);
 
         let entity: IdentityProvider | null | undefined;
         if (id) {

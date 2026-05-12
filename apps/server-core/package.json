@@ -79,7 +79,7 @@
         "@routup/assets": "^4.1.0",
         "@routup/basic": "^2.1.0",
         "@routup/cors": "^1.0.1",
-        "@routup/decorators": "^4.1.0",
+        "@routup/decorators": "^4.2.0",
         "@routup/logger": "^1.0.0",
         "@routup/prometheus": "^3.1.0",
         "@routup/rate-limit": "^3.1.0",

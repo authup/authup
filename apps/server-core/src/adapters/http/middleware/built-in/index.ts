@@ -7,6 +7,7 @@
 
 export * from './authorization/index.ts';
 export * from './loggedin/index.ts';
+export * from './realm-resolver/index.ts';
 
 export * from './assets.ts';
 export * from './basic.ts';
