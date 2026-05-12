@@ -15,7 +15,6 @@ import {
 import { createNanoID } from '@authup/kit';
 import { PermissionEntity } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
-import { expectClientError } from '../../../../../utils';
 
 // Service-level coverage of the DB-backed permission-checker lives in
 // test/unit/core/identity/permission/checker.spec.ts. The HTTP tests below
@@ -34,12 +33,14 @@ describe('http/controllers/entities/permission/checker', () => {
         await suite.teardown();
     });
 
-    it('responds with 404 for an unknown permission name', async () => {
+    it('returns status=error with the serialized error for an unknown name', async () => {
         const name = createNanoID();
-        await expectClientError(
-            () => suite.client.permission.check(name),
-            { status: 404 },
-        );
+        const response = await suite.client.permission.check(name);
+
+        expect(response).toBeDefined();
+        expect(response.status).toEqual('error');
+        expect(response.data).toBeDefined();
+        expect(typeof response.data!.message).toBe('string');
     });
 
     it('returns the checker result body with a 202 response', async () => {

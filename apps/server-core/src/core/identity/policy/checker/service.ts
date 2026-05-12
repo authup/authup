@@ -6,6 +6,7 @@
  */
 
 import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
+import type { Result } from '@authup/kit';
 import { isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
@@ -13,7 +14,6 @@ import { PolicyEngine } from '../../../security/policy/engine.ts';
 import { toIdentityPolicyData } from '../../permission/identity-policy-data.ts';
 import type {
     IPolicyCheckerService,
-    PolicyCheckResult,
     PolicyCheckerServiceContext,
 } from './types.ts';
 
@@ -29,7 +29,7 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-    ): Promise<PolicyCheckResult> {
+    ): Promise<void> {
         let criteria: Record<string, any>;
         if (isUUID(idOrName)) {
             criteria = { id: idOrName };
@@ -55,16 +55,23 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         }
 
         const engine = new PolicyEngine(this.ctx.identityPermissionProvider);
+        await engine.evaluate(
+            entity,
+            definePolicyEvaluationContext({ data: new PolicyData(input) }),
+        );
+    }
 
+    async safeCheck(
+        idOrName: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+        realm?: string,
+    ): Promise<Result<null>> {
         try {
-            await engine.evaluate(entity, definePolicyEvaluationContext({ data: new PolicyData(input) }));
-
-            return { status: 'success' };
+            await this.check(idOrName, data, actor, realm);
+            return { success: true, data: null };
         } catch (e) {
-            return {
-                status: 'error',
-                data: normalizeError(e),
-            };
+            return { success: false, error: normalizeError(e) };
         }
     }
 }

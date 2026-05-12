@@ -5,11 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { 
-    hasInstanceof, 
-    isBaseError, 
-    isError as isBaseErrorOrError, 
-    isObject, 
+import {
+    hasInstanceof,
+    isBaseError,
+    isObject,
+    isError as isRawError,
 } from '@ebec/core';
 import type { AuthupError } from './module.ts';
 import { AUTHUP_ERROR_INSTANCE } from './module.ts';
@@ -24,7 +24,7 @@ import { AUTHUP_ERROR_INSTANCE } from './module.ts';
  * duplicate-module copies) where `instanceof` can yield false negatives.
  */
 export function isError(input: unknown): input is Error {
-    return isBaseErrorOrError(input);
+    return isRawError(input);
 }
 
 /**

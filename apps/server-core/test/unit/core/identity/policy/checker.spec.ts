@@ -69,7 +69,7 @@ describe('core/identity/policy/checker', () => {
         ).rejects.toBeInstanceOf(EntityNotFoundError);
     });
 
-    it('returns success when an identity policy resolves the actor', async () => {
+    it('resolves when an identity policy passes for the actor', async () => {
         const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,
@@ -77,15 +77,21 @@ describe('core/identity/policy/checker', () => {
             built_in: true,
         }));
 
-        const result = await service.check(
+        await expect(service.check(
             policy.id,
             {},
             {
                 permissionEvaluator: createAllowAllActor().permissionEvaluator,
                 identity: { type: IdentityType.USER, data: adminUser as any },
             },
-        );
+        )).resolves.toBeUndefined();
+    });
 
-        expect(result.status).toEqual('success');
+    it('safeCheck wraps failures into Result<null>', async () => {
+        const result = await service.safeCheck(createNanoID(), {}, createAllowAllActor());
+        expect(result.success).toBe(false);
+        if (!result.success) {
+            expect(result.error).toBeInstanceOf(EntityNotFoundError);
+        }
     });
 });

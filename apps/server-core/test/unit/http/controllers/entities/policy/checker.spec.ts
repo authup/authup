@@ -16,7 +16,6 @@ import { BuiltInPolicyType } from '@authup/access';
 import { createNanoID } from '@authup/kit';
 import { PolicyRepository } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
-import { expectClientError } from '../../../../../utils';
 
 // Service-level coverage of the DB-backed policy-checker lives in
 // test/unit/core/identity/policy/checker.spec.ts. The HTTP tests below
@@ -35,12 +34,14 @@ describe('http/controllers/entities/policy/checker', () => {
         await suite.teardown();
     });
 
-    it('responds with 404 for an unknown policy name', async () => {
+    it('returns status=error with the serialized error for an unknown name', async () => {
         const name = createNanoID();
-        await expectClientError(
-            () => suite.client.policy.check(name),
-            { status: 404 },
-        );
+        const response = await suite.client.policy.check(name);
+
+        expect(response).toBeDefined();
+        expect(response.status).toEqual('error');
+        expect(response.data).toBeDefined();
+        expect(typeof response.data!.message).toBe('string');
     });
 
     it('returns the checker result body with a 202 response', async () => {

@@ -13,6 +13,7 @@ import type {
     PermissionUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Permission } from '@authup/core-kit';
+import { serializeError } from '@authup/errors';
 import {
     DBody,
     DContext,
@@ -85,7 +86,7 @@ export class PermissionController {
         @DContext() event: IRoutupEvent,
     ): Promise<PermissionAPICheckResponse> {
         const actor = buildActorContext(event);
-        const result = await this.checkerService.check(
+        const result = await this.checkerService.safeCheck(
             event.params.id,
             data,
             actor,
@@ -93,7 +94,14 @@ export class PermissionController {
         );
 
         event.response.status = 202;
-        return result;
+        if (result.success) {
+            return { status: 'success' };
+        }
+
+        return {
+            status: 'error',
+            data: serializeError(result.error),
+        };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])

@@ -13,6 +13,7 @@ import type {
     PolicySavePayload,
     PolicyUpdatePayload,
 } from '@authup/core-http-kit';
+import { serializeError } from '@authup/errors';
 import {
     DBody,
     DContext,
@@ -98,7 +99,7 @@ export class PolicyController {
         @DContext() event: IRoutupEvent,
     ): Promise<PolicyAPICheckResponse> {
         const actor = buildActorContext(event);
-        const result = await this.checkerService.check(
+        const result = await this.checkerService.safeCheck(
             id,
             data,
             actor,
@@ -106,7 +107,14 @@ export class PolicyController {
         );
 
         event.response.status = 202;
-        return result;
+        if (result.success) {
+            return { status: 'success' };
+        }
+
+        return {
+            status: 'error',
+            data: serializeError(result.error),
+        };
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

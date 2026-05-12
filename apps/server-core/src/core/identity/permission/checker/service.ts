@@ -7,6 +7,7 @@
 
 import type { PermissionEvaluationContext } from '@authup/access';
 import { BuiltInPolicyType, PermissionEvaluator, PolicyData } from '@authup/access';
+import type { Result } from '@authup/kit';
 import { isUUID } from '@authup/kit';
 import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
@@ -14,7 +15,6 @@ import { PolicyEngine } from '../../../security/policy/engine.ts';
 import { toIdentityPolicyData } from '../identity-policy-data.ts';
 import type {
     IPermissionCheckerService,
-    PermissionCheckResult,
     PermissionCheckerServiceContext,
 } from './types.ts';
 
@@ -30,7 +30,7 @@ export class PermissionCheckerService implements IPermissionCheckerService {
         data: Record<string, any>,
         actor: ActorContext,
         realm?: string,
-    ): Promise<PermissionCheckResult> {
+    ): Promise<void> {
         let criteria: Record<string, any>;
         if (isUUID(idOrName)) {
             criteria = { id: idOrName };
@@ -62,22 +62,27 @@ export class PermissionCheckerService implements IPermissionCheckerService {
             policyEngine: new PolicyEngine(this.ctx.identityPermissionProvider),
         });
 
-        try {
-            if (
-                evaluationContext.input &&
-                evaluationContext.input.has(BuiltInPolicyType.ATTRIBUTES)
-            ) {
-                await evaluator.evaluate(evaluationContext);
-            } else {
-                await evaluator.preEvaluate(evaluationContext);
-            }
+        if (
+            evaluationContext.input &&
+            evaluationContext.input.has(BuiltInPolicyType.ATTRIBUTES)
+        ) {
+            await evaluator.evaluate(evaluationContext);
+        } else {
+            await evaluator.preEvaluate(evaluationContext);
+        }
+    }
 
-            return { status: 'success' };
+    async safeCheck(
+        idOrName: string,
+        data: Record<string, any>,
+        actor: ActorContext,
+        realm?: string,
+    ): Promise<Result<null>> {
+        try {
+            await this.check(idOrName, data, actor, realm);
+            return { success: true, data: null };
         } catch (e) {
-            return {
-                status: 'error',
-                data: normalizeError(e),
-            };
+            return { success: false, error: normalizeError(e) };
         }
     }
 }

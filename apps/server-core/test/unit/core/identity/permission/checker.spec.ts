@@ -74,7 +74,7 @@ describe('core/identity/permission/checker', () => {
         ).rejects.toBeInstanceOf(EntityNotFoundError);
     });
 
-    it('returns success for a binding-protected permission the actor owns', async () => {
+    it('resolves for a binding-protected permission the actor owns', async () => {
         const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
@@ -102,19 +102,17 @@ describe('core/identity/permission/checker', () => {
             permission_realm_id: permission.realm_id,
         }));
 
-        const result = await service.check(
+        await expect(service.check(
             permission.id,
             {},
             {
                 permissionEvaluator: createAllowAllActor().permissionEvaluator,
                 identity: { type: IdentityType.USER, data: adminUser as any },
             },
-        );
-
-        expect(result.status).toEqual('success');
+        )).resolves.toBeUndefined();
     });
 
-    it('returns error for a binding-protected permission the actor does not own', async () => {
+    it('throws for a binding-protected permission the actor does not own', async () => {
         const policyRepository = new PolicyRepository(suite.dataSource);
         const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.PERMISSION_BINDING,
@@ -131,15 +129,21 @@ describe('core/identity/permission/checker', () => {
             policy_id: policy.id,
         }));
 
-        const result = await service.check(
+        await expect(service.check(
             permission.name,
             {},
             {
                 permissionEvaluator: createAllowAllActor().permissionEvaluator,
                 identity: { type: IdentityType.USER, data: adminUser as any },
             },
-        );
+        )).rejects.toThrow();
+    });
 
-        expect(result.status).toEqual('error');
+    it('safeCheck wraps failures into Result<null>', async () => {
+        const result = await service.safeCheck(createNanoID(), {}, createAllowAllActor());
+        expect(result.success).toBe(false);
+        if (!result.success) {
+            expect(result.error).toBeInstanceOf(EntityNotFoundError);
+        }
     });
 });

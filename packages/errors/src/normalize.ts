@@ -8,40 +8,23 @@
 import { isError } from './check.ts';
 
 /**
- * Normalize a thrown value into a plain object suitable for inclusion in
- * a JSON response body (or any serialization boundary).
+ * Normalize an arbitrary thrown value into an `Error` instance.
  *
- * Duck-typed: if the input exposes a `toJSON()` returning an object, use
- * it. That preserves every attribute the error chose to surface — `code`,
- * `cause`, `errors`, `issues`, `data`, AuthupError sub-class fields, ... —
- * including any class that implements `toJSON`. The guard does not pin
- * to `instanceof Error`; cross-realm boundaries (worker threads,
- * dynamic-import duplicate copies) can break `instanceof` even for our
- * own classes.
- *
- * Fall back to a `name` / `message` snapshot for plain Error instances,
- * spreading enumerable own properties so any caller-attached fields
- * survive. Non-Error inputs collapse to `{ message: String(input) }`.
+ * Useful at error-pipeline boundaries (catch blocks, error middleware,
+ * fallbacks) where TypeScript hands you `unknown` but downstream code
+ * wants a real `Error` to inspect or rethrow. Duck-typed: any value
+ * passing `isError` is returned as-is. Strings become `new Error(str)`;
+ * any other value is stringified.
  */
-export function normalizeError(input: unknown): Record<string, any> {
-    if (input && typeof (input as { toJSON?: unknown }).toJSON === 'function') {
-        const json = (input as { toJSON(): unknown }).toJSON();
-        if (json && typeof json === 'object' && !Array.isArray(json)) {
-            return json as Record<string, any>;
-        }
-    }
-
+export function normalizeError(input: unknown): Error {
     if (isError(input)) {
-        return {
-            ...input,
-            name: input.name,
-            message: input.message,
-        };
+        return input;
     }
 
     if (typeof input === 'string') {
-        return { message: input };
+        return new Error(input);
     }
 
-    return { message: String(input) };
+    return new Error(String(input));
 }
+
