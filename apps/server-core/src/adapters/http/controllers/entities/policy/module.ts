@@ -13,9 +13,6 @@ import type {
     PolicySavePayload,
     PolicyUpdatePayload,
 } from '@authup/core-http-kit';
-import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
-import { isUUID } from '@authup/kit';
-import { EntityNotFoundError } from '@authup/errors';
 import {
     DBody,
     DContext,
@@ -30,24 +27,15 @@ import {
 import { useRequestQuery } from '@routup/basic/query';
 import type { IRoutupEvent } from 'routup';
 import type {
- 
-    IIdentityPermissionProvider, 
-    IPolicyRepository, 
-    IPolicyService, 
-    IRealmRepository, 
+    IPolicyCheckerService,
+    IPolicyService,
 } from '../../../../../core/index.ts';
-import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import {
-    buildActorContext,
-    useRequestIdentity,
-} from '../../../request/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 export type PolicyControllerContext = {
     service: IPolicyService,
-    repository: IPolicyRepository,
-    realmRepository: IRealmRepository,
-    identityPermissionProvider: IIdentityPermissionProvider,
+    checkerService: IPolicyCheckerService,
 };
 
 @DTags('policy')
@@ -55,17 +43,11 @@ export type PolicyControllerContext = {
 export class PolicyController {
     protected service: IPolicyService;
 
-    protected repository: IPolicyRepository;
-
-    protected realmRepository: IRealmRepository;
-
-    protected identityPermissionProvider: IIdentityPermissionProvider;
+    protected checkerService: IPolicyCheckerService;
 
     constructor(ctx: PolicyControllerContext) {
         this.service = ctx.service;
-        this.repository = ctx.repository;
-        this.realmRepository = ctx.realmRepository;
-        this.identityPermissionProvider = ctx.identityPermissionProvider;
+        this.checkerService = ctx.checkerService;
     }
 
     @DGet('', [])
@@ -115,47 +97,16 @@ export class PolicyController {
         @DBody() data: any,
         @DContext() event: IRoutupEvent,
     ): Promise<PolicyAPICheckResponse> {
-        const paramId = event.params.id;
-
-        let criteria: Record<string, any>;
-        if (isUUID(paramId)) {
-            criteria = { id: paramId };
-        } else {
-            const realm = await this.realmRepository.resolve(event.params.realmId);
-            criteria = {
-                name: paramId,
-                ...(realm ? { realm_id: realm.id } : {}),
-            };
-        }
-
-        const entity = await this.repository.findOneBy(criteria);
-        if (!entity) {
-            throw new EntityNotFoundError();
-        }
-
-        if (
-            !data[BuiltInPolicyType.IDENTITY] &&
-            data[BuiltInPolicyType.IDENTITY] !== null
-        ) {
-            data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(event);
-        }
-
-        const policyEngine = new PolicyEngine(this.identityPermissionProvider);
-
-        let output: PolicyAPICheckResponse;
-        try {
-            await policyEngine.evaluate(entity, definePolicyEvaluationContext({ data: new PolicyData(data) }));
-
-            output = { status: 'success' };
-        } catch (e) {
-            output = {
-                status: 'error',
-                data: e as Error,
-            };
-        }
+        const actor = buildActorContext(event);
+        const result = await this.checkerService.check(
+            id,
+            data,
+            actor,
+            event.params.realmId,
+        );
 
         event.response.status = 202;
-        return output;
+        return result;
     }
 
     @DPost('/:id', [ForceLoggedInMiddleware])

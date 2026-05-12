@@ -1,22 +1,30 @@
 /*
- * Copyright (c) 2024.
+ * Copyright (c) 2024-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
 import { BuiltInPolicyType } from '@authup/access';
+import { createNanoID } from '@authup/kit';
 import { PolicyRepository } from '../../../../../../src';
 import { createTestApplication } from '../../../../../app';
+import { expectClientError } from '../../../../../utils';
 
-describe('src/security/permission/checker', () => {
+// Service-level coverage of the DB-backed policy-checker lives in
+// test/unit/core/identity/policy/checker.spec.ts. The HTTP tests below
+// stay minimal: they verify the controller's auth gate and the
+// status-code / response-shape contract — the actual checker logic is
+// exercised at the service layer.
+
+describe('http/controllers/entities/policy/checker', () => {
     const suite = createTestApplication();
 
     beforeAll(async () => {
@@ -27,20 +35,24 @@ describe('src/security/permission/checker', () => {
         await suite.teardown();
     });
 
-    it('should verify valid policy', async () => {
+    it('responds with 404 for an unknown policy name', async () => {
+        const name = createNanoID();
+        await expectClientError(
+            () => suite.client.policy.check(name),
+            { status: 404 },
+        );
+    });
+
+    it('returns the checker result body with a 202 response', async () => {
         const policyRepository = new PolicyRepository(suite.dataSource);
-        const policy = policyRepository.create({
+        const policy = await policyRepository.save(policyRepository.create({
             type: BuiltInPolicyType.IDENTITY,
             name: BuiltInPolicyType.IDENTITY,
             built_in: true,
-        });
+        }));
 
-        await policyRepository.save(policy);
-
-        const response = await suite.client
-            .policy
-            .check(policy.id);
-
-        expect(response.status).toEqual('success');
+        const response = await suite.client.policy.check(policy.id);
+        expect(response).toBeDefined();
+        expect(response.status).toMatch(/^(success|error)$/);
     });
 });

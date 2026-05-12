@@ -1,0 +1,142 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import {
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
+    it,
+} from 'vitest';
+import { BuiltInPolicyType } from '@authup/access';
+import { IdentityType } from '@authup/core-kit';
+import { createNanoID } from '@authup/kit';
+import { createAllowAllActor } from '@authup/server-test-kit';
+import type { UserEntity } from '../../../../../src';
+import {
+    PermissionEntity,
+    PermissionPolicyEntity,
+    PolicyRepository,
+    RealmEntity,
+    UserPermissionEntity,
+    UserRepository,
+} from '../../../../../src';
+import { PermissionCheckerService } from '../../../../../src/core';
+import type { IIdentityPermissionProvider } from '../../../../../src/core';
+import { IdentityInjectionKey } from '../../../../../src/app/modules/identity/index.ts';
+import { PermissionDatabaseProvider } from '../../../../../src/app/modules/database/repositories/permission-provider/module.ts';
+import { PermissionRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/permission/repository.ts';
+import { RealmRepositoryAdapter } from '../../../../../src/app/modules/database/repositories/realm/repository.ts';
+import { createTestApplication } from '../../../../app';
+
+describe('core/identity/permission/checker', () => {
+    const suite = createTestApplication();
+
+    let service: PermissionCheckerService;
+    let adminUser: UserEntity;
+
+    beforeAll(async () => {
+        await suite.setup();
+
+        const userRepository = new UserRepository(suite.dataSource);
+        adminUser = await userRepository.findOneByOrFail({ name: 'admin' });
+
+        const realmEntityRepository = suite.dataSource.getRepository(RealmEntity);
+        const realmRepository = new RealmRepositoryAdapter(realmEntityRepository);
+        const permissionRepository = new PermissionRepositoryAdapter({
+            repository: suite.dataSource.getRepository(PermissionEntity),
+            realmRepository: realmEntityRepository,
+        });
+        const identityPermissionProvider = (suite as any).container.resolve(
+            IdentityInjectionKey.PermissionProvider,
+        ) as IIdentityPermissionProvider;
+
+        service = new PermissionCheckerService({
+            repository: permissionRepository,
+            realmRepository,
+            permissionProvider: new PermissionDatabaseProvider(suite.dataSource),
+            identityPermissionProvider,
+        });
+    });
+
+    afterAll(async () => {
+        await suite.teardown();
+    });
+
+    it('throws EntityNotFoundError for an unknown name', async () => {
+        await expect(service.check(createNanoID(), {}, createAllowAllActor())).rejects.toThrow();
+    });
+
+    it('returns success for a binding-protected permission the actor owns', async () => {
+        const policyRepository = new PolicyRepository(suite.dataSource);
+        const policy = await policyRepository.save(policyRepository.create({
+            type: BuiltInPolicyType.PERMISSION_BINDING,
+            name: BuiltInPolicyType.PERMISSION_BINDING,
+            built_in: true,
+        }));
+
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permission = await permissionRepository.save(permissionRepository.create({
+            name: createNanoID(),
+            built_in: true,
+        }));
+
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        await permissionPolicyRepository.save(permissionPolicyRepository.create({
+            permission_id: permission.id,
+            policy_id: policy.id,
+        }));
+
+        const userPermissionRepository = suite.dataSource.getRepository(UserPermissionEntity);
+        await userPermissionRepository.save(userPermissionRepository.create({
+            user_id: adminUser.id,
+            user_realm_id: adminUser.realm_id,
+            permission_id: permission.id,
+            permission_realm_id: permission.realm_id,
+        }));
+
+        const result = await service.check(
+            permission.id,
+            {},
+            {
+                permissionEvaluator: createAllowAllActor().permissionEvaluator,
+                identity: { type: IdentityType.USER, data: adminUser as any },
+            },
+        );
+
+        expect(result.status).toEqual('success');
+    });
+
+    it('returns error for a binding-protected permission the actor does not own', async () => {
+        const policyRepository = new PolicyRepository(suite.dataSource);
+        const policy = await policyRepository.save(policyRepository.create({
+            type: BuiltInPolicyType.PERMISSION_BINDING,
+            name: BuiltInPolicyType.PERMISSION_BINDING,
+            built_in: true,
+        }));
+
+        const permissionRepository = suite.dataSource.getRepository(PermissionEntity);
+        const permission = await permissionRepository.save(permissionRepository.create({ name: createNanoID() }));
+
+        const permissionPolicyRepository = suite.dataSource.getRepository(PermissionPolicyEntity);
+        await permissionPolicyRepository.save(permissionPolicyRepository.create({
+            permission_id: permission.id,
+            policy_id: policy.id,
+        }));
+
+        const result = await service.check(
+            permission.name,
+            {},
+            {
+                permissionEvaluator: createAllowAllActor().permissionEvaluator,
+                identity: { type: IdentityType.USER, data: adminUser as any },
+            },
+        );
+
+        expect(result.status).toEqual('error');
+    });
+});

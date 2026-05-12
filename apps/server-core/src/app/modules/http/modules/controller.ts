@@ -122,8 +122,10 @@ import {
     IdentityProviderRoleMappingService,
     OAuth2ClientAuthenticator,
     PasswordRecoveryService,
+    PermissionCheckerService,
     PermissionPolicyService,
     PermissionService,
+    PolicyCheckerService,
     PolicyService,
     RealmService,
     RegistrationService,
@@ -452,12 +454,16 @@ export class HTTPControllerModule {
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
         const permissionProvider = new PermissionDatabaseProvider(dataSource);
 
-        return new PermissionController({
-            service,
+        const checkerService = new PermissionCheckerService({
             repository,
             realmRepository: realmRepositoryAdapter,
-            identityPermissionProvider,
             permissionProvider,
+            identityPermissionProvider,
+        });
+
+        return new PermissionController({
+            service,
+            checkerService,
         });
     }
 
@@ -634,11 +640,15 @@ export class HTTPControllerModule {
             realmRepository: realmRepositoryAdapter, 
         });
         const identityPermissionProvider = container.resolve(IdentityInjectionKey.PermissionProvider);
-        return new PolicyController({
-            service,
+        const checkerService = new PolicyCheckerService({
             repository,
             realmRepository: realmRepositoryAdapter,
-            identityPermissionProvider, 
+            identityPermissionProvider,
+        });
+
+        return new PolicyController({
+            service,
+            checkerService,
         });
     }
 
