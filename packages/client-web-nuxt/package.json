@@ -33,7 +33,7 @@
         "@authup/access": "^1.0.0-beta.41",
         "@authup/client-web-kit": "^1.0.0-beta.41",
         "@authup/kit": "^1.0.0-beta.41",
-        "@nuxt/kit": "^4.0.0",
+        "@nuxt/kit": "^4.4.5",
         "pathtrace": "^2.2.0",
         "smob": "^1.6.1"
     },
