@@ -43,3 +43,63 @@ export enum ErrorCode {
     POLICY_EVALUATOR_CONTEXT_INVALID = 'policy_evaluator_context_invalid',
 }
 ```
+
+## Helpers
+
+`@authup/errors` exports a small toolkit for working with thrown values:
+
+### `isError`
+
+Duck-typed guard for `Error`. Matches anything carrying the standard `name` / `message` / `stack` triplet, regardless of class or realm. Prefer this over `instanceof Error` whenever cross-realm boundaries (worker threads, duplicate-module copies) are in play.
+
+```ts
+import { isError } from '@authup/errors';
+
+if (isError(input)) {
+    // input is typed as Error
+}
+```
+
+### `normalizeError`
+
+Coerce an arbitrary thrown value into a real `Error` instance. Useful at error-pipeline boundaries (catch blocks, error middleware) where TypeScript hands you `unknown` but downstream code wants something with `.name` / `.message`.
+
+```ts
+import { normalizeError } from '@authup/errors';
+
+try {
+    /* ... */
+} catch (e) {
+    const error = normalizeError(e); // string / unknown → Error
+    throw error;
+}
+```
+
+### `serializeError`
+
+Convert an `Error` into a plain object suitable for embedding in a JSON response body. Calls `error.toJSON()` if present, preserving every attribute the error chose to surface (`code`, `cause`, `errors`, `issues`, `data`, ...). Falls back to spreading the Error's enumerable own properties alongside the standard `name` / `message` pair.
+
+```ts
+import { normalizeError, serializeError } from '@authup/errors';
+
+try {
+    /* ... */
+} catch (e) {
+    return {
+        status: 'error',
+        data: serializeError(normalizeError(e)),
+    };
+}
+```
+
+### `isAuthupError`
+
+Discriminates an `AuthupError` (or any subclass) from arbitrary errors. Uses the cross-realm `markInstanceof` chain (fast path) plus a shape check (slow path).
+
+```ts
+import { isAuthupError } from '@authup/errors';
+
+if (isAuthupError(error)) {
+    // error has .code, .issues, ...
+}
+```

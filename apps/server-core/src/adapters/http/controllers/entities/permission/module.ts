@@ -13,12 +13,7 @@ import type {
     PermissionUpdatePayload,
 } from '@authup/core-http-kit';
 import type { Permission } from '@authup/core-kit';
-import type { IPermissionProvider, PermissionEvaluationContext } from '@authup/access';
-import {
-    BuiltInPolicyType,
-    PermissionEvaluator, 
-    PolicyData,
-} from '@authup/access';
+import { serializeError } from '@authup/errors';
 import {
     DBody,
     DContext,
@@ -30,30 +25,18 @@ import {
     DPut,
     DTags,
 } from '@routup/decorators';
-import { isUUID } from '@authup/kit';
-import { EntityNotFoundError } from '@authup/errors';
 import type { IRoutupEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
- 
-    IIdentityPermissionProvider, 
-    IPermissionRepository, 
-    IPermissionService, 
-    IRealmRepository, 
+    IPermissionCheckerService,
+    IPermissionService,
 } from '../../../../../core/index.ts';
-import { PolicyEngine } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import {
-    buildActorContext,
-    useRequestIdentity,
-} from '../../../request/index.ts';
+import { buildActorContext } from '../../../request/index.ts';
 
 export type PermissionControllerContext = {
     service: IPermissionService,
-    repository: IPermissionRepository,
-    realmRepository: IRealmRepository,
-    identityPermissionProvider: IIdentityPermissionProvider,
-    permissionProvider: IPermissionProvider,
+    checkerService: IPermissionCheckerService,
 };
 
 @DTags('permission')
@@ -61,20 +44,11 @@ export type PermissionControllerContext = {
 export class PermissionController {
     protected service: IPermissionService;
 
-    protected repository: IPermissionRepository;
-
-    protected realmRepository: IRealmRepository;
-
-    protected identityPermissionProvider: IIdentityPermissionProvider;
-
-    protected permissionProvider: IPermissionProvider;
+    protected checkerService: IPermissionCheckerService;
 
     constructor(ctx: PermissionControllerContext) {
         this.service = ctx.service;
-        this.repository = ctx.repository;
-        this.realmRepository = ctx.realmRepository;
-        this.identityPermissionProvider = ctx.identityPermissionProvider;
-        this.permissionProvider = ctx.permissionProvider;
+        this.checkerService = ctx.checkerService;
     }
 
     @DGet('', [ForceLoggedInMiddleware])
@@ -111,59 +85,23 @@ export class PermissionController {
         @DBody() data: any,
         @DContext() event: IRoutupEvent,
     ): Promise<PermissionAPICheckResponse> {
-        const { id } = event.params;
-
-        let criteria: Record<string, any>;
-        if (isUUID(id)) {
-            criteria = { id };
-        } else {
-            const realm = await this.realmRepository.resolve(event.params.realmId);
-            criteria = {
-                name: id,
-                ...(realm ? { realm_id: realm.id } : {}),
-            };
-        }
-
-        const entity = await this.repository.findOneBy(criteria);
-        if (!entity) {
-            throw new EntityNotFoundError();
-        }
-
-        if (typeof data[BuiltInPolicyType.IDENTITY] === 'undefined') {
-            data[BuiltInPolicyType.IDENTITY] = useRequestIdentity(event);
-        }
-
-        const ctx: PermissionEvaluationContext = {
-            name: entity.name,
-            input: new PolicyData(data),
-        };
-
-        const permissionEvaluator = new PermissionEvaluator({
-            provider: this.permissionProvider,
-            policyEngine: new PolicyEngine(this.identityPermissionProvider),
-        });
-
-        let output: PermissionAPICheckResponse;
-        try {
-            if (
-                ctx.input &&
-                ctx.input.has(BuiltInPolicyType.ATTRIBUTES)
-            ) {
-                await permissionEvaluator.evaluate(ctx);
-            } else {
-                await permissionEvaluator.preEvaluate(ctx);
-            }
-
-            output = { status: 'success' };
-        } catch (e) {
-            output = {
-                status: 'error',
-                data: e as Error,
-            };
-        }
+        const actor = buildActorContext(event);
+        const result = await this.checkerService.safeCheck(
+            event.params.id,
+            data,
+            actor,
+            event.params.realmId,
+        );
 
         event.response.status = 202;
-        return output;
+        if (result.success) {
+            return { status: 'success' };
+        }
+
+        return {
+            status: 'error',
+            data: serializeError(result.error),
+        };
     }
 
     @DGet('/:id', [ForceLoggedInMiddleware])

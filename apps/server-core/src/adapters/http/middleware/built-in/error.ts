@@ -8,7 +8,7 @@
 import type { Router } from 'routup';
 import { defineErrorHandler } from 'routup';
 import { useLogger } from '@authup/server-kit';
-import { httpStatusFromCode } from '@authup/errors';
+import { httpStatusFromCode, serializeError } from '@authup/errors';
 import { sanitizeError } from '../../../../utils/index.ts';
 
 export function registerErrorMiddleware(router: Router) {
@@ -16,7 +16,7 @@ export function registerErrorMiddleware(router: Router) {
         const next = sanitizeError(error.cause ?? error);
         const status = httpStatusFromCode(next.code);
 
-        const payload = next.toJSON();
+        const payload = serializeError(next);
 
         if (status >= 500) {
             useLogger().error(next);
