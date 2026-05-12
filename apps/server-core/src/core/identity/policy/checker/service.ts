@@ -7,7 +7,7 @@
 
 import { BuiltInPolicyType, PolicyData, definePolicyEvaluationContext } from '@authup/access';
 import { isUUID } from '@authup/kit';
-import { EntityNotFoundError } from '@authup/errors';
+import { EntityNotFoundError, normalizeError } from '@authup/errors';
 import type { ActorContext } from '@authup/server-kit';
 import { PolicyEngine } from '../../../security/policy/engine.ts';
 import { toIdentityPolicyData } from '../../permission/identity-policy-data.ts';
@@ -63,21 +63,8 @@ export class PolicyCheckerService implements IPolicyCheckerService {
         } catch (e) {
             return {
                 status: 'error',
-                data: serializeError(e),
+                data: normalizeError(e),
             };
         }
     }
-}
-
-function serializeError(e: unknown): Record<string, any> {
-    if (e instanceof Error) {
-        return {
-            name: e.name,
-            message: e.message,
-        };
-    }
-    if (typeof e === 'string') {
-        return { message: e };
-    }
-    return { message: String(e) };
 }

@@ -15,5 +15,6 @@ export * from './built-in';
 export * from './check';
 export * from './constants';
 export * from './module';
+export * from './normalize';
 export * from './status';
 export * from './types';

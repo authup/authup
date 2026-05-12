@@ -5,9 +5,27 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { hasInstanceof, isBaseError, isObject } from '@ebec/core';
+import { 
+    hasInstanceof, 
+    isBaseError, 
+    isError as isBaseErrorOrError, 
+    isObject, 
+} from '@ebec/core';
 import type { AuthupError } from './module.ts';
 import { AUTHUP_ERROR_INSTANCE } from './module.ts';
+
+/**
+ * Duck-type guard for `Error`.
+ *
+ * Re-exports `@ebec/core`'s shape-based check: `input` matches when it
+ * carries the standard `name` / `message` / `stack` triplet, regardless
+ * of which realm or class hierarchy produced it. Use this instead of
+ * `instanceof Error` for cross-realm boundaries (worker threads,
+ * duplicate-module copies) where `instanceof` can yield false negatives.
+ */
+export function isError(input: unknown): input is Error {
+    return isBaseErrorOrError(input);
+}
 
 /**
  * Duck-type guard for AuthupError.
