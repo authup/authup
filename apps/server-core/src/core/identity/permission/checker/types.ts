@@ -26,6 +26,27 @@ export type PermissionCheckerServiceContext = {
 };
 
 export interface IPermissionCheckerService {
+    /**
+     * Resolve a permission by id (UUID) or name and evaluate it against
+     * the supplied data and actor.
+     *
+     * If `data[identity]` is omitted, the actor's identity (flattened to
+     * `IdentityPolicyData`) is injected. If `data[attributes]` is present,
+     * the evaluator runs a full `evaluate`; otherwise it runs a
+     * `preEvaluate` (data-less gate check).
+     *
+     * @param idOrName Permission UUID or name. Names are resolved within
+     *   the supplied realm (or the resolved fallback realm) so the same
+     *   name can collide across realms.
+     * @param data Caller-supplied evaluation input. Mutated copy is used
+     *   internally.
+     * @param actor The caller context. `actor.identity` becomes the
+     *   default identity input when `data[identity]` is unset.
+     * @param realm Optional realm id used to disambiguate name lookups.
+     * @returns `{ status: 'success' }` when the evaluator passes, or
+     *   `{ status: 'error', data: <Error> }` when it throws.
+     * @throws {EntityNotFoundError} When no permission matches.
+     */
     check(
         idOrName: string,
         data: Record<string, any>,

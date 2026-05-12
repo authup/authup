@@ -15,9 +15,6 @@ export function toIdentityPolicyData(identity: Identity | undefined): IdentityPo
     }
 
     const { type, data } = identity;
-    const realm = 'realm' in data && data.realm && typeof data.realm === 'object' ?
-        data.realm :
-        undefined;
 
     let clientId: string | null;
     if (type === IdentityType.CLIENT) {
@@ -29,8 +26,8 @@ export function toIdentityPolicyData(identity: Identity | undefined): IdentityPo
     }
 
     let realmId: string | null = data.realm_id ?? null;
-    if (!realmId && realm && 'id' in realm) {
-        realmId = realm.id ?? null;
+    if (!realmId && data.realm && data.realm.id) {
+        realmId = data.realm.id ?? null;
     }
 
     return {
@@ -38,6 +35,6 @@ export function toIdentityPolicyData(identity: Identity | undefined): IdentityPo
         id: data.id,
         clientId,
         realmId,
-        realmName: realm && 'name' in realm ? realm.name ?? null : null,
+        realmName: data.realm?.name ?? null,
     };
 }
