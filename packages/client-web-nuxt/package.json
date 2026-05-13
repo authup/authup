@@ -40,10 +40,10 @@
     "devDependencies": {
         "@nuxt/module-builder": "^1.0.2",
         "@pinia/nuxt": "^0.11.3",
-        "nuxt": "^4.4.4",
+        "nuxt": "^4.4.5",
         "pinia": "^3.0.0",
         "strip-literal": "^3.1.0",
-        "vue-router": "^5.0.4"
+        "vue-router": "^5.0.7"
     },
     "peerDependencies": {
         "@pinia/nuxt": "*",
