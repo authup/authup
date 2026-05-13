@@ -32,7 +32,11 @@ import type {
     IPermissionService,
 } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext } from '../../../request/index.ts';
+import {
+    applyRouteRealmIDToBody,
+    buildActorContext,
+    getRequestRealmID,
+} from '../../../request/index.ts';
 
 export type PermissionControllerContext = {
     service: IPermissionService,
@@ -40,7 +44,7 @@ export type PermissionControllerContext = {
 };
 
 @DTags('permission')
-@DController('/permissions')
+@DController(['/permissions', '/realms/:realmId/permissions'])
 export class PermissionController {
     protected service: IPermissionService;
 
@@ -72,6 +76,7 @@ export class PermissionController {
         @DBody() data: PermissionCreatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Permission> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -90,7 +95,7 @@ export class PermissionController {
             event.params.id,
             data,
             actor,
-            event.params.realmId,
+            getRequestRealmID(event),
         );
 
         event.response.status = 202;
@@ -113,7 +118,7 @@ export class PermissionController {
         const entity = await this.service.getOne(
             id,
             actor,
-            event.params.realmId,
+            getRequestRealmID(event),
         );
 
         return entity;
@@ -125,6 +130,7 @@ export class PermissionController {
         @DBody() data: PermissionUpdatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Permission> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -143,6 +149,7 @@ export class PermissionController {
         @DBody() data: PermissionSavePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Permission> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
             entity,

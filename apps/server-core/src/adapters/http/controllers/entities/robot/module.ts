@@ -35,7 +35,9 @@ import { OAuth2ScopeAttributesResolver } from '../../../../../core/index.ts';
 import { RobotEntity } from '../../../../database/domains/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
 import {
+    applyRouteRealmIDToBody,
     buildActorContext,
+    getRequestRealmID,
     useRequestIdentity,
     useRequestScopes,
 } from '../../../request/index.ts';
@@ -48,7 +50,7 @@ export type RobotControllerContext = {
 };
 
 @DTags('robot')
-@DController('/robots')
+@DController(['/robots', '/realms/:realmId/robots'])
 export class RobotController {
     protected service: IRobotService;
 
@@ -86,6 +88,7 @@ export class RobotController {
         @DBody() data: RobotCreatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Robot> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const { entity } = await this.service.save(undefined, data, actor);
 
@@ -120,7 +123,7 @@ export class RobotController {
             identity &&
             identity.type === 'robot'
         ) {
-            const realm = await this.realmRepository.resolve(event.params.realmId, true);
+            const realm = await this.realmRepository.resolve(getRequestRealmID(event), true);
             if (
                 identity.realmId === realm.id &&
                 identity.data &&
@@ -139,7 +142,7 @@ export class RobotController {
             const resolvedId = isSelfToken(id) ? identity!.id : id;
             entity = await this.repository.findOneByIdOrName(
                 resolvedId,
-                event.params.realmId,
+                getRequestRealmID(event),
             );
 
             if (entity) {
@@ -163,7 +166,7 @@ export class RobotController {
                 id,
                 actor,
                 useRequestQuery(event),
-                event.params.realmId,
+                getRequestRealmID(event),
             );
 
             return entity;
@@ -182,6 +185,7 @@ export class RobotController {
         @DBody() data: RobotUpdatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Robot> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const { entity } = await this.service.save(
             id,
@@ -201,6 +205,7 @@ export class RobotController {
         @DBody() data: RobotSavePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<Robot> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
             entity,

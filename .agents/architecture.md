@@ -350,6 +350,7 @@ Controller conventions:
 - Read query via `useRequestQuery(event)` from `@routup/basic/query`
 - Read path params via `@DPath('id') id: string` or `event.params.id`
 - Build actor via `buildActorContext(event)`
+- For realm-scoped writes (create / update / save) on controllers that are dual-mounted at `/realms/:realmId/<entity>`, call `applyRouteRealmIDToBody(event, data)` before delegating — route realm wins silently over body realm. For realm-scoped reads, pass `getRequestRealmID(event)` as the realm key argument. See *Realm Scoping Model → Nested Route Mounting*.
 - Delegate all work to `this.service.*()` methods
 - For non-200 statuses, set `event.response.status = 201/202` and return the value — never use `sendCreated`/`sendAccepted` because they erase the typed return value that trapi extracts.
 
@@ -445,9 +446,15 @@ adapters/http/controllers/workflows/
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function
+  realm-id.ts                       — getRequestRealmID / applyRouteRealmIDToBody / setRequestRealmID
+
+adapters/http/middleware/built-in/
+  realm-resolver/module.ts          — RealmResolverMiddleware resolves :realmId (UUID or name) → UUID
+  realm-resolver/factory.ts         — createRealmResolverMiddleware(ctx)
 
 app/modules/http/modules/
   controller.ts                     — Factory methods: creates repositories, services, and controllers
+  middleware.ts                     — HTTPMiddlewareModule (mountRealmResolver wires realm-resolver at /realms/:realmId)
 
 core/provisioning/
   entities/{entity}/types.ts        — Provisioning entity types and validators
@@ -500,6 +507,29 @@ There is no special "master realm" bypass. Access control is entirely policy-dri
 |------|-------|-----------------|
 | `admin` | All permissions, no restrictions | None |
 | `realm_admin` | All permissions except `realm_create`, `realm_update`, `realm_delete` | `system.realm-bound` on each role-permission entry |
+
+### Nested Route Mounting
+
+Realm-scoped controllers are dual-mounted via `@routup/decorators` array paths:
+
+```typescript
+@DController(['/users', '/realms/:realmId/users'])
+export class UserController { ... }
+```
+
+This applies to the six controllers that read realm context: `client`, `robot`, `user`, `permission`, `policy`, `identity-provider`. Junction controllers (e.g. `client-role`, `user-permission`) are mounted flat — their realm is implicit via the parent entity's joins.
+
+**Request flow**:
+
+1. `RealmResolverMiddleware` (mounted at `router.use('/realms/:realmId', middleware)` in `HTTPMiddlewareModule.mountRealmResolver`) fires on any URL whose first segment is `/realms/<key>`. It accepts either a UUID or a realm name, resolves via `IRealmRepository.resolve()`, and stashes the resolved UUID on `event.store[sym]` via `setRequestRealmID(event, uuid)`. Unknown realm key → `EntityNotFoundError` → 404.
+2. The decorator-mounted route subsequently re-extracts `:realmId` from the URL into `event.params.realmId`, clobbering the raw URL value with itself — this is why the resolved UUID is stored on `event.store`, not `event.params`.
+3. Controllers read the realm via `getRequestRealmID(event)` (helper in `adapters/http/request/helpers/realm-id.ts`), which prefers the stashed UUID and falls back to `event.params.realmId` for cases where the middleware didn't run.
+
+**Route-realm precedence (writes)**: controllers call `applyRouteRealmIDToBody(event, data)` at the top of `add`/`edit`/`put` (and inside `IdentityProviderController.write()`). When the route has `:realmId`, the helper overwrites `data.realm_id` with the route value — *route wins silently over body* (no `BadRequestError` for mismatch; the body value is simply discarded).
+
+**Permission model is unchanged**. `system.realm-match` still evaluates against the resolved `entity.realm_id`. Mounting `/realms/:realmId/users` does not grant cross-realm write access; an admin-in-master cannot create users in another realm regardless of which prefix is used. The dual mount is a routing convenience, not an authorization shortcut.
+
+**`RealmController` is unaffected**: the middleware is mounted at `/realms/:realmId/:nested` (not just `/realms/:realmId`) so it only fires when there's at least one path segment after `:realmId`. Bare realm CRUD routes (`GET/POST/PUT/DELETE /realms/:id`) and sub-resource routes that belong to `RealmController` itself (`/realms/:id/.well-known/openid-configuration`, `/realms/:id/jwks`, `/realms/:id/jwks/:keyId`) are not intercepted. This is important for `PUT /realms/:id` upsert semantics — an unknown realm name in the path is a valid "create" intent, not a lookup miss.
 
 ## Policy-Permission Model (n:m)
 

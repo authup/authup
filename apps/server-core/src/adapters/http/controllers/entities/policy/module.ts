@@ -32,7 +32,11 @@ import type {
     IPolicyService,
 } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext } from '../../../request/index.ts';
+import {
+    applyRouteRealmIDToBody,
+    buildActorContext,
+    getRequestRealmID,
+} from '../../../request/index.ts';
 
 export type PolicyControllerContext = {
     service: IPolicyService,
@@ -40,7 +44,7 @@ export type PolicyControllerContext = {
 };
 
 @DTags('policy')
-@DController('/policies')
+@DController(['/policies', '/realms/:realmId/policies'])
 export class PolicyController {
     protected service: IPolicyService;
 
@@ -86,7 +90,7 @@ export class PolicyController {
         const entity = await this.service.getOne(
             id,
             actor,
-            event.params.realmId,
+            getRequestRealmID(event),
         );
 
         return entity;
@@ -103,7 +107,7 @@ export class PolicyController {
             id,
             data,
             actor,
-            event.params.realmId,
+            getRequestRealmID(event),
         );
 
         event.response.status = 202;
@@ -123,6 +127,7 @@ export class PolicyController {
         @DBody() data: PolicyUpdatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<PolicyResponse> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -141,6 +146,7 @@ export class PolicyController {
         @DBody() data: PolicySavePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<PolicyResponse> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
 
         const {
@@ -174,6 +180,7 @@ export class PolicyController {
         @DBody() data: PolicyCreatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<PolicyResponse> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 

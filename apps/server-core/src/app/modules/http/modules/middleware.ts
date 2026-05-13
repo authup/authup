@@ -8,9 +8,12 @@
 import type { Router } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
+import type { Repository } from 'typeorm';
+import type { Realm } from '@authup/core-kit';
 import {
     createAuthorizationMiddleware,
     createLoggerMiddleware,
+    createRealmResolverMiddleware,
     createSwaggerMiddleware,
     registerAssetsMiddleware,
     registerBasicMiddleware,
@@ -24,6 +27,8 @@ import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { ConfigInjectionKey } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
+import { RealmEntity } from '../../../../adapters/database/domains/index.ts';
+import { RealmRepositoryAdapter } from '../../database/repositories/index.ts';
 import {
     DatabaseInjectionKey,
     PermissionDatabaseProvider,
@@ -43,6 +48,7 @@ export class HTTPMiddlewareModule {
 
         await this.mountSwagger(router, container);
         await this.mountAuthorization(router, container);
+        await this.mountRealmResolver(router, container);
     }
 
      
@@ -108,6 +114,18 @@ export class HTTPMiddlewareModule {
         });
 
         router.use('/docs', middleware);
+    }
+
+    async mountRealmResolver(router: Router, container: IContainer): Promise<void> {
+        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
+        const middleware = createRealmResolverMiddleware({ realmRepository: new RealmRepositoryAdapter(realmRepository) });
+
+        // Mounted at /realms/:realmId/:nested so the middleware only fires on
+        // nested-resource URLs (e.g. /realms/master/users/...). Bare
+        // /realms/:id routes belong to RealmController (CRUD, openid-config,
+        // jwks) and would otherwise 404 on PUT upserts where the realm
+        // doesn't exist yet.
+        router.use('/realms/:realmId/:nested', middleware);
     }
 
     async mountAuthorization(router: Router, container: IContainer): Promise<void> {

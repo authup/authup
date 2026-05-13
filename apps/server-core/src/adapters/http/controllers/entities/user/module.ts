@@ -27,7 +27,11 @@ import type {
 import type { User } from '@authup/core-kit';
 import type { IUserService } from '../../../../../core/index.ts';
 import { ForceLoggedInMiddleware } from '../../../middleware/index.ts';
-import { buildActorContext } from '../../../request/index.ts';
+import {
+    applyRouteRealmIDToBody,
+    buildActorContext,
+    getRequestRealmID,
+} from '../../../request/index.ts';
 import { isSelfToken } from '../../../../../utils/index.ts';
 
 export type UserControllerContext = {
@@ -35,7 +39,7 @@ export type UserControllerContext = {
 };
 
 @DTags('user')
-@DController('/users')
+@DController(['/users', '/realms/:realmId/users'])
 export class UserController {
     protected service: IUserService;
 
@@ -79,7 +83,7 @@ export class UserController {
             paramId,
             actor,
             useRequestQuery(event),
-            event.params.realmId,
+            getRequestRealmID(event),
         );
 
         return entity;
@@ -90,6 +94,7 @@ export class UserController {
         @DBody() data: UserCreatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<User> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
 
@@ -104,6 +109,7 @@ export class UserController {
         @DBody() data: UserUpdatePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<User> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const entity = await this.service.update(
             id,
@@ -122,6 +128,7 @@ export class UserController {
         @DBody() data: UserSavePayload,
         @DContext() event: IRoutupEvent,
     ): Promise<User> {
+        applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
         const {
             entity,
