@@ -529,7 +529,7 @@ This applies to the six controllers that read realm context: `client`, `robot`, 
 
 **Permission model is unchanged**. `system.realm-match` still evaluates against the resolved `entity.realm_id`. Mounting `/realms/:realmId/users` does not grant cross-realm write access; an admin-in-master cannot create users in another realm regardless of which prefix is used. The dual mount is a routing convenience, not an authorization shortcut.
 
-**`RealmController` overlap**: `RealmController` itself is mounted flat at `/realms` with routes like `/realms/:id`, `/realms/:id/.well-known/openid-configuration`. The realm-resolver middleware also fires on these URLs (prefix match) — it sets `event.params.realmId` independently, while the controller reads `event.params.id`. No conflict, but one extra `realmRepository.resolve()` call per realm-CRUD request — acceptable given realm count is small.
+**`RealmController` is unaffected**: the middleware is mounted at `/realms/:realmId/:nested` (not just `/realms/:realmId`) so it only fires when there's at least one path segment after `:realmId`. Bare realm CRUD routes (`GET/POST/PUT/DELETE /realms/:id`) and sub-resource routes that belong to `RealmController` itself (`/realms/:id/.well-known/openid-configuration`, `/realms/:id/jwks`, `/realms/:id/jwks/:keyId`) are not intercepted. This is important for `PUT /realms/:id` upsert semantics — an unknown realm name in the path is a valid "create" intent, not a lookup miss.
 
 ## Policy-Permission Model (n:m)
 

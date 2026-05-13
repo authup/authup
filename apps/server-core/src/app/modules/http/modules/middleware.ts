@@ -120,7 +120,12 @@ export class HTTPMiddlewareModule {
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const middleware = createRealmResolverMiddleware({ realmRepository: new RealmRepositoryAdapter(realmRepository) });
 
-        router.use('/realms/:realmId', middleware);
+        // Mounted at /realms/:realmId/:nested so the middleware only fires on
+        // nested-resource URLs (e.g. /realms/master/users/...). Bare
+        // /realms/:id routes belong to RealmController (CRUD, openid-config,
+        // jwks) and would otherwise 404 on PUT upserts where the realm
+        // doesn't exist yet.
+        router.use('/realms/:realmId/:nested', middleware);
     }
 
     async mountAuthorization(router: Router, container: IContainer): Promise<void> {
