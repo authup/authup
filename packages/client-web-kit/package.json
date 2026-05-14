@@ -68,7 +68,7 @@
         "@ilingo/vuelidate": "^6.0.0",
         "ilingo": "^5.0.0",
         "@posva/event-emitter": "^1.0.3",
-        "@types/node": "^25.7.0",
+        "@types/node": "^25.8.0",
         "@vitejs/plugin-vue": "^6.0.5",
         "@vuecs/form-controls": "^2.5.0",
         "@vuecs/list-controls": "^2.0.1",
