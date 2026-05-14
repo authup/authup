@@ -8,7 +8,7 @@
 import type { Client } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
 import { EntityCredentialsInvalidError, EntityInactiveError } from '@authup/errors';
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2ClientError } from '@authup/specs';
 import type { IIdentityResolver } from '../../../identity/index.ts';
 import { ClientCredentialsService } from '../../credential/index.ts';
 import { BaseCredentialsAuthenticator } from '../../base.ts';
@@ -41,7 +41,7 @@ export class ClientAuthenticator extends BaseCredentialsAuthenticator<Client> {
                 throw new EntityCredentialsInvalidError({ entity: 'client' });
             }
         } else {
-            throw OAuth2Error.clientInvalid();
+            throw OAuth2ClientError.invalid();
         }
 
         return identity.data;

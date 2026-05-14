@@ -10,7 +10,9 @@ import { ScopeName } from '@authup/core-kit';
 import type { OAuth2TokenPayload } from '@authup/specs';
 import {
     OAuth2AuthorizationResponseType,
-    OAuth2Error,
+    OAuth2GrantError,
+    OAuth2RequestError,
+    OAuth2ResponseTypeError,
     hasOAuth2Scopes,
 } from '@authup/specs';
 import type { IOAuth2OpenIDTokenIssuer, IOAuth2TokenIssuer } from '../token/index.ts';
@@ -61,14 +63,14 @@ export class OAuth2Authorization {
 
         for (const responseType of responseTypes) {
             if (!availableResponseTypes.includes(responseType)) {
-                throw OAuth2Error.responseTypeUnsupported();
+                throw OAuth2ResponseTypeError.unsupported();
             } else {
                 enabledResponseTypes[responseType] = true;
             }
         }
 
         if (!data.redirect_uri) {
-            throw OAuth2Error.redirectUriMismatch();
+            throw OAuth2GrantError.redirectUriMismatch();
         }
 
         const output : OAuth2AuthorizationResult = {
@@ -77,7 +79,7 @@ export class OAuth2Authorization {
         };
 
         if (!identity) {
-            throw OAuth2Error.identityInvalid();
+            throw OAuth2RequestError.identityInvalid();
         }
 
         const payloadBaseNormalized : OAuth2TokenPayload = {

@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2RequestError } from '@authup/specs';
 import type {
     IOAuth2AuthorizationStateManager,
     IOAuth2AuthorizeStateRepository,
@@ -26,7 +26,7 @@ export class OAuth2AuthorizationStateManager implements IOAuth2AuthorizationStat
     async verify(state: string, input: Partial<OAuth2AuthorizationState>): Promise<OAuth2AuthorizationState> {
         const payload = await this.repository.findOneById(state);
         if (!payload) {
-            throw OAuth2Error.stateInvalid();
+            throw OAuth2RequestError.stateInvalid();
         }
 
         // avoid replay attacks
@@ -36,14 +36,14 @@ export class OAuth2AuthorizationStateManager implements IOAuth2AuthorizationStat
             payload.ip &&
             input.ip !== payload.ip
         ) {
-            throw OAuth2Error.stateInvalid();
+            throw OAuth2RequestError.stateInvalid();
         }
 
         if (
             payload.userAgent &&
             input.userAgent !== payload.userAgent
         ) {
-            throw OAuth2Error.stateInvalid();
+            throw OAuth2RequestError.stateInvalid();
         }
 
         return payload;

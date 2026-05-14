@@ -39,7 +39,7 @@ import { resolveURL } from '../../../../../utils/index.ts';
 import type { AuthorizeParameters } from '@hapic/oauth2';
 import { useRequestQuery } from '@routup/basic/query';
 import { readRequestBody } from '@routup/basic/body';
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2RequestError } from '@authup/specs';
 import type {
     EntityCollectionResponse,
     IdentityProviderCreatePayload,
@@ -256,7 +256,7 @@ export class IdentityProviderController {
             try {
                 codeRequestDecoded = JSON.parse(base64URLDecode(query.codeRequest));
             } catch {
-                throw OAuth2Error.requestInvalid('The code request is malformed and can not be parsed.');
+                throw OAuth2RequestError.malformed('The code request is malformed and can not be parsed.');
             }
 
             const codeRequestValidated = await this.codeRequestValidator.run(codeRequestDecoded);
@@ -267,7 +267,7 @@ export class IdentityProviderController {
                 entity.realm_id &&
                 entity.realm_id !== data.client.realm_id
             ) {
-                throw OAuth2Error.requestInvalid('The provider and client realm do not match.');
+                throw OAuth2RequestError.malformed('The provider and client realm do not match.');
             }
 
             codeRequest = data.data;
@@ -298,7 +298,7 @@ export class IdentityProviderController {
             data.codeRequest.realm_id &&
             data.codeRequest.realm_id !== entity.realm_id
         ) {
-            throw OAuth2Error.requestInvalid('The provider and client realm do not match.');
+            throw OAuth2RequestError.malformed('The provider and client realm do not match.');
         }
 
         const { code } = useRequestQuery(event);
@@ -474,7 +474,7 @@ export class IdentityProviderController {
     private async verifyAuthorizationState(event: IRoutupEvent): Promise<OAuth2AuthorizationState> {
         const query = useRequestQuery(event);
         if (typeof query.state !== 'string') {
-            throw OAuth2Error.stateInvalid();
+            throw OAuth2RequestError.stateInvalid();
         }
 
         return this.stateManager.verify(query.state, {

@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2ClientError, OAuth2GrantError, OAuth2RequestError } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { IRoutupEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
@@ -34,7 +34,7 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         const body = await readRequestBody(event);
         const refreshToken = body?.refresh_token;
         if (typeof refreshToken !== 'string' || refreshToken.length === 0) {
-            throw OAuth2Error.requestInvalid();
+            throw OAuth2RequestError.malformed();
         }
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
@@ -54,12 +54,12 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
             );
 
             if (payload.client_id && payload.client_id !== client.id) {
-                throw OAuth2Error.grantInvalid();
+                throw OAuth2GrantError.invalid();
             }
         } else if (payload.client_id) {
             // Token was issued to a specific client — that client MUST
             // re-authenticate (RFC 6749 §6 binding requirement).
-            throw OAuth2Error.clientInvalid();
+            throw OAuth2ClientError.invalid();
         }
 
         return this.runWith(payload, {
