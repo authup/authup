@@ -120,7 +120,7 @@
         "@authup/server-test-kit": "^1.0.0-beta.41",
         "@faker-js/faker": "^10.4.0",
         "@fortawesome/fontawesome-free": "^7.2.0",
-        "@trapi/cli": "^0.1.2-beta.3",
+        "@trapi/cli": "^2.0.0",
         "@types/ldapjs": "^3.0.6",
         "@types/supertest": "^7.2.0",
         "@vitejs/plugin-vue": "^6.0.5",
