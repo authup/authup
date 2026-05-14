@@ -9,7 +9,7 @@ import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import {
     OAuth2AuthorizationCodeChallengeMethod,
     OAuth2AuthorizationResponseType,
-    OAuth2Error,
+    OAuth2ResponseTypeError,
 } from '@authup/specs';
 
 import { createValidator } from '@validup/adapter-zod';
@@ -32,7 +32,7 @@ export class OAuth2AuthorizationCodeRequestValidator extends Container<OAuth2Aut
 
                         for (const responseType of responseTypes) {
                             if (!availableResponseTypes.includes(responseType)) {
-                                const error = OAuth2Error.responseTypeUnsupported();
+                                const error = OAuth2ResponseTypeError.unsupported();
                                 ctx.issues.push({
                                     input: responseType,
                                     code: 'custom',

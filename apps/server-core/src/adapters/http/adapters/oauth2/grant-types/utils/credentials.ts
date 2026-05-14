@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2RequestError } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
 import type { IRoutupEvent } from 'routup';
@@ -32,7 +32,7 @@ export async function extractClientCredentialsFromRequest(event: IRoutupEvent): 
     const basicCredentials = parseBasicCredentials(event);
 
     if (hasBodyCredentials && basicCredentials) {
-        throw OAuth2Error.requestInvalid(
+        throw OAuth2RequestError.malformed(
             'Client credentials must be provided either via Basic Authorization header or request body, not both.',
         );
     }
@@ -42,7 +42,7 @@ export async function extractClientCredentialsFromRequest(event: IRoutupEvent): 
         // that gate auth on `if (clientId)` would silently skip
         // authentication and leak through with the secret discarded.
         if (!bodyClientId) {
-            throw OAuth2Error.requestInvalid('client_secret was provided without client_id.');
+            throw OAuth2RequestError.malformed('client_secret was provided without client_id.');
         }
         return { clientId: bodyClientId, clientSecret: bodyClientSecret };
     }
@@ -71,7 +71,7 @@ function parseBasicCredentials(event: IRoutupEvent): ExtractedClientCredentials 
     } catch {
         // Malformed Authorization header — surface as 400 invalid_request
         // rather than letting hapic's error propagate as 500.
-        throw OAuth2Error.requestInvalid('Malformed Authorization header.');
+        throw OAuth2RequestError.malformed('Malformed Authorization header.');
     }
 
     if (header.type !== AuthorizationHeaderType.BASIC) {

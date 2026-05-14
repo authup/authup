@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2AuthorizationCode } from '@authup/core-kit';
-import { OAuth2AuthorizationCodeChallengeMethod, OAuth2Error } from '@authup/specs';
+import { OAuth2AuthorizationCodeChallengeMethod, OAuth2GrantError } from '@authup/specs';
 import { buildOAuth2CodeChallenge } from '../../helpers.ts';
 
 import type { IOAuth2AuthorizationCodeRepository } from '../repository/index.ts';
@@ -22,7 +22,7 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
     async verify(code: string, options: IOAuth2AuthorizationCodeVerifyOptions) : Promise<OAuth2AuthorizationCode> {
         const entity = await this.repository.popOneById(code);
         if (!entity) {
-            throw OAuth2Error.grantInvalid();
+            throw OAuth2GrantError.invalid();
         }
 
         // RFC 6749 §4.1.3: if the client was issued a client_id, verify the
@@ -31,13 +31,13 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
         // bypass the binding by omitting it.
         if (entity.client_id) {
             if (!options.clientId || options.clientId !== entity.client_id) {
-                throw OAuth2Error.grantInvalid();
+                throw OAuth2GrantError.invalid();
             }
         }
 
         if (entity.redirect_uri) {
             if (!options.redirectUri || entity.redirect_uri !== options.redirectUri) {
-                throw OAuth2Error.redirectUriMismatch();
+                throw OAuth2GrantError.redirectUriMismatch();
             }
         }
 
@@ -45,12 +45,12 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
         // the authorize-side check was bypassed or the client's
         // is_confidential flag changed between authorize and token.
         if (options.clientIsPublic && !entity.code_challenge) {
-            throw OAuth2Error.grantInvalid('PKCE is required for public clients.');
+            throw OAuth2GrantError.invalid('PKCE is required for public clients.');
         }
 
         if (entity.code_challenge) {
             if (!options.codeVerifier) {
-                throw OAuth2Error.grantInvalid('Code verifier invalid.');
+                throw OAuth2GrantError.invalid('Code verifier invalid.');
             }
 
             // RFC 7636 §4.3: code_challenge_method defaults to "plain" when
@@ -59,10 +59,10 @@ export class OAuth2AuthorizationCodeVerifier implements IOAuth2AuthorizationCode
             if (entity.code_challenge_method === OAuth2AuthorizationCodeChallengeMethod.SHA_256) {
                 const codeVerifierHash = await buildOAuth2CodeChallenge(options.codeVerifier);
                 if (codeVerifierHash !== entity.code_challenge) {
-                    throw OAuth2Error.grantInvalid('PKCE code_verifier mismatch.');
+                    throw OAuth2GrantError.invalid('PKCE code_verifier mismatch.');
                 }
             } else if (options.codeVerifier !== entity.code_challenge) {
-                throw OAuth2Error.grantInvalid('PKCE code_verifier mismatch.');
+                throw OAuth2GrantError.invalid('PKCE code_verifier mismatch.');
             }
         }
 

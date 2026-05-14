@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
-import { OAuth2Error, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2GrantTypeError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import {
     DContext,
     DController,
@@ -115,7 +115,7 @@ export class TokenController {
             const token = await extractTokenFromRequest(event);
             const payload = await this.tokenVerifier.verify(token, { skipActiveCheck: true });
             if (!payload.sub || !payload.sub_kind) {
-                throw OAuth2Error.identityInvalid();
+                throw OAuth2RequestError.identityInvalid();
             }
 
             // todo: only receive client specific permissions
@@ -129,7 +129,7 @@ export class TokenController {
             const identity = await this.identityResolver.resolve(payload.sub_kind, payload.sub);
             if (!identity) {
                 // todo: differentiate between client, robot & user
-                throw OAuth2Error.identityInvalid();
+                throw OAuth2RequestError.identityInvalid();
             }
 
             const claimsBuilder = new OAuth2OpenIDClaimsBuilder();
@@ -193,12 +193,12 @@ export class TokenController {
     async createToken(@DContext() event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
         const grantType = await guessOauth2GrantTypeByRequest(event);
         if (!grantType) {
-            throw OAuth2Error.grantInvalid();
+            throw OAuth2GrantTypeError.unsupported();
         }
 
         const grant = this.tokenGrants[grantType];
         if (!grant) {
-            throw OAuth2Error.grantInvalid();
+            throw OAuth2GrantTypeError.unsupported();
         }
 
         return grant.runWithRequest(event);

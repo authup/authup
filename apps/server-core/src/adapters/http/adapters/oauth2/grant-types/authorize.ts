@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2RequestError } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import type { IRoutupEvent } from 'routup';
@@ -39,7 +39,7 @@ export class HTTPOAuth2AuthorizeGrant extends OAuth2AuthorizeGrant implements IH
         const redirectUri = this.pickStringParam(body, query, 'redirect_uri');
         const codeVerifier = this.pickStringParam(body, query, 'code_verifier');
         if (!code) {
-            throw OAuth2Error.requestInvalid();
+            throw OAuth2RequestError.malformed();
         }
 
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);

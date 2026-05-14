@@ -10,7 +10,10 @@ import { ScopeName } from '@authup/core-kit';
 import { isSimpleMatch } from '@authup/kit';
 import {
     OAuth2AuthorizationResponseType,
-    OAuth2Error,
+    OAuth2ClientError,
+    OAuth2GrantError,
+    OAuth2RequestError,
+    OAuth2ScopeError,
     hasOAuth2Scopes,
 } from '@authup/specs';
 import type { IOAuth2ClientRepository } from '../../../client/index.ts';
@@ -46,16 +49,16 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         data: OAuth2AuthorizationCodeRequest,
     ) : Promise<OAuth2AuthorizationCodeRequestVerificationResult> {
         if (!data.client_id) {
-            throw OAuth2Error.clientInvalid();
+            throw OAuth2ClientError.invalid();
         }
 
         const client = await this.clientRepository.findOneByIdOrName(data.client_id, data.realm_id);
         if (!client) {
-            throw OAuth2Error.clientInvalid();
+            throw OAuth2ClientError.invalid();
         }
 
         if (!client.active) {
-            throw OAuth2Error.clientInactive();
+            throw OAuth2ClientError.inactive();
         }
 
         // Public clients MUST use PKCE for the code flow (RFC 7636 §4.4.1,
@@ -64,7 +67,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         // /token. Only enforce when an authorization code will actually be
         // issued; implicit/id_token-only flows don't involve a code.
         if (!client.is_confidential && !data.code_challenge && willIssueCode(data.response_type)) {
-            throw OAuth2Error.requestInvalid('PKCE code_challenge is required for public clients.');
+            throw OAuth2RequestError.malformed('PKCE code_challenge is required for public clients.');
         }
 
         // Public clients SHOULD include state to bind the redirect to the
@@ -72,7 +75,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
         // clients are exempt because the /token exchange already authenticates
         // them via client_secret.
         if (!client.is_confidential && !data.state && willIssueCode(data.response_type)) {
-            throw OAuth2Error.requestInvalid('state is required for public clients in the code flow.');
+            throw OAuth2RequestError.malformed('state is required for public clients in the code flow.');
         }
 
         data.client_id = client.id;
@@ -85,7 +88,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
                 !hasOAuth2Scopes(scopeNames, data.scope) &&
                 !hasOAuth2Scopes(data.scope, ScopeName.GLOBAL)
             ) {
-                throw OAuth2Error.scopeInsufficient();
+                throw OAuth2ScopeError.insufficient();
             }
         } else {
             data.scope = scopeNames.join(' ');
@@ -95,7 +98,7 @@ export class OAuth2AuthorizationCodeRequestVerifier implements IOAuth2Authorizat
             const redirectUris = client.redirect_uri.split(',');
 
             if (!isSimpleMatch(data.redirect_uri, redirectUris)) {
-                throw OAuth2Error.redirectUriMismatch();
+                throw OAuth2GrantError.redirectUriMismatch();
             }
         }
 

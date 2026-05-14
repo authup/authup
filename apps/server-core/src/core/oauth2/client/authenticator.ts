@@ -7,7 +7,7 @@
 
 import type { Client } from '@authup/core-kit';
 import { IdentityType } from '@authup/core-kit';
-import { OAuth2Error } from '@authup/specs';
+import { OAuth2ClientError } from '@authup/specs';
 import { ClientCredentialsService } from '../../authentication/credential/index.ts';
 import type { IIdentityResolver } from '../../identity/index.ts';
 
@@ -34,26 +34,26 @@ export class OAuth2ClientAuthenticator {
         realmId?: string,
     ): Promise<Client> {
         if (!clientId) {
-            throw OAuth2Error.clientInvalid();
+            throw OAuth2ClientError.invalid();
         }
 
         const identity = await this.identityResolver.resolve(IdentityType.CLIENT, clientId, realmId);
         if (!identity || identity.type !== IdentityType.CLIENT) {
-            throw OAuth2Error.clientInvalid();
+            throw OAuth2ClientError.invalid();
         }
 
         if (!identity.data.active) {
-            throw OAuth2Error.clientInactive();
+            throw OAuth2ClientError.inactive();
         }
 
         if (identity.data.is_confidential) {
             if (!clientSecret) {
-                throw OAuth2Error.clientInvalid();
+                throw OAuth2ClientError.invalid();
             }
 
             const verified = await this.credentialsService.verify(clientSecret, identity.data);
             if (!verified) {
-                throw OAuth2Error.clientInvalid();
+                throw OAuth2ClientError.invalid();
             }
         }
 

@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { JWTError } from '@authup/specs';
-import { ErrorCode } from '@authup/errors';
+import { JWTError, isJWTError } from '@authup/specs';
+import { ErrorCode, httpStatusFromCode } from '@authup/errors';
 
 type Context = {
     code?: `${ErrorCode}`,
@@ -15,10 +15,10 @@ type Context = {
 };
 export function createResponseError(input: Context | JWTError) : Error {
     let context : Context;
-    if (input instanceof JWTError) {
+    if (isJWTError(input)) {
         context = {
             code: input.code as `${ErrorCode}`,
-            status: input.statusCode,
+            status: httpStatusFromCode(input.code),
             message: input.message,
         };
     } else {

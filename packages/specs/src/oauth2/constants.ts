@@ -55,5 +55,7 @@ export enum OAuth2ErrorCode {
 
     INVALID_SCOPE = 'invalid_scope',
 
+    INSUFFICIENT_SCOPE = 'insufficient_scope',
+
     SERVER_ERROR = 'server_error',
 }

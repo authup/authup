@@ -6,23 +6,20 @@
  */
 
 import { AuthupError } from '@authup/errors';
-import { OAuth2Error, OAuth2ErrorCode } from '@authup/specs';
+import { OAuth2Error, OAuth2ErrorCode, OAuth2GrantError } from '@authup/specs';
 import { describe, expect, it } from 'vitest';
 import { toOAuth2Error } from '../../../../../src/core/oauth2/helpers/error.ts';
 
 describe('toOAuth2Error', () => {
     it('should pass through OAuth2Error unchanged', () => {
-        const err = OAuth2Error.grantInvalid();
+        const err = OAuth2GrantError.invalid();
         const result = toOAuth2Error(err);
         expect(result).toBe(err);
         expect(result).toBeInstanceOf(OAuth2Error);
     });
 
     it('should wrap AuthupError with OAuth2 data', () => {
-        const err = new AuthupError({
-            message: 'something failed',
-            status: 400,
-        });
+        const err = new AuthupError({ message: 'something failed' });
         const result = toOAuth2Error(err);
         expect(result).toBeInstanceOf(OAuth2Error);
         expect(result.data).toEqual(expect.objectContaining({
@@ -34,7 +31,6 @@ describe('toOAuth2Error', () => {
     it('should preserve existing data on AuthupError', () => {
         const err = new AuthupError({
             message: 'test',
-            status: 400,
             data: { hint: 'some hint' },
         });
         const result = toOAuth2Error(err);
