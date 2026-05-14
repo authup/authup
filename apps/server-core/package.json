@@ -84,8 +84,6 @@
         "@routup/prometheus": "^3.2.0",
         "@routup/rate-limit": "^3.2.0",
         "@routup/swagger-ui": "^3.2.0",
-        "@trapi/metadata": "^2.0.0-beta.4",
-        "@trapi/swagger": "^2.0.0-beta.4",
         "@validup/adapter-validator": "^0.3.2",
         "@validup/adapter-zod": "^0.2.4",
         "better-sqlite3": "^12.10.0",
