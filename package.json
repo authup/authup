@@ -71,5 +71,8 @@
     },
     "lint-staged": {
         "*.ts": "eslint --fix"
+    },
+    "overrides": {
+        "typeorm": "0.3.28"
     }
 }
