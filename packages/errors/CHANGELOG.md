@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.41...v1.0.0-beta.41) (2026-05-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** The /permissions/:id/check and /policies/:id/check endpoints no longer return 404 for unknown ids/names. They now return 202 with { status: 'error', data: { name, message, ... } } in the body. The endpoints are predicates that always answer; the unknown-entity case is just one possible reason for status: 'error'.
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041))
+
+### Code Refactoring
+
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041)) ([058c503](https://github.com/authup/authup/commit/058c503b615dc1eeb9728908ab4817b53fd24f23))
+* **server-core:** extract permission/policy checker services ([#3048](https://github.com/authup/authup/issues/3048)) ([c639a05](https://github.com/authup/authup/commit/c639a0505cbf022d813a6808ccf826e3be6f631e))
+
 ## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
 
 

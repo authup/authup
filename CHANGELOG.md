@@ -3,6 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.41...v1.0.0-beta.41) (2026-05-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **oauth2:** split OAuth2Error into spec-aligned subclasses ([#3054](https://github.com/authup/authup/issues/3054))
+* **server-core:** The /permissions/:id/check and /policies/:id/check endpoints no longer return 404 for unknown ids/names. They now return 202 with { status: 'error', data: { name, message, ... } } in the body. The endpoints are predicates that always answer; the unknown-entity case is just one possible reason for status: 'error'.
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041))
+
+### Features
+
+* **server-core:** mount entity controllers under /realms/:realmId ([#3049](https://github.com/authup/authup/issues/3049)) ([8d2acaa](https://github.com/authup/authup/commit/8d2acaa85341654dbfcabd7373053060f22767a0))
+
+
+### Bug Fixes
+
+* **deps:** bump @ucast/mongo2js ([#3035](https://github.com/authup/authup/issues/3035)) ([28aefbd](https://github.com/authup/authup/commit/28aefbd2f1f9a08bf03c02816acc67d3fbdaf15e))
+* **deps:** bump the minorandpatch group across 1 directory with 21 updates ([#3053](https://github.com/authup/authup/issues/3053)) ([d0723c6](https://github.com/authup/authup/commit/d0723c6ddcff1bf8a6c197bcd2e66a00f1232cfd))
+* **deps:** pin typeorm to 0.3.28 to avoid select:false strip regression ([2524876](https://github.com/authup/authup/commit/25248767d16ce32c7fdea9a1ee6c07c98c40cc18))
+
+
+### Code Refactoring
+
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041)) ([058c503](https://github.com/authup/authup/commit/058c503b615dc1eeb9728908ab4817b53fd24f23))
+* **oauth2:** split OAuth2Error into spec-aligned subclasses ([#3054](https://github.com/authup/authup/issues/3054)) ([c40a37b](https://github.com/authup/authup/commit/c40a37bf5bbc065dfab95cba40bbff94f2b720f4))
+* **server-core:** extract permission/policy checker services ([#3048](https://github.com/authup/authup/issues/3048)) ([c639a05](https://github.com/authup/authup/commit/c639a0505cbf022d813a6808ccf826e3be6f631e))
+
 ## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
 
 

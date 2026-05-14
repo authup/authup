@@ -1,7 +1,7 @@
 {
     "name": "authup",
     "type": "module",
-    "version": "1.0.0-beta.41",
+    "version": "1.0.1-beta.41",
     "description": "This is the CLI for the authup ecosystem.",
     "license": "Apache-2.0",
     "exports": {
@@ -55,7 +55,7 @@
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
         "@authup/client-web": "^1.0.0-beta.41",
-        "@authup/kit": "^1.0.0-beta.41",
+        "@authup/kit": "^1.0.1-beta.41",
         "@authup/core-kit": "^1.0.0-beta.41",
         "@authup/server-core": "^1.0.0-beta.41",
         "citty": "^0.2.2",

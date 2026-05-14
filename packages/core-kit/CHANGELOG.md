@@ -1,5 +1,23 @@
 # Change Log
 
+## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.41...v1.0.0-beta.41) (2026-05-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041))
+
+### Code Refactoring
+
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041)) ([058c503](https://github.com/authup/authup/commit/058c503b615dc1eeb9728908ab4817b53fd24f23))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.41 to ^1.0.1-beta.41
+
 ## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
 
 
