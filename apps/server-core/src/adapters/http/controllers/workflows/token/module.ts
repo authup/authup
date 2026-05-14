@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2TokenGrantResponse, OAuth2TokenIntrospectionResponse, OAuth2TokenPermission } from '@authup/specs';
-import { OAuth2GrantError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
+import { OAuth2GrantTypeError, OAuth2RequestError, OAuth2TokenGrant } from '@authup/specs';
 import {
     DContext,
     DController,
@@ -193,12 +193,12 @@ export class TokenController {
     async createToken(@DContext() event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
         const grantType = await guessOauth2GrantTypeByRequest(event);
         if (!grantType) {
-            throw OAuth2GrantError.invalid();
+            throw OAuth2GrantTypeError.unsupported();
         }
 
         const grant = this.tokenGrants[grantType];
         if (!grant) {
-            throw OAuth2GrantError.invalid();
+            throw OAuth2GrantTypeError.unsupported();
         }
 
         return grant.runWithRequest(event);

@@ -38,7 +38,7 @@ export class OAuth2GrantError extends OAuth2Error {
     static redirectUriMismatch() {
         return new OAuth2GrantError({
             code: ErrorCode.OAUTH_REDIRECT_URI_MISMATCH,
-            message: 'The redirect URI is missing or do not match',
+            message: 'The redirect URI is missing or does not match',
         });
     }
 }

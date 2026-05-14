@@ -35,6 +35,7 @@ export class OAuth2ScopeError extends OAuth2Error {
         return new OAuth2ScopeError({
             code: ErrorCode.OAUTH_SCOPE_INSUFFICIENT,
             message: 'The request requires higher privileges than supported by the client.',
+            data: { error: OAuth2ErrorCode.INSUFFICIENT_SCOPE },
         });
     }
 }
