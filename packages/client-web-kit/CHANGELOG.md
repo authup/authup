@@ -1,5 +1,33 @@
 # Change Log
 
+## [1.0.0-beta.42](https://github.com/authup/authup/compare/v1.0.0-beta.41...v1.0.0-beta.42) (2026-05-15)
+
+
+### Bug Fixes
+
+* **deps:** bump the minorandpatch group across 1 directory with 21 updates ([#3053](https://github.com/authup/authup/issues/3053)) ([d0723c6](https://github.com/authup/authup/commit/d0723c6ddcff1bf8a6c197bcd2e66a00f1232cfd))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/core-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/core-http-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/errors bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/specs bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/core-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/core-http-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/errors bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/specs bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+
 ## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
 
 

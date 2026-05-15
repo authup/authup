@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.0.0-beta.42](https://github.com/authup/authup/compare/v1.0.0-beta.41...v1.0.0-beta.42) (2026-05-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041))
+
+### Bug Fixes
+
+* **deps:** bump @ucast/mongo2js ([#3035](https://github.com/authup/authup/issues/3035)) ([28aefbd](https://github.com/authup/authup/commit/28aefbd2f1f9a08bf03c02816acc67d3fbdaf15e))
+
+
+### Code Refactoring
+
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041)) ([058c503](https://github.com/authup/authup/commit/058c503b615dc1eeb9728908ab4817b53fd24f23))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+  * peerDependencies
+    * @authup/errors bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+
 ## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
 
 
