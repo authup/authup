@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.0.0-beta.42](https://github.com/authup/authup/compare/v1.0.0-beta.41...v1.0.0-beta.42) (2026-05-15)
+
+
+### ⚠ BREAKING CHANGES
+
+* **oauth2:** split OAuth2Error into spec-aligned subclasses ([#3054](https://github.com/authup/authup/issues/3054))
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041))
+
+### Bug Fixes
+
+* ensure consistent version for release ([183b5dd](https://github.com/authup/authup/commit/183b5dd882b1ed5a27212a0051648850e7693917))
+
+
+### Code Refactoring
+
+* **errors:** decouple AuthupError from @ebec/http, add inheritance-aware duck guards ([#3041](https://github.com/authup/authup/issues/3041)) ([058c503](https://github.com/authup/authup/commit/058c503b615dc1eeb9728908ab4817b53fd24f23))
+* **oauth2:** split OAuth2Error into spec-aligned subclasses ([#3054](https://github.com/authup/authup/issues/3054)) ([c40a37b](https://github.com/authup/authup/commit/c40a37bf5bbc065dfab95cba40bbff94f2b720f4))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/errors bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/specs bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/core-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/core-http-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+    * @authup/server-kit bumped from ^1.0.0-beta.41 to ^1.0.0-beta.42
+
 ## [1.0.0-beta.41](https://github.com/authup/authup/compare/v1.0.0-beta.40...v1.0.0-beta.41) (2026-05-08)
 
 

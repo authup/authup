@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-adapter-web",
     "type": "module",
-    "version": "1.0.0-beta.41",
+    "version": "1.0.0-beta.42",
     "description": "A Web Request adapter primitive for authup.",
     "exports": {
         "./package.json": "./package.json",
@@ -51,8 +51,8 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/errors": "^1.0.0-beta.41",
-        "@authup/server-adapter-kit": "^1.0.0-beta.41"
+        "@authup/errors": "^1.0.0-beta.42",
+        "@authup/server-adapter-kit": "^1.0.0-beta.42"
     },
     "devDependencies": {
         "vitest": "^4.0.18"
