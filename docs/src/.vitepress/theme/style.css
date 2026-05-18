@@ -1,0 +1,109 @@
+/* Design tokens — bind marketing components to VitePress's CSS vars so light/dark mode and brand changes propagate. */
+:root {
+    --au-color-bg: var(--vp-c-bg);
+    --au-color-bg-soft: var(--vp-c-bg-soft);
+    --au-color-bg-alt: var(--vp-c-bg-alt);
+    --au-color-text: var(--vp-c-text-1);
+    --au-color-text-muted: var(--vp-c-text-2);
+    --au-color-text-soft: var(--vp-c-text-3);
+    --au-color-divider: var(--vp-c-divider);
+    --au-color-primary: var(--vp-c-brand-1);
+    --au-color-primary-soft: var(--vp-c-brand-2);
+    --au-color-primary-deep: var(--vp-c-brand-3);
+    --au-color-success: #10b981;
+    --au-color-danger: #ef4444;
+    --au-color-warning: #f59e0b;
+    --au-color-accent-a: #6366f1;
+    --au-color-accent-b: #ec4899;
+    --au-color-accent-c: #14b8a6;
+
+    --au-radius-sm: 6px;
+    --au-radius: 12px;
+    --au-radius-lg: 18px;
+
+    --au-space-tight: 0.75rem;
+    --au-space: 1.25rem;
+    --au-space-loose: 2rem;
+    --au-space-section: 4rem;
+
+    --au-transition: 120ms ease-out;
+    --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
+    --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+    --au-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.3);
+    --au-shadow-card-hover: 0 1px 2px rgba(0, 0, 0, 0.25), 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* When index.md uses layout: page, hide the default content gutter so sections can go edge-to-edge. */
+.Layout:has(.au-marketing) .VPContent {
+    padding: 0 !important;
+}
+
+.au-marketing {
+    width: 100%;
+    margin: 0 auto;
+}
+
+.au-section {
+    padding: var(--au-space-section) 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.au-section--alt {
+    background: var(--au-color-bg-soft);
+    max-width: none;
+}
+
+.au-section--alt > .au-section-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+    .au-section {
+        padding: 2.5rem 1.25rem;
+    }
+}
+
+/* Shared "browser window" card chrome — reused by Hero and IntegrationSpotlight. */
+.au-card-window {
+    background: var(--au-color-bg-alt);
+    border: 1px solid var(--au-color-divider);
+    border-radius: var(--au-radius-lg);
+    box-shadow: var(--au-shadow-card);
+    overflow: hidden;
+}
+
+.au-card-window__chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 1rem;
+    background: var(--au-color-bg-soft);
+    border-bottom: 1px solid var(--au-color-divider);
+}
+
+.au-card-window__title {
+    margin-left: 0.75rem;
+    font-family: var(--vp-font-family-mono, ui-monospace, monospace);
+    font-size: 0.8rem;
+    color: var(--au-color-text-soft);
+}
+
+.au-card-window__body {
+    padding: 1.5rem;
+}
+
+.au-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.au-dot--r { background: #ff5f57; }
+.au-dot--y { background: #febc2e; }
+.au-dot--g { background: #28c840; }
