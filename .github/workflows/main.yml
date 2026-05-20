@@ -129,3 +129,77 @@ jobs:
                     DB_TYPE: ${{ matrix.db }}
                 run: |
                     npm run test --workspace=apps/server-core
+
+    tests-migrations:
+        name: Test Migrations
+        needs: [build]
+        runs-on: ubuntu-latest
+
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    -   db: mysql
+                        port: 3306
+                        user: root
+                    -   db: postgres
+                        port: 5432
+                        user: postgres
+
+        env:
+            DB_TYPE: ${{ matrix.db }}
+            DB_HOST: 127.0.0.1
+            DB_PORT: ${{ matrix.port }}
+            DB_USERNAME: ${{ matrix.user }}
+            DB_PASSWORD: start123
+            DB_DATABASE: app
+
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v6
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+                    node-registry: ${{ env.NODE_REGISTRY }}
+
+            -   name: Build
+                uses: ./.github/actions/build
+
+            -   name: Verify compiled migrations exist
+                working-directory: apps/server-core
+                run: |
+                    count=$(ls dist/adapters/database/migrations/${{ matrix.db }}/*.mjs 2>/dev/null | wc -l | tr -d ' ')
+                    if [ "$count" = "0" ]; then
+                        echo "ERROR: no compiled migrations in dist/adapters/database/migrations/${{ matrix.db }}/"
+                        exit 1
+                    fi
+                    echo "Found $count migration(s)"
+                    echo "MIGRATION_COUNT=$count" >> "$GITHUB_ENV"
+
+            -   name: Start ${{ matrix.db }}
+                run: docker compose up -d ${{ matrix.db }}
+
+            -   name: Wait for ${{ matrix.db }} to be ready
+                run: |
+                    if [ "${{ matrix.db }}" = "mysql" ]; then
+                        timeout 120 bash -c 'until docker compose exec -T mysql mysqladmin ping -h127.0.0.1 --silent; do sleep 2; done'
+                    else
+                        timeout 60 bash -c 'until docker compose exec -T postgres pg_isready -U postgres; do sleep 2; done'
+                    fi
+
+            -   name: Run migrations forward
+                working-directory: apps/server-core
+                run: node dist/cli/index.mjs migration run
+
+            -   name: Revert all migrations
+                working-directory: apps/server-core
+                run: |
+                    for ((i = 1; i <= MIGRATION_COUNT; i++)); do
+                        node dist/cli/index.mjs migration revert
+                    done
+
+            -   name: Re-apply all migrations (idempotency)
+                working-directory: apps/server-core
+                run: node dist/cli/index.mjs migration run
