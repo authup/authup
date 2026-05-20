@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { Router } from 'routup';
+import type { App } from 'routup';
 import { decorators } from '@routup/decorators';
 import type {
     Client,
@@ -150,7 +150,7 @@ import { ConfigInjectionKey } from '../../config/index.ts';
 import { MailInjectionKey } from '../../mail/index.ts';
 
 export class HTTPControllerModule {
-    async mount(router: Router, container: IContainer): Promise<void> {
+    async mount(router: App, container: IContainer): Promise<void> {
         const realmController = this.createRealmController(container);
         const roleController = this.createRoleController(container);
         const permissionController = await this.createPermissionController(container);

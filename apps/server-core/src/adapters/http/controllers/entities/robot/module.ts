@@ -21,7 +21,7 @@ import { isUUID } from '@authup/kit';
 import { EntityNotFoundError } from '@authup/errors';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { Robot } from '@authup/core-kit';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { DataSource } from 'typeorm';
 import type {
@@ -69,7 +69,7 @@ export class RobotController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<Robot>> {
         const actor = buildActorContext(event);
         const {
@@ -86,7 +86,7 @@ export class RobotController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: RobotCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Robot> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -100,7 +100,7 @@ export class RobotController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Robot> {
         const identity = useRequestIdentity(event);
         let isMe = false;
@@ -183,7 +183,7 @@ export class RobotController {
     async edit(
         @DPath('id') id: string,
         @DBody() data: RobotUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Robot> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -203,7 +203,7 @@ export class RobotController {
     async put(
         @DPath('id') id: string,
         @DBody() data: RobotSavePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Robot> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -223,7 +223,7 @@ export class RobotController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Robot> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);

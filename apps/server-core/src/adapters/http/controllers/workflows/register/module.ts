@@ -12,7 +12,7 @@ import {
     DController,
     DPost,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import type { IRegistrationService } from '../../../../../core/index.ts';
 
 export type RegisterControllerContext = {
@@ -30,7 +30,7 @@ export class RegisterController {
     @DPost('', [])
     async execute(
         @DBody() data: RegisterPayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<RegisterResponse> {
         const result = await this.service.register(data);
 

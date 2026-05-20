@@ -8,7 +8,7 @@
 import type { User } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator, OAuth2ClientAuthenticator } from '../../../../../core/index.ts';
 import { PasswordGrantType } from '../../../../../core/index.ts';
@@ -27,7 +27,7 @@ export class HTTPPasswordGrant extends PasswordGrantType implements IHTTPOAuth2G
         this.clientAuthenticator = ctx.clientAuthenticator;
     }
 
-    async runWithRequest(event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+    async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
         const body = await readRequestBody(event);
         const {
             username,

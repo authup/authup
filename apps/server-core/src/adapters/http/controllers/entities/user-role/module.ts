@@ -15,7 +15,7 @@ import {
     DPost,
     DTags,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
@@ -43,7 +43,7 @@ export class UserRoleController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<UserRole>> {
         const actor = buildActorContext(event);
         const {
@@ -60,7 +60,7 @@ export class UserRoleController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: UserRoleCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<UserRole> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
@@ -73,7 +73,7 @@ export class UserRoleController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async getOne(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<UserRole> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
@@ -84,7 +84,7 @@ export class UserRoleController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<UserRole> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);

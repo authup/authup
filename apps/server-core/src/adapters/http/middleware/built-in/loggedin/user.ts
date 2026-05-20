@@ -7,11 +7,11 @@
 
 import { UnauthorizedError } from '@authup/errors';
 import type { HandlerInterface } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestIdentity } from '../../../request/index.ts';
 
 export class ForceUserLoggedInMiddleware implements HandlerInterface {
-    public run(event: IRoutupEvent) {
+    public run(event: IAppEvent) {
         const identity = useRequestIdentity(event);
 
         if (!identity || identity.type !== 'user') {

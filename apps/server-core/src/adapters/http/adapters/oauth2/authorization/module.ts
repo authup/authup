@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import type { OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import type { IOAuth2AuthorizationCodeRequestVerifier, OAuth2AuthorizationResult } from '../../../../../core/index.ts';
 import { OAuth2Authorization, OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
@@ -25,7 +25,7 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
         this.requestValidator = new OAuth2AuthorizationCodeRequestValidator();
     }
 
-    async authorizeWithRequest(event: IRoutupEvent) : Promise<OAuth2AuthorizationResult> {
+    async authorizeWithRequest(event: IAppEvent) : Promise<OAuth2AuthorizationResult> {
         const codeRequestValidated = await this.validateWithRequest(event);
 
         const { data } = await this.codeRequestVerifier.verify(codeRequestValidated);
@@ -41,7 +41,7 @@ export class HTTPOAuth2Authorizer extends OAuth2Authorization {
      * @throws OAuth2Error
      */
     async validateWithRequest(
-        event: IRoutupEvent,
+        event: IAppEvent,
     ) : Promise<OAuth2AuthorizationCodeRequest> {
         const data = await readFromLocations(event, ['body', 'query']);
         return this.requestValidator.run(data);

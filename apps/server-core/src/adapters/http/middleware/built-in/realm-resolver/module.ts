@@ -7,7 +7,7 @@
 
 import { isUUID } from '@authup/kit';
 import { EntityNotFoundError } from '@authup/errors';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import type { IRealmRepository } from '../../../../../core/index.ts';
 import { setRequestRealmID } from '../../../request/index.ts';
 import type { RealmResolverMiddlewareContext } from './types.ts';
@@ -19,7 +19,7 @@ export class RealmResolverMiddleware {
         this.realmRepository = ctx.realmRepository;
     }
 
-    async run(event: IRoutupEvent) {
+    async run(event: IAppEvent) {
         const value = event.params.realmId;
         if (typeof value !== 'string' || !value) {
             return;

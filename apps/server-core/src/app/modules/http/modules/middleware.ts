@@ -5,7 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import type { Router } from 'routup';
+import type { App } from 'routup';
 import path from 'node:path';
 import type { IContainer } from 'eldin';
 import type { Repository } from 'typeorm';
@@ -35,7 +35,7 @@ import {
 } from '../../database/index.ts';
 
 export class HTTPMiddlewareModule {
-    async mountBefore(router: Router, container: IContainer): Promise<void> {
+    async mountBefore(router: App, container: IContainer): Promise<void> {
         // @routup/prometheus must be installed before any other plugin or
         // route so that its onion middleware can observe the full request
         // lifecycle (the v3 README is explicit on this).
@@ -52,12 +52,12 @@ export class HTTPMiddlewareModule {
     }
 
      
-    async mountAfter(router: Router, _container: IContainer): Promise<void> {
+    async mountAfter(router: App, _container: IContainer): Promise<void> {
         registerErrorMiddleware(router);
     }
 
     // ----------------------------------------------------
-    async mountCors(router: Router, container: IContainer): Promise<void> {
+    async mountCors(router: App, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewareCors)) {
@@ -67,22 +67,22 @@ export class HTTPMiddlewareModule {
         registerCorsMiddleware(router, this.transformBoolToEmptyObject(config.middlewareCors));
     }
 
-    async mountLogger(router: Router, container: IContainer): Promise<void> {
+    async mountLogger(router: App, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const middleware = createLoggerMiddleware({ env: config.env });
 
         router.use(middleware);
     }
 
-    async mountAssets(router: Router): Promise<void> {
+    async mountAssets(router: App): Promise<void> {
         await registerAssetsMiddleware(router);
     }
 
-    async mountBasic(router: Router): Promise<void> {
+    async mountBasic(router: App): Promise<void> {
         registerBasicMiddleware(router);
     }
 
-    async mountPrometheus(router: Router, container: IContainer): Promise<void> {
+    async mountPrometheus(router: App, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewarePrometheus)) {
@@ -92,7 +92,7 @@ export class HTTPMiddlewareModule {
         registerPrometheusMiddleware(router, this.transformBoolToEmptyObject(config.middlewarePrometheus));
     }
 
-    async mountRateLimit(router: Router, container: IContainer): Promise<void> {
+    async mountRateLimit(router: App, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
 
         if (!this.isEnabled(config.middlewareRateLimit)) {
@@ -102,7 +102,7 @@ export class HTTPMiddlewareModule {
         registerRateLimitMiddleware(router, this.transformBoolToEmptyObject(config.middlewareRateLimit));
     }
 
-    async mountSwagger(router: Router, container: IContainer): Promise<void> {
+    async mountSwagger(router: App, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         if (!this.isEnabled(config.middlewareSwagger)) {
             return;
@@ -116,7 +116,7 @@ export class HTTPMiddlewareModule {
         router.use('/docs', middleware);
     }
 
-    async mountRealmResolver(router: Router, container: IContainer): Promise<void> {
+    async mountRealmResolver(router: App, container: IContainer): Promise<void> {
         const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
         const middleware = createRealmResolverMiddleware({ realmRepository: new RealmRepositoryAdapter(realmRepository) });
 
@@ -128,7 +128,7 @@ export class HTTPMiddlewareModule {
         router.use('/realms/:realmId/:nested', middleware);
     }
 
-    async mountAuthorization(router: Router, container: IContainer): Promise<void> {
+    async mountAuthorization(router: App, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
 

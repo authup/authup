@@ -20,7 +20,7 @@ import {
 import { EntityNotFoundError } from '@authup/errors';
 import { isSelfToken } from '../../../../../utils/index.ts';
 import type { Client } from '@authup/core-kit';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     ClientCreatePayload,
@@ -58,7 +58,7 @@ export class ClientController {
 
     @DGet('', [])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<Client>> {
         const actor = buildActorContext(event);
         const {
@@ -75,7 +75,7 @@ export class ClientController {
     @DGet('/:id', [])
     async get(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Client> {
         const identity = useRequestIdentity(event);
 
@@ -127,7 +127,7 @@ export class ClientController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: ClientCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Client> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -142,7 +142,7 @@ export class ClientController {
     async edit(
         @DPath('id') id: string,
         @DBody() data: ClientUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Client> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -157,7 +157,7 @@ export class ClientController {
     async put(
         @DPath('id') id: string,
         @DBody() data: ClientSavePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Client> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -177,7 +177,7 @@ export class ClientController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Client> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);

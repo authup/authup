@@ -26,7 +26,7 @@ import {
     DTags,
 } from '@routup/decorators';
 import { useRequestQuery } from '@routup/basic/query';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import type {
     IPolicyCheckerService,
     IPolicyService,
@@ -57,7 +57,7 @@ export class PolicyController {
 
     @DGet('', [])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<PolicyResponse>> {
         const actor = buildActorContext(event);
         const {
@@ -74,7 +74,7 @@ export class PolicyController {
     @DGet('/:id/expanded', [])
     async getOneExpanded(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<PolicyResponse> {
         return this.getOne(id, event, { expanded: true });
     }
@@ -82,7 +82,7 @@ export class PolicyController {
     @DGet('/:id', [])
     async getOne(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options: { expanded?: boolean } = {},
     ): Promise<PolicyResponse> {
@@ -100,7 +100,7 @@ export class PolicyController {
     async check(
         @DPath('id') id: string,
         @DBody() data: any,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<PolicyAPICheckResponse> {
         const actor = buildActorContext(event);
         const result = await this.checkerService.safeCheck(
@@ -125,7 +125,7 @@ export class PolicyController {
     async update(
         @DPath('id') id: string,
         @DBody() data: PolicyUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<PolicyResponse> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -144,7 +144,7 @@ export class PolicyController {
     async replace(
         @DPath('id') id: string,
         @DBody() data: PolicySavePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<PolicyResponse> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -165,7 +165,7 @@ export class PolicyController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<PolicyResponse> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);
@@ -178,7 +178,7 @@ export class PolicyController {
     @DPost('', [ForceLoggedInMiddleware])
     async create(
         @DBody() data: PolicyCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<PolicyResponse> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);

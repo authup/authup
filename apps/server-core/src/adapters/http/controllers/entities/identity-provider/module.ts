@@ -18,7 +18,7 @@ import {
     DPut,
     DTags,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import {
     getRequestHeader,
     getRequestIP,
@@ -108,7 +108,7 @@ export class IdentityProviderController {
 
     @DGet('', [])
     async getProviders(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<IdentityProvider>> {
         const {
             data, 
@@ -142,7 +142,7 @@ export class IdentityProviderController {
     @DGet('/:id', [])
     async getProvider(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<IdentityProvider> {
         const paramId = useRequestParamID(event, { isUUID: false });
 
@@ -172,7 +172,7 @@ export class IdentityProviderController {
     async editProvider(
         @DPath('id') id: string,
         @DBody() user: IdentityProviderUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) : Promise<IdentityProvider> {
         return this.write(event, { updateOnly: true });
     }
@@ -181,7 +181,7 @@ export class IdentityProviderController {
     async put(
         @DPath('id') id: string,
         @DBody() user: IdentityProviderSavePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) : Promise<IdentityProvider> {
         return this.write(event);
     }
@@ -189,7 +189,7 @@ export class IdentityProviderController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async dropProvider(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) : Promise<IdentityProvider> {
         const paramId = useRequestParamID(event);
 
@@ -221,7 +221,7 @@ export class IdentityProviderController {
     @DPost('', [ForceLoggedInMiddleware])
     async addProvider(
         @DBody() user: IdentityProviderCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) : Promise<IdentityProvider> {
         return this.write(event);
     }
@@ -231,7 +231,7 @@ export class IdentityProviderController {
     @DGet('/:id/authorize-out', [])
     async authorizeOut(
         @DPath('id') _id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) {
         const id = useRequestParamID(event);
         const entity = await this.resolve(id);
@@ -281,7 +281,7 @@ export class IdentityProviderController {
     @DGet('/:id/authorize-in', [])
     async authorizeIn(
         @DPath('id') _id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) {
         const id = useRequestParamID(event);
 
@@ -356,7 +356,7 @@ export class IdentityProviderController {
 
     // ---------------------------------------------------------
 
-    private async write(event: IRoutupEvent, options: {
+    private async write(event: IAppEvent, options: {
         updateOnly?: boolean
     } = {}): Promise<IdentityProvider> {
         let group: string;
@@ -461,7 +461,7 @@ export class IdentityProviderController {
     // ---------------------------------------------------------
 
     private async saveAuthorizationState(
-        event: IRoutupEvent,
+        event: IAppEvent,
         codeRequest?: OAuth2AuthorizationCodeRequest,
     ) : Promise<string> {
         return this.stateManager.save({
@@ -471,7 +471,7 @@ export class IdentityProviderController {
         });
     }
 
-    private async verifyAuthorizationState(event: IRoutupEvent): Promise<OAuth2AuthorizationState> {
+    private async verifyAuthorizationState(event: IAppEvent): Promise<OAuth2AuthorizationState> {
         const query = useRequestQuery(event);
         if (typeof query.state !== 'string') {
             throw OAuth2RequestError.stateInvalid();

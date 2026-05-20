@@ -16,7 +16,7 @@ import {
     DPut,
     DTags,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
@@ -49,7 +49,7 @@ export class UserController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<User>> {
         const actor = buildActorContext(event);
         const {
@@ -66,7 +66,7 @@ export class UserController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<User> {
         const actor = buildActorContext(event);
         let paramId = id;
@@ -92,7 +92,7 @@ export class UserController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: UserCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<User> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -107,7 +107,7 @@ export class UserController {
     async edit(
         @DPath('id') id: string,
         @DBody() data: UserUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<User> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -126,7 +126,7 @@ export class UserController {
     async put(
         @DPath('id') id: string,
         @DBody() data: UserSavePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<User> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -146,7 +146,7 @@ export class UserController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<User> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);

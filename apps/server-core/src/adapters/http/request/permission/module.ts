@@ -11,15 +11,15 @@ import type {
     PermissionEvaluationContext,
 } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestIdentity, useRequestScopes } from '../helpers/index.ts';
 
 export class RequestPermissionEvaluator implements IPermissionEvaluator {
-    protected event: IRoutupEvent;
+    protected event: IAppEvent;
 
     protected evaluator: IPermissionEvaluator;
 
-    constructor(event: IRoutupEvent, evaluator: IPermissionEvaluator) {
+    constructor(event: IAppEvent, evaluator: IPermissionEvaluator) {
         this.event = event;
         this.evaluator = evaluator;
     }

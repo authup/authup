@@ -25,7 +25,7 @@ import {
     DPut,
     DTags,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     IPermissionCheckerService,
@@ -57,7 +57,7 @@ export class PermissionController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<Permission>> {
         const actor = buildActorContext(event);
         const {
@@ -74,7 +74,7 @@ export class PermissionController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: PermissionCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Permission> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -87,12 +87,13 @@ export class PermissionController {
 
     @DPost('/:id/check', [ForceLoggedInMiddleware])
     async check(
+        @DPath('id') id: string,
         @DBody() data: any,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<PermissionAPICheckResponse> {
         const actor = buildActorContext(event);
         const result = await this.checkerService.safeCheck(
-            event.params.id,
+            id,
             data,
             actor,
             getRequestRealmID(event),
@@ -112,7 +113,7 @@ export class PermissionController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Permission> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
@@ -128,7 +129,7 @@ export class PermissionController {
     async edit(
         @DPath('id') id: string,
         @DBody() data: PermissionUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Permission> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -147,7 +148,7 @@ export class PermissionController {
     async put(
         @DPath('id') id: string,
         @DBody() data: PermissionSavePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Permission> {
         applyRouteRealmIDToBody(event, data);
         const actor = buildActorContext(event);
@@ -167,7 +168,7 @@ export class PermissionController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Permission> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);

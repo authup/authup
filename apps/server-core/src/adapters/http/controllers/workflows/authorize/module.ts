@@ -16,7 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { URL } from 'node:url';
 
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import type { ViteDevServer } from 'vite';
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
@@ -63,7 +63,7 @@ export class AuthorizeController {
     // ---------------------------------------------------------
 
     @DPost('', [ForceUserLoggedInMiddleware])
-    async confirm(@DContext() event: IRoutupEvent): Promise<{ url: string }> {
+    async confirm(@DContext() event: IAppEvent): Promise<{ url: string }> {
         const result = await this.authorizer.authorizeWithRequest(event);
 
         const url = new URL(result.redirectUri);
@@ -87,7 +87,7 @@ export class AuthorizeController {
     }
 
     @DGet('', [])
-    async serve(@DContext() event: IRoutupEvent): Promise<string> {
+    async serve(@DContext() event: IAppEvent): Promise<string> {
         let codeRequest : OAuth2AuthorizationCodeRequest | undefined;
 
         let client : Client | undefined;

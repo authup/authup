@@ -9,7 +9,7 @@ import { load } from 'locter';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { createHandler } from '@routup/assets';
 import path from 'node:path';
-import type { Router } from 'routup';
+import type { App } from 'routup';
 import { defineCoreHandler } from 'routup';
 import { fromNodeMiddleware } from 'routup/node';
 import type * as Vite from 'vite';
@@ -18,7 +18,7 @@ import { PACKAGE_PATH, UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../path.ts'
 
 export const VITE_SERVER_STORE_KEY = Symbol('ViteServer');
 
-export async function registerAssetsMiddleware(router: Router) {
+export async function registerAssetsMiddleware(router: App) {
     if (!isCodeTransformation(CodeTransformation.JUST_IN_TIME)) {
         router.use('public', createHandler(
             path.posix.join(PACKAGE_PATH, 'public'),

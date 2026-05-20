@@ -7,7 +7,7 @@
 
 import type { Client, Robot, User } from '@authup/core-kit';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import type {
     BaseGrantContext,
     ICredentialsAuthenticator,
@@ -24,7 +24,7 @@ export type HTTPOAuth2AuthorizeGrantContext = OAuth2AuthorizeGrantContext & {
 };
 
 export interface IHTTPOAuth2Grant {
-    runWithRequest(event: IRoutupEvent) : Promise<OAuth2TokenGrantResponse>
+    runWithRequest(event: IAppEvent) : Promise<OAuth2TokenGrantResponse>
 }
 
 export type HTTPOAuth2PasswordGrantContext = OAuth2PasswordGrantContext & {

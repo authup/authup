@@ -12,7 +12,7 @@ import {
     DController,
     DPost,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
 
 export type PasswordResetControllerContext = {
@@ -30,7 +30,7 @@ export class PasswordResetController {
     @DPost('', [])
     async execute(
         @DBody() data: PasswordResetPayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<PasswordResetResponse> {
         const result = await this.service.resetPassword(data);
 

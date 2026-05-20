@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { Router } from 'routup';
+import { App } from 'routup';
 import { serve } from 'routup/node';
 import { ConfigInjectionKey } from '../config/index.ts';
 import type { IModule } from 'orkos';
@@ -42,7 +42,7 @@ export class HTTPModule implements IModule {
 
         logger.debug('Starting http server...');
 
-        const router = new Router();
+        const router = new App();
 
         await this.middleware.mountBefore(router, container);
         await this.controller.mount(router, container);
