@@ -6,14 +6,14 @@
  */
 
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { IdentityGrantType } from '../../../../../core/index.ts';
 import { useRequestIdentityOrFail } from '../../../request/index.ts';
 import type { IHTTPOAuth2Grant } from './types.ts';
 
 export class HTTPOAuth2IdentityGrantType extends IdentityGrantType implements IHTTPOAuth2Grant {
-    runWithRequest(event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+    runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
         const identity = useRequestIdentityOrFail(event);
 
         return this.runWith(

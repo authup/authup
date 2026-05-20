@@ -9,10 +9,10 @@ import { OAuth2TokenGrant } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { useRequestQuery } from '@routup/basic/query';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 
 export async function guessOauth2GrantTypeByRequest(
-    event: IRoutupEvent,
+    event: IAppEvent,
 ) : Promise<`${OAuth2TokenGrant}` | undefined> {
     const body = await readRequestBody(event);
     const query = useRequestQuery(event);

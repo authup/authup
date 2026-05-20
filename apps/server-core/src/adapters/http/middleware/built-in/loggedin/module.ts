@@ -6,11 +6,11 @@
  */
 
 import type { HandlerInterface } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestIdentityOrFail } from '../../../request/index.ts';
 
 export class ForceLoggedInMiddleware implements HandlerInterface {
-    public run(event: IRoutupEvent) {
+    public run(event: IAppEvent) {
         useRequestIdentityOrFail(event);
         return event.next();
     }

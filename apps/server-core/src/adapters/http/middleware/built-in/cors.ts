@@ -7,9 +7,9 @@
 
 import type { Options as CorsOptions } from '@routup/cors';
 import { cors } from '@routup/cors';
-import type { Router } from 'routup';
+import type { App } from 'routup';
 
-export function registerCorsMiddleware(router: Router, input?: CorsOptions) {
+export function registerCorsMiddleware(router: App, input?: CorsOptions) {
     router.use(cors({
         origin: true,
         credentials: true,

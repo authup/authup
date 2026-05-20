@@ -15,7 +15,7 @@ import {
     DPost,
     DTags,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
@@ -42,7 +42,7 @@ export class RoleAttributeController {
 
     @DGet('', [ForceLoggedInMiddleware])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<RoleAttribute>> {
         const actor = buildActorContext(event);
         const {
@@ -59,7 +59,7 @@ export class RoleAttributeController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: RoleAttributeCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<RoleAttribute> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
@@ -72,7 +72,7 @@ export class RoleAttributeController {
     @DGet('/:id', [ForceLoggedInMiddleware])
     async get(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<RoleAttribute> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(id, actor);
@@ -84,7 +84,7 @@ export class RoleAttributeController {
     async edit(
         @DPath('id') id: string,
         @DBody() data: RoleAttributeUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<RoleAttribute> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(id, data, actor);
@@ -97,7 +97,7 @@ export class RoleAttributeController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<RoleAttribute> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);

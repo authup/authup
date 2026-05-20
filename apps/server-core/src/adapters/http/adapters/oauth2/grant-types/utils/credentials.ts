@@ -8,7 +8,7 @@
 import { OAuth2RequestError } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import { AuthorizationHeaderType, parseAuthorizationHeader } from 'hapic';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 
 export type ExtractedClientCredentials = {
     clientId?: string,
@@ -23,7 +23,7 @@ export type ExtractedClientCredentials = {
  * that present credentials in BOTH the Basic Authorization header and the
  * request body.
  */
-export async function extractClientCredentialsFromRequest(event: IRoutupEvent): Promise<ExtractedClientCredentials> {
+export async function extractClientCredentialsFromRequest(event: IAppEvent): Promise<ExtractedClientCredentials> {
     const body = await readRequestBody(event);
     const bodyClientId = readStringField(body, 'client_id');
     const bodyClientSecret = readStringField(body, 'client_secret');
@@ -59,7 +59,7 @@ function readStringField(body: Record<string, any> | undefined, key: string): st
     return typeof value === 'string' && value.length > 0 ? value : undefined;
 }
 
-function parseBasicCredentials(event: IRoutupEvent): ExtractedClientCredentials | undefined {
+function parseBasicCredentials(event: IAppEvent): ExtractedClientCredentials | undefined {
     const headerValue = event.headers.get('authorization');
     if (!headerValue) {
         return undefined;

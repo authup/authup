@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { readRequestBody } from '@routup/basic/body';
 import { useRequestCookies } from '@routup/basic/cookie';
 import { useRequestQuery } from '@routup/basic/query';
@@ -13,7 +13,7 @@ import { useRequestQuery } from '@routup/basic/query';
 export type RequestDataLocation = 'body' | 'query' | 'params' | 'cookies';
 
 export async function readFromLocations(
-    event: IRoutupEvent,
+    event: IAppEvent,
     locations: RequestDataLocation[],
 ): Promise<Record<string, any>> {
     const out: Record<string, any> = {};

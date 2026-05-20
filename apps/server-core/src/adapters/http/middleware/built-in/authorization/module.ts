@@ -14,7 +14,7 @@ import {
 } from '@authup/core-kit';
 import { AuthHeaderError } from '@authup/errors';
 import { JWTError, OAuth2TokenKind, deserializeOAuth2Scope } from '@authup/specs';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import {
     AuthorizationHeaderType,
     type BasicAuthorizationHeader,
@@ -89,7 +89,7 @@ export class AuthorizationMiddleware {
 
     // --------------------------------------
 
-    async run(event: IRoutupEvent) {
+    async run(event: IAppEvent) {
         const requestAccessContext = new RequestPermissionEvaluator(
             event,
             this.permissionEvaluator,
@@ -120,7 +120,7 @@ export class AuthorizationMiddleware {
      * @throws JWTError
      */
     protected async verifyBearerAuthorizationHeader(
-        event: IRoutupEvent,
+        event: IAppEvent,
         header: BearerAuthorizationHeader,
     ) {
         const payload = await this.oauth2TokenVerifier.verify(header.token);
@@ -178,7 +178,7 @@ export class AuthorizationMiddleware {
     }
 
     protected async verifyBasicAuthorizationHeader(
-        event: IRoutupEvent,
+        event: IAppEvent,
         header: BasicAuthorizationHeader,
     ) {
         if (this.options.clientAuthBasic) {

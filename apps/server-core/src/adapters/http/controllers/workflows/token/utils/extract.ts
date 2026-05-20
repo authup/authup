@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import {
     ValidupError, 
     buildErrorMessageForAttribute, 
@@ -15,7 +15,7 @@ import {
 import { readFromLocations, useRequestToken } from '../../../../request/index.ts';
 import { TokenRequestValidator } from './validator.ts';
 
-export async function extractTokenFromRequest(event: IRoutupEvent) : Promise<string> {
+export async function extractTokenFromRequest(event: IAppEvent) : Promise<string> {
     let token : string | undefined;
 
     try {

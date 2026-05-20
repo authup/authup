@@ -8,7 +8,7 @@
 import type { Identity } from '@authup/core-kit';
 import { IdentityType, REALM_MASTER_NAME } from '@authup/core-kit';
 import { UnauthorizedError } from '@authup/errors';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 
 const sym = Symbol('RIdentity');
 
@@ -49,11 +49,11 @@ export class RequestIdentity {
     }
 }
 
-export function useRequestIdentity(event: IRoutupEvent) : RequestIdentity | undefined {
+export function useRequestIdentity(event: IAppEvent) : RequestIdentity | undefined {
     return event.store[sym] as RequestIdentity | undefined;
 }
 
-export function setRequestIdentity(event: IRoutupEvent, input: Identity | RequestIdentity) : void {
+export function setRequestIdentity(event: IAppEvent, input: Identity | RequestIdentity) : void {
     let data : RequestIdentity;
 
     if (input instanceof RequestIdentity) {
@@ -65,7 +65,7 @@ export function setRequestIdentity(event: IRoutupEvent, input: Identity | Reques
     event.store[sym] = data;
 }
 
-export function useRequestIdentityOrFail(event: IRoutupEvent) : RequestIdentity {
+export function useRequestIdentityOrFail(event: IAppEvent) : RequestIdentity {
     const identity = useRequestIdentity(event);
     if (!identity) {
         throw new UnauthorizedError();

@@ -7,9 +7,9 @@
 
 import type { OptionsInput } from '@routup/prometheus';
 import { prometheus } from '@routup/prometheus';
-import type { Router } from 'routup';
+import type { App } from 'routup';
 
-export function registerPrometheusMiddleware(router: Router, input?: OptionsInput) {
+export function registerPrometheusMiddleware(router: App, input?: OptionsInput) {
     let options : OptionsInput = {
         skip(event) {
             let { path } = event;

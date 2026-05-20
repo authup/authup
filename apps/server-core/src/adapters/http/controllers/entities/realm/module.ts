@@ -18,7 +18,7 @@ import {
 } from '@routup/decorators';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import { OAuth2AuthorizationResponseType } from '@authup/specs';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type { Repository } from 'typeorm';
 import type {
@@ -62,7 +62,7 @@ export class RealmController {
 
     @DGet('', [])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<Realm>> {
         const {
             data,
@@ -78,7 +78,7 @@ export class RealmController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: RealmCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) : Promise<Realm> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
@@ -161,7 +161,7 @@ export class RealmController {
     async edit(
         @DPath('id') id: string,
         @DBody() data: RealmUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) : Promise<Realm> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
@@ -179,7 +179,7 @@ export class RealmController {
     async put(
         @DPath('id') id: string,
         @DBody() data: RealmSavePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) : Promise<Realm> {
         const actor = buildActorContext(event);
         const {
@@ -198,7 +198,7 @@ export class RealmController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ) : Promise<Realm> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);

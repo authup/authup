@@ -8,7 +8,7 @@
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { OAuth2ClientError, OAuth2GrantError, OAuth2RequestError } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import { OAuth2RefreshTokenGrant } from '../../../../../core/index.ts';
 import type {
@@ -30,7 +30,7 @@ export class HTTPOAuth2RefreshTokenGrant extends OAuth2RefreshTokenGrant impleme
         this.refreshTokenVerifier = ctx.tokenVerifier;
     }
 
-    async runWithRequest(event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+    async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
         const body = await readRequestBody(event);
         const refreshToken = body?.refresh_token;
         if (typeof refreshToken !== 'string' || refreshToken.length === 0) {

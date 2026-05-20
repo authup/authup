@@ -16,7 +16,7 @@ import {
     DPut,
     DTags,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { useRequestQuery } from '@routup/basic/query';
 import type {
     EntityCollectionResponse,
@@ -44,7 +44,7 @@ export class ScopeController {
 
     @DGet('', [])
     async getMany(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<EntityCollectionResponse<Scope>> {
         const actor = buildActorContext(event);
         const {
@@ -61,7 +61,7 @@ export class ScopeController {
     @DPost('', [ForceLoggedInMiddleware])
     async add(
         @DBody() data: ScopeCreatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Scope> {
         const actor = buildActorContext(event);
         const entity = await this.service.create(data, actor);
@@ -74,7 +74,7 @@ export class ScopeController {
     @DGet('/:id', [])
     async get(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Scope> {
         const actor = buildActorContext(event);
         const entity = await this.service.getOne(
@@ -89,7 +89,7 @@ export class ScopeController {
     async edit(
         @DPath('id') id: string,
         @DBody() data: ScopeUpdatePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Scope> {
         const actor = buildActorContext(event);
         const entity = await this.service.update(
@@ -107,7 +107,7 @@ export class ScopeController {
     async put(
         @DPath('id') id: string,
         @DBody() data: ScopeSavePayload,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Scope> {
         const actor = buildActorContext(event);
         const {
@@ -126,7 +126,7 @@ export class ScopeController {
     @DDelete('/:id', [ForceLoggedInMiddleware])
     async drop(
         @DPath('id') id: string,
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<Scope> {
         const actor = buildActorContext(event);
         const entity = await this.service.delete(id, actor);

@@ -5,16 +5,16 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { getRequestStringParam } from './param-id.ts';
 
 const sym = Symbol('RRealmID');
 
-export function setRequestRealmID(event: IRoutupEvent, id: string): void {
+export function setRequestRealmID(event: IAppEvent, id: string): void {
     event.store[sym] = id;
 }
 
-export function getRequestRealmID(event: IRoutupEvent): string | undefined {
+export function getRequestRealmID(event: IAppEvent): string | undefined {
     const stored = event.store[sym] as string | undefined;
     if (stored) {
         return stored;
@@ -22,7 +22,7 @@ export function getRequestRealmID(event: IRoutupEvent): string | undefined {
     return getRequestStringParam(event, 'realmId');
 }
 
-export function applyRouteRealmIDToBody(event: IRoutupEvent, data: Record<string, any>): void {
+export function applyRouteRealmIDToBody(event: IAppEvent, data: Record<string, any>): void {
     const routeRealmId = getRequestRealmID(event);
     if (routeRealmId) {
         data.realm_id = routeRealmId;

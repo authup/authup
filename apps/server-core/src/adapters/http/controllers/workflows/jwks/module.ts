@@ -14,7 +14,7 @@ import {
     DGet,
     DPath,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import type { Repository } from 'typeorm';
 import { In } from 'typeorm';
 import type { KeyEntity } from '../../../../database/domains/index.ts';
@@ -34,7 +34,7 @@ export class JwkController {
 
     @DGet('/jwks', [])
     async getManyJwks(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<{ keys: OAuth2JsonWebKey[] }> {
         const realmId = getRequestStringParam(event, 'realmId');
 

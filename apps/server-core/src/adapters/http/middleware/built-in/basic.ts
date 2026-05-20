@@ -7,8 +7,8 @@
 
 import type { Options } from '@routup/basic';
 import { basic } from '@routup/basic';
-import type { Router } from 'routup';
+import type { App } from 'routup';
 
-export function registerBasicMiddleware(router: Router, input?: Options) {
+export function registerBasicMiddleware(router: App, input?: Options) {
     router.use(basic(input));
 }

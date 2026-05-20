@@ -14,7 +14,7 @@ import {
     DPost,
     DTags,
 } from '@routup/decorators';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { buildPermissionKey } from '@authup/access';
 import { toOAuth2Error } from '../../../../../core/oauth2/helpers/index.ts';
 import type { TokenControllerContext } from './types.ts';
@@ -103,13 +103,13 @@ export class TokenController {
     // -------------------------------------------
 
     @DGet('/introspect', [])
-    async getIntrospect(@DContext() event: IRoutupEvent): Promise<OAuth2TokenIntrospectionResponse> {
+    async getIntrospect(@DContext() event: IAppEvent): Promise<OAuth2TokenIntrospectionResponse> {
         return this.postIntrospect(event);
     }
 
     @DPost('/introspect', [])
     async postIntrospect(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<OAuth2TokenIntrospectionResponse> {
         try {
             const token = await extractTokenFromRequest(event);
@@ -171,7 +171,7 @@ export class TokenController {
 
     @DPost('/revoke', [])
     async revokeToken(
-        @DContext() event: IRoutupEvent,
+        @DContext() event: IAppEvent,
     ): Promise<null> {
         try {
             const token = await extractTokenFromRequest(event);
@@ -190,7 +190,7 @@ export class TokenController {
     // ----------------------------------------------------------
 
     @DPost('', [])
-    async createToken(@DContext() event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+    async createToken(@DContext() event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
         const grantType = await guessOauth2GrantTypeByRequest(event);
         if (!grantType) {
             throw OAuth2GrantTypeError.unsupported();

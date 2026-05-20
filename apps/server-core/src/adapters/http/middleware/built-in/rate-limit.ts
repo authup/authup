@@ -7,11 +7,11 @@
 
 import type { OptionsInput } from '@routup/rate-limit';
 import { rateLimit } from '@routup/rate-limit';
-import type { Router } from 'routup';
+import type { App } from 'routup';
 import { merge } from 'smob';
 import { useRequestIdentity } from '../../request/index.ts';
 
-export function registerRateLimitMiddleware(router: Router, input?: OptionsInput) {
+export function registerRateLimitMiddleware(router: App, input?: OptionsInput) {
     let options : OptionsInput = {
         max(event) {
             const identity = useRequestIdentity(event);

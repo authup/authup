@@ -5,13 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Router } from 'routup';
+import type { App } from 'routup';
 import { defineErrorHandler } from 'routup';
 import { useLogger } from '@authup/server-kit';
 import { httpStatusFromCode, serializeError } from '@authup/errors';
 import { sanitizeError } from '../../../../utils/index.ts';
 
-export function registerErrorMiddleware(router: Router) {
+export function registerErrorMiddleware(router: App) {
     router.use(defineErrorHandler((error, event) => {
         const next = sanitizeError(error.cause ?? error);
         const status = httpStatusFromCode(next.code);

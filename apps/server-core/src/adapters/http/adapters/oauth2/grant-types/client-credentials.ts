@@ -9,7 +9,7 @@ import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { readRequestBody } from '@routup/basic/body';
 import type { Client } from '@authup/core-kit';
 import { EntityCredentialsInvalidError } from '@authup/errors';
-import type { IRoutupEvent } from 'routup';
+import type { IAppEvent } from 'routup';
 import { getRequestHeader, getRequestIP } from 'routup';
 import type { ICredentialsAuthenticator } from '../../../../../core/index.ts';
 import { ClientCredentialsGrant } from '../../../../../core/index.ts';
@@ -25,7 +25,7 @@ export class HTTPClientCredentialsGrant extends ClientCredentialsGrant implement
         this.authenticator = ctx.authenticator;
     }
 
-    async runWithRequest(event: IRoutupEvent): Promise<OAuth2TokenGrantResponse> {
+    async runWithRequest(event: IAppEvent): Promise<OAuth2TokenGrantResponse> {
         const { clientId, clientSecret } = await extractClientCredentialsFromRequest(event);
         const body = await readRequestBody(event);
         const realmId = body?.realm_id;
