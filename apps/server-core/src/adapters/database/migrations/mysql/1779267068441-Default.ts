@@ -43,7 +43,7 @@ export class Default1779267068441 implements MigrationInterface {
             await queryRunner.query(`
                 UPDATE \`${table}\`
                 SET \`name\` = LOWER(TRIM(\`name\`))
-                WHERE \`name\` <> LOWER(TRIM(\`name\`))
+                WHERE BINARY \`name\` <> LOWER(TRIM(\`name\`))
             `);
         }
 
@@ -51,7 +51,7 @@ export class Default1779267068441 implements MigrationInterface {
             UPDATE \`auth_users\`
             SET \`email\` = LOWER(TRIM(\`email\`))
             WHERE \`email\` IS NOT NULL
-              AND \`email\` <> LOWER(TRIM(\`email\`))
+              AND BINARY \`email\` <> LOWER(TRIM(\`email\`))
         `);
 
         await queryRunner.query(`
