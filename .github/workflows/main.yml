@@ -170,7 +170,9 @@ jobs:
             -   name: Verify compiled migrations exist
                 working-directory: apps/server-core
                 run: |
-                    count=$(ls dist/adapters/database/migrations/${{ matrix.db }}/*.mjs 2>/dev/null | wc -l | tr -d ' ')
+                    shopt -s nullglob
+                    files=(dist/adapters/database/migrations/${{ matrix.db }}/*.mjs)
+                    count=${#files[@]}
                     if [ "$count" = "0" ]; then
                         echo "ERROR: no compiled migrations in dist/adapters/database/migrations/${{ matrix.db }}/"
                         exit 1
@@ -184,7 +186,7 @@ jobs:
             -   name: Wait for ${{ matrix.db }} to be ready
                 run: |
                     if [ "${{ matrix.db }}" = "mysql" ]; then
-                        timeout 120 bash -c 'until docker compose exec -T mysql mysqladmin ping -h127.0.0.1 --silent; do sleep 2; done'
+                        timeout 120 bash -c 'until docker compose exec -T -e MYSQL_PWD="$DB_PASSWORD" mysql mysqladmin ping -h127.0.0.1 -uroot --silent; do sleep 2; done'
                     else
                         timeout 60 bash -c 'until docker compose exec -T postgres pg_isready -U postgres; do sleep 2; done'
                     fi
