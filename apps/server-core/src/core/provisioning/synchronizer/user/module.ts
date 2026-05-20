@@ -64,7 +64,6 @@ export class UserProvisioningSynchronizer extends BaseProvisioningSynchronizer<U
         let attributes = await this.userRepository.findOneBy({
             name: input.attributes.name,
             realm_id: input.attributes.realm_id || null,
-            client_id: input.attributes.client_id || null,
         });
 
         if (strategy.type === ProvisioningEntityStrategyType.ABSENT) {
