@@ -3,6 +3,7 @@ import type { MigrationInterface, QueryRunner } from 'typeorm';
 type CollisionCheck = {
     table: string,
     groupBy: string[],
+    where?: string,
 };
 
 const NAME_COLLISION_CHECKS: CollisionCheck[] = [
@@ -10,10 +11,26 @@ const NAME_COLLISION_CHECKS: CollisionCheck[] = [
     { table: 'auth_robots', groupBy: ['LOWER(TRIM(name))', 'realm_id'] },
     { table: 'auth_users', groupBy: ['LOWER(TRIM(name))', 'realm_id'] },
     { table: 'auth_realms', groupBy: ['LOWER(TRIM(name))'] },
-    { table: 'auth_roles', groupBy: ['LOWER(TRIM(name))', 'client_id', 'realm_id'] },
-    { table: 'auth_scopes', groupBy: ['LOWER(TRIM(name))', 'realm_id'] },
-    { table: 'auth_permissions', groupBy: ['LOWER(TRIM(name))', 'client_id', 'realm_id'] },
-    { table: 'auth_policies', groupBy: ['LOWER(TRIM(name))', 'realm_id'] },
+    {
+        table: 'auth_roles', 
+        groupBy: ['LOWER(TRIM(name))', 'client_id', 'realm_id'], 
+        where: 'client_id IS NOT NULL AND realm_id IS NOT NULL', 
+    },
+    {
+        table: 'auth_scopes', 
+        groupBy: ['LOWER(TRIM(name))', 'realm_id'], 
+        where: 'realm_id IS NOT NULL', 
+    },
+    {
+        table: 'auth_permissions', 
+        groupBy: ['LOWER(TRIM(name))', 'client_id', 'realm_id'], 
+        where: 'client_id IS NOT NULL AND realm_id IS NOT NULL', 
+    },
+    {
+        table: 'auth_policies', 
+        groupBy: ['LOWER(TRIM(name))', 'realm_id'], 
+        where: 'realm_id IS NOT NULL', 
+    },
     { table: 'auth_identity_providers', groupBy: ['LOWER(TRIM(name))', 'realm_id'] },
 ];
 
@@ -28,6 +45,7 @@ export class Default1779267068441 implements MigrationInterface {
             const rows = await queryRunner.query(`
                 SELECT ${groupBy}
                 FROM \`${check.table}\`
+                ${check.where ? `WHERE ${check.where}` : ''}
                 GROUP BY ${groupBy}
                 HAVING COUNT(*) > 1
             `);
