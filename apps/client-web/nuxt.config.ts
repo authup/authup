@@ -25,11 +25,27 @@ export default defineNuxtConfig({
     },
 
     css: [
-        '@authup/client-web-kit/../dist/style.css',
+        // vuecs CSS pipeline (Bootstrap variant) — required cascade order
+        // per @vuecs/theme-bootstrap doctrine:
+        //   1. Bootstrap → default --bs-* CSS variables.
+        //   2. @vuecs/design/standalone → --vc-color-* tokens against a
+        //      Tailwind-free OKLCH palette catalog.
+        //   3. @vuecs/theme-bootstrap → bridges --bs-* ↔ --vc-color-*.
+        //   4. Per-component CSS (forms, table, button, elements, …)
+        //      consumes the --vc-color-* tokens above.
+        // Without (2)/(3)/(4), form controls / tables / buttons render
+        // unstyled (no borders, no spacing, default browser look).
+        'bootstrap/dist/css/bootstrap.css',
+        '@vuecs/design/standalone.css',
+        '@vuecs/theme-bootstrap/index.css',
+        '@vuecs/button/dist/style.css',
+        '@vuecs/elements/dist/style.css',
+        '@vuecs/forms/dist/style.css',
         '@vuecs/navigation/dist/style.css',
         '@vuecs/pagination/dist/style.css',
+        '@vuecs/table/dist/style.css',
+        '@authup/client-web-kit/../dist/style.css',
         '@fortawesome/fontawesome-free/css/all.css',
-        'bootstrap/dist/css/bootstrap.css',
         '@/assets/css/vue-layout-navigation.css',
         '@/assets/css/vue-toastification.css',
         '@/assets/css/root.css',

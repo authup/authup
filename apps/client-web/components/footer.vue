@@ -7,10 +7,10 @@
 <script lang="ts">
 
 import { defineComponent } from 'vue';
-import { VCToaster } from '@vuecs/overlays';
+import { VCToastProvider, VCToaster } from '@vuecs/overlays';
 
 export default defineComponent({
-    components: { VCToaster },
+    components: { VCToaster, VCToastProvider },
     computed: {
         year() {
             return new Date().getFullYear();
@@ -27,8 +27,14 @@ export default defineComponent({
         </div>
         <!-- Old composables/toast.ts wrapper defaulted bvnext's per-toast
              position to 'top-center'; preserve that across the migration
-             by setting it once on the viewport. -->
-        <VCToaster position="top-center" />
+             by setting it once on the viewport.
+             <VCToastProvider> is required: <VCToaster> renders Reka's
+             <ToastViewport>, which injects ToastProviderContext set up by
+             <ToastProvider>. Without this wrapper, mounting throws
+             "Injection Symbol(ToastProviderContext) not found." -->
+        <VCToastProvider>
+            <VCToaster position="top-center" />
+        </VCToastProvider>
     </div>
 </template>
 <style>

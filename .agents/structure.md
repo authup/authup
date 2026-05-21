@@ -99,9 +99,38 @@ per-package plugin (`installForms`, `installPagination`, ...). If a
 per-package plugin runs first, the manager freezes with no themes and
 every theme override is silently dropped.
 
+This trap extends **across Nuxt plugins**, not just within one. Every
+per-package `install()` we audited (`@vuecs/{button, countdown, elements,
+forms, list, navigation, overlays, pagination, table, timeago}`) calls
+`installThemeManager(app, {})` itself. So any Nuxt plugin that calls
+one of these directly (e.g. `apps/client-web/plugins/vuecs-navigation.ts`
+invokes `@vuecs/navigation`'s `install()` to set up the navigation
+manager) MUST `dependsOn: ['vuecs']` — otherwise it may run before the
+`vuecs` plugin and freeze the manager with no themes. The visible
+symptom: every `<VCFormInput>` / `<VCButton>` / `<VCTable>` renders with
+only its `vc-*` default class and no Bootstrap class (e.g.
+`form-control` is missing), so form fields look unstyled.
+
+The `vuecs` plugin in `apps/client-web/plugins/vuecs.ts` declares
+`name: 'vuecs'` precisely so other plugins can depend on it. Don't
+remove that name.
+
 `packages/client-web-kit/src/module.ts` deliberately does NOT install
 `@vuecs/forms` or `@vuecs/pagination` — both are installed by the
 consumer app's plugin file (`apps/client-web/plugins/vuecs.ts` and
-`apps/server-core/ui/src/app.ts`), AFTER `app.use(vuecs, ...)`. The
-client-web Nuxt plugin uses `enforce: 'pre'` so it runs before the
-`authup` plugin (which mounts the kit).
+`apps/server-core/ui/src/app.ts`), AFTER `app.use(vuecs, ...)`.
+
+The client-web Nuxt plugin declares `dependsOn: ['authup:kit']` so it
+runs AFTER `@authup/client-web-nuxt`'s kit plugin. The kit plugin's
+`install()` calls `installTranslator()` which provides the ilingo
+locale via `app.provide(LocaleSymbol, ...)`; the vuecs plugin's
+`injectTranslatorLocale()` (used to sync the timeago locale) reads
+that symbol back. Using `enforce: 'pre'` here would invert the order
+and make `injectLocale()` throw — that throw aborts the plugin chain
+before `@pinia/nuxt`'s setup runs, and the pinia plugin's
+already-registered `app:rendered` hook then reads `nuxtApp.$pinia` as
+undefined and fails SSR with a misleading "Cannot read properties of
+undefined (reading 'state')". The kit's `install()` only registers
+`app.component(...)`s (it does not render them), so installing the
+vuecs theme manager afterwards is still in time for the first page
+render.

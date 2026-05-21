@@ -18,10 +18,25 @@ import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installPagination from '@vuecs/pagination';
 
-import '@fortawesome/fontawesome-free/css/all.css';
+// vuecs CSS pipeline (Bootstrap variant) — required cascade order per
+// @vuecs/theme-bootstrap doctrine:
+//   1. Bootstrap → default --bs-* variables.
+//   2. @vuecs/design/standalone → --vc-color-* tokens (Tailwind-free OKLCH).
+//   3. @vuecs/theme-bootstrap → bridges --bs-* ↔ --vc-color-*.
+//   4. Per-component CSS (forms, table, button, elements, …) consumes
+//      the --vc-color-* tokens above.
+// Mirrors the client-web nuxt.config.ts pipeline so the consent UI's
+// vuecs SFCs render with the same Bootstrap-themed look.
 import 'bootstrap/dist/css/bootstrap.css';
+import '@vuecs/design/standalone.css';
+import '@vuecs/theme-bootstrap/index.css';
+import '@vuecs/button/dist/style.css';
+import '@vuecs/elements/dist/style.css';
+import '@vuecs/forms/dist/style.css';
 import '@vuecs/pagination/dist/style.css';
+import '@vuecs/table/dist/style.css';
 import '@authup/client-web-kit/../dist/style.css';
+import '@fortawesome/fontawesome-free/css/all.css';
 import '../../../client-web/assets/css/bootstrap-override.css';
 import '../../../client-web/assets/css/root.css';
 import '../../../client-web/assets/css/form.css';

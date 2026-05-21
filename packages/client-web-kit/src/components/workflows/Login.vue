@@ -15,6 +15,8 @@ import { IVuelidate } from '@ilingo/vuelidate';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { BuildInput } from 'rapiq';
+import { VCButton } from '@vuecs/button';
+import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import { injectHTTPClient, injectStore } from '../../core';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../entities';
 import { APagination, ATitle } from '../utility';
@@ -29,6 +31,9 @@ export default defineComponent({
         IVuelidate,
         AIdentityProviders,
         AIdentityProviderIcon,
+        VCButton,
+        VCFormGroup,
+        VCFormInput,
 
     },
     props: { codeRequest: { type: Object as PropType<OAuth2AuthorizationCodeRequest> } },
@@ -135,6 +140,19 @@ export default defineComponent({
             return authorizeURL;
         };
 
+        // useSubmitButton from @vuecs/forms returns a computed binding
+        // for VCButton ({ type: 'submit', label, iconLeft, color,
+        // loading, disabled }). Defaults flow through the vuecs
+        // defaults manager so consumers can override label/icon globally;
+        // we override `label` per call below ("Login" instead of the
+        // default "Create"/"Update"). The submission itself is fired by
+        // <form @submit.prevent="submit"> — VCButton just needs to be
+        // type="submit", which the composable already sets.
+        const submitButton = useSubmitButton({
+            loading: busy,
+            disabled: computed(() => busy.value || vuelidate.value.$invalid),
+        });
+
         return {
 
             updateRealmId,
@@ -143,6 +161,7 @@ export default defineComponent({
             form,
             submit,
             busy,
+            submitButton,
 
             identityProviderQuery,
             identityProviderRef,
@@ -197,13 +216,21 @@ export default defineComponent({
                 </template>
             </IVuelidate>
 
-            <VCFormSubmit
-                v-model="busy"
-                :invalid="vuelidate.$invalid"
-                :create-text="'Submit'"
-                :create-button-class="{value: 'btn btn-sm btn-dark btn-block', presets: { bootstrap: false }}"
-                :create-icon-class="'fa-solid fa-right-to-bracket'"
-                :submit="submit"
+            <!--
+                <VCFormSubmit> from form-controls 2.x was dropped in
+                @vuecs/forms 4.x. The 4.x replacement is the
+                useSubmitButton() composable (see setup() above) which
+                returns a v-bind-ready computed binding ({ type, label,
+                iconLeft, color, loading, disabled }) for VCButton. The
+                parent <form @submit.prevent="submit"> catches the
+                submission — no @click handler needed here. We override
+                `label` to "Login" because the composable's default
+                (sourced from the vuecs defaults manager) is "Create".
+            -->
+            <VCButton
+                v-bind="submitButton"
+                label="Login"
+                class="w-100"
             />
 
             <hr>

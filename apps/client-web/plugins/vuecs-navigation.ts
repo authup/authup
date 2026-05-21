@@ -12,7 +12,12 @@ import { defineNuxtPlugin } from '#imports';
 import { Navigation } from '../config/layout';
 
 export default defineNuxtPlugin({
-    dependsOn: ['authup'],
+    // MUST run after the `vuecs` plugin so the theme manager is created
+    // with the bootstrap theme already attached. @vuecs/navigation's
+    // `install()` calls `installThemeManager(app, {})` itself — if it
+    // runs first, the manager is frozen with no themes and every form /
+    // table / button theme override is silently dropped at render time.
+    dependsOn: ['authup', 'vuecs'],
     setup(ctx) {
         const store = injectStore(ctx.$pinia as Pinia);
         const navigation = new Navigation(store);

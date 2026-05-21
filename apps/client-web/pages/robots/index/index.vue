@@ -13,7 +13,7 @@ import {
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import type { Component } from 'vue';
+import type { TableColumn } from '@vuecs/table';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -39,7 +39,7 @@ export default defineComponent({
         const hasEditPermission = usePermissionCheck({ name: PermissionName.ROBOT_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.ROBOT_DELETE });
 
-        const fields = [
+        const fields: TableColumn<Robot>[] = [
             {
                 key: 'name',
                 label: 'Name',
@@ -55,13 +55,13 @@ export default defineComponent({
             {
                 key: 'updated_at',
                 label: 'Updated At',
-                headerClass: 'text-left',
-                cellClass: 'text-left',
+                headerClass: 'text-center',
+                cellClass: 'text-center',
             },
             {
                 key: 'options',
                 label: '',
-                cellClass: 'text-left', 
+                cellClass: 'text-center',
             },
         ];
 

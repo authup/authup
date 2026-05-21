@@ -10,45 +10,83 @@
  *
  * 1. Accepts the legacy `<BTable>` prop shape (`:items` + `:fields`)
  *    so page-level migration from bootstrap-vue-next stays mechanical.
- * 2. Declares per-column slots with a permissive index-signature
- *    (`[key: string]: ...`), which `<VCTable>`'s strict `SlotsType`
- *    doesn't model (Vue typed-slot generics can't express dynamic
- *    `cell-<key>` names today).
  *
- * Runtime is a straight pass-through — `#cell-<columnKey>` slots flow
- * verbatim to `<VCTable>`, which resolves them via Vue's standard slot
- * dispatch. No behavioural divergence from using `<VCTable>` directly.
+ * 2. Bridges the legacy `#cell-<columnKey>` slot pattern (`<BTable>`,
+ *    `<b-table>`, `@vuecs/list-controls` 2.x `buildTable`) onto
+ *    `<VCTable>`'s manual body API.
  *
- * TODO: drop this wrapper when vuecs adds dynamic-slot typing for
- * `cell-<key>` / `header-<key>` to `<VCTable>`'s `SlotsType`. The
- * compromise here is purely a TS limitation; runtime behaviour is the
- * same as calling `<VCTable>` directly with `#cell-<key>` slots.
+ *    Why this is non-trivial: when `<VCTable>` auto-renders cells
+ *    from `:columns`, it calls `<VCTableCell>` WITHOUT forwarding the
+ *    parent's slots, so a `#cell-options` slot defined on the parent
+ *    is silently dropped (the cell falls back to `String(row[key])`).
+ *    The replacement pattern in vuecs 1.x is per-column `formatter`
+ *    functions — but authup has ~10 page-level call sites written
+ *    against `<template #cell-<key>>` and rewriting them to formatters
+ *    would mean either inline `h(...)` in the columns config (verbose,
+ *    no template ergonomics) or per-page render-function refactors.
+ *
+ *    To keep the call sites idiomatic, this wrapper renders
+ *    `<VCTableHeader>` / `<VCTableBody>` explicitly and dispatches
+ *    `slots[\`cell-${field.key}\`]` per cell. Slot props match the
+ *    bvnext shape: `{ row, item, value, index }` — `item` is an alias
+ *    for `row` since both naming conventions exist in the codebase.
+ *
+ *    Header labels also use the legacy `#head-<columnKey>` slot
+ *    pattern (rare in authup but cheap to support).
+ *
+ * 3. The wrapper also drops `<VCTable>`'s default header styling
+ *    contribution from this path — `tableHeadCell` theme classes still
+ *    apply, so the theme-bootstrap `text-uppercase` etc. is honored
+ *    or overridden via the consumer app's `vuecs` plugin overrides
+ *    (see `apps/client-web/plugins/vuecs.ts`).
  */
-import type { PropType, SlotsType } from 'vue';
+import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
-import { VCTable } from '@vuecs/table';
+import {
+    VCTable,
+    VCTableBody,
+    VCTableCell,
+    VCTableHeadCell,
+    VCTableHeader,
+    VCTableRow,
+} from '@vuecs/table';
 import type { TableColumn } from '@vuecs/table';
 
-type AnyFn = (props: any) => any;
-
+// Permissive `any` shapes here are intentional — the wrapper exists
+// precisely to accept the legacy `<BTable>` row/field shapes (mixed
+// per-entity record types). `TableColumn` is invariant in its `Row`
+// type parameter (the `accessor: (row: Row) => unknown` arm makes it
+// contravariant in TS strict mode), so `TableColumn<User>` does NOT
+// assign to `TableColumn<Record<string, any>>`. We accept
+// `TableColumn<any>[]` to keep page-level typings ergonomic while
+// preserving header/cell-class autocomplete at the call site. See the
+// file-level JSDoc above for the broader rationale.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export default defineComponent({
     name: 'ATable',
+    components: {
+        VCTable,
+        VCTableHeader,
+        VCTableBody,
+        VCTableRow,
+        VCTableHeadCell,
+        VCTableCell,
+    },
     inheritAttrs: false,
     props: {
         items: { type: Array as PropType<Record<string, any>[]>, default: () => [] },
-        fields: { type: Array as PropType<TableColumn<Record<string, any>>[]>, default: () => [] },
+        fields: { type: Array as PropType<TableColumn<any>[]>, default: () => [] },
         busy: { type: Boolean, default: false },
         bordered: { type: Boolean, default: false },
         striped: { type: Boolean, default: false },
         hover: { type: Boolean, default: true },
     },
-    slots: Object as SlotsType<{ [key: string]: AnyFn }>,
 });
+/* eslint-enable @typescript-eslint/no-explicit-any */
 </script>
 
 <template>
     <VCTable
-        :columns="(fields as never)"
         :data="(items as never)"
         :busy="busy"
         :bordered="bordered"
@@ -56,14 +94,47 @@ export default defineComponent({
         :hover="hover"
         v-bind="$attrs"
     >
-        <template
-            v-for="(_, slotName) in $slots"
-            #[slotName]="slotProps"
-        >
-            <slot
-                :name="slotName"
-                v-bind="slotProps || {}"
-            />
-        </template>
+        <VCTableHeader>
+            <VCTableRow>
+                <VCTableHeadCell
+                    v-for="field in fields"
+                    :key="field.key"
+                    :column-key="field.key"
+                    :class="[field.class, field.headerClass]"
+                >
+                    <slot
+                        :name="`head-${field.key}`"
+                        :field="field"
+                    >
+                        {{ field.label ?? field.key }}
+                    </slot>
+                </VCTableHeadCell>
+            </VCTableRow>
+        </VCTableHeader>
+        <VCTableBody>
+            <template #row="{ row, index }: { row: Record<string, any>, index: number }">
+                <VCTableRow
+                    :row="row"
+                    :index="index"
+                >
+                    <VCTableCell
+                        v-for="field in fields"
+                        :key="field.key"
+                        :column-key="field.key"
+                        :class="[field.class, field.cellClass]"
+                    >
+                        <slot
+                            :name="`cell-${field.key}`"
+                            :row="row"
+                            :item="row"
+                            :value="row[field.key]"
+                            :index="index"
+                        >
+                            {{ row[field.key] }}
+                        </slot>
+                    </VCTableCell>
+                </VCTableRow>
+            </template>
+        </VCTableBody>
     </VCTable>
 </template>

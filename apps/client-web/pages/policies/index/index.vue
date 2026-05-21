@@ -16,7 +16,7 @@ import type { Policy } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import type { Component } from 'vue';
+import type { TableColumn } from '@vuecs/table';
 
 export default defineComponent({
     components: {
@@ -42,7 +42,7 @@ export default defineComponent({
         const hasEditPermission = usePermissionCheck({ name: PermissionName.PERMISSION_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.PERMISSION_DELETE });
 
-        const fields = [
+        const fields: TableColumn<Policy>[] = [
             {
                 key: 'name',
                 label: 'Name',
@@ -64,13 +64,13 @@ export default defineComponent({
             {
                 key: 'updated_at',
                 label: 'Updated at',
-                headerClass: 'text-left',
-                cellClass: 'text-left',
+                headerClass: 'text-center',
+                cellClass: 'text-center',
             },
             {
                 key: 'options',
                 label: '',
-                cellClass: 'text-left',
+                cellClass: 'text-center',
             },
         ];
 

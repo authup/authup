@@ -10,6 +10,19 @@
     line-height: 1rem;
 }
 
+/*
+ * Bump the sidebar's nav-link vertical padding above Bootstrap's
+ * default (0.5rem). Bootstrap's `.nav` rule defines
+ * `--bs-nav-link-padding-y: 0.5rem`; `.nav-link` reads it directly,
+ * so overriding the CSS variable on the sidebar's `.nav` scope
+ * flows through every nav link inside without us touching the
+ * link rule itself. The header navbar has its own `.navbar-nav`
+ * scope and is unaffected.
+ */
+.page-sidebar .nav {
+    --bs-nav-link-padding-y: 1rem;
+}
+
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:hover > .vc-nav-link,
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:active > .vc-nav-link,
 .vc-nav-items .vc-nav-item.vc-nav-item-nested.active > .vc-nav-link {

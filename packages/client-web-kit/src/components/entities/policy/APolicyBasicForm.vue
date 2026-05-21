@@ -11,7 +11,7 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormOption } from '@vuecs/forms';
-import { VCFormGroup, VCFormInput, VCFormCheckbox } from '@vuecs/forms';
+import { VCFormCheckbox, VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
 import { assignFormProperties, injectStore, storeToRefs } from '../../../core';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';

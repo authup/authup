@@ -14,7 +14,7 @@ import {
     usePermissionCheck,
 } from '@authup/client-web-kit';
 import type { BuildInput } from 'rapiq';
-import type { Component } from 'vue';
+import type { TableColumn } from '@vuecs/table';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
@@ -40,7 +40,7 @@ export default defineComponent({
         const hasEditPermission = usePermissionCheck({ name: PermissionName.CLIENT_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.CLIENT_DELETE });
 
-        const fields = [
+        const fields: TableColumn<Client>[] = [
             {
                 key: 'name',
                 label: 'Name',
@@ -80,7 +80,7 @@ export default defineComponent({
             {
                 key: 'options',
                 label: '',
-                cellClass: 'text-left', 
+                cellClass: 'text-center',
             },
         ];
 

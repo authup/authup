@@ -51,8 +51,19 @@ export default defineNuxtComponent({
                 </div>
             </div>
 
+            <!--
+                Use Bootstrap's `.nav .flex-column` instead of
+                `.navbar-nav`: navbar-nav zeroes
+                `--bs-nav-link-padding-x` (correct for the header bar,
+                wrong for a sidebar). Bare `.nav` provides the CSS-var
+                scope `.nav-link` reads its padding from
+                (`--bs-nav-link-padding-x: 1rem; --bs-nav-link-padding-y:
+                0.5rem;`); `.flex-column` keeps the layout vertical
+                (`.nav` alone is `display: flex; flex-wrap: wrap;`, which
+                would lay items out horizontally).
+            -->
             <VCNavItems
-                class="sidebar-menu navbar-nav"
+                class="sidebar-menu nav flex-column"
                 :level="1"
             />
 
@@ -71,10 +82,10 @@ export default defineNuxtComponent({
                     </small>
                 </div>
 
-                <ul class="sidebar-menu vc-nav-items navbar-nav">
+                <ul class="sidebar-menu vc-nav-items nav flex-column">
                     <li class="vc-nav-item">
                         <a
-                            class="vc-nav-link"
+                            class="vc-nav-link nav-link"
                             :href="docsUrl"
                             target="_blank"
                         >

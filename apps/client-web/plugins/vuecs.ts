@@ -27,13 +27,26 @@ import installIcon from '@vuecs/icon';
 import { defineNuxtPlugin } from '#imports';
 
 export default defineNuxtPlugin({
-    // Must run BEFORE `@authup/client-web-kit`'s `install()` mounts
-    // any A* components that reference `useComponentTheme(...)`. The
-    // kit deliberately does NOT install vuecs internals (per a comment
-    // in its `module.ts`) precisely so this plugin owns the theme +
-    // icon configuration. The `authup` plugin then runs after — by
-    // the time its setup fires, the theme manager is fully populated.
-    enforce: 'pre',
+    // Name this plugin so other plugins can express ordering against it.
+    // `vuecs-navigation` MUST depend on this — `@vuecs/navigation`'s
+    // `install()` calls `installThemeManager(app, {})` with no themes,
+    // and `installThemeManager` is first-install-wins. If vuecs-navigation
+    // runs before this plugin, the bootstrap theme below is silently
+    // dropped at theme-manager creation time, and every component renders
+    // with only its `vc-*` defaults (form-control etc. are missing,
+    // form fields look unstyled).
+    name: 'vuecs',
+    // Runs AFTER `authup:kit` because `injectTranslatorLocale()` below
+    // requires the ilingo locale provider that `installTranslator()`
+    // sets up inside the kit's `install()`. Using `enforce: 'pre'` here
+    // would invert the order and throw "An ilingo locale is not present
+    // in the vue context.", aborting the plugin chain before pinia's
+    // setup runs and producing a misleading "$pinia undefined" SSR
+    // error from `@pinia/nuxt`'s `app:rendered` hook. The kit's
+    // `install()` only registers `app.component(...)`s — it does not
+    // render them — so installing the vuecs theme manager afterwards
+    // is still in time for the first page render.
+    dependsOn: ['authup'],
     setup(ctx) {
         ctx.vueApp.use(vuecs, {
             themes: [bootstrap()],
@@ -43,6 +56,15 @@ export default defineNuxtPlugin({
                     list: { classes: { root: extend('list') } },
                     listBody: { classes: { root: extend('list-body') } },
                     listItem: { classes: { root: extend('list-item') } },
+                    // @vuecs/theme-bootstrap defaults tableHeader to
+                    // `text-uppercase small text-body-secondary`. authup
+                    // tables (users, robots, roles, …) display proper-cased
+                    // labels (`Name`, `Created At`); the uppercase upper-
+                    // cases them visually into UI noise. Replace the root
+                    // class entirely (no `extend()`) so the uppercase
+                    // utility is dropped; the rest of the small / muted
+                    // styling is preserved verbatim.
+                    tableHeader: { classes: { root: 'small text-body-secondary' } },
                 },
             },
         });

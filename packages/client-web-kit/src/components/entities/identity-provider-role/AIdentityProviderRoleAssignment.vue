@@ -12,7 +12,7 @@ import { maxLength, minLength } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
-import { VCFormGroup, VCFormInput, VCFormCheckbox } from '@vuecs/forms';
+import { VCFormCheckbox, VCFormGroup, VCFormInput } from '@vuecs/forms';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,

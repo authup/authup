@@ -10,7 +10,7 @@ import { maxValue, minValue } from '@vuelidate/validators';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormOption } from '@vuecs/forms';
-import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCFormGroup, VCFormInput, VCFormSelect } from '@vuecs/forms';
 import {
     TimePolicyInterval,
     isIntervalForDayOfMonth,
@@ -25,6 +25,7 @@ export default defineComponent({
     components: {
         VCFormInput,
         VCFormGroup,
+        VCFormSelect,
         IVuelidate,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },

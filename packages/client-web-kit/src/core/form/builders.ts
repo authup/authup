@@ -143,14 +143,21 @@ export type FormCheckboxBuildOptionsInput = {
 };
 
 export function buildFormCheckbox(input: FormCheckboxBuildOptionsInput): VNodeChild {
-    return h(VCFormCheckbox, {
+    const base = {
         modelValue: !!unref(input.value),
         'onUpdate:modelValue': (next: boolean) => input.onChange?.(next),
+        label: input.label,
+        group: input.group,
         labelContent: typeof input.labelContent === 'string' ? input.labelContent : undefined,
         class: input.class ?? input.groupClass,
-    }, typeof input.labelContent !== 'string' && input.labelContent !== undefined ?
-        { label: () => input.labelContent } :
-        undefined);
+    };
+    return h(
+        VCFormCheckbox,
+        input.props ? mergeProps(base as never, input.props as never) : base,
+        typeof input.labelContent !== 'string' && input.labelContent !== undefined ?
+            { label: () => input.labelContent } :
+            undefined,
+    );
 }
 
 export type FormSelectOptionLegacy = {
@@ -195,7 +202,8 @@ export function buildFormSelect(input: FormSelectBuildOptionsInput): VNodeChild 
         // (a string) drives the visible `label`. Fall through to the other
         // when only one is set.
         const defaultId = input.optionDefaultId ?? input.optionDefaultValue ?? '';
-        const defaultText = input.optionDefaultValue ?? '';
+        const defaultText = input.optionDefaultValue ??
+            (input.optionDefaultId !== undefined ? String(input.optionDefaultId) : '');
         options.unshift({
             value: defaultId as never,
             label: defaultText,
