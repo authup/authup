@@ -7,10 +7,10 @@
 <script lang="ts">
 
 import { defineComponent } from 'vue';
-import { VCToastProvider, VCToaster } from '@vuecs/overlays';
+import { VCToaster } from '@vuecs/overlays';
 
 export default defineComponent({
-    components: { VCToaster, VCToastProvider },
+    components: { VCToaster },
     computed: {
         year() {
             return new Date().getFullYear();
@@ -25,16 +25,18 @@ export default defineComponent({
                 &copy; Authup {{ year }}
             </div>
         </div>
-        <!-- Old composables/toast.ts wrapper defaulted bvnext's per-toast
-             position to 'top-center'; preserve that across the migration
-             by setting it once on the viewport.
-             <VCToastProvider> is required: <VCToaster> renders Reka's
-             <ToastViewport>, which injects ToastProviderContext set up by
-             <ToastProvider>. Without this wrapper, mounting throws
-             "Injection Symbol(ToastProviderContext) not found." -->
-        <VCToastProvider>
-            <VCToaster position="top-center" />
-        </VCToastProvider>
+        <!--
+            Old composables/toast.ts wrapper defaulted bvnext's per-toast
+            position to 'top-center'; preserve that across the migration
+            by setting it once on the viewport.
+            <VCToaster> renders Reka's <ToastViewport>, which requires a
+            <VCToastProvider> ancestor for the ToastProviderContext
+            injection — provided once at the layout root in
+            apps/client-web/layouts/default.vue, so every layout that
+            renders the toaster has the context regardless of whether
+            this footer is mounted.
+        -->
+        <VCToaster position="top-center" />
     </div>
 </template>
 <style>

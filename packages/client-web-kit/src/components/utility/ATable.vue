@@ -31,8 +31,9 @@
  *    bvnext shape: `{ row, item, value, index }` — `item` is an alias
  *    for `row` since both naming conventions exist in the codebase.
  *
- *    Header labels also use the legacy `#head-<columnKey>` slot
- *    pattern (rare in authup but cheap to support).
+ *    Header labels also use the `#header-<columnKey>` slot pattern
+ *    (no current authup consumer, but matches the slot name
+ *    `<VCTable>`'s `TableColumn` JSDoc documents).
  *
  * 3. The wrapper also drops `<VCTable>`'s default header styling
  *    contribution from this path — `tableHeadCell` theme classes still
@@ -103,7 +104,7 @@ export default defineComponent({
                     :class="[field.class, field.headerClass]"
                 >
                     <slot
-                        :name="`head-${field.key}`"
+                        :name="`header-${field.key}`"
                         :field="field"
                     >
                         {{ field.label ?? field.key }}
