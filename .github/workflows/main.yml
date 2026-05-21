@@ -154,6 +154,31 @@ jobs:
             DB_PASSWORD: start123
             DB_DATABASE: app
 
+        services:
+            mysql:
+                image: mysql:9
+                env:
+                    MYSQL_ROOT_PASSWORD: start123
+                ports:
+                    - 3306:3306
+                options: >-
+                    --health-cmd="mysqladmin ping -h localhost -pstart123"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+
+            postgres:
+                image: postgres:18
+                env:
+                    POSTGRES_PASSWORD: start123
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd="pg_isready -U postgres"
+                    --health-interval=10s
+                    --health-timeout=5s
+                    --health-retries=5
+
         steps:
             -   name: Checkout
                 uses: actions/checkout@v6
@@ -179,17 +204,6 @@ jobs:
                     fi
                     echo "Found $count migration(s)"
                     echo "MIGRATION_COUNT=$count" >> "$GITHUB_ENV"
-
-            -   name: Start ${{ matrix.db }}
-                run: docker compose up -d ${{ matrix.db }}
-
-            -   name: Wait for ${{ matrix.db }} to be ready
-                run: |
-                    if [ "${{ matrix.db }}" = "mysql" ]; then
-                        timeout 120 bash -c 'until docker compose exec -T -e MYSQL_PWD="$DB_PASSWORD" mysql mysqladmin ping -h127.0.0.1 -uroot --silent; do sleep 2; done'
-                    else
-                        timeout 60 bash -c 'until docker compose exec -T postgres pg_isready -U postgres; do sleep 2; done'
-                    fi
 
             -   name: Run migrations forward
                 working-directory: apps/server-core
