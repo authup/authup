@@ -75,3 +75,33 @@ Apps:
 - **Domain logic** → core-kit
 - **API clients** → core-http-kit
 - **UI components** → client-web-kit
+
+## UI Stack (`apps/client-web`, `apps/server-core/ui`, `packages/client-web-kit`)
+
+| Layer | Package(s) | Notes |
+|---|---|---|
+| **Theming** | `@vuecs/core` (3.x) + `@vuecs/theme-bootstrap` (4.x) | Theme manager + Bootstrap 5 class strings. authup also imports `bootstrap/dist/css/bootstrap.css` directly for chrome the theme bridge doesn't reach (per the vuecs theme-bridge doctrine). |
+| **Icons** | `@vuecs/icon` + `@vuecs/icons-font-awesome` | Iconify-backed `<VCIcon>` + the FA Solid name preset. Old `fa-solid fa-X` CSS class strings on plain `<i>` are still in use for legacy templates — both paths coexist. |
+| **Form controls** | `@vuecs/forms` (4.x) | `<VCFormGroup>` / `<VCFormInput>` / `<VCFormTextarea>` / `<VCFormCheckbox>` / `<VCFormSelect>`. Authup uses these via the `buildForm*` shim in `packages/client-web-kit/src/core/form/builders.ts` — render-function builders that wrap the SFCs and preserve the legacy `{ value, onChange, props, class }` shape. |
+| **List rendering** | `@vuecs/list` (1.x) | Compound `<VCList>` / `<VCListBody>` / `<VCListItem>` / `<VCListLoading>` / `<VCListEmpty>`. `defineEntityCollectionManager`'s renderer in `client-web-kit/src/components/utility/entity/collection/module.ts` composes these directly. |
+| **Tables** | `@vuecs/table` (1.x) via `<ATable>` wrapper | The `<ATable>` SFC in `client-web-kit/src/components/utility/ATable.vue` bridges the legacy `<BTable>` shape (`:items` + `:fields`) and exposes a permissive `[key: string]: ...` slot type so `#cell-<columnKey>` templates type-check (vuecs's `SlotsType` doesn't model dynamic slot names today). Drop the wrapper when vuecs adds that typing. |
+| **Pagination** | `@vuecs/pagination` (2.x) via `buildPagination` wrapper | `client-web-kit/src/components/utility/pagination/module.ts` converts the legacy `{ load, meta, busy }` shape to `<VCPagination>`'s `update:page` event. |
+| **Overlays** | `@vuecs/overlays` (1.x) | `<VCToaster>` mounted in `apps/client-web/components/footer.vue`; `useToast()` shimmed in `apps/client-web/composables/toast.ts` to preserve the bvnext-style `toast.show(string \| { variant, body })` call surface. `<VCDropdownMenuItem>` resolved opportunistically in `<AEntityDelete>` (replaces the bvnext `BDropdownItem` fallback). |
+| **Other** | `@vuecs/{button, elements, countdown, timeago, navigation}` | Each used via its globally-registered `<VC*>` components after `app.use(installX)`. |
+
+### Plugin install order — important
+
+`@vuecs/core`'s `installThemeManager` is **first-install-wins** (early
+return when an inject already exists, by design — so multiple package
+installs share one manager). Consequence: the consumer app MUST call
+`app.use(vuecs, { themes: [...], icons: [...] })` BEFORE any
+per-package plugin (`installForms`, `installPagination`, ...). If a
+per-package plugin runs first, the manager freezes with no themes and
+every theme override is silently dropped.
+
+`packages/client-web-kit/src/module.ts` deliberately does NOT install
+`@vuecs/forms` or `@vuecs/pagination` — both are installed by the
+consumer app's plugin file (`apps/client-web/plugins/vuecs.ts` and
+`apps/server-core/ui/src/app.ts`), AFTER `app.use(vuecs, ...)`. The
+client-web Nuxt plugin uses `enforce: 'pre'` so it runs before the
+`authup` plugin (which mounts the kit).

@@ -19,28 +19,26 @@ import {
     watch,
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
-import type { FormSelectOption } from '@vuecs/form-controls';
+import type { FormOption } from '@vuecs/forms';
 import { 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationGroup, 
+    VuelidateCustomRule, 
+    VuelidateCustomRuleKey, 
+    assignFormProperties, 
     buildFormGroup, 
     buildFormInput, 
     buildFormSelect, 
+    buildFormSubmitWithTranslations, 
     buildFormTextarea, 
-} from '@vuecs/form-controls';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
-    assignFormProperties,
-    buildFormSubmitWithTranslations,
-    createFormSubmitTranslations,
-    getVuelidateSeverity,
-    injectStore,
-    storeToRefs,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+    createFormSubmitTranslations, 
+    getVuelidateSeverity, 
+    injectStore, 
+    storeToRefs, 
+    useTranslationsForGroup, 
+    useTranslationsForNestedValidation, 
 } from '../../../core';
+import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -74,9 +72,9 @@ export const APermissionForm = defineComponent({
             realm_id: '',
         });
 
-        const decisionStrategyOptions : FormSelectOption[] = Object.values(DecisionStrategy)
+        const decisionStrategyOptions : FormOption[] = Object.values(DecisionStrategy)
             .map((value) => ({
-                id: value,
+                label: value,
                 value,
             }));
 

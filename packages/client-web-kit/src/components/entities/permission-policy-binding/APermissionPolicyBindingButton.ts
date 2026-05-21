@@ -17,9 +17,8 @@ import {
     toRef,
     watch,
 } from 'vue';
-import { SlotName } from '@vuecs/list-controls';
+import { SlotName, injectHTTPClient  } from '../../../core';
 import { hasOwnProperty } from '@authup/kit';
-import { injectHTTPClient } from '../../../core';
 import { APolicies } from '../policy/APolicies';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
 import APolicySummary from '../policy/APolicySummary.vue';

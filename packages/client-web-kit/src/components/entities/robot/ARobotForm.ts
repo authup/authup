@@ -22,24 +22,22 @@ import {
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Realm, Robot } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import {
-    buildFormGroup,
-    buildFormInput,
-} from '@vuecs/form-controls';
-import { SlotName } from '@vuecs/list-controls';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
-    assignFormProperties,
-    buildFormSubmitWithTranslations,
-    createFormSubmitTranslations,
-    getVuelidateSeverity,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+import { 
+    SlotName, 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationGroup, 
+    VuelidateCustomRule, 
+    VuelidateCustomRuleKey, 
+    assignFormProperties, 
+    buildFormGroup, 
+    buildFormInput, 
+    buildFormSubmitWithTranslations, 
+    createFormSubmitTranslations, 
+    getVuelidateSeverity, 
+    useTranslationsForGroup, 
+    useTranslationsForNestedValidation, 
 } from '../../../core';
+import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,

@@ -8,7 +8,7 @@
 <script lang="ts">
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
 import type { OpenIDProviderMetadata } from '@authup/specs';
-import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
+import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import useVuelidate from '@vuelidate/core';
 import { required, url } from '@vuelidate/validators';
 import type { PropType } from 'vue';

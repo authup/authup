@@ -8,16 +8,24 @@
 import { hasOwnProperty } from '@authup/kit';
 import type { EntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
-import type { ListFooterBuildOptionsInput, ListHeaderBuildOptionsInput } from '@vuecs/list-controls';
-import { buildList } from '@vuecs/list-controls';
+import {
+    VCList,
+    VCListBody,
+    VCListEmpty,
+    VCListItem,
+    VCListLoading,
+} from '@vuecs/list';
 import type { BuildInput, FiltersBuildInput } from 'rapiq';
 import type { Ref, VNodeChild } from 'vue';
 import {
+    Fragment,
     computed,
+    h,
     isRef,
     ref,
     unref,
 } from 'vue';
+import { EntityCollectionSlotName } from './constants';
 import { createMerger, isObject } from 'smob';
 import { boolableToObject } from '../../../../utils';
 import { injectHTTPClient } from '../../../../core/http-client';
@@ -28,7 +36,13 @@ import type {
     EntityCollectionManager,
     EntityCollectionManagerCreateContext,
     EntityCollectionRenderOptions,
+    ListFooterOptions,
+    ListHeaderOptions,
+    ListItemSlotProps,
+    ListLoadingOptions,
     ListMeta,
+    ListNoMoreOptions,
+    ListSlotProps,
 } from './types';
 import {
     ListHandlers,
@@ -196,53 +210,129 @@ function create<
         } else {
             renderOptions = context.props;
         }
-        const header : ListHeaderBuildOptionsInput<RECORD> = boolableToObject(renderOptions.header || {});
-        const footer : ListFooterBuildOptionsInput<RECORD> = boolableToObject(renderOptions.footer || {});
+        const headerOpt: ListHeaderOptions<RECORD> | undefined = boolableToObject(renderOptions.header || {});
+        const footerOpt: ListFooterOptions<RECORD> | undefined = boolableToObject(renderOptions.footer || {});
+        const noMoreOpt: ListNoMoreOptions<RECORD> | undefined = boolableToObject(renderOptions.noMore || {});
+        const loadingOpt: ListLoadingOptions<RECORD> | undefined = boolableToObject(renderOptions.loading || {});
 
-        if (renderOptions.item) {
-            if (
-                typeof renderOptions.body === 'undefined' ||
-                typeof renderOptions.body === 'boolean'
-            ) {
-                renderOptions.body = { item: renderOptions.item };
-            } else {
-                renderOptions.body.item = renderOptions.item;
-            }
-        }
+        const itemOpt = renderOptions.item ||
+            (renderOptions.body && typeof renderOptions.body === 'object' ?
+                renderOptions.body.item :
+                undefined);
 
-        return buildList<RECORD, ListMeta<RECORD>>({
-            footer,
-            header,
-            noMore: renderOptions.noMore,
-            body: renderOptions.body,
-            loading: renderOptions.loading,
+        const slots = context.setup.slots || {};
+
+        // Each callback delegates to the `handlers` instance which already
+        // updates total/data and emits the corresponding parent event —
+        // adding a parallel `context.setup.emit(...)` here would fire each
+        // event twice (silent data-corruption risk on entity mutations).
+        const slotProps = (): ListSlotProps<RECORD, ListMeta<RECORD>> => ({
+            data: data.value,
+            busy: busy.value,
             total: total.value,
             load,
-            busy: busy.value,
-            data: data.value as Entity<RECORD>[],
             meta: meta.value,
-            onCreated: (value: RECORD) => {
-                if (context.setup.emit) {
-                    context.setup.emit('created', value);
+            created: (value: RECORD) => handlers.created(value),
+            updated: (value: RECORD) => handlers.updated(value),
+            deleted: (value: RECORD) => handlers.deleted(value),
+        });
+
+        const renderChrome = (
+            slotName: EntityCollectionSlotName,
+            opt: ListHeaderOptions<RECORD> | undefined,
+            cssClass: string,
+        ): VNodeChild | null => {
+            const slot = slots[slotName];
+            if (slot) {
+                return h(opt?.tag ?? 'div', { class: cssClass }, slot(slotProps()));
+            }
+            if (opt?.content) {
+                return h(opt.tag ?? 'div', { class: cssClass }, opt.content);
+            }
+            return null;
+        };
+
+        return h(VCList, {}, () => {
+            const children: VNodeChild[] = [];
+
+            const headerVNode = renderOptions.header !== false ?
+                renderChrome(EntityCollectionSlotName.HEADER, headerOpt, 'vc-list-header') :
+                null;
+            if (headerVNode) children.push(headerVNode);
+
+            // Body — VCListBody renders the <ul>; we render <VCListItem>s
+            // per row, with optional loading / empty fallbacks.
+            children.push(h(VCListBody, {}, () => {
+                const renderLoadingBand = (overlay: boolean) => {
+                    if (renderOptions.loading === false) return null;
+                    const slot = slots[EntityCollectionSlotName.LOADING];
+                    if (slot) return slot(undefined);
+                    if (loadingOpt?.content) {
+                        return h(loadingOpt.tag ?? 'div', { class: 'vc-list-loading' }, loadingOpt.content);
+                    }
+                    return h(VCListLoading, { overlay });
+                };
+
+                // First-load: data is empty AND busy → show loading in place.
+                if (busy.value && data.value.length === 0) {
+                    return renderLoadingBand(false);
                 }
 
-                handlers.created(value);
-            },
-            onDeleted: (value: RECORD) => {
-                if (context.setup.emit) {
-                    context.setup.emit('deleted', value);
+                if (data.value.length === 0) {
+                    return h(VCListEmpty);
                 }
 
-                handlers.deleted(value);
-            },
-            onUpdated: (value: RECORD) => {
-                if (context.setup.emit) {
-                    context.setup.emit('updated', value);
-                }
+                // Refresh path: data shown AND busy → overlay loading on top
+                // of existing rows so consumers still see refresh feedback
+                // (the old buildList rendered an overlay here; without it
+                // there's no signal that an in-flight reload is happening).
+                const rows = data.value.map((item, index) => {
+                    // Same single-emit contract as `slotProps()`: handlers
+                    // already emits, so we delegate and don't double-fire.
+                    const itemSlotProps: ListItemSlotProps<RECORD> = {
+                        data: item,
+                        index,
+                        busy: busy.value,
+                        updated: (next: RECORD) => handlers.updated(next),
+                        deleted: (next: RECORD) => handlers.deleted(next),
+                    };
+                    return h(VCListItem, { key: (item as any).id ?? index }, () => {
+                        const itemSlot = slots[EntityCollectionSlotName.ITEM];
+                        if (itemSlot) {
+                            return itemSlot(itemSlotProps);
+                        }
+                        if (itemOpt?.content) {
+                            if (typeof itemOpt.content === 'function') {
+                                return itemOpt.content(item, itemSlotProps);
+                            }
+                            return itemOpt.content;
+                        }
+                        return h('span', String((item as any).name ?? (item as any).id ?? ''));
+                    });
+                });
 
-                handlers.updated(value);
-            },
-            slotItems: context.setup.slots || {},
+                if (busy.value) {
+                    return [rows, renderLoadingBand(true)];
+                }
+                return rows;
+            }));
+
+            // "No more" — once the full set is loaded.
+            if (
+                renderOptions.noMore !== false &&
+                total.value > 0 &&
+                data.value.length >= total.value
+            ) {
+                const noMoreVNode = renderChrome(EntityCollectionSlotName.NO_MORE, noMoreOpt, 'vc-list-no-more');
+                if (noMoreVNode) children.push(noMoreVNode);
+            }
+
+            const footerVNode = renderOptions.footer !== false ?
+                renderChrome(EntityCollectionSlotName.FOOTER, footerOpt, 'vc-list-footer') :
+                null;
+            if (footerVNode) children.push(footerVNode);
+
+            return h(Fragment, children);
         });
     }
 

@@ -1,6 +1,10 @@
-import { SlotName } from '@vuecs/list-controls';
+import { 
+    SlotName, 
+    hasNormalizedSlot, 
+    normalizeSlot, 
+    useTranslation,  
+} from '../../../core';
 import { defineComponent } from 'vue';
-import { hasNormalizedSlot, normalizeSlot, useTranslation } from '../../../core';
 
 export const ATranslation = defineComponent({
     props: {

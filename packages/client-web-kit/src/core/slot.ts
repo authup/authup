@@ -9,6 +9,26 @@ import { hasOwnProperty } from '@authup/kit';
 import type { Slot, Slots, VNode } from 'vue';
 
 /**
+ * Slot-name vocabulary previously exported by `@vuecs/list-controls`.
+ * `@vuecs/list` 1.0 (plan 027 compound rewrite) removed the enum;
+ * authup keeps the string literals locally so existing collection
+ * components and the `EntityCollectionSlotName` re-export keep
+ * compiling. New code should prefer the compound `<VCList*>` parts
+ * over slot-name dispatch.
+ */
+export enum SlotName {
+    DEFAULT = 'default',
+    FOOTER = 'footer',
+    HEADER = 'header',
+    BODY = 'body',
+    LOADING = 'loading',
+    NO_MORE = 'noMore',
+    ITEM = 'item',
+    ITEM_ACTIONS = 'itemActions',
+    ITEM_ACTIONS_EXTRA = 'itemActionsExtra',
+}
+
+/**
  * Returns true if either scoped or unscoped named slot exists
  *
  * @returns boolean

@@ -3,7 +3,7 @@ import { type PropType, defineComponent, reactive } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
-import { VCFormGroup } from '@vuecs/form-controls';
+import { VCFormGroup } from '@vuecs/forms';
 import type { RealmMatchPolicy } from '@authup/access';
 import { assignFormProperties } from '../../../../core';
 import { onChange, useUpdatedAt } from '../../../../composables';
@@ -98,7 +98,7 @@ export default defineComponent({
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
-                        <VCFormInputCheckbox
+                        <VCFormCheckbox
                             v-model="vuelidate.attribute_name_strict.$model"
                             :group-class="'form-switch'"
                             :label="true"
@@ -109,7 +109,7 @@ export default defineComponent({
                                     Only match if the attribute is strict equal to the name?
                                 </label>
                             </template>
-                        </VCFormInputCheckbox>
+                        </VCFormCheckbox>
                     </VCFormGroup>
                 </template>
             </IVuelidate>
@@ -119,7 +119,7 @@ export default defineComponent({
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
-                        <VCFormInputCheckbox
+                        <VCFormCheckbox
                             v-model="vuelidate.attribute_null_match_all.$model"
                             :group-class="'form-switch'"
                             :label="true"
@@ -131,7 +131,7 @@ export default defineComponent({
                                     If true, any identity realm can access resources with null realm-id/name values.
                                 </label>
                             </template>
-                        </VCFormInputCheckbox>
+                        </VCFormCheckbox>
                     </VCFormGroup>
                 </template>
             </IVuelidate>
@@ -141,7 +141,7 @@ export default defineComponent({
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
-                        <VCFormInputCheckbox
+                        <VCFormCheckbox
                             v-model="vuelidate.identity_master_match_all.$model"
                             :group-class="'form-switch'"
                             :label="true"
@@ -153,7 +153,7 @@ export default defineComponent({
                                     If true, the master realm can access any resource regardless of its realm value.
                                 </label>
                             </template>
-                        </VCFormInputCheckbox>
+                        </VCFormCheckbox>
                     </VCFormGroup>
                 </template>
             </IVuelidate>

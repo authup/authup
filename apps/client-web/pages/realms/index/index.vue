@@ -1,15 +1,15 @@
 <script lang="ts">
 import { VCTimeago } from '@vuecs/timeago';
-import { BTable } from 'bootstrap-vue-next';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
-    AEntityDelete, 
-    APagination, 
-    ARealms, 
-    ASearch, 
-    ATitle, 
-    injectStore, 
+    AEntityDelete,
+    APagination,
+    ARealms,
+    ASearch,
+    ATable,
+    ATitle,
+    injectStore,
     usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
@@ -18,10 +18,10 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
+        ATable,
         ATitle,
         APagination,
         ASearch,
-        BTable: BTable as Component,
         AEntityDelete,
         ARealms,
         VCTimeago,
@@ -42,25 +42,25 @@ export default defineComponent({
             {
                 key: 'name',
                 label: 'Name',
-                thClass: 'text-left',
-                tdClass: 'text-left',
+                headerClass: 'text-left',
+                cellClass: 'text-left',
             },
             {
                 key: 'updated_at',
                 label: 'Updated At',
-                thClass: 'text-center',
-                tdClass: 'text-center',
+                headerClass: 'text-center',
+                cellClass: 'text-center',
             },
             {
                 key: 'created_at',
                 label: 'Created At',
-                thClass: 'text-center',
-                tdClass: 'text-center',
+                headerClass: 'text-center',
+                cellClass: 'text-center',
             },
             {
                 key: 'options',
                 label: '',
-                tdClass: 'text-left', 
+                cellClass: 'text-left', 
             },
         ];
 
@@ -94,28 +94,28 @@ export default defineComponent({
             />
         </template>
         <template #body="props">
-            <BTable
+            <ATable
                 :items="props.data"
                 :fields="fields"
                 :busy="props.busy"
-                outlined
+                bordered
             >
-                <template #cell(created_at)="data">
-                    <VCTimeago :datetime="data.item.created_at" />
+                <template #cell-created_at="{ row }">
+                    <VCTimeago :datetime="row.created_at" />
                 </template>
-                <template #cell(updated_at)="data">
-                    <VCTimeago :datetime="data.item.created_at" />
+                <template #cell-updated_at="{ row }">
+                    <VCTimeago :datetime="row.updated_at" />
                 </template>
-                <template #cell(options)="data">
+                <template #cell-options="{ row }">
                     <button
-                        v-if="realmManagementId !== data.item.id"
+                        v-if="realmManagementId !== row.id"
                         class="btn btn-xs btn-primary me-1"
-                        @click.prevent="setRealmManagement(data.item)"
+                        @click.prevent="setRealmManagement(row)"
                     >
                         <i class="fa-solid fa-check" />
                     </button>
                     <NuxtLink
-                        :to="'/realms/'+ data.item.id"
+                        :to="'/realms/'+ row.id"
                         class="btn btn-xs btn-outline-primary me-1"
                         :disabled="!hasEditPermission"
                     >
@@ -123,14 +123,14 @@ export default defineComponent({
                     </NuxtLink>
                     <AEntityDelete
                         class="btn btn-xs btn-outline-danger"
-                        :entity-id="data.item.id"
+                        :entity-id="row.id"
                         entity-type="realm"
                         :with-text="false"
-                        :disabled="data.item.built_in || !hasDropPermission"
+                        :disabled="row.built_in || !hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>
-            </BTable>
+            </ATable>
         </template>
     </ARealms>
 </template>

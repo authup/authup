@@ -7,7 +7,19 @@
 
 import type { IdentityProvider } from '@authup/core-kit';
 import { createNanoID } from '@authup/kit';
-import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
+import { 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationGroup, 
+    VuelidateCustomRule, 
+    VuelidateCustomRuleKey, 
+    assignFormProperties, 
+    buildFormCheckbox, 
+    buildFormGroup, 
+    buildFormInput, 
+    getVuelidateSeverity, 
+    useTranslationsForGroup, 
+    useTranslationsForNestedValidation, 
+} from '../../../core';
 import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { PropType } from 'vue';
@@ -18,16 +30,6 @@ import {
     reactive,
 } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey, 
-    assignFormProperties, 
-    getVuelidateSeverity, 
-    useTranslationsForGroup, 
-    useTranslationsForNestedValidation,
-} from '../../../core';
 
 export const AIdentityProviderBasicFields = defineComponent({
     props: { entity: { type: Object as PropType<Partial<IdentityProvider>> } },
@@ -136,7 +138,7 @@ export const AIdentityProviderBasicFields = defineComponent({
                 }),
             });
 
-            const enabled = buildFormInputCheckbox({
+            const enabled = buildFormCheckbox({
                 groupClass: 'form-switch mt-3',
                 labelContent: 'Enabled?',
                 value: $v.value.enabled.$model,

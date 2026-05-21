@@ -325,7 +325,7 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormInputCheckbox
+                                <VCFormCheckbox
                                     v-model="vuelidate.is_confidential.$model"
                                     :group-class="'form-switch'"
                                     :label="true"
@@ -342,7 +342,7 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormInputCheckbox
+                                <VCFormCheckbox
                                     v-model="vuelidate.secret_hashed.$model"
                                     :group-class="'form-switch'"
                                     :label="true"
@@ -359,7 +359,7 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormInputCheckbox
+                                <VCFormCheckbox
                                     v-model="vuelidate.active.$model"
                                     :group-class="'form-switch'"
                                     :label="true"

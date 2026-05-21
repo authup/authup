@@ -12,7 +12,7 @@ import { maxLength, minLength } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
-import { VCFormGroup, VCFormInput, VCFormInputCheckbox } from '@vuecs/form-controls';
+import { VCFormGroup, VCFormInput, VCFormCheckbox } from '@vuecs/forms';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
@@ -30,7 +30,7 @@ export default defineComponent({
     components: {
         VCFormGroup, 
         VCFormInput, 
-        VCFormInputCheckbox, 
+        VCFormCheckbox, 
     },
     props: {
         role: {
@@ -218,7 +218,7 @@ export default defineComponent({
                 <template #label>
                     Regex
                 </template>
-                <VCFormInputCheckbox
+                <VCFormCheckbox
                     v-model="$v.value_is_regex.$model"
                     group-class="form-switch"
                     :label-content="translationsDefault.valueIsRegex.value"

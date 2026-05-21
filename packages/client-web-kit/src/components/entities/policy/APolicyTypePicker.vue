@@ -1,25 +1,25 @@
 <script lang="ts">
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import type { FormSelectOption } from '@vuecs/form-controls';
+import type { FormOption } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
 
 export default defineComponent({
     props: {
         type: { type: String },
-        types: { type: Array as PropType<(FormSelectOption | string)[]> },
+        types: { type: Array as PropType<(FormOption | string)[]> },
     },
     emits: ['pick'],
     setup(props, setup) {
         const option = ref<string | null>(null);
-        const options = computed<FormSelectOption[]>(() => {
+        const options = computed<FormOption[]>(() => {
             if (props.types) {
                 return props.types.map((type) => {
                     if (typeof type === 'string') {
                         return {
-                            id: type,
-                            value: type, 
-                        } satisfies FormSelectOption;
+                            label: type,
+                            value: type,
+                        } satisfies FormOption;
                     }
 
                     return type;
@@ -28,9 +28,9 @@ export default defineComponent({
 
             return Object.values(BuiltInPolicyType)
                 .map((type: string) => ({
-                    id: type,
+                    label: type,
                     value: type,
-                } satisfies FormSelectOption));
+                } satisfies FormOption));
         });
 
         if (props.type) {
@@ -61,9 +61,9 @@ export default defineComponent({
                     :key="key"
                 >
                     <div
-                        :class="{'active': item.id === option}"
+                        :class="{'active': item.value === option}"
                         class="d-flex flex-column gap-1 text-center a-picker-item"
-                        @click.prevent="pick(`${item.id}`)"
+                        @click.prevent="pick(`${item.value}`)"
                     >
                         <div>
                             {{ item.value }}

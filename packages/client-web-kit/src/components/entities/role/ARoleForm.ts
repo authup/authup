@@ -18,26 +18,24 @@ import {
 } from 'vue';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Role } from '@authup/core-kit';
-import {
-    buildFormGroup,
-    buildFormInput,
-    buildFormTextarea,
-} from '@vuecs/form-controls';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
-    assignFormProperties,
-    buildFormSubmitWithTranslations,
-    createFormSubmitTranslations,
-    getVuelidateSeverity,
-    injectStore,
-    storeToRefs,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+import { 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationGroup, 
+    VuelidateCustomRule, 
+    VuelidateCustomRuleKey, 
+    assignFormProperties, 
+    buildFormGroup, 
+    buildFormInput, 
+    buildFormSubmitWithTranslations, 
+    buildFormTextarea, 
+    createFormSubmitTranslations, 
+    getVuelidateSeverity, 
+    injectStore, 
+    storeToRefs, 
+    useTranslationsForGroup, 
+    useTranslationsForNestedValidation, 
 } from '../../../core';
+import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,

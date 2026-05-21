@@ -12,13 +12,15 @@ import type { App } from 'vue';
 import { createSSRApp } from 'vue';
 import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router';
 
-import { applyStoreManagerOptions, installStoreManager } from '@vuecs/form-controls/core';
-import bootstrap from '@vuecs/preset-bootstrap-v5';
-import fontAwesome from '@vuecs/preset-font-awesome';
+import vuecs from '@vuecs/core';
+import bootstrap from '@vuecs/theme-bootstrap';
+import fontAwesome from '@vuecs/icons-font-awesome';
+import installForms from '@vuecs/forms';
+import installPagination from '@vuecs/pagination';
 
 import '@fortawesome/fontawesome-free/css/all.css';
 import 'bootstrap/dist/css/bootstrap.css';
-import '@vuecs/pagination/dist/index.css';
+import '@vuecs/pagination/dist/style.css';
 import '@authup/client-web-kit/../dist/style.css';
 import '../../../client-web/assets/css/bootstrap-override.css';
 import '../../../client-web/assets/css/root.css';
@@ -85,17 +87,19 @@ export function createApp(payload: HydrationPayload) : {
 
     providePayload(payload, app);
 
+    // Install vuecs BEFORE the kit / per-package plugins so the theme
+    // manager is populated when components mount (see the matching note
+    // in `apps/client-web/plugins/vuecs.ts`).
+    app.use(vuecs, {
+        themes: [bootstrap()],
+        icons: [fontAwesome()],
+    });
+    app.use(installForms);
+    app.use(installPagination);
+
     install(app, {
         baseURL: payload?.config?.baseURL,
         pinia,
-    });
-
-    const storeManager = installStoreManager(app);
-    applyStoreManagerOptions(storeManager, {
-        presets: {
-            bootstrap,
-            fontAwesome,
-        },
     });
 
     return {

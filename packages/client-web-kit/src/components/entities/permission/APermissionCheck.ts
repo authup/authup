@@ -7,10 +7,14 @@
 
 import type { PermissionEvaluationOptions } from '@authup/access';
 import { PolicyData } from '@authup/access';
-import { SlotName } from '@vuecs/list-controls';
+import { 
+    SlotName, 
+    createPermissionCheckerReactiveFn, 
+    hasNormalizedSlot, 
+    normalizeSlot,  
+} from '../../../core';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
-import { createPermissionCheckerReactiveFn, hasNormalizedSlot, normalizeSlot } from '../../../core';
 
 export const APermissionCheck = defineComponent({
     props: {

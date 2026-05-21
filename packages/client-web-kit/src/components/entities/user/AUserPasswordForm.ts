@@ -20,14 +20,16 @@ import {
     ref, 
     toRef,
 } from 'vue';
-import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
-import {
-    buildFormSubmitWithTranslations,
+import { 
+    buildFormCheckbox, 
+    buildFormGroup, 
+    buildFormInput, 
+    buildFormSubmitWithTranslations, 
     createFormSubmitTranslations, 
-    getVuelidateSeverity,
-    injectHTTPClient,
-    useTranslationsForNestedValidation,
-    wrapFnWithBusyState,
+    getVuelidateSeverity, 
+    injectHTTPClient, 
+    useTranslationsForNestedValidation, 
+    wrapFnWithBusyState, 
 } from '../../../core';
 
 export const AUserPasswordForm = defineComponent({
@@ -119,7 +121,7 @@ export const AUserPasswordForm = defineComponent({
                 }),
             });
 
-            const showPassword = buildFormInputCheckbox({
+            const showPassword = buildFormCheckbox({
                 groupClass: 'mt-3',
                 labelContent: [
                     'Password ',

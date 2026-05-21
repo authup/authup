@@ -1,14 +1,14 @@
 <script lang="ts">
-import { BTable } from 'bootstrap-vue-next';
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
-    AEntityDelete, 
-    APagination, 
-    ASearch, 
-    ATitle, 
-    AUsers, 
-    injectStore, 
+    AEntityDelete,
+    APagination,
+    ASearch,
+    ATable,
+    ATitle,
+    AUsers,
+    injectStore,
     usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
@@ -18,10 +18,10 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
+        ATable,
         ATitle,
         APagination,
         ASearch,
-        BTable: BTable as Component,
         AUsers,
         AEntityDelete,
     },
@@ -43,25 +43,25 @@ export default defineComponent({
             {
                 key: 'name',
                 label: 'Name',
-                thClass: 'text-left',
-                tdClass: 'text-left',
+                headerClass: 'text-left',
+                cellClass: 'text-left',
             },
             {
                 key: 'created_at',
                 label: 'Created At',
-                thClass: 'text-center',
-                tdClass: 'text-center',
+                headerClass: 'text-center',
+                cellClass: 'text-center',
             },
             {
                 key: 'updated_at',
                 label: 'Updated At',
-                thClass: 'text-left',
-                tdClass: 'text-left',
+                headerClass: 'text-left',
+                cellClass: 'text-left',
             },
             {
                 key: 'options',
                 label: '',
-                tdClass: 'text-left', 
+                cellClass: 'text-left', 
             },
         ];
 
@@ -97,21 +97,21 @@ export default defineComponent({
             />
         </template>
         <template #body="props">
-            <BTable
+            <ATable
                 :items="props.data"
                 :fields="fields"
                 :busy="props.busy"
-                outlined
+                bordered
             >
-                <template #cell(created_at)="data">
-                    <VCTimeago :datetime="data.item.created_at" />
+                <template #cell-created_at="{ row }">
+                    <VCTimeago :datetime="row.created_at" />
                 </template>
-                <template #cell(updated_at)="data">
-                    <VCTimeago :datetime="data.item.created_at" />
+                <template #cell-updated_at="{ row }">
+                    <VCTimeago :datetime="row.updated_at" />
                 </template>
-                <template #cell(options)="data">
+                <template #cell-options="{ row }">
                     <NuxtLink
-                        :to="'/users/'+ data.item.id"
+                        :to="'/users/'+ row.id"
                         class="btn btn-xs btn-outline-primary me-1"
                         :disabled="!hasEditPermission"
                     >
@@ -119,14 +119,14 @@ export default defineComponent({
                     </NuxtLink>
                     <AEntityDelete
                         class="btn btn-xs btn-outline-danger"
-                        :entity-id="data.item.id"
+                        :entity-id="row.id"
                         entity-type="user"
                         :with-text="false"
                         :disabled="!hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>
-            </BTable>
+            </ATable>
         </template>
     </AUsers>
 </template>

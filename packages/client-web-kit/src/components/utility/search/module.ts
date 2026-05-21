@@ -4,11 +4,10 @@
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
-import type { FormInputBuildOptionsInput } from '@vuecs/form-controls';
-import { buildFormInputText } from '@vuecs/form-controls';
+import type { FormInputBuildOptionsInput } from '../../../core';
+import { buildFormInputText, hasNormalizedSlot, normalizeSlot  } from '../../../core';
 import type { VNodeChild } from 'vue';
 import { h } from 'vue';
-import { hasNormalizedSlot, normalizeSlot } from '../../../core';
 import { ListSearchSlotName } from './constants';
 import type { SearchOptionsInput } from './type';
 

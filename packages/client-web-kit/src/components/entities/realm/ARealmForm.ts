@@ -18,24 +18,22 @@ import {
 } from 'vue';
 import type { Realm } from '@authup/core-kit';
 import { EntityType, REALM_MASTER_NAME } from '@authup/core-kit';
-import {
-    buildFormGroup,
-    buildFormInput,
-    buildFormTextarea,
-} from '@vuecs/form-controls';
-import { useIsEditing, useUpdatedAt } from '../../../composables';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
-    assignFormProperties,
-    buildFormSubmitWithTranslations,
-    createFormSubmitTranslations,
-    getVuelidateSeverity,
-    useTranslationsForGroup,
-    useTranslationsForNestedValidation,
+import { 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationGroup, 
+    VuelidateCustomRule, 
+    VuelidateCustomRuleKey, 
+    assignFormProperties, 
+    buildFormGroup, 
+    buildFormInput, 
+    buildFormSubmitWithTranslations, 
+    buildFormTextarea, 
+    createFormSubmitTranslations, 
+    getVuelidateSeverity, 
+    useTranslationsForGroup, 
+    useTranslationsForNestedValidation, 
 } from '../../../core';
+import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,

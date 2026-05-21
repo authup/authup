@@ -5,8 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { FormSubmitOptionsInput } from '@vuecs/form-controls';
-import { buildFormSubmit } from '@vuecs/form-controls';
+import type { FormSubmitOptionsInput } from './builders';
+import { buildFormSubmit } from './builders';
 import type { Ref, VNodeChild } from 'vue';
 import { TranslatorTranslationDefaultKey, TranslatorTranslationGroup, useTranslation } from '../translator';
 

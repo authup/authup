@@ -9,8 +9,8 @@ import useVuelidate from '@vuelidate/core';
 import { maxValue, minValue } from '@vuelidate/validators';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
-import type { FormSelectOption } from '@vuecs/form-controls';
-import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
+import type { FormOption } from '@vuecs/forms';
+import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import {
     TimePolicyInterval,
     isIntervalForDayOfMonth,
@@ -39,11 +39,11 @@ export default defineComponent({
             day_of_year: '',
         });
 
-        const intervalOptions : FormSelectOption[] = Object.values(TimePolicyInterval)
+        const intervalOptions : FormOption[] = Object.values(TimePolicyInterval)
             .map((el) => ({
-                id: el,
+                label: el,
                 value: el,
-            } satisfies FormSelectOption));
+            } satisfies FormOption));
 
         const vuelidate = useVuelidate({
             start: {},

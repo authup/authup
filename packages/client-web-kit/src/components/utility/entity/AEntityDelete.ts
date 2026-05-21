@@ -109,9 +109,9 @@ const AEntityDelete = defineComponent({
                 case ElementType.DROP_DOWN_ITEM:
                     if (
                         instance &&
-                        typeof instance.appContext.app.component('BDropdownItem') !== 'undefined'
+                        typeof instance.appContext.app.component('VCDropdownMenuItem') !== 'undefined'
                     ) {
-                        tag = resolveDynamicComponent('BDropdownItem') as Component;
+                        tag = resolveDynamicComponent('VCDropdownMenuItem') as Component;
                     }
                     break;
             }
