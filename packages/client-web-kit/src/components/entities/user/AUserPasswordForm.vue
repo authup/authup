@@ -138,8 +138,17 @@ export default AUserPasswordForm;
                 v-model="passwordShow"
                 :label="true"
             >
-                <template #label>
-                    Password {{ passwordShow ? 'hide' : 'show' }}
+                <template #label="{ id, class: labelClass }">
+                    <!-- Render `<label for=id>` ourselves so clicking the text
+                         toggles the switch (matches the implicit behavior of
+                         passing labelContent as a string prop, which the
+                         component wraps in <label for=id> internally). -->
+                    <label
+                        :for="id"
+                        :class="labelClass"
+                    >
+                        Password {{ passwordShow ? 'hide' : 'show' }}
+                    </label>
                 </template>
             </VCFormSwitch>
         </div>
