@@ -55,6 +55,22 @@
            as the migration touches the styled-but-not-tokenized chrome
            (header, sidebar, login card, ...) */
     }
+
+    /*
+     * Tailwind v4 preflight resets every heading to inherit the parent
+     * font-size — h1/h2/h3 all render at body size unless utility
+     * classes are applied per-template. Authup's templates haven't been
+     * rewritten to do that (and Bootstrap's preflight used to size
+     * headings automatically). Restore the heading size scale here
+     * once, project-wide. Font-family + font-weight come from
+     * apps/client-web/assets/css/root.css.
+     */
+    h1 { @apply text-4xl; }
+    h2 { @apply text-3xl; }
+    h3 { @apply text-2xl; }
+    h4 { @apply text-xl; }
+    h5 { @apply text-lg; }
+    h6 { @apply text-base; }
 }
 
 /* ------------------------------------------------------------------
