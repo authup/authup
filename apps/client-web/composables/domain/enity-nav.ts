@@ -37,7 +37,7 @@ export function buildDomainEntityNav(
 
     switch (options.direction) {
         case 'vertical':
-            clazz.push('flex-column');
+            clazz.push('flex-col');
             break;
     }
 

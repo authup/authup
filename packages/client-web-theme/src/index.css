@@ -172,7 +172,7 @@
     /* Nav-pills — joined-tab look. Used by buildDomainEntityNav() in
        apps/client-web/composables/domain/enity-nav.ts to render entity
        sub-navigation as a pill row (horizontal) or pill column
-       (.flex-column). vuecs has no equivalent component; this compat
+       (.flex-col). vuecs has no equivalent component; this compat
        owns the styling until we move callers to a future <VCTabs> /
        similar. */
     .nav-pills .nav-link {
@@ -187,15 +187,15 @@
     .nav-pills .nav-item:last-child .nav-link {
         @apply rounded-r-md;
     }
-    .nav-pills.flex-column .nav-link {
+    .nav-pills.flex-col .nav-link {
         margin-left: 0;
         margin-top: -1px;
     }
-    .nav-pills.flex-column .nav-item:first-child .nav-link {
+    .nav-pills.flex-col .nav-item:first-child .nav-link {
         @apply rounded-t-md rounded-l-none;
         margin-top: 0;
     }
-    .nav-pills.flex-column .nav-item:last-child .nav-link {
+    .nav-pills.flex-col .nav-item:last-child .nav-link {
         @apply rounded-b-md rounded-r-none;
     }
     .nav-pills .nav-link.active,
