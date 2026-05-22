@@ -18,15 +18,10 @@ import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installPagination from '@vuecs/pagination';
 
-// vuecs CSS pipeline (Tailwind variant) — the @authup/client-web-theme
-// entry pulls in:
-//   1. tailwindcss           — utility layer + @theme directive
-//   2. @vuecs/design         — concrete --vc-color-* OKLCH tokens
-//   3. @vuecs/theme-tailwind — rebinds Tailwind --color-* ↔ --vc-color-*
-//   4. authup design tokens  — project palette / radii / typography
-// Mirrors the client-web nuxt.config.ts pipeline so the consent UI's
-// vuecs SFCs render with the same authup look.
-import '@authup/client-web-theme/index.css';
+// App-local Tailwind v4 entry — `@import`s @authup/client-web-theme
+// (tailwindcss + @vuecs/design + theme-tailwind + compat layer) and adds
+// `@source` scopes for this app's templates + per-app nested vuecs deps.
+import './tailwind.css';
 import '@authup/client-web-kit/../dist/style.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 import '../../../client-web/assets/css/root.css';

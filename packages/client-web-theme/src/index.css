@@ -22,23 +22,27 @@
 @import "@vuecs/design";
 @import "@vuecs/theme-tailwind";
 
-/* Tell Tailwind v4 to scan the workspace .vue / .ts surfaces — the JIT
-   otherwise misses utility classes that live outside the consumer app's
-   own source tree (e.g. classes in packages/client-web-kit/src/**). */
-@source "../../../apps/client-web/**/*.{vue,ts}";
-@source "../../../apps/server-core/ui/**/*.{vue,ts}";
-@source "../../../packages/client-web-kit/src/**/*.{vue,ts}";
-
-/* Scan installed `@vuecs/*` packages — they ship element class maps
-   (e.g. theme-tailwind's `formInput.classes.root = "block w-full rounded-md
-   border border-border ..."`) applied to vuecs SFCs at runtime via the
-   theme manager. Without these scopes, Tailwind's JIT never sees those
-   utility strings and the vuecs components render with `vc-*` class names
-   alone — i.e. unstyled. npm workspaces hoist some packages to root and
-   nest others per workspace, so we scan both. */
+/*
+ * `@source` declarations — what the Tailwind v4 JIT must scan for
+ * utility-class strings beyond this CSS file's own directory.
+ *
+ * Tailwind v4 doesn't resolve npm package names in `@source`, so we
+ * walk paths. The theme scans only its own runtime dependencies:
+ *
+ *   - `@authup/client-web-kit` (sibling workspace package) — the kit's
+ *     SFCs ship class strings any consumer of this theme renders.
+ *   - `@vuecs/*` (hoisted to root by npm workspaces) — element class
+ *     maps applied at runtime via the theme manager (e.g.
+ *     `formInput.classes.root = "block w-full rounded-md border ..."`).
+ *     Without these scopes, every `<VCFormInput>` / `<VCButton>` /
+ *     `<VCTable>` renders with `vc-*` defaults and no Tailwind styling.
+ *
+ * Consumer apps add their own `@source` directives for their template
+ * trees + any locally-nested vuecs deps in a per-app CSS entry
+ * (e.g. `apps/client-web/assets/css/tailwind.css`).
+ */
+@source "../../client-web-kit/src";
 @source "../../../node_modules/@vuecs";
-@source "../../../apps/client-web/node_modules/@vuecs";
-@source "../../../packages/client-web-kit/node_modules/@vuecs";
 
 /* ------------------------------------------------------------------
    Authup design tokens
@@ -97,21 +101,23 @@
     .btn-outline-light     { @apply border-border-muted text-fg-muted    hover:bg-bg-muted; }
     .btn-outline-dark      { @apply border-fg           text-fg          hover:bg-fg          hover:text-bg; }
 
-    /* Grid ----------------------------------------------------------- */
-    .row     { @apply grid grid-cols-12 gap-4; }
-    .col     { @apply col-span-12; }
-    .col-1   { @apply col-span-1; }
-    .col-2   { @apply col-span-2; }
-    .col-3   { @apply col-span-3; }
-    .col-4   { @apply col-span-4; }
-    .col-5   { @apply col-span-5; }
-    .col-6   { @apply col-span-6; }
-    .col-7   { @apply col-span-7; }
-    .col-8   { @apply col-span-8; }
-    .col-9   { @apply col-span-9; }
-    .col-10  { @apply col-span-10; }
-    .col-11  { @apply col-span-11; }
-    .col-12  { @apply col-span-12; }
+    /* Grid — Bootstrap-style 12-col layout via flex (not CSS grid). The
+       earlier grid-based shim broke layouts that relied on `.row` being
+       a flex container (e.g. `.row > .ms-auto`). */
+    .row     { @apply flex flex-wrap; }
+    .col     { @apply flex-1 basis-0; }
+    .col-1   { @apply w-1/12; }
+    .col-2   { @apply w-2/12; }
+    .col-3   { @apply w-3/12; }
+    .col-4   { @apply w-4/12; }
+    .col-5   { @apply w-5/12; }
+    .col-6   { @apply w-6/12; }
+    .col-7   { @apply w-7/12; }
+    .col-8   { @apply w-8/12; }
+    .col-9   { @apply w-9/12; }
+    .col-10  { @apply w-10/12; }
+    .col-11  { @apply w-11/12; }
+    .col-12  { @apply w-full; }
 
     .container       { @apply mx-auto w-full max-w-screen-lg px-4; }
     .container-fluid { @apply w-full px-4; }
@@ -145,10 +151,18 @@
     /* Bootstrap-style .collapse: content is hidden unless `.show` is
        toggled. `.navbar-expand-md` (used on the `<nav>` itself) flips
        the navbar contents back to visible + horizontal at md+ so the
-       desktop header is single-row, mobile is a toggleable column. */
+       desktop header is single-row, mobile is a toggleable column.
+
+       `!` is required on the flex-direction override: @vuecs/navigation
+       applies `flex-col` to the navigation root via theme-tailwind's
+       element class map. That class lives in Tailwind's `utilities`
+       layer; our compat rules live in `components`. Without `!`, the
+       utility layer (flex-col) wins regardless of selector specificity,
+       and the desktop header stacks vertically — ~250px instead of
+       ~56px. */
     .collapse:not(.show) { @apply hidden; }
     .navbar-expand-md .navbar-collapse { @apply md:flex!; }
-    .navbar-expand-md .navbar-nav      { @apply md:flex-row; }
+    .navbar-expand-md .navbar-nav      { @apply md:flex-row!; }
     .navbar-expand-md                  { @apply md:flex-nowrap md:justify-start; }
 
     /* Forms — minimal shims (vuecs SFCs own the real form styles) ---- */

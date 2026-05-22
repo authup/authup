@@ -1,0 +1,19 @@
+/*
+ * Tailwind v4 entry for apps/server-core/ui (embedded OAuth consent SSR).
+ *
+ * Pulls in the authup theme (tailwindcss + @vuecs/design + theme-tailwind
+ * + compat layer), then declares the SSR app's local `@source` scopes
+ * so the JIT picks up class-name tokens it can't reach via the theme.
+ */
+
+@import "@authup/client-web-theme";
+
+/* Scan this SSR app's templates. */
+@source "..";
+
+/*
+ * Per-app nested vuecs deps — see the matching note in
+ * `apps/client-web/assets/css/tailwind.css`. server-core hoists
+ * differently from client-web, so paths land here.
+ */
+@source "../../node_modules/@vuecs";

@@ -26,15 +26,11 @@ export default defineNuxtConfig({
     },
 
     css: [
-        // vuecs CSS pipeline (Tailwind variant) — the @authup/client-web-theme
-        // entry pulls in:
-        //   1. tailwindcss           — utility layer + @theme directive
-        //   2. @vuecs/design         — concrete --vc-color-* OKLCH tokens
-        //   3. @vuecs/theme-tailwind — rebinds Tailwind --color-* ↔ --vc-color-*
-        //   4. authup design tokens  — project palette / radii / typography
-        // The Tailwind v4 vite plugin (configured under `vite.plugins` above)
-        // processes the `@import "tailwindcss"` directive at build time.
-        '@authup/client-web-theme/index.css',
+        // App-local Tailwind v4 entry — `@import`s @authup/client-web-theme
+        // (tailwindcss + @vuecs/design + theme-tailwind + compat layer) and
+        // adds `@source` scopes for this app's templates + per-app nested
+        // vuecs deps.
+        '@/assets/css/tailwind.css',
         '@authup/client-web-kit/../dist/style.css',
         '@fortawesome/fontawesome-free/css/all.css',
         '@/assets/css/vue-layout-navigation.css',
