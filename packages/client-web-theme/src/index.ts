@@ -12,22 +12,12 @@ export { merge };
 /**
  * Authup theme for vuecs components.
  *
- * Currently a pass-through over `@vuecs/theme-tailwind`. The module
- * exists as the single project-wide entry point so future per-element
- * overrides land in one place. Consumers register a single theme:
+ * Layers authup-specific per-element overrides on top of
+ * `@vuecs/theme-tailwind`. The theme manager merges classes with the
+ * base, so overrides only need to declare the deltas — twMerge
+ * (`classesMergeFn`) dedups conflicting utilities.
  *
  *     app.use(vuecs, { themes: [authupTheme()] });
- *
- * To add overrides, replace the body with a merge over the base theme:
- *
- *     const base = tailwindTheme();
- *     return {
- *         ...base,
- *         elements: {
- *             ...base.elements,
- *             button: { classes: { root: 'extra-authup-class' } },
- *         },
- *     };
  *
  * Reskinning (palette swap, dark mode) is handled by redefining
  * `--vc-color-*` variables — `setColorPalette()` from
@@ -35,5 +25,19 @@ export { merge };
  * any theme configuration here.
  */
 export default function authupTheme() {
-    return tailwindTheme();
+    const base = tailwindTheme();
+
+    return {
+        ...base,
+        elements: {
+            ...base.elements,
+            // Bottom margin between stacked form groups. theme-tailwind's
+            // default formGroup root is `flex flex-col gap-1` (gap between
+            // label / input / hint inside ONE group), but it leaves no
+            // spacing between consecutive groups. authup's entity forms
+            // stack 5-10 groups; without mb-3 they collapse against each
+            // other.
+            formGroup: { classes: { root: 'mb-3' } },
+        },
+    };
 }
