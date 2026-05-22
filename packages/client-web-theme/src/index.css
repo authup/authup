@@ -207,12 +207,22 @@
         margin-left: 0;
         margin-top: -1px;
     }
+    /*
+     * Vertical orientation: cancel the horizontal rule's
+     * `rounded-l-md` / `rounded-r-md` and instead round the
+     * top corners of the first pill, bottom corners of the last.
+     * Use per-corner utilities — `rounded-t-md` alone would not
+     * cancel the bottom-left corner inherited from the horizontal
+     * `rounded-l-md` rule (and `rounded-l-none` zeros out top-left
+     * as well, which is exactly what was visible as "rounded
+     * everywhere except top-left").
+     */
     .nav-pills.flex-col .nav-item:first-child .nav-link {
-        @apply rounded-t-md rounded-l-none;
+        @apply rounded-tr-md rounded-bl-none;
         margin-top: 0;
     }
     .nav-pills.flex-col .nav-item:last-child .nav-link {
-        @apply rounded-b-md rounded-r-none;
+        @apply rounded-bl-md rounded-tr-none;
     }
     .nav-pills .nav-link.active,
     .nav-pills .nav-link.router-link-exact-active,
