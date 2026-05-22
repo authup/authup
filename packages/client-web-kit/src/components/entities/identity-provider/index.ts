@@ -6,9 +6,9 @@
  */
 
 export { AIdentityProvider } from './AIdentityProvider';
-export { AIdentityProviderForm } from './AIdentityProviderForm';
-export { AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form';
-export { AIdentityProviderLdapForm } from './AIdentityProviderLdapForm';
+export { AIdentityProviderForm } from './AIdentityProviderForm.vue';
+export { AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form.vue';
+export { AIdentityProviderLdapForm } from './AIdentityProviderLdapForm.vue';
 export { AIdentityProviders } from './AIdentityProviders';
 export { AIdentityProviderPreset } from './AIdentityProviderPreset';
 export { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
