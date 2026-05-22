@@ -41,6 +41,7 @@
  * trees + any locally-nested vuecs deps in a per-app CSS entry
  * (e.g. `apps/client-web/assets/css/tailwind.css`).
  */
+@source ".";
 @source "../../client-web-kit/src";
 @source "../../../node_modules/@vuecs";
 

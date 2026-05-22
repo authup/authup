@@ -160,5 +160,6 @@ export default defineComponent({
                 </slot>
             </template>
         </div>
+        <slot name="hint" />
     </div>
 </template>

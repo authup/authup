@@ -259,8 +259,10 @@ export default defineComponent({
                             v-model="vuelidate.name.$model"
                             :disabled="isNameFixed"
                         />
+                        <template #hint>
+                            {{ translationsClient.nameHint }}
+                        </template>
                     </VCFormGroup>
-                    <small>{{ translationsClient.nameHint }}</small>
                 </template>
             </IVuelidate>
             <IVuelidate :validation="vuelidate.display_name">
@@ -400,8 +402,10 @@ export default defineComponent({
                 <template #label>
                     {{ translationsDefault.redirectUris }}
                 </template>
+                <template #hint>
+                    {{ translationsClient.redirectURIHint }}
+                </template>
             </AFormInputList>
-            <small>{{ translationsClient.redirectURIHint }}</small>
             <IVuelidate :validation="vuelidate.description">
                 <template #default="props">
                     <VCFormGroup
@@ -415,9 +419,10 @@ export default defineComponent({
                             v-model="vuelidate.description.$model"
                             rows="7"
                         />
+                        <template #hint>
+                            {{ translationsClient.descriptionHint }}
+                        </template>
                     </VCFormGroup>
-
-                    <small>{{ translationsClient.descriptionHint }}</small>
                 </template>
             </IVuelidate>
             <div>
