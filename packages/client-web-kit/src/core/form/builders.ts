@@ -167,6 +167,11 @@ export function buildFormCheckbox(input: FormCheckboxBuildOptionsInput): VNodeCh
  * `{ value, onChange, label, labelContent, groupClass, ... }` shape so the
  * pre-1.x `buildFormCheckbox({ groupClass: 'form-switch' })` call sites
  * migrate by a single rename.
+ *
+ * `groupClass` maps to `themeClass.group` (the OUTER wrapper override),
+ * not `class` — Vue's `mergeProps` would otherwise concatenate it onto
+ * the inner SwitchRoot button, which offsets the button relative to the
+ * label inside the wrapper's `items-center` and visibly misaligns them.
  */
 export function buildFormSwitch(input: FormCheckboxBuildOptionsInput): VNodeChild {
     const base = {
@@ -175,7 +180,8 @@ export function buildFormSwitch(input: FormCheckboxBuildOptionsInput): VNodeChil
         label: input.label,
         group: input.group,
         labelContent: typeof input.labelContent === 'string' ? input.labelContent : undefined,
-        class: input.class ?? input.groupClass,
+        class: input.class,
+        themeClass: input.groupClass ? { group: input.groupClass } : undefined,
     };
     return h(
         VCFormSwitch,
