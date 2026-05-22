@@ -9,6 +9,7 @@ import {
     defineComponent,
     ref,
     toRef,
+    watch,
 } from 'vue';
 import { IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '@authup/core-kit';
 import type { IdentityProvider, IdentityProviderPreset } from '@authup/core-kit';
@@ -36,6 +37,13 @@ export const AIdentityProviderForm = defineComponent({
         const entity = toRef(props, 'entity');
         const updatedAt = useUpdatedAt(entity);
         const localEntity = ref<IdentityProvider | undefined>(props.entity);
+
+        // Sync localEntity from the prop. The original implementation used
+        // `toRef(props, 'entity')` and mutated it directly on emits; that
+        // pattern relies on prop-write side effects which Vue 3 warns about.
+        // The explicit `ref + watch` is cleaner but needs the watcher to
+        // catch parent-driven updates (e.g. entity loaded after mount).
+        watch(() => props.entity, (val) => { localEntity.value = val; });
 
         const set = () => {
             if (entity.value) {

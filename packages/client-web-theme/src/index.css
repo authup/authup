@@ -262,6 +262,15 @@
         @apply !rounded-r-md;
     }
 
+    /* Form validation visual states. Bootstrap had `.is-valid` /
+       `.is-invalid` classes for green/red field highlights;
+       AIdentityProviderOAuth2Discovery uses `.is-valid` to confirm a
+       successful discovery URL lookup. Keep just `.is-valid` for now —
+       `.is-invalid` would shadow IVuelidate's own severity styling. */
+    .is-valid {
+        @apply border-success-600 ring-1 ring-success-500;
+    }
+
     /* Dropdowns — Bootstrap-style toggle/menu used by
        LanguageSwitcherDropdown (in the header gadgets) and any other
        legacy markup. The `hidden` on `.dropdown-menu` is load-bearing:

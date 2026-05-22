@@ -15,3 +15,4 @@ export * from './LanguageSwitcherDropdown';
 
 export { AFormSubmit } from './AFormSubmit';
 export { default as ATable } from './ATable.vue';
+export { default as AToggleButton } from './AToggleButton.vue';

@@ -35,6 +35,7 @@ import { IVuelidate } from '@ilingo/vuelidate';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    AToggleButton,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -44,6 +45,7 @@ export const AUserForm = defineComponent({
     components: {
         ARealms,
         AFormSubmit,
+        AToggleButton,
         IVuelidate,
         VCFormGroup,
         VCFormInput,
@@ -284,26 +286,11 @@ export default AUserForm;
             <div v-if="showRealmPicker">
                 <ARealms>
                     <template #itemActions="pickerProps">
-                        <button
-                            type="button"
-                            class="btn btn-xs"
-                            :class="{
-                                'btn-dark': pickerProps.busy,
-                                'btn-success': !pickerProps.busy && form.realm_id !== pickerProps.data.id,
-                                'btn-danger': !pickerProps.busy && form.realm_id === pickerProps.data.id,
-                            }"
-                            :disabled="pickerProps.busy"
-                            @click.prevent="form.realm_id = form.realm_id === pickerProps.data.id ? '' : pickerProps.data.id"
-                        >
-                            <i
-                                class="fa"
-                                :class="{
-                                    'fa-question': pickerProps.busy,
-                                    'fa-plus': !pickerProps.busy && form.realm_id !== pickerProps.data.id,
-                                    'fa-minus': !pickerProps.busy && form.realm_id === pickerProps.data.id,
-                                }"
-                            />
-                        </button>
+                        <AToggleButton
+                            :value="form.realm_id === pickerProps.data.id"
+                            :is-busy="pickerProps.busy"
+                            @changed="(value: boolean) => { form.realm_id = value ? pickerProps.data.id : ''; }"
+                        />
                     </template>
                 </ARealms>
             </div>

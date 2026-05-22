@@ -146,13 +146,20 @@ export type FormCheckboxBuildOptionsInput = {
 };
 
 export function buildFormCheckbox(input: FormCheckboxBuildOptionsInput): VNodeChild {
+    // Mirror buildFormSwitch's groupClass handling: route to
+    // `themeClass.group` (the wrapper override) via `extend()` so the
+    // class merges with theme-tailwind's base wrapper classes rather
+    // than replacing them. Otherwise `groupClass: 'mt-3'` ends up on
+    // the checkbox root via mergeProps, offsetting the checkbox from
+    // the label inside `items-center`.
     const base = {
         modelValue: !!unref(input.value),
         'onUpdate:modelValue': (next: boolean) => input.onChange?.(next),
         label: input.label,
         group: input.group,
         labelContent: typeof input.labelContent === 'string' ? input.labelContent : undefined,
-        class: input.class ?? input.groupClass,
+        class: input.class,
+        themeClass: input.groupClass ? { group: extend(input.groupClass) } : undefined,
     };
     return h(
         VCFormCheckbox,
