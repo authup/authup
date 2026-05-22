@@ -70,7 +70,6 @@ export const AIdentityProviderForm = defineComponent({
             if (!entity.value) {
                 return [
                     renderPicker(),
-                    h('hr'),
                     node,
                 ];
             }

@@ -211,7 +211,6 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                             props: { disabled: true },
                         }),
                     }),
-                    h('hr'),
                 ];
             }
 
@@ -278,7 +277,6 @@ export const AIdentityProviderOAuth2Form = defineComponent({
                         securityNode,
                     ]),
                 ]),
-                h('hr'),
                 endpointsNode,
                 submitNode,
             ]);

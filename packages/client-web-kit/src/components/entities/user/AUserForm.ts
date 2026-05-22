@@ -270,7 +270,6 @@ export const AUserForm = defineComponent({
                 displayName,
                 email,
                 checks,
-                h('hr'),
                 submitForm,
             ]);
 

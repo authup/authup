@@ -252,7 +252,6 @@ export const ARobotForm = defineComponent({
                 displayName,
                 secret,
                 secretInfo,
-                h('hr'),
                 submitForm,
             ]);
 
