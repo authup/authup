@@ -20,16 +20,16 @@ import {
     ref, 
     toRef,
 } from 'vue';
-import { 
-    buildFormCheckbox, 
-    buildFormGroup, 
-    buildFormInput, 
-    buildFormSubmitWithTranslations, 
-    createFormSubmitTranslations, 
-    getVuelidateSeverity, 
-    injectHTTPClient, 
-    useTranslationsForNestedValidation, 
-    wrapFnWithBusyState, 
+import {
+    buildFormGroup,
+    buildFormInput,
+    buildFormSubmitWithTranslations,
+    buildFormSwitch,
+    createFormSubmitTranslations,
+    getVuelidateSeverity,
+    injectHTTPClient,
+    useTranslationsForNestedValidation,
+    wrapFnWithBusyState,
 } from '../../../core';
 
 export const AUserPasswordForm = defineComponent({
@@ -121,8 +121,7 @@ export const AUserPasswordForm = defineComponent({
                 }),
             });
 
-            const showPassword = buildFormCheckbox({
-                groupClass: 'my-3',
+            const showPassword = buildFormSwitch({
                 labelContent: [
                     'Password ',
                     (passwordShow.value ? 'hide' : 'show'),
