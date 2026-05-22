@@ -140,6 +140,7 @@ export const AUserPasswordForm = defineComponent({
             }, submitTranslations);
 
             return h('form', {
+                class: 'flex flex-col gap-3',
                 onSubmit($event: any) {
                     $event.preventDefault();
 
@@ -148,8 +149,8 @@ export const AUserPasswordForm = defineComponent({
             }, [
                 password,
                 passwordRepeat,
-                showPassword,
-                submitButton,
+                h('div', null, [showPassword]),
+                h('div', null, [submitButton]),
             ]);
         };
 
