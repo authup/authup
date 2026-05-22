@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectTranslatorLocale } from '@authup/client-web-kit';
+import { buildSubmitButtonDefaults, injectTranslatorLocale } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
 
@@ -51,6 +51,15 @@ export default defineNuxtPlugin({
         ctx.vueApp.use(vuecs, {
             themes: [authupTheme()],
             icons: [fontAwesome()],
+            defaults: {
+                // Wire authup's translator + icon choices into vuecs's
+                // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`
+                // resolve to locale-reactive labels with no per-call work.
+                // Runs after the kit's translator install (`dependsOn:
+                // ['authup']`), so `useTranslation` inside the helper sees
+                // the live ilingo locale provider.
+                submitButton: buildSubmitButtonDefaults(),
+            },
         });
 
         // vuecs's `installThemeManager` is first-install-wins (see

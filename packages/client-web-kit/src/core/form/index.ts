@@ -6,5 +6,6 @@
  */
 
 export * from './builders';
+export * from './defaults';
 export * from './properties';
 export * from './submit';

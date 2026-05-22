@@ -25,6 +25,7 @@ import {
     VCFormSelect,
     VCFormSwitch,
     VCFormTextarea,
+    useSubmitButton,
 } from '@vuecs/forms';
 import type { FormOption, ValidationMessages } from '@vuecs/forms';
 
@@ -271,35 +272,44 @@ export type FormSubmitOptionsInput = {
 };
 
 export function buildFormSubmit(input: FormSubmitOptionsInput): VNodeChild {
-    const busy = !!unref(input.busy);
+    // Delegate label / icon / color resolution to @vuecs/forms's
+    // `useSubmitButton` composable. Per-call options below STILL override
+    // the bindings — authup's translator + icon defaults are wired into
+    // the vuecs DefaultsManager once at app bootstrap (see
+    // `apps/client-web/plugins/vuecs.ts`), so a caller passing nothing
+    // here gets locale-reactive labels for free.
+    const bindings = useSubmitButton({
+        isEditing: () => !!input.isEditing,
+        loading: () => !!unref(input.busy),
+        disabled: () => !!input.invalid || !!unref(input.busy),
+    });
+
     const isEditing = !!input.isEditing;
-    const invalid = !!input.invalid;
-    const label = isEditing ?
-        (input.updateText ?? 'Update') :
-        (input.createText ?? 'Create');
-    // Restore parity with the old form-controls 2.x defaults:
-    //   createIconClass: 'fa-solid fa-plus'        → fa6-solid:plus
-    //   updateIconClass: 'fa-solid fa-save'        → fa6-solid:floppy-disk
-    // Consumers can opt out via `icon: false` or override per call.
+    const resolved = bindings.value;
+
+    const label = (isEditing ? input.updateText : input.createText) ?? resolved.label;
+
     let iconLeft: string | undefined;
     if (input.icon === false) {
         iconLeft = undefined;
-    } else if (isEditing) {
-        iconLeft = input.updateIcon ?? 'fa6-solid:floppy-disk';
     } else {
-        iconLeft = input.createIcon ?? 'fa6-solid:plus';
+        const iconOverride = isEditing ? input.updateIcon : input.createIcon;
+        iconLeft = iconOverride ?? resolved.iconLeft;
     }
 
-    // Old buildFormSubmit defaulted both create + update buttons to the
-    // primary color (no semantic differentiation). Keep that contract
-    // until/unless authup explicitly opts into a per-mode color scheme.
     return h(
         VCButton,
         {
-            type: input.type ?? 'submit',
-            disabled: invalid || busy,
-            loading: busy,
-            color: 'primary',
+            type: input.type ?? resolved.type,
+            color: resolved.color,
+            loading: resolved.loading,
+            disabled: resolved.disabled,
+            // `mt-3` matches the `mb-3` inter-group spacing applied to
+            // every form-group root (see client-web-theme's `formGroup`
+            // override), so the submit button sits at one consistent
+            // gap below the last form field instead of butting up
+            // against it.
+            class: 'btn-xs mt-3',
             iconLeft,
             onClick: () => { void input.submit(); },
         },

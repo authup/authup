@@ -122,7 +122,7 @@ export const AUserPasswordForm = defineComponent({
             });
 
             const showPassword = buildFormCheckbox({
-                groupClass: 'mt-3',
+                groupClass: 'my-3',
                 labelContent: [
                     'Password ',
                     (passwordShow.value ? 'hide' : 'show'),

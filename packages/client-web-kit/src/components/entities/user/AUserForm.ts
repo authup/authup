@@ -265,7 +265,7 @@ export const AUserForm = defineComponent({
                 invalid: $v.value.$invalid,
             }, translationsSubmit);
 
-            const leftColumn = h('div', { class: 'col' }, [
+            const leftColumn = h('div', [
                 name,
                 displayName,
                 email,
@@ -282,7 +282,7 @@ export const AUserForm = defineComponent({
                 const realm = h(ARealms, {}, {
                     [SlotName.ITEM_ACTIONS]: (props: {
                         data: Realm,
-                        busy: boolean 
+                        busy: boolean
                     }) => renderToggleButton({
                         value: form.realm_id === props.data.id,
                         isBusy: props.busy,
@@ -297,7 +297,7 @@ export const AUserForm = defineComponent({
                 });
 
                 rightColumn = [
-                    h('div', { class: 'col' }, [
+                    h('div', [
                         realm,
                     ]),
                 ];
@@ -310,7 +310,7 @@ export const AUserForm = defineComponent({
                     return submit.apply(null);
                 },
             }, [
-                h('div', { class: 'row' }, [
+                h('div', { class: 'grid grid-cols-1 md:grid-cols-2 gap-4' }, [
                     leftColumn,
                     rightColumn,
                 ]),
