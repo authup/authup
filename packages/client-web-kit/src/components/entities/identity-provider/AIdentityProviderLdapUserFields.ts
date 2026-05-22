@@ -6,12 +6,17 @@
  */
 
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
+import { 
+    assignFormProperties, 
+    buildFormGroup, 
+    buildFormInput, 
+    getVuelidateSeverity, 
+    useTranslationsForNestedValidation,  
+} from '../../../core';
 import useVuelidate from '@vuelidate/core';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 
 export const AIdentityProviderLdapUserFields = defineComponent({
     props: {

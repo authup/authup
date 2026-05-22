@@ -7,7 +7,7 @@
 
 <script lang="ts">
 import type { Policy } from '@authup/core-kit';
-import { SlotName } from '@vuecs/list-controls';
+import { SlotName } from '../../../core';
 import type { SlotsType } from 'vue';
 import { defineComponent, h } from 'vue';
 import { defineEntityPicker, defineEntityPickerVEmitOptions, defineEntityPickerVProps } from '../../utility';

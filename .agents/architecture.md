@@ -764,3 +764,103 @@ When adding a `name`-style column on a new entity (or extending an existing one)
 1. **Validator** — chain `.trim().toLowerCase()` after `z.string()` (Zod) or before the format check (validup) and before any length / pattern check.
 2. **Repository** — use `=` for name lookups, never `LIKE :name`.
 3. **Migration** — include the new column in the canonical-name data migration (see `.agents/plans/008-canonical-name-migration-ledger.md`) with an up-front collision pre-check.
+
+## UI Layer (`apps/client-web`, `apps/server-core/ui`, `packages/client-web-kit`)
+
+The UI sits on the `@vuecs/*` 1.x line — see
+[`.agents/structure.md` → UI Stack](structure.md#ui-stack-appsclient-web-appsserver-coreui-packagesclient-web-kit)
+for the package matrix. Two architectural notes specific to authup's
+integration are worth knowing before editing UI code:
+
+### Compat shims over vuecs's 1.x SFC rewrite
+
+`@vuecs/forms` 4.0, `@vuecs/list` 1.0, and `@vuecs/pagination` 2.0
+collectively dropped their pre-1.x render-function builder APIs
+(`buildFormGroup` / `buildList` / `buildPagination` and friends) in
+favour of compound `<VC*>` SFCs. Authup's entity forms, entity
+collection views, and pagination chrome had ~150 builder call sites
+written against the old shape. The migration kept those call sites
+intact by introducing three shim layers:
+
+- **`packages/client-web-kit/src/core/form/builders.ts`** —
+  `buildFormGroup` / `buildFormInput` / `buildFormInputText` /
+  `buildFormTextarea` / `buildFormCheckbox` / `buildFormSelect` /
+  `buildFormSubmit` shims that take the legacy
+  `{ value, onChange, props, class, ... }` config bag and emit
+  `h(VCFormGroup, { ... }, () => ...)` / `h(VCFormInput, ...)` /
+  etc. Re-exported from `@authup/client-web-kit`'s top-level
+  `core` barrel. Submit buttons default to FA Iconify glyphs
+  (`fa6-solid:plus` / `fa6-solid:floppy-disk`) and `color: primary`
+  for create + update parity with the pre-rewrite defaults.
+- **`packages/client-web-kit/src/components/utility/pagination/module.ts`** —
+  `buildPagination` shim that converts the legacy
+  `{ load, meta, busy }` shape to `<VCPagination>`'s
+  `update:page` event (computing `offset = (page - 1) * limit`).
+- **`packages/client-web-kit/src/components/utility/entity/collection/module.ts`** —
+  `defineEntityCollectionManager().render(...)` rewritten to compose
+  `<VCList>` + `<VCListBody>` + `<VCListItem>` + `<VCListLoading>` +
+  `<VCListEmpty>` directly. Preserves the
+  `{ header, body, item, footer, noMore, loading }` consumer-options
+  shape and the `slotProps.created/updated/deleted` callback
+  convention. **Single-emit contract:** the callbacks delegate to
+  the existing `ListHandlers` instance, which already calls
+  `context.setup.emit('created' | 'updated' | 'deleted', ...)` —
+  don't add a parallel `emit()` on the wrapper side or every
+  mutation will fire twice and double-update Pinia stores.
+
+The shims are intentionally tactical — they let the migration land
+in one PR without rewriting the ~150 builder call sites. The
+long-term direction is to migrate entity forms / collections /
+pagination chrome to native `<VC*>` SFC template usage, file by
+file, and retire each shim when its last caller is gone.
+
+### `<ATable>` wrapper
+
+`@vuecs/table` 1.x supports `#cell-<key>` and `#header-<key>` slots
+at runtime, but its `SlotsType` only declares `default` / `caption` /
+`colgroup` — Vue typed-slot generics can't model dynamic per-column
+slot names. `<ATable>` in
+`packages/client-web-kit/src/components/utility/ATable.vue` wraps
+`<VCTable>` with a permissive `SlotsType<{ [key: string]: ... }>`
+and bridges the legacy `<BTable>` prop shape
+(`:items` + `:fields`) the 9 entity index pages were written
+against. Pure pass-through — `#cell-<key>` slots flow verbatim to
+`<VCTable>`. Drop the wrapper when vuecs adds dynamic-slot typing.
+
+### `bvnext` (bootstrap-vue-next) removal
+
+Pre-vuecs-1.x, authup used `bootstrap-vue-next` for tables
+(`<BTable>`), toasts (`useToast` + `BOrchestrator`), and dropdowns
+(`BDropdown` / `BDropdownItem`). All three are now served by vuecs
+equivalents:
+
+- `<BTable>` → `<ATable>` (which wraps `<VCTable>`)
+- `useToast()` from bvnext → `useToast()` from `@vuecs/overlays`,
+  via the thin wrapper in
+  `apps/client-web/composables/toast.ts` that preserves the
+  `toast.show('msg')` / `toast.show({ variant, body })` calling shape
+- `BOrchestrator` → `<VCToaster position="top-center" />`
+  mounted in `apps/client-web/components/footer.vue`
+- `BDropdownItem` (opportunistic fallback in `<AEntityDelete>`) →
+  `<VCDropdownMenuItem>` resolved via `app.component(...)` lookup
+- `createBootstrap` → not needed; `app.use(vuecs, ...)` configures
+  vuecs in `apps/client-web/plugins/vuecs.ts` (the old
+  `plugins/bootstrap.ts` was deleted)
+
+`bootstrap-vue-next` is no longer a dependency of authup; the
+`bootstrap/dist/css/bootstrap.css` CSS import remains for chrome
+that the vuecs theme bridge doesn't cover.
+
+### `SlotName` enum local re-introduction
+
+`@vuecs/list-controls` 2.x exported a `SlotName` enum
+(`DEFAULT='default'`, `HEADER='header'`, `BODY='body'`,
+`ITEM='item'`, `ITEM_ACTIONS='itemActions'`, ...) that authup's
+`EntityCollectionSlotName` enum extended via `SlotName.X`
+references. The `@vuecs/list` 1.0 compound rewrite removed the
+enum. Authup keeps the string vocabulary locally in
+`packages/client-web-kit/src/core/slot.ts` so the six consumer
+files (`AUserForm`, `ARobotForm`, `APermissionPolicyBindingButton`,
+`APermissionCheck`, `APolicyPicker`, `ATranslation`) and
+`EntityCollectionSlotName` keep compiling. New code should prefer
+the compound `<VCList*>` parts directly over slot-name dispatch.

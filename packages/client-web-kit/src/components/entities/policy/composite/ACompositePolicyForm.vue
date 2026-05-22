@@ -10,8 +10,8 @@ import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
 import { DecisionStrategy } from '@authup/kit';
 import { IVuelidate } from '@ilingo/vuelidate';
-import type { FormSelectOption } from '@vuecs/form-controls';
-import { VCFormGroup, VCFormSelect } from '@vuecs/form-controls';
+import type { FormOption } from '@vuecs/forms';
+import { VCFormGroup, VCFormSelect } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import APolicyPicker from '../APolicyPicker.vue';
 
@@ -30,9 +30,9 @@ export default defineComponent({
             decision_strategy: '',
         });
 
-        const decisionStrategyOptions : FormSelectOption[] = Object.values(DecisionStrategy)
+        const decisionStrategyOptions : FormOption[] = Object.values(DecisionStrategy)
             .map((value) => ({
-                id: value,
+                label: value,
                 value,
             }));
 

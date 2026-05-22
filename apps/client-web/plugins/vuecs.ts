@@ -8,38 +8,82 @@
 import { injectTranslatorLocale } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
-import type { StoreManagerOptions } from '@vuecs/core';
-import bootstrap from '@vuecs/preset-bootstrap-v5';
-import fontAwesome from '@vuecs/preset-font-awesome';
+
+import vuecs, { extend } from '@vuecs/core';
+import bootstrap from '@vuecs/theme-bootstrap';
+import fontAwesome from '@vuecs/icons-font-awesome';
 
 import installCountdown from '@vuecs/countdown';
 import installTimeago, { injectLocale as injectTimeagoLocale } from '@vuecs/timeago';
-import { applyStoreManagerOptions, installStoreManager } from '@vuecs/form-controls/core';
+import installButton from '@vuecs/button';
+import installElements from '@vuecs/elements';
+import installForms from '@vuecs/forms';
+import installList from '@vuecs/list';
+import installOverlays from '@vuecs/overlays';
+import installPagination from '@vuecs/pagination';
+import installTable from '@vuecs/table';
+import installIcon from '@vuecs/icon';
 
 import { defineNuxtPlugin } from '#imports';
 
 export default defineNuxtPlugin({
+    // Name this plugin so other plugins can express ordering against it.
+    // `vuecs-navigation` MUST depend on this — `@vuecs/navigation`'s
+    // `install()` calls `installThemeManager(app, {})` with no themes,
+    // and `installThemeManager` is first-install-wins. If vuecs-navigation
+    // runs before this plugin, the bootstrap theme below is silently
+    // dropped at theme-manager creation time, and every component renders
+    // with only its `vc-*` defaults (form-control etc. are missing,
+    // form fields look unstyled).
+    name: 'vuecs',
+    // Runs AFTER `authup:kit` because `injectTranslatorLocale()` below
+    // requires the ilingo locale provider that `installTranslator()`
+    // sets up inside the kit's `install()`. Using `enforce: 'pre'` here
+    // would invert the order and throw "An ilingo locale is not present
+    // in the vue context.", aborting the plugin chain before pinia's
+    // setup runs and producing a misleading "$pinia undefined" SSR
+    // error from `@pinia/nuxt`'s `app:rendered` hook. The kit's
+    // `install()` only registers `app.component(...)`s — it does not
+    // render them — so installing the vuecs theme manager afterwards
+    // is still in time for the first page render.
     dependsOn: ['authup'],
     setup(ctx) {
-        const storeManagerOptions: StoreManagerOptions = {
-            presets: {
-                bootstrap,
-                fontAwesome,
+        ctx.vueApp.use(vuecs, {
+            themes: [bootstrap()],
+            icons: [fontAwesome()],
+            overrides: {
+                elements: {
+                    list: { classes: { root: extend('list') } },
+                    listBody: { classes: { root: extend('list-body') } },
+                    listItem: { classes: { root: extend('list-item') } },
+                    // @vuecs/theme-bootstrap defaults tableHeader to
+                    // `text-uppercase small text-body-secondary`. authup
+                    // tables (users, robots, roles, …) display proper-cased
+                    // labels (`Name`, `Created At`); the uppercase upper-
+                    // cases them visually into UI noise. Replace the root
+                    // class entirely (no `extend()`) so the uppercase
+                    // utility is dropped; the rest of the small / muted
+                    // styling is preserved verbatim.
+                    tableHeader: { classes: { root: 'small text-body-secondary' } },
+                },
             },
-            defaults: {
-                list: { class: 'list' },
-                listBody: { class: 'list-body' },
-                listItem: { class: 'list-item' },
-            },
-        };
+        });
 
-        const storeManager = installStoreManager(ctx.vueApp);
-        applyStoreManagerOptions(storeManager, storeManagerOptions);
+        // vuecs's `installThemeManager` is first-install-wins (see
+        // `@vuecs/core/dist/index.mjs`); installing per-package plugins
+        // BEFORE `app.use(vuecs, ...)` above would freeze the manager
+        // with no themes. Order matters.
+        ctx.vueApp.use(installButton);
+        ctx.vueApp.use(installElements);
+        ctx.vueApp.use(installForms);
+        ctx.vueApp.use(installList);
+        ctx.vueApp.use(installOverlays);
+        ctx.vueApp.use(installPagination);
+        ctx.vueApp.use(installTable);
+        ctx.vueApp.use(installIcon);
 
         ctx.vueApp.use(installCountdown);
         ctx.vueApp.use(installTimeago, { locales: { de } });
-
-        // preset missing ...
 
         const locale = injectTranslatorLocale();
         const timeagoLocale = injectTimeagoLocale();

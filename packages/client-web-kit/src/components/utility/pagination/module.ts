@@ -5,23 +5,33 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildPagination as _buildPagination } from '@vuecs/pagination';
+import { VCPagination } from '@vuecs/pagination';
+import { h } from 'vue';
+import type { VNodeChild } from 'vue';
 import type { PaginationOptions } from './type';
 
 export function buildPagination(
     ctx: PaginationOptions,
-) {
-    return _buildPagination({
-        load: (pagination) => ctx.load?.({
-            ...ctx.meta,
-            pagination: {
-                limit: pagination.limit,
-                offset: pagination.offset,
-            },
-        }),
-        total: ctx.meta?.total ?? ctx.total ?? 0,
-        limit: ctx.meta?.pagination?.limit ?? 0,
-        offset: ctx.meta?.pagination?.offset ?? 0,
-        busy: ctx.meta?.busy ?? ctx.busy,
+): VNodeChild {
+    const total = ctx.meta?.total ?? ctx.total ?? 0;
+    const limit = ctx.meta?.pagination?.limit ?? 0;
+    const offset = ctx.meta?.pagination?.offset ?? 0;
+    const busy = ctx.meta?.busy ?? ctx.busy ?? false;
+
+    return h(VCPagination, {
+        total,
+        limit,
+        offset,
+        busy,
+        'onUpdate:page': (page: number) => {
+            const nextOffset = (page - 1) * (limit || 1);
+            void ctx.load?.({
+                ...ctx.meta,
+                pagination: {
+                    limit,
+                    offset: nextOffset,
+                },
+            });
+        },
     });
 }

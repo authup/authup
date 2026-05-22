@@ -3,7 +3,7 @@ import { type PropType, defineComponent, reactive } from 'vue';
 import useVuelidate from '@vuelidate/core';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
-import { VCFormGroup, VCFormInput } from '@vuecs/form-controls';
+import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import type { DatePolicy } from '@authup/access';
 import { assignFormProperties } from '../../../../core';
 import { onChange, useUpdatedAt } from '../../../../composables';

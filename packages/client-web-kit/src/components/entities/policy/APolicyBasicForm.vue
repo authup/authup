@@ -10,8 +10,8 @@ import useVuelidate from '@vuelidate/core';
 import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
-import type { FormSelectOption } from '@vuecs/form-controls';
-import { VCFormGroup, VCFormInput, VCFormInputCheckbox } from '@vuecs/form-controls';
+import type { FormOption } from '@vuecs/forms';
+import { VCFormCheckbox, VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
 import { assignFormProperties, injectStore, storeToRefs } from '../../../core';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
@@ -21,7 +21,7 @@ export default defineComponent({
     components: {
         ARealmPicker,
         VCFormInput,
-        VCFormInputCheckbox,
+        VCFormCheckbox,
         VCFormGroup,
         IVuelidate,
     },
@@ -51,10 +51,10 @@ export default defineComponent({
                 null;
         });
 
-        const typeOptions : FormSelectOption[] = [
+        const typeOptions : FormOption[] = [
             ...Object.values(BuiltInPolicyType).map((type) => ({
-                id: type,
-                value: type, 
+                label: type,
+                value: type,
             })),
         ];
 
@@ -163,7 +163,7 @@ export default defineComponent({
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
-                        <VCFormInputCheckbox
+                        <VCFormCheckbox
                             v-model="vuelidate.invert.$model"
                             :group-class="'form-switch'"
                             :label="true"
@@ -174,7 +174,7 @@ export default defineComponent({
                                     Invert?
                                 </label>
                             </template>
-                        </VCFormInputCheckbox>
+                        </VCFormCheckbox>
                     </VCFormGroup>
                 </template>
             </IVuelidate>

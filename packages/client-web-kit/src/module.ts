@@ -5,9 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import installFormControl from '@vuecs/form-controls';
-import { installStoreManager } from '@vuecs/form-controls/core';
-import installPagination from '@vuecs/pagination';
 import type { App, Component } from 'vue';
 import * as components from './components/entities';
 import {
@@ -77,8 +74,13 @@ export function install(app: App, options: Options): void {
 
     installComponents(app, options.components);
 
-    installStoreManager(app);
-
-    app.use(installFormControl);
-    app.use(installPagination);
+    // NOTE: `@vuecs/forms` and `@vuecs/pagination` are NOT installed here.
+    // Both `installForms` / `installPagination` internally call
+    // `installThemeManager(app, {})` which is first-install-wins (per the
+    // `inject(THEME_MANAGER_SYMBOL); if (existing) return existing;` check
+    // in `@vuecs/core`). Installing them inside the kit before the app's
+    // own `app.use(vuecs, { themes: [...] })` runs would freeze the theme
+    // manager with no themes, silently dropping every theme override.
+    // The consumer plugin (see apps/client-web/plugins/vuecs.ts) installs
+    // `vuecs` first, then the per-package plugins on top.
 }

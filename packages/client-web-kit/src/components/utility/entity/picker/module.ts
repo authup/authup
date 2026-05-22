@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { SlotName } from '@vuecs/list-controls';
+import { SlotName, hasNormalizedSlot, normalizeSlot  } from '../../../../core';
 import type { PropType, Ref, VNodeChild } from 'vue';
 import {
     computed, 
@@ -19,7 +19,6 @@ import { APagination } from '../../pagination';
 import { renderToggleButton } from '../../toggle-button';
 import type { EntityCollectionVSlots } from '../collection';
 import { defineEntityCollectionVEmitOptions, defineEntityCollectionVProps } from '../collection';
-import { hasNormalizedSlot, normalizeSlot } from '../../../../core';
 import { ASearch } from '../../search';
 import type { EntityPickerContext, EntityPickerVEmitOptions, RecordWithID } from './types';
 
@@ -111,12 +110,10 @@ export function defineEntityPicker<T extends RecordWithID>({
         {
             [SlotName.HEADER]: (slotProps: EntityCollectionVSlots<RecordWithID>['header']) => [
                 h(ASearch, {
-                    load: (payload: any) => {
+                    load: async (payload: any) => {
                         if (slotProps.load) {
-                            return slotProps.load(payload);
+                            await slotProps.load(payload);
                         }
-
-                        return undefined;
                     },
                     busy: slotProps.busy,
                 }),

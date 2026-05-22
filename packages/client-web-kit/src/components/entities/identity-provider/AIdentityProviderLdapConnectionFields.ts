@@ -6,13 +6,19 @@
  */
 
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
+import { 
+    assignFormProperties, 
+    buildFormCheckbox, 
+    buildFormGroup, 
+    buildFormInput, 
+    getVuelidateSeverity, 
+    useTranslationsForNestedValidation,  
+} from '../../../core';
 import useVuelidate from '@vuelidate/core';
 import { numeric, required } from '@vuelidate/validators';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 
 export const AIdentityProviderLdapConnectionFields = defineComponent({
     props: {
@@ -86,7 +92,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
                 validationSeverity: getVuelidateSeverity($v.value.start_tls),
                 label: true,
                 labelContent: 'StartTLS',
-                content: buildFormInputCheckbox({
+                content: buildFormCheckbox({
                     groupClass: 'form-switch',
                     labelContent: 'Enable StartTLS process?',
                     value: $v.value.start_tls.$model,

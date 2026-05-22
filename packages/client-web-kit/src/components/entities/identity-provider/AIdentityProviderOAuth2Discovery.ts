@@ -7,7 +7,12 @@
 
 import { Client } from '@authup/core-http-kit';
 import { isOpenIDProviderMetadata } from '@authup/specs';
-import { buildFormGroup, buildFormInput } from '@vuecs/form-controls';
+import { 
+    buildFormGroup, 
+    buildFormInput, 
+    getVuelidateSeverity, 
+    useTranslationsForBaseValidation,  
+} from '../../../core';
 import useVuelidate from '@vuelidate/core';
 import { url } from '@vuelidate/validators';
 import type { VNodeChild } from 'vue';
@@ -17,7 +22,6 @@ import {
     reactive, 
     ref,
 } from 'vue';
-import { getVuelidateSeverity, useTranslationsForBaseValidation } from '../../../core';
 
 export const AIdentityProviderOAuth2Discovery = defineComponent({
     emits: ['lookup', 'failed'],

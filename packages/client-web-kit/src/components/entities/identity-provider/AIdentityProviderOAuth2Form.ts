@@ -24,17 +24,15 @@ import type {
     OAuth2IdentityProvider,
 } from '@authup/core-kit';
 import { EntityType, IdentityProviderProtocol } from '@authup/core-kit';
-import {
-    buildFormGroup,
-    buildFormInput,
-} from '@vuecs/form-controls';
-import { onChange, useIsEditing } from '../../../composables';
-import {
-    buildFormSubmitWithTranslations,
-    createFormSubmitTranslations,
-    extractVuelidateResultsFromChild,
-    injectHTTPClient,
+import { 
+    buildFormGroup, 
+    buildFormInput, 
+    buildFormSubmitWithTranslations, 
+    createFormSubmitTranslations, 
+    extractVuelidateResultsFromChild, 
+    injectHTTPClient, 
 } from '../../../core';
+import { onChange, useIsEditing } from '../../../composables';
 import { defineEntityManager, defineEntityVEmitOptions } from '../../utility';
 import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields';
 import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields';

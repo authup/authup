@@ -1,27 +1,27 @@
 <script lang="ts">
-import { BTable } from 'bootstrap-vue-next';
 import type { Scope } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
-    AEntityDelete, 
-    APagination, 
-    AScopes, 
-    ASearch, 
-    ATitle, 
-    injectStore, 
+    AEntityDelete,
+    APagination,
+    AScopes,
+    ASearch,
+    ATable,
+    ATitle,
+    injectStore,
     usePermissionCheck,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
-import type { Component } from 'vue';
+import type { TableColumn } from '@vuecs/table';
 import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
+        ATable,
         ATitle,
         APagination,
         ASearch,
-        BTable: BTable as Component,
         AScopes,
         AEntityDelete,
     },
@@ -39,35 +39,35 @@ export default defineComponent({
         const hasEditPermission = usePermissionCheck({ name: PermissionName.SCOPE_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.SCOPE_DELETE });
 
-        const fields = [
+        const fields: TableColumn<Scope>[] = [
             {
                 key: 'name',
                 label: 'Name',
-                thClass: 'text-left',
-                tdClass: 'text-left',
+                headerClass: 'text-left',
+                cellClass: 'text-left',
             },
             {
                 key: 'built_in',
                 label: 'Built in?',
-                thClass: 'text-center',
-                tdClass: 'text-center',
+                headerClass: 'text-center',
+                cellClass: 'text-center',
             },
             {
                 key: 'created_at',
                 label: 'Created at',
-                thClass: 'text-center',
-                tdClass: 'text-center',
+                headerClass: 'text-center',
+                cellClass: 'text-center',
             },
             {
                 key: 'updated_at',
                 label: 'Updated at',
-                thClass: 'text-left',
-                tdClass: 'text-left',
+                headerClass: 'text-center',
+                cellClass: 'text-center',
             },
             {
                 key: 'options',
                 label: '',
-                tdClass: 'text-left', 
+                cellClass: 'text-center',
             },
         ];
 
@@ -101,30 +101,30 @@ export default defineComponent({
             />
         </template>
         <template #body="props">
-            <BTable
+            <ATable
                 :items="props.data"
                 :fields="fields"
                 :busy="props.busy"
-                outlined
+                bordered
             >
-                <template #cell(built_in)="data">
+                <template #cell-built_in="{ row }">
                     <i
                         class="fas"
                         :class="{
-                            'fa-check text-success': data.item.built_in,
-                            'fa-times text-danger': !data.item.built_in,
+                            'fa-check text-success': row.built_in,
+                            'fa-times text-danger': !row.built_in,
                         }"
                     />
                 </template>
-                <template #cell(created_at)="data">
-                    <VCTimeago :datetime="data.item.created_at" />
+                <template #cell-created_at="{ row }">
+                    <VCTimeago :datetime="row.created_at" />
                 </template>
-                <template #cell(updated_at)="data">
-                    <VCTimeago :datetime="data.item.created_at" />
+                <template #cell-updated_at="{ row }">
+                    <VCTimeago :datetime="row.updated_at" />
                 </template>
-                <template #cell(options)="data">
+                <template #cell-options="{ row }">
                     <NuxtLink
-                        :to="'/scopes/'+ data.item.id"
+                        :to="'/scopes/'+ row.id"
                         class="btn btn-xs btn-outline-primary me-1"
                         :disabled="!hasEditPermission"
                     >
@@ -132,14 +132,14 @@ export default defineComponent({
                     </NuxtLink>
                     <AEntityDelete
                         class="btn btn-xs btn-outline-danger"
-                        :entity-id="data.item.id"
+                        :entity-id="row.id"
                         entity-type="scope"
                         :with-text="false"
-                        :disabled="data.item.built_in || !hasDropPermission"
+                        :disabled="row.built_in || !hasDropPermission"
                         @deleted="props.deleted"
                     />
                 </template>
-            </BTable>
+            </ATable>
         </template>
     </AScopes>
 </template>

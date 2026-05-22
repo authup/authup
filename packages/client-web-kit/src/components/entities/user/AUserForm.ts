@@ -7,8 +7,22 @@
 
 import type { Realm, User } from '@authup/core-kit';
 import { EntityType, buildUserFakeEmail, isUserFakeEmail } from '@authup/core-kit';
-import { buildFormGroup, buildFormInput, buildFormInputCheckbox } from '@vuecs/form-controls';
-import { SlotName } from '@vuecs/list-controls';
+import { 
+    SlotName, 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationGroup, 
+    VuelidateCustomRule, 
+    VuelidateCustomRuleKey, 
+    assignFormProperties, 
+    buildFormCheckbox, 
+    buildFormGroup, 
+    buildFormInput, 
+    buildFormSubmitWithTranslations, 
+    createFormSubmitTranslations, 
+    getVuelidateSeverity, 
+    useTranslationsForGroup, 
+    useTranslationsForNestedValidation, 
+} from '../../../core';
 import useVuelidate from '@vuelidate/core';
 import {
     email, 
@@ -26,18 +40,6 @@ import {
     watch,
 } from 'vue';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup, 
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
-    assignFormProperties,
-    buildFormSubmitWithTranslations, 
-    createFormSubmitTranslations, 
-    getVuelidateSeverity, 
-    useTranslationsForGroup, 
-    useTranslationsForNestedValidation,
-} from '../../../core';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -211,7 +213,7 @@ export const AUserForm = defineComponent({
                 let nameLock : VNodeArrayChildren = [];
                 if (props.entity) {
                     nameLock = [
-                        buildFormInputCheckbox({
+                        buildFormCheckbox({
                             groupClass: 'form-switch mt-3',
                             labelContent: h('span', {
                                 class: {
@@ -232,7 +234,7 @@ export const AUserForm = defineComponent({
                 checks = [
                     h('div', { class: 'row' }, [
                         h('div', { class: 'col' }, [
-                            buildFormInputCheckbox({
+                            buildFormCheckbox({
                                 groupClass: 'form-switch mt-3',
                                 labelContent: h('span', {
                                     class: {
