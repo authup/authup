@@ -310,7 +310,7 @@ export const AUserForm = defineComponent({
                     return submit.apply(null);
                 },
             }, [
-                h('div', { class: 'grid grid-cols-1 md:grid-cols-2 gap-4' }, [
+                h('div', { class: 'grid grid-cols-1 md:grid-cols-2 gap-2' }, [
                     leftColumn,
                     rightColumn,
                 ]),
