@@ -29,6 +29,17 @@
 @source "../../../apps/server-core/ui/**/*.{vue,ts}";
 @source "../../../packages/client-web-kit/src/**/*.{vue,ts}";
 
+/* Scan installed `@vuecs/*` packages — they ship element class maps
+   (e.g. theme-tailwind's `formInput.classes.root = "block w-full rounded-md
+   border border-border ..."`) applied to vuecs SFCs at runtime via the
+   theme manager. Without these scopes, Tailwind's JIT never sees those
+   utility strings and the vuecs components render with `vc-*` class names
+   alone — i.e. unstyled. npm workspaces hoist some packages to root and
+   nest others per workspace, so we scan both. */
+@source "../../../node_modules/@vuecs";
+@source "../../../apps/client-web/node_modules/@vuecs";
+@source "../../../packages/client-web-kit/node_modules/@vuecs";
+
 /* ------------------------------------------------------------------
    Authup design tokens
    Override `--vc-color-*` (or palette names via setColorPalette()) to

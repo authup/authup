@@ -74,10 +74,10 @@ export default defineNuxtConfig({
         [
             // '../client-web-nuxt/src/module', {
             '@authup/client-web-nuxt',
-{
-    apiURLRuntimeKey: 'apiUrl',
-    cookieDomainRuntimeKey: 'cookieDomain',
-} satisfies ModuleOptions,
+            {
+                apiURLRuntimeKey: 'apiUrl',
+                cookieDomainRuntimeKey: 'cookieDomain',
+            } satisfies ModuleOptions,
         ],
         [
             '@nuxtjs/google-fonts',
