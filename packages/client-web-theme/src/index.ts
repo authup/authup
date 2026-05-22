@@ -36,19 +36,19 @@ export default function authupTheme() {
             // label / input / hint inside ONE group), but it leaves no
             // spacing between consecutive groups.
             //
-            // Use mb-6 (24px) — the inter-group spacing needs to be
-            // clearly larger than the intra-group gap-1 (4px), otherwise
-            // the trailing hint visually floats between groups and reads
-            // as belonging to the next group. mb-3 (12px = 3x the gap)
-            // wasn't enough; mb-6 gives a clean 6x ratio.
+            // mb-3 (12px) inter-group spacing. With hints now living
+            // INSIDE the form group (via the #hint slot), the trailing
+            // gap no longer has a free-floating hint visually drifting
+            // between groups — so the smaller 3x-of-gap-1 ratio is
+            // visually fine again.
             //
             // `extend()` marks the value as ADDITIVE — without it,
             // vuecs's `mergeClasses` ASSIGNS the override, replacing the
             // base entirely. Replacing dropped `flex flex-col gap-1`,
             // which caused label + control to render inline instead of
             // stacked. With extend(), twMerge concatenates: the final
-            // root becomes `flex flex-col gap-1 mb-6`.
-            formGroup: { classes: { root: extend('mb-6') } },
+            // root becomes `flex flex-col gap-1 mb-3`.
+            formGroup: { classes: { root: extend('mb-3') } },
         },
     });
 }
