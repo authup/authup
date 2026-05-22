@@ -33,8 +33,8 @@ export default defineComponent({
             <i
                 class="fa-solid"
                 :class="{
-                    'fa-check text-success': isEnabled,
-                    'fa-times text-danger': !isEnabled
+                    'fa-check text-success-600': isEnabled,
+                    'fa-times text-error-600': !isEnabled
                 }"
             />
         </div>

@@ -34,7 +34,7 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="d-flex flex-column gap-2">
+    <div class="flex flex-col gap-2">
         <APolicyTypePicker @pick="handlePicked" />
 
         <template v-if="type">

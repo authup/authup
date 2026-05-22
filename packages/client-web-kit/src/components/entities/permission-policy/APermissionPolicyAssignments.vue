@@ -94,7 +94,7 @@ export default defineComponent({
                 @click="detailPolicy = null"
             />
             <div
-                class="modal fade show d-block"
+                class="modal fade show block"
                 tabindex="-1"
                 role="dialog"
                 aria-modal="true"

@@ -847,9 +847,67 @@ equivalents:
   vuecs in `apps/client-web/plugins/vuecs.ts` (the old
   `plugins/bootstrap.ts` was deleted)
 
-`bootstrap-vue-next` is no longer a dependency of authup; the
-`bootstrap/dist/css/bootstrap.css` CSS import remains for chrome
-that the vuecs theme bridge doesn't cover.
+### Tailwind v4 migration
+
+The theme stack moved from `@vuecs/theme-bootstrap` (4.x) + raw
+Bootstrap CSS to `@vuecs/theme-tailwind` (1.x) + Tailwind v4 + a
+new `@authup/client-web-theme` package.
+
+- **`@authup/client-web-theme`** (`packages/client-web-theme/`) —
+  composes `tailwindTheme()` from `@vuecs/theme-tailwind` with
+  authup-specific element overrides and ships a single CSS entry
+  (`@authup/client-web-theme/index.css`) that pulls in
+  `tailwindcss`, `@vuecs/design` (concrete OKLCH tokens),
+  `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind), and a
+  small Bootstrap-compat `@layer components` block. Consumers register
+  one theme: `app.use(vuecs, { themes: [authupTheme()] })`.
+- **Tailwind v4** — wired via `@tailwindcss/vite` in both
+  `apps/client-web/nuxt.config.ts` (`vite.plugins`) and
+  `apps/server-core/ui/vite.config.ts`. v3 is not supported because
+  theme-tailwind uses `@theme` and `--color-*` rebinds.
+- **Bootstrap-compat layer** — the `@layer components` block in
+  `packages/client-web-theme/src/index.css` provides `.btn`,
+  `.row`/`.col-N`, `.alert`, `.badge`, `.nav`/`.navbar`,
+  `.modal-*`, `.fade` and a few helpers, each `@apply`ing Tailwind
+  utilities under the legacy Bootstrap class names. This keeps
+  authup's ~135 .vue templates rendering without a 220-class-hit
+  manual rewrite. The layer is transitional — phase out by
+  refactoring call sites to `<VCButton>` / `<VCAlert>` / `<VCBadge>`
+  / Tailwind utilities, and the corresponding rule disappears once
+  no caller references it.
+- **Mechanical sweep** — Bootstrap utility classes with a 1:1
+  Tailwind equivalent (e.g. `d-flex` → `flex`, `flex-column` →
+  `flex-col`, `w-100` → `w-full`, `fw-bold` → `font-bold`,
+  `text-muted` → `text-fg-muted`, `bg-primary` → `bg-primary-600`)
+  were rewritten across 37 templates by a one-off Python regex
+  pass. Spacing utilities (`ms-*`, `me-*`, `mt-*`, `mb-*`, `p*`,
+  `gap-*`) carry over unchanged — Tailwind v4 uses the same naming.
+- **Tailwind `@source` scanning** — the theme's CSS adds `@source`
+  directives for `apps/client-web/**`, `apps/server-core/ui/**`,
+  and `packages/client-web-kit/src/**` so the JIT picks up
+  utility-class strings that live outside any single consumer app's
+  source tree (notably, classes inside the kit's components and
+  the embedded consent SSR app).
+- **Theme-tailwind semantic colors** — `bg-bg`, `bg-bg-muted`,
+  `bg-bg-elevated`, `text-fg`, `text-fg-muted`, `border-border`,
+  `text-on-primary`, `text-on-success`, etc. — plus per-palette
+  scales `primary-*`, `success-*`, `warning-*`, `error-*`,
+  `info-*` (50–950). Note: `error`, not `danger`; theme-tailwind
+  does not ship a `secondary` or `light`/`dark` palette (Bootstrap
+  names map onto `bg-bg-elevated` / `bg-bg-muted` / `bg-fg`).
+- **Plugin install order** — the theme manager is still
+  first-install-wins; `apps/client-web/plugins/vuecs.ts` keeps its
+  `name: 'vuecs'` declaration, and `vuecs-navigation.ts` still
+  `dependsOn: ['vuecs']`. Per-package plugins (`installForms`,
+  `installPagination`, ...) still install AFTER
+  `app.use(vuecs, ...)`. The trap is unchanged from the
+  theme-bootstrap days — only the consequence-text changes
+  (unstyled Tailwind class strings instead of unstyled
+  Bootstrap class strings).
+
+`bootstrap` and `@vuecs/theme-bootstrap` are no longer dependencies
+of authup. The
+`bootstrap/dist/css/bootstrap.css` CSS import is gone.
 
 ### `SlotName` enum local re-introduction
 

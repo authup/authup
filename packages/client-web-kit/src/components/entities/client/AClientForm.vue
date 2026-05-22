@@ -295,7 +295,7 @@ export default defineComponent({
                             {{ translationsDefault.secret }}
 
                             <template v-if="isSecretHashed">
-                                <span class="text-danger font-weight-bold">
+                                <span class="text-error-600 font-weight-bold">
                                     <i class="fa fa-exclamation-triangle" />
                                 </span>
                             </template>

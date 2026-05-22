@@ -27,6 +27,12 @@ In your CSS entry:
 @import "@authup/client-web-theme";
 ```
 
+Or in a CSS array (Nuxt / Vite):
+
+```ts
+css: ['@authup/client-web-theme/index.css']
+```
+
 This single import pulls in `tailwindcss`, `@vuecs/design` (concrete OKLCH tokens), and `@vuecs/theme-tailwind` (rebinds Tailwind's `--color-*` onto `--vc-color-*`).
 
 In your Vite config:

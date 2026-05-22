@@ -11,16 +11,14 @@
 }
 
 /*
- * Bump the sidebar's nav-link vertical padding above Bootstrap's
- * default (0.5rem). Bootstrap's `.nav` rule defines
- * `--bs-nav-link-padding-y: 0.5rem`; `.nav-link` reads it directly,
- * so overriding the CSS variable on the sidebar's `.nav` scope
- * flows through every nav link inside without us touching the
- * link rule itself. The header navbar has its own `.navbar-nav`
- * scope and is unaffected.
+ * Bump the sidebar's nav-link vertical padding. Authup styles its
+ * sidebar links through `.page-sidebar .nav-link`; an inline padding
+ * rule replaces the old `--bs-nav-link-padding-y` CSS-variable bump
+ * (Bootstrap-only, no longer in scope after the Tailwind migration).
  */
-.page-sidebar .nav {
-    --bs-nav-link-padding-y: 1rem;
+.page-sidebar .nav-link {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:hover > .vc-nav-link,

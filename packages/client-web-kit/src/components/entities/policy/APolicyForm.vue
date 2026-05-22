@@ -102,7 +102,7 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="d-flex flex-column">
+    <div class="flex flex-col">
         <h6>General</h6>
         <APolicyBasicForm :entity="data" />
 

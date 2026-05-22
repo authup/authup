@@ -76,12 +76,12 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex-column d-flex gap-2">
+    <div class="flex-col flex gap-2">
         <div class="text-center">
-            <h5 class="text-secondary mb-1">
+            <h5 class="text-fg-muted mb-1">
                 Application
             </h5>
-            <h1 class="fw-bold">
+            <h1 class="font-bold">
                 {{ client.name }}
             </h1>
         </div>
@@ -93,7 +93,7 @@ export default defineComponent({
         />
 
         <div class="mt-auto">
-            <div class="d-flex flex-row">
+            <div class="flex flex-row">
                 <div>
                     <i class="fa-solid fa-link" />
                 </div>
@@ -103,7 +103,7 @@ export default defineComponent({
                     </small>
                 </div>
             </div>
-            <div class="d-flex flex-row">
+            <div class="flex flex-row">
                 <div>
                     <i class="fa fa-solid fa-lock" />
                 </div>
@@ -117,7 +117,7 @@ export default defineComponent({
                     </small>
                 </div>
             </div>
-            <div class="d-flex flex-row">
+            <div class="flex flex-row">
                 <div>
                     <i class="fa fa-solid fa-clock" />
                 </div>
@@ -133,7 +133,7 @@ export default defineComponent({
             <div class="col-6">
                 <button
                     type="button"
-                    class="btn btn-block btn-secondary"
+                    class="btn w-full btn-secondary"
                     @click.prevent="abort"
                 >
                     Abort
@@ -142,7 +142,7 @@ export default defineComponent({
             <div class="col-6">
                 <button
                     type="button"
-                    class="btn btn-block btn-primary"
+                    class="btn w-full btn-primary"
                     @click.prevent="authorize"
                 >
                     Authorize

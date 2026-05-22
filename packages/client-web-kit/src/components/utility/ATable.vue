@@ -37,7 +37,7 @@
  *
  * 3. The wrapper also drops `<VCTable>`'s default header styling
  *    contribution from this path — `tableHeadCell` theme classes still
- *    apply, so the theme-bootstrap `text-uppercase` etc. is honored
+ *    apply, so the theme-bootstrap `uppercase` etc. is honored
  *    or overridden via the consumer app's `vuecs` plugin overrides
  *    (see `apps/client-web/plugins/vuecs.ts`).
  */

@@ -52,37 +52,37 @@ export default defineNuxtComponent({
             </div>
 
             <!--
-                Use Bootstrap's `.nav .flex-column` instead of
+                Use Bootstrap's `.nav .flex-col` instead of
                 `.navbar-nav`: navbar-nav zeroes
                 `--bs-nav-link-padding-x` (correct for the header bar,
                 wrong for a sidebar). Bare `.nav` provides the CSS-var
                 scope `.nav-link` reads its padding from
                 (`--bs-nav-link-padding-x: 1rem; --bs-nav-link-padding-y:
-                0.5rem;`); `.flex-column` keeps the layout vertical
+                0.5rem;`); `.flex-col` keeps the layout vertical
                 (`.nav` alone is `display: flex; flex-wrap: wrap;`, which
                 would lay items out horizontally).
             -->
             <VCNavItems
-                class="sidebar-menu nav flex-column"
+                class="sidebar-menu nav flex-col"
                 :level="1"
             />
 
             <div class="mt-auto">
                 <div
                     v-if="loggedIn"
-                    class="session-info font-weight-light flex-column ms-3 me-3 mb-1 mt-auto"
+                    class="session-info font-weight-light flex-col ms-3 me-3 mb-1 mt-auto"
                 >
                     <small>
                         <VCCountdown :time="tokenExpiresIn">
                             <template #default="props">
                                 <i class="fa fa-clock pe-1" /> The session will be renewed in
-                                <span class="text-success">{{ props.minutes }} minute(s), {{ props.seconds }} second(s)</span>.
+                                <span class="text-success-600">{{ props.minutes }} minute(s), {{ props.seconds }} second(s)</span>.
                             </template>
                         </VCCountdown>
                     </small>
                 </div>
 
-                <ul class="sidebar-menu vc-nav-items nav flex-column">
+                <ul class="sidebar-menu vc-nav-items nav flex-col">
                     <li class="vc-nav-item">
                         <a
                             class="vc-nav-link nav-link"

@@ -11,12 +11,6 @@ import { defineNuxtConfig } from 'nuxt/config';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineNuxtConfig({
-    build: {
-        transpile: [
-            'vue-toastification',
-        ],
-    },
-
     vite: {
         plugins: [
             tailwindcss(),
@@ -44,7 +38,6 @@ export default defineNuxtConfig({
         '@authup/client-web-kit/../dist/style.css',
         '@fortawesome/fontawesome-free/css/all.css',
         '@/assets/css/vue-layout-navigation.css',
-        '@/assets/css/vue-toastification.css',
         '@/assets/css/root.css',
         '@/assets/css/core/header.css',
         '@/assets/css/core/navbar.css',

@@ -66,7 +66,7 @@ export default defineNuxtComponent({
             <span class="sub-title ms-1">Management</span>
         </h1>
         <div class="content-wrapper">
-            <div class="content-sidebar flex-column">
+            <div class="content-sidebar flex-col">
                 <DomainEntityNav
                     :items="items"
                     path="/identity-providers"

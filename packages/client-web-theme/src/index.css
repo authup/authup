@@ -1,0 +1,150 @@
+/*!
+ * @authup/client-web-theme — single CSS entry for authup's vuecs UI.
+ *
+ * Imports the full Tailwind v4 + vuecs design-token + theme-tailwind pipeline,
+ * then layers authup-specific design tokens and component tweaks on top.
+ *
+ * Consumers `@import "@authup/client-web-theme"` (or list it in their app's
+ * CSS array) — no other vuecs / Tailwind imports are required.
+ *
+ * Cascade order:
+ *   1. tailwindcss            — utility layer + @theme directive support
+ *   2. @vuecs/design          — concrete --vc-color-* OKLCH tokens
+ *   3. @vuecs/theme-tailwind  — rebinds --color-* (Tailwind) ↔ --vc-color-*
+ *   4. authup tokens          — project palette / radii / typography choices
+ *   5. authup compat layer    — Bootstrap-shaped class shims (@apply'd from
+ *                                Tailwind utilities) that keep legacy markup
+ *                                rendering correctly. Phased out as templates
+ *                                migrate to <VCButton> / <VCAlert> / etc.
+ */
+
+@import "tailwindcss";
+@import "@vuecs/design";
+@import "@vuecs/theme-tailwind";
+
+/* Tell Tailwind v4 to scan the workspace .vue / .ts surfaces — the JIT
+   otherwise misses utility classes that live outside the consumer app's
+   own source tree (e.g. classes in packages/client-web-kit/src/**). */
+@source "../../../apps/client-web/**/*.{vue,ts}";
+@source "../../../apps/server-core/ui/**/*.{vue,ts}";
+@source "../../../packages/client-web-kit/src/**/*.{vue,ts}";
+
+/* ------------------------------------------------------------------
+   Authup design tokens
+   Override `--vc-color-*` (or palette names via setColorPalette()) to
+   reskin the entire UI without touching component class strings.
+   ------------------------------------------------------------------ */
+@layer base {
+    :root {
+        /* placeholder — concrete authup brand tokens will be filled in
+           as the migration touches the styled-but-not-tokenized chrome
+           (header, sidebar, login card, ...) */
+    }
+}
+
+/* ------------------------------------------------------------------
+   Bootstrap-compat layer
+   Provides the Bootstrap-shaped utility / component class names that
+   authup's pre-Tailwind templates still reference. Each rule `@apply`s
+   Tailwind utilities — same visual contract, no `bootstrap` dep, and
+   the rules disappear automatically when the last caller is rewritten
+   to a `<VC*>` component.
+
+   Scope is intentionally narrow: only what the authup codebase actually
+   uses today. Don't add Bootstrap utilities that have no live caller —
+   `grep -rn 'class="[^"]*<token>'` first.
+   ------------------------------------------------------------------ */
+@layer components {
+    /* Buttons --------------------------------------------------------- */
+    .btn {
+        @apply inline-flex items-center justify-center gap-1 rounded-md
+               border border-transparent px-3 py-1.5 text-sm font-medium
+               transition-colors cursor-pointer
+               disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+    .btn-xs { @apply px-1.5 py-0.5 text-xs; }
+    .btn-sm { @apply px-2 py-1 text-xs; }
+    .btn-lg { @apply px-4 py-2 text-base; }
+
+    .btn-primary   { @apply bg-primary-600 text-on-primary hover:bg-primary-700; }
+    .btn-secondary { @apply bg-bg-elevated text-fg         hover:bg-bg-muted; }
+    .btn-success   { @apply bg-success-600 text-on-success hover:bg-success-700; }
+    .btn-danger    { @apply bg-error-600   text-on-error   hover:bg-error-700; }
+    .btn-warning   { @apply bg-warning-500 text-on-warning hover:bg-warning-600; }
+    .btn-info      { @apply bg-info-500    text-on-info    hover:bg-info-600; }
+    .btn-light     { @apply bg-bg-muted    text-fg         hover:bg-bg-elevated; }
+    .btn-dark      { @apply bg-fg          text-bg         hover:opacity-80; }
+
+    .btn-outline-primary   { @apply border-primary-600  text-primary-600 hover:bg-primary-600 hover:text-on-primary; }
+    .btn-outline-secondary { @apply border-border       text-fg          hover:bg-bg-muted; }
+    .btn-outline-success   { @apply border-success-600  text-success-600 hover:bg-success-600 hover:text-on-success; }
+    .btn-outline-danger    { @apply border-error-600    text-error-600   hover:bg-error-600   hover:text-on-error; }
+    .btn-outline-warning   { @apply border-warning-500  text-warning-600 hover:bg-warning-500 hover:text-on-warning; }
+    .btn-outline-info      { @apply border-info-500     text-info-600    hover:bg-info-500    hover:text-on-info; }
+    .btn-outline-light     { @apply border-border-muted text-fg-muted    hover:bg-bg-muted; }
+    .btn-outline-dark      { @apply border-fg           text-fg          hover:bg-fg          hover:text-bg; }
+
+    /* Grid ----------------------------------------------------------- */
+    .row     { @apply grid grid-cols-12 gap-4; }
+    .col     { @apply col-span-12; }
+    .col-1   { @apply col-span-1; }
+    .col-2   { @apply col-span-2; }
+    .col-3   { @apply col-span-3; }
+    .col-4   { @apply col-span-4; }
+    .col-5   { @apply col-span-5; }
+    .col-6   { @apply col-span-6; }
+    .col-7   { @apply col-span-7; }
+    .col-8   { @apply col-span-8; }
+    .col-9   { @apply col-span-9; }
+    .col-10  { @apply col-span-10; }
+    .col-11  { @apply col-span-11; }
+    .col-12  { @apply col-span-12; }
+
+    .container       { @apply mx-auto w-full max-w-screen-lg px-4; }
+    .container-fluid { @apply w-full px-4; }
+
+    /* Alerts --------------------------------------------------------- */
+    .alert         { @apply relative mb-3 rounded-md border px-4 py-3; }
+    .alert-sm      { @apply px-3 py-2 text-sm; }
+    .alert-primary { @apply border-primary-200 bg-primary-50 text-primary-700; }
+    .alert-success { @apply border-success-200 bg-success-50 text-success-700; }
+    .alert-warning { @apply border-warning-200 bg-warning-50 text-warning-700; }
+    .alert-danger  { @apply border-error-200   bg-error-50   text-error-700; }
+    .alert-info    { @apply border-info-200    bg-info-50    text-info-700; }
+
+    /* Badges --------------------------------------------------------- */
+    .badge {
+        @apply inline-flex items-center rounded-full px-2 py-0.5
+               text-xs font-medium;
+    }
+
+    /* Nav / navbar — bootstrap's nav components ---------------------- */
+    .nav             { @apply flex flex-wrap; }
+    .nav-item        { @apply list-none; }
+    .nav-link        { @apply block px-3 py-2 text-fg hover:text-primary-600 no-underline; }
+    .nav-link.active { @apply text-primary-600; }
+    .navbar          { @apply flex flex-wrap items-center justify-between; }
+    .navbar-nav      { @apply flex flex-col list-none; }
+    .navbar-brand    { @apply mr-4 inline-block py-2 text-lg whitespace-nowrap; }
+    .navbar-toggler  { @apply rounded border border-border px-2 py-1; }
+    .navbar-expand-md { @apply md:flex-nowrap md:justify-start; }
+    .navbar-collapse { @apply flex-grow basis-full items-center; }
+
+    /* Forms — minimal shims (vuecs SFCs own the real form styles) ---- */
+    .form-group   { @apply mb-3; }
+    .form-switch  { @apply inline-flex items-center gap-2; }
+
+    /* Modal — minimal classic-Bootstrap chrome ----------------------- */
+    .modal-backdrop { @apply fixed inset-0 z-40 bg-black/50; }
+    .modal          { @apply fixed inset-0 z-50 overflow-y-auto; }
+    .modal-dialog   { @apply mx-auto my-8 w-full max-w-lg; }
+    .modal-content  { @apply rounded-md border border-border bg-bg shadow-lg; }
+    .modal-header   { @apply flex items-center justify-between border-b border-border px-4 py-3; }
+    .modal-title    { @apply font-semibold; }
+    .modal-body     { @apply px-4 py-3; }
+    .modal-footer   { @apply flex items-center justify-end gap-2 border-t border-border px-4 py-3; }
+
+    /* Transition helpers used by modal etc. -------------------------- */
+    .fade.show { @apply opacity-100; }
+    .fade      { @apply transition-opacity; }
+}

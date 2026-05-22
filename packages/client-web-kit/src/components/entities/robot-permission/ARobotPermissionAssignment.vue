@@ -75,7 +75,7 @@ export default defineComponent({
 });
 </script>
 <template>
-    <span class="d-flex gap-1">
+    <span class="flex gap-1">
         <AToggleButton
             :value="!!manager.data.value"
             :is-busy="manager.busy.value"

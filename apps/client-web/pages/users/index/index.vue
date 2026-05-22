@@ -61,7 +61,7 @@ export default defineComponent({
             {
                 key: 'options',
                 label: '',
-                cellClass: 'text-center',
+                cellClass: 'text-centegit r',
             },
         ];
 
