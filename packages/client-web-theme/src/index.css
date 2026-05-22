@@ -169,6 +169,57 @@
     .form-group   { @apply mb-3; }
     .form-switch  { @apply inline-flex items-center gap-2; }
 
+    /* Nav-pills — joined-tab look. Used by buildDomainEntityNav() in
+       apps/client-web/composables/domain/enity-nav.ts to render entity
+       sub-navigation as a pill row (horizontal) or pill column
+       (.flex-column). vuecs has no equivalent component; this compat
+       owns the styling until we move callers to a future <VCTabs> /
+       similar. */
+    .nav-pills .nav-link {
+        @apply border border-border bg-bg-muted text-fg cursor-pointer
+               rounded-none;
+        margin-left: -1px;
+    }
+    .nav-pills .nav-item:first-child .nav-link {
+        @apply rounded-l-md;
+        margin-left: 0;
+    }
+    .nav-pills .nav-item:last-child .nav-link {
+        @apply rounded-r-md;
+    }
+    .nav-pills.flex-column .nav-link {
+        margin-left: 0;
+        margin-top: -1px;
+    }
+    .nav-pills.flex-column .nav-item:first-child .nav-link {
+        @apply rounded-t-md rounded-l-none;
+        margin-top: 0;
+    }
+    .nav-pills.flex-column .nav-item:last-child .nav-link {
+        @apply rounded-b-md rounded-r-none;
+    }
+    .nav-pills .nav-link.active,
+    .nav-pills .nav-link.router-link-exact-active,
+    .nav-pills .nav-link.router-link-active {
+        @apply bg-primary-600 text-on-primary border-primary-600;
+    }
+
+    /* Pagination — override theme-tailwind's per-button rounded-md to a
+       joined-tab look (only first / last buttons get rounded outer
+       corners). vuecs's default is each button independently rounded
+       (pill row); authup historically used the Bootstrap-joined style. */
+    .vc-pagination .vc-pagination-link {
+        @apply !rounded-none;
+        margin-left: -1px;
+    }
+    .vc-pagination > :first-child .vc-pagination-link {
+        @apply !rounded-l-md;
+        margin-left: 0;
+    }
+    .vc-pagination > :last-child .vc-pagination-link {
+        @apply !rounded-r-md;
+    }
+
     /* Modal — minimal classic-Bootstrap chrome ----------------------- */
     .modal-backdrop { @apply fixed inset-0 z-40 bg-black/50; }
     .modal          { @apply fixed inset-0 z-50 overflow-y-auto; }

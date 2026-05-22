@@ -23,13 +23,15 @@ export function buildPagination(
         limit,
         offset,
         busy,
-        'onUpdate:page': (page: number) => {
-            const nextOffset = (page - 1) * (limit || 1);
+        // VCPagination emits `load` with `{ page, offset, limit }` —
+        // NOT `update:page`. Using the wrong event name silently
+        // breaks the shim: pagination buttons render but don't paginate.
+        onLoad: (payload: { offset: number }) => {
             void ctx.load?.({
                 ...ctx.meta,
                 pagination: {
                     limit,
-                    offset: nextOffset,
+                    offset: payload.offset,
                 },
             });
         },

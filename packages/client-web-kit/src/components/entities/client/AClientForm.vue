@@ -7,10 +7,10 @@
 
 <script lang="ts">
 import {
-    type PropType, 
-    computed, 
-    defineComponent, 
-    reactive, 
+    type PropType,
+    computed,
+    defineComponent,
+    reactive,
     watch,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
@@ -20,20 +20,20 @@ import { createNanoID, isBCryptHash } from '@authup/kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import { ARealmPicker } from '../realm';
 import {
-    AFormInputList, 
-    AFormSubmit, 
-    defineEntityManager, 
+    AFormInputList,
+    AFormSubmit,
+    defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
 import {
     TranslatorTranslationClientKey,
-    TranslatorTranslationDefaultKey, 
-    TranslatorTranslationGroup, 
-    VuelidateCustomRule, 
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
+    VuelidateCustomRule,
     VuelidateCustomRuleKey,
     assignFormProperties,
     injectStore,
-    storeToRefs, 
+    storeToRefs,
     useTranslationsForGroup,
 } from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
@@ -325,9 +325,8 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormCheckbox
+                                <VCFormSwitch
                                     v-model="vuelidate.is_confidential.$model"
-                                    :group-class="'form-switch'"
                                     :label="true"
                                     :label-content="translationsClient.isConfidential.value"
                                 />
@@ -342,9 +341,8 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormCheckbox
+                                <VCFormSwitch
                                     v-model="vuelidate.secret_hashed.$model"
-                                    :group-class="'form-switch'"
                                     :label="true"
                                     :label-content="translationsClient.hashSecret.value"
                                 />
@@ -359,9 +357,8 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormCheckbox
+                                <VCFormSwitch
                                     v-model="vuelidate.active.$model"
-                                    :group-class="'form-switch'"
                                     :label="true"
                                     :label-content="translationsClient.isActive.value"
                                 />

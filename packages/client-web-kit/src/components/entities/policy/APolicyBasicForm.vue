@@ -11,7 +11,7 @@ import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Policy } from '@authup/core-kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormOption } from '@vuecs/forms';
-import { VCFormCheckbox, VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
 import { assignFormProperties, injectStore, storeToRefs } from '../../../core';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
@@ -21,7 +21,7 @@ export default defineComponent({
     components: {
         ARealmPicker,
         VCFormInput,
-        VCFormCheckbox,
+        VCFormSwitch,
         VCFormGroup,
         IVuelidate,
     },
@@ -163,9 +163,8 @@ export default defineComponent({
                         :validation-messages="props.data"
                         :validation-severity="props.severity"
                     >
-                        <VCFormCheckbox
+                        <VCFormSwitch
                             v-model="vuelidate.invert.$model"
-                            :group-class="'form-switch'"
                             :label="true"
                             @change="handleUpdated"
                         >
@@ -174,7 +173,7 @@ export default defineComponent({
                                     Invert?
                                 </label>
                             </template>
-                        </VCFormCheckbox>
+                        </VCFormSwitch>
                     </VCFormGroup>
                 </template>
             </IVuelidate>
