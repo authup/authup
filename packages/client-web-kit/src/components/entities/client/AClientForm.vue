@@ -263,9 +263,6 @@ export default defineComponent({
                     <small>{{ translationsClient.nameHint }}</small>
                 </template>
             </IVuelidate>
-
-            <hr>
-
             <IVuelidate :validation="vuelidate.display_name">
                 <template #default="props">
                     <VCFormGroup
@@ -282,9 +279,6 @@ export default defineComponent({
                     </VCFormGroup>
                 </template>
             </IVuelidate>
-
-            <hr>
-
             <IVuelidate :validation="vuelidate.secret">
                 <template #default="props">
                     <VCFormGroup
@@ -369,7 +363,6 @@ export default defineComponent({
             </div>
 
             <template v-if="!realmId && !isEditing">
-                <hr>
                 <IVuelidate :validation="vuelidate.realm_id">
                     <template #default="props">
                         <VCFormGroup
@@ -409,9 +402,6 @@ export default defineComponent({
                 </template>
             </AFormInputList>
             <small>{{ translationsClient.redirectURIHint }}</small>
-
-            <hr>
-
             <IVuelidate :validation="vuelidate.description">
                 <template #default="props">
                     <VCFormGroup
@@ -430,9 +420,6 @@ export default defineComponent({
                     <small>{{ translationsClient.descriptionHint }}</small>
                 </template>
             </IVuelidate>
-
-            <hr>
-
             <div>
                 <AFormSubmit
                     :is-busy="isBusy"

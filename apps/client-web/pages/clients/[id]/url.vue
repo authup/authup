@@ -72,9 +72,6 @@ export default defineNuxtComponent({
         <div class="mb-1">
             Generate an authorize url by picking the scopes it needs to function.
         </div>
-
-        <hr>
-
         <AClientScopes
             :header="true"
             :query="query"
@@ -97,9 +94,6 @@ export default defineNuxtComponent({
                 </VCFormSwitch>
             </template>
         </AClientScopes>
-
-        <hr>
-
         <VCFormGroup>
             <template #label>
                 Redirect URL
@@ -111,8 +105,6 @@ export default defineNuxtComponent({
                 />
             </template>
         </VCFormGroup>
-
-        <hr>
         <VCFormGroup>
             <template #label>
                 Generated URL

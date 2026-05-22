@@ -120,7 +120,7 @@
     /* Grid — Bootstrap-style 12-col layout via flex (not CSS grid). The
        earlier grid-based shim broke layouts that relied on `.row` being
        a flex container (e.g. `.row > .ms-auto`). */
-    .row     { @apply flex flex-wrap; }
+    .row     { @apply flex flex-wrap gap-4; }
     .col     { @apply flex-1 basis-0; }
     .col-1   { @apply w-1/12; }
     .col-2   { @apply w-2/12; }
