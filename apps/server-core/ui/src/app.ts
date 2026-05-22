@@ -13,31 +13,22 @@ import { createSSRApp } from 'vue';
 import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router';
 
 import vuecs from '@vuecs/core';
-import bootstrap from '@vuecs/theme-bootstrap';
+import authupTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installPagination from '@vuecs/pagination';
 
-// vuecs CSS pipeline (Bootstrap variant) — required cascade order per
-// @vuecs/theme-bootstrap doctrine:
-//   1. Bootstrap → default --bs-* variables.
-//   2. @vuecs/design/standalone → --vc-color-* tokens (Tailwind-free OKLCH).
-//   3. @vuecs/theme-bootstrap → bridges --bs-* ↔ --vc-color-*.
-//   4. Per-component CSS (forms, table, button, elements, …) consumes
-//      the --vc-color-* tokens above.
+// vuecs CSS pipeline (Tailwind variant) — the @authup/client-web-theme
+// entry pulls in:
+//   1. tailwindcss           — utility layer + @theme directive
+//   2. @vuecs/design         — concrete --vc-color-* OKLCH tokens
+//   3. @vuecs/theme-tailwind — rebinds Tailwind --color-* ↔ --vc-color-*
+//   4. authup design tokens  — project palette / radii / typography
 // Mirrors the client-web nuxt.config.ts pipeline so the consent UI's
-// vuecs SFCs render with the same Bootstrap-themed look.
-import 'bootstrap/dist/css/bootstrap.css';
-import '@vuecs/design/standalone.css';
-import '@vuecs/theme-bootstrap/index.css';
-import '@vuecs/button/dist/style.css';
-import '@vuecs/elements/dist/style.css';
-import '@vuecs/forms/dist/style.css';
-import '@vuecs/pagination/dist/style.css';
-import '@vuecs/table/dist/style.css';
+// vuecs SFCs render with the same authup look.
+import '@authup/client-web-theme/index.css';
 import '@authup/client-web-kit/../dist/style.css';
 import '@fortawesome/fontawesome-free/css/all.css';
-import '../../../client-web/assets/css/bootstrap-override.css';
 import '../../../client-web/assets/css/root.css';
 import '../../../client-web/assets/css/form.css';
 import '../../../client-web/assets/css/generics.css';
@@ -106,7 +97,7 @@ export function createApp(payload: HydrationPayload) : {
     // manager is populated when components mount (see the matching note
     // in `apps/client-web/plugins/vuecs.ts`).
     app.use(vuecs, {
-        themes: [bootstrap()],
+        themes: [authupTheme()],
         icons: [fontAwesome()],
     });
     app.use(installForms);

@@ -8,11 +8,18 @@
 import type { ModuleOptions } from '@authup/client-web-nuxt';
 import path from 'node:path';
 import { defineNuxtConfig } from 'nuxt/config';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineNuxtConfig({
     build: {
         transpile: [
             'vue-toastification',
+        ],
+    },
+
+    vite: {
+        plugins: [
+            tailwindcss(),
         ],
     },
 
@@ -25,25 +32,15 @@ export default defineNuxtConfig({
     },
 
     css: [
-        // vuecs CSS pipeline (Bootstrap variant) — required cascade order
-        // per @vuecs/theme-bootstrap doctrine:
-        //   1. Bootstrap → default --bs-* CSS variables.
-        //   2. @vuecs/design/standalone → --vc-color-* tokens against a
-        //      Tailwind-free OKLCH palette catalog.
-        //   3. @vuecs/theme-bootstrap → bridges --bs-* ↔ --vc-color-*.
-        //   4. Per-component CSS (forms, table, button, elements, …)
-        //      consumes the --vc-color-* tokens above.
-        // Without (2)/(3)/(4), form controls / tables / buttons render
-        // unstyled (no borders, no spacing, default browser look).
-        'bootstrap/dist/css/bootstrap.css',
-        '@vuecs/design/standalone.css',
-        '@vuecs/theme-bootstrap/index.css',
-        '@vuecs/button/dist/style.css',
-        '@vuecs/elements/dist/style.css',
-        '@vuecs/forms/dist/style.css',
-        '@vuecs/navigation/dist/style.css',
-        '@vuecs/pagination/dist/style.css',
-        '@vuecs/table/dist/style.css',
+        // vuecs CSS pipeline (Tailwind variant) — the @authup/client-web-theme
+        // entry pulls in:
+        //   1. tailwindcss           — utility layer + @theme directive
+        //   2. @vuecs/design         — concrete --vc-color-* OKLCH tokens
+        //   3. @vuecs/theme-tailwind — rebinds Tailwind --color-* ↔ --vc-color-*
+        //   4. authup design tokens  — project palette / radii / typography
+        // The Tailwind v4 vite plugin (configured under `vite.plugins` above)
+        // processes the `@import "tailwindcss"` directive at build time.
+        '@authup/client-web-theme/index.css',
         '@authup/client-web-kit/../dist/style.css',
         '@fortawesome/fontawesome-free/css/all.css',
         '@/assets/css/vue-layout-navigation.css',
@@ -55,11 +52,9 @@ export default defineNuxtConfig({
         '@/assets/css/core/sidebar.css',
         '@/assets/css/core/footer.css',
         '@/assets/css/domain.css',
-        '@/assets/css/root.css',
         '@/assets/css/card.css',
         '@/assets/css/form.css',
         '@/assets/css/generics.css',
-        '@/assets/css/bootstrap-override.css',
     ],
 
     alias: {
@@ -68,6 +63,7 @@ export default defineNuxtConfig({
         '@authup/core-http-kit': path.join(__dirname, '..', '..', 'packages', 'core-http-kit', 'src'),
         '@authup/kit': path.join(__dirname, '..', '..', 'packages', 'kit', 'src'),
         '@authup/client-web-kit': path.join(__dirname, '..', '..', 'packages', 'client-web-kit', 'src'),
+        '@authup/client-web-theme': path.join(__dirname, '..', '..', 'packages', 'client-web-theme', 'src'),
         '@authup/specs': path.join(__dirname, '..', '..', 'packages', 'specs', 'src'),
     },
 
