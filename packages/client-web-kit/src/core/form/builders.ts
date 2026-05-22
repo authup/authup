@@ -16,6 +16,7 @@ import type {
     VNodeChild, 
 } from 'vue';
 import { h, mergeProps, unref } from 'vue';
+import { extend } from '@vuecs/core';
 import { VCButton } from '@vuecs/button';
 import {
     VCFormCheckbox,
@@ -172,6 +173,11 @@ export function buildFormCheckbox(input: FormCheckboxBuildOptionsInput): VNodeCh
  * not `class` — Vue's `mergeProps` would otherwise concatenate it onto
  * the inner SwitchRoot button, which offsets the button relative to the
  * label inside the wrapper's `items-center` and visibly misaligns them.
+ *
+ * Must wrap in `extend()` so it MERGES with the theme's base wrapper
+ * classes (`inline-flex items-center gap-2`). Without `extend()`,
+ * vuecs's `applyOverrides` REPLACES the slot — blowing away the gap
+ * and items-center, so the switch and label collapse together.
  */
 export function buildFormSwitch(input: FormCheckboxBuildOptionsInput): VNodeChild {
     const base = {
@@ -181,7 +187,7 @@ export function buildFormSwitch(input: FormCheckboxBuildOptionsInput): VNodeChil
         group: input.group,
         labelContent: typeof input.labelContent === 'string' ? input.labelContent : undefined,
         class: input.class,
-        themeClass: input.groupClass ? { group: input.groupClass } : undefined,
+        themeClass: input.groupClass ? { group: extend(input.groupClass) } : undefined,
     };
     return h(
         VCFormSwitch,
