@@ -8,4 +8,4 @@
 export { AUser } from './AUser';
 export { AUserForm } from './AUserForm';
 export { AUsers } from './AUsers';
-export { AUserPasswordForm } from './AUserPasswordForm';
+export { AUserPasswordForm } from './AUserPasswordForm.vue';
