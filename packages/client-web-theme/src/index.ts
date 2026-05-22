@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Theme } from '@vuecs/core';
 import tailwindTheme, { merge } from '@vuecs/theme-tailwind';
 
 export { merge };
@@ -13,27 +12,28 @@ export { merge };
 /**
  * Authup theme for vuecs components.
  *
- * Composes `@vuecs/theme-tailwind` (semantic Tailwind v4 classes referencing
- * `--vc-color-*` tokens) with authup-specific per-element overrides. Consumers
- * register a single theme:
+ * Currently a pass-through over `@vuecs/theme-tailwind`. The module
+ * exists as the single project-wide entry point so future per-element
+ * overrides land in one place. Consumers register a single theme:
  *
  *     app.use(vuecs, { themes: [authupTheme()] });
  *
- * Reskinning (palette swap, dark mode) is handled by redefining `--vc-color-*`
- * variables — `setColorPalette()` from `@vuecs/theme-tailwind` or toggling
- * `.dark` on `<html>` works without further theme configuration.
+ * To add overrides, replace the body with a merge over the base theme:
+ *
+ *     const base = tailwindTheme();
+ *     return {
+ *         ...base,
+ *         elements: {
+ *             ...base.elements,
+ *             button: { classes: { root: 'extra-authup-class' } },
+ *         },
+ *     };
+ *
+ * Reskinning (palette swap, dark mode) is handled by redefining
+ * `--vc-color-*` variables — `setColorPalette()` from
+ * `@vuecs/theme-tailwind` or toggling `.dark` on `<html>` works without
+ * any theme configuration here.
  */
-export default function authupTheme(): Theme {
-    const base = tailwindTheme();
-
-    return {
-        ...base,
-        classesMergeFn: merge,
-        elements: {
-            ...base.elements,
-            // Authup-specific element overrides go here as they crystallize
-            // during template migration. The structural vc-* classes from
-            // base are preserved by the theme manager's merge step.
-        },
-    };
+export default function authupTheme() {
+    return tailwindTheme();
 }
