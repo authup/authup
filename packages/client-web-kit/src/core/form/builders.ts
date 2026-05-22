@@ -22,6 +22,7 @@ import {
     VCFormGroup,
     VCFormInput,
     VCFormSelect,
+    VCFormSwitch,
     VCFormTextarea,
 } from '@vuecs/forms';
 import type { FormOption, ValidationMessages } from '@vuecs/forms';
@@ -153,6 +154,31 @@ export function buildFormCheckbox(input: FormCheckboxBuildOptionsInput): VNodeCh
     };
     return h(
         VCFormCheckbox,
+        input.props ? mergeProps(base as never, input.props as never) : base,
+        typeof input.labelContent !== 'string' && input.labelContent !== undefined ?
+            { label: () => input.labelContent } :
+            undefined,
+    );
+}
+
+/**
+ * Switch (toggle) variant of `buildFormCheckbox`. Renders `<VCFormSwitch>`
+ * — the dedicated slider component in `@vuecs/forms` 4.x — using the same
+ * `{ value, onChange, label, labelContent, groupClass, ... }` shape so the
+ * pre-1.x `buildFormCheckbox({ groupClass: 'form-switch' })` call sites
+ * migrate by a single rename.
+ */
+export function buildFormSwitch(input: FormCheckboxBuildOptionsInput): VNodeChild {
+    const base = {
+        modelValue: !!unref(input.value),
+        'onUpdate:modelValue': (next: boolean) => input.onChange?.(next),
+        label: input.label,
+        group: input.group,
+        labelContent: typeof input.labelContent === 'string' ? input.labelContent : undefined,
+        class: input.class ?? input.groupClass,
+    };
+    return h(
+        VCFormSwitch,
         input.props ? mergeProps(base as never, input.props as never) : base,
         typeof input.labelContent !== 'string' && input.labelContent !== undefined ?
             { label: () => input.labelContent } :

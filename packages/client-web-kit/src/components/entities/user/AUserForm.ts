@@ -13,15 +13,15 @@ import {
     TranslatorTranslationGroup, 
     VuelidateCustomRule, 
     VuelidateCustomRuleKey, 
-    assignFormProperties, 
-    buildFormCheckbox, 
-    buildFormGroup, 
-    buildFormInput, 
-    buildFormSubmitWithTranslations, 
-    createFormSubmitTranslations, 
-    getVuelidateSeverity, 
-    useTranslationsForGroup, 
-    useTranslationsForNestedValidation, 
+    assignFormProperties,
+    buildFormGroup,
+    buildFormInput,
+    buildFormSubmitWithTranslations,
+    buildFormSwitch,
+    createFormSubmitTranslations,
+    getVuelidateSeverity,
+    useTranslationsForGroup,
+    useTranslationsForNestedValidation,
 } from '../../../core';
 import useVuelidate from '@vuelidate/core';
 import {
@@ -213,8 +213,8 @@ export const AUserForm = defineComponent({
                 let nameLock : VNodeArrayChildren = [];
                 if (props.entity) {
                     nameLock = [
-                        buildFormCheckbox({
-                            groupClass: 'form-switch mt-3',
+                        buildFormSwitch({
+                            groupClass: 'mt-3',
                             labelContent: h('span', {
                                 class: {
                                     'text-warning': !form.name_locked,
@@ -234,8 +234,8 @@ export const AUserForm = defineComponent({
                 checks = [
                     h('div', { class: 'row' }, [
                         h('div', { class: 'col' }, [
-                            buildFormCheckbox({
-                                groupClass: 'form-switch mt-3',
+                            buildFormSwitch({
+                                groupClass: 'mt-3',
                                 labelContent: h('span', {
                                     class: {
                                         'text-danger': !form.active,

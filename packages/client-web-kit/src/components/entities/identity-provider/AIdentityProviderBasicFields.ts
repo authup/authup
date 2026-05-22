@@ -12,10 +12,10 @@ import {
     TranslatorTranslationGroup, 
     VuelidateCustomRule, 
     VuelidateCustomRuleKey, 
-    assignFormProperties, 
-    buildFormCheckbox, 
-    buildFormGroup, 
-    buildFormInput, 
+    assignFormProperties,
+    buildFormGroup,
+    buildFormInput,
+    buildFormSwitch, 
     getVuelidateSeverity, 
     useTranslationsForGroup, 
     useTranslationsForNestedValidation, 
@@ -138,8 +138,8 @@ export const AIdentityProviderBasicFields = defineComponent({
                 }),
             });
 
-            const enabled = buildFormCheckbox({
-                groupClass: 'form-switch mt-3',
+            const enabled = buildFormSwitch({
+                groupClass: 'mt-3',
                 labelContent: 'Enabled?',
                 value: $v.value.enabled.$model,
                 onChange(input) {

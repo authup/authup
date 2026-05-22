@@ -6,13 +6,13 @@
  */
 
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { 
-    assignFormProperties, 
-    buildFormCheckbox, 
-    buildFormGroup, 
-    buildFormInput, 
-    getVuelidateSeverity, 
-    useTranslationsForNestedValidation,  
+import {
+    assignFormProperties,
+    buildFormGroup,
+    buildFormInput,
+    buildFormSwitch,
+    getVuelidateSeverity,
+    useTranslationsForNestedValidation,
 } from '../../../core';
 import useVuelidate from '@vuelidate/core';
 import { numeric, required } from '@vuelidate/validators';
@@ -92,8 +92,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
                 validationSeverity: getVuelidateSeverity($v.value.start_tls),
                 label: true,
                 labelContent: 'StartTLS',
-                content: buildFormCheckbox({
-                    groupClass: 'form-switch',
+                content: buildFormSwitch({
                     labelContent: 'Enable StartTLS process?',
                     value: $v.value.start_tls.$model,
                     onChange(input) {
