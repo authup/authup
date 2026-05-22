@@ -303,6 +303,14 @@ export const AUserForm = defineComponent({
                 ];
             }
 
+            // Two-column grid only when the right side has content (the
+            // realm picker). With an empty right column, md:grid-cols-2
+            // still reserves half the width and squashes the form inputs.
+            const hasRight = rightColumn.length > 0;
+            const layoutClass = hasRight ?
+                'grid grid-cols-1 md:grid-cols-2 gap-2' :
+                '';
+
             return h('form', {
                 onSubmit($event: any) {
                     $event.preventDefault();
@@ -310,7 +318,7 @@ export const AUserForm = defineComponent({
                     return submit.apply(null);
                 },
             }, [
-                h('div', { class: 'grid grid-cols-1 md:grid-cols-2 gap-2' }, [
+                h('div', { class: layoutClass }, [
                     leftColumn,
                     rightColumn,
                 ]),
