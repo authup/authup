@@ -129,8 +129,16 @@
     .navbar-nav      { @apply flex flex-col list-none; }
     .navbar-brand    { @apply mr-4 inline-block py-2 text-lg whitespace-nowrap; }
     .navbar-toggler  { @apply rounded border border-border px-2 py-1; }
-    .navbar-expand-md { @apply md:flex-nowrap md:justify-start; }
-    .navbar-collapse { @apply flex-grow basis-full items-center; }
+    .navbar-collapse { @apply grow basis-full items-center; }
+
+    /* Bootstrap-style .collapse: content is hidden unless `.show` is
+       toggled. `.navbar-expand-md` (used on the `<nav>` itself) flips
+       the navbar contents back to visible + horizontal at md+ so the
+       desktop header is single-row, mobile is a toggleable column. */
+    .collapse:not(.show) { @apply hidden; }
+    .navbar-expand-md .navbar-collapse { @apply md:flex!; }
+    .navbar-expand-md .navbar-nav      { @apply md:flex-row; }
+    .navbar-expand-md                  { @apply md:flex-nowrap md:justify-start; }
 
     /* Forms — minimal shims (vuecs SFCs own the real form styles) ---- */
     .form-group   { @apply mb-3; }
