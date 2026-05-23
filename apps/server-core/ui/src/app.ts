@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectStore, install } from '@authup/client-web-kit';
+import { buildSubmitButtonDefaults, injectStore, install } from '@authup/client-web-kit';
 import { omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
@@ -18,13 +18,29 @@ import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installPagination from '@vuecs/pagination';
 
-// App-local Tailwind v4 entry — `@import`s @authup/client-web-theme
-// (tailwindcss + @vuecs/design + theme-tailwind + compat layer) and adds
-// `@source` scopes for this app's templates + per-app nested vuecs deps.
+// CSS pipeline — mirrors apps/client-web/nuxt.config.ts so the embedded
+// consent UI inherits the same theme cascade as the main Nuxt app:
+//   1. ./tailwind.css            — @import @authup/client-web-theme
+//                                  (tailwindcss + @vuecs/design +
+//                                  theme-tailwind + compat layer) +
+//                                  this app's `@source` scopes.
+//   2. client-web-kit dist styles — SFC `<style scoped>` blocks.
+//   3. Font Awesome              — legacy `<i class="fa-*">` icons.
+//   4. authup CSS (root / layout / domain / card / form / generics) —
+//                                  project-specific layout styling
+//                                  shared with the Nuxt app.
 import './tailwind.css';
 import '@authup/client-web-kit/../dist/style.css';
 import '@fortawesome/fontawesome-free/css/all.css';
+import '../../../client-web/assets/css/vue-layout-navigation.css';
 import '../../../client-web/assets/css/root.css';
+import '../../../client-web/assets/css/core/header.css';
+import '../../../client-web/assets/css/core/navbar.css';
+import '../../../client-web/assets/css/core/body.css';
+import '../../../client-web/assets/css/core/sidebar.css';
+import '../../../client-web/assets/css/core/footer.css';
+import '../../../client-web/assets/css/domain.css';
+import '../../../client-web/assets/css/card.css';
 import '../../../client-web/assets/css/form.css';
 import '../../../client-web/assets/css/generics.css';
 
@@ -94,6 +110,13 @@ export function createApp(payload: HydrationPayload) : {
     app.use(vuecs, {
         themes: [authupTheme()],
         icons: [fontAwesome()],
+        defaults: {
+            // Wire authup's translator + icon choices into vuecs's
+            // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`
+            // resolve to locale-reactive labels with no per-call work.
+            // Mirrors the Nuxt plugin in apps/client-web/plugins/vuecs.ts.
+            submitButton: buildSubmitButtonDefaults(),
+        },
     });
     app.use(installForms);
     app.use(installPagination);
