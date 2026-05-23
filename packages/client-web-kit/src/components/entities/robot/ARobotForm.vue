@@ -219,7 +219,7 @@ export default ARobotForm;
                             <template #label>
                                 {{ translationsDefault.secret }}<span
                                     v-if="isSecretHashed"
-                                    class="text-danger font-weight-bold ps-1"
+                                    class="text-error-600 font-bold ps-1"
                                 >
                                     {{ translationsDefault.hashed }}
                                     <i class="fa fa-exclamation-triangle ps-1" />

@@ -247,7 +247,7 @@ export default AUserForm;
                                 <template #label="{ id, class: labelClass }">
                                     <label
                                         :for="id"
-                                        :class="[labelClass, form.active ? 'text-success' : 'text-danger']"
+                                        :class="[labelClass, form.active ? 'text-success-600' : 'text-error-600']"
                                     >
                                         {{ form.active ? translationsDefault.active : translationsDefault.inactive }}
                                     </label>
@@ -265,7 +265,7 @@ export default AUserForm;
                                 <template #label="{ id, class: labelClass }">
                                     <label
                                         :for="id"
-                                        :class="[labelClass, form.name_locked ? 'text-success' : 'text-warning']"
+                                        :class="[labelClass, form.name_locked ? 'text-success-600' : 'text-warning-600']"
                                     >
                                         {{ form.name_locked ? translationsDefault.locked : translationsDefault.notLocked }}
                                     </label>

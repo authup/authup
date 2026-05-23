@@ -41,6 +41,10 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
                 return;
             }
 
+            busy.value = true;
+            message.value = null;
+            lookupValid.value = false;
+
             try {
                 const response = await apiClient.get(form.url);
                 if (isOpenIDProviderMetadata(response.data)) {
@@ -59,7 +63,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
             }
         };
 
-        const isDisabled = computed(() => !form.url || $v.value.$invalid);
+        const isDisabled = computed(() => busy.value || !form.url || $v.value.$invalid);
 
         return {
             vuelidate: $v,
