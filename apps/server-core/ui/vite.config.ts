@@ -26,6 +26,7 @@ export default defineConfig({
             '@authup/core-http-kit': path.join(packagesRoot, 'core-http-kit', 'src'),
             '@authup/kit': path.join(packagesRoot, 'kit', 'src'),
             '@authup/client-web-kit': path.join(packagesRoot, 'client-web-kit', 'src'),
+            '@authup/client-web-kit-theme': path.join(packagesRoot, 'client-web-kit-theme', 'src'),
             '@authup/client-web-theme': path.join(packagesRoot, 'client-web-theme', 'src'),
             '@authup/specs': path.join(packagesRoot, 'specs', 'src'),
         },

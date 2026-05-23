@@ -1,0 +1,48 @@
+/*!
+ * @authup/client-web-kit-theme — Tailwind v4 + vuecs theme-tailwind pipeline
+ * for the `@authup/client-web-kit` components.
+ *
+ * Cascade order:
+ *   1. tailwindcss           — utility layer + @theme directive support
+ *   2. @vuecs/design         — concrete --vc-color-* OKLCH tokens
+ *   3. @vuecs/theme-tailwind — rebinds Tailwind --color-* ↔ --vc-color-*
+ *
+ * App-level concerns (heading scale, Bootstrap-compat shims, brand
+ * tokens) live in `@authup/client-web-theme`, which `@import`s this
+ * file and layers extras on top.
+ */
+
+@import "tailwindcss";
+@import "@vuecs/design";
+@import "@vuecs/theme-tailwind";
+
+/*
+ * `@source` declarations for what this theme is responsible for:
+ *
+ *   - this package's own src (for class strings declared inside
+ *     `clientWebKitTheme()` via `extend()`).
+ *   - `@authup/client-web-kit` (sibling workspace package) — the kit
+ *     ships class strings on its SFCs that any consumer renders.
+ *   - `@vuecs/*` (hoisted to root by npm workspaces) — element class
+ *     maps applied at runtime via the theme manager (e.g.
+ *     `formInput.classes.root = "block w-full rounded-md border ..."`).
+ *     Without these scopes, every `<VCFormInput>` / `<VCButton>` /
+ *     `<VCTable>` renders with `vc-*` defaults and no Tailwind styling.
+ *
+ * Consumer apps add their own `@source` directives for their template
+ * trees + any locally-nested vuecs deps in a per-app CSS entry
+ * (e.g. `apps/client-web/assets/css/tailwind.css`).
+ */
+@source ".";
+@source "../../client-web-kit/src";
+@source "../../../node_modules/@vuecs";
+
+/* ------------------------------------------------------------------
+   Kit-component styles
+   Authup-owned styles for the components that live in
+   `@authup/client-web-kit`. Imported here so the kit theme stays
+   self-contained — host apps don't need separate per-stylesheet
+   entries.
+   ------------------------------------------------------------------ */
+@import "./styles/list.css";
+@import "./styles/form-validation.css";

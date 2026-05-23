@@ -27,23 +27,14 @@ export default defineNuxtConfig({
 
     css: [
         // App-local Tailwind v4 entry — `@import`s @authup/client-web-theme
-        // (tailwindcss + @vuecs/design + theme-tailwind + compat layer) and
-        // adds `@source` scopes for this app's templates + per-app nested
-        // vuecs deps.
+        // (which transitively pulls in @authup/client-web-kit-theme +
+        // tailwindcss + @vuecs/design + @vuecs/theme-tailwind + every
+        // authup-owned stylesheet) and adds `@source` scopes for this
+        // app's own template tree + per-app nested vuecs deps. With the
+        // theme split, the app no longer holds any project CSS directly.
         '@/assets/css/tailwind.css',
         '@authup/client-web-kit/../dist/style.css',
         '@fortawesome/fontawesome-free/css/all.css',
-        '@/assets/css/vue-layout-navigation.css',
-        '@/assets/css/root.css',
-        '@/assets/css/core/header.css',
-        '@/assets/css/core/navbar.css',
-        '@/assets/css/core/body.css',
-        '@/assets/css/core/sidebar.css',
-        '@/assets/css/core/footer.css',
-        '@/assets/css/domain.css',
-        '@/assets/css/card.css',
-        '@/assets/css/form.css',
-        '@/assets/css/generics.css',
     ],
 
     alias: {
@@ -52,6 +43,7 @@ export default defineNuxtConfig({
         '@authup/core-http-kit': path.join(__dirname, '..', '..', 'packages', 'core-http-kit', 'src'),
         '@authup/kit': path.join(__dirname, '..', '..', 'packages', 'kit', 'src'),
         '@authup/client-web-kit': path.join(__dirname, '..', '..', 'packages', 'client-web-kit', 'src'),
+        '@authup/client-web-kit-theme': path.join(__dirname, '..', '..', 'packages', 'client-web-kit-theme', 'src'),
         '@authup/client-web-theme': path.join(__dirname, '..', '..', 'packages', 'client-web-theme', 'src'),
         '@authup/specs': path.join(__dirname, '..', '..', 'packages', 'specs', 'src'),
     },

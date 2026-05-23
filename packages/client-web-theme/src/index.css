@@ -1,49 +1,27 @@
 /*!
- * @authup/client-web-theme — single CSS entry for authup's vuecs UI.
+ * @authup/client-web-theme — app-level layer on top of
+ * `@authup/client-web-kit-theme`.
  *
- * Imports the full Tailwind v4 + vuecs design-token + theme-tailwind pipeline,
- * then layers authup-specific design tokens and component tweaks on top.
- *
- * Consumers `@import "@authup/client-web-theme"` (or list it in their app's
- * CSS array) — no other vuecs / Tailwind imports are required.
- *
- * Cascade order:
- *   1. tailwindcss            — utility layer + @theme directive support
- *   2. @vuecs/design          — concrete --vc-color-* OKLCH tokens
- *   3. @vuecs/theme-tailwind  — rebinds --color-* (Tailwind) ↔ --vc-color-*
- *   4. authup tokens          — project palette / radii / typography choices
- *   5. authup compat layer    — Bootstrap-shaped class shims (@apply'd from
- *                                Tailwind utilities) that keep legacy markup
- *                                rendering correctly. Phased out as templates
- *                                migrate to <VCButton> / <VCAlert> / etc.
+ * Cascade order (apps consume this file; the kit theme's cascade
+ * is included transitively):
+ *   1. tailwindcss            — via the kit theme
+ *   2. @vuecs/design          — via the kit theme
+ *   3. @vuecs/theme-tailwind  — via the kit theme
+ *   4. authup tokens          — project palette / radii / typography
+ *   5. authup compat layer    — Bootstrap-shaped class shims (@apply'd
+ *                                from Tailwind utilities). Phased out
+ *                                as templates migrate to <VCButton> /
+ *                                <VCAlert> / etc.
  */
 
-@import "tailwindcss";
-@import "@vuecs/design";
-@import "@vuecs/theme-tailwind";
+@import "@authup/client-web-kit-theme";
 
 /*
- * `@source` declarations — what the Tailwind v4 JIT must scan for
- * utility-class strings beyond this CSS file's own directory.
- *
- * Tailwind v4 doesn't resolve npm package names in `@source`, so we
- * walk paths. The theme scans only its own runtime dependencies:
- *
- *   - `@authup/client-web-kit` (sibling workspace package) — the kit's
- *     SFCs ship class strings any consumer of this theme renders.
- *   - `@vuecs/*` (hoisted to root by npm workspaces) — element class
- *     maps applied at runtime via the theme manager (e.g.
- *     `formInput.classes.root = "block w-full rounded-md border ..."`).
- *     Without these scopes, every `<VCFormInput>` / `<VCButton>` /
- *     `<VCTable>` renders with `vc-*` defaults and no Tailwind styling.
- *
- * Consumer apps add their own `@source` directives for their template
- * trees + any locally-nested vuecs deps in a per-app CSS entry
- * (e.g. `apps/client-web/assets/css/tailwind.css`).
+ * Scan this package's own src so class strings declared inside
+ * `clientWebTheme()` (none today, but a hook for future overrides)
+ * land in the JIT corpus.
  */
 @source ".";
-@source "../../client-web-kit/src";
-@source "../../../node_modules/@vuecs";
 
 /* ------------------------------------------------------------------
    Authup design tokens
@@ -303,3 +281,19 @@
     .modal-footer   { @apply flex items-center justify-end gap-2 border-t border-border px-4 py-3; }
 
 }
+
+/* ------------------------------------------------------------------
+   Authup app styles — chrome (header, navbar, sidebar, footer, body)
+   + project utilities + login chrome. Layered LAST so app-specific
+   selectors win over the Tailwind utility / compat layers when the
+   classes overlap (e.g. `.page-sidebar .nav-link`).
+   ------------------------------------------------------------------ */
+@import "./styles/root.css";
+@import "./styles/navigation.css";
+@import "./styles/core/header.css";
+@import "./styles/core/navbar.css";
+@import "./styles/core/body.css";
+@import "./styles/core/sidebar.css";
+@import "./styles/core/footer.css";
+@import "./styles/card.css";
+@import "./styles/generics.css";

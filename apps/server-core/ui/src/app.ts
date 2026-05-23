@@ -13,7 +13,8 @@ import { createSSRApp } from 'vue';
 import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router';
 
 import vuecs from '@vuecs/core';
-import authupTheme from '@authup/client-web-theme';
+import clientWebKitTheme from '@authup/client-web-kit-theme';
+import clientWebTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installPagination from '@vuecs/pagination';
@@ -21,28 +22,17 @@ import installPagination from '@vuecs/pagination';
 // CSS pipeline — mirrors apps/client-web/nuxt.config.ts so the embedded
 // consent UI inherits the same theme cascade as the main Nuxt app:
 //   1. ./tailwind.css            — @import @authup/client-web-theme
-//                                  (tailwindcss + @vuecs/design +
-//                                  theme-tailwind + compat layer) +
+//                                  (which transitively pulls
+//                                  @authup/client-web-kit-theme +
+//                                  tailwindcss + @vuecs/design +
+//                                  @vuecs/theme-tailwind + every
+//                                  authup-owned stylesheet) and adds
 //                                  this app's `@source` scopes.
 //   2. client-web-kit dist styles — SFC `<style scoped>` blocks.
 //   3. Font Awesome              — legacy `<i class="fa-*">` icons.
-//   4. authup CSS (root / layout / domain / card / form / generics) —
-//                                  project-specific layout styling
-//                                  shared with the Nuxt app.
 import './tailwind.css';
 import '@authup/client-web-kit/../dist/style.css';
 import '@fortawesome/fontawesome-free/css/all.css';
-import '../../../client-web/assets/css/vue-layout-navigation.css';
-import '../../../client-web/assets/css/root.css';
-import '../../../client-web/assets/css/core/header.css';
-import '../../../client-web/assets/css/core/navbar.css';
-import '../../../client-web/assets/css/core/body.css';
-import '../../../client-web/assets/css/core/sidebar.css';
-import '../../../client-web/assets/css/core/footer.css';
-import '../../../client-web/assets/css/domain.css';
-import '../../../client-web/assets/css/card.css';
-import '../../../client-web/assets/css/form.css';
-import '../../../client-web/assets/css/generics.css';
 
 import type { Router } from 'vue-router';
 import Authorize from './pages/authorize.vue';
@@ -108,7 +98,9 @@ export function createApp(payload: HydrationPayload) : {
     // manager is populated when components mount (see the matching note
     // in `apps/client-web/plugins/vuecs.ts`).
     app.use(vuecs, {
-        themes: [authupTheme()],
+        // Register both themes side-by-side (mirrors the Nuxt plugin).
+        // Kit theme first, app theme layers on top.
+        themes: [clientWebKitTheme(), clientWebTheme()],
         icons: [fontAwesome()],
         defaults: {
             // Wire authup's translator + icon choices into vuecs's

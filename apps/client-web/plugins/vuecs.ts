@@ -10,7 +10,8 @@ import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
 
 import vuecs from '@vuecs/core';
-import authupTheme from '@authup/client-web-theme';
+import clientWebKitTheme from '@authup/client-web-kit-theme';
+import clientWebTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
 
 import installCountdown from '@vuecs/countdown';
@@ -49,7 +50,12 @@ export default defineNuxtPlugin({
     dependsOn: ['authup'],
     setup(ctx) {
         ctx.vueApp.use(vuecs, {
-            themes: [authupTheme()],
+            // Register both themes side-by-side. The kit theme owns
+            // overrides the kit's own components need (e.g. formGroup
+            // margin); the app theme layers app-specific concerns
+            // (heading scale, Bootstrap-compat shims) on top. Order
+            // matters: kit first, app overrides win on conflicts.
+            themes: [clientWebKitTheme(), clientWebTheme()],
             icons: [fontAwesome()],
             defaults: {
                 // Wire authup's translator + icon choices into vuecs's

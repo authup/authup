@@ -1,8 +1,8 @@
 {
-    "name": "@authup/client-web-theme",
+    "name": "@authup/client-web-kit-theme",
     "type": "module",
     "version": "1.0.0-beta.42",
-    "description": "Authup theme for vuecs components, built on top of @vuecs/theme-tailwind.",
+    "description": "Kit-level vuecs theme for authup — composes @vuecs/theme-tailwind with the overrides @authup/client-web-kit's components need.",
     "license": "Apache-2.0",
     "exports": {
         "./package.json": "./package.json",
@@ -33,7 +33,8 @@
         "vuecs",
         "theme",
         "tailwindcss",
-        "ui-theme"
+        "ui-theme",
+        "client-web-kit"
     ],
     "author": {
         "name": "Peter Placzek",
@@ -43,14 +44,13 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/client-web-theme"
+        "directory": "packages/client-web-kit-theme"
     },
     "bugs": {
         "url": "https://github.com/authup/authup/issues"
     },
     "homepage": "https://github.com/authup/authup#readme",
     "dependencies": {
-        "@authup/client-web-kit-theme": "^1.0.0-beta.42",
         "@vuecs/design": "^1.0.0",
         "@vuecs/theme-tailwind": "^1.1.0"
     },

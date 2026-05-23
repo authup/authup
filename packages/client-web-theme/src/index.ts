@@ -5,50 +5,40 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import tailwindTheme, { merge } from '@vuecs/theme-tailwind';
-import { defineTheme, extend } from '@vuecs/core';
+import { defineTheme } from '@vuecs/core';
 
-export { merge };
+export { default as clientWebKitTheme, merge } from '@authup/client-web-kit-theme';
 
 /**
- * Authup theme for vuecs components.
+ * App-level theme. Layers authup app-specific concerns (Bootstrap-compat
+ * class shims, heading scale, brand tokens) on top of the kit theme.
  *
- * Layers authup-specific per-element overrides on top of
- * `@vuecs/theme-tailwind`. The theme manager merges classes with the
- * base, so overrides only need to declare the deltas — twMerge
- * (`classesMergeFn`) dedups conflicting utilities.
+ * Consumers register both themes — order matters: the kit-level theme
+ * first so its element class strings are the baseline, then the app
+ * theme so its overrides win:
  *
- *     app.use(vuecs, { themes: [authupTheme()] });
+ *     import clientWebKitTheme from '@authup/client-web-kit-theme';
+ *     import clientWebTheme from '@authup/client-web-theme';
+ *
+ *     app.use(vuecs, {
+ *         themes: [clientWebKitTheme(), clientWebTheme()],
+ *     });
+ *
+ * The split lets host apps without the Bootstrap-compat needs (e.g. a
+ * future fresh app built fully on `<VCButton>` / `<VCAlert>`) register
+ * only the kit theme and skip the compat layer.
  *
  * Reskinning (palette swap, dark mode) is handled by redefining
  * `--vc-color-*` variables — `setColorPalette()` from
  * `@vuecs/theme-tailwind` or toggling `.dark` on `<html>` works without
  * any theme configuration here.
  */
-export default function authupTheme() {
+export default function clientWebTheme() {
     return defineTheme({
-        extends: [
-            tailwindTheme(),
-        ],
-        elements: {
-            // Bottom margin between stacked form groups. theme-tailwind's
-            // default formGroup root is `flex flex-col gap-1` (gap between
-            // label / input / hint inside ONE group), but it leaves no
-            // spacing between consecutive groups.
-            //
-            // mb-3 (12px) inter-group spacing. With hints now living
-            // INSIDE the form group (via the #hint slot), the trailing
-            // gap no longer has a free-floating hint visually drifting
-            // between groups — so the smaller 3x-of-gap-1 ratio is
-            // visually fine again.
-            //
-            // `extend()` marks the value as ADDITIVE — without it,
-            // vuecs's `mergeClasses` ASSIGNS the override, replacing the
-            // base entirely. Replacing dropped `flex flex-col gap-1`,
-            // which caused label + control to render inline instead of
-            // stacked. With extend(), twMerge concatenates: the final
-            // root becomes `flex flex-col gap-1 mb-3`.
-            formGroup: { classes: { root: extend('mb-3') } },
-        },
+        // App-level element overrides go here. Currently empty —
+        // the kit theme already handles `formGroup.mb-3`. Drop future
+        // per-element tweaks (button defaults, table head styling, ...)
+        // into an `elements: { ... }` block below.
+        elements: {},
     });
 }
