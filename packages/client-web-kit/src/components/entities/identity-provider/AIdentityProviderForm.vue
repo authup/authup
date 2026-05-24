@@ -75,6 +75,15 @@ export const AIdentityProviderForm = defineComponent({
             setup.emit('updated', el);
         };
 
+        const onChildDeleted = (el: IdentityProvider) => {
+            localEntity.value = undefined;
+            setup.emit('deleted', el);
+        };
+
+        const onChildFailed = (err: unknown) => {
+            setup.emit('failed', err);
+        };
+
         const isOAuth = (p: string | null) => p === IdentityProviderProtocol.OAUTH2 ||
             p === IdentityProviderProtocol.OIDC;
         const isLdap = (p: string | null) => p === IdentityProviderProtocol.LDAP;
@@ -88,6 +97,8 @@ export const AIdentityProviderForm = defineComponent({
             onPick,
             onChildCreated,
             onChildUpdated,
+            onChildDeleted,
+            onChildFailed,
         };
     },
 });
@@ -112,6 +123,8 @@ export default AIdentityProviderForm;
             :preset="preset"
             @created="onChildCreated"
             @updated="onChildUpdated"
+            @deleted="onChildDeleted"
+            @failed="onChildFailed"
         />
 
         <AIdentityProviderLdapForm
@@ -120,6 +133,8 @@ export default AIdentityProviderForm;
             :realm-id="realmId"
             @created="onChildCreated"
             @updated="onChildUpdated"
+            @deleted="onChildDeleted"
+            @failed="onChildFailed"
         />
 
         <div

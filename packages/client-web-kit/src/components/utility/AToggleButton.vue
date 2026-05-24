@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 
 /**
  * Tri-state toggle button used in entity pickers' #itemActions slot
@@ -27,7 +27,13 @@ export const AToggleButton = defineComponent({
     },
     emits: ['changed'],
     setup(props, { emit }) {
+        const ariaLabel = computed(() => {
+            if (props.isBusy) return 'Updating selection';
+            return props.value ? 'Remove from selection' : 'Add to selection';
+        });
+
         return {
+            ariaLabel,
             toggle() {
                 emit('changed', !props.value);
             },
@@ -42,6 +48,9 @@ export default AToggleButton;
     <button
         type="button"
         class="btn btn-xs"
+        :aria-label="ariaLabel"
+        :aria-busy="isBusy ? 'true' : 'false'"
+        :aria-pressed="value ? 'true' : 'false'"
         :class="{
             'btn-dark': isBusy,
             'btn-success': !isBusy && !value,
@@ -52,6 +61,7 @@ export default AToggleButton;
     >
         <i
             class="fa"
+            aria-hidden="true"
             :class="{
                 'fa-question': isBusy,
                 'fa-plus': !isBusy && !value,

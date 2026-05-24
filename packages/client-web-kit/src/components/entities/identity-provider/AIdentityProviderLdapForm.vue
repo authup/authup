@@ -61,20 +61,25 @@ export const AIdentityProviderLdapForm = defineComponent({
         const $v = useVuelidate({ $stopPropagation: true });
 
         const submit = async () => {
-            if ($v.value.$invalid) {
+            if (busy.value || $v.value.$invalid) {
                 return;
             }
 
-            const data: Partial<IdentityProvider> = {
-                ...extractVuelidateResultsFromChild($v, 'basic'),
-                ...extractVuelidateResultsFromChild($v, 'connection'),
-                ...extractVuelidateResultsFromChild($v, 'credentials'),
-                ...extractVuelidateResultsFromChild($v, 'group'),
-                ...extractVuelidateResultsFromChild($v, 'user'),
-                protocol: IdentityProviderProtocol.LDAP,
-            };
+            busy.value = true;
+            try {
+                const data: Partial<IdentityProvider> = {
+                    ...extractVuelidateResultsFromChild($v, 'basic'),
+                    ...extractVuelidateResultsFromChild($v, 'connection'),
+                    ...extractVuelidateResultsFromChild($v, 'credentials'),
+                    ...extractVuelidateResultsFromChild($v, 'group'),
+                    ...extractVuelidateResultsFromChild($v, 'user'),
+                    protocol: IdentityProviderProtocol.LDAP,
+                };
 
-            await manager.createOrUpdate(data);
+                await manager.createOrUpdate(data);
+            } finally {
+                busy.value = false;
+            }
         };
 
         return {

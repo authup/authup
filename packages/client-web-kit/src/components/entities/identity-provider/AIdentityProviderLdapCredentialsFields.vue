@@ -74,7 +74,11 @@ export default AIdentityProviderLdapCredentialsFields;
                     <template #label>
                         Password
                     </template>
-                    <VCFormInput v-model="vuelidate.password.$model" />
+                    <VCFormInput
+                        v-model="vuelidate.password.$model"
+                        type="password"
+                        autocomplete="current-password"
+                    />
                 </VCFormGroup>
             </template>
         </IVuelidate>

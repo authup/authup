@@ -17,7 +17,12 @@ import {
     ref,
     watch,
 } from 'vue';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import {
+    maxLength,
+    minLength,
+    required,
+    requiredIf,
+} from '@vuelidate/validators';
 import type { FormOption } from '@vuecs/forms';
 import {
     VCFormGroup,
@@ -101,7 +106,10 @@ export const APermissionForm = defineComponent({
                 maxLength: maxLength(4096),
             },
             decision_strategy: {},
-            realm_id: {},
+            // Realm picker is conditionally rendered when no implicit
+            // realm is known and not editing — require selection in
+            // that branch.
+            realm_id: { required: requiredIf(() => !realmId.value && !isEditing.value) },
         }, form);
 
         const store = injectStore();
@@ -145,16 +153,21 @@ export const APermissionForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if ($v.value.$invalid) {
+            if (busy.value || $v.value.$invalid) {
                 return;
             }
 
-            const data: Record<string, unknown> = {
-                ...form,
-                decision_strategy: form.decision_strategy || null,
-            };
+            busy.value = true;
+            try {
+                const data: Record<string, unknown> = {
+                    ...form,
+                    decision_strategy: form.decision_strategy || null,
+                };
 
-            await manager.createOrUpdate(data);
+                await manager.createOrUpdate(data);
+            } finally {
+                busy.value = false;
+            }
         };
 
         const translationsDefault = useTranslationsForGroup(

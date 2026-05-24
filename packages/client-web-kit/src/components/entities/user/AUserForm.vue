@@ -114,10 +114,6 @@ export const AUserForm = defineComponent({
         const showRealmPicker = computed(() => props.canManage && !isRealmLocked.value);
 
         function initForm() {
-            if (props.realmId) {
-                form.realm_id = props.realmId;
-            }
-
             if (
                 !!manager.data.value &&
                 typeof manager.data.value.name_locked !== 'undefined'
@@ -126,6 +122,12 @@ export const AUserForm = defineComponent({
             }
 
             assignFormProperties(form, manager.data.value);
+
+            // Locked-realm prop wins over any realm_id pulled from the
+            // loaded entity — apply after assign.
+            if (props.realmId) {
+                form.realm_id = props.realmId;
+            }
         }
 
         watch(updatedAt, (val, oldVal) => {
@@ -138,11 +140,16 @@ export const AUserForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if ($v.value.$invalid) {
+            if (busy.value || $v.value.$invalid) {
                 return;
             }
 
-            await manager.createOrUpdate(form);
+            busy.value = true;
+            try {
+                await manager.createOrUpdate(form);
+            } finally {
+                busy.value = false;
+            }
         };
 
         const onNameChange = (input: string) => {

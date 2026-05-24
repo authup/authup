@@ -77,7 +77,11 @@ export default AIdentityProviderOAuth2ClientFields;
                     <template #label>
                         Client Secret
                     </template>
-                    <VCFormInput v-model="vuelidate.client_secret.$model" />
+                    <VCFormInput
+                        v-model="vuelidate.client_secret.$model"
+                        type="password"
+                        autocomplete="new-password"
+                    />
                 </VCFormGroup>
             </template>
         </IVuelidate>

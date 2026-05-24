@@ -34,7 +34,21 @@
  * (e.g. `apps/client-web/assets/css/tailwind.css`).
  */
 @source ".";
-@source "../../client-web-kit/src";
+/*
+ * Both @source entries below resolve via npm-workspace symlinks in
+ * dev AND via real node_modules paths in published consumers.
+ *
+ * @authup/client-web-kit ships `dist/` only (`files: ["dist"]`), so
+ * the dist path is the post-publish source of truth. In workspace
+ * dev we also scan `src/` because the symlink resolves both — and
+ * `dist/` only exists after `npm run build -w packages/client-web-kit`,
+ * so without the src fallback a fresh checkout / un-built kit edit
+ * would silently lose JIT coverage for its class strings.
+ * Tailwind v4 silently skips missing paths, so the src branch is
+ * a no-op for published consumers.
+ */
+@source "../../../node_modules/@authup/client-web-kit/dist";
+@source "../../../node_modules/@authup/client-web-kit/src";
 @source "../../../node_modules/@vuecs";
 
 /* ------------------------------------------------------------------

@@ -56,10 +56,12 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
         init();
 
         const onTimeoutChange = (input: string) => {
-            const intValue = Number.parseInt(input, 10);
-            if (!Number.isNaN(intValue)) {
-                $v.value.timeout.$model = intValue;
+            if (input.trim() === '') {
+                $v.value.timeout.$model = 0;
+                return;
             }
+            const intValue = Number.parseInt(input, 10);
+            $v.value.timeout.$model = Number.isNaN(intValue) ? 0 : intValue;
         };
 
         return {

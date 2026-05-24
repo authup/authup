@@ -895,6 +895,19 @@ new `@authup/client-web-theme` package.
   `info-*` (50–950). Note: `error`, not `danger`; theme-tailwind
   does not ship a `secondary` or `light`/`dark` palette (Bootstrap
   names map onto `bg-bg-elevated` / `bg-bg-muted` / `bg-fg`).
+- **Tailwind v4 breaking changes** — UI work needs to follow the v4
+  syntax, not v3:
+  - Important modifier is a **suffix**: `text-3xl!`, not `!text-3xl`.
+  - Opacity utilities are removed: use slash notation
+    `bg-blue-500/20`, not `bg-blue-500 bg-opacity-20`.
+  - CSS-variable references use parens:
+    `bg-(--brand-color)`, not `bg-[--brand-color]`.
+  - `outline-none` only zeroes `outline-style` now; for the full
+    "remove outline" use `outline-hidden`.
+  - Default ring width is **1px** (was 3px in v3) — pass `ring-3`
+    to restore the v3 look.
+  - Browser minimums: Chrome 111+, Safari 16.4+, Firefox 128+. v4
+    drops the older fallbacks v3 carried.
 - **Plugin install order** — the theme manager is still
   first-install-wins; `apps/client-web/plugins/vuecs.ts` keeps its
   `name: 'vuecs'` declaration, and `vuecs-navigation.ts` still

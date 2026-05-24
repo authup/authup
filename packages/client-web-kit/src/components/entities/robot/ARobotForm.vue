@@ -102,10 +102,12 @@ export const ARobotForm = defineComponent({
         };
 
         function initForm() {
+            assignFormProperties(form, manager.data.value);
+
+            // Apply caller-fixed props AFTER assign so the entity payload
+            // can't overwrite a locked name / realm.
             if (props.name) form.name = props.name;
             if (props.realmId) form.realm_id = props.realmId;
-
-            assignFormProperties(form, manager.data.value);
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -122,14 +124,19 @@ export const ARobotForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if ($v.value.$invalid) {
+            if (busy.value || $v.value.$invalid) {
                 return;
             }
 
-            await manager.createOrUpdate({
-                ...form,
-                secret: isSecretHashed.value ? '' : form.secret,
-            });
+            busy.value = true;
+            try {
+                await manager.createOrUpdate({
+                    ...form,
+                    secret: isSecretHashed.value ? '' : form.secret,
+                });
+            } finally {
+                busy.value = false;
+            }
         };
 
         const translationsDefault = useTranslationsForGroup(

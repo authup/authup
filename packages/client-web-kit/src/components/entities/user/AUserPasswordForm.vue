@@ -64,6 +64,7 @@ export const AUserPasswordForm = defineComponent({
         }, form);
 
         const submit = wrapFnWithBusyState(busy, async () => {
+            if ($v.value.$invalid) return;
             if (!props.id) return;
 
             try {

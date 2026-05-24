@@ -18,7 +18,7 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex-col">
+    <div class="flex flex-col">
         <div class="text-center">
             <i
                 class="fa-solid fa-10x"
