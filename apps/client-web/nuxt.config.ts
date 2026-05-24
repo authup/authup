@@ -77,7 +77,23 @@ export default defineNuxtConfig({
                 download: true,
             },
         ],
+        '@vuecs/nuxt',
     ],
+
+    // @vuecs/nuxt — only wire color-mode persistence here. Theme
+    // registration + per-package plugins stay in plugins/vuecs.ts
+    // (which handles installButton / installForms / etc. + defaults +
+    // translator-locale binding). `themes: []` prevents the module from
+    // auto-installing a duplicate theme manager.
+    //
+    // `injectTokens: false` — @vuecs/design is already pulled in via
+    // @authup/client-web-kit-theme's CSS @import chain.
+    vuecs: {
+        injectTokens: false,
+        themes: [],
+        colorMode: { value: 'system' },
+        colorPalette: false,
+    },
 
     compatibilityDate: '2025-01-13',
 });

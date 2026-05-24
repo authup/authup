@@ -53,6 +53,7 @@
         "@vuecs/overlays": "^1.0.0",
         "@vuecs/pagination": "^2.0.0",
         "@vuecs/table": "^1.0.0",
+        "@vuecs/nuxt": "^1.0.0",
         "@vuecs/theme-tailwind": "^1.1.0",
         "@vuecs/timeago": "^2.0.0",
         "@vuelidate/core": "^2.0.3",

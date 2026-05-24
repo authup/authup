@@ -29,10 +29,40 @@
    reskin the entire UI without touching component class strings.
    ------------------------------------------------------------------ */
 @layer base {
+    /*
+     * Authup brand tokens. Three shapes:
+     *
+     *   1. Chrome (header, sidebar, footer, dropdown menus) is always
+     *      dark — both in light and dark mode. Built from
+     *      `--vc-color-neutral-*` shades so the chrome stays dark even
+     *      when the `--vc-color-bg`/`fg` semantic pair flips for dark
+     *      mode (those flip; the raw `neutral-N` shades do not).
+     *
+     *   2. Content tokens (body, page-content, lists, cards) reference
+     *      `--vc-color-bg` / `--vc-color-fg` / `--vc-color-bg-muted` /
+     *      `--vc-color-bg-elevated` / `--vc-color-border` directly —
+     *      `@vuecs/design`'s `.dark` block flips those automatically,
+     *      so consumers get dark mode for free without per-class
+     *      overrides here.
+     *
+     *   3. Brand accents (golden, coral, indigo) carry the authup
+     *      identity and are hard-coded; they look fine on both light
+     *      and dark backgrounds.
+     */
     :root {
-        /* placeholder — concrete authup brand tokens will be filled in
-           as the migration touches the styled-but-not-tokenized chrome
-           (header, sidebar, login card, ...) */
+        /* Chrome (header / sidebar / footer / dropdown) */
+        --authup-chrome-bg:                 var(--vc-color-neutral-900);
+        --authup-chrome-bg-elevated:        var(--vc-color-neutral-800);
+        --authup-chrome-bg-hover:           var(--vc-color-neutral-700);
+        --authup-chrome-fg:                 var(--vc-color-neutral-100);
+        --authup-chrome-fg-muted:           var(--vc-color-neutral-400);
+        --authup-chrome-border:             var(--vc-color-neutral-800);
+
+        /* Brand accents — unchanged in dark mode */
+        --authup-brand-gold:                #baa875;
+        --authup-brand-coral:               #ff5b5b;
+        --authup-brand-indigo:              #6d7fcc;
+        --authup-brand-tan:                 #c8b98d;
     }
 
     /*
