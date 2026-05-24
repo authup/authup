@@ -16,13 +16,16 @@ import type {
     VNodeChild, 
 } from 'vue';
 import { h, mergeProps, unref } from 'vue';
+import { extend } from '@vuecs/core';
 import { VCButton } from '@vuecs/button';
 import {
     VCFormCheckbox,
     VCFormGroup,
     VCFormInput,
     VCFormSelect,
+    VCFormSwitch,
     VCFormTextarea,
+    useSubmitButton,
 } from '@vuecs/forms';
 import type { FormOption, ValidationMessages } from '@vuecs/forms';
 
@@ -143,16 +146,59 @@ export type FormCheckboxBuildOptionsInput = {
 };
 
 export function buildFormCheckbox(input: FormCheckboxBuildOptionsInput): VNodeChild {
+    // Mirror buildFormSwitch's groupClass handling: route to
+    // `themeClass.group` (the wrapper override) via `extend()` so the
+    // class merges with theme-tailwind's base wrapper classes rather
+    // than replacing them. Otherwise `groupClass: 'mt-3'` ends up on
+    // the checkbox root via mergeProps, offsetting the checkbox from
+    // the label inside `items-center`.
     const base = {
         modelValue: !!unref(input.value),
         'onUpdate:modelValue': (next: boolean) => input.onChange?.(next),
         label: input.label,
         group: input.group,
         labelContent: typeof input.labelContent === 'string' ? input.labelContent : undefined,
-        class: input.class ?? input.groupClass,
+        class: input.class,
+        themeClass: input.groupClass ? { group: extend(input.groupClass) } : undefined,
     };
     return h(
         VCFormCheckbox,
+        input.props ? mergeProps(base as never, input.props as never) : base,
+        typeof input.labelContent !== 'string' && input.labelContent !== undefined ?
+            { label: () => input.labelContent } :
+            undefined,
+    );
+}
+
+/**
+ * Switch (toggle) variant of `buildFormCheckbox`. Renders `<VCFormSwitch>`
+ * — the dedicated slider component in `@vuecs/forms` 4.x — using the same
+ * `{ value, onChange, label, labelContent, groupClass, ... }` shape so the
+ * pre-1.x `buildFormCheckbox({ groupClass: 'form-switch' })` call sites
+ * migrate by a single rename.
+ *
+ * `groupClass` maps to `themeClass.group` (the OUTER wrapper override),
+ * not `class` — Vue's `mergeProps` would otherwise concatenate it onto
+ * the inner SwitchRoot button, which offsets the button relative to the
+ * label inside the wrapper's `items-center` and visibly misaligns them.
+ *
+ * Must wrap in `extend()` so it MERGES with the theme's base wrapper
+ * classes (`inline-flex items-center gap-2`). Without `extend()`,
+ * vuecs's `applyOverrides` REPLACES the slot — blowing away the gap
+ * and items-center, so the switch and label collapse together.
+ */
+export function buildFormSwitch(input: FormCheckboxBuildOptionsInput): VNodeChild {
+    const base = {
+        modelValue: !!unref(input.value),
+        'onUpdate:modelValue': (next: boolean) => input.onChange?.(next),
+        label: input.label,
+        group: input.group,
+        labelContent: typeof input.labelContent === 'string' ? input.labelContent : undefined,
+        class: input.class,
+        themeClass: input.groupClass ? { group: extend(input.groupClass) } : undefined,
+    };
+    return h(
+        VCFormSwitch,
         input.props ? mergeProps(base as never, input.props as never) : base,
         typeof input.labelContent !== 'string' && input.labelContent !== undefined ?
             { label: () => input.labelContent } :
@@ -233,35 +279,44 @@ export type FormSubmitOptionsInput = {
 };
 
 export function buildFormSubmit(input: FormSubmitOptionsInput): VNodeChild {
-    const busy = !!unref(input.busy);
+    // Delegate label / icon / color resolution to @vuecs/forms's
+    // `useSubmitButton` composable. Per-call options below STILL override
+    // the bindings — authup's translator + icon defaults are wired into
+    // the vuecs DefaultsManager once at app bootstrap (see
+    // `apps/client-web/plugins/vuecs.ts`), so a caller passing nothing
+    // here gets locale-reactive labels for free.
+    const bindings = useSubmitButton({
+        isEditing: () => !!input.isEditing,
+        loading: () => !!unref(input.busy),
+        disabled: () => !!input.invalid || !!unref(input.busy),
+    });
+
     const isEditing = !!input.isEditing;
-    const invalid = !!input.invalid;
-    const label = isEditing ?
-        (input.updateText ?? 'Update') :
-        (input.createText ?? 'Create');
-    // Restore parity with the old form-controls 2.x defaults:
-    //   createIconClass: 'fa-solid fa-plus'        → fa6-solid:plus
-    //   updateIconClass: 'fa-solid fa-save'        → fa6-solid:floppy-disk
-    // Consumers can opt out via `icon: false` or override per call.
+    const resolved = bindings.value;
+
+    const label = (isEditing ? input.updateText : input.createText) ?? resolved.label;
+
     let iconLeft: string | undefined;
     if (input.icon === false) {
         iconLeft = undefined;
-    } else if (isEditing) {
-        iconLeft = input.updateIcon ?? 'fa6-solid:floppy-disk';
     } else {
-        iconLeft = input.createIcon ?? 'fa6-solid:plus';
+        const iconOverride = isEditing ? input.updateIcon : input.createIcon;
+        iconLeft = iconOverride ?? resolved.iconLeft;
     }
 
-    // Old buildFormSubmit defaulted both create + update buttons to the
-    // primary color (no semantic differentiation). Keep that contract
-    // until/unless authup explicitly opts into a per-mode color scheme.
     return h(
         VCButton,
         {
-            type: input.type ?? 'submit',
-            disabled: invalid || busy,
-            loading: busy,
-            color: 'primary',
+            type: input.type ?? resolved.type,
+            color: resolved.color,
+            loading: resolved.loading,
+            disabled: resolved.disabled,
+            // `mt-3` matches the `mb-3` inter-group spacing applied to
+            // every form-group root (see client-web-theme's `formGroup`
+            // override), so the submit button sits at one consistent
+            // gap below the last form field instead of butting up
+            // against it.
+            class: 'btn-xs mt-3',
             iconLeft,
             onClick: () => { void input.submit(); },
         },

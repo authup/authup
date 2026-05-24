@@ -34,7 +34,7 @@ export default defineComponent({
     <APolicyTypeBadge :type="entity.type" />
     <span
         v-if="entity.invert"
-        class="badge bg-warning"
+        class="badge bg-warning-500"
     >Inverted</span>
     <APolicyDetailNav
         :policy-id="entity.id"

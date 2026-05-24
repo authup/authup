@@ -80,7 +80,7 @@ Apps:
 
 | Layer | Package(s) | Notes |
 |---|---|---|
-| **Theming** | `@vuecs/core` (3.x) + `@vuecs/theme-bootstrap` (4.x) | Theme manager + Bootstrap 5 class strings. authup also imports `bootstrap/dist/css/bootstrap.css` directly for chrome the theme bridge doesn't reach (per the vuecs theme-bridge doctrine). |
+| **Theming** | `@vuecs/core` (3.x) + `@vuecs/theme-tailwind` (1.x) via `@authup/client-web-theme` | Theme manager + Tailwind v4 class strings. `@authup/client-web-theme` composes `tailwindTheme()` and ships a single CSS entry (`@authup/client-web-theme/index.css`) that pulls in `tailwindcss`, `@vuecs/design` (OKLCH semantic tokens), `@vuecs/theme-tailwind` (Tailwind ↔ vc-color rebind), and a small Bootstrap-compat `@layer components` block (`.btn`, `.row`/`.col`, `.alert`, `.badge`, `.nav`/`.navbar`, `.modal-*`, `.fade`) that `@apply`s Tailwind utilities under the legacy Bootstrap class names so authup's pre-Tailwind markup keeps rendering. The compat layer is transitional; it shrinks as call sites migrate to `<VCButton>` / `<VCAlert>` / `<VCBadge>` / etc. |
 | **Icons** | `@vuecs/icon` + `@vuecs/icons-font-awesome` | Iconify-backed `<VCIcon>` + the FA Solid name preset. Old `fa-solid fa-X` CSS class strings on plain `<i>` are still in use for legacy templates — both paths coexist. |
 | **Form controls** | `@vuecs/forms` (4.x) | `<VCFormGroup>` / `<VCFormInput>` / `<VCFormTextarea>` / `<VCFormCheckbox>` / `<VCFormSelect>`. Authup uses these via the `buildForm*` shim in `packages/client-web-kit/src/core/form/builders.ts` — render-function builders that wrap the SFCs and preserve the legacy `{ value, onChange, props, class }` shape. |
 | **List rendering** | `@vuecs/list` (1.x) | Compound `<VCList>` / `<VCListBody>` / `<VCListItem>` / `<VCListLoading>` / `<VCListEmpty>`. `defineEntityCollectionManager`'s renderer in `client-web-kit/src/components/utility/entity/collection/module.ts` composes these directly. |
@@ -108,8 +108,9 @@ invokes `@vuecs/navigation`'s `install()` to set up the navigation
 manager) MUST `dependsOn: ['vuecs']` — otherwise it may run before the
 `vuecs` plugin and freeze the manager with no themes. The visible
 symptom: every `<VCFormInput>` / `<VCButton>` / `<VCTable>` renders with
-only its `vc-*` default class and no Bootstrap class (e.g.
-`form-control` is missing), so form fields look unstyled.
+only its `vc-*` default class and no Tailwind utilities (e.g. the
+`border border-border bg-bg ...` class string from `@vuecs/theme-tailwind`
+is missing), so form fields look unstyled.
 
 The `vuecs` plugin in `apps/client-web/plugins/vuecs.ts` declares
 `name: 'vuecs'` precisely so other plugins can depend on it. Don't

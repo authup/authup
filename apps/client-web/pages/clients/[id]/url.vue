@@ -1,7 +1,7 @@
 <script lang="ts">
 import { AClientScopes } from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
-import { VCFormCheckbox, VCFormInput } from '@vuecs/forms';
+import { VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import type { BuildInput } from 'rapiq';
 import type { PropType } from 'vue';
 import { computed, ref } from 'vue';
@@ -11,8 +11,8 @@ import { defineNuxtComponent } from '#imports';
 export default defineNuxtComponent({
     components: {
         VCFormInput,
-        VCFormCheckbox,
-        AClientScopes, 
+        VCFormSwitch,
+        AClientScopes,
     },
     props: {
         entity: {
@@ -72,9 +72,6 @@ export default defineNuxtComponent({
         <div class="mb-1">
             Generate an authorize url by picking the scopes it needs to function.
         </div>
-
-        <hr>
-
         <AClientScopes
             :header="true"
             :query="query"
@@ -84,9 +81,8 @@ export default defineNuxtComponent({
                 <span>Scopes</span>
             </template>
             <template #item="props">
-                <VCFormCheckbox
+                <VCFormSwitch
                     :label="true"
-                    :group-class="'form-switch'"
                     :model-value="scopes.includes(props.data.scope.name)"
                     @update:model-value="toggleScope(props.data.scope.name)"
                 >
@@ -95,12 +91,9 @@ export default defineNuxtComponent({
                             {{ props.data.scope.name }}
                         </label>
                     </template>
-                </VCFormCheckbox>
+                </VCFormSwitch>
             </template>
         </AClientScopes>
-
-        <hr>
-
         <VCFormGroup>
             <template #label>
                 Redirect URL
@@ -112,8 +105,6 @@ export default defineNuxtComponent({
                 />
             </template>
         </VCFormGroup>
-
-        <hr>
         <VCFormGroup>
             <template #label>
                 Generated URL

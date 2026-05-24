@@ -68,14 +68,14 @@ export default defineComponent({
         <div>
             This will allow the <strong>{{ client.name }}</strong> application to
         </div>
-        <div class="flex-column">
+        <div class="flex-col">
             <template
                 v-for="item in scopesAvailableNormalized"
                 :key="item.id"
             >
                 <AuthorizeScope
                     :entity="item"
-                    class="d-flex flex-row gap-1"
+                    class="flex flex-row gap-1"
                     :requested="scopesRequestedNormalized"
                 />
             </template>

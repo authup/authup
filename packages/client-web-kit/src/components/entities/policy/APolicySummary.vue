@@ -23,11 +23,11 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <div class="d-flex flex-row gap-2 mb-2">
+        <div class="flex flex-row gap-2 mb-2">
             <strong style="min-width: 120px">Name</strong>
             <div>{{ entity.name }}</div>
         </div>
-        <div class="d-flex flex-row gap-2 mb-2">
+        <div class="flex flex-row gap-2 mb-2">
             <strong style="min-width: 120px">Type</strong>
             <div>
                 <APolicyTypeBadge :type="entity.type" />
@@ -35,34 +35,34 @@ export default defineComponent({
         </div>
         <div
             v-if="entity.display_name"
-            class="d-flex flex-row gap-2 mb-2"
+            class="flex flex-row gap-2 mb-2"
         >
             <strong style="min-width: 120px">Display Name</strong>
             <div>{{ entity.display_name }}</div>
         </div>
         <div
             v-if="entity.description"
-            class="d-flex flex-row gap-2 mb-2"
+            class="flex flex-row gap-2 mb-2"
         >
             <strong style="min-width: 120px">Description</strong>
             <div>{{ entity.description }}</div>
         </div>
         <div
             v-if="entity.invert"
-            class="d-flex flex-row gap-2 mb-2"
+            class="flex flex-row gap-2 mb-2"
         >
             <strong style="min-width: 120px">Invert</strong>
             <div>
-                <span class="badge bg-warning">Yes</span>
+                <span class="badge bg-warning-500">Yes</span>
             </div>
         </div>
         <div
             v-if="entity.built_in"
-            class="d-flex flex-row gap-2 mb-2"
+            class="flex flex-row gap-2 mb-2"
         >
             <strong style="min-width: 120px">Built-in</strong>
             <div>
-                <span class="badge bg-secondary">Yes</span>
+                <span class="badge bg-bg-elevated">Yes</span>
             </div>
         </div>
     </div>

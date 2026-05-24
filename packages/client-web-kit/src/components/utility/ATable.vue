@@ -37,7 +37,7 @@
  *
  * 3. The wrapper also drops `<VCTable>`'s default header styling
  *    contribution from this path — `tableHeadCell` theme classes still
- *    apply, so the theme-bootstrap `text-uppercase` etc. is honored
+ *    apply, so the theme-bootstrap `uppercase` etc. is honored
  *    or overridden via the consumer app's `vuecs` plugin overrides
  *    (see `apps/client-web/plugins/vuecs.ts`).
  */
@@ -52,6 +52,24 @@ import {
     VCTableRow,
 } from '@vuecs/table';
 import type { TableColumn } from '@vuecs/table';
+
+/*
+ * theme-tailwind's `tableHeadCell.classes.root = "px-3 text-left ..."`
+ * bakes `text-left` into the head cell. When a column passes
+ * `headerClass: 'text-center'`, both classes end up on the `<th>` —
+ * Vue's `mergeProps` just concatenates, and Tailwind's `text-left`
+ * happens to come later in the emitted CSS source order, so it wins.
+ * The proper API is `VCTableHeadCell`'s `align` prop, which feeds the
+ * theme's alignment variant; this sniffs the legacy `headerClass`
+ * string for an alignment utility and forwards it as the prop.
+ */
+function deriveAlign(headerClass: unknown): 'left' | 'center' | 'right' | undefined {
+    if (typeof headerClass !== 'string') return undefined;
+    if (headerClass.includes('text-center')) return 'center';
+    if (headerClass.includes('text-right') || headerClass.includes('text-end')) return 'right';
+    if (headerClass.includes('text-left') || headerClass.includes('text-start')) return 'left';
+    return undefined;
+}
 
 // Permissive `any` shapes here are intentional — the wrapper exists
 // precisely to accept the legacy `<BTable>` row/field shapes (mixed
@@ -82,6 +100,7 @@ export default defineComponent({
         striped: { type: Boolean, default: false },
         hover: { type: Boolean, default: true },
     },
+    methods: { deriveAlign },
 });
 /* eslint-enable @typescript-eslint/no-explicit-any */
 </script>
@@ -101,6 +120,7 @@ export default defineComponent({
                     v-for="field in fields"
                     :key="field.key"
                     :column-key="field.key"
+                    :align="deriveAlign(field.headerClass)"
                     :class="[field.class, field.headerClass]"
                 >
                     <slot

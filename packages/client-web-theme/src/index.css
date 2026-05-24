@@ -1,0 +1,299 @@
+/*!
+ * @authup/client-web-theme — app-level layer on top of
+ * `@authup/client-web-kit-theme`.
+ *
+ * Cascade order (apps consume this file; the kit theme's cascade
+ * is included transitively):
+ *   1. tailwindcss            — via the kit theme
+ *   2. @vuecs/design          — via the kit theme
+ *   3. @vuecs/theme-tailwind  — via the kit theme
+ *   4. authup tokens          — project palette / radii / typography
+ *   5. authup compat layer    — Bootstrap-shaped class shims (@apply'd
+ *                                from Tailwind utilities). Phased out
+ *                                as templates migrate to <VCButton> /
+ *                                <VCAlert> / etc.
+ */
+
+@import "@authup/client-web-kit-theme";
+
+/*
+ * Scan this package's own src so class strings declared inside
+ * `clientWebTheme()` (none today, but a hook for future overrides)
+ * land in the JIT corpus.
+ */
+@source ".";
+
+/* ------------------------------------------------------------------
+   Authup design tokens
+   Override `--vc-color-*` (or palette names via setColorPalette()) to
+   reskin the entire UI without touching component class strings.
+   ------------------------------------------------------------------ */
+@layer base {
+    :root {
+        /* placeholder — concrete authup brand tokens will be filled in
+           as the migration touches the styled-but-not-tokenized chrome
+           (header, sidebar, login card, ...) */
+    }
+
+    /*
+     * Tailwind v4 preflight resets every heading to inherit the parent
+     * font-size — h1/h2/h3 all render at body size unless utility
+     * classes are applied per-template. Authup's templates haven't been
+     * rewritten to do that (and Bootstrap's preflight used to size
+     * headings automatically). Restore the heading size scale here
+     * once, project-wide. Font-family + font-weight come from
+     * apps/client-web/assets/css/root.css.
+     */
+    h1 { @apply text-4xl; }
+    h2 { @apply text-3xl; }
+    h3 { @apply text-2xl; }
+    h4 { @apply text-xl; }
+    h5 { @apply text-lg; }
+    h6 { @apply text-base; }
+}
+
+/* ------------------------------------------------------------------
+   Bootstrap-compat layer
+   Provides the Bootstrap-shaped utility / component class names that
+   authup's pre-Tailwind templates still reference. Each rule `@apply`s
+   Tailwind utilities — same visual contract, no `bootstrap` dep, and
+   the rules disappear automatically when the last caller is rewritten
+   to a `<VC*>` component.
+
+   Scope is intentionally narrow: only what the authup codebase actually
+   uses today. Don't add Bootstrap utilities that have no live caller —
+   `grep -rn 'class="[^"]*<token>'` first.
+   ------------------------------------------------------------------ */
+@layer components {
+    /* Buttons --------------------------------------------------------- */
+    .btn {
+        @apply inline-flex items-center justify-center gap-1 rounded-md
+               border border-transparent px-3 py-1.5 text-sm font-medium
+               transition-colors cursor-pointer
+               focus-visible:outline-2 focus-visible:outline-offset-2
+               focus-visible:outline-primary-500
+               disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+    /* `!` is required: VCButton (from @vuecs/theme-tailwind) emits size
+       utilities like `px-3 py-1.5 text-sm` directly on the root, and
+       those live in Tailwind's `utilities` layer — which wins over our
+       `@layer components` shims by cascade-layer order. Marking the
+       size shims as !important is what lets `<VCButton class="btn-xs">`
+       actually render at the xs size. */
+    .btn-xs { @apply px-1.5! py-1.25! text-xs!; }
+    .btn-sm { @apply px-2! py-1! text-xs!; }
+    .btn-lg { @apply px-4! py-2! text-base!; }
+
+    .btn-primary   { @apply bg-primary-600 text-on-primary hover:bg-primary-700; }
+    .btn-secondary { @apply bg-bg-elevated text-fg         hover:bg-bg-muted; }
+    .btn-success   { @apply bg-success-600 text-on-success hover:bg-success-700; }
+    .btn-danger    { @apply bg-error-600   text-on-error   hover:bg-error-700; }
+    .btn-warning   { @apply bg-warning-500 text-on-warning hover:bg-warning-600; }
+    .btn-info      { @apply bg-info-500    text-on-info    hover:bg-info-600; }
+    .btn-light     { @apply bg-bg-muted    text-fg         hover:bg-bg-elevated; }
+    .btn-dark      { @apply bg-fg          text-bg         hover:opacity-80; }
+
+    .btn-outline-primary   { @apply border-primary-600  text-primary-600 hover:bg-primary-600 hover:text-on-primary; }
+    .btn-outline-secondary { @apply border-border       text-fg          hover:bg-bg-muted; }
+    .btn-outline-success   { @apply border-success-600  text-success-600 hover:bg-success-600 hover:text-on-success; }
+    .btn-outline-danger    { @apply border-error-600    text-error-600   hover:bg-error-600   hover:text-on-error; }
+    .btn-outline-warning   { @apply border-warning-500  text-warning-600 hover:bg-warning-500 hover:text-on-warning; }
+    .btn-outline-info      { @apply border-info-500     text-info-600    hover:bg-info-500    hover:text-on-info; }
+    .btn-outline-light     { @apply border-border-muted text-fg-muted    hover:bg-bg-muted; }
+    .btn-outline-dark      { @apply border-fg           text-fg          hover:bg-fg          hover:text-bg; }
+
+    /* Grid — Bootstrap-style 12-col layout via flex (not CSS grid). The
+       earlier grid-based shim broke layouts that relied on `.row` being
+       a flex container (e.g. `.row > .ms-auto`).
+
+       Gutters via negative row margin + per-col px-2 — same shape as
+       Bootstrap 5's `--bs-gutter-x` trick but tighter (16px combined
+       gap between adjacent cols rather than Bootstrap's default 24px;
+       authup's two-up forms looked too far apart at the wider value).
+       A plain `gap-N` would push col-7 + col-5 + gap past 100% width
+       and wrap onto two lines; this layout keeps col widths exact
+       (w-N/12 with `box-sizing: border-box`) while the px-2 carves
+       the gutter out of each col's interior. */
+    .row     { @apply flex flex-wrap; margin-left: -0.5rem; margin-right: -0.5rem; }
+    .col     { @apply flex-1 basis-0 px-2; }
+    .col-1   { @apply w-1/12 px-2; }
+    .col-2   { @apply w-2/12 px-2; }
+    .col-3   { @apply w-3/12 px-2; }
+    .col-4   { @apply w-4/12 px-2; }
+    .col-5   { @apply w-5/12 px-2; }
+    .col-6   { @apply w-6/12 px-2; }
+    .col-7   { @apply w-7/12 px-2; }
+    .col-8   { @apply w-8/12 px-2; }
+    .col-9   { @apply w-9/12 px-2; }
+    .col-10  { @apply w-10/12 px-2; }
+    .col-11  { @apply w-11/12 px-2; }
+    .col-12  { @apply w-full px-2; }
+
+    .container       { @apply mx-auto w-full max-w-screen-lg px-4; }
+    .container-fluid { @apply w-full px-4; }
+
+    /* Alerts --------------------------------------------------------- */
+    .alert         { @apply relative mb-3 rounded-md border px-4 py-3; }
+    .alert-sm      { @apply px-3 py-2 text-sm; }
+    .alert-primary { @apply border-primary-200 bg-primary-50 text-primary-700; }
+    .alert-success { @apply border-success-200 bg-success-50 text-success-700; }
+    .alert-warning { @apply border-warning-200 bg-warning-50 text-warning-700; }
+    .alert-danger  { @apply border-error-200   bg-error-50   text-error-700; }
+    .alert-info    { @apply border-info-200    bg-info-50    text-info-700; }
+
+    /* Badges --------------------------------------------------------- */
+    .badge {
+        @apply inline-flex items-center rounded-full px-2 py-0.5
+               text-xs font-medium;
+    }
+
+    /* Nav / navbar — bootstrap's nav components ---------------------- */
+    .nav             { @apply flex flex-wrap; }
+    .nav-item        { @apply list-none; }
+    .nav-link        { @apply block px-3 py-2 text-fg hover:text-primary-600 no-underline; }
+    .nav-link.active { @apply text-primary-600; }
+    .navbar          { @apply flex flex-wrap items-center justify-between; }
+    .navbar-nav      { @apply flex flex-col list-none; }
+    .navbar-brand    { @apply mr-4 inline-block py-2 text-lg whitespace-nowrap; }
+    .navbar-toggler  { @apply rounded border border-border px-2 py-1; }
+    .navbar-collapse { @apply grow basis-full items-center; }
+
+    /* Bootstrap-style .collapse: content is hidden unless `.show` is
+       toggled. `.navbar-expand-md` (used on the `<nav>` itself) flips
+       the navbar contents back to visible + horizontal at md+ so the
+       desktop header is single-row, mobile is a toggleable column.
+
+       `!` is required on the flex-direction override: @vuecs/navigation
+       applies `flex-col` to the navigation root via theme-tailwind's
+       element class map. That class lives in Tailwind's `utilities`
+       layer; our compat rules live in `components`. Without `!`, the
+       utility layer (flex-col) wins regardless of selector specificity,
+       and the desktop header stacks vertically — ~250px instead of
+       ~56px. */
+    .collapse:not(.show) { @apply hidden; }
+    .navbar-expand-md .navbar-collapse { @apply md:flex!; }
+    .navbar-expand-md .navbar-nav      { @apply md:flex-row!; }
+    .navbar-expand-md                  { @apply md:flex-nowrap md:justify-start; }
+
+    /* Forms — minimal shims (vuecs SFCs own the real form styles) ---- */
+    .form-group   { @apply mb-3; }
+    .form-switch  { @apply inline-flex items-center gap-2; }
+
+    /* Nav-pills — joined-tab look. Used by buildDomainEntityNav() in
+       apps/client-web/composables/domain/enity-nav.ts to render entity
+       sub-navigation as a pill row (horizontal) or pill column
+       (.flex-col). vuecs has no equivalent component; this compat
+       owns the styling until we move callers to a future <VCTabs> /
+       similar. */
+    .nav-pills .nav-link {
+        @apply border border-border bg-bg-muted text-fg cursor-pointer
+               rounded-none;
+        margin-left: -1px;
+    }
+    .nav-pills .nav-item:first-child .nav-link {
+        @apply rounded-l-md;
+        margin-left: 0;
+    }
+    .nav-pills .nav-item:last-child .nav-link {
+        @apply rounded-r-md;
+    }
+    .nav-pills.flex-col .nav-link {
+        margin-left: 0;
+        margin-top: -1px;
+    }
+    /*
+     * Vertical orientation: cancel the horizontal rule's
+     * `rounded-l-md` / `rounded-r-md` and instead round the
+     * top corners of the first pill, bottom corners of the last.
+     * Use per-corner utilities — `rounded-t-md` alone would not
+     * cancel the bottom-left corner inherited from the horizontal
+     * `rounded-l-md` rule (and `rounded-l-none` zeros out top-left
+     * as well, which is exactly what was visible as "rounded
+     * everywhere except top-left").
+     */
+    .nav-pills.flex-col .nav-item:first-child .nav-link {
+        @apply rounded-tr-md rounded-bl-none;
+        margin-top: 0;
+    }
+    .nav-pills.flex-col .nav-item:last-child .nav-link {
+        @apply rounded-bl-md rounded-tr-none;
+    }
+    .nav-pills .nav-link.active,
+    .nav-pills .nav-link.router-link-exact-active,
+    .nav-pills .nav-link.router-link-active {
+        @apply bg-primary-600 text-on-primary border-primary-600;
+    }
+
+    /* Pagination — override theme-tailwind's per-button rounded-md to a
+       joined-tab look (only first / last buttons get rounded outer
+       corners). vuecs's default is each button independently rounded
+       (pill row); authup historically used the Bootstrap-joined style. */
+    .vc-pagination .vc-pagination-link {
+        @apply !rounded-none;
+        margin-left: -1px;
+    }
+    .vc-pagination > :first-child .vc-pagination-link {
+        @apply !rounded-l-md;
+        margin-left: 0;
+    }
+    .vc-pagination > :last-child .vc-pagination-link {
+        @apply !rounded-r-md;
+    }
+
+    /* Form validation visual states. Bootstrap had `.is-valid` /
+       `.is-invalid` classes for green/red field highlights;
+       AIdentityProviderOAuth2Discovery uses `.is-valid` to confirm a
+       successful discovery URL lookup. Keep just `.is-valid` for now —
+       `.is-invalid` would shadow IVuelidate's own severity styling. */
+    .is-valid {
+        @apply border-success-600 ring-1 ring-success-500;
+    }
+
+    /* Dropdowns — Bootstrap-style toggle/menu used by
+       LanguageSwitcherDropdown (in the header gadgets) and any other
+       legacy markup. The `hidden` on `.dropdown-menu` is load-bearing:
+       without it, the menu renders inline below the toggle and the
+       page header balloons by ~80px because the list-of-locales sits
+       always-visible inside the navbar. The toggle's click handler
+       (see LanguageSwitcherDropdown.ts) flips `.show` on the menu. */
+    .dropdown-toggle { @apply cursor-pointer; }
+    .dropdown-menu {
+        @apply absolute z-50 hidden min-w-40 rounded-md
+               border border-border bg-bg py-1 shadow-md;
+    }
+    .dropdown-menu.show { @apply block; }
+    .dropdown-item {
+        @apply block w-full cursor-pointer border-0 bg-transparent
+               px-3 py-1 text-left text-sm text-fg hover:bg-bg-muted;
+    }
+    .dropdown-item.active {
+        @apply bg-primary-600 text-on-primary hover:bg-primary-700;
+    }
+
+    /* Modal — minimal classic-Bootstrap chrome ----------------------- */
+    .modal-backdrop { @apply fixed inset-0 z-40 bg-black/50; }
+    .modal          { @apply fixed inset-0 z-50 overflow-y-auto; }
+    .modal-dialog   { @apply mx-auto my-8 w-full max-w-lg; }
+    .modal-content  { @apply rounded-md border border-border bg-bg shadow-lg; }
+    .modal-header   { @apply flex items-center justify-between border-b border-border px-4 py-3; }
+    .modal-title    { @apply font-semibold; }
+    .modal-body     { @apply px-4 py-3; }
+    .modal-footer   { @apply flex items-center justify-end gap-2 border-t border-border px-4 py-3; }
+
+}
+
+/* ------------------------------------------------------------------
+   Authup app styles — chrome (header, navbar, sidebar, footer, body)
+   + project utilities + login chrome. Layered LAST so app-specific
+   selectors win over the Tailwind utility / compat layers when the
+   classes overlap (e.g. `.page-sidebar .nav-link`).
+   ------------------------------------------------------------------ */
+@import "./styles/root.css";
+@import "./styles/navigation.css";
+@import "./styles/core/header.css";
+@import "./styles/core/navbar.css";
+@import "./styles/core/body.css";
+@import "./styles/core/sidebar.css";
+@import "./styles/core/footer.css";
+@import "./styles/card.css";
+@import "./styles/generics.css";

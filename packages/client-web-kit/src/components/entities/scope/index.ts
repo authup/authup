@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { AScopeForm } from './AScopeForm';
+export { AScopeForm } from './AScopeForm.vue';
 export { AScopes } from './AScopes';
 export { AScope } from './AScope';

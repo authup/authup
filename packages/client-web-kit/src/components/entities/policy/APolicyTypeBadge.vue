@@ -33,5 +33,5 @@ export default defineComponent({
 });
 </script>
 <template>
-    <span class="badge bg-info">{{ typeLabels[type] || type }}</span>
+    <span class="badge bg-info-500">{{ typeLabels[type] || type }}</span>
 </template>

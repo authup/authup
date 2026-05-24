@@ -51,18 +51,18 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="d-flex flex-column gap-2">
+    <div class="flex flex-col gap-2">
         <div>
             <h6>Type</h6>
 
-            <div class="d-flex flex-row gap-2 flex-wrap">
+            <div class="flex flex-row gap-2 flex-wrap">
                 <template
                     v-for="(item, key) in options"
                     :key="key"
                 >
                     <div
                         :class="{'active': item.value === option}"
-                        class="d-flex flex-column gap-1 text-center a-picker-item"
+                        class="flex flex-col gap-1 text-center a-picker-item"
                         @click.prevent="pick(`${item.value}`)"
                     >
                         <div>

@@ -21,7 +21,7 @@ import AuthorizeText from './AuthorizeText.vue';
 
 const wrapChild = (child: VNodeChild) => h(
     'div',
-    { class: 'd-flex align-items-center justify-content-center h-100' },
+    { class: 'flex items-center justify-center h-full' },
     [
         h(
             'div',

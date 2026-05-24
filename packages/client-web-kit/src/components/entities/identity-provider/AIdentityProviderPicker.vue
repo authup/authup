@@ -36,11 +36,11 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="d-flex flex-column gap-2">
+    <div class="flex flex-col gap-2">
         <div>
             <h6>Protocols</h6>
 
-            <div class="d-flex flex-row gap-2 flex-wrap">
+            <div class="flex flex-row gap-2 flex-wrap">
                 <template
                     v-for="(item, key) in protocols"
                     :key="key"
@@ -49,7 +49,7 @@ export default defineComponent({
                         <template #default="props">
                             <div
                                 :class="{'active': item === protocol && !preset}"
-                                class="d-flex flex-column gap-1 text-center identity-provider-picker-item"
+                                class="flex flex-col gap-1 text-center identity-provider-picker-item"
                                 @click.prevent="pickProtocol(item)"
                             >
                                 <div>
@@ -70,7 +70,7 @@ export default defineComponent({
         <div>
             <h6>Presets</h6>
 
-            <div class="d-flex flex-row gap-2 flex-wrap">
+            <div class="flex flex-row gap-2 flex-wrap">
                 <template
                     v-for="(item, key) in presets"
                     :key="key"
@@ -79,7 +79,7 @@ export default defineComponent({
                         <template #default="props">
                             <div
                                 :class="{'active': item === preset}"
-                                class="d-flex flex-column gap-1 text-center identity-provider-picker-item"
+                                class="flex flex-col gap-1 text-center identity-provider-picker-item"
                                 @click.prevent="pickPreset(item)"
                             >
                                 <div>

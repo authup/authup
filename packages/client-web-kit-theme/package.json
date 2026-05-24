@@ -1,0 +1,66 @@
+{
+    "name": "@authup/client-web-kit-theme",
+    "type": "module",
+    "version": "1.0.0-beta.42",
+    "description": "Kit-level vuecs theme for authup — composes @vuecs/theme-tailwind with the overrides @authup/client-web-kit's components need.",
+    "license": "Apache-2.0",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "style": "./src/index.css",
+            "import": "./dist/index.mjs"
+        },
+        "./index.css": "./src/index.css",
+        "./src/index.css": "./src/index.css"
+    },
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist",
+        "src/index.css"
+    ],
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "tsdown",
+        "build": "rimraf ./dist && npm run build:js && npm run build:types"
+    },
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
+    "keywords": [
+        "authup",
+        "vuecs",
+        "theme",
+        "tailwindcss",
+        "ui-theme",
+        "client-web-kit"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/client-web-kit-theme"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {
+        "@vuecs/design": "^1.0.0",
+        "@vuecs/theme-tailwind": "^1.1.0"
+    },
+    "peerDependencies": {
+        "@vuecs/core": "^3.x",
+        "@vuecs/design": "^1.x",
+        "@vuecs/theme-tailwind": "^1.x",
+        "tailwindcss": "^4.x"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

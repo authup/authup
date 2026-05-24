@@ -15,7 +15,7 @@ import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
-import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery';
+import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery.vue';
 
 export default defineComponent({
     components: {

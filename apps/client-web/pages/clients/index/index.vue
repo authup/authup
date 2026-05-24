@@ -123,24 +123,24 @@ export default defineComponent({
                 <template #cell-active="{ row }">
                     <i
                         :class="{
-                            'fa fa-times text-danger': !row.active,
-                            'fa fa-check text-success': row.active,
+                            'fa fa-times text-error-600': !row.active,
+                            'fa fa-check text-success-600': row.active,
                         }"
                     />
                 </template>
                 <template #cell-is_confidential="{ row }">
                     <i
                         :class="{
-                            'fa fa-times text-danger': !row.is_confidential,
-                            'fa fa-check text-success': row.is_confidential,
+                            'fa fa-times text-error-600': !row.is_confidential,
+                            'fa fa-check text-success-600': row.is_confidential,
                         }"
                     />
                 </template>
                 <template #cell-built_in="{ row }">
                     <i
                         :class="{
-                            'fa fa-times text-danger': !row.built_in,
-                            'fa fa-check text-success': row.built_in,
+                            'fa fa-times text-error-600': !row.built_in,
+                            'fa fa-check text-success-600': row.built_in,
                         }"
                     />
                 </template>

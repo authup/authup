@@ -111,8 +111,8 @@ export default defineComponent({
                     <i
                         class="fas"
                         :class="{
-                            'fa-check text-success': row.built_in,
-                            'fa-times text-danger': !row.built_in,
+                            'fa-check text-success-600': row.built_in,
+                            'fa-times text-error-600': !row.built_in,
                         }"
                     />
                 </template>

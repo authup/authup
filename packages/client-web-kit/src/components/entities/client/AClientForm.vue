@@ -7,10 +7,10 @@
 
 <script lang="ts">
 import {
-    type PropType, 
-    computed, 
-    defineComponent, 
-    reactive, 
+    type PropType,
+    computed,
+    defineComponent,
+    reactive,
     watch,
 } from 'vue';
 import useVuelidate from '@vuelidate/core';
@@ -20,20 +20,20 @@ import { createNanoID, isBCryptHash } from '@authup/kit';
 import { IVuelidate } from '@ilingo/vuelidate';
 import { ARealmPicker } from '../realm';
 import {
-    AFormInputList, 
-    AFormSubmit, 
-    defineEntityManager, 
+    AFormInputList,
+    AFormSubmit,
+    defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
 import {
     TranslatorTranslationClientKey,
-    TranslatorTranslationDefaultKey, 
-    TranslatorTranslationGroup, 
-    VuelidateCustomRule, 
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationGroup,
+    VuelidateCustomRule,
     VuelidateCustomRuleKey,
     assignFormProperties,
     injectStore,
-    storeToRefs, 
+    storeToRefs,
     useTranslationsForGroup,
 } from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
@@ -259,13 +259,12 @@ export default defineComponent({
                             v-model="vuelidate.name.$model"
                             :disabled="isNameFixed"
                         />
+                        <template #hint>
+                            {{ translationsClient.nameHint }}
+                        </template>
                     </VCFormGroup>
-                    <small>{{ translationsClient.nameHint }}</small>
                 </template>
             </IVuelidate>
-
-            <hr>
-
             <IVuelidate :validation="vuelidate.display_name">
                 <template #default="props">
                     <VCFormGroup
@@ -282,9 +281,6 @@ export default defineComponent({
                     </VCFormGroup>
                 </template>
             </IVuelidate>
-
-            <hr>
-
             <IVuelidate :validation="vuelidate.secret">
                 <template #default="props">
                     <VCFormGroup
@@ -295,7 +291,7 @@ export default defineComponent({
                             {{ translationsDefault.secret }}
 
                             <template v-if="isSecretHashed">
-                                <span class="text-danger font-weight-bold">
+                                <span class="text-error-600 font-bold">
                                     <i class="fa fa-exclamation-triangle" />
                                 </span>
                             </template>
@@ -325,9 +321,8 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormCheckbox
+                                <VCFormSwitch
                                     v-model="vuelidate.is_confidential.$model"
-                                    :group-class="'form-switch'"
                                     :label="true"
                                     :label-content="translationsClient.isConfidential.value"
                                 />
@@ -342,9 +337,8 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormCheckbox
+                                <VCFormSwitch
                                     v-model="vuelidate.secret_hashed.$model"
-                                    :group-class="'form-switch'"
                                     :label="true"
                                     :label-content="translationsClient.hashSecret.value"
                                 />
@@ -359,9 +353,8 @@ export default defineComponent({
                                 :validation-messages="props.data"
                                 :validation-severity="props.severity"
                             >
-                                <VCFormCheckbox
+                                <VCFormSwitch
                                     v-model="vuelidate.active.$model"
-                                    :group-class="'form-switch'"
                                     :label="true"
                                     :label-content="translationsClient.isActive.value"
                                 />
@@ -372,7 +365,6 @@ export default defineComponent({
             </div>
 
             <template v-if="!realmId && !isEditing">
-                <hr>
                 <IVuelidate :validation="vuelidate.realm_id">
                     <template #default="props">
                         <VCFormGroup
@@ -410,11 +402,10 @@ export default defineComponent({
                 <template #label>
                     {{ translationsDefault.redirectUris }}
                 </template>
+                <template #hint>
+                    {{ translationsClient.redirectURIHint }}
+                </template>
             </AFormInputList>
-            <small>{{ translationsClient.redirectURIHint }}</small>
-
-            <hr>
-
             <IVuelidate :validation="vuelidate.description">
                 <template #default="props">
                     <VCFormGroup
@@ -428,14 +419,12 @@ export default defineComponent({
                             v-model="vuelidate.description.$model"
                             rows="7"
                         />
+                        <template #hint>
+                            {{ translationsClient.descriptionHint }}
+                        </template>
                     </VCFormGroup>
-
-                    <small>{{ translationsClient.descriptionHint }}</small>
                 </template>
             </IVuelidate>
-
-            <hr>
-
             <div>
                 <AFormSubmit
                     :is-busy="isBusy"

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectStore, install } from '@authup/client-web-kit';
+import { buildSubmitButtonDefaults, injectStore, install } from '@authup/client-web-kit';
 import { omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
@@ -13,34 +13,26 @@ import { createSSRApp } from 'vue';
 import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router';
 
 import vuecs from '@vuecs/core';
-import bootstrap from '@vuecs/theme-bootstrap';
+import clientWebKitTheme from '@authup/client-web-kit-theme';
+import clientWebTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installPagination from '@vuecs/pagination';
 
-// vuecs CSS pipeline (Bootstrap variant) — required cascade order per
-// @vuecs/theme-bootstrap doctrine:
-//   1. Bootstrap → default --bs-* variables.
-//   2. @vuecs/design/standalone → --vc-color-* tokens (Tailwind-free OKLCH).
-//   3. @vuecs/theme-bootstrap → bridges --bs-* ↔ --vc-color-*.
-//   4. Per-component CSS (forms, table, button, elements, …) consumes
-//      the --vc-color-* tokens above.
-// Mirrors the client-web nuxt.config.ts pipeline so the consent UI's
-// vuecs SFCs render with the same Bootstrap-themed look.
-import 'bootstrap/dist/css/bootstrap.css';
-import '@vuecs/design/standalone.css';
-import '@vuecs/theme-bootstrap/index.css';
-import '@vuecs/button/dist/style.css';
-import '@vuecs/elements/dist/style.css';
-import '@vuecs/forms/dist/style.css';
-import '@vuecs/pagination/dist/style.css';
-import '@vuecs/table/dist/style.css';
+// CSS pipeline — mirrors apps/client-web/nuxt.config.ts so the embedded
+// consent UI inherits the same theme cascade as the main Nuxt app:
+//   1. ./tailwind.css            — @import @authup/client-web-theme
+//                                  (which transitively pulls
+//                                  @authup/client-web-kit-theme +
+//                                  tailwindcss + @vuecs/design +
+//                                  @vuecs/theme-tailwind + every
+//                                  authup-owned stylesheet) and adds
+//                                  this app's `@source` scopes.
+//   2. client-web-kit dist styles — SFC `<style scoped>` blocks.
+//   3. Font Awesome              — legacy `<i class="fa-*">` icons.
+import './tailwind.css';
 import '@authup/client-web-kit/../dist/style.css';
 import '@fortawesome/fontawesome-free/css/all.css';
-import '../../../client-web/assets/css/bootstrap-override.css';
-import '../../../client-web/assets/css/root.css';
-import '../../../client-web/assets/css/form.css';
-import '../../../client-web/assets/css/generics.css';
 
 import type { Router } from 'vue-router';
 import Authorize from './pages/authorize.vue';
@@ -106,8 +98,17 @@ export function createApp(payload: HydrationPayload) : {
     // manager is populated when components mount (see the matching note
     // in `apps/client-web/plugins/vuecs.ts`).
     app.use(vuecs, {
-        themes: [bootstrap()],
+        // Register both themes side-by-side (mirrors the Nuxt plugin).
+        // Kit theme first, app theme layers on top.
+        themes: [clientWebKitTheme(), clientWebTheme()],
         icons: [fontAwesome()],
+        defaults: {
+            // Wire authup's translator + icon choices into vuecs's
+            // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`
+            // resolve to locale-reactive labels with no per-call work.
+            // Mirrors the Nuxt plugin in apps/client-web/plugins/vuecs.ts.
+            submitButton: buildSubmitButtonDefaults(),
+        },
     });
     app.use(installForms);
     app.use(installPagination);

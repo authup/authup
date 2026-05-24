@@ -18,13 +18,13 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex-column">
+    <div class="flex flex-col">
         <div class="text-center">
             <i
                 class="fa-solid fa-10x"
                 :class="{
-                    'fa-exclamation text-danger': isError,
-                    'fa-info text-info': !isError,
+                    'fa-exclamation text-error-600': isError,
+                    'fa-info text-info-600': !isError,
                 }"
             />
         </div>

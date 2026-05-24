@@ -5,12 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { injectTranslatorLocale } from '@authup/client-web-kit';
+import { buildSubmitButtonDefaults, injectTranslatorLocale } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 import { watch } from 'vue';
 
-import vuecs, { extend } from '@vuecs/core';
-import bootstrap from '@vuecs/theme-bootstrap';
+import vuecs from '@vuecs/core';
+import clientWebKitTheme from '@authup/client-web-kit-theme';
+import clientWebTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
 
 import installCountdown from '@vuecs/countdown';
@@ -31,10 +32,10 @@ export default defineNuxtPlugin({
     // `vuecs-navigation` MUST depend on this — `@vuecs/navigation`'s
     // `install()` calls `installThemeManager(app, {})` with no themes,
     // and `installThemeManager` is first-install-wins. If vuecs-navigation
-    // runs before this plugin, the bootstrap theme below is silently
+    // runs before this plugin, the authup theme below is silently
     // dropped at theme-manager creation time, and every component renders
-    // with only its `vc-*` defaults (form-control etc. are missing,
-    // form fields look unstyled).
+    // with only its `vc-*` defaults (no Tailwind utility classes — fields
+    // look unstyled).
     name: 'vuecs',
     // Runs AFTER `authup:kit` because `injectTranslatorLocale()` below
     // requires the ilingo locale provider that `installTranslator()`
@@ -49,23 +50,21 @@ export default defineNuxtPlugin({
     dependsOn: ['authup'],
     setup(ctx) {
         ctx.vueApp.use(vuecs, {
-            themes: [bootstrap()],
+            // Register both themes side-by-side. The kit theme owns
+            // overrides the kit's own components need (e.g. formGroup
+            // margin); the app theme layers app-specific concerns
+            // (heading scale, Bootstrap-compat shims) on top. Order
+            // matters: kit first, app overrides win on conflicts.
+            themes: [clientWebKitTheme(), clientWebTheme()],
             icons: [fontAwesome()],
-            overrides: {
-                elements: {
-                    list: { classes: { root: extend('list') } },
-                    listBody: { classes: { root: extend('list-body') } },
-                    listItem: { classes: { root: extend('list-item') } },
-                    // @vuecs/theme-bootstrap defaults tableHeader to
-                    // `text-uppercase small text-body-secondary`. authup
-                    // tables (users, robots, roles, …) display proper-cased
-                    // labels (`Name`, `Created At`); the uppercase upper-
-                    // cases them visually into UI noise. Replace the root
-                    // class entirely (no `extend()`) so the uppercase
-                    // utility is dropped; the rest of the small / muted
-                    // styling is preserved verbatim.
-                    tableHeader: { classes: { root: 'small text-body-secondary' } },
-                },
+            defaults: {
+                // Wire authup's translator + icon choices into vuecs's
+                // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`
+                // resolve to locale-reactive labels with no per-call work.
+                // Runs after the kit's translator install (`dependsOn:
+                // ['authup']`), so `useTranslation` inside the helper sees
+                // the live ilingo locale provider.
+                submitButton: buildSubmitButtonDefaults(),
             },
         });
 
