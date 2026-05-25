@@ -91,6 +91,23 @@
         --authup-chrome-fg:                 #ffffff;
         --authup-chrome-fg-muted:           #aeb2b7;
         --authup-chrome-border:             #333333;
+
+        /*
+         * Soften the content background. `@vuecs/design`'s `.dark`
+         * puts `--vc-color-bg` at neutral-900 (~20.5% L) — near-black.
+         * Lift to neutral-700 (~37% L) so it pairs with authup's warm
+         * dark chrome (~32% L) as a gentle step rather than a
+         * near-black cliff. Works from inside `@layer base` because
+         * `@vuecs/design` 1.0.1+ wraps its `.dark` defaults in
+         * `@layer vuecs`, and our kit theme positions `vuecs` earlier
+         * than `base` in the layer order — see
+         * `@authup/client-web-kit-theme/src/index.css` for the
+         * `@layer theme, vuecs, base, components, utilities;`
+         * declaration. Pre-1.0.1, vuecs defined `.dark` at the top
+         * level (outside any layer) and this override had to be
+         * hoisted out of `@layer base` to win the cascade.
+         */
+        --vc-color-bg: var(--vc-color-neutral-700);
     }
 
     /*
@@ -366,48 +383,20 @@
 @import "./styles/generics.css";
 
 /*
- * Top-level override (NOT inside `@layer base`) of vuecs/design's
- * dark-mode `--vc-color-bg`. vuecs/design ships its `.dark { ... }`
- * block at the top level (outside any cascade layer); under CSS
- * cascade rules, top-level declarations beat *any* layered rule
- * regardless of source order, so an `@layer base { .dark { ... } }`
- * override loses no matter how the imports are ordered. Hoisting
- * just this one declaration to the top level puts us on the same
- * cascade tier as vuecs/design, where source order then decides —
- * and our `@import` chain runs after vuecs/design's, so we win.
- *
- * The reason for the override itself: `@vuecs/design`'s dark `bg`
- * is `--vc-color-neutral-900` (~20.5% L, near-black). With authup's
- * warm dark chrome at ~32% L sitting next to it, the contrast goes
- * inverted: content reads as the darkest surface. Lifting to
- * `neutral-700` gives a softer dark that lets chrome float above
- * content instead of beneath it.
- *
- * Track upstream: tada5hi/vuecs — wrapping `@vuecs/design`'s `.dark`
- * (and `:root`) in a named cascade layer would let consumers
- * override cleanly from inside `@layer base` without this hoist.
- */
-.dark {
-    --vc-color-bg: var(--vc-color-neutral-700);
-}
-
-/*
- * Pagination hover override at the TOP LEVEL (outside `@layer
- * components`). Equivalent rule in `@layer components` with
- * `!important` should have won — and on the desk did, in the
- * compiled CSS — but the browser was still painting Tailwind's
- * `hover:bg-neutral-100` (non-important, utilities layer) on top.
- * Hoisting the override to top level removes the cascade-layer
- * variable entirely: top-level rules beat any layered rule
- * regardless of importance, so the next time we touch this we can
- * collapse the !important back out if vuecs's `<VCPagination>` ever
- * exposes a hover-color slot via its element class map.
+ * Pagination hover override. Lives at the top level (outside `@layer
+ * components`) and uses `!important` — belt-and-suspenders against
+ * the underlying `<VCPagination>` button class
+ * (`hover:bg-neutral-100 dark:hover:bg-neutral-700`) which sits in
+ * `@layer utilities`. Either tactic alone would suffice, but the
+ * combination keeps the rule robust if vuecs's element class map
+ * for pagination shifts in a future minor.
  *
  * Why this color: the active page button paints `bg-primary-600` /
  * `text-on-primary`. Mirroring it on hover acts as a preview of
  * "click and this would be the active page" — same contract in
  * both light and dark mode, no theme-tailwind dark/light split.
- * `:not(:disabled)` keeps Next / Last quiet on the last page.
+ * `:not(:disabled)` keeps Next / Last quiet on the last page (the
+ * `:disabled` rule below handles their visual state).
  */
 .vc-pagination .vc-pagination-link:hover:not(:disabled),
 .vc-pagination .vc-pagination-link:focus:not(:disabled) {

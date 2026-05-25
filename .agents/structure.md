@@ -91,26 +91,30 @@ Apps:
 
 ### Plugin install order — important
 
-`@vuecs/core`'s `installThemeManager` is **first-install-wins** (early
-return when an inject already exists, by design — so multiple package
-installs share one manager). Consequence: the consumer app MUST call
-`app.use(vuecs, { themes: [...], icons: [...] })` BEFORE any
-per-package plugin (`installForms`, `installPagination`, ...). If a
-per-package plugin runs first, the manager freezes with no themes and
-every theme override is silently dropped.
+`@vuecs/core` ≥ 3.1.0 (`installThemeManager`) now **merges install
+options into the existing manager** rather than dropping them on second
+install (see tada5hi/vuecs#1591). So the previous "first-install-wins"
+trap is gone: if a per-package plugin (`installForms`,
+`installPagination`, ...) runs before the consumer's
+`app.use(vuecs, { themes: [...], icons: [...] })`, the second call still
+merges the themes / icons into the already-created manager. Form fields
+no longer render unstyled just because the install order shifted.
 
-This trap extends **across Nuxt plugins**, not just within one. Every
-per-package `install()` we audited (`@vuecs/{button, countdown, elements,
-forms, list, navigation, overlays, pagination, table, timeago}`) calls
-`installThemeManager(app, {})` itself. So any Nuxt plugin that calls
-one of these directly (e.g. `apps/client-web/plugins/vuecs-navigation.ts`
-invokes `@vuecs/navigation`'s `install()` to set up the navigation
-manager) MUST `dependsOn: ['vuecs']` — otherwise it may run before the
-`vuecs` plugin and freeze the manager with no themes. The visible
-symptom: every `<VCFormInput>` / `<VCButton>` / `<VCTable>` renders with
-only its `vc-*` default class and no Tailwind utilities (e.g. the
-`border border-border bg-bg ...` class string from `@vuecs/theme-tailwind`
-is missing), so form fields look unstyled.
+Even so, **keep the explicit ordering**:
+
+- Consumer app's `vuecs` plugin retains `name: 'vuecs'` in
+  `apps/client-web/plugins/vuecs.ts` so other Nuxt plugins that touch
+  vuecs APIs directly (e.g. `vuecs-navigation.ts` calling
+  `@vuecs/navigation`'s `install()`) can `dependsOn: ['vuecs']`.
+- `packages/client-web-kit/src/module.ts` still deliberately does NOT
+  install `@vuecs/forms` or `@vuecs/pagination` — both are installed by
+  the consumer app, where it's clear they get the full theme config.
+- The trap is defused, not removed: a malformed sequence where the
+  consumer never calls `app.use(vuecs, ...)` at all still leaves the
+  manager with whatever empty-config per-package installs first set up.
+  An explicit `app.use(vuecs, { themes, icons, defaults })` somewhere in
+  the boot chain is still required for the app to actually pick up
+  authup's theme overrides.
 
 The `vuecs` plugin in `apps/client-web/plugins/vuecs.ts` declares
 `name: 'vuecs'` precisely so other plugins can depend on it. Don't

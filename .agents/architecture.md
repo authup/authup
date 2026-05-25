@@ -816,16 +816,29 @@ file, and retire each shim when its last caller is gone.
 
 ### `<ATable>` wrapper
 
-`@vuecs/table` 1.x supports `#cell-<key>` and `#header-<key>` slots
-at runtime, but its `SlotsType` only declares `default` / `caption` /
-`colgroup` — Vue typed-slot generics can't model dynamic per-column
-slot names. `<ATable>` in
-`packages/client-web-kit/src/components/utility/ATable.vue` wraps
-`<VCTable>` with a permissive `SlotsType<{ [key: string]: ... }>`
-and bridges the legacy `<BTable>` prop shape
-(`:items` + `:fields`) the 9 entity index pages were written
-against. Pure pass-through — `#cell-<key>` slots flow verbatim to
-`<VCTable>`. Drop the wrapper when vuecs adds dynamic-slot typing.
+`@vuecs/table` ≥ 1.1.1 types dynamic per-column slots via template-
+literal slot signatures (`[cellSlot: \`cell-${string}\`]: ...`,
+`[headerSlot: \`header-${string}\`]: ...`) — see tada5hi/vuecs#1592.
+The TypeScript reason for the wrapper (the permissive
+`SlotsType<{ [key: string]: ... }>` shim) is therefore obsolete.
+
+`<ATable>` in `packages/client-web-kit/src/components/utility/ATable.vue`
+still earns its keep on two non-typing concerns:
+
+1. **Prop-shape bridge.** Authup's ~10 entity index pages are written
+   against `<BTable>`'s `:items` / `:fields` shape; `<VCTable>` uses
+   `:data` / `:columns`. The wrapper translates inline so the page-
+   level migration from bvnext stays mechanical.
+2. **Alignment derivation.** `field.headerClass: 'text-center'`
+   (bvnext convention) gets sniffed for `text-{left,center,right,start,end}`
+   and forwarded as `<VCTableHeadCell>`'s `align` prop, which feeds
+   the theme alignment variant cleanly instead of stacking conflicting
+   `text-*` utilities on the `<th>`.
+
+Drop the wrapper when those two concerns are gone — either by
+rewriting the ~10 call sites to vuecs's native prop shape + per-
+column `align` props, or once a future helper inside `client-web-kit`
+absorbs them.
 
 ### `bvnext` (bootstrap-vue-next) removal
 

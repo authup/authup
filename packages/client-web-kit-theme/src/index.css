@@ -12,6 +12,31 @@
  * file and layers extras on top.
  */
 
+/*
+ * Cascade layer order — declared explicitly so we control where
+ * vuecs's `@layer vuecs` block (from `@vuecs/design` 1.0.1+, which
+ * wraps `:root` + `.dark` token defaults in that layer, see
+ * tada5hi/vuecs#1595) sits relative to Tailwind's layers.
+ *
+ * Layer order is established at FIRST appearance; subsequent
+ * `@layer X` declarations of an already-positioned layer are no-ops.
+ * Tailwind v4's `@import "tailwindcss"` itself declares
+ * `@layer theme, base, components, utilities;` — but it imports
+ * AFTER this line, so our ordering takes effect.
+ *
+ * Why this order:
+ *   - `vuecs` early (right after `theme`) so consumer apps can
+ *     override `--vc-color-*` semantic tokens from inside their
+ *     `@layer base { :root, .dark { ... } }` blocks — under the
+ *     cascade-layers spec, non-important rules in LATER layers win,
+ *     so base beats vuecs. Pre-1.0.1 this was impossible because
+ *     vuecs declared its tokens at the top level (outside any
+ *     layer), where they beat ANY layered consumer override.
+ *   - `theme` first so it stays where Tailwind expects it (the
+ *     palette catalog tokens vuecs/design references via `var(...)`).
+ */
+@layer theme, vuecs, base, components, utilities;
+
 @import "tailwindcss";
 @import "@vuecs/design";
 @import "@vuecs/theme-tailwind";
