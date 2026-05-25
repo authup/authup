@@ -57,7 +57,7 @@
         "@authup/errors": "^1.0.0-beta.42",
         "@authup/specs": "^1.0.0-beta.42",
         "@validup/adapter-zod": "^0.2.4",
-        "validup": "^0.2.2",
+        "validup": "^0.3.0",
         "zod": "^4.4.3"
     },
     "devDependencies": {
