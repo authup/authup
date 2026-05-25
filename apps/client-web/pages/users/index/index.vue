@@ -5,7 +5,6 @@ import {
     AEntityDelete,
     APagination,
     ASearch,
-    ATable,
     ATitle,
     AUsers,
     injectStore,
@@ -18,7 +17,6 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
-        ATable,
         ATitle,
         APagination,
         ASearch,
@@ -39,7 +37,7 @@ export default defineComponent({
         const hasEditPermission = usePermissionCheck({ name: PermissionName.USER_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.USER_DELETE });
 
-        const fields: TableColumn<User>[] = [
+        const columns: TableColumn[] = [
             {
                 key: 'name',
                 label: 'Name',
@@ -49,13 +47,13 @@ export default defineComponent({
             {
                 key: 'created_at',
                 label: 'Created At',
-                headerClass: 'text-center',
+                headerClass: 'text-center!',
                 cellClass: 'text-center',
             },
             {
                 key: 'updated_at',
                 label: 'Updated At',
-                headerClass: 'text-center',
+                headerClass: 'text-center!',
                 cellClass: 'text-center',
             },
             {
@@ -66,7 +64,7 @@ export default defineComponent({
         ];
 
         return {
-            fields,
+            columns,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -97,19 +95,19 @@ export default defineComponent({
             />
         </template>
         <template #body="props">
-            <ATable
-                :items="props.data"
-                :fields="fields"
+            <VCTable
+                :data="props.data"
+                :columns="columns"
                 :busy="props.busy"
                 bordered
             >
-                <template #cell-created_at="{ row }">
+                <template #cell-created_at="{ row }: { row: any }">
                     <VCTimeago :datetime="row.created_at" />
                 </template>
-                <template #cell-updated_at="{ row }">
+                <template #cell-updated_at="{ row }: { row: any }">
                     <VCTimeago :datetime="row.updated_at" />
                 </template>
-                <template #cell-options="{ row }">
+                <template #cell-options="{ row }: { row: any }">
                     <NuxtLink
                         :to="'/users/'+ row.id"
                         class="btn btn-xs btn-outline-primary me-1"
@@ -126,7 +124,7 @@ export default defineComponent({
                         @deleted="props.deleted"
                     />
                 </template>
-            </ATable>
+            </VCTable>
         </template>
     </AUsers>
 </template>

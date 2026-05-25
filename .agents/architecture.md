@@ -814,31 +814,26 @@ long-term direction is to migrate entity forms / collections /
 pagination chrome to native `<VC*>` SFC template usage, file by
 file, and retire each shim when its last caller is gone.
 
-### `<ATable>` wrapper
+### Table usage
 
-`@vuecs/table` ≥ 1.1.1 types dynamic per-column slots via template-
-literal slot signatures (`[cellSlot: \`cell-${string}\`]: ...`,
-`[headerSlot: \`header-${string}\`]: ...`) — see tada5hi/vuecs#1592.
-The TypeScript reason for the wrapper (the permissive
-`SlotsType<{ [key: string]: ... }>` shim) is therefore obsolete.
+All 9 entity index pages (`apps/client-web/pages/<entity>/index/index.vue`)
+use `<VCTable>` directly with `:data="props.data"` + `:columns="columns"`.
+Column shape is `TableColumn<Row>` from `@vuecs/table`; per-cell rendering
+flows through the `#cell-<key>` template slots that `<VCTable>`'s
+auto-render path dispatches onto each `<VCTableCell>` (tada5hi/vuecs#1592).
 
-`<ATable>` in `packages/client-web-kit/src/components/utility/ATable.vue`
-still earns its keep on two non-typing concerns:
+Centered headers use the Tailwind v4 `!` suffix: `headerClass: 'text-center!'`.
+Without `!important`, theme-tailwind's `tableHeadCell.classes.root`
+baked-in `text-left font-medium` would beat the consumer's class on
+source order. Body cells don't need `!` — `<VCTableCell>`'s root is
+just `px-3 align-middle`, no baked alignment.
 
-1. **Prop-shape bridge.** Authup's ~10 entity index pages are written
-   against `<BTable>`'s `:items` / `:fields` shape; `<VCTable>` uses
-   `:data` / `:columns`. The wrapper translates inline so the page-
-   level migration from bvnext stays mechanical.
-2. **Alignment derivation.** `field.headerClass: 'text-center'`
-   (bvnext convention) gets sniffed for `text-{left,center,right,start,end}`
-   and forwarded as `<VCTableHeadCell>`'s `align` prop, which feeds
-   the theme alignment variant cleanly instead of stacking conflicting
-   `text-*` utilities on the `<th>`.
-
-Drop the wrapper when those two concerns are gone — either by
-rewriting the ~10 call sites to vuecs's native prop shape + per-
-column `align` props, or once a future helper inside `client-web-kit`
-absorbs them.
+The pre-vuecs-1.1.1 `<ATable>` wrapper at
+`packages/client-web-kit/src/components/utility/ATable.vue` has been
+removed; its three jobs (permissive `SlotsType`, bvnext `:items`/`:fields`
+prop bridge, alignment derivation from `headerClass` strings) are
+either solved upstream (slot typing) or absorbed into the per-page call
+sites (column shape, `!`-suffixed alignment).
 
 ### `bvnext` (bootstrap-vue-next) removal
 
@@ -847,7 +842,9 @@ Pre-vuecs-1.x, authup used `bootstrap-vue-next` for tables
 (`BDropdown` / `BDropdownItem`). All three are now served by vuecs
 equivalents:
 
-- `<BTable>` → `<ATable>` (which wraps `<VCTable>`)
+- `<BTable>` → `<VCTable>` (the transitional `<ATable>` wrapper was
+  retired once `@vuecs/table` 1.1.1 added template-literal slot
+  typing for `cell-<key>` / `header-<key>`)
 - `useToast()` from bvnext → `useToast()` from `@vuecs/overlays`,
   via the thin wrapper in
   `apps/client-web/composables/toast.ts` that preserves the

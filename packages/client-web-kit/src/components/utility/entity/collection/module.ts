@@ -290,8 +290,9 @@ function create<
             if (headerVNode) children.push(headerVNode);
 
             // BODY slot — if provided, the consumer renders the full body
-            // (e.g. an `<ATable>` wrapper) and per-item rendering is skipped.
-            // Otherwise fall back to <VCListBody> + per-item <VCListItem>.
+            // (e.g. a `<VCTable>` with `:columns` driving auto-render) and
+            // per-item rendering is skipped. Otherwise fall back to
+            // <VCListBody> + per-item <VCListItem>.
             const bodySlot = slots[EntityCollectionSlotName.BODY];
             if (bodySlot) {
                 children.push(bodySlot(slotProps()));
