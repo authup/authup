@@ -393,8 +393,11 @@
  * `text-on-primary`. Mirroring it on hover acts as a preview of
  * "click and this would be the active page" — same contract in
  * both light and dark mode, no theme-tailwind dark/light split.
- * `:not(:disabled)` keeps Next / Last quiet on the last page (the
- * `:disabled` rule below handles their visual state).
+ * `:not(:disabled)` is defensive: the kit's `buildPagination` passes
+ * `hideDisabled: true` so edge controls are unrendered at page
+ * boundaries today, but a future caller using `<VCPagination>`
+ * directly without that prop would still get disabled buttons —
+ * the filter keeps the hover preview off them.
  */
 .vc-pagination .vc-pagination-link:hover:not(:disabled),
 .vc-pagination .vc-pagination-link:focus-visible:not(:disabled) {
@@ -403,34 +406,3 @@
     border-color:     var(--color-primary-600) !important;
 }
 
-/*
- * Disabled pagination buttons (First / Prev on page 1, Next / Last on
- * the last page) should look disabled and not react to hover.
- * theme-tailwind's defaults don't ship disabled-state styling for
- * `<VCPagination>`, so the buttons render identical to enabled ones
- * — and worse, the `hover:bg-*` / `dark:hover:bg-*` utilities still
- * fire on them. In dark mode the dark hover bg happens to match
- * resting (neutral-700), so disabled hover feels "broken" (no
- * change); in light mode it gives a misleading lightening that
- * suggests the button is clickable.
- *
- * Pin the hover bg/border/color to the resting state so disabled
- * buttons are visually inert under the pointer, and dim them via
- * opacity + cursor so they read as disabled at a glance.
- */
-.vc-pagination .vc-pagination-link:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-/*
- * Suppress only the `hover:bg-*` / `dark:hover:bg-*` utilities on
- * disabled — nothing else needs overriding. The resting state's
- * `border-neutral-300 dark:border-neutral-700` and `text-fg` utilities
- * have no `:hover` prefix, so they keep applying through the hover.
- * Overriding border or color would force `neutral-300` in dark mode
- * (palette colors don't flip), introducing a visible flicker.
- */
-.vc-pagination .vc-pagination-link:disabled:hover,
-.vc-pagination .vc-pagination-link:disabled:focus {
-    background-color: var(--color-bg) !important;
-}

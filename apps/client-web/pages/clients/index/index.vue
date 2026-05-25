@@ -48,31 +48,31 @@ export default defineComponent({
             {
                 key: 'active',
                 label: 'Active?',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'is_confidential',
                 label: 'Confidential?',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'built_in',
                 label: 'Built in?',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'created_at',
                 label: 'Created at',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'updated_at',
                 label: 'Updated at',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {

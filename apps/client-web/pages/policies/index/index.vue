@@ -56,13 +56,13 @@ export default defineComponent({
             {
                 key: 'created_at',
                 label: 'Created at',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'updated_at',
                 label: 'Updated at',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {

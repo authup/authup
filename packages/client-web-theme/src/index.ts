@@ -35,10 +35,30 @@ export { default as clientWebKitTheme, merge } from '@authup/client-web-kit-them
  */
 export default function clientWebTheme() {
     return defineTheme({
-        // App-level element overrides go here. Currently empty —
-        // the kit theme already handles `formGroup.mb-3`. Drop future
-        // per-element tweaks (button defaults, table head styling, ...)
-        // into an `elements: { ... }` block below.
-        elements: {},
+        elements: {
+            /*
+             * Strip the baked `text-left` from theme-tailwind's
+             * `tableHeadCell.classes.root` (default:
+             * `"px-3 text-left font-medium"`).
+             *
+             * Without this override, a consumer-side
+             * `headerClass: 'text-center'` on a `TableColumn` loses to
+             * the theme's `text-left` on CSS source-order, so authup's
+             * entity index pages would have to use Tailwind v4's
+             * `!important` suffix (`'text-center!'`) just to override.
+             * Centralising the strip here means the call sites stay
+             * clean — `headerClass: 'text-center'` works as written
+             * — and the single fix point makes future theme-tailwind
+             * changes easy to absorb.
+             *
+             * Authup's entity tables always specify alignment per
+             * column, so removing the default doesn't visually
+             * regress anything; columns without an explicit alignment
+             * would fall through to the browser default for `<th>`
+             * (`text-align: center`), which is fine for the rare
+             * unspecified case.
+             */
+            tableHeadCell: { classes: { root: 'px-3 font-medium' } },
+        },
     });
 }

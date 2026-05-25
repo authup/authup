@@ -49,25 +49,25 @@ export default defineComponent({
             {
                 key: 'built_in',
                 label: 'Built in?',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'global',
                 label: 'Global?',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'created_at',
                 label: 'Created at',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'updated_at',
                 label: 'Updated at',
-                headerClass: 'text-center!',
+                headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {

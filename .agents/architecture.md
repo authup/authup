@@ -822,11 +822,15 @@ Column shape is `TableColumn<Row>` from `@vuecs/table`; per-cell rendering
 flows through the `#cell-<key>` template slots that `<VCTable>`'s
 auto-render path dispatches onto each `<VCTableCell>` (tada5hi/vuecs#1592).
 
-Centered headers use the Tailwind v4 `!` suffix: `headerClass: 'text-center!'`.
-Without `!important`, theme-tailwind's `tableHeadCell.classes.root`
-baked-in `text-left font-medium` would beat the consumer's class on
-source order. Body cells don't need `!` — `<VCTableCell>`'s root is
-just `px-3 align-middle`, no baked alignment.
+Alignment classes (`headerClass: 'text-center'`, `cellClass: 'text-center'`)
+go through as written — no Tailwind v4 `!` suffix needed.
+`@authup/client-web-theme`'s `clientWebTheme()` overrides
+`tableHeadCell.classes.root` to drop theme-tailwind's baked
+`text-left` (default `"px-3 text-left font-medium"` → `"px-3 font-medium"`),
+so the consumer-side class wins on source order. If theme-tailwind
+ever bakes alignment into `tableCell.classes.root` (today it's just
+`"px-3 align-middle"`), the same pattern can be applied to that
+element in the theme override.
 
 The pre-vuecs-1.1.1 `<ATable>` wrapper at
 `packages/client-web-kit/src/components/utility/ATable.vue` has been
