@@ -17,6 +17,29 @@
 @import "@vuecs/theme-tailwind";
 
 /*
+ * Make Tailwind's `dark:` variant key off the `.dark` class on
+ * `<html>`, not `@media (prefers-color-scheme: dark)`. The
+ * `@vuecs/nuxt` color-mode plugin (and `@vuecs/design`'s
+ * `bindColorMode`) toggles dark mode by adding a `.dark` class to
+ * the root element — which is independent of the OS preference.
+ *
+ * Without this `@custom-variant`, `dark:` utilities only fire when
+ * the OS preference is dark, so a user on a light OS who toggles
+ * the in-app switch gets a half-broken cascade: vuecs/design's
+ * `.dark`-class overrides (semantic-token flips) fire, but every
+ * `dark:bg-*` / `dark:text-*` / `dark:hover:bg-*` utility stays
+ * dormant. The visible symptom is light-themed hover states (e.g.
+ * `hover:bg-neutral-100` beating an absent `dark:hover:bg-neutral-700`)
+ * leaking into dark mode.
+ *
+ * Lives in the kit theme rather than `@authup/client-web-theme` so
+ * any consumer of the kit theme — including the embedded
+ * `apps/server-core/ui/` consent app — inherits the same dark-
+ * variant semantics without re-declaring this in each entry.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
  * `@source` declarations for what this theme is responsible for:
  *
  *   - this package's own src (for class strings declared inside

@@ -68,7 +68,7 @@ export default defineNuxtComponent({
             <nav class="page-navbar navbar-expand-md">
                 <div
                     id="page-navbar"
-                    class="navbar-content navbar-collapse collapse"
+                    class="navbar-content navbar-collapse"
                     :class="{'show': displayNav}"
                 >
                     <VCNavItems

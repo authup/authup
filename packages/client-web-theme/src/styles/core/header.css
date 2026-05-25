@@ -14,7 +14,7 @@
     display: flex;
     align-items: center;
     box-shadow: 0px -6px 0px rgba(0, 0, 0, 0.3) inset;
-    background-color: #34353a;
+    background-color: var(--authup-chrome-bg);
     padding-bottom: 6px;
 }
 
@@ -31,13 +31,13 @@
 }
 
 .page-header .toggle-box {
-    color: #aeb2b7;
+    color: var(--authup-chrome-fg-muted);
 }
 
 .page-header .toggle-box .toggle-trigger {
     cursor: pointer;
     background-color: transparent;
-    border: 1px solid #333;
+    border: 1px solid var(--authup-chrome-border);
     border-radius: .25rem;
     margin: 0 10px;
     padding: 10px;
@@ -50,18 +50,18 @@
     height: 2px;
     border-radius: 1px;
     margin-top:4px;
-    background:#fff;
+    background: var(--authup-chrome-fg);
 }
 
 .page-header .logo {
     font-size: 24px;
-    color: #f2f2f2;
+    color: var(--authup-chrome-fg);
     flex: auto;
     font-weight: 600;
 }
 
 .page-header .logo span:not(.info-text) {
-    color: #baa875;
+    color: var(--authup-brand-gold);
 }
 
 .page-header .logo .info-text {

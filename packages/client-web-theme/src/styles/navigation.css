@@ -24,11 +24,19 @@
     padding-bottom: 1rem;
 }
 
+/*
+ * Active / hover state foreground is pinned to white in BOTH modes:
+ * the background is a saturated brand color (`--authup-brand-tan`
+ * here, `--authup-brand-indigo` below) that does not flip with
+ * light/dark mode. Using `--authup-chrome-fg` would paint dark text
+ * on the brand background in light mode — unreadable on indigo,
+ * weak on tan.
+ */
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:hover > .vc-nav-link,
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:active > .vc-nav-link,
 .vc-nav-items .vc-nav-item.vc-nav-item-nested.active > .vc-nav-link {
     background: var(--authup-brand-tan);
-    color: var(--authup-chrome-fg);
+    color: #ffffff;
 }
 
 .vc-nav-items .vc-nav-item .vc-nav-link.dropdown-toggle {
@@ -54,16 +62,39 @@
 .vc-nav-items .vc-nav-link.router-link-exact-active,
 .vc-nav-items .vc-nav-link.nuxt-link-exact-active {
     cursor: pointer;
-    color: var(--authup-chrome-fg);
+    color: #ffffff;
     background: var(--authup-brand-indigo) !important;
 }
 
+/*
+ * Section-divider layout: text centered between two flanking lines.
+ * The `:before` / `:after` pseudo-elements need a flex parent to
+ * stretch (`flex: 1` is a no-op on block-level parents), so make the
+ * separator itself a flex row. `gap` adds breathing room between the
+ * text and the flanking lines.
+ */
+.vc-nav-items .vc-nav-separator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+/*
+ * Line color uses `--authup-chrome-fg-muted` (with opacity) rather
+ * than `--authup-chrome-bg-elevated`: in light mode, chrome-bg
+ * (neutral-100) and chrome-bg-elevated (neutral-50) are only ~1.5%
+ * lightness apart, below the perceptual threshold against a near-
+ * white surface — the lines disappear. The fg-muted token is a
+ * mid-tone in both modes (neutral-500 in light, ~neutral-300 in
+ * dark) and ALWAYS contrasts against chrome-bg, so the same opacity
+ * gives a consistent subtle weight regardless of mode.
+ */
 .vc-nav-items .vc-nav-separator:before,
 .vc-nav-items .vc-nav-separator:after {
     content: '';
     flex: 1;
-    height: 3px;
-    background: var(--authup-chrome-bg-elevated);
+    height: 1px;
+    background: var(--authup-chrome-fg-muted);
+    opacity: 0.3;
 }
 
 .vc-nav-item-nested .vc-nav-items .vc-nav-link {
