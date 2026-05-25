@@ -8,7 +8,6 @@ import {
     AEntityDelete,
     APagination,
     ASearch,
-    ATable,
     ATitle,
     injectStore,
     usePermissionCheck,
@@ -19,7 +18,6 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
-        ATable,
         APagination,
         ASearch,
         ATitle,
@@ -40,7 +38,7 @@ export default defineComponent({
         const hasEditPermission = usePermissionCheck({ name: PermissionName.CLIENT_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.CLIENT_DELETE });
 
-        const fields: TableColumn<Client>[] = [
+        const columns: TableColumn[] = [
             {
                 key: 'name',
                 label: 'Name',
@@ -85,7 +83,7 @@ export default defineComponent({
         ];
 
         return {
-            fields,
+            columns,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -114,13 +112,13 @@ export default defineComponent({
             />
         </template>
         <template #body="props">
-            <ATable
-                :items="props.data"
-                :fields="fields"
+            <VCTable
+                :data="props.data"
+                :columns="columns"
                 :busy="props.busy"
                 bordered
             >
-                <template #cell-active="{ row }">
+                <template #cell-active="{ row }: { row: any }">
                     <i
                         :class="{
                             'fa fa-times text-error-600': !row.active,
@@ -128,7 +126,7 @@ export default defineComponent({
                         }"
                     />
                 </template>
-                <template #cell-is_confidential="{ row }">
+                <template #cell-is_confidential="{ row }: { row: any }">
                     <i
                         :class="{
                             'fa fa-times text-error-600': !row.is_confidential,
@@ -136,7 +134,7 @@ export default defineComponent({
                         }"
                     />
                 </template>
-                <template #cell-built_in="{ row }">
+                <template #cell-built_in="{ row }: { row: any }">
                     <i
                         :class="{
                             'fa fa-times text-error-600': !row.built_in,
@@ -144,13 +142,13 @@ export default defineComponent({
                         }"
                     />
                 </template>
-                <template #cell-created_at="{ row }">
+                <template #cell-created_at="{ row }: { row: any }">
                     <VCTimeago :datetime="row.created_at" />
                 </template>
-                <template #cell-updated_at="{ row }">
+                <template #cell-updated_at="{ row }: { row: any }">
                     <VCTimeago :datetime="row.updated_at" />
                 </template>
-                <template #cell-options="{ row }">
+                <template #cell-options="{ row }: { row: any }">
                     <NuxtLink
                         :to="'/clients/'+ row.id"
                         class="btn btn-xs btn-outline-primary me-1"
@@ -167,7 +165,7 @@ export default defineComponent({
                         @deleted="props.deleted"
                     />
                 </template>
-            </ATable>
+            </VCTable>
         </template>
     </AClients>
 </template>

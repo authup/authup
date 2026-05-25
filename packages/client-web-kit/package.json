@@ -1,124 +1,124 @@
 {
-    "name": "@authup/client-web-kit",
-    "type": "module",
-    "version": "1.0.0-beta.42",
-    "description": "This package contains vue components.",
-    "license": "Apache-2.0",
-    "module": "dist/index.mjs",
-    "types": "dist/index.d.ts",
-    "exports": {
-        "./package.json": "./package.json",
-        ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs"
-        },
-        "./dist/style.css": "./dist/style.css"
+  "name": "@authup/client-web-kit",
+  "type": "module",
+  "version": "1.0.0-beta.42",
+  "description": "This package contains vue components.",
+  "license": "Apache-2.0",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
     },
-    "files": [
-        "dist"
-    ],
-    "scripts": {
-        "build:types": "vue-tsc --declaration --emitDeclarationOnly -p tsconfig.build.json",
-        "build:js": "tsdown",
-        "build": "rimraf ./dist && npm run build:js && npm run build:types",
-        "build:watch": "npm run build -- --watch"
-    },
-    "engines": {
-        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
-    },
-    "keywords": [
-        "auth",
-        "authentication",
-        "authorization",
-        "vue",
-        "vue3",
-        "components",
-        "form",
-        "pinia",
-        "oauth2",
-        "user-management",
-        "rbac",
-        "ui-kit"
-    ],
-    "author": {
-        "name": "Peter Placzek",
-        "email": "contact@tada5hi.net",
-        "url": "https://github.com/tada5hi"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/client-web-kit"
-    },
-    "bugs": {
-        "url": "https://github.com/authup/authup/issues"
-    },
-    "homepage": "https://github.com/authup/authup#readme",
-    "dependencies": {
-        "@vueuse/integrations": "^14.3.0"
-    },
-    "devDependencies": {
-        "@authup/access": "^1.0.0-beta.42",
-        "@authup/kit": "^1.0.0-beta.42",
-        "@authup/core-kit": "^1.0.0-beta.42",
-        "@authup/core-http-kit": "^1.0.0-beta.42",
-        "@authup/core-realtime-kit": "^1.0.0-beta.42",
-        "@authup/errors": "^1.0.0-beta.42",
-        "@authup/specs": "^1.0.0-beta.42",
-        "@ilingo/vuelidate": "^6.0.0",
-        "ilingo": "^5.0.0",
-        "@posva/event-emitter": "^1.0.3",
-        "@types/node": "^25.7.0",
-        "@vitejs/plugin-vue": "^6.0.5",
-        "@vuecs/button": "^1.0.0",
-        "@vuecs/core": "^3.0.0",
-        "@vuecs/elements": "^1.0.0",
-        "@vuecs/forms": "^4.0.0",
-        "@vuecs/icon": "^1.0.0",
-        "@vuecs/list": "^1.0.0",
-        "@vuecs/overlays": "^1.0.0",
-        "@vuecs/pagination": "^2.0.0",
-        "@vuecs/table": "^1.0.0",
-        "@vuelidate/core": "^2.0.3",
-        "@vuelidate/validators": "^2.0.4",
-        "cross-env": "^10.1.0",
-        "pinia": "^3.0.0",
-        "rapiq": "^0.9.0",
-        "smob": "^1.6.1",
-        "socket.io-client": "^4.8.3",
-        "universal-cookie": "^8.1.2",
-        "vue": "^3.5.34",
-        "vue-tsc": "^3.2.8"
-    },
-    "peerDependencies": {
-        "@authup/access": "^1.0.0-beta.42",
-        "@authup/kit": "^1.0.0-beta.42",
-        "@authup/core-kit": "^1.0.0-beta.42",
-        "@authup/core-http-kit": "^1.0.0-beta.42",
-        "@authup/core-realtime-kit": "^1.0.0-beta.42",
-        "@authup/errors": "^1.0.0-beta.42",
-        "@authup/specs": "^1.0.0-beta.42",
-        "@vuecs/button": "^1.x",
-        "@vuecs/core": "^3.x",
-        "@vuecs/elements": "^1.x",
-        "@vuecs/forms": "^4.x",
-        "@vuecs/icon": "^1.x",
-        "@vuecs/list": "^1.x",
-        "@vuecs/overlays": "^1.x",
-        "@vuecs/pagination": "^2.x",
-        "@vuecs/table": "^1.x",
-        "@vuelidate/core": "^2.x",
-        "@vuelidate/validators": "^2.x",
-        "@ilingo/vuelidate": "^6.x",
-        "ilingo": "^5.x",
-        "pinia": "^2.x || ^3.x",
-        "rapiq": ">=0.8.0 <1.0.0",
-        "smob": "^1.6.1",
-        "socket.io-client": "^4.8.3",
-        "universal-cookie": "^8.1.2",
-        "vue": "^3.3.x"
-    },
-    "publishConfig": {
-        "access": "public"
-    }
+    "./dist/style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:types": "vue-tsc --declaration --emitDeclarationOnly -p tsconfig.build.json",
+    "build:js": "tsdown",
+    "build": "rimraf ./dist && npm run build:js && npm run build:types",
+    "build:watch": "npm run build -- --watch"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+  },
+  "keywords": [
+    "auth",
+    "authentication",
+    "authorization",
+    "vue",
+    "vue3",
+    "components",
+    "form",
+    "pinia",
+    "oauth2",
+    "user-management",
+    "rbac",
+    "ui-kit"
+  ],
+  "author": {
+    "name": "Peter Placzek",
+    "email": "contact@tada5hi.net",
+    "url": "https://github.com/tada5hi"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/authup/authup.git",
+    "directory": "packages/client-web-kit"
+  },
+  "bugs": {
+    "url": "https://github.com/authup/authup/issues"
+  },
+  "homepage": "https://github.com/authup/authup#readme",
+  "dependencies": {
+    "@vueuse/integrations": "^14.3.0"
+  },
+  "devDependencies": {
+    "@authup/access": "^1.0.0-beta.42",
+    "@authup/kit": "^1.0.0-beta.42",
+    "@authup/core-kit": "^1.0.0-beta.42",
+    "@authup/core-http-kit": "^1.0.0-beta.42",
+    "@authup/core-realtime-kit": "^1.0.0-beta.42",
+    "@authup/errors": "^1.0.0-beta.42",
+    "@authup/specs": "^1.0.0-beta.42",
+    "@ilingo/vuelidate": "^6.0.0",
+    "ilingo": "^5.0.0",
+    "@posva/event-emitter": "^1.0.3",
+    "@types/node": "^25.7.0",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vuecs/button": "^1.0.1",
+    "@vuecs/core": "^3.1.0",
+    "@vuecs/elements": "^1.2.0",
+    "@vuecs/forms": "^4.0.1",
+    "@vuecs/icon": "^1.0.0",
+    "@vuecs/list": "^1.0.1",
+    "@vuecs/overlays": "^1.0.1",
+    "@vuecs/pagination": "^2.1.0",
+    "@vuecs/table": "^1.1.1",
+    "@vuelidate/core": "^2.0.3",
+    "@vuelidate/validators": "^2.0.4",
+    "cross-env": "^10.1.0",
+    "pinia": "^3.0.0",
+    "rapiq": "^0.9.0",
+    "smob": "^1.6.1",
+    "socket.io-client": "^4.8.3",
+    "universal-cookie": "^8.1.2",
+    "vue": "^3.5.34",
+    "vue-tsc": "^3.2.8"
+  },
+  "peerDependencies": {
+    "@authup/access": "^1.0.0-beta.42",
+    "@authup/kit": "^1.0.0-beta.42",
+    "@authup/core-kit": "^1.0.0-beta.42",
+    "@authup/core-http-kit": "^1.0.0-beta.42",
+    "@authup/core-realtime-kit": "^1.0.0-beta.42",
+    "@authup/errors": "^1.0.0-beta.42",
+    "@authup/specs": "^1.0.0-beta.42",
+    "@vuecs/button": "^1.x",
+    "@vuecs/core": "^3.x",
+    "@vuecs/elements": "^1.x",
+    "@vuecs/forms": "^4.x",
+    "@vuecs/icon": "^1.x",
+    "@vuecs/list": "^1.x",
+    "@vuecs/overlays": "^1.x",
+    "@vuecs/pagination": "^2.x",
+    "@vuecs/table": "^1.x",
+    "@vuelidate/core": "^2.x",
+    "@vuelidate/validators": "^2.x",
+    "@ilingo/vuelidate": "^6.x",
+    "ilingo": "^5.x",
+    "pinia": "^2.x || ^3.x",
+    "rapiq": ">=0.8.0 <1.0.0",
+    "smob": "^1.6.1",
+    "socket.io-client": "^4.8.3",
+    "universal-cookie": "^8.1.2",
+    "vue": "^3.3.x"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2021-2021.
+ * Copyright (c) 2021-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 .vc-nav-items .vc-nav-link {
-    color: #aeb2b7;
+    color: var(--authup-chrome-fg-muted);
     line-height: 1rem;
 }
 
@@ -24,11 +24,19 @@
     padding-bottom: 1rem;
 }
 
+/*
+ * Active / hover state foreground is pinned to white in BOTH modes:
+ * the background is a saturated brand color (`--authup-brand-tan`
+ * here, `--authup-brand-indigo` below) that does not flip with
+ * light/dark mode. Using `--authup-chrome-fg` would paint dark text
+ * on the brand background in light mode — unreadable on indigo,
+ * weak on tan.
+ */
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:hover > .vc-nav-link,
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:active > .vc-nav-link,
 .vc-nav-items .vc-nav-item.vc-nav-item-nested.active > .vc-nav-link {
-    background: #c8b98d;
-    color: #fff;
+    background: var(--authup-brand-tan);
+    color: #ffffff;
 }
 
 .vc-nav-items .vc-nav-item .vc-nav-link.dropdown-toggle {
@@ -40,7 +48,7 @@
 .vc-nav-items .vc-nav-item .vc-nav-link,
 .vc-nav-items .vc-nav-item:hover .vc-nav-link,
 .vc-nav-items .vc-nav-item.active .vc-nav-link {
-    border-left-color: #c8b98d !important;
+    border-left-color: var(--authup-brand-tan) !important;
 }
 
 .vc-nav-items .vc-nav-link.active:not(.vc-nav-link-root),
@@ -54,22 +62,56 @@
 .vc-nav-items .vc-nav-link.router-link-exact-active,
 .vc-nav-items .vc-nav-link.nuxt-link-exact-active {
     cursor: pointer;
-    color: #fff;
-    background: #6d7fcc !important;
+    color: #ffffff;
+    background: var(--authup-brand-indigo) !important;
 }
 
+/*
+ * Section-divider layout: text centered between two flanking lines.
+ * The `:before` / `:after` pseudo-elements need a flex parent to
+ * stretch (`flex: 1` is a no-op on block-level parents), so make the
+ * separator itself a flex row. `gap` adds breathing room between the
+ * text and the flanking lines.
+ */
+.vc-nav-items .vc-nav-separator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+/*
+ * Line color uses `--authup-chrome-fg-muted` (with opacity) rather
+ * than `--authup-chrome-bg-elevated`: in light mode, chrome-bg
+ * (neutral-100) and chrome-bg-elevated (neutral-50) are only ~1.5%
+ * lightness apart, below the perceptual threshold against a near-
+ * white surface — the lines disappear. The fg-muted token is a
+ * mid-tone in both modes (neutral-500 in light, ~neutral-300 in
+ * dark) and ALWAYS contrasts against chrome-bg, so the same opacity
+ * gives a consistent subtle weight regardless of mode.
+ */
 .vc-nav-items .vc-nav-separator:before,
 .vc-nav-items .vc-nav-separator:after {
     content: '';
     flex: 1;
-    height:3px;
-    background: #32333B;
+    height: 1px;
+    background: var(--authup-chrome-fg-muted);
+    opacity: 0.3;
 }
 
+/*
+ * Same contrast trap as `.vc-nav-separator` had:
+ * `--authup-chrome-bg-elevated` is only ~1.5% L apart from chrome-bg
+ * in light mode (neutral-50 vs neutral-100), so the border-left
+ * disappears against the light chrome surface. Mix
+ * `--authup-chrome-fg-muted` to 30% alpha — the mid-tone token has
+ * consistent visibility on chrome-bg in both modes, and `color-mix`
+ * is the border-friendly equivalent of the pseudo-element's
+ * `opacity: 0.3` (border-left can't use opacity without dimming the
+ * link text along with it).
+ */
 .vc-nav-item-nested .vc-nav-items .vc-nav-link {
     border-left-width: 6px;
     border-left-style: solid;
-    border-left-color: rgb(64,67,78);
+    border-left-color: color-mix(in oklab, var(--authup-chrome-fg-muted) 30%, transparent);
 }
 
 @media (max-width: 768px) {

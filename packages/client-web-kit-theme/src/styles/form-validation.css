@@ -1,12 +1,5 @@
 /*
- * Copyright (c) 2021-2021.
- * Author Peter Placzek (tada5hi)
- * For the full copyright and license information,
- * view the LICENSE file that was distributed with this source code.
- */
-
-/*
- * Copyright (c) 2021-2021.
+ * Copyright (c) 2021-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -14,26 +7,26 @@
 
 .form-group-warning label,
 .form-group-warning .label {
-    color: #a68d2f;
+    color: var(--vc-color-warning-600);
 }
 
 .form-group-warning input.form-control,
 .form-group-warning textarea.form-control,
 .form-group-warning select.form-control {
-    box-shadow: 0 0 0 0.1rem #f3db82;
-    border-color: #f3db82;
+    box-shadow: 0 0 0 0.1rem var(--vc-color-warning-200);
+    border-color: var(--vc-color-warning-200);
 }
 
 .form-group-error label,
 .form-group-error .label {
-    color: #f04124;
+    color: var(--vc-color-error-600);
 }
 
 .form-group-error input.form-control,
 .form-group-error textarea.form-control,
 .form-group-error select.form-control {
-    box-shadow: 0 0 0 0.1rem #f79483;
-    border-color: #f79483;
+    box-shadow: 0 0 0 0.1rem var(--vc-color-error-200);
+    border-color: var(--vc-color-error-200);
 }
 
 .form-group-hint {
@@ -51,9 +44,9 @@
 }
 
 .form-group-hint.group-required {
-    color: rgba(0,123,255);
+    color: var(--vc-color-info-600);
 }
 
 .form-group-error .form-group-hint {
-    color: #f57f6c;
+    color: var(--vc-color-error-500);
 }

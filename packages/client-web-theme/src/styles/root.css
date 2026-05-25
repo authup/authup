@@ -18,11 +18,11 @@ html, body {
 }
 
 body {
-    font-family: Nunito,sans-serif;
+    font-family: Nunito, sans-serif;
     font-size: 13px;
-    color: #30373E;
+    color: var(--vc-color-fg);
     font-weight: 300;
-    background: #D5D8DA none repeat scroll 0% 0%;
+    background: var(--vc-color-bg-muted) none repeat scroll 0% 0%;
 }
 
 b, strong {
@@ -78,8 +78,7 @@ h2.title,
 h3.title,
 h4.title,
 h5.title {
-    /* font-weight: 700; */
-    color: rgba(0,0,0,0.7);
+    color: var(--vc-color-fg);
 }
 
 h1.title:before,
@@ -90,7 +89,7 @@ h5.title:before {
     content: "";
     width: 4px;
     padding-right: 4px;
-    background: #baa875;
+    background: var(--authup-brand-gold);
     margin-right: 4px;
 }
 
@@ -104,7 +103,7 @@ h5.title:before {
 
 .title .sub-title {
     font-size: .65em;
-    color: #cc8181;
+    color: var(--vc-color-fg-muted);
 }
 
 .form-horizontal .form-group {
@@ -149,10 +148,10 @@ body
 
 .page-content {
     padding: 15px 15px 40px;
-    position:relative;
+    position: relative;
     overflow-x: hidden;
     width: 100%;
-    background: #f7f5f2;
+    background: var(--vc-color-bg);
 }
 
 /*
@@ -172,10 +171,8 @@ Login
 .login-container .login-box .login-body {
     width: 100%;
     float: left;
-    background: #f5f5f5;
+    background: var(--vc-color-bg-elevated);
     padding: 20px;
-    -moz-border-radius: 5px;
-    -webkit-border-radius: 5px;
     border-radius: 5px;
 }
 
@@ -184,5 +181,5 @@ Login
     font-weight: 300;
     margin-bottom: 20px;
     text-align: center;
-    color: #33414e;
+    color: var(--vc-color-fg);
 }

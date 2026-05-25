@@ -8,8 +8,8 @@
 .page-sidebar {
     height: 100%;
     width:240px;
-    background-color: #34353a;
-    color: #fff;
+    background-color: var(--authup-chrome-bg);
+    color: var(--authup-chrome-fg);
     transition: all 0.3s;
     display: flex;
     flex-direction: column;
@@ -31,7 +31,7 @@
 }
 
 .page-sidebar .sidebar-header span {
-    color: #4ECDC4;
+    color: var(--authup-brand-gold);
 }
 
 @media only screen and (max-width: 768px) {

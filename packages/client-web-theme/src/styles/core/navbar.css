@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2021.
+ * Copyright (c) 2021-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -12,15 +12,15 @@
 .page-navbar {
     border-radius: 0px;
     margin: 0 auto;
-    padding:0;
+    padding: 0;
     border: none;
-    width:100%;
+    width: 100%;
     text-align: right;
     display: flex;
 }
 
 .page-navbar .navbar-toggler {
-    border-color: #333;
+    border-color: var(--authup-chrome-border);
     padding: 9px 10px;
     margin: 8px 15px 8px 0px;
 }
@@ -30,16 +30,16 @@
     width: 22px;
     height: 2px;
     border-radius: 1px;
-    margin-top:4px;
-    background:#fff;
+    margin-top: 4px;
+    background: var(--authup-chrome-fg);
 }
 
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item:hover,
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item:active,
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item:focus,
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item.active {
-    color: #FF5B5B;
-    background: #32333B;
+    color: var(--authup-brand-coral);
+    background: var(--authup-chrome-bg-elevated);
     text-decoration: none;
 }
 
@@ -48,11 +48,11 @@
     display: block;
     font-size: 11px;
     font-weight: bold;
-    color: #9d9d9d;
+    color: var(--authup-chrome-fg-muted);
 }
 
 .page-navbar .navbar-content .dropdown-menu {
-    background-color: #40434E;
+    background-color: var(--authup-chrome-bg-elevated);
 }
 
 .page-navbar .navbar-content .navbar-gadgets {
@@ -82,11 +82,11 @@
 }
 
 .page-navbar .navbar-content .navbar-gadgets > li > a.vc-nav-link.user-link span {
-    padding-left:6px;
+    padding-left: 6px;
 }
 
-.page-navbar .navbar-content > .navbar-gadgets> li > a i {
-    font-size:16px;
+.page-navbar .navbar-content > .navbar-gadgets > li > a i {
+    font-size: 16px;
 }
 
 

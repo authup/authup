@@ -29,10 +29,83 @@
    reskin the entire UI without touching component class strings.
    ------------------------------------------------------------------ */
 @layer base {
+    /*
+     * Authup brand tokens. Three shapes:
+     *
+     *   1. Chrome (header, sidebar, footer, dropdown menus) flips with
+     *      mode. Light-mode defaults alias `--vc-color-bg-elevated` /
+     *      `-fg` / `-border` etc. so the chrome reads as a light
+     *      surface distinct from the page-content bg. The `.dark`
+     *      block below overrides them to authup's historical dark
+     *      chrome palette (≈32% L), which is intentionally lighter
+     *      than the page-content bg so the hierarchy reads
+     *      content < chrome (chrome floats above content).
+     *
+     *   2. Content tokens (body, page-content, lists, cards) reference
+     *      `--vc-color-bg` / `--vc-color-fg` / `--vc-color-bg-muted` /
+     *      `--vc-color-bg-elevated` / `--vc-color-border` directly —
+     *      `@vuecs/design`'s `.dark` block flips those automatically,
+     *      so consumers get dark mode for free without per-class
+     *      overrides here.
+     *
+     *   3. Brand accents (golden, coral, indigo) carry the authup
+     *      identity and are hard-coded; they look fine on both light
+     *      and dark backgrounds.
+     */
     :root {
-        /* placeholder — concrete authup brand tokens will be filled in
-           as the migration touches the styled-but-not-tokenized chrome
-           (header, sidebar, login card, ...) */
+        /* Chrome — light-mode defaults, alias semantic vuecs tokens */
+        --authup-chrome-bg:                 var(--vc-color-bg-elevated);
+        --authup-chrome-bg-elevated:        var(--vc-color-bg-muted);
+        --authup-chrome-fg:                 var(--vc-color-fg);
+        --authup-chrome-fg-muted:           var(--vc-color-fg-muted);
+        --authup-chrome-border:             var(--vc-color-border);
+
+        /* Brand accents — unchanged across modes */
+        --authup-brand-gold:                #baa875;
+        --authup-brand-coral:               #ff5b5b;
+        --authup-brand-indigo:              #6d7fcc;
+        --authup-brand-tan:                 #c8b98d;
+    }
+
+    /*
+     * Dark-mode overrides. Two distinct moves:
+     *
+     *   a) Restore the historical authup chrome palette
+     *      (#34353a ≈ 32% L) so the dark chrome stays the
+     *      recognizable warm dark grey, rather than vuecs's
+     *      `bg-elevated` value (neutral-800 ≈ 27% L) which would
+     *      blend into the page-content bg.
+     *
+     *   b) Soften the content background. vuecs/design's `.dark` puts
+     *      `--vc-color-bg` at neutral-900 (≈20.5% L) — near-black —
+     *      which feels harsh against the warmer ~32% L chrome.
+     *      Raise it to a softer dark (oklch 23%, ≈ #2a2c30) so
+     *      the difference between content and chrome reads as a
+     *      gentle tonal step rather than a near-black cliff.
+     */
+    .dark {
+        --authup-chrome-bg:                 #34353a;
+        --authup-chrome-bg-elevated:        #3f4147;
+        --authup-chrome-fg:                 #ffffff;
+        --authup-chrome-fg-muted:           #aeb2b7;
+        --authup-chrome-border:             #333333;
+
+        /*
+         * Soften the content background. `@vuecs/design`'s `.dark`
+         * puts `--vc-color-bg` at neutral-900 (~20.5% L) — near-black.
+         * Lift to neutral-700 (~37% L) so it pairs with authup's warm
+         * dark chrome (~32% L) as a gentle step rather than a
+         * near-black cliff. Works from inside `@layer base` because
+         * `@vuecs/design` 1.0.1+ wraps its `.dark` defaults in
+         * `@layer vuecs`, and our kit theme positions `vuecs` earlier
+         * than `base` in the layer order — see
+         * `@authup/client-web-kit-theme/src/index.css` for the
+         * `@layer theme, vuecs, base, components, utilities;`
+         * declaration. Pre-1.0.1, vuecs defined `.dark` at the top
+         * level (outside any layer) and this override had to be
+         * hoisted out of `@layer base` to win the cascade.
+         */
+        --vc-color-bg: var(--vc-color-neutral-700);
     }
 
     /*
@@ -158,10 +231,19 @@
     .navbar-toggler  { @apply rounded border border-border px-2 py-1; }
     .navbar-collapse { @apply grow basis-full items-center; }
 
-    /* Bootstrap-style .collapse: content is hidden unless `.show` is
-       toggled. `.navbar-expand-md` (used on the `<nav>` itself) flips
-       the navbar contents back to visible + horizontal at md+ so the
-       desktop header is single-row, mobile is a toggleable column.
+    /* Bootstrap-style collapse-on-mobile: content is hidden unless
+       `.show` is toggled. `.navbar-expand-md` (used on the `<nav>` itself)
+       flips the navbar contents back to visible + horizontal at md+ so
+       the desktop header is single-row, mobile is a toggleable column.
+
+       The hide rule is scoped to `.navbar-collapse` (not the bare
+       `.collapse` class) because Tailwind v4 ships its own `.collapse`
+       utility that sets `visibility: collapse`. Tailwind utilities sit
+       in a later cascade layer than our `components` rules, so the
+       `visibility: collapse` would leak through our `display: flex !important`
+       override and render the entire navbar subtree invisible at md+
+       (display flips back, visibility stays collapsed). Scoping to
+       `.navbar-collapse` sidesteps the collision entirely.
 
        `!` is required on the flex-direction override: @vuecs/navigation
        applies `flex-col` to the navigation root via theme-tailwind's
@@ -170,7 +252,7 @@
        utility layer (flex-col) wins regardless of selector specificity,
        and the desktop header stacks vertically — ~250px instead of
        ~56px. */
-    .collapse:not(.show) { @apply hidden; }
+    .navbar-collapse:not(.show)        { @apply hidden; }
     .navbar-expand-md .navbar-collapse { @apply md:flex!; }
     .navbar-expand-md .navbar-nav      { @apply md:flex-row!; }
     .navbar-expand-md                  { @apply md:flex-nowrap md:justify-start; }
@@ -297,3 +379,30 @@
 @import "./styles/core/footer.css";
 @import "./styles/card.css";
 @import "./styles/generics.css";
+
+/*
+ * Pagination hover override. Lives at the top level (outside `@layer
+ * components`) and uses `!important` — belt-and-suspenders against
+ * the underlying `<VCPagination>` button class
+ * (`hover:bg-neutral-100 dark:hover:bg-neutral-700`) which sits in
+ * `@layer utilities`. Either tactic alone would suffice, but the
+ * combination keeps the rule robust if vuecs's element class map
+ * for pagination shifts in a future minor.
+ *
+ * Why this color: the active page button paints `bg-primary-600` /
+ * `text-on-primary`. Mirroring it on hover acts as a preview of
+ * "click and this would be the active page" — same contract in
+ * both light and dark mode, no theme-tailwind dark/light split.
+ * `:not(:disabled)` is defensive: the kit's `buildPagination` passes
+ * `hideDisabled: true` so edge controls are unrendered at page
+ * boundaries today, but a future caller using `<VCPagination>`
+ * directly without that prop would still get disabled buttons —
+ * the filter keeps the hover preview off them.
+ */
+.vc-pagination .vc-pagination-link:hover:not(:disabled),
+.vc-pagination .vc-pagination-link:focus-visible:not(:disabled) {
+    background-color: var(--color-primary-600) !important;
+    color:            var(--color-on-primary)  !important;
+    border-color:     var(--color-primary-600) !important;
+}
+

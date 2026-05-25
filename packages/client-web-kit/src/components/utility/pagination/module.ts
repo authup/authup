@@ -28,6 +28,14 @@ export function buildPagination(
             limit,
             offset,
             busy,
+            // `hideDisabled` (vuecs/pagination 2.1.0+) unrenders edge
+            // controls — First / Prev on page 1, Next / Last on the
+            // last page — instead of rendering them disabled. Keeps
+            // the pagination bar visually focused on the buttons the
+            // user can actually click; the kit-side disabled-state
+            // CSS (used to dim + suppress hover on rendered-disabled
+            // buttons) is therefore no longer needed.
+            hideDisabled: true,
             // VCPagination emits `load` with `{ page, offset, limit }` —
             // NOT `update:page`. Using the wrong event name silently
             // breaks the shim: pagination buttons render but don't paginate.

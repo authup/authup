@@ -7,10 +7,10 @@
 
 .page-footer {
     box-shadow: 0px 6px 0px 0px rgba(0, 0, 0, 0.3) inset;
-    background-color: #34353a;
+    background-color: var(--authup-chrome-bg);
     padding: 10px 0px 4px 0px;
     text-align: center;
-    color: #aeb2b7;
+    color: var(--authup-chrome-fg-muted);
 }
 
 .page-footer .copyright {
@@ -20,5 +20,5 @@
 .page-footer .copyright a {
     flex: none;
     text-decoration: none;
-    color:#FF5B5B;
+    color: var(--authup-brand-coral);
 }

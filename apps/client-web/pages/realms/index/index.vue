@@ -7,7 +7,6 @@ import {
     APagination,
     ARealms,
     ASearch,
-    ATable,
     ATitle,
     injectStore,
     usePermissionCheck,
@@ -18,7 +17,6 @@ import { defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
-        ATable,
         ATitle,
         APagination,
         ASearch,
@@ -38,7 +36,7 @@ export default defineComponent({
         const hasEditPermission = usePermissionCheck({ name: PermissionName.REALM_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.REALM_DELETE });
 
-        const fields: TableColumn<Realm>[] = [
+        const columns: TableColumn[] = [
             {
                 key: 'name',
                 label: 'Name',
@@ -65,7 +63,7 @@ export default defineComponent({
         ];
 
         return {
-            fields,
+            columns,
             hasEditPermission,
             hasDropPermission,
             handleDeleted,
@@ -94,19 +92,19 @@ export default defineComponent({
             />
         </template>
         <template #body="props">
-            <ATable
-                :items="props.data"
-                :fields="fields"
+            <VCTable
+                :data="props.data"
+                :columns="columns"
                 :busy="props.busy"
                 bordered
             >
-                <template #cell-created_at="{ row }">
+                <template #cell-created_at="{ row }: { row: any }">
                     <VCTimeago :datetime="row.created_at" />
                 </template>
-                <template #cell-updated_at="{ row }">
+                <template #cell-updated_at="{ row }: { row: any }">
                     <VCTimeago :datetime="row.updated_at" />
                 </template>
-                <template #cell-options="{ row }">
+                <template #cell-options="{ row }: { row: any }">
                     <button
                         v-if="realmManagementId !== row.id"
                         class="btn btn-xs btn-primary me-1"
@@ -130,7 +128,7 @@ export default defineComponent({
                         @deleted="props.deleted"
                     />
                 </template>
-            </ATable>
+            </VCTable>
         </template>
     </ARealms>
 </template>

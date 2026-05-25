@@ -7,21 +7,30 @@
 <script lang="ts">
 import { LanguageSwitcherDropdown, injectStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
-import { defineNuxtComponent, ref } from '#imports';
+import { defineNuxtComponent, ref, useColorMode } from '#imports';
 
 export default defineNuxtComponent({
     components: { LanguageSwitcherDropdown },
     setup() {
         const store = injectStore();
         const {
-            loggedIn, 
-            user, 
+            loggedIn,
+            user,
         } = storeToRefs(store);
 
         const displayNav = ref(false);
-
         const toggleNav = () => {
             displayNav.value = !displayNav.value;
+        };
+
+        // `useColorMode()` is auto-imported by @vuecs/nuxt. The
+        // composable returns a { mode, isDark } pair backed by the
+        // `vc-color-mode` cookie + `.dark` / `.light` class on <html>;
+        // toggling `isDark` flips both server-side (SSR-safe via cookie)
+        // and client-side (immediate class swap).
+        const { isDark } = useColorMode();
+        const toggleColorMode = () => {
+            isDark.value = !isDark.value;
         };
 
         return {
@@ -29,6 +38,8 @@ export default defineNuxtComponent({
             user,
             toggleNav,
             displayNav,
+            isDark,
+            toggleColorMode,
         };
     },
 });
@@ -57,7 +68,7 @@ export default defineNuxtComponent({
             <nav class="page-navbar navbar-expand-md">
                 <div
                     id="page-navbar"
-                    class="navbar-content navbar-collapse collapse"
+                    class="navbar-content navbar-collapse"
                     :class="{'show': displayNav}"
                 >
                     <VCNavItems
@@ -66,6 +77,20 @@ export default defineNuxtComponent({
                     />
 
                     <ul class="navbar-nav vc-nav-items navbar-gadgets">
+                        <li class="vc-nav-item">
+                            <button
+                                type="button"
+                                class="vc-nav-link"
+                                :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+                                :aria-pressed="isDark ? 'true' : 'false'"
+                                @click.prevent="toggleColorMode"
+                            >
+                                <i
+                                    class="fa"
+                                    :class="isDark ? 'fa-sun' : 'fa-moon'"
+                                />
+                            </button>
+                        </li>
                         <li class="vc-nav-item">
                             <LanguageSwitcherDropdown link-class-extra="vc-nav-link" />
                         </li>
