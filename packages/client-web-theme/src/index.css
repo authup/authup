@@ -56,7 +56,6 @@
         /* Chrome — light-mode defaults, alias semantic vuecs tokens */
         --authup-chrome-bg:                 var(--vc-color-bg-elevated);
         --authup-chrome-bg-elevated:        var(--vc-color-bg-muted);
-        --authup-chrome-bg-hover:           var(--vc-color-bg-muted);
         --authup-chrome-fg:                 var(--vc-color-fg);
         --authup-chrome-fg-muted:           var(--vc-color-fg-muted);
         --authup-chrome-border:             var(--vc-color-border);
@@ -87,7 +86,6 @@
     .dark {
         --authup-chrome-bg:                 #34353a;
         --authup-chrome-bg-elevated:        #3f4147;
-        --authup-chrome-bg-hover:           #4a4c53;
         --authup-chrome-fg:                 #ffffff;
         --authup-chrome-fg-muted:           #aeb2b7;
         --authup-chrome-border:             #333333;
@@ -399,7 +397,7 @@
  * `:disabled` rule below handles their visual state).
  */
 .vc-pagination .vc-pagination-link:hover:not(:disabled),
-.vc-pagination .vc-pagination-link:focus:not(:disabled) {
+.vc-pagination .vc-pagination-link:focus-visible:not(:disabled) {
     background-color: var(--color-primary-600) !important;
     color:            var(--color-on-primary)  !important;
     border-color:     var(--color-primary-600) !important;
@@ -424,9 +422,15 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+/*
+ * Suppress only the `hover:bg-*` / `dark:hover:bg-*` utilities on
+ * disabled — nothing else needs overriding. The resting state's
+ * `border-neutral-300 dark:border-neutral-700` and `text-fg` utilities
+ * have no `:hover` prefix, so they keep applying through the hover.
+ * Overriding border or color would force `neutral-300` in dark mode
+ * (palette colors don't flip), introducing a visible flicker.
+ */
 .vc-pagination .vc-pagination-link:disabled:hover,
 .vc-pagination .vc-pagination-link:disabled:focus {
     background-color: var(--color-bg) !important;
-    color:            var(--color-fg) !important;
-    border-color:     var(--color-neutral-300) !important;
 }
