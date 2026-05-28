@@ -96,11 +96,11 @@
     "hapic": "^2.5.1",
     "ldapjs": "^3.0.7",
     "locter": "^2.2.1",
-    "mysql2": "^3.22.3",
+    "mysql2": "^3.22.4",
     "node-cron": "^4.2.1",
-    "nodemailer": "^8.0.7",
+    "nodemailer": "^8.0.9",
     "orkos": "^1.1.1",
-    "pg": "^8.20.0",
+    "pg": "^8.21.0",
     "rapiq": "^0.9.0",
     "reflect-metadata": "^0.2.2",
     "routup": "^6.0.0",
@@ -110,7 +110,7 @@
     "typeorm": "0.3.28",
     "typeorm-extension": "^3.9.0",
     "uncrypto": "^0.1.3",
-    "validup": "^0.2.2",
+    "validup": "^0.3.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -124,7 +124,7 @@
     "@trapi/cli": "^2.0.0",
     "@types/ldapjs": "^3.0.6",
     "@types/supertest": "^7.2.0",
-    "@vitejs/plugin-vue": "^6.0.5",
+    "@vitejs/plugin-vue": "^6.0.7",
     "@vuecs/button": "^1.0.1",
     "@vuecs/core": "^3.1.0",
     "@vuecs/countdown": "^2.0.1",
@@ -149,10 +149,10 @@
     "testcontainers": "^11.14.0",
     "ts-node": "^10.8.2",
     "unplugin-swc": "^1.5.9",
-    "vite": "^8.0.12",
+    "vite": "^8.0.14",
     "vitest": "^4.0.14",
-    "vue": "^3.5.34",
-    "vue-router": "^5.0.7"
+    "vue": "^3.5.35",
+    "vue-router": "^5.1.0"
   },
   "publishConfig": {
     "access": "public"
