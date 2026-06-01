@@ -174,8 +174,9 @@ export default AIdentityProviderOAuth2Form;
                 <template #default="element">
                     <div>
                         <h4 class="mb-3">
-                            <i
-                                :class="[element.icon, 'pe-1']"
+                            <VCIcon
+                                :name="element.icon"
+                                class="pe-1"
                             /> {{ element.name }}
                         </h4>
                     </div>
@@ -189,8 +190,9 @@ export default AIdentityProviderOAuth2Form;
                 <template #default="element">
                     <div>
                         <h4 class="mb-3">
-                            <i
-                                :class="[element.icon, 'pe-1']"
+                            <VCIcon
+                                :name="element.icon"
+                                class="pe-1"
                             /> {{ element.name }}
                         </h4>
                     </div>
@@ -200,7 +202,7 @@ export default AIdentityProviderOAuth2Form;
 
         <template v-if="isEditing">
             <h6>
-                <i class="fas fa-info-circle" /> Details
+                <VCIcon name="fa6-solid:circle-info" /> Details
             </h6>
             <VCFormGroup>
                 <template #label>
@@ -216,7 +218,7 @@ export default AIdentityProviderOAuth2Form;
         <div class="row">
             <div class="col">
                 <h6>
-                    <i class="fa fa-wrench" /> Basic
+                    <VCIcon name="fa6-solid:wrench" /> Basic
                 </h6>
                 <AIdentityProviderBasicFields
                     ref="basicFieldsRef"
@@ -225,7 +227,7 @@ export default AIdentityProviderOAuth2Form;
             </div>
             <div class="col">
                 <h6>
-                    <i class="fa fa-lock" /> Security
+                    <VCIcon name="fa6-solid:lock" /> Security
                 </h6>
                 <AIdentityProviderOAuth2ClientFields :entity="data" />
             </div>
@@ -233,7 +235,7 @@ export default AIdentityProviderOAuth2Form;
 
         <template v-if="!presetEff">
             <h6>
-                <i class="fa-solid fa-vihara" /> Endpoints
+                <VCIcon name="fa6-solid:vihara" /> Endpoints
             </h6>
             <AIdentityProviderOAuth2EndpointFields
                 :entity="data"

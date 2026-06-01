@@ -109,7 +109,10 @@ export default AIdentityProviderOAuth2Discovery;
             :disabled="isDisabled"
             @click.prevent="lookup"
         >
-            <i class="fa fa-search pe-1" /> Lookup
+            <VCIcon
+                name="fa6-solid:magnifying-glass"
+                class="pe-1"
+            /> Lookup
         </button>
     </div>
 </template>

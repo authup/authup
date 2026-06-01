@@ -177,7 +177,7 @@ export default ARealmForm;
                 :class="{ 'btn-dark': isNameEmpty, 'btn-warning': !isNameEmpty }"
                 @click.prevent="generateName"
             >
-                <i class="fa fa-wrench" /> {{ translationsDefault.generate }}
+                <VCIcon name="fa6-solid:wrench" /> {{ translationsDefault.generate }}
             </button>
         </div>
 

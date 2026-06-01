@@ -40,7 +40,7 @@ const AEntityDelete = defineComponent({
     props: {
         elementIcon: {
             type: String,
-            default: 'fa-solid fa-trash',
+            default: 'fa6-solid:trash',
         },
         withText: {
             type: Boolean,
@@ -119,7 +119,10 @@ const AEntityDelete = defineComponent({
             let icon : VNodeArrayChildren = [];
             if (props.elementIcon) {
                 icon = [
-                    h('i', { class: [props.elementIcon, { 'pe-1': props.withText }] }),
+                    h(resolveDynamicComponent('VCIcon') as Component, {
+                        name: props.elementIcon,
+                        class: props.withText ? 'pe-1' : undefined,
+                    }),
                 ];
             }
 

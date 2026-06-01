@@ -95,7 +95,7 @@ export default defineComponent({
         <div class="mt-auto">
             <div class="flex flex-row">
                 <div>
-                    <i class="fa-solid fa-link" />
+                    <VCIcon name="fa6-solid:link" />
                 </div>
                 <div class="ms-1">
                     <small>
@@ -105,7 +105,7 @@ export default defineComponent({
             </div>
             <div class="flex flex-row">
                 <div>
-                    <i class="fa fa-solid fa-lock" />
+                    <VCIcon name="fa6-solid:lock" />
                 </div>
                 <div class="ms-1">
                     <small>
@@ -119,7 +119,7 @@ export default defineComponent({
             </div>
             <div class="flex flex-row">
                 <div>
-                    <i class="fa fa-solid fa-clock" />
+                    <VCIcon name="fa6-solid:clock" />
                 </div>
                 <div class="ms-1">
                     <small>

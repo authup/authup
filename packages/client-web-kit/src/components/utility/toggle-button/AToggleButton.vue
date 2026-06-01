@@ -42,13 +42,9 @@ export default defineComponent({
         :disabled="isBusy"
         @click="handleClick"
     >
-        <i
+        <VCIcon
             aria-hidden="true"
-            :class="['fa', {
-                'fa-question': isBusy,
-                'fa-plus': !isBusy && !value,
-                'fa-minus': !isBusy && value,
-            }]"
+            :name="isBusy ? 'fa6-solid:question' : (value ? 'fa6-solid:minus' : 'fa6-solid:plus')"
         />
     </button>
 </template>

@@ -13,6 +13,9 @@ import vuecs from '@vuecs/core';
 import clientWebKitTheme from '@authup/client-web-kit-theme';
 import clientWebTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
+import { addCollection } from '@iconify/vue';
+import faBrands from '@iconify-json/fa6-brands/icons.json';
+import faSolid from '@iconify-json/fa6-solid/icons.json';
 
 import installCountdown from '@vuecs/countdown';
 import installTimeago, { injectLocale as injectTimeagoLocale } from '@vuecs/timeago';
@@ -26,6 +29,9 @@ import installTable from '@vuecs/table';
 import installIcon from '@vuecs/icon';
 
 import { defineNuxtPlugin } from '#imports';
+
+addCollection(faSolid);
+addCollection(faBrands);
 
 export default defineNuxtPlugin({
     // Name this plugin so other plugins can express ordering against it.

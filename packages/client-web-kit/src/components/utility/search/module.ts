@@ -7,7 +7,7 @@
 import type { FormInputBuildOptionsInput } from '../../../core';
 import { buildFormInputText, hasNormalizedSlot, normalizeSlot  } from '../../../core';
 import type { VNodeChild } from 'vue';
-import { h } from 'vue';
+import { h, resolveComponent } from 'vue';
 import { ListSearchSlotName } from './constants';
 import type { SearchOptionsInput } from './type';
 
@@ -25,7 +25,7 @@ export function buildListSearch(
     ctx: SearchOptionsInput,
 ) {
     ctx.icon = ctx.icon ?? true;
-    ctx.iconClass = ctx.iconClass || 'fa fa-search';
+    ctx.iconClass = ctx.iconClass || 'fa6-solid:magnifying-glass';
     ctx.iconPosition = ctx.iconPosition ?? 'start';
 
     if (hasNormalizedSlot(ListSearchSlotName.DEFAULT, ctx.slots)) {
@@ -46,19 +46,20 @@ export function buildListSearch(
     const options: FormInputBuildOptionsInput = {};
 
     if (ctx.icon) {
+        const VCIcon = resolveComponent('VCIcon');
         if (ctx.iconPosition === 'start') {
             options.groupPrepend = true;
             if (iconContent) {
                 options.groupPrependContent = iconContent;
             } else {
-                options.groupPrependContent = h('i', { class: ctx.iconClass });
+                options.groupPrependContent = h(VCIcon, { name: ctx.iconClass });
             }
         } else {
             options.groupAppend = true;
             if (iconContent) {
                 options.groupAppendContent = iconContent;
             } else {
-                options.groupAppendContent = h('i', { class: ctx.iconClass });
+                options.groupAppendContent = h(VCIcon, { name: ctx.iconClass });
             }
         }
     }

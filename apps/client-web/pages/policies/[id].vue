@@ -23,7 +23,7 @@ export default defineComponent({
         const items = [
             {
                 name: 'General',
-                icon: 'fas fa-bars',
+                icon: 'fa6-solid:bars',
                 urlSuffix: '',
             },
         ];
@@ -74,7 +74,10 @@ export default defineComponent({
 <template>
     <div>
         <h1 class="title no-border mb-3">
-            <i class="fa fa-balance-scale me-1" />
+            <VCIcon
+                name="fa6-solid:scale-balanced"
+                class="me-1"
+            />
             {{ entity.name }}
             <span class="sub-title ms-1">
                 Details

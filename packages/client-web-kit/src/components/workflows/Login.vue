@@ -271,7 +271,7 @@ export default defineComponent({
                                 <div class="flex flex-col">
                                     <div class="text-center mb-1">
                                         <AIdentityProviderIcon
-                                            class="fa-2x"
+                                            class="text-2xl"
                                             :entity="item"
                                         />
                                     </div>

@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { h } from 'vue';
+import { h, resolveComponent } from 'vue';
 
 type ToggleButtonOptions = {
     value: boolean,
@@ -15,6 +15,16 @@ type ToggleButtonOptions = {
 export function renderToggleButton(
     options: ToggleButtonOptions,
 ) {
+    const VCIcon = resolveComponent('VCIcon');
+    let iconName: string;
+    if (options.isBusy) {
+        iconName = 'fa6-solid:question';
+    } else if (options.value) {
+        iconName = 'fa6-solid:minus';
+    } else {
+        iconName = 'fa6-solid:plus';
+    }
+
     return h('button', {
         class: ['btn btn-xs', {
             'btn-dark': options.isBusy,
@@ -28,12 +38,6 @@ export function renderToggleButton(
             options.changed(!options.value);
         },
     }, [
-        h('i', {
-            class: ['fa', {
-                'fa-question': options.isBusy,
-                'fa-plus': !options.isBusy && !options.value,
-                'fa-minus': !options.isBusy && options.value,
-            }],
-        }),
+        h(VCIcon, { name: iconName }),
     ]);
 }

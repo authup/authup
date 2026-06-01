@@ -113,21 +113,15 @@ export default defineComponent({
                 bordered
             >
                 <template #cell-built_in="{ row }: { row: any }">
-                    <i
-                        class="fas"
-                        :class="{
-                            'fa-check text-success-600': row.built_in,
-                            'fa-times text-error-600': !row.built_in,
-                        }"
+                    <VCIcon
+                        :name="row.built_in ? 'fa6-solid:check' : 'fa6-solid:xmark'"
+                        :class="row.built_in ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
                 <template #cell-global="{ row }: { row: any }">
-                    <i
-                        class="fas"
-                        :class="{
-                            'fa-check text-success-600': !row.realm_id,
-                            'fa-times text-error-600': row.realm_id,
-                        }"
+                    <VCIcon
+                        :name="!row.realm_id ? 'fa6-solid:check' : 'fa6-solid:xmark'"
+                        :class="!row.realm_id ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
                 <template #cell-created_at="{ row }: { row: any }">
@@ -142,7 +136,7 @@ export default defineComponent({
                         class="btn btn-xs btn-outline-primary me-1"
                         :disabled="!hasEditPermission"
                     >
-                        <i class="fa-solid fa-bars" />
+                        <VCIcon name="fa6-solid:bars" />
                     </NuxtLink>
                     <AEntityDelete
                         class="btn btn-xs btn-outline-danger"

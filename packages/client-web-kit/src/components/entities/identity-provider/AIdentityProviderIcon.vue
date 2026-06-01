@@ -29,7 +29,10 @@ export default defineComponent({
         :id="entity.preset"
     >
         <template #default="item">
-            <i :class="[item.icon, $attrs.class]" />
+            <VCIcon
+                :name="item.icon"
+                :class="$attrs.class"
+            />
         </template>
     </AIdentityProviderPreset>
     <AIdentityProviderProtocol
@@ -37,7 +40,10 @@ export default defineComponent({
         :id="entity.protocol"
     >
         <template #default="item">
-            <i :class="[item.icon, $attrs.class]" />
+            <VCIcon
+                :name="item.icon"
+                :class="$attrs.class"
+            />
         </template>
     </AIdentityProviderProtocol>
 </template>

@@ -18,27 +18,21 @@ import clientWebTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
 import installPagination from '@vuecs/pagination';
+import { addCollection } from '@iconify/vue';
+import faBrands from '@iconify-json/fa6-brands/icons.json';
+import faSolid from '@iconify-json/fa6-solid/icons.json';
 
-// CSS pipeline — mirrors apps/client-web/nuxt.config.ts so the embedded
-// consent UI inherits the same theme cascade as the main Nuxt app:
-//   1. ./tailwind.css            — @import @authup/client-web-theme
-//                                  (which transitively pulls
-//                                  @authup/client-web-kit-theme +
-//                                  tailwindcss + @vuecs/design +
-//                                  @vuecs/theme-tailwind + every
-//                                  authup-owned stylesheet) and adds
-//                                  this app's `@source` scopes.
-//   2. client-web-kit dist styles — SFC `<style scoped>` blocks.
-//   3. Font Awesome              — legacy `<i class="fa-*">` icons.
 import './tailwind.css';
 import '@authup/client-web-kit/../dist/style.css';
-import '@fortawesome/fontawesome-free/css/all.css';
 
 import type { Router } from 'vue-router';
 import Authorize from './pages/authorize.vue';
 import VApp from './App.vue';
 import { providePayload } from './di';
 import type { HydrationPayload } from './types';
+
+addCollection(faSolid);
+addCollection(faBrands);
 
 export function createApp(payload: HydrationPayload) : {
     app: App,

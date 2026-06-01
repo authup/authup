@@ -141,12 +141,7 @@ export default defineComponent({
                     class="btn btn-xs btn-dark"
                     @click.prevent="toggleDisplay()"
                 >
-                    <i
-                        :class="['fa', {
-                            'fa-chevron-down': !display,
-                            'fa-chevron-up': display,
-                        }]"
-                    />
+                    <VCIcon :name="display ? 'fa6-solid:chevron-up' : 'fa6-solid:chevron-down'" />
                 </button>
             </div>
             <div>
@@ -165,12 +160,7 @@ export default defineComponent({
                     }]"
                     @click="handleSaveOrCreate"
                 >
-                    <i
-                        :class="['fa', {
-                            'fa-plus': !manager.data.value,
-                            'fa-save': manager.data.value,
-                        }]"
-                    />
+                    <VCIcon :name="manager.data.value ? 'fa6-solid:floppy-disk' : 'fa6-solid:plus'" />
                 </button>
                 <button
                     v-if="manager.data.value"
@@ -178,7 +168,7 @@ export default defineComponent({
                     :disabled="manager.busy.value"
                     @click="handleDelete"
                 >
-                    <i class="fa fa-trash" />
+                    <VCIcon name="fa6-solid:trash" />
                 </button>
             </div>
         </div>

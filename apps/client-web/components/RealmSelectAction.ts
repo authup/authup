@@ -7,7 +7,7 @@
 
 import { REALM_MASTER_NAME } from '@authup/core-kit';
 import type { Realm } from '@authup/core-kit';
-import { computed } from 'vue';
+import { computed, resolveComponent } from 'vue';
 import type { PropType } from 'vue';
 
 export default defineNuxtComponent({
@@ -27,6 +27,8 @@ export default defineNuxtComponent({
         const canCheck = computed(() => !(isMaster.value && !modelValue.value) &&
                 modelValue.value !== props.entity.id);
 
+        const VCIcon = resolveComponent('VCIcon');
+
         return () => {
             if (canCheck.value) {
                 return h('button', {
@@ -40,20 +42,15 @@ export default defineNuxtComponent({
                         emit('update:modelValue', props.entity.id);
                     },
                 }, [
-                    h('i', {
-                        class: {
-                            'fa fa-check': canCheck.value,
-                            'fa fa-times': !canCheck.value,
-                        },
-                    }),
+                    h(VCIcon, { name: canCheck.value ? 'fa6-solid:check' : 'fa6-solid:xmark' }),
                 ]);
             }
 
             return h('button', {
                 class: 'btn btn-xs btn-disabled btn-success',
-                disabled: true, 
+                disabled: true,
             }, [
-                h('i', { class: 'fa-solid fa-check' }),
+                h(VCIcon, { name: 'fa6-solid:check' }),
             ]);
         };
     },
