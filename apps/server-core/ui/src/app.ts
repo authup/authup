@@ -17,6 +17,7 @@ import clientWebKitTheme from '@authup/client-web-kit-theme';
 import clientWebTheme from '@authup/client-web-theme';
 import fontAwesome from '@vuecs/icons-font-awesome';
 import installForms from '@vuecs/forms';
+import installIcon from '@vuecs/icon';
 import installPagination from '@vuecs/pagination';
 import { addCollection } from '@iconify/vue';
 import faBrands from '@iconify-json/fa6-brands/icons.json';
@@ -105,6 +106,7 @@ export function createApp(payload: HydrationPayload) : {
         },
     });
     app.use(installForms);
+    app.use(installIcon);
     app.use(installPagination);
 
     install(app, {
