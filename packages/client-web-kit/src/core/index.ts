@@ -16,4 +16,4 @@ export * from './socket-manager';
 export * from './store';
 export * from './slot';
 export * from './translator';
-export * from './vuelidate';
+export * from './validup';
