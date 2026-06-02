@@ -33,6 +33,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
     {
         name: 'Resources',
         type: 'separator',
+        meta: { [LayoutKey.REQUIRED_LOGGED_IN]: true },
     },
     {
         name: 'Realms',

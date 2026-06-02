@@ -22,6 +22,7 @@ export default defineComponent({
     setup(props) {
         return () => h('img', {
             src: Account,
+            class: 'mx-auto',
             width: props.width,
             height: props.height,
             style: { maxWidth: '100%' },
