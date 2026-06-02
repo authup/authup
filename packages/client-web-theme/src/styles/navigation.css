@@ -39,10 +39,50 @@
     color: #ffffff;
 }
 
+/*
+ * Keep dropdown-toggle on the same flex+align-items:center layout as
+ * the other vc-nav-link tags so its text content sits on the same
+ * vertical axis as the icon-only links beside it. (Pre-migration this
+ * rule set `display: block` and the FA `<i>` font-glyph happened to
+ * sit on the text baseline anyway; with SVG icons the difference
+ * surfaces as a visible misalignment.)
+ */
 .vc-nav-items .vc-nav-item .vc-nav-link.dropdown-toggle {
     background: none;
-    display: block;
     border: none;
+}
+
+/*
+ * Normalize `<button class="vc-nav-link">` to render identically to
+ * `<a class="vc-nav-link">`. Without this, Tailwind v4 preflight
+ * leaves the button with UA `appearance: button` + a default border,
+ * which adds a couple of pixels of height and pushes icon-only
+ * buttons (color-mode toggle, dropdown-toggle) onto a different
+ * vertical axis than the icon-only anchors (settings, logout).
+ */
+button.vc-nav-link {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font: inherit;
+}
+
+/*
+ * Pin Iconify icons inside nav-links to a fixed 1rem box. Without
+ * this the SVG sizes against the inherited font-size (which varies
+ * between the header's smaller letter-spaced text and elsewhere),
+ * and width="0.75em" / width="1em" attributes from @iconify/vue
+ * render at different pixel widths depending on context — the
+ * resulting line-boxes have different intrinsic heights, breaking
+ * cross-axis alignment of sibling nav items. Pre-migration the
+ * anchor `<i>` icons were size-pinned via `.navbar-gadgets > li > a i
+ * { font-size: 16px }` in core/navbar.css; the SVG path needs the
+ * equivalent.
+ */
+.vc-nav-link svg.iconify {
+    width: 1rem;
+    height: 1rem;
 }
 
 .vc-nav-items .vc-nav-item .vc-nav-link,

@@ -85,11 +85,6 @@
     padding-left: 6px;
 }
 
-.page-navbar .navbar-content > .navbar-gadgets > li > a i {
-    font-size: 16px;
-}
-
-
 @media (max-width: 1024px) {
     .page-navbar > .navbar-content {
         padding: 0 50px;
