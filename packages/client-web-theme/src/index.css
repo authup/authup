@@ -93,19 +93,32 @@
         /*
          * Soften the content background. `@vuecs/design`'s `.dark`
          * puts `--vc-color-bg` at neutral-900 (~20.5% L) — near-black.
-         * Lift to neutral-700 (~37% L) so it pairs with authup's warm
-         * dark chrome (~32% L) as a gentle step rather than a
-         * near-black cliff. Works from inside `@layer base` because
-         * `@vuecs/design` 1.0.1+ wraps its `.dark` defaults in
-         * `@layer vuecs`, and our kit theme positions `vuecs` earlier
-         * than `base` in the layer order — see
+         * Lift it so the content surface pairs with authup's warm dark
+         * chrome as a gentle tonal step rather than a near-black cliff.
+         * Works from inside `@layer base` because `@vuecs/design` 1.0.1+
+         * wraps its `.dark` defaults in `@layer vuecs`, and our kit theme
+         * positions `vuecs` earlier than `base` in the layer order — see
          * `@authup/client-web-kit-theme/src/index.css` for the
          * `@layer theme, vuecs, base, components, utilities;`
          * declaration. Pre-1.0.1, vuecs defined `.dark` at the top
          * level (outside any layer) and this override had to be
          * hoisted out of `@layer base` to win the cascade.
          */
-        --vc-color-bg: var(--vc-color-neutral-700);
+        --vc-color-bg: var(--vc-color-neutral-400);
+
+        /*
+         * With the lighter base above, vuecs's default muted surface
+         * (neutral-800, near-black) reads as a too-dark cliff — visible
+         * on `.nav-pills .nav-link` backgrounds and the generated
+         * `disabled:bg-bg-muted` utility. Pull it up to a subtle step
+         * darker than the base instead. `--vc-color-bg-elevated` is
+         * deliberately left at the vuecs default: `.btn-secondary`
+         * (`bg-bg-elevated text-fg`) relies on a dark elevated surface
+         * for its light `text-fg` to stay legible.
+         */
+        --vc-color-bg-muted: var(--vc-color-neutral-500);
+
+        --vc-color-border: var(--vc-color-neutral-500);
     }
 
     /*
@@ -123,6 +136,41 @@
     h4 { @apply text-xl; }
     h5 { @apply text-lg; }
     h6 { @apply text-base; }
+
+    /*
+     * Tailwind v4 preflight sets `svg { display: block }` to make
+     * standalone illustrations behave predictably. That breaks inline
+     * icon-next-to-text layouts (e.g. `<VCIcon /> Realm Management`):
+     * the SVG drops onto its own line and the text wraps below it.
+     *
+     * `@iconify/vue`'s `<Icon>` (which `<VCIcon>` wraps) tags every
+     * rendered SVG with `class="iconify ..."` — use that as the hook
+     * to scope the override only to Iconify icons, leaving any
+     * full-bleed `<svg>` illustrations (`AccountSVG`, brand marks)
+     * on their default `display: block`.
+     *
+     * `vertical-align: -0.125em` reproduces FontAwesome's baseline
+     * adjustment so the icon optically aligns with the text baseline
+     * rather than sitting on it.
+     */
+    svg.iconify {
+        display: inline-block;
+        vertical-align: -0.125em;
+    }
+
+    /*
+     * Tailwind v4 preflight includes `<hr>` in its `margin: 0` reset and
+     * sets `border-top-width: 1px; color: inherit` — so a bare `<hr>`
+     * renders as a current-color line flush against its neighbours
+     * (visible under the login submit button: the divider hugged the
+     * button with no breathing room). Bootstrap gave `<hr>` vertical
+     * rhythm + a muted divider color; restore both project-wide.
+     */
+    hr {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        border-color: var(--vc-color-border);
+    }
 }
 
 /* ------------------------------------------------------------------
@@ -337,12 +385,24 @@
        without it, the menu renders inline below the toggle and the
        page header balloons by ~80px because the list-of-locales sits
        always-visible inside the navbar. The toggle's click handler
-       (see LanguageSwitcherDropdown.ts) flips `.show` on the menu. */
+       (see LanguageSwitcherDropdown.ts) flips `.show` on the menu.
+
+       `.dropdown` is the positioned ancestor: the menu is
+       `position: absolute`, so without a relatively-positioned wrapper
+       it anchors to the initial containing block (viewport) at its
+       static position. In the top-right gadget cluster that static
+       position is flush against the right edge, so the menu's `min-w-40`
+       width spills off-screen. `.dropdown { relative }` + `top-full
+       left-0` anchors the menu under its toggle; `.dropdown-menu-end`
+       right-aligns it so a toggle sitting at the header's right edge
+       opens leftward and stays fully on-screen. */
+    .dropdown { @apply relative; }
     .dropdown-toggle { @apply cursor-pointer; }
     .dropdown-menu {
-        @apply absolute z-50 hidden min-w-40 rounded-md
+        @apply absolute top-full left-0 z-50 hidden min-w-40 rounded-md
                border border-border bg-bg py-1 shadow-md;
     }
+    .dropdown-menu-end { @apply left-auto right-0; }
     .dropdown-menu.show { @apply block; }
     .dropdown-item {
         @apply block w-full cursor-pointer border-0 bg-transparent

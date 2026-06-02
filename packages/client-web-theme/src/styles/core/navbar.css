@@ -55,8 +55,23 @@
     background-color: var(--authup-chrome-bg-elevated);
 }
 
+/*
+ * Center every gadget control on the row's cross axis. The gadgets
+ * <ul> is a flex row; its default `align-items: stretch` makes each
+ * <li> grow to the tallest sibling, but the `.vc-nav-link` inside is
+ * not full-height — it sits at the TOP of its stretched <li> and
+ * centers its icon within its OWN box. A <button> nav-link (color-mode
+ * toggle, language dropdown-toggle) and an <a> nav-link (settings,
+ * logout) differ by a fraction of a pixel in intrinsic height (residual
+ * UA button metrics that survive Tailwind preflight), so their icon
+ * centers land at slightly different Y — the items read as off-axis.
+ * Switching the row to `align-items: center` collapses every <li> to
+ * its natural height and centers it, so each control's center coincides
+ * with the row center regardless of the button/anchor height delta.
+ */
 .page-navbar .navbar-content .navbar-gadgets {
     margin-left: auto;
+    align-items: center;
 }
 
 .page-navbar .navbar-content li:not(:last-child) .vc-nav-item {
@@ -84,11 +99,6 @@
 .page-navbar .navbar-content .navbar-gadgets > li > a.vc-nav-link.user-link span {
     padding-left: 6px;
 }
-
-.page-navbar .navbar-content > .navbar-gadgets > li > a i {
-    font-size: 16px;
-}
-
 
 @media (max-width: 1024px) {
     .page-navbar > .navbar-content {

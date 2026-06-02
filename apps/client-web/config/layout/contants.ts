@@ -19,7 +19,7 @@ export enum LayoutKey {
 export const LayoutTopNavigation : NavigationItem<NavigationItemMeta>[] = [
     {
         name: 'General',
-        icon: 'fa fa-home',
+        icon: 'fa6-solid:house',
     },
 ];
 
@@ -28,17 +28,18 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Home',
         type: 'link',
         url: '/',
-        icon: 'fas fa-home',
+        icon: 'fa6-solid:house',
     },
     {
         name: 'Resources',
         type: 'separator',
+        meta: { [LayoutKey.REQUIRED_LOGGED_IN]: true },
     },
     {
         name: 'Realms',
         type: 'link',
         url: '/realms',
-        icon: 'fas fa-building',
+        icon: 'fa6-solid:building',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -53,7 +54,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Clients',
         type: 'link',
         url: '/clients',
-        icon: 'fa-solid fa-cube',
+        icon: 'fa6-solid:cube',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -68,7 +69,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Scopes',
         type: 'link',
         url: '/scopes',
-        icon: 'fa-solid fa-meteor',
+        icon: 'fa6-solid:meteor',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -83,7 +84,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Identity Providers',
         type: 'link',
         url: '/identity-providers',
-        icon: 'fa-solid fa-atom',
+        icon: 'fa6-solid:atom',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -98,7 +99,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Robots',
         type: 'link',
         url: '/robots',
-        icon: 'fas fa-robot',
+        icon: 'fa6-solid:robot',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -113,7 +114,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Users',
         type: 'link',
         url: '/users',
-        icon: 'fas fa-user',
+        icon: 'fa6-solid:user',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -128,7 +129,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Roles',
         type: 'link',
         url: '/roles',
-        icon: 'fa-solid fa-theater-masks',
+        icon: 'fa6-solid:masks-theater',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -146,7 +147,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Policies',
         type: 'link',
         url: '/policies',
-        icon: 'fa fa-balance-scale',
+        icon: 'fa6-solid:scale-balanced',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -161,7 +162,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Permissions',
         type: 'link',
         url: '/permissions',
-        icon: 'fas fa-key',
+        icon: 'fa6-solid:key',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
             [LayoutKey.REQUIRED_PERMISSIONS]: [
@@ -180,21 +181,21 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         name: 'Login',
         type: 'link',
         url: '/login',
-        icon: 'fas fa-sign',
+        icon: 'fa6-solid:right-to-bracket',
         meta: { [LayoutKey.REQUIRED_LOGGED_OUT]: true },
     },
     {
         name: 'Settings',
         type: 'link',
         url: '/settings',
-        icon: 'fas fa-cog',
+        icon: 'fa6-solid:gear',
         meta: { [LayoutKey.REQUIRED_LOGGED_IN]: true },
     },
     {
         name: 'Logout',
         type: 'link',
         url: '/logout',
-        icon: 'fa fa-power-off',
+        icon: 'fa6-solid:power-off',
         meta: { [LayoutKey.REQUIRED_LOGGED_IN]: true },
     },
 ];

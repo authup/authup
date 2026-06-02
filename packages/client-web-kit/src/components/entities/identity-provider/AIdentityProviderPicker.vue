@@ -53,9 +53,9 @@ export default defineComponent({
                                 @click.prevent="pickProtocol(item)"
                             >
                                 <div>
-                                    <i
-                                        class="fa-2x"
-                                        :class="props.icon"
+                                    <VCIcon
+                                        class="text-2xl"
+                                        :name="props.icon"
                                     />
                                 </div>
                                 <div>
@@ -83,9 +83,9 @@ export default defineComponent({
                                 @click.prevent="pickPreset(item)"
                             >
                                 <div>
-                                    <i
-                                        class="fa-2x"
-                                        :class="props.icon"
+                                    <VCIcon
+                                        class="text-2xl"
+                                        :name="props.icon"
                                     />
                                 </div>
                                 <div>

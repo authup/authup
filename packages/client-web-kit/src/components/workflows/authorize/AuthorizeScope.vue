@@ -30,11 +30,11 @@ export default defineComponent({
 <template>
     <div>
         <div class="text-center">
-            <i
-                class="fa-solid"
+            <VCIcon
+                :name="isEnabled ? 'fa6-solid:check' : 'fa6-solid:xmark'"
                 :class="{
-                    'fa-check text-success-600': isEnabled,
-                    'fa-times text-error-600': !isEnabled
+                    'text-success-600': isEnabled,
+                    'text-error-600': !isEnabled,
                 }"
             />
         </div>

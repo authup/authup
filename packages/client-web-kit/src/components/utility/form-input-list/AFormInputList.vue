@@ -128,7 +128,7 @@ export default defineComponent({
                     :disabled="!canAdd"
                     @click.prevent="add()"
                 >
-                    <i class="fa fa-plus" /> <ATranslationDefault :name="'add'" />
+                    <VCIcon name="fa6-solid:plus" /> <ATranslationDefault :name="'add'" />
                 </button>
             </div>
         </div>

@@ -140,7 +140,7 @@ export default AIdentityProviderBasicFields;
                 class="btn btn-xs btn-dark"
                 @click.prevent="onGenerate"
             >
-                <i class="fa fa-refresh" /> Generate
+                <VCIcon name="fa6-solid:arrows-rotate" /> Generate
             </button>
         </div>
 

@@ -106,8 +106,9 @@ export default AIdentityProviderLdapForm;
             <template #default="element">
                 <div>
                     <h4 class="mb-3">
-                        <i
-                            :class="[element.icon, 'pe-1']"
+                        <VCIcon
+                            :name="element.icon"
+                            class="pe-1"
                         /> {{ element.name }}
                     </h4>
                 </div>
@@ -117,33 +118,33 @@ export default AIdentityProviderLdapForm;
         <div class="row">
             <div class="col">
                 <h6>
-                    <i class="fa fa-wrench" /> Basic
+                    <VCIcon name="fa6-solid:wrench" /> Basic
                 </h6>
                 <AIdentityProviderBasicFields :entity="data" />
             </div>
             <div class="col">
                 <h6>
-                    <i class="fa fa-lock" /> Security
+                    <VCIcon name="fa6-solid:lock" /> Security
                 </h6>
                 <AIdentityProviderLdapCredentialsFields :entity="data" />
             </div>
         </div>
 
         <h6>
-            <i class="fa-solid fa-vihara" /> Connection
+            <VCIcon name="fa6-solid:vihara" /> Connection
         </h6>
         <AIdentityProviderLdapConnectionFields :entity="data" />
 
         <div class="row">
             <div class="col">
                 <h6>
-                    <i class="fas fa-user" /> User
+                    <VCIcon name="fa6-solid:user" /> User
                 </h6>
                 <AIdentityProviderLdapUserFields :entity="data" />
             </div>
             <div class="col">
                 <h6>
-                    <i class="fa-solid fa-theater-masks" /> Group
+                    <VCIcon name="fa6-solid:masks-theater" /> Group
                 </h6>
                 <AIdentityProviderLdapGroupFields :entity="data" />
             </div>

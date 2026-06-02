@@ -85,10 +85,7 @@ export default defineNuxtComponent({
                                 :aria-pressed="isDark ? 'true' : 'false'"
                                 @click.prevent="toggleColorMode"
                             >
-                                <i
-                                    class="fa"
-                                    :class="isDark ? 'fa-sun' : 'fa-moon'"
-                                />
+                                <VCIcon :name="isDark ? 'fa6-solid:sun' : 'fa6-solid:moon'" />
                             </button>
                         </li>
                         <li class="vc-nav-item">
@@ -108,7 +105,7 @@ export default defineNuxtComponent({
                                     :to="'/settings'"
                                     class="vc-nav-link"
                                 >
-                                    <i class="fa fa-cog" />
+                                    <VCIcon name="fa6-solid:gear" />
                                 </NuxtLink>
                             </li>
                             <li class="vc-nav-item">
@@ -116,7 +113,7 @@ export default defineNuxtComponent({
                                     :to="'/logout'"
                                     class="vc-nav-link"
                                 >
-                                    <i class="fa fa-power-off" />
+                                    <VCIcon name="fa6-solid:power-off" />
                                 </NuxtLink>
                             </li>
                         </template>

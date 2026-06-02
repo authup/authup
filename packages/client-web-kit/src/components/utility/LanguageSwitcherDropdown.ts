@@ -43,7 +43,7 @@ const LanguageSwitcherDropdown = defineComponent({
             opened.value = false;
         };
 
-        return () => [
+        return () => h('div', { class: 'dropdown' }, [
             h('button', {
                 class: [
                     'dropdown-toggle',
@@ -60,6 +60,7 @@ const LanguageSwitcherDropdown = defineComponent({
             h('div', {
                 class: [
                     'dropdown-menu',
+                    'dropdown-menu-end',
                     opened.value ? 'show' : '',
                 ],
             }, elements.value.map((element) => h('button', {
@@ -73,7 +74,7 @@ const LanguageSwitcherDropdown = defineComponent({
                     element.active ? 'active' : '',
                 ],
             }, [element.value]))),
-        ];
+        ]);
     },
 });
 

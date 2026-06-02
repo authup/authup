@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 import type { VNodeChild } from 'vue';
-import { h } from 'vue';
+import { h, resolveComponent } from 'vue';
 import { hasNormalizedSlot, normalizeSlot } from '../../../core';
 import { TitleSlotName } from './constants';
 import type { TitleOptions } from './type';
@@ -15,7 +15,7 @@ export function buildTitle(
 ) {
     ctx.tag = ctx.tag || 'h6';
     ctx.icon = ctx.icon ?? true;
-    ctx.iconClass = ctx.iconClass || 'fa-solid fa-list';
+    ctx.iconClass = ctx.iconClass || 'fa6-solid:list';
     ctx.iconPosition = ctx.iconPosition ?? 'start';
 
     if (hasNormalizedSlot(TitleSlotName.DEFAULT, ctx.slots)) {
@@ -39,8 +39,8 @@ export function buildTitle(
             icon = iconContent;
         } else {
             icon = h(
-                'i',
-                { class: [ctx.iconClass, 'pe-1'] },
+                resolveComponent('VCIcon'),
+                { name: ctx.iconClass, class: 'pe-1' },
             );
         }
     }

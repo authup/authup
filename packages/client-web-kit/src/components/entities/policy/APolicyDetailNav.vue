@@ -34,6 +34,6 @@ export default defineComponent({
         aria-label="View policy details"
         @click="handleClick"
     >
-        <i class="fa fa-eye" />
+        <VCIcon name="fa6-solid:eye" />
     </button>
 </template>

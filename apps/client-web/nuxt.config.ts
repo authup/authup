@@ -34,7 +34,6 @@ export default defineNuxtConfig({
         // theme split, the app no longer holds any project CSS directly.
         '@/assets/css/tailwind.css',
         '@authup/client-web-kit/../dist/style.css',
-        '@fortawesome/fontawesome-free/css/all.css',
     ],
 
     alias: {

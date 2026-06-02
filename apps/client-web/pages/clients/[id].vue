@@ -25,27 +25,27 @@ export default defineComponent({
         const items = [
             {
                 name: 'General',
-                icon: 'fas fa-bars',
+                icon: 'fa6-solid:bars',
                 urlSuffix: '',
             },
             {
                 name: 'Scopes',
-                icon: 'fa-solid fa-meteor',
+                icon: 'fa6-solid:meteor',
                 urlSuffix: '/scopes',
             },
             {
                 name: 'URL',
-                icon: 'fa-solid fa-link',
+                icon: 'fa6-solid:link',
                 urlSuffix: '/url',
             },
             {
                 name: 'Permissions',
-                icon: 'fas fa-user-secret',
+                icon: 'fa6-solid:user-secret',
                 urlSuffix: '/permissions',
             },
             {
                 name: 'Roles',
-                icon: 'fa-solid fa-user-group',
+                icon: 'fa6-solid:user-group',
                 urlSuffix: '/roles',
             },
         ];
@@ -96,7 +96,10 @@ export default defineComponent({
 <template>
     <div>
         <h1 class="title no-border mb-3">
-            <i class="fa-solid fa-cube me-1" /> {{ entity.name }}
+            <VCIcon
+                name="fa6-solid:cube"
+                class="me-1"
+            /> {{ entity.name }}
             <span class="sub-title ms-1">Details</span>
         </h1>
         <div class="mb-2">

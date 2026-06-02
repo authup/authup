@@ -119,27 +119,21 @@ export default defineComponent({
                 bordered
             >
                 <template #cell-active="{ row }: { row: any }">
-                    <i
-                        :class="{
-                            'fa fa-times text-error-600': !row.active,
-                            'fa fa-check text-success-600': row.active,
-                        }"
+                    <VCIcon
+                        :name="row.active ? 'fa6-solid:check' : 'fa6-solid:xmark'"
+                        :class="row.active ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
                 <template #cell-is_confidential="{ row }: { row: any }">
-                    <i
-                        :class="{
-                            'fa fa-times text-error-600': !row.is_confidential,
-                            'fa fa-check text-success-600': row.is_confidential,
-                        }"
+                    <VCIcon
+                        :name="row.is_confidential ? 'fa6-solid:check' : 'fa6-solid:xmark'"
+                        :class="row.is_confidential ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
                 <template #cell-built_in="{ row }: { row: any }">
-                    <i
-                        :class="{
-                            'fa fa-times text-error-600': !row.built_in,
-                            'fa fa-check text-success-600': row.built_in,
-                        }"
+                    <VCIcon
+                        :name="row.built_in ? 'fa6-solid:check' : 'fa6-solid:xmark'"
+                        :class="row.built_in ? 'text-success-600' : 'text-error-600'"
                     />
                 </template>
                 <template #cell-created_at="{ row }: { row: any }">
@@ -154,7 +148,7 @@ export default defineComponent({
                         class="btn btn-xs btn-outline-primary me-1"
                         :disabled="!hasEditPermission"
                     >
-                        <i class="fa-solid fa-bars" />
+                        <VCIcon name="fa6-solid:bars" />
                     </NuxtLink>
                     <AEntityDelete
                         class="btn btn-xs btn-outline-danger"

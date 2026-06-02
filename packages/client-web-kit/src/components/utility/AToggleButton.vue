@@ -59,14 +59,9 @@ export default AToggleButton;
         :disabled="isBusy"
         @click.prevent="toggle"
     >
-        <i
-            class="fa"
+        <VCIcon
             aria-hidden="true"
-            :class="{
-                'fa-question': isBusy,
-                'fa-plus': !isBusy && !value,
-                'fa-minus': !isBusy && value,
-            }"
+            :name="isBusy ? 'fa6-solid:question' : (value ? 'fa6-solid:minus' : 'fa6-solid:plus')"
         />
     </button>
 </template>

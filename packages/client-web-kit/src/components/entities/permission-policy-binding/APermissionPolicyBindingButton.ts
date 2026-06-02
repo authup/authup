@@ -14,6 +14,7 @@ import {
     onMounted,
     onUnmounted,
     ref,
+    resolveComponent,
     toRef,
     watch,
 } from 'vue';
@@ -93,6 +94,8 @@ export const APermissionPolicyBindingButton = defineComponent({
 
         const modalTitleId = `policy-modal-title-${props.entity.id}`;
 
+        const VCIcon = resolveComponent('VCIcon');
+
         return () => {
             const children = [];
 
@@ -108,7 +111,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                     modalOpen.value = true;
                 },
             }, [
-                h('i', { class: 'fa fa-cog' }),
+                h(VCIcon, { name: 'fa6-solid:gear' }),
             ]));
 
             if (modalOpen.value) {
@@ -139,7 +142,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                                 detailPolicy.value = null;
                             },
                         }, [
-                            h('i', { class: 'fa fa-arrow-left me-1' }),
+                            h(VCIcon, { name: 'fa6-solid:arrow-left', class: 'me-1' }),
                             'Back',
                         ]),
                     ];
@@ -174,12 +177,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                                             }
                                         },
                                     }, [
-                                        h('i', {
-                                            class: ['fa', {
-                                                'fa-check': isSelected,
-                                                'fa-plus': !isSelected,
-                                            }],
-                                        }),
+                                        h(VCIcon, { name: isSelected ? 'fa6-solid:check' : 'fa6-solid:plus' }),
                                     ]),
                                 ]),
                             ];

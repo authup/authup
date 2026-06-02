@@ -229,7 +229,10 @@ export default ARobotForm;
                                     class="text-error-600 font-bold ps-1"
                                 >
                                     {{ translationsDefault.hashed }}
-                                    <i class="fa fa-exclamation-triangle ps-1" />
+                                    <VCIcon
+                                        name="fa6-solid:triangle-exclamation"
+                                        class="ps-1"
+                                    />
                                 </span>
                             </template>
                             <VCFormInput v-model="vuelidate.secret.$model" />
@@ -243,7 +246,7 @@ export default ARobotForm;
                         class="btn btn-dark btn-xs"
                         @click.prevent="generateSecret"
                     >
-                        <i class="fa fa-wrench" /> {{ translationsDefault.generate }}
+                        <VCIcon name="fa6-solid:wrench" /> {{ translationsDefault.generate }}
                     </button>
                 </div>
 

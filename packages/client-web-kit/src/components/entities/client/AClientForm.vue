@@ -292,7 +292,7 @@ export default defineComponent({
 
                             <template v-if="isSecretHashed">
                                 <span class="text-error-600 font-bold">
-                                    <i class="fa fa-exclamation-triangle" />
+                                    <VCIcon name="fa6-solid:triangle-exclamation" />
                                 </span>
                             </template>
                         </template>
@@ -306,7 +306,7 @@ export default defineComponent({
                                     type="button"
                                     @click.prevent="() => vuelidate.secret.$model = generateSecret()"
                                 >
-                                    <i class="fa fa-refresh" />
+                                    <VCIcon name="fa6-solid:arrows-rotate" />
                                 </button>
                             </template>
                         </VCFormInput>

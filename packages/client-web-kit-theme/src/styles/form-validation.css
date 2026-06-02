@@ -50,3 +50,28 @@
 .form-group-error .form-group-hint {
     color: var(--vc-color-error-500);
 }
+
+/*
+ * Dark-mode accent text. The 500/600 shades above are tuned for a light
+ * surface; on a dark background a saturated mid/dark accent reads as
+ * either low-contrast (dark-on-near-black in the default dark theme) or
+ * harsh over-saturated text (on a lighter mid-tone chrome). The lighter
+ * 400 tints stay legible and soft against dark surfaces in both cases.
+ */
+.dark .form-group-warning label,
+.dark .form-group-warning .label {
+    color: var(--vc-color-warning-400);
+}
+
+.dark .form-group-error label,
+.dark .form-group-error .label {
+    color: var(--vc-color-error-400);
+}
+
+.dark .form-group-hint.group-required {
+    color: var(--vc-color-info-400);
+}
+
+.dark .form-group-error .form-group-hint {
+    color: var(--vc-color-error-400);
+}

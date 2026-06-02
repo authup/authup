@@ -6,6 +6,7 @@
  */
 
 import type { VNodeChild } from 'vue';
+import { resolveComponent } from 'vue';
 import { NuxtLink } from '#components';
 
 export type DomainEntityNavItem = {
@@ -41,6 +42,8 @@ export function buildDomainEntityNav(
             break;
     }
 
+    const VCIcon = resolveComponent('VCIcon');
+
     let prevLink : VNodeChild = [];
     if (options.prevLink) {
         prevLink = h('li', { class: 'nav-item' }, [
@@ -52,7 +55,7 @@ export function buildDomainEntityNav(
                 },
                 {
                     default: () => [
-                        h('i', { class: 'fa fa-arrow-left' }),
+                        h(VCIcon, { name: 'fa6-solid:arrow-left' }),
                     ],
                 },
             ),
@@ -85,7 +88,7 @@ export function buildDomainEntityNav(
                     },
                     {
                         default: () => [
-                            h('i', { class: `${item.icon} pe-1` }),
+                            h(VCIcon, { name: item.icon, class: 'pe-1' }),
                             item.name,
                         ],
                     },

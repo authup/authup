@@ -16,12 +16,12 @@ export default defineComponent({
         const items = [
             {
                 name: 'Account',
-                icon: 'fas fa-bars',
+                icon: 'fa6-solid:bars',
                 urlSuffix: '',
             },
             {
                 name: 'Security',
-                icon: 'fa fa-lock',
+                icon: 'fa6-solid:lock',
                 urlSuffix: '/security',
             },
         ];
@@ -36,7 +36,7 @@ export default defineComponent({
             <AccountSVG />
         </div>
         <h1 class="title no-border mb-3">
-            <i class="fa fa-cog" />
+            <VCIcon name="fa6-solid:gear" />
             Settings
             <span class="sub-title ms-1">
                 Management
