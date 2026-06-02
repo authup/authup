@@ -45,10 +45,15 @@ export const AIdentityProviderBasicFields = defineComponent({
         // Shared `IdentityProviderValidator` from `@authup/core-kit`.
         // Registers under the parent `<AIdentityProviderOAuth2Form>` /
         // `<AIdentityProviderLdapForm>` collectors via `name: 'basic'`.
-        const $v = useValidup(new IdentityProviderValidator(), form as any, {
-            name: 'basic',
-            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
-        });
+        const $v = useValidup(
+            new IdentityProviderValidator(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            form as any,
+            {
+                name: 'basic',
+                group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
+            },
+        );
 
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
 
@@ -88,7 +93,7 @@ export const AIdentityProviderBasicFields = defineComponent({
         );
 
         const onEnabledChange = (value: boolean) => {
-            $v.fields.enabled.$model.value = value;
+            $v.fields.enabled!.$model.value = value;
             update();
         };
 
@@ -112,11 +117,11 @@ export default AIdentityProviderBasicFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.name!)">
             <template #label>
                 {{ translationsDefault.name }}
             </template>
-            <VCFormInput v-model="$v.fields.name.$model.value" />
+            <VCFormInput v-model="$v.fields.name!.$model.value" />
         </VCFormGroup>
 
         <div class="mb-3">
@@ -129,16 +134,16 @@ export default AIdentityProviderBasicFields;
             </button>
         </div>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.display_name!)">
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name.$model.value" />
+            <VCFormInput v-model="$v.fields.display_name!.$model.value" />
         </VCFormGroup>
 
         <div class="mt-3">
             <VCFormSwitch
-                :model-value="$v.fields.enabled.$model.value"
+                :model-value="$v.fields.enabled!.$model.value"
                 :label="true"
                 label-content="Enabled?"
                 @update:model-value="onEnabledChange"

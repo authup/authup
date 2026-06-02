@@ -23,7 +23,11 @@ import ATimePolicyForm from './time/ATimePolicyForm.vue';
 import AIdentityPolicyForm from './identity/AIdentityPolicyForm.vue';
 
 export default defineComponent({
-    components: { AFormSubmit, APolicyTypePicker, APolicyBasicForm },
+    components: {
+        AFormSubmit, 
+        APolicyTypePicker, 
+        APolicyBasicForm, 
+    },
     props: {
         entity: { type: Object as PropType<Policy> },
         type: { type: String as PropType<string> },
@@ -74,9 +78,9 @@ export default defineComponent({
         const isInvalidComputed = computed(() => {
             const basic = $v.$getResultsForChild('basic');
             const type = $v.$getResultsForChild('type');
-            return !typeComputed.value
-                || !!basic?.$invalid.value
-                || !!type?.$invalid.value;
+            return !typeComputed.value ||
+                !!basic?.$invalid.value ||
+                !!type?.$invalid.value;
         });
 
         const submit = async () => {

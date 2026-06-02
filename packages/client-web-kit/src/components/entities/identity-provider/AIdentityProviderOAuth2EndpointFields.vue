@@ -76,37 +76,37 @@ export default defineComponent({
     />
     <VCFormGroup
         :label="true"
-        :validation="useFieldValidation($v.fields.token_url)"
+        :validation="useFieldValidation($v.fields.token_url!)"
     >
         <template #label>
             Token
         </template>
         <VCFormInput
-            v-model="$v.fields.token_url.$model.value"
+            v-model="$v.fields.token_url!.$model.value"
             placeholder="https://..."
         />
     </VCFormGroup>
     <VCFormGroup
         :label="true"
-        :validation="useFieldValidation($v.fields.authorize_url)"
+        :validation="useFieldValidation($v.fields.authorize_url!)"
     >
         <template #label>
             Authorize
         </template>
         <VCFormInput
-            v-model="$v.fields.authorize_url.$model.value"
+            v-model="$v.fields.authorize_url!.$model.value"
             placeholder="https://..."
         />
     </VCFormGroup>
     <VCFormGroup
         :label="true"
-        :validation="useFieldValidation($v.fields.user_info_url)"
+        :validation="useFieldValidation($v.fields.user_info_url!)"
     >
         <template #label>
             UserInfo
         </template>
         <VCFormInput
-            v-model="$v.fields.user_info_url.$model.value"
+            v-model="$v.fields.user_info_url!.$model.value"
             placeholder="https://..."
         />
     </VCFormGroup>

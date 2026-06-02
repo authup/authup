@@ -92,9 +92,9 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             const basic = $v.$getResultsForChild('basic');
             const client = $v.$getResultsForChild('client');
             const endpoint = $v.$getResultsForChild('endpoint');
-            return !!basic?.$invalid.value
-                || !!client?.$invalid.value
-                || !!endpoint?.$invalid.value;
+            return !!basic?.$invalid.value ||
+                !!client?.$invalid.value ||
+                !!endpoint?.$invalid.value;
         });
 
         const authorizeUri = computed<string>(() => {

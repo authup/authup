@@ -11,7 +11,11 @@ import { onChange, useUpdatedAt } from '../../../../composables';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
 
 export default defineComponent({
-    components: { AFormInputList, VCFormGroup, VCFormSwitch },
+    components: {
+        AFormInputList, 
+        VCFormGroup, 
+        VCFormSwitch, 
+    },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
@@ -26,7 +30,7 @@ export default defineComponent({
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
             const { attribute_name, ...data } = input;
-            assignFormProperties(form, data as Record<string, any>);
+            assignFormProperties(form, data as Record<string, unknown>);
             if (attribute_name) {
                 form.attribute_name = typeof attribute_name === 'string' ? [attribute_name] : attribute_name;
             } else {
@@ -65,17 +69,17 @@ export default defineComponent({
 <template>
     <div class="row">
         <div class="col-7">
-            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_name)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_name!)">
                 <AFormInputList
-                    :names="$v.fields.attribute_name.$model.value"
+                    :names="$v.fields.attribute_name!.$model.value"
                     @changed="handleAttributeNameChanged"
                 />
             </VCFormGroup>
         </div>
         <div class="col-5">
-            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_name_strict)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_name_strict!)">
                 <VCFormSwitch
-                    v-model="$v.fields.attribute_name_strict.$model.value"
+                    v-model="$v.fields.attribute_name_strict!.$model.value"
                     :label="true"
                     @change="handleUpdated"
                 >
@@ -86,9 +90,9 @@ export default defineComponent({
                     </template>
                 </VCFormSwitch>
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_null_match_all)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_null_match_all!)">
                 <VCFormSwitch
-                    v-model="$v.fields.attribute_null_match_all.$model.value"
+                    v-model="$v.fields.attribute_null_match_all!.$model.value"
                     :label="true"
                     @change="handleUpdated"
                 >
@@ -100,9 +104,9 @@ export default defineComponent({
                     </template>
                 </VCFormSwitch>
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.identity_master_match_all)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.identity_master_match_all!)">
                 <VCFormSwitch
-                    v-model="$v.fields.identity_master_match_all.$model.value"
+                    v-model="$v.fields.identity_master_match_all!.$model.value"
                     :label="true"
                     @change="handleUpdated"
                 >

@@ -11,6 +11,7 @@ import {
     computed,
     defineComponent,
     reactive,
+    unref,
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
@@ -82,9 +83,12 @@ export default defineComponent({
         // Shared `ClientValidator` from `@authup/core-kit`. Reactive
         // `group` flips between CREATE / UPDATE so the validator's
         // per-mount optional-ness matches the form's mode.
-        const $v = useValidup(new ClientValidator(), form as any, {
-            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
-        });
+        const $v = useValidup(
+            new ClientValidator(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            form as any,
+            { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
+        );
 
         const store = injectStore();
         const storeRefs = storeToRefs(store);
@@ -114,7 +118,9 @@ export default defineComponent({
 
             assignFormProperties(form, manager.data.value);
 
-            form.realm_id = realmId.value ?? '';
+            // `unref()` for the Pinia 3 / Vue 3.5 double-ref-wrap leak —
+            // see authentication-hook/install.ts for the same pattern.
+            form.realm_id = (unref(realmId.value) as string | null) ?? '';
 
             if (form.secret.length === 0) {
                 form.secret = generateSecret();
@@ -180,7 +186,7 @@ export default defineComponent({
         );
 
         const redirectUris = computed(() => {
-            const value = $v.fields.redirect_uri.$model.value as string | undefined;
+            const value = $v.fields.redirect_uri!.$model.value as string | undefined;
             return value ? value.split(',') : [];
         });
 
@@ -216,28 +222,28 @@ export default defineComponent({
                 </VCFormGroup>
             </template>
 
-            <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.name!)">
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
                 <VCFormInput
-                    v-model="$v.fields.name.$model.value"
+                    v-model="$v.fields.name!.$model.value"
                     :disabled="isNameFixed"
                 />
                 <template #hint>
                     {{ translationsClient.nameHint }}
                 </template>
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.display_name!)">
                 <template #label>
                     {{ translationsDefault.displayName }}
                 </template>
                 <VCFormInput
-                    v-model="$v.fields.display_name.$model.value"
+                    v-model="$v.fields.display_name!.$model.value"
                     :disabled="isNameFixed"
                 />
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.secret)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.secret!)">
                 <template #label>
                     {{ translationsDefault.secret }}
                     <template v-if="isSecretHashed">
@@ -247,14 +253,14 @@ export default defineComponent({
                     </template>
                 </template>
                 <VCFormInput
-                    v-model="$v.fields.secret.$model.value"
-                    :disabled="!$v.fields.is_confidential.$model.value"
+                    v-model="$v.fields.secret!.$model.value"
+                    :disabled="!$v.fields.is_confidential!.$model.value"
                 >
                     <template #groupAppend>
                         <button
                             class="btn"
                             type="button"
-                            @click.prevent="() => $v.fields.secret.$model.value = generateSecret()"
+                            @click.prevent="() => $v.fields.secret!.$model.value = generateSecret()"
                         >
                             <VCIcon name="fa6-solid:arrows-rotate" />
                         </button>
@@ -263,27 +269,27 @@ export default defineComponent({
             </VCFormGroup>
             <div class="row">
                 <div class="col">
-                    <VCFormGroup :validation="useFieldValidation($v.fields.is_confidential)">
+                    <VCFormGroup :validation="useFieldValidation($v.fields.is_confidential!)">
                         <VCFormSwitch
-                            v-model="$v.fields.is_confidential.$model.value"
+                            v-model="$v.fields.is_confidential!.$model.value"
                             :label="true"
                             :label-content="translationsClient.isConfidential.value"
                         />
                     </VCFormGroup>
                 </div>
                 <div class="col">
-                    <VCFormGroup :validation="useFieldValidation($v.fields.secret_hashed)">
+                    <VCFormGroup :validation="useFieldValidation($v.fields.secret_hashed!)">
                         <VCFormSwitch
-                            v-model="$v.fields.secret_hashed.$model.value"
+                            v-model="$v.fields.secret_hashed!.$model.value"
                             :label="true"
                             :label-content="translationsClient.hashSecret.value"
                         />
                     </VCFormGroup>
                 </div>
                 <div class="col">
-                    <VCFormGroup :validation="useFieldValidation($v.fields.active)">
+                    <VCFormGroup :validation="useFieldValidation($v.fields.active!)">
                         <VCFormSwitch
-                            v-model="$v.fields.active.$model.value"
+                            v-model="$v.fields.active!.$model.value"
                             :label="true"
                             :label-content="translationsClient.isActive.value"
                         />
@@ -292,15 +298,15 @@ export default defineComponent({
             </div>
 
             <template v-if="!realmId && !isEditing">
-                <VCFormGroup :validation="useFieldValidation($v.fields.realm_id)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.realm_id!)">
                     <template #label>
                         {{ translationsDefault.realm }}
                     </template>
                     <template #default>
                         <ARealmPicker
-                            :value="$v.fields.realm_id.$model.value"
+                            :value="$v.fields.realm_id!.$model.value"
                             @change="(input: string[]) => {
-                                $v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                                $v.fields.realm_id!.$model.value = input.length > 0 ? input[0] ?? '' : '';
                             }"
                         />
                     </template>
@@ -312,10 +318,10 @@ export default defineComponent({
                 :names="redirectUris"
                 @changed="(value) => {
                     if (value.length === 0) {
-                        $v.fields.redirect_uri.$model.value = '';
+                        $v.fields.redirect_uri!.$model.value = '';
                         return;
                     }
-                    $v.fields.redirect_uri.$model.value = value.join(',');
+                    $v.fields.redirect_uri!.$model.value = value.join(',');
                 }"
             >
                 <template #label>
@@ -325,12 +331,12 @@ export default defineComponent({
                     {{ translationsClient.redirectURIHint }}
                 </template>
             </AFormInputList>
-            <VCFormGroup :validation="useFieldValidation($v.fields.description)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.description!)">
                 <template #label>
                     {{ translationsDefault.description }}
                 </template>
                 <VCFormTextarea
-                    v-model="$v.fields.description.$model.value"
+                    v-model="$v.fields.description!.$model.value"
                     rows="7"
                 />
                 <template #hint>
@@ -341,7 +347,7 @@ export default defineComponent({
                 <AFormSubmit
                     :is-busy="isBusy"
                     :is-editing="isEditing"
-                    :is-invalid="$v.$invalid"
+                    :is-invalid="$v.$invalid.value"
                     @submit="submit"
                 />
             </div>

@@ -68,9 +68,12 @@ export const AScopeForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(new ScopeValidator(), form as any, {
-            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
-        });
+        const $v = useValidup(
+            new ScopeValidator(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            form as any,
+            { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
+        );
 
         const store = injectStore();
         const storeRefs = storeToRefs(store);
@@ -148,42 +151,42 @@ export default AScopeForm;
 
 <template>
     <form @submit.prevent="submit">
-        <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.name!)">
             <template #label>
                 {{ translationsDefault.name }}
             </template>
             <VCFormInput
-                v-model="$v.fields.name.$model.value"
+                v-model="$v.fields.name!.$model.value"
                 :disabled="isNameFixed"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.display_name!)">
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name.$model.value" />
+            <VCFormInput v-model="$v.fields.display_name!.$model.value" />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.description)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.description!)">
             <template #label>
                 {{ translationsDefault.description }}
             </template>
             <VCFormTextarea
-                v-model="$v.fields.description.$model.value"
+                v-model="$v.fields.description!.$model.value"
                 :rows="7"
             />
         </VCFormGroup>
 
         <template v-if="!realmId && !isNameFixed && !isEditing">
-            <VCFormGroup :validation="useFieldValidation($v.fields.realm_id)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.realm_id!)">
                 <template #label>
                     {{ translationsDefault.realm }}
                 </template>
                 <ARealmPicker
-                    :value="$v.fields.realm_id.$model.value"
+                    :value="$v.fields.realm_id!.$model.value"
                     @change="(input: string[]) => {
-                        $v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                        $v.fields.realm_id!.$model.value = input.length > 0 ? input[0] ?? '' : '';
                     }"
                 />
             </VCFormGroup>
@@ -192,7 +195,7 @@ export default AScopeForm;
         <AFormSubmit
             :is-busy="busy"
             :is-editing="isEditing"
-            :is-invalid="$v.$invalid"
+            :is-invalid="$v.$invalid.value"
             @submit="submit"
         />
     </form>

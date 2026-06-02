@@ -16,7 +16,11 @@ import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
 
 export const AIdentityProviderLdapConnectionFields = defineComponent({
-    components: { VCFormGroup, VCFormInput, VCFormSwitch },
+    components: {
+        VCFormGroup, 
+        VCFormInput, 
+        VCFormSwitch, 
+    },
     props: {
         entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
         discovery: {
@@ -47,11 +51,11 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
 
         const onTimeoutChange = (input: string) => {
             if (input.trim() === '') {
-                $v.fields.timeout.$model.value = 0;
+                $v.fields.timeout!.$model.value = 0;
                 return;
             }
             const intValue = Number.parseInt(input, 10);
-            $v.fields.timeout.$model.value = Number.isNaN(intValue) ? 0 : intValue;
+            $v.fields.timeout!.$model.value = Number.isNaN(intValue) ? 0 : intValue;
         };
 
         return {
@@ -67,44 +71,44 @@ export default AIdentityProviderLdapConnectionFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.url)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.url!)">
             <template #label>
                 URL
             </template>
             <VCFormInput
-                v-model="$v.fields.url.$model.value"
+                v-model="$v.fields.url!.$model.value"
                 placeholder="<scheme>://<address>:<port>"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.timeout)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.timeout!)">
             <template #label>
                 Timeout
             </template>
             <VCFormInput
-                :model-value="String($v.fields.timeout.$model.value)"
+                :model-value="String($v.fields.timeout!.$model.value)"
                 type="number"
                 @update:model-value="onTimeoutChange"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.start_tls)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.start_tls!)">
             <template #label>
                 StartTLS
             </template>
             <VCFormSwitch
-                v-model="$v.fields.start_tls.$model.value"
+                v-model="$v.fields.start_tls!.$model.value"
                 :label="true"
                 label-content="Enable StartTLS process?"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.base_dn)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.base_dn!)">
             <template #label>
                 Base DN
             </template>
             <VCFormInput
-                v-model="$v.fields.base_dn.$model.value"
+                v-model="$v.fields.base_dn!.$model.value"
                 placeholder="e.g. dc=example,dc=com"
             />
         </VCFormGroup>

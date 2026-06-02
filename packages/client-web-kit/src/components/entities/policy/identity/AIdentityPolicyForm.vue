@@ -45,7 +45,7 @@ export default defineComponent({
 </script>
 <template>
     <AFormInputList
-        :names="$v.fields.types.$model.value"
+        :names="$v.fields.types!.$model.value"
         :min-items="1"
         @changed="handleUpdated"
     >

@@ -26,7 +26,7 @@ export default defineComponent({
         const $v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(data: Partial<DatePolicy> = {}) {
-            assignFormProperties(form, data as Record<string, any>);
+            assignFormProperties(form, data as Record<string, unknown>);
         }
 
         setup.expose({ assign });
@@ -53,23 +53,23 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.start)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.start!)">
             <template #label>
                 Start
             </template>
             <VCFormInput
-                v-model="$v.fields.start.$model.value"
+                v-model="$v.fields.start!.$model.value"
                 placeholder="YYYY-MM-DD"
                 @change="handleUpdated"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.end)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.end!)">
             <template #label>
                 End
             </template>
             <VCFormInput
-                v-model="$v.fields.end.$model.value"
+                v-model="$v.fields.end!.$model.value"
                 placeholder="YYYY-MM-DD"
                 @change="handleUpdated"
             />

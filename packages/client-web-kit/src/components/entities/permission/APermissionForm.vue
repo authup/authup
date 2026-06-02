@@ -16,6 +16,7 @@ import {
     defineComponent,
     reactive,
     ref,
+    unref,
     watch,
 } from 'vue';
 import type { FormOption } from '@vuecs/forms';
@@ -87,16 +88,21 @@ export const APermissionForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(new PermissionValidator(), form as any, {
-            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
-        });
+        const $v = useValidup(
+            new PermissionValidator(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            form as any,
+            { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
+        );
 
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const realmId = computed(() => {
+        const realmId = computed<string | null>(() => {
             if (!storeRefs.realmIsRoot) {
-                return storeRefs.realmId.value;
+                // `unref()` collapses the Pinia 3 / Vue 3.5 double-ref-wrap
+                // returned by `storeToRefs` on computed-getter fields.
+                return (unref(storeRefs.realmId.value) as string | null) ?? null;
             }
 
             return manager.data.value ?
@@ -175,39 +181,39 @@ export default APermissionForm;
 
 <template>
     <form @submit.prevent="submit">
-        <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.name!)">
             <template #label>
                 {{ translationsDefault.name }}
             </template>
             <VCFormInput
-                v-model="$v.fields.name.$model.value"
+                v-model="$v.fields.name!.$model.value"
                 :disabled="isBuiltIn"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.display_name!)">
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name.$model.value" />
+            <VCFormInput v-model="$v.fields.display_name!.$model.value" />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.description)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.description!)">
             <template #label>
                 {{ translationsDefault.description }}
             </template>
             <VCFormTextarea
-                v-model="$v.fields.description.$model.value"
+                v-model="$v.fields.description!.$model.value"
                 :rows="4"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.decision_strategy)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.decision_strategy!)">
             <template #label>
                 {{ translationsDefault.decisionStrategy }}
             </template>
             <VCFormSelect
-                v-model="$v.fields.decision_strategy.$model.value"
+                v-model="$v.fields.decision_strategy!.$model.value"
                 :options="decisionStrategyOptions"
                 :option-default="true"
                 option-default-value="-- None (default: unanimous) --"
@@ -218,15 +224,15 @@ export default APermissionForm;
         </VCFormGroup>
 
         <template v-if="!realmId && !isEditing">
-            <VCFormGroup :validation="useFieldValidation($v.fields.realm_id)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.realm_id!)">
                 <template #label>
                     {{ translationsDefault.realm }}
                 </template>
                 <ARealmPicker
-                    :value="$v.fields.realm_id.$model.value"
+                    :value="$v.fields.realm_id!.$model.value"
                     :multiple="false"
                     @change="(input: string[]) => {
-                        $v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                        $v.fields.realm_id!.$model.value = input.length > 0 ? input[0] ?? '' : '';
                     }"
                 />
             </VCFormGroup>
@@ -235,7 +241,7 @@ export default APermissionForm;
         <AFormSubmit
             :is-busy="busy"
             :is-editing="isEditing"
-            :is-invalid="$v.$invalid"
+            :is-invalid="$v.$invalid.value"
             @submit="submit"
         />
     </form>

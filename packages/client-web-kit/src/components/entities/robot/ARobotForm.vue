@@ -65,9 +65,12 @@ export const ARobotForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(new RobotValidator(), form as any, {
-            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
-        });
+        const $v = useValidup(
+            new RobotValidator(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            form as any,
+            { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
+        );
 
         const updatedAt = useUpdatedAt(props.entity);
 
@@ -169,24 +172,24 @@ export default ARobotForm;
                     </VCFormGroup>
                 </template>
 
-                <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.name!)">
                     <template #label>
                         {{ translationsDefault.name }}
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.name.$model.value"
+                        v-model="$v.fields.name!.$model.value"
                         :disabled="isNameFixed"
                     />
                 </VCFormGroup>
 
-                <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.display_name!)">
                     <template #label>
                         {{ translationsDefault.displayName }}
                     </template>
-                    <VCFormInput v-model="$v.fields.display_name.$model.value" />
+                    <VCFormInput v-model="$v.fields.display_name!.$model.value" />
                 </VCFormGroup>
 
-                <VCFormGroup :validation="useFieldValidation($v.fields.secret)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.secret!)">
                     <template #label>
                         {{ translationsDefault.secret }}<span
                             v-if="isSecretHashed"
@@ -199,7 +202,7 @@ export default ARobotForm;
                             />
                         </span>
                     </template>
-                    <VCFormInput v-model="$v.fields.secret.$model.value" />
+                    <VCFormInput v-model="$v.fields.secret!.$model.value" />
                 </VCFormGroup>
 
                 <div>
@@ -215,7 +218,7 @@ export default ARobotForm;
                 <AFormSubmit
                     :is-busy="busy"
                     :is-editing="isEditing"
-                    :is-invalid="$v.$invalid"
+                    :is-invalid="$v.$invalid.value"
                     @submit="submit"
                 />
             </div>
