@@ -6,10 +6,11 @@ import {
     defineComponent,
     reactive,
 } from 'vue';
-import useVuelidate from '@vuelidate/core';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
 import type { Policy } from '@authup/core-kit';
 import { DecisionStrategy } from '@authup/kit';
-import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormGroup, VCFormSelect } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../../composables';
@@ -20,7 +21,6 @@ export default defineComponent({
         APolicyChildrenPicker: APolicyPicker,
         VCFormGroup,
         VCFormSelect,
-        IVuelidate,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
@@ -30,7 +30,7 @@ export default defineComponent({
             decision_strategy: '',
         });
 
-        const decisionStrategyOptions : FormOption[] = Object.values(DecisionStrategy)
+        const decisionStrategyOptions: FormOption[] = Object.values(DecisionStrategy)
             .map((value) => ({
                 label: value,
                 value,
@@ -40,14 +40,13 @@ export default defineComponent({
             if (!props.entity) {
                 return undefined;
             }
-
             return props.entity.id;
         });
 
-        const vuelidate = useVuelidate({ items: {}, decision_strategy: {} }, form, { $registerAs: 'type' });
+        const $v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         const query = computed<BuildInput<Policy & { parent_id?: string | null }>>(() => {
-            const filters : FiltersBuildInput<Policy & { parent_id?: string | null }> = {};
+            const filters: FiltersBuildInput<Policy & { parent_id?: string | null }> = {};
             if (props.entity) {
                 // todo: maybe respect manual realmId component prop
                 if (props.entity.realm_id) {
@@ -83,7 +82,6 @@ export default defineComponent({
                 form.items = [];
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const record = data as Record<string, any>;
             if (record.decision_strategy) {
                 form.decision_strategy = record.decision_strategy;
@@ -98,6 +96,14 @@ export default defineComponent({
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
+
+        const emitUpdated = () => {
+            setup.emit('updated', {
+                data: [...form.items],
+                decision_strategy: form.decision_strategy || undefined,
+                valid: !$v.$invalid.value,
+            });
+        };
 
         const handleUpdated = (children: string[]) => {
             form.items = children;
@@ -121,72 +127,46 @@ export default defineComponent({
             emitUpdated();
         };
 
-        const emitUpdated = () => {
-            setup.emit('updated', {
-                data: [
-                    ...form.items,
-                ],
-                decision_strategy: form.decision_strategy || undefined,
-                valid: !vuelidate.value.$invalid,
-            });
-        };
-
         return {
             id,
-
             handleUpdated,
             handleDecisionStrategyUpdated,
-
             decisionStrategyHint,
             decisionStrategyOptions,
-            vuelidate,
-
+            $v,
             query,
+            useFieldValidation,
         };
     },
 });
 </script>
 <template>
     <div>
-        <IVuelidate :validation="vuelidate.decision_strategy">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Decision Strategy
-                    </template>
-                    <VCFormSelect
-                        v-model="vuelidate.decision_strategy.$model"
-                        :options="decisionStrategyOptions"
-                        :option-default="true"
-                        :option-default-value="'-- None (default: unanimous) --'"
-                        @change="handleDecisionStrategyUpdated"
-                    />
-                    <div class="alert alert-sm alert-info mt-1 mb-0">
-                        {{ decisionStrategyHint }}
-                    </div>
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.decision_strategy)">
+            <template #label>
+                Decision Strategy
             </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.items">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Children
-                    </template>
-                    <APolicyChildrenPicker
-                        :parent-id="id"
-                        :query="query"
-                        :value="vuelidate.items.$model"
-                        @change="handleUpdated"
-                    />
-                </VCFormGroup>
+            <VCFormSelect
+                v-model="$v.fields.decision_strategy.$model"
+                :options="decisionStrategyOptions"
+                :option-default="true"
+                :option-default-value="'-- None (default: unanimous) --'"
+                @change="handleDecisionStrategyUpdated"
+            />
+            <div class="alert alert-sm alert-info mt-1 mb-0">
+                {{ decisionStrategyHint }}
+            </div>
+        </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.items)">
+            <template #label>
+                Children
             </template>
-        </IVuelidate>
+            <APolicyChildrenPicker
+                :parent-id="id"
+                :query="query"
+                :value="$v.fields.items.$model"
+                @change="handleUpdated"
+            />
+        </VCFormGroup>
     </div>
 </template>

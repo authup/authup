@@ -7,20 +7,16 @@
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import { assignFormProperties } from '../../../core';
-import useVuelidate from '@vuelidate/core';
-import { required } from '@vuelidate/validators';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import { onChange, useUpdatedAt } from '../../../composables';
 
 export const AIdentityProviderLdapCredentialsFields = defineComponent({
-    components: {
-        IVuelidate, 
-        VCFormGroup, 
-        VCFormInput, 
-    },
+    components: { VCFormGroup, VCFormInput },
     props: {
         entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
         discovery: { type: Boolean, default: false },
@@ -29,10 +25,7 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
     setup(props) {
         const form = reactive({ user: '', password: '' });
 
-        const $v = useVuelidate({
-            user: { required },
-            password: { required },
-        }, form, { $registerAs: 'credentials' });
+        const $v = useValidup(new Container<typeof form>(), form, { name: 'credentials' });
 
         function init() {
             if (!props.entity) return;
@@ -43,7 +36,7 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
         onChange(updated, () => init());
         init();
 
-        return { vuelidate: $v };
+        return { $v, useFieldValidation };
     },
 });
 
@@ -52,35 +45,21 @@ export default AIdentityProviderLdapCredentialsFields;
 
 <template>
     <div>
-        <IVuelidate :validation="vuelidate.user">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        User
-                    </template>
-                    <VCFormInput v-model="vuelidate.user.$model" />
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.user)">
+            <template #label>
+                User
             </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.password">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Password
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.password.$model"
-                        type="password"
-                        autocomplete="current-password"
-                    />
-                </VCFormGroup>
+            <VCFormInput v-model="$v.fields.user.$model" />
+        </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.password)">
+            <template #label>
+                Password
             </template>
-        </IVuelidate>
+            <VCFormInput
+                v-model="$v.fields.password.$model"
+                type="password"
+                autocomplete="current-password"
+            />
+        </VCFormGroup>
     </div>
 </template>

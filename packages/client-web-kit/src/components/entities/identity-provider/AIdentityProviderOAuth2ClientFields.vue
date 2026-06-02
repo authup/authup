@@ -7,36 +7,22 @@
 <script lang="ts">
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
 import { assignFormProperties } from '../../../core';
-import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import { onChange, useUpdatedAt } from '../../../composables';
 
 export const AIdentityProviderOAuth2ClientFields = defineComponent({
-    components: {
-        IVuelidate, 
-        VCFormGroup, 
-        VCFormInput, 
-    },
+    components: { VCFormGroup, VCFormInput },
     props: { entity: { type: Object as PropType<Partial<OAuth2IdentityProvider>> } },
     emits: ['updated'],
     setup(props) {
         const form = reactive({ client_id: '', client_secret: '' });
 
-        const $v = useVuelidate({
-            client_id: {
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-            client_secret: {
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-        }, form, { $registerAs: 'client' });
+        const $v = useValidup(new Container<typeof form>(), form, { name: 'client' });
 
         function assign() {
             assignFormProperties(form, props.entity);
@@ -46,7 +32,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
         onChange(updatedAt, () => assign());
         assign();
 
-        return { vuelidate: $v };
+        return { $v, useFieldValidation };
     },
 });
 
@@ -55,35 +41,21 @@ export default AIdentityProviderOAuth2ClientFields;
 
 <template>
     <div>
-        <IVuelidate :validation="vuelidate.client_id">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Client ID
-                    </template>
-                    <VCFormInput v-model="vuelidate.client_id.$model" />
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.client_id)">
+            <template #label>
+                Client ID
             </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.client_secret">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Client Secret
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.client_secret.$model"
-                        type="password"
-                        autocomplete="new-password"
-                    />
-                </VCFormGroup>
+            <VCFormInput v-model="$v.fields.client_id.$model" />
+        </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.client_secret)">
+            <template #label>
+                Client Secret
             </template>
-        </IVuelidate>
+            <VCFormInput
+                v-model="$v.fields.client_secret.$model"
+                type="password"
+                autocomplete="new-password"
+            />
+        </VCFormGroup>
     </div>
 </template>

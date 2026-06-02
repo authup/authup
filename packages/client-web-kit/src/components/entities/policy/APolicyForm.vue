@@ -1,12 +1,17 @@
 <script lang="ts">
 import type { PropType } from 'vue';
-import { computed, defineComponent } from 'vue';
+import {
+    computed,
+    defineComponent,
+    reactive,
+} from 'vue';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import type { Policy } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
-import useVuelidate from '@vuelidate/core';
 import { BuiltInPolicyType } from '@authup/access';
 import { useIsEditing } from '../../../composables';
-import { extractVuelidateResultsFromChild, injectHTTPClient } from '../../../core';
+import { extractValidupResultsFromChild, injectHTTPClient } from '../../../core';
 import { AFormSubmit, defineEntityManager } from '../../utility';
 import APolicyBasicForm from './APolicyBasicForm.vue';
 import APolicyTypePicker from './APolicyTypePicker.vue';
@@ -18,18 +23,14 @@ import ATimePolicyForm from './time/ATimePolicyForm.vue';
 import AIdentityPolicyForm from './identity/AIdentityPolicyForm.vue';
 
 export default defineComponent({
-    components: {
-        AFormSubmit,
-        APolicyTypePicker,
-        APolicyBasicForm, 
-    },
+    components: { AFormSubmit, APolicyTypePicker, APolicyBasicForm },
     props: {
         entity: { type: Object as PropType<Policy> },
         type: { type: String as PropType<string> },
     },
     setup(props, ctx) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const typeComponents : Record<string, any> = {
+        const typeComponents: Record<string, any> = {
             [BuiltInPolicyType.IDENTITY]: AIdentityPolicyForm,
             [BuiltInPolicyType.REALM_MATCH]: ARealmMatchPolicyForm,
             [BuiltInPolicyType.COMPOSITE]: ACompositePolicyForm,
@@ -59,19 +60,36 @@ export default defineComponent({
             return null;
         });
 
-        const vuelidate = useVuelidate({ $stopPropagation: true });
+        // Parent collector — the empty `Container` + empty state
+        // make this a registration-only Composable that aggregates the
+        // 'basic' + 'type' child slots via `$getResultsForChild`.
+        // `stopPropagation: true` mirrors vuelidate's `$stopPropagation`
+        // — don't register THIS form with an even-higher-level collector
+        // (no real one exists today, but it future-proofs the contract).
+        const $v = useValidup(new Container(), reactive({}), { stopPropagation: true });
+
+        // The parent's `$invalid` only includes the parent's own issues
+        // (which is always empty here); aggregate the children's status
+        // for the submit gate.
+        const isInvalidComputed = computed(() => {
+            const basic = $v.$getResultsForChild('basic');
+            const type = $v.$getResultsForChild('type');
+            return !typeComputed.value
+                || !!basic?.$invalid.value
+                || !!type?.$invalid.value;
+        });
 
         const submit = async () => {
-            if (vuelidate.value.$invalid) {
+            if (isInvalidComputed.value) {
                 return;
             }
 
             const {
-                items = [], 
-                ...data 
+                items = [],
+                ...data
             } = {
-                ...extractVuelidateResultsFromChild(vuelidate, 'basic'),
-                ...extractVuelidateResultsFromChild(vuelidate, 'type'),
+                ...extractValidupResultsFromChild($v, 'basic'),
+                ...extractValidupResultsFromChild($v, 'type'),
             } as Partial<Omit<Policy, 'children'>> & { items: string[] };
 
             if (typeComputed.value) {
@@ -95,8 +113,8 @@ export default defineComponent({
             data: manager.data,
             busy: manager.busy,
             isEditing,
+            isInvalid: isInvalidComputed,
             submit,
-            vuelidate,
         };
     },
 });
@@ -122,7 +140,7 @@ export default defineComponent({
 
         <div>
             <AFormSubmit
-                :is-invalid="vuelidate.$invalid || !typeComputed"
+                :is-invalid="isInvalid"
                 :is-busy="busy"
                 :is-editing="isEditing"
                 @submit="submit"
