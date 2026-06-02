@@ -123,6 +123,27 @@
     h4 { @apply text-xl; }
     h5 { @apply text-lg; }
     h6 { @apply text-base; }
+
+    /*
+     * Tailwind v4 preflight sets `svg { display: block }` to make
+     * standalone illustrations behave predictably. That breaks inline
+     * icon-next-to-text layouts (e.g. `<VCIcon /> Realm Management`):
+     * the SVG drops onto its own line and the text wraps below it.
+     *
+     * `@iconify/vue`'s `<Icon>` (which `<VCIcon>` wraps) tags every
+     * rendered SVG with `class="iconify ..."` — use that as the hook
+     * to scope the override only to Iconify icons, leaving any
+     * full-bleed `<svg>` illustrations (`AccountSVG`, brand marks)
+     * on their default `display: block`.
+     *
+     * `vertical-align: -0.125em` reproduces FontAwesome's baseline
+     * adjustment so the icon optically aligns with the text baseline
+     * rather than sitting on it.
+     */
+    svg.iconify {
+        display: inline-block;
+        vertical-align: -0.125em;
+    }
 }
 
 /* ------------------------------------------------------------------
