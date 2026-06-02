@@ -5,8 +5,9 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { createNanoID } from '@authup/kit';
-import useVuelidate from '@vuelidate/core';
+import { ValidatorGroup, createNanoID } from '@authup/kit';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -15,16 +16,12 @@ import {
     ref,
     watch,
 } from 'vue';
-import { maxLength, minLength, required } from '@vuelidate/validators';
 import type { Robot } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
+import { EntityType, RobotValidator } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
     assignFormProperties,
     useTranslationsForGroup,
 } from '../../../core';
@@ -42,7 +39,6 @@ export const ARobotForm = defineComponent({
         ARealms,
         AFormSubmit,
         AToggleButton,
-        IVuelidate,
         VCFormGroup,
         VCFormInput,
     },
@@ -61,25 +57,6 @@ export const ARobotForm = defineComponent({
             secret: '',
         });
 
-        const $v = useVuelidate({
-            name: {
-                [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT]: VuelidateCustomRule[
-                    VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT
-                ],
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-            display_name: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            realm_id: { required },
-            secret: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-        }, form);
-
         const manager = defineEntityManager({
             type: `${EntityType.ROBOT}`,
             setup: ctx,
@@ -87,6 +64,11 @@ export const ARobotForm = defineComponent({
         });
 
         const isEditing = useIsEditing(manager.data);
+
+        const $v = useValidup(new RobotValidator(), form, {
+            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
+        });
+
         const updatedAt = useUpdatedAt(props.entity);
 
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
@@ -124,7 +106,7 @@ export const ARobotForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if (busy.value || $v.value.$invalid) {
+            if (busy.value || $v.$invalid.value) {
                 return;
             }
 
@@ -154,7 +136,7 @@ export const ARobotForm = defineComponent({
         return {
             busy,
             form,
-            vuelidate: $v,
+            $v,
             isEditing,
             isNameFixed,
             isRealmLocked,
@@ -163,6 +145,7 @@ export const ARobotForm = defineComponent({
             translationsDefault,
             generateSecret,
             submit,
+            useFieldValidation,
         };
     },
 });
@@ -186,59 +169,38 @@ export default ARobotForm;
                     </VCFormGroup>
                 </template>
 
-                <IVuelidate :validation="vuelidate.name">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
+                <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+                    <template #label>
+                        {{ translationsDefault.name }}
+                    </template>
+                    <VCFormInput
+                        v-model="$v.fields.name.$model"
+                        :disabled="isNameFixed"
+                    />
+                </VCFormGroup>
+
+                <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+                    <template #label>
+                        {{ translationsDefault.displayName }}
+                    </template>
+                    <VCFormInput v-model="$v.fields.display_name.$model" />
+                </VCFormGroup>
+
+                <VCFormGroup :validation="useFieldValidation($v.fields.secret)">
+                    <template #label>
+                        {{ translationsDefault.secret }}<span
+                            v-if="isSecretHashed"
+                            class="text-error-600 font-bold ps-1"
                         >
-                            <template #label>
-                                {{ translationsDefault.name }}
-                            </template>
-                            <VCFormInput
-                                v-model="vuelidate.name.$model"
-                                :disabled="isNameFixed"
+                            {{ translationsDefault.hashed }}
+                            <VCIcon
+                                name="fa6-solid:triangle-exclamation"
+                                class="ps-1"
                             />
-                        </VCFormGroup>
+                        </span>
                     </template>
-                </IVuelidate>
-
-                <IVuelidate :validation="vuelidate.display_name">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                {{ translationsDefault.displayName }}
-                            </template>
-                            <VCFormInput v-model="vuelidate.display_name.$model" />
-                        </VCFormGroup>
-                    </template>
-                </IVuelidate>
-
-                <IVuelidate :validation="vuelidate.secret">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                {{ translationsDefault.secret }}<span
-                                    v-if="isSecretHashed"
-                                    class="text-error-600 font-bold ps-1"
-                                >
-                                    {{ translationsDefault.hashed }}
-                                    <VCIcon
-                                        name="fa6-solid:triangle-exclamation"
-                                        class="ps-1"
-                                    />
-                                </span>
-                            </template>
-                            <VCFormInput v-model="vuelidate.secret.$model" />
-                        </VCFormGroup>
-                    </template>
-                </IVuelidate>
+                    <VCFormInput v-model="$v.fields.secret.$model" />
+                </VCFormGroup>
 
                 <div>
                     <button
@@ -253,7 +215,7 @@ export default ARobotForm;
                 <AFormSubmit
                     :is-busy="busy"
                     :is-editing="isEditing"
-                    :is-invalid="vuelidate.$invalid"
+                    :is-invalid="$v.$invalid"
                     @submit="submit"
                 />
             </div>

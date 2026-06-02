@@ -6,9 +6,10 @@
   -->
 <script lang="ts">
 import type { Permission } from '@authup/core-kit';
-import { EntityType } from '@authup/core-kit';
-import { DecisionStrategy } from '@authup/kit';
-import useVuelidate from '@vuelidate/core';
+import { EntityType, PermissionValidator } from '@authup/core-kit';
+import { DecisionStrategy, ValidatorGroup } from '@authup/kit';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -17,12 +18,6 @@ import {
     ref,
     watch,
 } from 'vue';
-import {
-    maxLength,
-    minLength,
-    required,
-    requiredIf,
-} from '@vuelidate/validators';
 import type { FormOption } from '@vuecs/forms';
 import {
     VCFormGroup,
@@ -30,12 +25,9 @@ import {
     VCFormSelect,
     VCFormTextarea,
 } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
     assignFormProperties,
     injectStore,
     storeToRefs,
@@ -66,7 +58,6 @@ export const APermissionForm = defineComponent({
     components: {
         ARealmPicker,
         AFormSubmit,
-        IVuelidate,
         VCFormGroup,
         VCFormInput,
         VCFormSelect,
@@ -88,38 +79,20 @@ export const APermissionForm = defineComponent({
         const decisionStrategyOptions: FormOption[] = Object.values(DecisionStrategy)
             .map((value) => ({ label: value, value }));
 
-        const $v = useVuelidate({
-            name: {
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-                [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT]: VuelidateCustomRule[
-                    VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT
-                ],
-            },
-            display_name: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            description: {
-                minLength: minLength(5),
-                maxLength: maxLength(4096),
-            },
-            decision_strategy: {},
-            // Realm picker is conditionally rendered when no implicit
-            // realm is known and not editing — require selection in
-            // that branch.
-            realm_id: { required: requiredIf(() => !realmId.value && !isEditing.value) },
-        }, form);
-
-        const store = injectStore();
-        const storeRefs = storeToRefs(store);
-
         const manager = defineEntityManager({
             type: `${EntityType.PERMISSION}`,
             setup: ctx,
             props,
         });
+
+        const isEditing = useIsEditing(manager.data);
+
+        const $v = useValidup(new PermissionValidator(), form, {
+            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
+        });
+
+        const store = injectStore();
+        const storeRefs = storeToRefs(store);
 
         const realmId = computed(() => {
             if (!storeRefs.realmIsRoot) {
@@ -131,7 +104,6 @@ export const APermissionForm = defineComponent({
                 null;
         });
 
-        const isEditing = useIsEditing(manager.data);
         const updatedAt = useUpdatedAt(props.entity);
         const isBuiltIn = computed(() => !!(manager.data.value && manager.data.value.built_in));
 
@@ -153,7 +125,7 @@ export const APermissionForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if (busy.value || $v.value.$invalid) {
+            if (busy.value || $v.$invalid.value) {
                 return;
             }
 
@@ -185,7 +157,7 @@ export const APermissionForm = defineComponent({
 
         return {
             busy,
-            vuelidate: $v,
+            $v,
             isEditing,
             isBuiltIn,
             realmId,
@@ -193,6 +165,7 @@ export const APermissionForm = defineComponent({
             decisionStrategyHint: decisionStrategyHintComputed,
             translationsDefault,
             submit,
+            useFieldValidation,
         };
     },
 });
@@ -202,102 +175,67 @@ export default APermissionForm;
 
 <template>
     <form @submit.prevent="submit">
-        <IVuelidate :validation="vuelidate.name">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        {{ translationsDefault.name }}
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.name.$model"
-                        :disabled="isBuiltIn"
-                    />
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+            <template #label>
+                {{ translationsDefault.name }}
             </template>
-        </IVuelidate>
+            <VCFormInput
+                v-model="$v.fields.name.$model"
+                :disabled="isBuiltIn"
+            />
+        </VCFormGroup>
 
-        <IVuelidate :validation="vuelidate.display_name">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        {{ translationsDefault.displayName }}
-                    </template>
-                    <VCFormInput v-model="vuelidate.display_name.$model" />
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+            <template #label>
+                {{ translationsDefault.displayName }}
             </template>
-        </IVuelidate>
+            <VCFormInput v-model="$v.fields.display_name.$model" />
+        </VCFormGroup>
 
-        <IVuelidate :validation="vuelidate.description">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        {{ translationsDefault.description }}
-                    </template>
-                    <VCFormTextarea
-                        v-model="vuelidate.description.$model"
-                        :rows="4"
-                    />
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.description)">
+            <template #label>
+                {{ translationsDefault.description }}
             </template>
-        </IVuelidate>
+            <VCFormTextarea
+                v-model="$v.fields.description.$model"
+                :rows="4"
+            />
+        </VCFormGroup>
 
-        <IVuelidate :validation="vuelidate.decision_strategy">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        {{ translationsDefault.decisionStrategy }}
-                    </template>
-                    <VCFormSelect
-                        v-model="vuelidate.decision_strategy.$model"
-                        :options="decisionStrategyOptions"
-                        :option-default="true"
-                        option-default-value="-- None (default: unanimous) --"
-                    />
-                    <div class="alert alert-sm alert-info mt-1 mb-0">
-                        {{ decisionStrategyHint }}
-                    </div>
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.decision_strategy)">
+            <template #label>
+                {{ translationsDefault.decisionStrategy }}
             </template>
-        </IVuelidate>
+            <VCFormSelect
+                v-model="$v.fields.decision_strategy.$model"
+                :options="decisionStrategyOptions"
+                :option-default="true"
+                option-default-value="-- None (default: unanimous) --"
+            />
+            <div class="alert alert-sm alert-info mt-1 mb-0">
+                {{ decisionStrategyHint }}
+            </div>
+        </VCFormGroup>
 
         <template v-if="!realmId && !isEditing">
-            <IVuelidate :validation="vuelidate.realm_id">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            {{ translationsDefault.realm }}
-                        </template>
-                        <ARealmPicker
-                            :value="vuelidate.realm_id.$model"
-                            :multiple="false"
-                            @change="(input: string[]) => {
-                                vuelidate.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
-                            }"
-                        />
-                    </VCFormGroup>
+            <VCFormGroup :validation="useFieldValidation($v.fields.realm_id)">
+                <template #label>
+                    {{ translationsDefault.realm }}
                 </template>
-            </IVuelidate>
+                <ARealmPicker
+                    :value="$v.fields.realm_id.$model"
+                    :multiple="false"
+                    @change="(input: string[]) => {
+                        $v.fields.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
+                    }"
+                />
+            </VCFormGroup>
         </template>
 
         <AFormSubmit
             :is-busy="busy"
             :is-editing="isEditing"
-            :is-invalid="vuelidate.$invalid"
+            :is-invalid="$v.$invalid"
             @submit="submit"
         />
     </form>

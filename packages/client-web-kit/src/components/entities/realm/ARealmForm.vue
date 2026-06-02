@@ -5,9 +5,9 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { createNanoID } from '@authup/kit';
-import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import { ValidatorGroup, createNanoID } from '@authup/kit';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -17,14 +17,11 @@ import {
     watch,
 } from 'vue';
 import type { Realm } from '@authup/core-kit';
-import { EntityType, REALM_MASTER_NAME } from '@authup/core-kit';
+import { EntityType, REALM_MASTER_NAME, RealmValidator } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
     assignFormProperties,
     useTranslationsForGroup,
 } from '../../../core';
@@ -38,7 +35,6 @@ import {
 export const ARealmForm = defineComponent({
     components: {
         AFormSubmit,
-        IVuelidate,
         VCFormGroup,
         VCFormInput,
         VCFormTextarea,
@@ -59,25 +55,6 @@ export const ARealmForm = defineComponent({
             description: '',
         });
 
-        const $v = useVuelidate({
-            name: {
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-                [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT]: VuelidateCustomRule[
-                    VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT
-                ],
-            },
-            display_name: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            description: {
-                minLength: minLength(5),
-                maxLength: maxLength(4096),
-            },
-        }, form);
-
         const manager = defineEntityManager({
             type: `${EntityType.REALM}`,
             setup: ctx,
@@ -85,6 +62,11 @@ export const ARealmForm = defineComponent({
         });
 
         const isEditing = useIsEditing(manager.data);
+
+        const $v = useValidup(new RealmValidator(), form, {
+            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
+        });
+
         const updatedAt = useUpdatedAt(props.entity);
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
         const isMaster = computed(() => manager.data.value &&
@@ -113,7 +95,7 @@ export const ARealmForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if ($v.value.$invalid) {
+            if ($v.$invalid.value) {
                 return;
             }
 
@@ -133,7 +115,7 @@ export const ARealmForm = defineComponent({
 
         return {
             busy,
-            vuelidate: $v,
+            $v,
             isEditing,
             isNameEmpty,
             isMaster,
@@ -141,6 +123,7 @@ export const ARealmForm = defineComponent({
             translationsDefault,
             generateName,
             submit,
+            useFieldValidation,
         };
     },
 });
@@ -150,22 +133,15 @@ export default ARealmForm;
 
 <template>
     <form @submit.prevent="submit">
-        <IVuelidate :validation="vuelidate.name">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        {{ translationsDefault.name }}
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.name.$model"
-                        :disabled="isMaster"
-                    />
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+            <template #label>
+                {{ translationsDefault.name }}
             </template>
-        </IVuelidate>
+            <VCFormInput
+                v-model="$v.fields.name.$model"
+                :disabled="isMaster"
+            />
+        </VCFormGroup>
 
         <div
             v-if="isCreating"
@@ -181,41 +157,27 @@ export default ARealmForm;
             </button>
         </div>
 
-        <IVuelidate :validation="vuelidate.display_name">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        {{ translationsDefault.displayName }}
-                    </template>
-                    <VCFormInput v-model="vuelidate.display_name.$model" />
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+            <template #label>
+                {{ translationsDefault.displayName }}
             </template>
-        </IVuelidate>
+            <VCFormInput v-model="$v.fields.display_name.$model" />
+        </VCFormGroup>
 
-        <IVuelidate :validation="vuelidate.description">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        {{ translationsDefault.description }}
-                    </template>
-                    <VCFormTextarea
-                        v-model="vuelidate.description.$model"
-                        :rows="4"
-                    />
-                </VCFormGroup>
+        <VCFormGroup :validation="useFieldValidation($v.fields.description)">
+            <template #label>
+                {{ translationsDefault.description }}
             </template>
-        </IVuelidate>
+            <VCFormTextarea
+                v-model="$v.fields.description.$model"
+                :rows="4"
+            />
+        </VCFormGroup>
 
         <AFormSubmit
             :is-busy="busy"
             :is-editing="isEditing"
-            :is-invalid="vuelidate.$invalid"
+            :is-invalid="$v.$invalid"
             @submit="submit"
         />
     </form>
