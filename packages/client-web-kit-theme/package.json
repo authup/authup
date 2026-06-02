@@ -51,8 +51,8 @@
   },
   "homepage": "https://github.com/authup/authup#readme",
   "dependencies": {
-    "@vuecs/design": "^1.0.1",
-    "@vuecs/theme-tailwind": "^1.1.1"
+    "@vuecs/design": "^1.0.2",
+    "@vuecs/theme-tailwind": "^1.1.2"
   },
   "peerDependencies": {
     "@vuecs/core": "^3.x",
