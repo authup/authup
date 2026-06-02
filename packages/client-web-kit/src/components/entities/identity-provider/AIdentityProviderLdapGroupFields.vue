@@ -57,7 +57,7 @@ export default AIdentityProviderLdapGroupFields;
                 Filter
             </template>
             <VCFormInput
-                v-model="$v.fields.group_filter.$model"
+                v-model="$v.fields.group_filter.$model.value"
                 placeholder="(member={{dn}})"
             />
         </VCFormGroup>
@@ -65,31 +65,31 @@ export default AIdentityProviderLdapGroupFields;
             <template #label>
                 Base DN
             </template>
-            <VCFormInput v-model="$v.fields.group_base_dn.$model" />
+            <VCFormInput v-model="$v.fields.group_base_dn.$model.value" />
         </VCFormGroup>
         <VCFormGroup :validation="useFieldValidation($v.fields.group_class)">
             <template #label>
                 Class
             </template>
-            <VCFormInput v-model="$v.fields.group_class.$model" />
+            <VCFormInput v-model="$v.fields.group_class.$model.value" />
         </VCFormGroup>
         <VCFormGroup :validation="useFieldValidation($v.fields.group_name_attribute)">
             <template #label>
                 Name Attribute
             </template>
-            <VCFormInput v-model="$v.fields.group_name_attribute.$model" />
+            <VCFormInput v-model="$v.fields.group_name_attribute.$model.value" />
         </VCFormGroup>
         <VCFormGroup :validation="useFieldValidation($v.fields.group_member_attribute)">
             <template #label>
                 Member Attribute
             </template>
-            <VCFormInput v-model="$v.fields.group_member_attribute.$model" />
+            <VCFormInput v-model="$v.fields.group_member_attribute.$model.value" />
         </VCFormGroup>
         <VCFormGroup :validation="useFieldValidation($v.fields.group_member_user_attribute)">
             <template #label>
                 Member User Attribute
             </template>
-            <VCFormInput v-model="$v.fields.group_member_user_attribute.$model" />
+            <VCFormInput v-model="$v.fields.group_member_user_attribute.$model.value" />
         </VCFormGroup>
     </div>
 </template>

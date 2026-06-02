@@ -68,7 +68,7 @@ export const AScopeForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(new ScopeValidator(), form, {
+        const $v = useValidup(new ScopeValidator(), form as any, {
             group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
         });
 
@@ -153,7 +153,7 @@ export default AScopeForm;
                 {{ translationsDefault.name }}
             </template>
             <VCFormInput
-                v-model="$v.fields.name.$model"
+                v-model="$v.fields.name.$model.value"
                 :disabled="isNameFixed"
             />
         </VCFormGroup>
@@ -162,7 +162,7 @@ export default AScopeForm;
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name.$model" />
+            <VCFormInput v-model="$v.fields.display_name.$model.value" />
         </VCFormGroup>
 
         <VCFormGroup :validation="useFieldValidation($v.fields.description)">
@@ -170,7 +170,7 @@ export default AScopeForm;
                 {{ translationsDefault.description }}
             </template>
             <VCFormTextarea
-                v-model="$v.fields.description.$model"
+                v-model="$v.fields.description.$model.value"
                 :rows="7"
             />
         </VCFormGroup>
@@ -181,9 +181,9 @@ export default AScopeForm;
                     {{ translationsDefault.realm }}
                 </template>
                 <ARealmPicker
-                    :value="$v.fields.realm_id.$model"
+                    :value="$v.fields.realm_id.$model.value"
                     @change="(input: string[]) => {
-                        $v.fields.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
+                        $v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
                     }"
                 />
             </VCFormGroup>

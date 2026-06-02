@@ -34,12 +34,12 @@ export const AUsers = defineComponent({
         });
 
         const translationName = useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.USERS,
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationName },
         });

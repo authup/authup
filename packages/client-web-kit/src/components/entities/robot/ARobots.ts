@@ -34,12 +34,12 @@ export const ARobots = defineComponent({
         });
 
         const translationName = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationDefaultKey.ROBOTS,
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationName },
         });

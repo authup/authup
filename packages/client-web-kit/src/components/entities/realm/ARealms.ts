@@ -34,12 +34,12 @@ export const ARealms = defineComponent({
         });
 
         const translationsName = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationDefaultKey.REALMS,
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationsName },
         });

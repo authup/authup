@@ -26,7 +26,7 @@ export const ATitle = defineComponent({
     }>,
     setup(props, { slots }) {
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.OVERVIEW,
         });
 

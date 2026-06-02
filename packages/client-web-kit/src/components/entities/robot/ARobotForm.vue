@@ -65,7 +65,7 @@ export const ARobotForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(new RobotValidator(), form, {
+        const $v = useValidup(new RobotValidator(), form as any, {
             group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
         });
 
@@ -174,7 +174,7 @@ export default ARobotForm;
                         {{ translationsDefault.name }}
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.name.$model"
+                        v-model="$v.fields.name.$model.value"
                         :disabled="isNameFixed"
                     />
                 </VCFormGroup>
@@ -183,7 +183,7 @@ export default ARobotForm;
                     <template #label>
                         {{ translationsDefault.displayName }}
                     </template>
-                    <VCFormInput v-model="$v.fields.display_name.$model" />
+                    <VCFormInput v-model="$v.fields.display_name.$model.value" />
                 </VCFormGroup>
 
                 <VCFormGroup :validation="useFieldValidation($v.fields.secret)">
@@ -199,7 +199,7 @@ export default ARobotForm;
                             />
                         </span>
                     </template>
-                    <VCFormInput v-model="$v.fields.secret.$model" />
+                    <VCFormInput v-model="$v.fields.secret.$model.value" />
                 </VCFormGroup>
 
                 <div>

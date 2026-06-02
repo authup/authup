@@ -33,12 +33,12 @@ export const APermissions = defineComponent({
         });
 
         const translationName = useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.PERMISSIONS,
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationName },
         });

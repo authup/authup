@@ -45,14 +45,14 @@ export default AIdentityProviderOAuth2ClientFields;
             <template #label>
                 Client ID
             </template>
-            <VCFormInput v-model="$v.fields.client_id.$model" />
+            <VCFormInput v-model="$v.fields.client_id.$model.value" />
         </VCFormGroup>
         <VCFormGroup :validation="useFieldValidation($v.fields.client_secret)">
             <template #label>
                 Client Secret
             </template>
             <VCFormInput
-                v-model="$v.fields.client_secret.$model"
+                v-model="$v.fields.client_secret.$model.value"
                 type="password"
                 autocomplete="new-password"
             />

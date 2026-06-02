@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LinesRecord } from 'ilingo';
+import type { Translations } from 'ilingo';
 import { TranslatorTranslationDefaultKey } from '../constants';
 
-export const TranslatorTranslationDefaultEnglish : LinesRecord = {
+export const TranslatorTranslationDefaultEnglish : Translations = {
     [TranslatorTranslationDefaultKey.ADD]: 'add',
     [TranslatorTranslationDefaultKey.CREATE]: 'create',
     [TranslatorTranslationDefaultKey.DELETE]: 'delete',

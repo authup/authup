@@ -63,7 +63,7 @@ export const ARealmForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(new RealmValidator(), form, {
+        const $v = useValidup(new RealmValidator(), form as any, {
             group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
         });
 
@@ -138,7 +138,7 @@ export default ARealmForm;
                 {{ translationsDefault.name }}
             </template>
             <VCFormInput
-                v-model="$v.fields.name.$model"
+                v-model="$v.fields.name.$model.value"
                 :disabled="isMaster"
             />
         </VCFormGroup>
@@ -161,7 +161,7 @@ export default ARealmForm;
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name.$model" />
+            <VCFormInput v-model="$v.fields.display_name.$model.value" />
         </VCFormGroup>
 
         <VCFormGroup :validation="useFieldValidation($v.fields.description)">
@@ -169,7 +169,7 @@ export default ARealmForm;
                 {{ translationsDefault.description }}
             </template>
             <VCFormTextarea
-                v-model="$v.fields.description.$model"
+                v-model="$v.fields.description.$model.value"
                 :rows="4"
             />
         </VCFormGroup>

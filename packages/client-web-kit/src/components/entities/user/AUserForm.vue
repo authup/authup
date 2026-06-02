@@ -6,22 +6,16 @@
   -->
 <script lang="ts">
 import type { User } from '@authup/core-kit';
-import { EntityType, buildUserFakeEmail, isUserFakeEmail } from '@authup/core-kit';
+import { EntityType, UserValidator, buildUserFakeEmail, isUserFakeEmail } from '@authup/core-kit';
+import { ValidatorGroup } from '@authup/kit';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
     assignFormProperties,
     useTranslationsForGroup,
 } from '../../../core';
-import useVuelidate from '@vuelidate/core';
-import {
-    email,
-    maxLength,
-    minLength,
-    required,
-} from '@vuelidate/validators';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -31,7 +25,6 @@ import {
     watch,
 } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
@@ -46,7 +39,6 @@ export const AUserForm = defineComponent({
         ARealms,
         AFormSubmit,
         AToggleButton,
-        IVuelidate,
         VCFormGroup,
         VCFormInput,
         VCFormSwitch,
@@ -77,30 +69,6 @@ export const AUserForm = defineComponent({
             realm_id: '',
         });
 
-        const $v = useVuelidate({
-            active: {},
-            name: {
-                [VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT]: VuelidateCustomRule[
-                    VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT
-                ],
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-            name_locked: {},
-            display_name: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            email: {
-                minLength: minLength(5),
-                maxLength: maxLength(255),
-                email,
-                required,
-            },
-            realm_id: { required },
-        }, form);
-
         const manager = defineEntityManager({
             type: `${EntityType.USER}`,
             setup: ctx,
@@ -108,6 +76,11 @@ export const AUserForm = defineComponent({
         });
 
         const isEditing = useIsEditing(manager.data);
+
+        const $v = useValidup(new UserValidator(), form as any, {
+            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
+        });
+
         const updatedAt = useUpdatedAt(props.entity);
 
         const isRealmLocked = computed(() => !!props.realmId);
@@ -140,7 +113,7 @@ export const AUserForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if (busy.value || $v.value.$invalid) {
+            if (busy.value || $v.$invalid.value) {
                 return;
             }
 
@@ -153,10 +126,11 @@ export const AUserForm = defineComponent({
         };
 
         const onNameChange = (input: string) => {
-            $v.value.name.$model = input;
+            $v.fields.name.$model.value = input;
 
-            if (!$v.value.email.$model || isUserFakeEmail($v.value.email.$model)) {
-                $v.value.email.$model = buildUserFakeEmail(input);
+            const currentEmail = $v.fields.email.$model.value as string;
+            if (!currentEmail || isUserFakeEmail(currentEmail)) {
+                $v.fields.email.$model.value = buildUserFakeEmail(input);
             }
         };
 
@@ -177,12 +151,13 @@ export const AUserForm = defineComponent({
         return {
             busy,
             form,
-            vuelidate: $v,
+            $v,
             isEditing,
             showRealmPicker,
             translationsDefault,
             onNameChange,
             submit,
+            useFieldValidation,
         };
     },
 });
@@ -194,55 +169,34 @@ export default AUserForm;
     <form @submit.prevent="submit">
         <div :class="showRealmPicker ? 'grid grid-cols-1 md:grid-cols-2 gap-2' : ''">
             <div>
-                <IVuelidate :validation="vuelidate.name">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                {{ translationsDefault.name }}
-                            </template>
-                            <VCFormInput
-                                :model-value="vuelidate.name.$model"
-                                :disabled="form.name_locked"
-                                @update:model-value="onNameChange"
-                            />
-                        </VCFormGroup>
+                <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+                    <template #label>
+                        {{ translationsDefault.name }}
                     </template>
-                </IVuelidate>
+                    <VCFormInput
+                        :model-value="$v.fields.name.$model.value"
+                        :disabled="form.name_locked"
+                        @update:model-value="onNameChange"
+                    />
+                </VCFormGroup>
 
-                <IVuelidate :validation="vuelidate.display_name">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                {{ translationsDefault.displayName }}
-                            </template>
-                            <VCFormInput v-model="vuelidate.display_name.$model" />
-                        </VCFormGroup>
+                <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+                    <template #label>
+                        {{ translationsDefault.displayName }}
                     </template>
-                </IVuelidate>
+                    <VCFormInput v-model="$v.fields.display_name.$model.value" />
+                </VCFormGroup>
 
-                <IVuelidate :validation="vuelidate.email">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                {{ translationsDefault.email }}
-                            </template>
-                            <VCFormInput
-                                v-model="vuelidate.email.$model"
-                                type="email"
-                                placeholder="...@..."
-                            />
-                        </VCFormGroup>
+                <VCFormGroup :validation="useFieldValidation($v.fields.email)">
+                    <template #label>
+                        {{ translationsDefault.email }}
                     </template>
-                </IVuelidate>
+                    <VCFormInput
+                        v-model="$v.fields.email.$model.value"
+                        type="email"
+                        placeholder="...@..."
+                    />
+                </VCFormGroup>
 
                 <template v-if="$props.canManage">
                     <div class="row">
@@ -285,7 +239,7 @@ export default AUserForm;
                 <AFormSubmit
                     :is-busy="busy"
                     :is-editing="isEditing"
-                    :is-invalid="vuelidate.$invalid"
+                    :is-invalid="$v.$invalid"
                     @submit="submit"
                 />
             </div>

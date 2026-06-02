@@ -72,7 +72,7 @@ export default AIdentityProviderLdapConnectionFields;
                 URL
             </template>
             <VCFormInput
-                v-model="$v.fields.url.$model"
+                v-model="$v.fields.url.$model.value"
                 placeholder="<scheme>://<address>:<port>"
             />
         </VCFormGroup>
@@ -82,7 +82,7 @@ export default AIdentityProviderLdapConnectionFields;
                 Timeout
             </template>
             <VCFormInput
-                :model-value="String($v.fields.timeout.$model)"
+                :model-value="String($v.fields.timeout.$model.value)"
                 type="number"
                 @update:model-value="onTimeoutChange"
             />
@@ -93,7 +93,7 @@ export default AIdentityProviderLdapConnectionFields;
                 StartTLS
             </template>
             <VCFormSwitch
-                v-model="$v.fields.start_tls.$model"
+                v-model="$v.fields.start_tls.$model.value"
                 :label="true"
                 label-content="Enable StartTLS process?"
             />
@@ -104,7 +104,7 @@ export default AIdentityProviderLdapConnectionFields;
                 Base DN
             </template>
             <VCFormInput
-                v-model="$v.fields.base_dn.$model"
+                v-model="$v.fields.base_dn.$model.value"
                 placeholder="e.g. dc=example,dc=com"
             />
         </VCFormGroup>

@@ -82,7 +82,7 @@ export default defineComponent({
             Token
         </template>
         <VCFormInput
-            v-model="$v.fields.token_url.$model"
+            v-model="$v.fields.token_url.$model.value"
             placeholder="https://..."
         />
     </VCFormGroup>
@@ -94,7 +94,7 @@ export default defineComponent({
             Authorize
         </template>
         <VCFormInput
-            v-model="$v.fields.authorize_url.$model"
+            v-model="$v.fields.authorize_url.$model.value"
             placeholder="https://..."
         />
     </VCFormGroup>
@@ -106,7 +106,7 @@ export default defineComponent({
             UserInfo
         </template>
         <VCFormInput
-            v-model="$v.fields.user_info_url.$model"
+            v-model="$v.fields.user_info_url.$model.value"
             placeholder="https://..."
         />
     </VCFormGroup>

@@ -19,7 +19,7 @@ export const ATranslation = defineComponent({
     },
     setup(props, { slots }) {
         const translation = useTranslation({
-            group: props.group,
+            namespace: props.group,
             key: props.name,
         });
 

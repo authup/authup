@@ -67,7 +67,7 @@ export default defineComponent({
         // Shared backend validator from @authup/core-kit. Registers
         // under the parent `<APolicyForm>` collector via `name: 'basic'`
         // so the parent extracts via `extractValidupResultsFromChild('basic')`.
-        const $v = useValidup(new PolicyValidator(), form, {
+        const $v = useValidup(new PolicyValidator(), form as any, {
             name: 'basic',
             group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
         });
@@ -109,7 +109,7 @@ export default defineComponent({
                     Name
                 </template>
                 <VCFormInput
-                    v-model="$v.fields.name.$model"
+                    v-model="$v.fields.name.$model.value"
                     @change="handleUpdated"
                 />
             </VCFormGroup>
@@ -118,7 +118,7 @@ export default defineComponent({
                     Display Name
                 </template>
                 <VCFormInput
-                    v-model="$v.fields.display_name.$model"
+                    v-model="$v.fields.display_name.$model.value"
                     @change="handleUpdated"
                 />
             </VCFormGroup>
@@ -127,14 +127,14 @@ export default defineComponent({
                     Description
                 </template>
                 <VCFormTextarea
-                    v-model="$v.fields.description.$model"
+                    v-model="$v.fields.description.$model.value"
                     rows="4"
                     @change="handleUpdated"
                 />
             </VCFormGroup>
             <VCFormGroup :validation="useFieldValidation($v.fields.invert)">
                 <VCFormSwitch
-                    v-model="$v.fields.invert.$model"
+                    v-model="$v.fields.invert.$model.value"
                     :label="true"
                     @change="handleUpdated"
                 >
@@ -155,8 +155,8 @@ export default defineComponent({
                     Realm
                 </template>
                 <ARealmPicker
-                    :value="$v.fields.realm_id.$model"
-                    @change="(value: string[]) => { $v.fields.realm_id.$model = value.length > 0 ? value[0] ?? '' : ''; }"
+                    :value="$v.fields.realm_id.$model.value"
+                    @change="(value: string[]) => { $v.fields.realm_id.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
                 />
             </VCFormGroup>
         </div>

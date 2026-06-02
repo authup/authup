@@ -40,6 +40,12 @@ export type FormGroupOptionsInput = {
     hint?: boolean;
     hintTag?: string;
     hintContent?: VNodeChild;
+    /**
+     * @deprecated The boolean visibility toggle was removed in
+     * `@vuecs/forms` 5.x — visibility derives from content + slot
+     * presence. Kept on the input type for one cycle to avoid
+     * breaking consumer call sites; the value is ignored.
+     */
     validation?: boolean;
     validationMessages?: ValidationMessages;
     validationSeverity?: ValidationSeverity;
@@ -56,7 +62,6 @@ export function buildFormGroup(input: FormGroupOptionsInput): VNode {
             hint: input.hint,
             hintTag: input.hintTag,
             hintContent: typeof input.hintContent === 'string' ? input.hintContent : undefined,
-            validation: input.validation,
             validationMessages: input.validationMessages,
             validationSeverity: input.validationSeverity,
         },

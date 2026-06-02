@@ -72,7 +72,7 @@ export const ARoleForm = defineComponent({
         // so the validator switches between `CREATE` (strict) and
         // `UPDATE` (every field optional) when the form flips between
         // create and edit modes.
-        const $v = useValidup(new RoleValidator(), form, {
+        const $v = useValidup(new RoleValidator(), form as any, {
             group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
         });
 
@@ -143,14 +143,14 @@ export default ARoleForm;
             <template #label>
                 {{ translationsDefault.name }}
             </template>
-            <VCFormInput v-model="$v.fields.name.$model" />
+            <VCFormInput v-model="$v.fields.name.$model.value" />
         </VCFormGroup>
 
         <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name.$model" />
+            <VCFormInput v-model="$v.fields.display_name.$model.value" />
         </VCFormGroup>
 
         <VCFormGroup :validation="useFieldValidation($v.fields.description)">
@@ -158,7 +158,7 @@ export default ARoleForm;
                 {{ translationsDefault.description }}
             </template>
             <VCFormTextarea
-                v-model="$v.fields.description.$model"
+                v-model="$v.fields.description.$model.value"
                 :rows="6"
             />
         </VCFormGroup>
@@ -169,9 +169,9 @@ export default ARoleForm;
                     {{ translationsDefault.realm }}
                 </template>
                 <ARealmPicker
-                    :value="$v.fields.realm_id.$model"
+                    :value="$v.fields.realm_id.$model.value"
                     @change="(input: string[]) => {
-                        $v.fields.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
+                        $v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
                     }"
                 />
             </VCFormGroup>

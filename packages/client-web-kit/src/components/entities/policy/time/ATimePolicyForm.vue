@@ -108,7 +108,7 @@ export default defineComponent({
                         Start
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.start.$model"
+                        v-model="$v.fields.start.$model.value"
                         placeholder="HH:MM"
                         @change="handleUpdated"
                     />
@@ -120,7 +120,7 @@ export default defineComponent({
                         End
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.end.$model"
+                        v-model="$v.fields.end.$model.value"
                         placeholder="HH:MM"
                         @change="handleUpdated"
                     />
@@ -134,7 +134,7 @@ export default defineComponent({
                         Interval
                     </template>
                     <VCFormSelect
-                        v-model="$v.fields.interval.$model"
+                        v-model="$v.fields.interval.$model.value"
                         :options="intervalOptions"
                         :option-default="true"
                         @change="handleIntervalUpdated"
@@ -150,7 +150,7 @@ export default defineComponent({
                         Day of Week
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.day_of_week.$model"
+                        v-model="$v.fields.day_of_week.$model.value"
                         placeholder="0-6"
                         type="number"
                         @change="handleUpdated"
@@ -166,7 +166,7 @@ export default defineComponent({
                         Day of Month
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.day_of_month.$model"
+                        v-model="$v.fields.day_of_month.$model.value"
                         placeholder="1-31"
                         type="number"
                         @change="handleUpdated"
@@ -182,7 +182,7 @@ export default defineComponent({
                         Day of Year
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.day_of_year.$model"
+                        v-model="$v.fields.day_of_year.$model.value"
                         type="number"
                         placeholder="1-365"
                         @change="handleUpdated"

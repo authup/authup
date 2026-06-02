@@ -34,12 +34,12 @@ export const AClientScopes = defineComponent({
         });
 
         const translationClientScopes = useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.CLIENT_SCOPES,
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationGroup.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationClientScopes },
         });

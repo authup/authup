@@ -58,7 +58,7 @@ export default defineComponent({
                 Start
             </template>
             <VCFormInput
-                v-model="$v.fields.start.$model"
+                v-model="$v.fields.start.$model.value"
                 placeholder="YYYY-MM-DD"
                 @change="handleUpdated"
             />
@@ -69,7 +69,7 @@ export default defineComponent({
                 End
             </template>
             <VCFormInput
-                v-model="$v.fields.end.$model"
+                v-model="$v.fields.end.$model.value"
                 placeholder="YYYY-MM-DD"
                 @change="handleUpdated"
             />

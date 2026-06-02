@@ -49,14 +49,14 @@ export default AIdentityProviderLdapCredentialsFields;
             <template #label>
                 User
             </template>
-            <VCFormInput v-model="$v.fields.user.$model" />
+            <VCFormInput v-model="$v.fields.user.$model.value" />
         </VCFormGroup>
         <VCFormGroup :validation="useFieldValidation($v.fields.password)">
             <template #label>
                 Password
             </template>
             <VCFormInput
-                v-model="$v.fields.password.$model"
+                v-model="$v.fields.password.$model.value"
                 type="password"
                 autocomplete="current-password"
             />

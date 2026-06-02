@@ -87,7 +87,7 @@ export const APermissionForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(new PermissionValidator(), form, {
+        const $v = useValidup(new PermissionValidator(), form as any, {
             group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
         });
 
@@ -180,7 +180,7 @@ export default APermissionForm;
                 {{ translationsDefault.name }}
             </template>
             <VCFormInput
-                v-model="$v.fields.name.$model"
+                v-model="$v.fields.name.$model.value"
                 :disabled="isBuiltIn"
             />
         </VCFormGroup>
@@ -189,7 +189,7 @@ export default APermissionForm;
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name.$model" />
+            <VCFormInput v-model="$v.fields.display_name.$model.value" />
         </VCFormGroup>
 
         <VCFormGroup :validation="useFieldValidation($v.fields.description)">
@@ -197,7 +197,7 @@ export default APermissionForm;
                 {{ translationsDefault.description }}
             </template>
             <VCFormTextarea
-                v-model="$v.fields.description.$model"
+                v-model="$v.fields.description.$model.value"
                 :rows="4"
             />
         </VCFormGroup>
@@ -207,7 +207,7 @@ export default APermissionForm;
                 {{ translationsDefault.decisionStrategy }}
             </template>
             <VCFormSelect
-                v-model="$v.fields.decision_strategy.$model"
+                v-model="$v.fields.decision_strategy.$model.value"
                 :options="decisionStrategyOptions"
                 :option-default="true"
                 option-default-value="-- None (default: unanimous) --"
@@ -223,10 +223,10 @@ export default APermissionForm;
                     {{ translationsDefault.realm }}
                 </template>
                 <ARealmPicker
-                    :value="$v.fields.realm_id.$model"
+                    :value="$v.fields.realm_id.$model.value"
                     :multiple="false"
                     @change="(input: string[]) => {
-                        $v.fields.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
+                        $v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
                     }"
                 />
             </VCFormGroup>

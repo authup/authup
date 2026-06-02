@@ -2,7 +2,6 @@
 import { base64URLEncode } from '@authup/kit';
 import type { PropType, Ref } from 'vue';
 import {
-
     computed,
     defineComponent,
     nextTick,
@@ -11,9 +10,11 @@ import {
 } from 'vue';
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
-import { IVuelidate } from '@ilingo/vuelidate';
-import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
+import { createValidator } from '@validup/adapter-zod';
+import { Container } from 'validup';
+import { z } from 'zod';
 import type { BuildInput } from 'rapiq';
 import { VCButton } from '@vuecs/button';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
@@ -21,20 +22,34 @@ import { injectHTTPClient, injectStore } from '../../core';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../entities';
 import { APagination, ATitle } from '../utility';
 
+// Inline validator — the login form isn't an entity edit, so it has
+// its own credentials validator rather than reusing `UserValidator`
+// (whose `name` mount enforces backend rules like `isUserNameValid`
+// that are stricter than the login UX wants — login lets the user
+// type whatever credentials the server will check).
+class LoginCredentialsValidator extends Container<{
+    name: string;
+    password: string;
+    realm_id: string;
+}> {
+    protected override initialize() {
+        super.initialize();
+        this.mount('name', createValidator(z.string().min(3).max(255)));
+        this.mount('password', createValidator(z.string().min(3).max(255)));
+        this.mount('realm_id', { optional: true }, createValidator(z.string()));
+    }
+}
+
 export default defineComponent({
-
     components: {
-
         ARealmPicker,
         APagination,
         ATitle,
-        IVuelidate,
         AIdentityProviders,
         AIdentityProviderIcon,
         VCButton,
         VCFormGroup,
         VCFormInput,
-
     },
     props: { codeRequest: { type: Object as PropType<OAuth2AuthorizationCodeRequest> } },
     emits: ['done', 'failed'],
@@ -46,25 +61,9 @@ export default defineComponent({
             name: '',
             password: '',
             realm_id: '',
-
         });
 
-        const vuelidate = useVuelidate({
-            name: {
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(255),
-
-            },
-            password: {
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(255),
-
-            },
-            realm_id: {},
-
-        }, form);
+        const $v = useValidup(new LoginCredentialsValidator(), form);
 
         const busy = ref(false);
 
@@ -76,23 +75,21 @@ export default defineComponent({
             return form.realm_id;
         });
 
-        const identityProviderQuery : Ref<BuildInput<IdentityProvider>> = ref({});
+        const identityProviderQuery: Ref<BuildInput<IdentityProvider>> = ref({});
         const resetIdentityProviderQuery = () => {
             identityProviderQuery.value = {
                 filters: {
                     realm_id: realmId.value || '',
                     protocol: `!${IdentityProviderProtocol.LDAP}`,
                     enabled: true,
-
                 },
             };
         };
 
         resetIdentityProviderQuery();
 
-         
         const identityProviderRef = ref<null | {
-            load:() => Promise<void>,
+            load: () => Promise<void>,
             [key: string]: unknown
         }>(null);
         const updateIdentityProviderList = () => {
@@ -117,7 +114,6 @@ export default defineComponent({
                     name: form.name,
                     password: form.password,
                     realmId: form.realm_id,
-
                 });
 
                 emit('done');
@@ -127,10 +123,7 @@ export default defineComponent({
         };
 
         const buildIdentityProviderURL = (id: string) => {
-            let authorizeURL = apiClient.identityProvider.getAuthorizeUri(
-                id,
-
-            );
+            let authorizeURL = apiClient.identityProvider.getAuthorizeUri(id);
 
             if (props.codeRequest) {
                 const serialized = base64URLEncode(JSON.stringify(props.codeRequest));
@@ -150,23 +143,20 @@ export default defineComponent({
         // type="submit", which the composable already sets.
         const submitButton = useSubmitButton({
             loading: busy,
-            disabled: computed(() => busy.value || vuelidate.value.$invalid),
+            disabled: computed(() => busy.value || $v.$invalid.value),
         });
 
         return {
-
             updateRealmId,
-
-            vuelidate,
+            $v,
             form,
             submit,
             busy,
             submitButton,
-
             identityProviderQuery,
             identityProviderRef,
             buildIdentityProviderURL,
-
+            useFieldValidation,
         };
     },
 });
@@ -179,42 +169,22 @@ export default defineComponent({
             </h1>
         </div>
         <form @submit.prevent="submit">
-            <IVuelidate :validation="vuelidate.name">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            Name
-                        </template>
-                        <template #default>
-                            <VCFormInput
-                                v-model="vuelidate.name.$model"
-                            />
-                        </template>
-                    </VCFormGroup>
+            <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+                <template #label>
+                    Name
                 </template>
-            </IVuelidate>
+                <VCFormInput v-model="$v.fields.name.$model.value" />
+            </VCFormGroup>
 
-            <IVuelidate :validation="vuelidate.password">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            Password
-                        </template>
-                        <template #default>
-                            <VCFormInput
-                                v-model="vuelidate.password.$model"
-                                type="password"
-                            />
-                        </template>
-                    </VCFormGroup>
+            <VCFormGroup :validation="useFieldValidation($v.fields.password)">
+                <template #label>
+                    Password
                 </template>
-            </IVuelidate>
+                <VCFormInput
+                    v-model="$v.fields.password.$model.value"
+                    type="password"
+                />
+            </VCFormGroup>
 
             <!--
                 <VCFormSubmit> from form-controls 2.x was dropped in

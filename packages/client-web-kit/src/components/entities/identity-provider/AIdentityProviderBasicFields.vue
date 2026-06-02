@@ -45,7 +45,7 @@ export const AIdentityProviderBasicFields = defineComponent({
         // Shared `IdentityProviderValidator` from `@authup/core-kit`.
         // Registers under the parent `<AIdentityProviderOAuth2Form>` /
         // `<AIdentityProviderLdapForm>` collectors via `name: 'basic'`.
-        const $v = useValidup(new IdentityProviderValidator(), form, {
+        const $v = useValidup(new IdentityProviderValidator(), form as any, {
             name: 'basic',
             group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
         });
@@ -116,7 +116,7 @@ export default AIdentityProviderBasicFields;
             <template #label>
                 {{ translationsDefault.name }}
             </template>
-            <VCFormInput v-model="$v.fields.name.$model" />
+            <VCFormInput v-model="$v.fields.name.$model.value" />
         </VCFormGroup>
 
         <div class="mb-3">
@@ -133,12 +133,12 @@ export default AIdentityProviderBasicFields;
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name.$model" />
+            <VCFormInput v-model="$v.fields.display_name.$model.value" />
         </VCFormGroup>
 
         <div class="mt-3">
             <VCFormSwitch
-                :model-value="$v.fields.enabled.$model"
+                :model-value="$v.fields.enabled.$model.value"
                 :label="true"
                 label-content="Enabled?"
                 @update:model-value="onEnabledChange"

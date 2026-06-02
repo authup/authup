@@ -98,7 +98,7 @@ export default AIdentityProviderOAuth2Discovery;
                 Discovery
             </template>
             <VCFormInput
-                v-model="$v.fields.url.$model"
+                v-model="$v.fields.url.$model.value"
                 :class="{ 'is-valid': lookupValid }"
                 placeholder="https://example.com/.well-known/openid-configuration"
             />

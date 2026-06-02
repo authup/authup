@@ -13,11 +13,10 @@ import {
     reactive,
     watch,
 } from 'vue';
-import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength, required } from '@vuelidate/validators';
-import { type Client, EntityType } from '@authup/core-kit';
-import { createNanoID, isBCryptHash } from '@authup/kit';
-import { IVuelidate } from '@ilingo/vuelidate';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
+import { type Client, ClientValidator, EntityType } from '@authup/core-kit';
+import { ValidatorGroup, createNanoID, isBCryptHash } from '@authup/kit';
 import { ARealmPicker } from '../realm';
 import {
     AFormInputList,
@@ -29,8 +28,6 @@ import {
     TranslatorTranslationClientKey,
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
-    VuelidateCustomRule,
-    VuelidateCustomRuleKey,
     assignFormProperties,
     injectStore,
     storeToRefs,
@@ -43,7 +40,6 @@ export default defineComponent({
         AFormSubmit,
         ARealmPicker,
         AFormInputList,
-        IVuelidate,
     },
     props: {
         name: {
@@ -75,40 +71,6 @@ export default defineComponent({
             secret_hashed: false,
         });
 
-        const vuelidate = useVuelidate({
-            active: { required },
-            name: {
-                required,
-                [
-                VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT
-                ]: VuelidateCustomRule[VuelidateCustomRuleKey.ALPHA_UPPER_NUM_HYPHEN_UNDERSCORE_DOT],
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            display_name: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            description: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            realm_id: { required },
-            redirect_uri: {
-                // todo: url is required!
-                maxLength: maxLength(2000),
-            },
-            is_confidential: {},
-            secret: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            secret_hashed: {},
-        }, form);
-
-        const store = injectStore();
-        const storeRefs = storeToRefs(store);
-
         const manager = defineEntityManager({
             type: `${EntityType.CLIENT}`,
             setup: ctx,
@@ -116,6 +78,17 @@ export default defineComponent({
         });
 
         const isEditing = useIsEditing(manager.data);
+
+        // Shared `ClientValidator` from `@authup/core-kit`. Reactive
+        // `group` flips between CREATE / UPDATE so the validator's
+        // per-mount optional-ness matches the form's mode.
+        const $v = useValidup(new ClientValidator(), form as any, {
+            group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
+        });
+
+        const store = injectStore();
+        const storeRefs = storeToRefs(store);
+
         const updatedAt = useUpdatedAt(props.entity);
 
         const isNameFixed = computed(() => !!props.name && props.name.length > 0);
@@ -164,7 +137,6 @@ export default defineComponent({
             (val, oldVal) => {
                 if (val && val !== oldVal) {
                     manager.data.value = props.entity;
-
                     initForm();
                 }
             },
@@ -173,7 +145,7 @@ export default defineComponent({
         initForm();
 
         const submit = async () => {
-            if (vuelidate.value.$invalid) {
+            if ($v.$invalid.value) {
                 return;
             }
 
@@ -207,26 +179,24 @@ export default defineComponent({
             ],
         );
 
-        const redirectUris = computed(() => (vuelidate.value.redirect_uri.$model ?
-            vuelidate.value.redirect_uri.$model.split(',') :
-            []));
+        const redirectUris = computed(() => {
+            const value = $v.fields.redirect_uri.$model.value as string | undefined;
+            return value ? value.split(',') : [];
+        });
 
         return {
             translationsDefault,
             translationsClient,
-
-            vuelidate,
+            $v,
             data: manager.data,
             isNameFixed,
             isBusy: manager.busy.value,
             isEditing,
-
             isSecretHashed,
             generateSecret,
-
             redirectUris,
-
             submit,
+            useFieldValidation,
         };
     },
 });
@@ -246,146 +216,95 @@ export default defineComponent({
                 </VCFormGroup>
             </template>
 
-            <IVuelidate :validation="vuelidate.name">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            {{ translationsDefault.name }}
-                        </template>
-                        <VCFormInput
-                            v-model="vuelidate.name.$model"
-                            :disabled="isNameFixed"
-                        />
-                        <template #hint>
-                            {{ translationsClient.nameHint }}
-                        </template>
-                    </VCFormGroup>
+            <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+                <template #label>
+                    {{ translationsDefault.name }}
                 </template>
-            </IVuelidate>
-            <IVuelidate :validation="vuelidate.display_name">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            {{ translationsDefault.displayName }}
-                        </template>
-                        <VCFormInput
-                            v-model="vuelidate.display_name.$model"
-                            :disabled="isNameFixed"
-                        />
-                    </VCFormGroup>
+                <VCFormInput
+                    v-model="$v.fields.name.$model.value"
+                    :disabled="isNameFixed"
+                />
+                <template #hint>
+                    {{ translationsClient.nameHint }}
                 </template>
-            </IVuelidate>
-            <IVuelidate :validation="vuelidate.secret">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            {{ translationsDefault.secret }}
-
-                            <template v-if="isSecretHashed">
-                                <span class="text-error-600 font-bold">
-                                    <VCIcon name="fa6-solid:triangle-exclamation" />
-                                </span>
-                            </template>
-                        </template>
-                        <VCFormInput
-                            v-model="vuelidate.secret.$model"
-                            :disabled="!vuelidate.is_confidential.$model"
+            </VCFormGroup>
+            <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+                <template #label>
+                    {{ translationsDefault.displayName }}
+                </template>
+                <VCFormInput
+                    v-model="$v.fields.display_name.$model.value"
+                    :disabled="isNameFixed"
+                />
+            </VCFormGroup>
+            <VCFormGroup :validation="useFieldValidation($v.fields.secret)">
+                <template #label>
+                    {{ translationsDefault.secret }}
+                    <template v-if="isSecretHashed">
+                        <span class="text-error-600 font-bold">
+                            <VCIcon name="fa6-solid:triangle-exclamation" />
+                        </span>
+                    </template>
+                </template>
+                <VCFormInput
+                    v-model="$v.fields.secret.$model.value"
+                    :disabled="!$v.fields.is_confidential.$model.value"
+                >
+                    <template #groupAppend>
+                        <button
+                            class="btn"
+                            type="button"
+                            @click.prevent="() => $v.fields.secret.$model.value = generateSecret()"
                         >
-                            <template #groupAppend>
-                                <button
-                                    class="btn"
-                                    type="button"
-                                    @click.prevent="() => vuelidate.secret.$model = generateSecret()"
-                                >
-                                    <VCIcon name="fa6-solid:arrows-rotate" />
-                                </button>
-                            </template>
-                        </VCFormInput>
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
+                            <VCIcon name="fa6-solid:arrows-rotate" />
+                        </button>
+                    </template>
+                </VCFormInput>
+            </VCFormGroup>
             <div class="row">
                 <div class="col">
-                    <IVuelidate :validation="vuelidate.is_confidential">
-                        <template #default="props">
-                            <VCFormGroup
-                                :validation-messages="props.data"
-                                :validation-severity="props.severity"
-                            >
-                                <VCFormSwitch
-                                    v-model="vuelidate.is_confidential.$model"
-                                    :label="true"
-                                    :label-content="translationsClient.isConfidential.value"
-                                />
-                            </VCFormGroup>
-                        </template>
-                    </IVuelidate>
+                    <VCFormGroup :validation="useFieldValidation($v.fields.is_confidential)">
+                        <VCFormSwitch
+                            v-model="$v.fields.is_confidential.$model.value"
+                            :label="true"
+                            :label-content="translationsClient.isConfidential.value"
+                        />
+                    </VCFormGroup>
                 </div>
                 <div class="col">
-                    <IVuelidate :validation="vuelidate.secret_hashed">
-                        <template #default="props">
-                            <VCFormGroup
-                                :validation-messages="props.data"
-                                :validation-severity="props.severity"
-                            >
-                                <VCFormSwitch
-                                    v-model="vuelidate.secret_hashed.$model"
-                                    :label="true"
-                                    :label-content="translationsClient.hashSecret.value"
-                                />
-                            </VCFormGroup>
-                        </template>
-                    </IVuelidate>
+                    <VCFormGroup :validation="useFieldValidation($v.fields.secret_hashed)">
+                        <VCFormSwitch
+                            v-model="$v.fields.secret_hashed.$model.value"
+                            :label="true"
+                            :label-content="translationsClient.hashSecret.value"
+                        />
+                    </VCFormGroup>
                 </div>
                 <div class="col">
-                    <IVuelidate :validation="vuelidate.active">
-                        <template #default="props">
-                            <VCFormGroup
-                                :validation-messages="props.data"
-                                :validation-severity="props.severity"
-                            >
-                                <VCFormSwitch
-                                    v-model="vuelidate.active.$model"
-                                    :label="true"
-                                    :label-content="translationsClient.isActive.value"
-                                />
-                            </VCFormGroup>
-                        </template>
-                    </IVuelidate>
+                    <VCFormGroup :validation="useFieldValidation($v.fields.active)">
+                        <VCFormSwitch
+                            v-model="$v.fields.active.$model.value"
+                            :label="true"
+                            :label-content="translationsClient.isActive.value"
+                        />
+                    </VCFormGroup>
                 </div>
             </div>
 
             <template v-if="!realmId && !isEditing">
-                <IVuelidate :validation="vuelidate.realm_id">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                {{ translationsDefault.realm }}
-                            </template>
-                            <template #default>
-                                <ARealmPicker
-                                    :value="vuelidate.realm_id.$model"
-                                    @change="(input: string[]) => {
-
-                                        vuelidate.realm_id.$model = input.length > 0 ? input[0] ?? '' : '';
-                                    }"
-                                />
-                            </template>
-                        </VCFormGroup>
+                <VCFormGroup :validation="useFieldValidation($v.fields.realm_id)">
+                    <template #label>
+                        {{ translationsDefault.realm }}
                     </template>
-                </IVuelidate>
+                    <template #default>
+                        <ARealmPicker
+                            :value="$v.fields.realm_id.$model.value"
+                            @change="(input: string[]) => {
+                                $v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                            }"
+                        />
+                    </template>
+                </VCFormGroup>
             </template>
         </div>
         <div class="col">
@@ -393,10 +312,10 @@ export default defineComponent({
                 :names="redirectUris"
                 @changed="(value) => {
                     if (value.length === 0) {
-                        vuelidate.redirect_uri.$model = '';
+                        $v.fields.redirect_uri.$model.value = '';
                         return;
                     }
-                    vuelidate.redirect_uri.$model = value.join(',');
+                    $v.fields.redirect_uri.$model.value = value.join(',');
                 }"
             >
                 <template #label>
@@ -406,30 +325,23 @@ export default defineComponent({
                     {{ translationsClient.redirectURIHint }}
                 </template>
             </AFormInputList>
-            <IVuelidate :validation="vuelidate.description">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            {{ translationsDefault.description }}
-                        </template>
-                        <VCFormTextarea
-                            v-model="vuelidate.description.$model"
-                            rows="7"
-                        />
-                        <template #hint>
-                            {{ translationsClient.descriptionHint }}
-                        </template>
-                    </VCFormGroup>
+            <VCFormGroup :validation="useFieldValidation($v.fields.description)">
+                <template #label>
+                    {{ translationsDefault.description }}
                 </template>
-            </IVuelidate>
+                <VCFormTextarea
+                    v-model="$v.fields.description.$model.value"
+                    rows="7"
+                />
+                <template #hint>
+                    {{ translationsClient.descriptionHint }}
+                </template>
+            </VCFormGroup>
             <div>
                 <AFormSubmit
                     :is-busy="isBusy"
                     :is-editing="isEditing"
-                    :is-invalid="vuelidate.$invalid"
+                    :is-invalid="$v.$invalid"
                     @submit="submit"
                 />
             </div>

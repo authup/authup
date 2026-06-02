@@ -94,7 +94,7 @@ const AEntityDelete = defineComponent({
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.DELETE,
         });
 

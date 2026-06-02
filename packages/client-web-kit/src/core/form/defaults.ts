@@ -27,11 +27,11 @@ import {
 export function buildSubmitButtonDefaults(): ComponentDefaultValues<SubmitButtonDefaults> {
     return {
         createText: useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.CREATE,
         }),
         updateText: useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationGroup.DEFAULT,
             key: TranslatorTranslationDefaultKey.UPDATE,
         }),
         createIcon: 'fa6-solid:plus',

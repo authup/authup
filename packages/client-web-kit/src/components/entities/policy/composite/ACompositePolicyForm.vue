@@ -147,7 +147,7 @@ export default defineComponent({
                 Decision Strategy
             </template>
             <VCFormSelect
-                v-model="$v.fields.decision_strategy.$model"
+                v-model="$v.fields.decision_strategy.$model.value"
                 :options="decisionStrategyOptions"
                 :option-default="true"
                 :option-default-value="'-- None (default: unanimous) --'"
@@ -164,7 +164,7 @@ export default defineComponent({
             <APolicyChildrenPicker
                 :parent-id="id"
                 :query="query"
-                :value="$v.fields.items.$model"
+                :value="$v.fields.items.$model.value"
                 @change="handleUpdated"
             />
         </VCFormGroup>

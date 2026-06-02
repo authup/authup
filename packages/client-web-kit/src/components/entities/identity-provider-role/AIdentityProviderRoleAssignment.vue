@@ -1,5 +1,5 @@
 <!--
-  Copyright (c) 2022.
+  Copyright (c) 2022-2026.
   Author Peter Placzek (tada5hi)
   For the full copyright and license information,
   view the LICENSE file that was distributed with this source code.
@@ -7,8 +7,11 @@
 
 <script lang="ts">
 import { EntityType } from '@authup/core-kit';
-import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength } from '@vuelidate/validators';
+import { createValidator } from '@validup/adapter-zod';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
+import { useFieldValidation } from '@ilingo/validup-vue';
+import { z } from 'zod';
 import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
@@ -17,21 +20,32 @@ import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationGroup,
     assignFormProperties,
-    getVuelidateSeverity,
     useTranslationsForGroup,
-    useTranslationsForNestedValidation,
 } from '../../../core';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
 
+// Inline validator — no `IdentityProviderRoleMappingValidator` for the
+// attribute fields ships in core-kit; the entity validator covers the
+// foreign-key columns (`role_id`, `provider_id`) which this form
+// doesn't expose to the user.
+class RoleMappingAttributesValidator extends Container<{
+    name: string;
+    value: string;
+    value_is_regex: boolean;
+}> {
+    protected override initialize() {
+        super.initialize();
+        this.mount('name', { optional: true }, createValidator(z.string().min(3).max(32)));
+        this.mount('value', { optional: true }, createValidator(z.string().min(3).max(128)));
+        this.mount('value_is_regex', { optional: true }, createValidator(z.boolean()));
+    }
+}
+
 export default defineComponent({
-    components: {
-        VCFormGroup,
-        VCFormInput,
-        VCFormSwitch,
-    },
+    components: { VCFormGroup, VCFormInput, VCFormSwitch },
     props: {
         role: {
             type: Object as PropType<Role>,
@@ -55,19 +69,8 @@ export default defineComponent({
             value_is_regex: false,
         });
 
-        const $v = useVuelidate({
-            name: {
-                minLength: minLength(3),
-                maxLength: maxLength(32),
-            },
-            value: {
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-            value_is_regex: {},
-        }, form);
+        const $v = useValidup(new RoleMappingAttributesValidator(), form);
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
         const translationsDefault = useTranslationsForGroup(
             TranslatorTranslationGroup.DEFAULT,
             [
@@ -123,12 +126,11 @@ export default defineComponent({
             display,
             toggleDisplay,
             $v,
-            validationMessages,
             translationsDefault,
             manager,
             handleSaveOrCreate,
             handleDelete,
-            getVuelidateSeverity,
+            useFieldValidation,
         };
     },
 });
@@ -178,38 +180,31 @@ export default defineComponent({
         >
             <VCFormGroup
                 :label="true"
-                :validation-messages="validationMessages.name.value"
-                :validation-severity="getVuelidateSeverity($v.name)"
+                :validation="useFieldValidation($v.fields.name)"
             >
                 <template #label>
                     Name
                 </template>
-                <VCFormInput
-                    v-model="$v.name.$model"
-                />
+                <VCFormInput v-model="$v.fields.name.$model.value" />
             </VCFormGroup>
             <VCFormGroup
                 :label="true"
-                :validation-messages="validationMessages.value.value"
-                :validation-severity="getVuelidateSeverity($v.value)"
+                :validation="useFieldValidation($v.fields.value)"
             >
                 <template #label>
                     Value
                 </template>
-                <VCFormInput
-                    v-model="$v.value.$model"
-                />
+                <VCFormInput v-model="$v.fields.value.$model.value" />
             </VCFormGroup>
             <VCFormGroup
                 :label="true"
-                :validation-messages="validationMessages.value_is_regex.value"
-                :validation-severity="getVuelidateSeverity($v.value_is_regex)"
+                :validation="useFieldValidation($v.fields.value_is_regex)"
             >
                 <template #label>
                     Regex
                 </template>
                 <VCFormSwitch
-                    v-model="$v.value_is_regex.$model"
+                    v-model="$v.fields.value_is_regex.$model.value"
                     :label-content="translationsDefault.valueIsRegex.value"
                 />
             </VCFormGroup>
