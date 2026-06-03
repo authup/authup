@@ -172,19 +172,19 @@ export default defineComponent({
             </h1>
         </div>
         <form @submit.prevent="submit">
-            <VCFormGroup :validation="useFieldValidation($v.fields.name!)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.name)">
                 <template #label>
                     Name
                 </template>
-                <VCFormInput v-model="$v.fields.name!.$model.value" />
+                <VCFormInput v-model="$v.fields.name.$model.value" />
             </VCFormGroup>
 
-            <VCFormGroup :validation="useFieldValidation($v.fields.password!)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.password)">
                 <template #label>
                     Password
                 </template>
                 <VCFormInput
-                    v-model="$v.fields.password!.$model.value"
+                    v-model="$v.fields.password.$model.value"
                     type="password"
                 />
             </VCFormGroup>

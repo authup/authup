@@ -137,23 +137,23 @@ export default AUserPasswordForm;
         class="flex flex-col gap-3"
         @submit.prevent="submit"
     >
-        <VCFormGroup :validation="useFieldValidation($v.fields.password!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.password)">
             <template #label>
                 Password
             </template>
             <VCFormInput
-                v-model="$v.fields.password!.$model.value"
+                v-model="$v.fields.password.$model.value"
                 :type="passwordShow ? 'text' : 'password'"
                 autocomplete="new-password"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.password_repeat!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.password_repeat)">
             <template #label>
                 Password repeat
             </template>
             <VCFormInput
-                v-model="$v.fields.password_repeat!.$model.value"
+                v-model="$v.fields.password_repeat.$model.value"
                 :type="passwordShow ? 'text' : 'password'"
                 autocomplete="new-password"
             />

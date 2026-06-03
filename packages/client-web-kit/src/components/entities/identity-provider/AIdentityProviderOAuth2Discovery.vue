@@ -49,7 +49,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
         const apiClient = new Client();
 
         const lookup = async () => {
-            if (busy.value || $v.fields.url!.$invalid.value) {
+            if (busy.value || $v.fields.url.$invalid.value) {
                 return;
             }
 
@@ -93,12 +93,12 @@ export default AIdentityProviderOAuth2Discovery;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.url!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.url)">
             <template #label>
                 Discovery
             </template>
             <VCFormInput
-                v-model="$v.fields.url!.$model.value"
+                v-model="$v.fields.url.$model.value"
                 :class="{ 'is-valid': lookupValid }"
                 placeholder="https://example.com/.well-known/openid-configuration"
             />

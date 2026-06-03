@@ -59,15 +59,15 @@ export default defineComponent({
         assign(props.entity);
 
         const displayIntervalForDayOfWeek = computed(
-            () => isIntervalForDayOfWeek($v.fields.interval!.$model.value),
+            () => isIntervalForDayOfWeek($v.fields.interval.$model.value),
         );
 
         const displayIntervalForDayOfMonth = computed(
-            () => isIntervalForDayOfMonth($v.fields.interval!.$model.value),
+            () => isIntervalForDayOfMonth($v.fields.interval.$model.value),
         );
 
         const displayIntervalForDayOfYear = computed(
-            () => isIntervalForDayOfYear($v.fields.interval!.$model.value),
+            () => isIntervalForDayOfYear($v.fields.interval.$model.value),
         );
 
         const handleUpdated = () => {
@@ -79,13 +79,13 @@ export default defineComponent({
 
         const handleIntervalUpdated = (value: string) => {
             if (!isIntervalForDayOfWeek(value)) {
-                $v.fields.day_of_week!.$model.value = '';
+                $v.fields.day_of_week.$model.value = '';
             }
             if (!isIntervalForDayOfMonth(value)) {
-                $v.fields.day_of_month!.$model.value = '';
+                $v.fields.day_of_month.$model.value = '';
             }
             if (!isIntervalForDayOfYear(value)) {
-                $v.fields.day_of_year!.$model.value = '';
+                $v.fields.day_of_year.$model.value = '';
             }
             handleUpdated();
         };
@@ -107,24 +107,24 @@ export default defineComponent({
     <div>
         <div class="row">
             <div class="col">
-                <VCFormGroup :validation="useFieldValidation($v.fields.start!)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.start)">
                     <template #label>
                         Start
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.start!.$model.value"
+                        v-model="$v.fields.start.$model.value"
                         placeholder="HH:MM"
                         @change="handleUpdated"
                     />
                 </VCFormGroup>
             </div>
             <div class="col">
-                <VCFormGroup :validation="useFieldValidation($v.fields.end!)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.end)">
                     <template #label>
                         End
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.end!.$model.value"
+                        v-model="$v.fields.end.$model.value"
                         placeholder="HH:MM"
                         @change="handleUpdated"
                     />
@@ -133,12 +133,12 @@ export default defineComponent({
         </div>
         <div class="row">
             <div class="col">
-                <VCFormGroup :validation="useFieldValidation($v.fields.interval!)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.interval)">
                     <template #label>
                         Interval
                     </template>
                     <VCFormSelect
-                        v-model="$v.fields.interval!.$model.value"
+                        v-model="$v.fields.interval.$model.value"
                         :options="intervalOptions"
                         :option-default="true"
                         @change="handleIntervalUpdated"
@@ -149,12 +149,12 @@ export default defineComponent({
                 v-if="displayIntervalForDayOfWeek"
                 class="col"
             >
-                <VCFormGroup :validation="useFieldValidation($v.fields.day_of_week!)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.day_of_week)">
                     <template #label>
                         Day of Week
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.day_of_week!.$model.value"
+                        v-model="$v.fields.day_of_week.$model.value"
                         placeholder="0-6"
                         type="number"
                         @change="handleUpdated"
@@ -165,12 +165,12 @@ export default defineComponent({
                 v-if="displayIntervalForDayOfMonth"
                 class="col"
             >
-                <VCFormGroup :validation="useFieldValidation($v.fields.day_of_month!)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.day_of_month)">
                     <template #label>
                         Day of Month
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.day_of_month!.$model.value"
+                        v-model="$v.fields.day_of_month.$model.value"
                         placeholder="1-31"
                         type="number"
                         @change="handleUpdated"
@@ -181,12 +181,12 @@ export default defineComponent({
                 v-if="displayIntervalForDayOfYear"
                 class="col"
             >
-                <VCFormGroup :validation="useFieldValidation($v.fields.day_of_year!)">
+                <VCFormGroup :validation="useFieldValidation($v.fields.day_of_year)">
                     <template #label>
                         Day of Year
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.day_of_year!.$model.value"
+                        v-model="$v.fields.day_of_year.$model.value"
                         type="number"
                         placeholder="1-365"
                         @change="handleUpdated"

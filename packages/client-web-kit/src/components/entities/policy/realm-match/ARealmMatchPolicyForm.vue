@@ -69,17 +69,17 @@ export default defineComponent({
 <template>
     <div class="row">
         <div class="col-7">
-            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_name!)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_name)">
                 <AFormInputList
-                    :names="$v.fields.attribute_name!.$model.value"
+                    :names="$v.fields.attribute_name.$model.value"
                     @changed="handleAttributeNameChanged"
                 />
             </VCFormGroup>
         </div>
         <div class="col-5">
-            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_name_strict!)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_name_strict)">
                 <VCFormSwitch
-                    v-model="$v.fields.attribute_name_strict!.$model.value"
+                    v-model="$v.fields.attribute_name_strict.$model.value"
                     :label="true"
                     @change="handleUpdated"
                 >
@@ -90,9 +90,9 @@ export default defineComponent({
                     </template>
                 </VCFormSwitch>
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_null_match_all!)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.attribute_null_match_all)">
                 <VCFormSwitch
-                    v-model="$v.fields.attribute_null_match_all!.$model.value"
+                    v-model="$v.fields.attribute_null_match_all.$model.value"
                     :label="true"
                     @change="handleUpdated"
                 >
@@ -104,9 +104,9 @@ export default defineComponent({
                     </template>
                 </VCFormSwitch>
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.identity_master_match_all!)">
+            <VCFormGroup :validation="useFieldValidation($v.fields.identity_master_match_all)">
                 <VCFormSwitch
-                    v-model="$v.fields.identity_master_match_all!.$model.value"
+                    v-model="$v.fields.identity_master_match_all.$model.value"
                     :label="true"
                     @change="handleUpdated"
                 >

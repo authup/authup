@@ -56,7 +56,7 @@
         "@ucast/mongo2js": "^2.0.0",
         "@validup/adapter-zod": "^0.2.4",
         "pathtrace": "^2.2.0",
-        "validup": "^0.4.0",
+        "validup": "^0.4.1",
         "zod": "^4.4.3"
     },
     "devDependencies": {

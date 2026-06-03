@@ -65,8 +65,7 @@ export const ARealmForm = defineComponent({
 
         const $v = useValidup(
             new RealmValidator(),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            form as any,
+            form,
             { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
         );
 
@@ -136,12 +135,12 @@ export default ARealmForm;
 
 <template>
     <form @submit.prevent="submit">
-        <VCFormGroup :validation="useFieldValidation($v.fields.name!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.name)">
             <template #label>
                 {{ translationsDefault.name }}
             </template>
             <VCFormInput
-                v-model="$v.fields.name!.$model.value"
+                v-model="$v.fields.name.$model.value"
                 :disabled="isMaster"
             />
         </VCFormGroup>
@@ -160,20 +159,24 @@ export default ARealmForm;
             </button>
         </div>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.display_name!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
-            <VCFormInput v-model="$v.fields.display_name!.$model.value" />
+            <VCFormInput
+                :model-value="$v.fields.display_name.$model.value ?? ''"
+                @update:model-value="(v: string) => { $v.fields.display_name.$model.value = v; }"
+            />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.description!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.description)">
             <template #label>
                 {{ translationsDefault.description }}
             </template>
             <VCFormTextarea
-                v-model="$v.fields.description!.$model.value"
+                :model-value="$v.fields.description.$model.value ?? ''"
                 :rows="4"
+                @update:model-value="(v: string) => { $v.fields.description.$model.value = v; }"
             />
         </VCFormGroup>
 

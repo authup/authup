@@ -42,7 +42,7 @@ export default defineComponent({
         const $v = useValidup(new FormInputListItemValidator(), form, { detached: true });
 
         const handleUpdated = () => {
-            ctx.emit('updated', $v.fields.name!.$model.value);
+            ctx.emit('updated', $v.fields.name.$model.value);
         };
 
         const handleDeleted = () => {
@@ -59,9 +59,9 @@ export default defineComponent({
 });
 </script>
 <template>
-    <VCFormGroup :validation="useFieldValidation($v.fields.name!)">
+    <VCFormGroup :validation="useFieldValidation($v.fields.name)">
         <VCFormInput
-            v-model="$v.fields.name!.$model.value"
+            v-model="$v.fields.name.$model.value"
             @change="handleUpdated"
         >
             <template #groupAppend>

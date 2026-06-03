@@ -51,38 +51,38 @@ export default AIdentityProviderLdapUserFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.user_filter!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.user_filter)">
             <template #label>
                 Filter
             </template>
             <VCFormInput
-                v-model="$v.fields.user_filter!.$model.value"
+                v-model="$v.fields.user_filter.$model.value"
                 placeholder="(|({name_attribute}={{input}})({mail_attribute}={{input}}))"
             />
         </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation($v.fields.user_base_dn!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.user_base_dn)">
             <template #label>
                 Base DN
             </template>
-            <VCFormInput v-model="$v.fields.user_base_dn!.$model.value" />
+            <VCFormInput v-model="$v.fields.user_base_dn.$model.value" />
         </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation($v.fields.user_name_attribute!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.user_name_attribute)">
             <template #label>
                 Name Attribute
             </template>
-            <VCFormInput v-model="$v.fields.user_name_attribute!.$model.value" />
+            <VCFormInput v-model="$v.fields.user_name_attribute.$model.value" />
         </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation($v.fields.user_mail_attribute!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.user_mail_attribute)">
             <template #label>
                 Mail Attribute
             </template>
-            <VCFormInput v-model="$v.fields.user_mail_attribute!.$model.value" />
+            <VCFormInput v-model="$v.fields.user_mail_attribute.$model.value" />
         </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation($v.fields.user_display_name_attribute!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.user_display_name_attribute)">
             <template #label>
                 DisplayName Attribute
             </template>
-            <VCFormInput v-model="$v.fields.user_display_name_attribute!.$model.value" />
+            <VCFormInput v-model="$v.fields.user_display_name_attribute.$model.value" />
         </VCFormGroup>
     </div>
 </template>

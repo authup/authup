@@ -142,12 +142,12 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.decision_strategy!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.decision_strategy)">
             <template #label>
                 Decision Strategy
             </template>
             <VCFormSelect
-                v-model="$v.fields.decision_strategy!.$model.value"
+                v-model="$v.fields.decision_strategy.$model.value"
                 :options="decisionStrategyOptions"
                 :option-default="true"
                 :option-default-value="'-- None (default: unanimous) --'"
@@ -157,14 +157,14 @@ export default defineComponent({
                 {{ decisionStrategyHint }}
             </div>
         </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation($v.fields.items!)">
+        <VCFormGroup :validation="useFieldValidation($v.fields.items)">
             <template #label>
                 Children
             </template>
             <APolicyChildrenPicker
                 :parent-id="id"
                 :query="query"
-                :value="$v.fields.items!.$model.value"
+                :value="$v.fields.items.$model.value"
                 @change="handleUpdated"
             />
         </VCFormGroup>
