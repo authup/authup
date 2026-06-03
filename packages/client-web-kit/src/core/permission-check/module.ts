@@ -12,7 +12,6 @@ import {
     onMounted,
     onUnmounted,
     ref,
-    unref,
     watch,
 } from 'vue';
 import type { Store } from '../store';
@@ -40,26 +39,19 @@ export function createPermissionCheckerReactiveFn(
                 return computePromise;
             }
 
-            // `unref()` collapses the Pinia 3 / Vue 3.5 double-ref-wrap on
-            // computed-getter access via `storeToRefs`. Same pattern as
-            // authentication-hook/install.ts; runtime stays unchanged.
-            const userId = unref(storeRefs.userId.value) as string | null;
-            const realmId = unref(storeRefs.realmId.value) as string | null;
-            const realmName = unref(storeRefs.realmName.value) as string | null;
-
             let identity: IdentityPolicyData | undefined;
-            if (userId) {
+            if (storeRefs.userId.value) {
                 identity = {
                     type: 'user',
-                    id: userId,
+                    id: storeRefs.userId.value,
                 };
 
-                if (realmId) {
-                    identity.realmId = realmId;
+                if (storeRefs.realmId.value) {
+                    identity.realmId = storeRefs.realmId.value;
                 }
 
-                if (realmName) {
-                    identity.realmId = realmName;
+                if (storeRefs.realmName.value) {
+                    identity.realmId = storeRefs.realmName.value;
                 }
             }
 

@@ -18,7 +18,6 @@ import {
     isRef,
     onMounted,
     onUnmounted,
-    unref,
     watch,
 } from 'vue';
 import { injectStore, storeToRefs } from '../../../../core/store';
@@ -46,12 +45,8 @@ function create<
     const store = injectStore();
     const storeRefs = storeToRefs(store);
 
-    // `unref()` collapses the Pinia 3 / Vue 3.5 double-ref-wrap that
-    // `storeToRefs` returns for computed-getter store fields. See
-    // authentication-hook/install.ts for the same pattern.
     const realmId = computed(() => {
-        const realmName = unref(storeRefs.realmName.value) as string | null;
-        if (realmName === REALM_MASTER_NAME) {
+        if (storeRefs.realmName.value === REALM_MASTER_NAME) {
             return undefined;
         }
 
@@ -63,7 +58,7 @@ function create<
             return ctx.realmId;
         }
 
-        return (unref(storeRefs.realmId.value) as string | null) ?? undefined;
+        return storeRefs.realmId.value;
     });
 
     const targetId = computed(

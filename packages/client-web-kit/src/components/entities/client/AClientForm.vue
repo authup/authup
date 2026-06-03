@@ -11,7 +11,6 @@ import {
     computed,
     defineComponent,
     reactive,
-    unref,
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
@@ -118,9 +117,7 @@ export default defineComponent({
 
             assignFormProperties(form, manager.data.value);
 
-            // `unref()` for the Pinia 3 / Vue 3.5 double-ref-wrap leak —
-            // see authentication-hook/install.ts for the same pattern.
-            form.realm_id = (unref(realmId.value) as string | null) ?? '';
+            form.realm_id = realmId.value ?? '';
 
             if (form.secret.length === 0) {
                 form.secret = generateSecret();

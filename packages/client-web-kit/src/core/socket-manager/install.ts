@@ -8,7 +8,7 @@
 import { ClientManager } from '@authup/core-realtime-kit';
 import type { Pinia } from 'pinia';
 import type { App } from 'vue';
-import { ref, unref } from 'vue';
+import { ref } from 'vue';
 import { injectStoreFactory, storeToRefs } from '../store';
 import { provideSocketManager } from './singleton';
 
@@ -22,15 +22,9 @@ export function installSocketManager(app: App, options: SocketManagerInstallOpti
     const store = storeCreator(options.pinia);
     const { accessToken } = storeToRefs(store);
 
-    // `unref()` collapses the Pinia 3 / Vue 3.5 double-ref-wrap that
-    // `storeToRefs` started returning after the foundation commit's
-    // package bumps. Runtime behaviour is unchanged; the cast just
-    // realigns TypeScript's view with what Pinia's proxy already
-    // unwraps. Same pattern applies to `state.accessToken` inside the
-    // $subscribe handler below.
     const manager = new ClientManager({
         url: options.baseURL,
-        token: () => (unref(accessToken.value) as string | null) ?? undefined,
+        token: () => accessToken.value ?? undefined,
     });
 
     const oldValue = ref<string | undefined>();
@@ -39,7 +33,7 @@ export function installSocketManager(app: App, options: SocketManagerInstallOpti
         mutation,
         state,
     ) => {
-        const normalizedToken = (unref((state as { accessToken: unknown }).accessToken) as string | null) ?? undefined;
+        const normalizedToken = state.accessToken ?? undefined;
         if (normalizedToken !== oldValue.value) {
             oldValue.value = normalizedToken;
 

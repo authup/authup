@@ -16,7 +16,6 @@ import {
     defineComponent,
     reactive,
     ref,
-    unref,
     watch,
 } from 'vue';
 import type { FormOption } from '@vuecs/forms';
@@ -98,11 +97,9 @@ export const APermissionForm = defineComponent({
         const store = injectStore();
         const storeRefs = storeToRefs(store);
 
-        const realmId = computed<string | null>(() => {
+        const realmId = computed(() => {
             if (!storeRefs.realmIsRoot) {
-                // `unref()` collapses the Pinia 3 / Vue 3.5 double-ref-wrap
-                // returned by `storeToRefs` on computed-getter fields.
-                return (unref(storeRefs.realmId.value) as string | null) ?? null;
+                return storeRefs.realmId.value;
             }
 
             return manager.data.value ?
