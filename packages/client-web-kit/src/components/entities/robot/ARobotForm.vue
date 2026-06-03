@@ -21,9 +21,9 @@ import { EntityType, RobotValidator } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForGroup,
+    useTranslationsForNamespace,
 } from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
@@ -123,8 +123,8 @@ export const ARobotForm = defineComponent({
             }
         };
 
-        const translationsDefault = useTranslationsForGroup(
-            TranslatorTranslationGroup.DEFAULT,
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.GENERATE },
                 { key: TranslatorTranslationDefaultKey.HASHED },

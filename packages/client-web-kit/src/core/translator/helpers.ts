@@ -14,11 +14,6 @@ type Input = Omit<GetContext, 'namespace'>;
 /**
  * Resolve a batch of translations under a single namespace. Returns a
  * keyed map of `Ref<string>`s, one per element.
- *
- * Naming aligned with ilingo 6's descriptor-tree terminology
- * (namespaces, not groups). The deprecated `useTranslationsForGroup`
- * alias below is kept for one minor so consumer call sites can rename
- * at their own pace.
  */
 export function useTranslationsForNamespace<T extends Input>(
     namespace: string,
@@ -34,9 +29,3 @@ export function useTranslationsForNamespace<T extends Input>(
 
     return output;
 }
-
-/**
- * @deprecated Renamed to `useTranslationsForNamespace` to match
- * ilingo 6's terminology. Drop in the next minor.
- */
-export const useTranslationsForGroup = useTranslationsForNamespace;

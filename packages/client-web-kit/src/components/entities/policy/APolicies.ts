@@ -11,7 +11,7 @@ import type { Policy } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
 } from '../../../core';
@@ -33,12 +33,12 @@ export const APolicies = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationNamespace.DEFAULT,
             key: TranslatorTranslationDefaultKey.POLICIES,
         });
 
         const translation = useTranslation({
-            namespace: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationNamespace.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationName },
         });

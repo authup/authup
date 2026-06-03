@@ -27,11 +27,11 @@ import {
 import {
     TranslatorTranslationClientKey,
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     assignFormProperties,
     injectStore,
     storeToRefs,
-    useTranslationsForGroup,
+    useTranslationsForNamespace,
 } from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 
@@ -156,8 +156,8 @@ export default defineComponent({
             assignFormProperties(form, manager.data.value);
         };
 
-        const translationsClient = useTranslationsForGroup(
-            TranslatorTranslationGroup.CLIENT,
+        const translationsClient = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
             [
                 { key: TranslatorTranslationClientKey.NAME_HINT },
                 { key: TranslatorTranslationClientKey.DESCRIPTION_HINT },
@@ -168,8 +168,8 @@ export default defineComponent({
             ],
         );
 
-        const translationsDefault = useTranslationsForGroup(
-            TranslatorTranslationGroup.DEFAULT,
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.GENERATE },
                 { key: TranslatorTranslationDefaultKey.NAME },

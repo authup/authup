@@ -10,9 +10,9 @@ import { IdentityProviderValidator } from '@authup/core-kit';
 import { ValidatorGroup, createNanoID } from '@authup/kit';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForGroup,
+    useTranslationsForNamespace,
 } from '../../../core';
 import { useValidup } from '@validup/vue';
 import { useFieldValidation } from '@ilingo/validup-vue';
@@ -82,8 +82,8 @@ export const AIdentityProviderBasicFields = defineComponent({
 
         assign(props.entity);
 
-        const translationsDefault = useTranslationsForGroup(
-            TranslatorTranslationGroup.DEFAULT,
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.NAME },

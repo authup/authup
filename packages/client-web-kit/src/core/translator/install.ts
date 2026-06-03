@@ -15,7 +15,7 @@ import {
 import { install as installIlingoVue } from '@ilingo/vue';
 import { install as installIlingoValidup } from '@ilingo/validup-vue';
 import type { App } from 'vue';
-import { TranslatorTranslationGroup } from './constants';
+import { TranslatorTranslationNamespace } from './constants';
 import {
     TranslatorTranslationClientGerman,
     TranslatorTranslationDefaultGerman,
@@ -48,24 +48,24 @@ import type { TranslatorInstallOptions } from './types';
 export function installTranslator(app: App, options: TranslatorInstallOptions = {}) {
     const catalog = defineCatalog([
         defineLocale('en', [
-            defineNamespace(TranslatorTranslationGroup.CLIENT, [
+            defineNamespace(TranslatorTranslationNamespace.CLIENT, [
                 defineTranslations(TranslatorTranslationClientEnglish),
             ]),
-            defineNamespace(TranslatorTranslationGroup.DEFAULT, [
+            defineNamespace(TranslatorTranslationNamespace.DEFAULT, [
                 defineTranslations(TranslatorTranslationDefaultEnglish),
             ]),
-            defineNamespace(TranslatorTranslationGroup.VUECS, [
+            defineNamespace(TranslatorTranslationNamespace.VUECS, [
                 defineTranslations(TranslatorTranslationVuecsEnglish),
             ]),
         ]),
         defineLocale('de', [
-            defineNamespace(TranslatorTranslationGroup.CLIENT, [
+            defineNamespace(TranslatorTranslationNamespace.CLIENT, [
                 defineTranslations(TranslatorTranslationClientGerman),
             ]),
-            defineNamespace(TranslatorTranslationGroup.DEFAULT, [
+            defineNamespace(TranslatorTranslationNamespace.DEFAULT, [
                 defineTranslations(TranslatorTranslationDefaultGerman),
             ]),
-            defineNamespace(TranslatorTranslationGroup.VUECS, [
+            defineNamespace(TranslatorTranslationNamespace.VUECS, [
                 defineTranslations(TranslatorTranslationVuecsGerman),
             ]),
         ]),

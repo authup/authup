@@ -13,12 +13,8 @@
  * The `validup` namespace (validation-message catalogs for `IssueCode`
  * keys) is registered automatically by `@ilingo/validup-vue`'s install
  * and is **not** part of this enum.
- *
- * Historical note: this enum was named `TranslatorTranslationGroup`
- * before the ilingo 6 bump; the rename to "namespace" matches the new
- * upstream terminology.
  */
-export enum TranslatorTranslationGroup {
+export enum TranslatorTranslationNamespace {
     DEFAULT = 'default',
 
     CLIENT = 'authupClient',

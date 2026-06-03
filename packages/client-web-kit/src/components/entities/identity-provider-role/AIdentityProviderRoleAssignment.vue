@@ -18,9 +18,9 @@ import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForGroup,
+    useTranslationsForNamespace,
 } from '../../../core';
 import {
     defineEntityManager,
@@ -79,8 +79,8 @@ export default defineComponent({
 
         const $v = useValidup(new RoleMappingAttributesValidator(), form);
 
-        const translationsDefault = useTranslationsForGroup(
-            TranslatorTranslationGroup.DEFAULT,
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.VALUE_IS_REGEX },
             ],

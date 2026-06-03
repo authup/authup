@@ -27,11 +27,11 @@ import {
 } from '@vuecs/forms';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     assignFormProperties,
     injectStore,
     storeToRefs,
-    useTranslationsForGroup,
+    useTranslationsForNamespace,
 } from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
@@ -147,8 +147,8 @@ export const APermissionForm = defineComponent({
             }
         };
 
-        const translationsDefault = useTranslationsForGroup(
-            TranslatorTranslationGroup.DEFAULT,
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.NAME },
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },

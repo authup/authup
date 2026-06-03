@@ -21,9 +21,9 @@ import { EntityType, REALM_MASTER_NAME, RealmValidator } from '@authup/core-kit'
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForGroup,
+    useTranslationsForNamespace,
 } from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
@@ -104,8 +104,8 @@ export const ARealmForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
-        const translationsDefault = useTranslationsForGroup(
-            TranslatorTranslationGroup.DEFAULT,
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.GENERATE },
                 { key: TranslatorTranslationDefaultKey.NAME },

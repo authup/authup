@@ -17,7 +17,7 @@ import {
 } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
 } from '../../../core';
@@ -34,12 +34,12 @@ export const ARoles = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationNamespace.VUECS,
             key: TranslatorTranslationDefaultKey.ROLES,
         });
 
         const translation = useTranslation({
-            namespace: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationNamespace.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationName },
         });

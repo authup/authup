@@ -12,7 +12,7 @@ import type { IdentityProvider } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
 } from '../../../core';
@@ -35,12 +35,12 @@ export const AIdentityProviders = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationNamespace.DEFAULT,
             key: TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS,
         });
 
         const translation = useTranslation({
-            namespace: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationNamespace.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationName },
         });

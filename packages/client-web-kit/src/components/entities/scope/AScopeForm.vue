@@ -21,11 +21,11 @@ import type { Scope } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     assignFormProperties,
     injectStore,
     storeToRefs,
-    useTranslationsForGroup,
+    useTranslationsForNamespace,
 } from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
@@ -122,8 +122,8 @@ export const AScopeForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
-        const translationsDefault = useTranslationsForGroup(
-            TranslatorTranslationGroup.DEFAULT,
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
             [
                 { key: TranslatorTranslationDefaultKey.NAME },
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
