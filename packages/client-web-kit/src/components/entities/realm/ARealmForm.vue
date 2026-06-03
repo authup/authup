@@ -11,7 +11,6 @@ import {
     TranslatorTranslationDefaultKey, 
     TranslatorTranslationNamespace, 
     assignFormProperties, 
-    useFieldValidation, 
     useTranslationsForNamespace, 
 } from '../../../core';
 import type { PropType } from 'vue';
@@ -26,6 +25,7 @@ import type { Realm } from '@authup/core-kit';
 import { EntityType, REALM_MASTER_NAME, RealmValidator } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 import {
     AFormSubmit,
     defineEntityManager,
@@ -38,6 +38,8 @@ export const ARealmForm = defineComponent({
         VCFormGroup,
         VCFormInput,
         VCFormTextarea,
+
+        IFieldValidation,
     },
     props: {
         entity: {
@@ -125,7 +127,6 @@ export const ARealmForm = defineComponent({
             translationsDefault,
             generateName,
             submit,
-            useFieldValidation,
         };
     },
 });
@@ -135,15 +136,20 @@ export default ARealmForm;
 
 <template>
     <form @submit.prevent="submit">
-        <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-            <template #label>
-                {{ translationsDefault.name }}
-            </template>
-            <VCFormInput
-                v-model="v.fields.name.$model.value"
-                :disabled="isMaster"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.name"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translationsDefault.name }}
+                </template>
+                <VCFormInput
+                    v-model="v.fields.name.$model.value"
+                    :disabled="isMaster"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
         <div
             v-if="isCreating"
@@ -159,26 +165,36 @@ export default ARealmForm;
             </button>
         </div>
 
-        <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
-            <template #label>
-                {{ translationsDefault.displayName }}
-            </template>
-            <VCFormInput
-                :model-value="v.fields.display_name.$model.value ?? ''"
-                @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.display_name"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translationsDefault.displayName }}
+                </template>
+                <VCFormInput
+                    :model-value="v.fields.display_name.$model.value ?? ''"
+                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <VCFormGroup :validation="useFieldValidation(v.fields.description)">
-            <template #label>
-                {{ translationsDefault.description }}
-            </template>
-            <VCFormTextarea
-                :model-value="v.fields.description.$model.value ?? ''"
-                :rows="4"
-                @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.description"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translationsDefault.description }}
+                </template>
+                <VCFormTextarea
+                    :model-value="v.fields.description.$model.value ?? ''"
+                    :rows="4"
+                    @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
         <AFormSubmit
             :is-busy="busy"

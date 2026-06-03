@@ -12,7 +12,6 @@ import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationNamespace,
     assignFormProperties,
-    useFieldValidation, 
     useTranslationsForNamespace, 
 } from '../../../core';
 import { useValidup } from '@validup/vue';
@@ -24,12 +23,15 @@ import {
 } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AIdentityProviderBasicFields = defineComponent({
     components: {
         VCFormGroup,
         VCFormInput,
         VCFormSwitch,
+
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Partial<IdentityProvider>> } },
     emits: ['updated'],
@@ -106,7 +108,6 @@ export const AIdentityProviderBasicFields = defineComponent({
             translationsDefault,
             onGenerate,
             onEnabledChange,
-            useFieldValidation,
         };
     },
 });
@@ -116,12 +117,17 @@ export default AIdentityProviderBasicFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-            <template #label>
-                {{ translationsDefault.name }}
-            </template>
-            <VCFormInput v-model="v.fields.name.$model.value" />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.name"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translationsDefault.name }}
+                </template>
+                <VCFormInput v-model="v.fields.name.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
 
         <div class="mb-3">
             <button
@@ -133,15 +139,20 @@ export default AIdentityProviderBasicFields;
             </button>
         </div>
 
-        <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
-            <template #label>
-                {{ translationsDefault.displayName }}
-            </template>
-            <VCFormInput
-                :model-value="v.fields.display_name.$model.value ?? ''"
-                @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.display_name"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translationsDefault.displayName }}
+                </template>
+                <VCFormInput
+                    :model-value="v.fields.display_name.$model.value ?? ''"
+                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
         <div class="mt-3">
             <VCFormSwitch

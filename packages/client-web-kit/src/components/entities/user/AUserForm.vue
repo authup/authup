@@ -17,7 +17,6 @@ import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationNamespace,
     assignFormProperties,
-    useFieldValidation, 
     useTranslationsForNamespace, 
 } from '../../../core';
 import { useValidup } from '@validup/vue';
@@ -38,6 +37,7 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import { ARealms } from '../realm';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AUserForm = defineComponent({
     components: {
@@ -47,6 +47,8 @@ export const AUserForm = defineComponent({
         VCFormGroup,
         VCFormInput,
         VCFormSwitch,
+
+        IFieldValidation,
     },
     props: {
         entity: {
@@ -164,7 +166,6 @@ export const AUserForm = defineComponent({
             translationsDefault,
             onNameChange,
             submit,
-            useFieldValidation,
         };
     },
 });
@@ -176,37 +177,52 @@ export default AUserForm;
     <form @submit.prevent="submit">
         <div :class="showRealmPicker ? 'grid grid-cols-1 md:grid-cols-2 gap-2' : ''">
             <div>
-                <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-                    <template #label>
-                        {{ translationsDefault.name }}
-                    </template>
-                    <VCFormInput
-                        :model-value="v.fields.name.$model.value"
-                        :disabled="form.name_locked"
-                        @update:model-value="onNameChange"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.name"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.name }}
+                        </template>
+                        <VCFormInput
+                            :model-value="v.fields.name.$model.value"
+                            :disabled="form.name_locked"
+                            @update:model-value="onNameChange"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
 
-                <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
-                    <template #label>
-                        {{ translationsDefault.displayName }}
-                    </template>
-                    <VCFormInput
-                        :model-value="v.fields.display_name.$model.value ?? ''"
-                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.display_name"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.displayName }}
+                        </template>
+                        <VCFormInput
+                            :model-value="v.fields.display_name.$model.value ?? ''"
+                            @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
 
-                <VCFormGroup :validation="useFieldValidation(v.fields.email)">
-                    <template #label>
-                        {{ translationsDefault.email }}
-                    </template>
-                    <VCFormInput
-                        v-model="v.fields.email.$model.value"
-                        type="email"
-                        placeholder="...@..."
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.email"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.email }}
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.email.$model.value"
+                            type="email"
+                            placeholder="...@..."
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
 
                 <template v-if="$props.canManage">
                     <div class="row">

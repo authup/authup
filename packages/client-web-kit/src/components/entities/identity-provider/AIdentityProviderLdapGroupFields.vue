@@ -6,16 +6,21 @@
   -->
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { assignFormProperties, useFieldValidation  } from '../../../core';
+import { assignFormProperties } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AIdentityProviderLdapGroupFields = defineComponent({
-    components: { VCFormGroup, VCFormInput },
+    components: {
+        VCFormGroup, 
+        VCFormInput, 
+        IFieldValidation, 
+    },
     props: {
         entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
         discovery: { type: Boolean, default: false },
@@ -42,7 +47,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
         onChange(updated, () => init());
         init();
 
-        return { v, useFieldValidation };
+        return { v };
     },
 });
 
@@ -51,44 +56,74 @@ export default AIdentityProviderLdapGroupFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation(v.fields.group_filter)">
-            <template #label>
-                Filter
-            </template>
-            <VCFormInput
-                v-model="v.fields.group_filter.$model.value"
-                placeholder="(member={{dn}})"
-            />
-        </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation(v.fields.group_base_dn)">
-            <template #label>
-                Base DN
-            </template>
-            <VCFormInput v-model="v.fields.group_base_dn.$model.value" />
-        </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation(v.fields.group_class)">
-            <template #label>
-                Class
-            </template>
-            <VCFormInput v-model="v.fields.group_class.$model.value" />
-        </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation(v.fields.group_name_attribute)">
-            <template #label>
-                Name Attribute
-            </template>
-            <VCFormInput v-model="v.fields.group_name_attribute.$model.value" />
-        </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation(v.fields.group_member_attribute)">
-            <template #label>
-                Member Attribute
-            </template>
-            <VCFormInput v-model="v.fields.group_member_attribute.$model.value" />
-        </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation(v.fields.group_member_user_attribute)">
-            <template #label>
-                Member User Attribute
-            </template>
-            <VCFormInput v-model="v.fields.group_member_user_attribute.$model.value" />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.group_filter"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Filter
+                </template>
+                <VCFormInput
+                    v-model="v.fields.group_filter.$model.value"
+                    placeholder="(member={{dn}})"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.group_base_dn"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Base DN
+                </template>
+                <VCFormInput v-model="v.fields.group_base_dn.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.group_class"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Class
+                </template>
+                <VCFormInput v-model="v.fields.group_class.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.group_name_attribute"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Name Attribute
+                </template>
+                <VCFormInput v-model="v.fields.group_name_attribute.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.group_member_attribute"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Member Attribute
+                </template>
+                <VCFormInput v-model="v.fields.group_member_attribute.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.group_member_user_attribute"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Member User Attribute
+                </template>
+                <VCFormInput v-model="v.fields.group_member_user_attribute.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

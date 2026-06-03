@@ -11,17 +11,20 @@ import type { OpenIDProviderMetadata } from '@authup/specs';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties, useFieldValidation  } from '../../../core';
+import { assignFormProperties } from '../../../core';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery.vue';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
         VCFormGroup,
         VCFormInput,
         AIdentityProviderOAuth2Discovery,
+
+        IFieldValidation,
     },
     props: {
         entity: { type: Object as PropType<Partial<OAuth2IdentityProvider>> },
@@ -63,7 +66,6 @@ export default defineComponent({
         return {
             v,
             handleDiscoveryLookup,
-            useFieldValidation,
         };
     },
 });
@@ -73,40 +75,55 @@ export default defineComponent({
         v-if="discovery"
         @lookup="handleDiscoveryLookup"
     />
-    <VCFormGroup
-        :label="true"
-        :validation="useFieldValidation(v.fields.token_url)"
+    <IFieldValidation
+        v-slot="{ value }"
+        :field="v.fields.token_url"
     >
-        <template #label>
-            Token
-        </template>
-        <VCFormInput
-            v-model="v.fields.token_url.$model.value"
-            placeholder="https://..."
-        />
-    </VCFormGroup>
-    <VCFormGroup
-        :label="true"
-        :validation="useFieldValidation(v.fields.authorize_url)"
+        <VCFormGroup
+            :label="true"
+            :validation="value"
+        >
+            <template #label>
+                Token
+            </template>
+            <VCFormInput
+                v-model="v.fields.token_url.$model.value"
+                placeholder="https://..."
+            />
+        </VCFormGroup>
+    </IFieldValidation>
+    <IFieldValidation
+        v-slot="{ value }"
+        :field="v.fields.authorize_url"
     >
-        <template #label>
-            Authorize
-        </template>
-        <VCFormInput
-            v-model="v.fields.authorize_url.$model.value"
-            placeholder="https://..."
-        />
-    </VCFormGroup>
-    <VCFormGroup
-        :label="true"
-        :validation="useFieldValidation(v.fields.user_info_url)"
+        <VCFormGroup
+            :label="true"
+            :validation="value"
+        >
+            <template #label>
+                Authorize
+            </template>
+            <VCFormInput
+                v-model="v.fields.authorize_url.$model.value"
+                placeholder="https://..."
+            />
+        </VCFormGroup>
+    </IFieldValidation>
+    <IFieldValidation
+        v-slot="{ value }"
+        :field="v.fields.user_info_url"
     >
-        <template #label>
-            UserInfo
-        </template>
-        <VCFormInput
-            v-model="v.fields.user_info_url.$model.value"
-            placeholder="https://..."
-        />
-    </VCFormGroup>
+        <VCFormGroup
+            :label="true"
+            :validation="value"
+        >
+            <template #label>
+                UserInfo
+            </template>
+            <VCFormInput
+                v-model="v.fields.user_info_url.$model.value"
+                placeholder="https://..."
+            />
+        </VCFormGroup>
+    </IFieldValidation>
 </template>

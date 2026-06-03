@@ -2,14 +2,19 @@
 import { type PropType, defineComponent, reactive } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties, useFieldValidation  } from '../../../../core';
+import { assignFormProperties } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import type { DatePolicy } from '@authup/access';
 import { onChange, useUpdatedAt } from '../../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
-    components: { VCFormInput, VCFormGroup },
+    components: {
+        VCFormInput, 
+        VCFormGroup, 
+        IFieldValidation, 
+    },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
     setup(props, setup) {
@@ -45,33 +50,42 @@ export default defineComponent({
         return {
             handleUpdated,
             v,
-            useFieldValidation,
         };
     },
 });
 </script>
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation(v.fields.start)">
-            <template #label>
-                Start
-            </template>
-            <VCFormInput
-                v-model="v.fields.start.$model.value"
-                placeholder="YYYY-MM-DD"
-                @change="handleUpdated"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.start"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Start
+                </template>
+                <VCFormInput
+                    v-model="v.fields.start.$model.value"
+                    placeholder="YYYY-MM-DD"
+                    @change="handleUpdated"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <VCFormGroup :validation="useFieldValidation(v.fields.end)">
-            <template #label>
-                End
-            </template>
-            <VCFormInput
-                v-model="v.fields.end.$model.value"
-                placeholder="YYYY-MM-DD"
-                @change="handleUpdated"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.end"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    End
+                </template>
+                <VCFormInput
+                    v-model="v.fields.end.$model.value"
+                    placeholder="YYYY-MM-DD"
+                    @change="handleUpdated"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

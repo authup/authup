@@ -14,7 +14,6 @@ import {
     TranslatorTranslationDefaultKey, 
     TranslatorTranslationNamespace, 
     assignFormProperties, 
-    useFieldValidation, 
     useTranslationsForNamespace, 
 } from '../../../core';
 import { z } from 'zod';
@@ -22,6 +21,7 @@ import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
+import { IFieldValidation } from '@ilingo/validup-vue';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -52,7 +52,9 @@ export default defineComponent({
     components: {
         VCFormGroup, 
         VCFormInput, 
-        VCFormSwitch, 
+        VCFormSwitch,
+
+        IFieldValidation,
     },
     props: {
         role: {
@@ -138,7 +140,6 @@ export default defineComponent({
             manager,
             handleSaveOrCreate,
             handleDelete,
-            useFieldValidation,
         };
     },
 });
@@ -186,36 +187,51 @@ export default defineComponent({
             v-if="display"
             class="mt-2"
         >
-            <VCFormGroup
-                :label="true"
-                :validation="useFieldValidation(v.fields.name)"
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.name"
             >
-                <template #label>
-                    Name
-                </template>
-                <VCFormInput v-model="v.fields.name.$model.value" />
-            </VCFormGroup>
-            <VCFormGroup
-                :label="true"
-                :validation="useFieldValidation(v.fields.value)"
+                <VCFormGroup
+                    :label="true"
+                    :validation="value"
+                >
+                    <template #label>
+                        Name
+                    </template>
+                    <VCFormInput v-model="v.fields.name.$model.value" />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.value"
             >
-                <template #label>
-                    Value
-                </template>
-                <VCFormInput v-model="v.fields.value.$model.value" />
-            </VCFormGroup>
-            <VCFormGroup
-                :label="true"
-                :validation="useFieldValidation(v.fields.value_is_regex)"
+                <VCFormGroup
+                    :label="true"
+                    :validation="value"
+                >
+                    <template #label>
+                        Value
+                    </template>
+                    <VCFormInput v-model="v.fields.value.$model.value" />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.value_is_regex"
             >
-                <template #label>
-                    Regex
-                </template>
-                <VCFormSwitch
-                    v-model="v.fields.value_is_regex.$model.value"
-                    :label-content="translationsDefault.valueIsRegex.value"
-                />
-            </VCFormGroup>
+                <VCFormGroup
+                    :label="true"
+                    :validation="value"
+                >
+                    <template #label>
+                        Regex
+                    </template>
+                    <VCFormSwitch
+                        v-model="v.fields.value_is_regex.$model.value"
+                        :label-content="translationsDefault.valueIsRegex.value"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
     </div>
 </template>

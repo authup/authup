@@ -13,7 +13,7 @@ import {
 import type { PropType } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { useValidup } from '@validup/vue';
-import { injectHTTPClient, useFieldValidation, wrapFnWithBusyState  } from '../../../core';
+import { injectHTTPClient, wrapFnWithBusyState  } from '../../../core';
 import { createValidator } from '@validup/adapter-zod';
 import {
     Container,
@@ -23,6 +23,7 @@ import {
 import type { Validator } from 'validup';
 import { z } from 'zod';
 import { AFormSubmit } from '../../utility';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 // Cross-field equality between `password` and `password_repeat` — runs
 // as a second mount on `password_repeat` so the first mount's length
@@ -78,6 +79,8 @@ export const AUserPasswordForm = defineComponent({
         VCFormInput,
         VCFormSwitch,
         AFormSubmit,
+
+        IFieldValidation,
     },
     props: {
         id: {
@@ -123,7 +126,6 @@ export const AUserPasswordForm = defineComponent({
             passwordShow,
             v,
             submit,
-            useFieldValidation,
         };
     },
 });
@@ -136,27 +138,37 @@ export default AUserPasswordForm;
         class="flex flex-col gap-3"
         @submit.prevent="submit"
     >
-        <VCFormGroup :validation="useFieldValidation(v.fields.password)">
-            <template #label>
-                Password
-            </template>
-            <VCFormInput
-                v-model="v.fields.password.$model.value"
-                :type="passwordShow ? 'text' : 'password'"
-                autocomplete="new-password"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.password"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Password
+                </template>
+                <VCFormInput
+                    v-model="v.fields.password.$model.value"
+                    :type="passwordShow ? 'text' : 'password'"
+                    autocomplete="new-password"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <VCFormGroup :validation="useFieldValidation(v.fields.password_repeat)">
-            <template #label>
-                Password repeat
-            </template>
-            <VCFormInput
-                v-model="v.fields.password_repeat.$model.value"
-                :type="passwordShow ? 'text' : 'password'"
-                autocomplete="new-password"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.password_repeat"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Password repeat
+                </template>
+                <VCFormInput
+                    v-model="v.fields.password_repeat.$model.value"
+                    :type="passwordShow ? 'text' : 'password'"
+                    autocomplete="new-password"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
         <div>
             <VCFormSwitch

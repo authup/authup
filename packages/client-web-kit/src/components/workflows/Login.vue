@@ -11,7 +11,7 @@ import {
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { useValidup } from '@validup/vue';
-import { injectHTTPClient, injectStore, useFieldValidation  } from '../../core';
+import { injectHTTPClient, injectStore } from '../../core';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
@@ -20,6 +20,7 @@ import { VCButton } from '@vuecs/button';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../entities';
 import { APagination, ATitle } from '../utility';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 // Inline by design — login deliberately uses a permissive credentials
 // shape (any non-empty min/max-bounded string) rather than reusing
@@ -52,6 +53,8 @@ export default defineComponent({
         VCButton,
         VCFormGroup,
         VCFormInput,
+
+        IFieldValidation,
     },
     props: { codeRequest: { type: Object as PropType<OAuth2AuthorizationCodeRequest> } },
     emits: ['done', 'failed'],
@@ -158,7 +161,6 @@ export default defineComponent({
             identityProviderQuery,
             identityProviderRef,
             buildIdentityProviderURL,
-            useFieldValidation,
         };
     },
 });
@@ -171,22 +173,32 @@ export default defineComponent({
             </h1>
         </div>
         <form @submit.prevent="submit">
-            <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-                <template #label>
-                    Name
-                </template>
-                <VCFormInput v-model="v.fields.name.$model.value" />
-            </VCFormGroup>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Name
+                    </template>
+                    <VCFormInput v-model="v.fields.name.$model.value" />
+                </VCFormGroup>
+            </IFieldValidation>
 
-            <VCFormGroup :validation="useFieldValidation(v.fields.password)">
-                <template #label>
-                    Password
-                </template>
-                <VCFormInput
-                    v-model="v.fields.password.$model.value"
-                    type="password"
-                />
-            </VCFormGroup>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.password"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Password
+                    </template>
+                    <VCFormInput
+                        v-model="v.fields.password.$model.value"
+                        type="password"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
 
             <!--
                 <VCFormSubmit> from form-controls 2.x was dropped in

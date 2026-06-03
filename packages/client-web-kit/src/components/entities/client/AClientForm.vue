@@ -21,7 +21,6 @@ import {
     assignFormProperties, 
     injectStore, 
     storeToRefs, 
-    useFieldValidation, 
     useTranslationsForNamespace, 
 } from '../../../core';
 import { type Client, ClientValidator, EntityType } from '@authup/core-kit';
@@ -34,12 +33,15 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
         AFormSubmit,
         ARealmPicker,
         AFormInputList,
+
+        IFieldValidation,
     },
     props: {
         name: {
@@ -198,7 +200,6 @@ export default defineComponent({
             generateSecret,
             redirectUris,
             submit,
-            useFieldValidation,
         };
     },
 });
@@ -218,97 +219,132 @@ export default defineComponent({
                 </VCFormGroup>
             </template>
 
-            <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-                <template #label>
-                    {{ translationsDefault.name }}
-                </template>
-                <VCFormInput
-                    v-model="v.fields.name.$model.value"
-                    :disabled="isNameFixed"
-                />
-                <template #hint>
-                    {{ translationsClient.nameHint }}
-                </template>
-            </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
-                <template #label>
-                    {{ translationsDefault.displayName }}
-                </template>
-                <VCFormInput
-                    :model-value="v.fields.display_name.$model.value ?? ''"
-                    :disabled="isNameFixed"
-                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
-                />
-            </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation(v.fields.secret)">
-                <template #label>
-                    {{ translationsDefault.secret }}
-                    <template v-if="isSecretHashed">
-                        <span class="text-error-600 font-bold">
-                            <VCIcon name="fa6-solid:triangle-exclamation" />
-                        </span>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.name }}
                     </template>
-                </template>
-                <VCFormInput
-                    :model-value="v.fields.secret.$model.value ?? ''"
-                    :disabled="!v.fields.is_confidential.$model.value"
-                    @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
-                >
-                    <template #groupAppend>
-                        <button
-                            class="btn"
-                            type="button"
-                            @click.prevent="() => v.fields.secret.$model.value = generateSecret()"
-                        >
-                            <VCIcon name="fa6-solid:arrows-rotate" />
-                        </button>
+                    <VCFormInput
+                        v-model="v.fields.name.$model.value"
+                        :disabled="isNameFixed"
+                    />
+                    <template #hint>
+                        {{ translationsClient.nameHint }}
                     </template>
-                </VCFormInput>
-            </VCFormGroup>
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.display_name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.displayName }}
+                    </template>
+                    <VCFormInput
+                        :model-value="v.fields.display_name.$model.value ?? ''"
+                        :disabled="isNameFixed"
+                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.secret"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.secret }}
+                        <template v-if="isSecretHashed">
+                            <span class="text-error-600 font-bold">
+                                <VCIcon name="fa6-solid:triangle-exclamation" />
+                            </span>
+                        </template>
+                    </template>
+                    <VCFormInput
+                        :model-value="v.fields.secret.$model.value ?? ''"
+                        :disabled="!v.fields.is_confidential.$model.value"
+                        @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
+                    >
+                        <template #groupAppend>
+                            <button
+                                class="btn"
+                                type="button"
+                                @click.prevent="() => v.fields.secret.$model.value = generateSecret()"
+                            >
+                                <VCIcon name="fa6-solid:arrows-rotate" />
+                            </button>
+                        </template>
+                    </VCFormInput>
+                </VCFormGroup>
+            </IFieldValidation>
             <div class="row">
                 <div class="col">
-                    <VCFormGroup :validation="useFieldValidation(v.fields.is_confidential)">
-                        <VCFormSwitch
-                            v-model="v.fields.is_confidential.$model.value"
-                            :label="true"
-                            :label-content="translationsClient.isConfidential.value"
-                        />
-                    </VCFormGroup>
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.is_confidential"
+                    >
+                        <VCFormGroup :validation="value">
+                            <VCFormSwitch
+                                v-model="v.fields.is_confidential.$model.value"
+                                :label="true"
+                                :label-content="translationsClient.isConfidential.value"
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
                 </div>
                 <div class="col">
-                    <VCFormGroup :validation="useFieldValidation(v.fields.secret_hashed)">
-                        <VCFormSwitch
-                            v-model="v.fields.secret_hashed.$model.value"
-                            :label="true"
-                            :label-content="translationsClient.hashSecret.value"
-                        />
-                    </VCFormGroup>
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.secret_hashed"
+                    >
+                        <VCFormGroup :validation="value">
+                            <VCFormSwitch
+                                v-model="v.fields.secret_hashed.$model.value"
+                                :label="true"
+                                :label-content="translationsClient.hashSecret.value"
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
                 </div>
                 <div class="col">
-                    <VCFormGroup :validation="useFieldValidation(v.fields.active)">
-                        <VCFormSwitch
-                            v-model="v.fields.active.$model.value"
-                            :label="true"
-                            :label-content="translationsClient.isActive.value"
-                        />
-                    </VCFormGroup>
+                    <IFieldValidation
+                        v-slot="{ value }"
+                        :field="v.fields.active"
+                    >
+                        <VCFormGroup :validation="value">
+                            <VCFormSwitch
+                                v-model="v.fields.active.$model.value"
+                                :label="true"
+                                :label-content="translationsClient.isActive.value"
+                            />
+                        </VCFormGroup>
+                    </IFieldValidation>
                 </div>
             </div>
 
             <template v-if="!realmId && !isEditing">
-                <VCFormGroup :validation="useFieldValidation(v.fields.realm_id)">
-                    <template #label>
-                        {{ translationsDefault.realm }}
-                    </template>
-                    <template #default>
-                        <ARealmPicker
-                            :value="v.fields.realm_id.$model.value"
-                            @change="(input: string[]) => {
-                                v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
-                            }"
-                        />
-                    </template>
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.realm_id"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.realm }}
+                        </template>
+                        <template #default>
+                            <ARealmPicker
+                                :value="v.fields.realm_id.$model.value"
+                                @change="(input: string[]) => {
+                                    v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                                }"
+                            />
+                        </template>
+                    </VCFormGroup>
+                </IFieldValidation>
             </template>
         </div>
         <div class="col">
@@ -329,19 +365,24 @@ export default defineComponent({
                     {{ translationsClient.redirectURIHint }}
                 </template>
             </AFormInputList>
-            <VCFormGroup :validation="useFieldValidation(v.fields.description)">
-                <template #label>
-                    {{ translationsDefault.description }}
-                </template>
-                <VCFormTextarea
-                    :model-value="v.fields.description.$model.value ?? ''"
-                    rows="7"
-                    @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
-                />
-                <template #hint>
-                    {{ translationsClient.descriptionHint }}
-                </template>
-            </VCFormGroup>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.description"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.description }}
+                    </template>
+                    <VCFormTextarea
+                        :model-value="v.fields.description.$model.value ?? ''"
+                        rows="7"
+                        @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
+                    />
+                    <template #hint>
+                        {{ translationsClient.descriptionHint }}
+                    </template>
+                </VCFormGroup>
+            </IFieldValidation>
             <div>
                 <AFormSubmit
                     :is-busy="isBusy"

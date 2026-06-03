@@ -8,19 +8,21 @@ import {
 } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { DecisionStrategy } from '@authup/kit';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormGroup, VCFormSelect } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import APolicyPicker from '../APolicyPicker.vue';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
         APolicyChildrenPicker: APolicyPicker,
         VCFormGroup,
         VCFormSelect,
+
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
@@ -135,38 +137,47 @@ export default defineComponent({
             decisionStrategyOptions,
             v,
             query,
-            useFieldValidation,
         };
     },
 });
 </script>
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation(v.fields.decision_strategy)">
-            <template #label>
-                Decision Strategy
-            </template>
-            <VCFormSelect
-                v-model="v.fields.decision_strategy.$model.value"
-                :options="decisionStrategyOptions"
-                :option-default="true"
-                :option-default-value="'-- None (default: unanimous) --'"
-                @change="handleDecisionStrategyUpdated"
-            />
-            <div class="alert alert-sm alert-info mt-1 mb-0">
-                {{ decisionStrategyHint }}
-            </div>
-        </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation(v.fields.items)">
-            <template #label>
-                Children
-            </template>
-            <APolicyChildrenPicker
-                :parent-id="id"
-                :query="query"
-                :value="v.fields.items.$model.value"
-                @change="handleUpdated"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.decision_strategy"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Decision Strategy
+                </template>
+                <VCFormSelect
+                    v-model="v.fields.decision_strategy.$model.value"
+                    :options="decisionStrategyOptions"
+                    :option-default="true"
+                    :option-default-value="'-- None (default: unanimous) --'"
+                    @change="handleDecisionStrategyUpdated"
+                />
+                <div class="alert alert-sm alert-info mt-1 mb-0">
+                    {{ decisionStrategyHint }}
+                </div>
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.items"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Children
+                </template>
+                <APolicyChildrenPicker
+                    :parent-id="id"
+                    :query="query"
+                    :value="v.fields.items.$model.value"
+                    @change="handleUpdated"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

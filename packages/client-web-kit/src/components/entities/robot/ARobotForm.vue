@@ -11,7 +11,6 @@ import {
     TranslatorTranslationDefaultKey, 
     TranslatorTranslationNamespace, 
     assignFormProperties, 
-    useFieldValidation, 
     useTranslationsForNamespace, 
 } from '../../../core';
 import type { PropType } from 'vue';
@@ -33,6 +32,7 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import { ARealms } from '../realm';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const ARobotForm = defineComponent({
     components: {
@@ -41,6 +41,8 @@ export const ARobotForm = defineComponent({
         AToggleButton,
         VCFormGroup,
         VCFormInput,
+
+        IFieldValidation,
     },
     props: {
         name: { type: String, default: undefined },
@@ -147,7 +149,6 @@ export const ARobotForm = defineComponent({
             translationsDefault,
             generateSecret,
             submit,
-            useFieldValidation,
         };
     },
 });
@@ -171,44 +172,59 @@ export default ARobotForm;
                     </VCFormGroup>
                 </template>
 
-                <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-                    <template #label>
-                        {{ translationsDefault.name }}
-                    </template>
-                    <VCFormInput
-                        v-model="v.fields.name.$model.value"
-                        :disabled="isNameFixed"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.name"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.name }}
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.name.$model.value"
+                            :disabled="isNameFixed"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
 
-                <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
-                    <template #label>
-                        {{ translationsDefault.displayName }}
-                    </template>
-                    <VCFormInput
-                        :model-value="v.fields.display_name.$model.value ?? ''"
-                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.display_name"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.displayName }}
+                        </template>
+                        <VCFormInput
+                            :model-value="v.fields.display_name.$model.value ?? ''"
+                            @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
 
-                <VCFormGroup :validation="useFieldValidation(v.fields.secret)">
-                    <template #label>
-                        {{ translationsDefault.secret }}<span
-                            v-if="isSecretHashed"
-                            class="text-error-600 font-bold ps-1"
-                        >
-                            {{ translationsDefault.hashed }}
-                            <VCIcon
-                                name="fa6-solid:triangle-exclamation"
-                                class="ps-1"
-                            />
-                        </span>
-                    </template>
-                    <VCFormInput
-                        :model-value="v.fields.secret.$model.value ?? ''"
-                        @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.secret"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            {{ translationsDefault.secret }}<span
+                                v-if="isSecretHashed"
+                                class="text-error-600 font-bold ps-1"
+                            >
+                                {{ translationsDefault.hashed }}
+                                <VCIcon
+                                    name="fa6-solid:triangle-exclamation"
+                                    class="ps-1"
+                                />
+                            </span>
+                        </template>
+                        <VCFormInput
+                            :model-value="v.fields.secret.$model.value ?? ''"
+                            @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
 
                 <div>
                     <button

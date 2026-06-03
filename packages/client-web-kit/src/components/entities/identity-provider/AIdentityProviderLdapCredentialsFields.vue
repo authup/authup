@@ -6,16 +6,21 @@
   -->
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { assignFormProperties, useFieldValidation  } from '../../../core';
+import { assignFormProperties } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AIdentityProviderLdapCredentialsFields = defineComponent({
-    components: { VCFormGroup, VCFormInput },
+    components: {
+        VCFormGroup, 
+        VCFormInput, 
+        IFieldValidation, 
+    },
     props: {
         entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
         discovery: { type: Boolean, default: false },
@@ -35,7 +40,7 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
         onChange(updated, () => init());
         init();
 
-        return { v, useFieldValidation };
+        return { v };
     },
 });
 
@@ -44,21 +49,31 @@ export default AIdentityProviderLdapCredentialsFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation(v.fields.user)">
-            <template #label>
-                User
-            </template>
-            <VCFormInput v-model="v.fields.user.$model.value" />
-        </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation(v.fields.password)">
-            <template #label>
-                Password
-            </template>
-            <VCFormInput
-                v-model="v.fields.password.$model.value"
-                type="password"
-                autocomplete="current-password"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.user"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    User
+                </template>
+                <VCFormInput v-model="v.fields.user.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.password"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Password
+                </template>
+                <VCFormInput
+                    v-model="v.fields.password.$model.value"
+                    type="password"
+                    autocomplete="current-password"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

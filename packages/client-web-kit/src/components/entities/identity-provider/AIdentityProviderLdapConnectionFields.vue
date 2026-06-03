@@ -6,19 +6,22 @@
   -->
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { assignFormProperties, useFieldValidation  } from '../../../core';
+import { assignFormProperties } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AIdentityProviderLdapConnectionFields = defineComponent({
     components: {
         VCFormGroup, 
         VCFormInput, 
-        VCFormSwitch, 
+        VCFormSwitch,
+
+        IFieldValidation,
     },
     props: {
         entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
@@ -60,7 +63,6 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
         return {
             v,
             onTimeoutChange,
-            useFieldValidation,
         };
     },
 });
@@ -70,46 +72,66 @@ export default AIdentityProviderLdapConnectionFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation(v.fields.url)">
-            <template #label>
-                URL
-            </template>
-            <VCFormInput
-                v-model="v.fields.url.$model.value"
-                placeholder="<scheme>://<address>:<port>"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.url"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    URL
+                </template>
+                <VCFormInput
+                    v-model="v.fields.url.$model.value"
+                    placeholder="<scheme>://<address>:<port>"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <VCFormGroup :validation="useFieldValidation(v.fields.timeout)">
-            <template #label>
-                Timeout
-            </template>
-            <VCFormInput
-                :model-value="String(v.fields.timeout.$model.value)"
-                type="number"
-                @update:model-value="onTimeoutChange"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.timeout"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Timeout
+                </template>
+                <VCFormInput
+                    :model-value="String(v.fields.timeout.$model.value)"
+                    type="number"
+                    @update:model-value="onTimeoutChange"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <VCFormGroup :validation="useFieldValidation(v.fields.start_tls)">
-            <template #label>
-                StartTLS
-            </template>
-            <VCFormSwitch
-                v-model="v.fields.start_tls.$model.value"
-                :label="true"
-                label-content="Enable StartTLS process?"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.start_tls"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    StartTLS
+                </template>
+                <VCFormSwitch
+                    v-model="v.fields.start_tls.$model.value"
+                    :label="true"
+                    label-content="Enable StartTLS process?"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <VCFormGroup :validation="useFieldValidation(v.fields.base_dn)">
-            <template #label>
-                Base DN
-            </template>
-            <VCFormInput
-                v-model="v.fields.base_dn.$model.value"
-                placeholder="e.g. dc=example,dc=com"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.base_dn"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Base DN
+                </template>
+                <VCFormInput
+                    v-model="v.fields.base_dn.$model.value"
+                    placeholder="e.g. dc=example,dc=com"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

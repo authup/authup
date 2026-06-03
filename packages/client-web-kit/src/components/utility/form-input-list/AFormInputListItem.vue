@@ -10,9 +10,9 @@ import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '../../../core';
 import { z } from 'zod';
 import { defineComponent, reactive } from 'vue';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 // Per-row input validator — local because there's no
 // "list item name" entity in core-kit.
@@ -24,7 +24,11 @@ class FormInputListItemValidator extends Container<{ name: string }> {
 }
 
 export default defineComponent({
-    components: { VCFormInput, VCFormGroup },
+    components: {
+        VCFormInput, 
+        VCFormGroup, 
+        IFieldValidation, 
+    },
     props: {
         name: {
             type: String,
@@ -53,27 +57,31 @@ export default defineComponent({
             handleUpdated,
             handleDeleted,
             v,
-            useFieldValidation,
         };
     },
 });
 </script>
 <template>
-    <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-        <VCFormInput
-            v-model="v.fields.name.$model.value"
-            @change="handleUpdated"
-        >
-            <template #groupAppend>
-                <button
-                    :disabled="disabled"
-                    type="button"
-                    class="btn btn-xs btn-warning"
-                    @click.prevent="handleDeleted"
-                >
-                    <VCIcon name="fa6-solid:minus" />
-                </button>
-            </template>
-        </VCFormInput>
-    </VCFormGroup>
+    <IFieldValidation
+        v-slot="{ value }"
+        :field="v.fields.name"
+    >
+        <VCFormGroup :validation="value">
+            <VCFormInput
+                v-model="v.fields.name.$model.value"
+                @change="handleUpdated"
+            >
+                <template #groupAppend>
+                    <button
+                        :disabled="disabled"
+                        type="button"
+                        class="btn btn-xs btn-warning"
+                        @click.prevent="handleDeleted"
+                    >
+                        <VCIcon name="fa6-solid:minus" />
+                    </button>
+                </template>
+            </VCFormInput>
+        </VCFormGroup>
+    </IFieldValidation>
 </template>

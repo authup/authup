@@ -2,18 +2,21 @@
 import { type PropType, defineComponent, reactive } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties, useFieldValidation  } from '../../../../core';
+import { assignFormProperties } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormSwitch } from '@vuecs/forms';
 import type { RealmMatchPolicy } from '@authup/access';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
         AFormInputList, 
         VCFormGroup, 
-        VCFormSwitch, 
+        VCFormSwitch,
+
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
@@ -60,7 +63,6 @@ export default defineComponent({
             handleUpdated,
             handleAttributeNameChanged,
             v,
-            useFieldValidation,
         };
     },
 });
@@ -68,55 +70,75 @@ export default defineComponent({
 <template>
     <div class="row">
         <div class="col-7">
-            <VCFormGroup :validation="useFieldValidation(v.fields.attribute_name)">
-                <AFormInputList
-                    :names="v.fields.attribute_name.$model.value"
-                    @changed="handleAttributeNameChanged"
-                />
-            </VCFormGroup>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.attribute_name"
+            >
+                <VCFormGroup :validation="value">
+                    <AFormInputList
+                        :names="v.fields.attribute_name.$model.value"
+                        @changed="handleAttributeNameChanged"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
         <div class="col-5">
-            <VCFormGroup :validation="useFieldValidation(v.fields.attribute_name_strict)">
-                <VCFormSwitch
-                    v-model="v.fields.attribute_name_strict.$model.value"
-                    :label="true"
-                    @change="handleUpdated"
-                >
-                    <template #label="iProps">
-                        <label :for="iProps.id">
-                            Only match if the attribute is strict equal to the name?
-                        </label>
-                    </template>
-                </VCFormSwitch>
-            </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation(v.fields.attribute_null_match_all)">
-                <VCFormSwitch
-                    v-model="v.fields.attribute_null_match_all.$model.value"
-                    :label="true"
-                    @change="handleUpdated"
-                >
-                    <template #label="iProps">
-                        <label :for="iProps.id">
-                            Determines if resources with null realm-id/name value should match all identity realms.<br>
-                            If true, any identity realm can access resources with null realm-id/name values.
-                        </label>
-                    </template>
-                </VCFormSwitch>
-            </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation(v.fields.identity_master_match_all)">
-                <VCFormSwitch
-                    v-model="v.fields.identity_master_match_all.$model.value"
-                    :label="true"
-                    @change="handleUpdated"
-                >
-                    <template #label="iProps">
-                        <label :for="iProps.id">
-                            Specifies whether the master realm of an identity should match all realm-id/name attributes, including null.<br>
-                            If true, the master realm can access any resource regardless of its realm value.
-                        </label>
-                    </template>
-                </VCFormSwitch>
-            </VCFormGroup>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.attribute_name_strict"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.attribute_name_strict.$model.value"
+                        :label="true"
+                        @change="handleUpdated"
+                    >
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Only match if the attribute is strict equal to the name?
+                            </label>
+                        </template>
+                    </VCFormSwitch>
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.attribute_null_match_all"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.attribute_null_match_all.$model.value"
+                        :label="true"
+                        @change="handleUpdated"
+                    >
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Determines if resources with null realm-id/name value should match all identity realms.<br>
+                                If true, any identity realm can access resources with null realm-id/name values.
+                            </label>
+                        </template>
+                    </VCFormSwitch>
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.identity_master_match_all"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.identity_master_match_all.$model.value"
+                        :label="true"
+                        @change="handleUpdated"
+                    >
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Specifies whether the master realm of an identity should match all realm-id/name attributes, including null.<br>
+                                If true, the master realm can access any resource regardless of its realm value.
+                            </label>
+                        </template>
+                    </VCFormSwitch>
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
     </div>
 </template>

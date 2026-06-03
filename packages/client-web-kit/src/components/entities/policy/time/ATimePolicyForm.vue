@@ -7,7 +7,7 @@ import {
 } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties, useFieldValidation  } from '../../../../core';
+import { assignFormProperties } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormGroup, VCFormInput, VCFormSelect } from '@vuecs/forms';
@@ -19,12 +19,15 @@ import {
 } from '@authup/access';
 import type { TimePolicy } from '@authup/access';
 import { onChange, useUpdatedAt } from '../../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
         VCFormInput, 
         VCFormGroup, 
-        VCFormSelect, 
+        VCFormSelect,
+
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
@@ -97,7 +100,6 @@ export default defineComponent({
             displayIntervalForDayOfYear,
             intervalOptions,
             v,
-            useFieldValidation,
         };
     },
 });
@@ -106,91 +108,121 @@ export default defineComponent({
     <div>
         <div class="row">
             <div class="col">
-                <VCFormGroup :validation="useFieldValidation(v.fields.start)">
-                    <template #label>
-                        Start
-                    </template>
-                    <VCFormInput
-                        v-model="v.fields.start.$model.value"
-                        placeholder="HH:MM"
-                        @change="handleUpdated"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.start"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Start
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.start.$model.value"
+                            placeholder="HH:MM"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
             <div class="col">
-                <VCFormGroup :validation="useFieldValidation(v.fields.end)">
-                    <template #label>
-                        End
-                    </template>
-                    <VCFormInput
-                        v-model="v.fields.end.$model.value"
-                        placeholder="HH:MM"
-                        @change="handleUpdated"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.end"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            End
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.end.$model.value"
+                            placeholder="HH:MM"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
         </div>
         <div class="row">
             <div class="col">
-                <VCFormGroup :validation="useFieldValidation(v.fields.interval)">
-                    <template #label>
-                        Interval
-                    </template>
-                    <VCFormSelect
-                        v-model="v.fields.interval.$model.value"
-                        :options="intervalOptions"
-                        :option-default="true"
-                        @change="handleIntervalUpdated"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.interval"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Interval
+                        </template>
+                        <VCFormSelect
+                            v-model="v.fields.interval.$model.value"
+                            :options="intervalOptions"
+                            :option-default="true"
+                            @change="handleIntervalUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
             <div
                 v-if="displayIntervalForDayOfWeek"
                 class="col"
             >
-                <VCFormGroup :validation="useFieldValidation(v.fields.day_of_week)">
-                    <template #label>
-                        Day of Week
-                    </template>
-                    <VCFormInput
-                        v-model="v.fields.day_of_week.$model.value"
-                        placeholder="0-6"
-                        type="number"
-                        @change="handleUpdated"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.day_of_week"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Day of Week
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.day_of_week.$model.value"
+                            placeholder="0-6"
+                            type="number"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
             <div
                 v-if="displayIntervalForDayOfMonth"
                 class="col"
             >
-                <VCFormGroup :validation="useFieldValidation(v.fields.day_of_month)">
-                    <template #label>
-                        Day of Month
-                    </template>
-                    <VCFormInput
-                        v-model="v.fields.day_of_month.$model.value"
-                        placeholder="1-31"
-                        type="number"
-                        @change="handleUpdated"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.day_of_month"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Day of Month
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.day_of_month.$model.value"
+                            placeholder="1-31"
+                            type="number"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
             <div
                 v-if="displayIntervalForDayOfYear"
                 class="col"
             >
-                <VCFormGroup :validation="useFieldValidation(v.fields.day_of_year)">
-                    <template #label>
-                        Day of Year
-                    </template>
-                    <VCFormInput
-                        v-model="v.fields.day_of_year.$model.value"
-                        type="number"
-                        placeholder="1-365"
-                        @change="handleUpdated"
-                    />
-                </VCFormGroup>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.day_of_year"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Day of Year
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.day_of_year.$model.value"
+                            type="number"
+                            placeholder="1-365"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
         </div>
     </div>

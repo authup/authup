@@ -14,7 +14,6 @@ import {
     assignFormProperties, 
     injectStore, 
     storeToRefs, 
-    useFieldValidation, 
     useTranslationsForNamespace, 
 } from '../../../core';
 import type { PropType } from 'vue';
@@ -34,6 +33,7 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 import { ARealmPicker } from '../realm';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AScopeForm = defineComponent({
     components: {
@@ -42,6 +42,8 @@ export const AScopeForm = defineComponent({
         VCFormGroup,
         VCFormInput,
         VCFormTextarea,
+
+        IFieldValidation,
     },
     props: {
         name: {
@@ -140,7 +142,6 @@ export const AScopeForm = defineComponent({
             isNameFixed,
             translationsDefault,
             submit,
-            useFieldValidation,
         };
     },
 });
@@ -150,49 +151,69 @@ export default AScopeForm;
 
 <template>
     <form @submit.prevent="submit">
-        <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-            <template #label>
-                {{ translationsDefault.name }}
-            </template>
-            <VCFormInput
-                v-model="v.fields.name.$model.value"
-                :disabled="isNameFixed"
-            />
-        </VCFormGroup>
-
-        <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
-            <template #label>
-                {{ translationsDefault.displayName }}
-            </template>
-            <VCFormInput
-                :model-value="v.fields.display_name.$model.value ?? ''"
-                @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
-            />
-        </VCFormGroup>
-
-        <VCFormGroup :validation="useFieldValidation(v.fields.description)">
-            <template #label>
-                {{ translationsDefault.description }}
-            </template>
-            <VCFormTextarea
-                :model-value="v.fields.description.$model.value ?? ''"
-                :rows="7"
-                @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
-            />
-        </VCFormGroup>
-
-        <template v-if="!realmId && !isNameFixed && !isEditing">
-            <VCFormGroup :validation="useFieldValidation(v.fields.realm_id)">
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.name"
+        >
+            <VCFormGroup :validation="value">
                 <template #label>
-                    {{ translationsDefault.realm }}
+                    {{ translationsDefault.name }}
                 </template>
-                <ARealmPicker
-                    :value="v.fields.realm_id.$model.value"
-                    @change="(input: string[]) => {
-                        v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
-                    }"
+                <VCFormInput
+                    v-model="v.fields.name.$model.value"
+                    :disabled="isNameFixed"
                 />
             </VCFormGroup>
+        </IFieldValidation>
+
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.display_name"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translationsDefault.displayName }}
+                </template>
+                <VCFormInput
+                    :model-value="v.fields.display_name.$model.value ?? ''"
+                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
+
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.description"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    {{ translationsDefault.description }}
+                </template>
+                <VCFormTextarea
+                    :model-value="v.fields.description.$model.value ?? ''"
+                    :rows="7"
+                    @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
+
+        <template v-if="!realmId && !isNameFixed && !isEditing">
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.realm_id"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        {{ translationsDefault.realm }}
+                    </template>
+                    <ARealmPicker
+                        :value="v.fields.realm_id.$model.value"
+                        @change="(input: string[]) => {
+                            v.fields.realm_id.$model.value = input.length > 0 ? input[0] ?? '' : '';
+                        }"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
         </template>
 
         <AFormSubmit

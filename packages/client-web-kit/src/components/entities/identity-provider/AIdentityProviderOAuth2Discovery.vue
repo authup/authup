@@ -10,7 +10,6 @@ import { isOpenIDProviderMetadata } from '@authup/specs';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '../../../core';
 import { z } from 'zod';
 import {
     computed,
@@ -19,6 +18,7 @@ import {
     ref,
 } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 // Standalone form (not a registered child) — uses its own URL
 // validator since `@authup/core-kit` doesn't ship a "discovery URL"
@@ -32,7 +32,11 @@ class DiscoveryUrlValidator extends Container<{ url: string }> {
 }
 
 export const AIdentityProviderOAuth2Discovery = defineComponent({
-    components: { VCFormGroup, VCFormInput },
+    components: {
+        VCFormGroup, 
+        VCFormInput, 
+        IFieldValidation, 
+    },
     emits: ['lookup', 'failed'],
     setup(_, setup) {
         const busy = ref(false);
@@ -83,7 +87,6 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
             lookupValid,
             isDisabled,
             lookup,
-            useFieldValidation,
         };
     },
 });
@@ -93,16 +96,21 @@ export default AIdentityProviderOAuth2Discovery;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation(v.fields.url)">
-            <template #label>
-                Discovery
-            </template>
-            <VCFormInput
-                v-model="v.fields.url.$model.value"
-                :class="{ 'is-valid': lookupValid }"
-                placeholder="https://example.com/.well-known/openid-configuration"
-            />
-        </VCFormGroup>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.url"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Discovery
+                </template>
+                <VCFormInput
+                    v-model="v.fields.url.$model.value"
+                    :class="{ 'is-valid': lookupValid }"
+                    placeholder="https://example.com/.well-known/openid-configuration"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
         <div
             v-if="message"
             class="alert alert-sm alert-warning"

@@ -11,7 +11,6 @@ import {
     assignFormProperties, 
     injectStore, 
     storeToRefs, 
-    useFieldValidation,  
 } from '../../../core';
 import { ValidatorGroup } from '@authup/kit';
 import type { Policy } from '@authup/core-kit';
@@ -26,6 +25,7 @@ import {
 import { BuiltInPolicyType } from '@authup/access';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
 import { ARealmPicker } from '../realm';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
@@ -34,6 +34,8 @@ export default defineComponent({
         VCFormSwitch,
         VCFormGroup,
         VCFormTextarea,
+
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Policy> } },
     emits: ['updated'],
@@ -104,7 +106,6 @@ export default defineComponent({
             handleUpdated,
             typeOptions,
             v,
-            useFieldValidation,
         };
     },
 });
@@ -112,63 +113,88 @@ export default defineComponent({
 <template>
     <div class="row">
         <div class="col">
-            <VCFormGroup :validation="useFieldValidation(v.fields.name)">
-                <template #label>
-                    Name
-                </template>
-                <VCFormInput
-                    v-model="v.fields.name.$model.value"
-                    @change="handleUpdated"
-                />
-            </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
-                <template #label>
-                    Display Name
-                </template>
-                <VCFormInput
-                    :model-value="v.fields.display_name.$model.value ?? ''"
-                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
-                    @change="handleUpdated"
-                />
-            </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation(v.fields.description)">
-                <template #label>
-                    Description
-                </template>
-                <VCFormTextarea
-                    :model-value="v.fields.description.$model.value ?? ''"
-                    rows="4"
-                    @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
-                    @change="handleUpdated"
-                />
-            </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation(v.fields.invert)">
-                <VCFormSwitch
-                    v-model="v.fields.invert.$model.value"
-                    :label="true"
-                    @change="handleUpdated"
-                >
-                    <template #label="iProps">
-                        <label :for="iProps.id">
-                            Invert?
-                        </label>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Name
                     </template>
-                </VCFormSwitch>
-            </VCFormGroup>
+                    <VCFormInput
+                        v-model="v.fields.name.$model.value"
+                        @change="handleUpdated"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.display_name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Display Name
+                    </template>
+                    <VCFormInput
+                        :model-value="v.fields.display_name.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                        @change="handleUpdated"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.description"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Description
+                    </template>
+                    <VCFormTextarea
+                        :model-value="v.fields.description.$model.value ?? ''"
+                        rows="4"
+                        @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
+                        @change="handleUpdated"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.invert"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.invert.$model.value"
+                        :label="true"
+                        @change="handleUpdated"
+                    >
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Invert?
+                            </label>
+                        </template>
+                    </VCFormSwitch>
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
         <div
             v-if="!realmId && !isEditing"
             class="col"
         >
-            <VCFormGroup :validation="useFieldValidation(v.fields.realm_id)">
-                <template #label>
-                    Realm
-                </template>
-                <ARealmPicker
-                    :value="v.fields.realm_id.$model.value"
-                    @change="(value: string[]) => { v.fields.realm_id.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
-                />
-            </VCFormGroup>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.realm_id"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Realm
+                    </template>
+                    <ARealmPicker
+                        :value="v.fields.realm_id.$model.value"
+                        @change="(value: string[]) => { v.fields.realm_id.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
     </div>
 </template>
