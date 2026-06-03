@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Composable } from '@validup/vue';
+import type { Composable, FieldState } from '@validup/vue';
 import { getSeverity } from '@validup/vue';
+import { useFieldValidation as baseUseFieldValidation } from '@ilingo/validup-vue';
 import type { ObjectLiteral } from 'validup';
 
 /**
@@ -17,6 +18,45 @@ import type { ObjectLiteral } from 'validup';
  * pending-but-dirty, `undefined` for pristine.
  */
 export { getSeverity };
+
+/**
+ * Memoized wrapper around `@ilingo/validup-vue`'s `useFieldValidation()`.
+ *
+ * The upstream implementation calls VueUse's `computedAsync()` internally,
+ * which registers a `watchEffect()` in the current component's effect
+ * scope. The upstream docstring recommends calling it **inline in
+ * templates** (`<VCFormGroup :validation="useFieldValidation(v.fields.X)">`)
+ * — but every template render then re-registers a fresh watcher, which
+ * accumulates over the component's lifetime. On every keystroke the
+ * mounting form-control triggers all accumulated watchers, each schedules
+ * an async translate, each commits a reactive write, each re-renders →
+ * appends another watcher. The cascade saturates the scheduler and the
+ * page hangs.
+ *
+ * Each `useValidup()` composable maintains its own per-path `FieldState`
+ * cache, so same-key field accesses across renders return the **same**
+ * `FieldState` object identity. We use that identity as a `WeakMap` key
+ * and memoize the validation bundle per field. First render registers
+ * the watcher (lives for the component's lifetime); subsequent renders
+ * return the cached bundle without re-registering.
+ *
+ * Tracked upstream at tada5hi/ilingo#…  — drop this wrapper once
+ * `@ilingo/validup-vue` memoizes internally (or moves the watchEffect
+ * registration onto first-access only).
+ */
+const fieldValidationCache = new WeakMap<
+    FieldState<any>,
+    ReturnType<typeof baseUseFieldValidation>
+>();
+
+export function useFieldValidation<V>(field: FieldState<V>): ReturnType<typeof baseUseFieldValidation> {
+    let bundle = fieldValidationCache.get(field);
+    if (!bundle) {
+        bundle = baseUseFieldValidation(field);
+        fieldValidationCache.set(field, bundle);
+    }
+    return bundle;
+}
 
 /**
  * Snapshot the `$model` values of every top-level field in a registered

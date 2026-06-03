@@ -10,7 +10,7 @@ import { isOpenIDProviderMetadata } from '@authup/specs';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { useFieldValidation } from '../../../core';
 import { z } from 'zod';
 import {
     computed,

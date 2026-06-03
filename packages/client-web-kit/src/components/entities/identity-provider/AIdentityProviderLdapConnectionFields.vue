@@ -6,10 +6,9 @@
   -->
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { assignFormProperties } from '../../../core';
+import { assignFormProperties, useFieldValidation  } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';

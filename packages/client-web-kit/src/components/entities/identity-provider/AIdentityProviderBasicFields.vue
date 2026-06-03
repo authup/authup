@@ -12,10 +12,10 @@ import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForNamespace,
+    useFieldValidation, 
+    useTranslationsForNamespace, 
 } from '../../../core';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
 import type { PropType } from 'vue';
 import {
     computed,

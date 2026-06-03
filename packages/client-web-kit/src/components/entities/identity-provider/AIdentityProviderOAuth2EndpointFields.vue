@@ -11,11 +11,10 @@ import type { OpenIDProviderMetadata } from '@authup/specs';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { assignFormProperties, useFieldValidation  } from '../../../core';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import { assignFormProperties } from '../../../core';
 import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery.vue';
 
 export default defineComponent({

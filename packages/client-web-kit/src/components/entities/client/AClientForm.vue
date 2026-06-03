@@ -14,7 +14,16 @@ import {
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { 
+    TranslatorTranslationClientKey, 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationNamespace, 
+    assignFormProperties, 
+    injectStore, 
+    storeToRefs, 
+    useFieldValidation, 
+    useTranslationsForNamespace, 
+} from '../../../core';
 import { type Client, ClientValidator, EntityType } from '@authup/core-kit';
 import { ValidatorGroup, createNanoID, isBCryptHash } from '@authup/kit';
 import { ARealmPicker } from '../realm';
@@ -24,15 +33,6 @@ import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
-import {
-    TranslatorTranslationClientKey,
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    injectStore,
-    storeToRefs,
-    useTranslationsForNamespace,
-} from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 
 export default defineComponent({

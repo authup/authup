@@ -7,7 +7,12 @@ import {
     toRef,
 } from 'vue';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { 
+    assignFormProperties, 
+    injectStore, 
+    storeToRefs, 
+    useFieldValidation,  
+} from '../../../core';
 import { ValidatorGroup } from '@authup/kit';
 import type { Policy } from '@authup/core-kit';
 import { PolicyValidator } from '@authup/core-kit';
@@ -19,7 +24,6 @@ import {
     VCFormTextarea,
 } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
-import { assignFormProperties, injectStore, storeToRefs } from '../../../core';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
 import { ARealmPicker } from '../realm';
 

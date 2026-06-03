@@ -11,14 +11,13 @@ import {
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { injectHTTPClient, injectStore, useFieldValidation  } from '../../core';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import type { BuildInput } from 'rapiq';
 import { VCButton } from '@vuecs/button';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
-import { injectHTTPClient, injectStore } from '../../core';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../entities';
 import { APagination, ATitle } from '../utility';
 

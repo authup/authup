@@ -7,7 +7,13 @@
 <script lang="ts">
 import { ValidatorGroup, createNanoID } from '@authup/kit';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationNamespace, 
+    assignFormProperties, 
+    useFieldValidation, 
+    useTranslationsForNamespace, 
+} from '../../../core';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -19,12 +25,6 @@ import {
 import type { Realm } from '@authup/core-kit';
 import { EntityType, REALM_MASTER_NAME, RealmValidator } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    useTranslationsForNamespace,
-} from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,

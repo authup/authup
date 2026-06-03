@@ -13,7 +13,7 @@ import {
 import type { PropType } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { injectHTTPClient, useFieldValidation, wrapFnWithBusyState  } from '../../../core';
 import { createValidator } from '@validup/adapter-zod';
 import {
     Container,
@@ -22,7 +22,6 @@ import {
 } from 'validup';
 import type { Validator } from 'validup';
 import { z } from 'zod';
-import { injectHTTPClient, wrapFnWithBusyState } from '../../../core';
 import { AFormSubmit } from '../../utility';
 
 // Cross-field equality between `password` and `password_repeat` — runs

@@ -2,11 +2,10 @@
 import { type PropType, defineComponent, reactive } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { assignFormProperties, useFieldValidation  } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import type { DatePolicy } from '@authup/access';
-import { assignFormProperties } from '../../../../core';
 import { onChange, useUpdatedAt } from '../../../../composables';
 
 export default defineComponent({

@@ -2,11 +2,10 @@
 import { type PropType, defineComponent, reactive } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { assignFormProperties, useFieldValidation  } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormSwitch } from '@vuecs/forms';
 import type { RealmMatchPolicy } from '@authup/access';
-import { assignFormProperties } from '../../../../core';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
 

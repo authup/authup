@@ -8,7 +8,15 @@
 import { EntityType, RoleValidator } from '@authup/core-kit';
 import { ValidatorGroup } from '@authup/kit';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationNamespace, 
+    assignFormProperties, 
+    injectStore, 
+    storeToRefs, 
+    useFieldValidation, 
+    useTranslationsForNamespace, 
+} from '../../../core';
 import type { PropType } from 'vue';
 import {
     computed,
@@ -19,14 +27,6 @@ import {
 } from 'vue';
 import type { Role } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    injectStore,
-    storeToRefs,
-    useTranslationsForNamespace,
-} from '../../../core';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,

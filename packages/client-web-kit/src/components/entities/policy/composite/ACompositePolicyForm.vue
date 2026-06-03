@@ -8,7 +8,7 @@ import {
 } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { useFieldValidation } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { DecisionStrategy } from '@authup/kit';
 import type { FormOption } from '@vuecs/forms';

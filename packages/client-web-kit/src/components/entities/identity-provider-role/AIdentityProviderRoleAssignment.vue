@@ -10,18 +10,18 @@ import { EntityType } from '@authup/core-kit';
 import { createValidator } from '@validup/adapter-zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { useFieldValidation } from '@ilingo/validup-vue';
+import { 
+    TranslatorTranslationDefaultKey, 
+    TranslatorTranslationNamespace, 
+    assignFormProperties, 
+    useFieldValidation, 
+    useTranslationsForNamespace, 
+} from '../../../core';
 import { z } from 'zod';
 import type { PropType } from 'vue';
 import { defineComponent, reactive, ref } from 'vue';
 import type { IdentityProviderRoleMapping, Role } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
-import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    useTranslationsForNamespace,
-} from '../../../core';
 import {
     defineEntityManager,
     defineEntityVEmitOptions,
