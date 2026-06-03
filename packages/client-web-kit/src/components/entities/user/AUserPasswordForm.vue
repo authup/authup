@@ -14,7 +14,7 @@ import type { PropType } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { useValidup } from '@validup/vue';
 import { injectHTTPClient, wrapFnWithBusyState  } from '../../../core';
-import { createValidator } from '@validup/adapter-zod';
+import { createValidator } from '@validup/zod';
 import {
     Container,
     ValidupError,

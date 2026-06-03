@@ -12,7 +12,7 @@ import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/c
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { useValidup } from '@validup/vue';
 import { injectHTTPClient, injectStore } from '../../core';
-import { createValidator } from '@validup/adapter-zod';
+import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import type { BuildInput } from 'rapiq';

@@ -7,7 +7,7 @@
 
 <script lang="ts">
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { createValidator } from '@validup/adapter-zod';
+import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { z } from 'zod';

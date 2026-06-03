@@ -48,16 +48,16 @@ import type { TranslatorInstallOptions } from './types';
  * the namespace tree and a misspelled namespace name is a compile
  * error.
  *
- * **Known gap until `@validup/adapter-zod` ships the zod-code →
- * validup-code mapping** (source landed at tada5hi/validup@49df8fb,
- * not yet on npm — latest published is 0.2.4): the adapter emits every
- * zod issue as `code: 'value_invalid'`, which the validup catalog
- * resolves to "The value is invalid". Specific zod constraints
- * (min-length, max-length, required, email, …) won't surface until the
- * fixed adapter is published and bumped here. The `issue.message`
- * fallback path in `@ilingo/validup`'s `translateIssue` only fires
- * when the catalog has no entry for the code — which is not the case
- * for `value_invalid`. Tracked at tada5hi/validup#397.
+ * Zod-driven validators flow through `@validup/zod`'s
+ * `createValidator()`, which maps each `ZodIssue` to a specific validup
+ * `IssueCode` (`too_small` → `MIN_LENGTH` / `MIN_VALUE` based on
+ * origin, `too_big` → `MAX_LENGTH` / `MAX_VALUE`, `invalid_format` →
+ * `EMAIL` / `URL` / `UUID` / `DATE` / `IP_ADDRESS` / `BASE64` / `JSON`
+ * / `PATTERN` per zod's `format` discriminator, `invalid_type` with
+ * undefined input → `REQUIRED`, `invalid_value` → `ONE_OF_FAILED`).
+ * Specific constraints surface as parameterized catalog templates
+ * (`'The minimum length allowed is {{min}}'`, etc.), localized via
+ * `@ilingo/validup`'s EN / DE / FR / ES translations.
  *
  * Migrated from the previous `@ilingo/vuelidate`-based install when
  * authup's frontend moved off `vuelidate` to `@validup/vue`.

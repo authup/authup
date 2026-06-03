@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidator } from '@validup/adapter-zod';
+import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import type { RobotProvisioningRelations } from './types.ts';

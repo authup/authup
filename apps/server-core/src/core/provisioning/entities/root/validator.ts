@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildZodIssuesForError, createValidator } from '@validup/adapter-zod';
+import { buildZodIssuesForError, createValidator } from '@validup/zod';
 import { Container, isValidupError } from 'validup';
 import { z } from 'zod';
 import { ProvisioningStrategyValidator } from '../../strategy/index.ts';

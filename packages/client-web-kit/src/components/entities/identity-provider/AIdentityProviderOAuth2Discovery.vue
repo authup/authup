@@ -7,7 +7,7 @@
 <script lang="ts">
 import { Client } from '@authup/core-http-kit';
 import { isOpenIDProviderMetadata } from '@authup/specs';
-import { createValidator } from '@validup/adapter-zod';
+import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { z } from 'zod';

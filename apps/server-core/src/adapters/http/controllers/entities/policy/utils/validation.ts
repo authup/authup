@@ -31,7 +31,7 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
                     min: 3,
                     max: 128,
                 })
-                .custom((value) => isPolicyNameValid(value, { throwOnFailure: true }));
+                .custom((value: unknown) => isPolicyNameValid(value as string, { throwOnFailure: true }));
         });
 
         this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator);
