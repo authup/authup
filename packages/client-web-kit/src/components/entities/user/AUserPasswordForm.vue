@@ -15,10 +15,45 @@ import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { useValidup } from '@validup/vue';
 import { useFieldValidation } from '@ilingo/validup-vue';
 import { createValidator } from '@validup/adapter-zod';
-import { Container } from 'validup';
+import {
+    Container,
+    ValidupError,
+    defineIssueItem,
+} from 'validup';
+import type { Validator } from 'validup';
 import { z } from 'zod';
 import { injectHTTPClient, wrapFnWithBusyState } from '../../../core';
 import { AFormSubmit } from '../../utility';
+
+// Cross-field equality between `password` and `password_repeat` — runs
+// as a second mount on `password_repeat` so the first mount's length
+// validator surfaces its own message independently.
+const sameAsPassword: Validator = (ctx) => {
+    const { value } = ctx;
+    // If the value isn't a string at this point, the prior length
+    // validator already failed — defer to its issue rather than adding
+    // a confusing "doesn't match" alongside.
+    if (typeof value !== 'string') {
+        return value;
+    }
+    const { password } = ctx.data as { password?: unknown };
+    if (value !== password) {
+        // Bare-code path (defaults to `VALUE_INVALID`) + explicit
+        // message. Parameterized `SAME_AS` would surface the contract
+        // via `data: { other: 'password' }`, but `DefineIssueItemData`'s
+        // overload selection in validup 0.4 didn't accept the literal
+        // — bare-code + message gets the same end-user experience and
+        // sidesteps the type-juggling. validup's run loop prefixes the
+        // mount key on re-throw, so the issue lands under
+        // `password_repeat` in `$errors`.
+        const path: PropertyKey[] = [];
+        throw new ValidupError([defineIssueItem({
+            path,
+            message: 'Must match the password.',
+        })]);
+    }
+    return value;
+};
 
 // Inline validator — there's no `UserPasswordValidator` in core-kit;
 // `UserValidator` covers `password` for the entity-edit path. This
@@ -30,12 +65,11 @@ class UserPasswordValidator extends Container<{ password: string; password_repea
         const passwordValidator = createValidator(z.string().min(5).max(100));
         this.mount('password', passwordValidator);
 
-        // `password_repeat` matches `password` — the cross-field check
-        // happens in the submit guard rather than the validator, because
-        // validup's `Container` doesn't take a cross-field comparator
-        // primitive (would require a custom `Validator` with access to
-        // the whole `data` object via `ctx.data`).
+        // Two mounts on `password_repeat` — length first, equality second.
+        // Container runs mounts in order; a failure in the first short-
+        // circuits the key, so consumers only see one issue at a time.
         this.mount('password_repeat', passwordValidator);
+        this.mount('password_repeat', sameAsPassword);
     }
 }
 
@@ -66,8 +100,9 @@ export const AUserPasswordForm = defineComponent({
         const $v = useValidup(new UserPasswordValidator(), form);
 
         const submit = wrapFnWithBusyState(busy, async () => {
+            // `$v.$invalid` already covers length + password-repeat match
+            // (the `sameAsPassword` validator above).
             if ($v.$invalid.value) return;
-            if (form.password !== form.password_repeat) return;
             if (!props.id) return;
 
             try {

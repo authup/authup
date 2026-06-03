@@ -27,10 +27,14 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 
-// Inline validator — no `IdentityProviderRoleMappingValidator` for the
-// attribute fields ships in core-kit; the entity validator covers the
-// foreign-key columns (`role_id`, `provider_id`) which this form
-// doesn't expose to the user.
+// Inline attribute-only validator. `@authup/core-kit`'s
+// `IdentityProviderRoleMappingValidator` does cover these three keys
+// but also mounts the foreign-key columns (`provider_id`, `role_id`)
+// — those are supplied by the parent component at submit time, not by
+// the form, so routing through the entity validator would require an
+// always-`UPDATE` group cast that obscures intent. A follow-up split
+// in core-kit (`…AttributesValidator` vs `…EntityValidator`) would let
+// this collapse to a re-export.
 class RoleMappingAttributesValidator extends Container<{
     name: string;
     value: string;

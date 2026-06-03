@@ -22,11 +22,14 @@ import { injectHTTPClient, injectStore } from '../../core';
 import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../entities';
 import { APagination, ATitle } from '../utility';
 
-// Inline validator — the login form isn't an entity edit, so it has
-// its own credentials validator rather than reusing `UserValidator`
-// (whose `name` mount enforces backend rules like `isUserNameValid`
-// that are stricter than the login UX wants — login lets the user
-// type whatever credentials the server will check).
+// Inline by design — login deliberately uses a permissive credentials
+// shape (any non-empty min/max-bounded string) rather than reusing
+// `UserValidator`'s `isUserNameValid` check, which enforces the
+// canonical *creation* rules. The server is the authoritative
+// credentials check; the form just needs basic length validation so
+// the user gets immediate feedback instead of a round-trip 401.
+// Not a candidate for promotion to `@authup/core-kit` — login is not
+// an entity edit.
 class LoginCredentialsValidator extends Container<{
     name: string;
     password: string;
