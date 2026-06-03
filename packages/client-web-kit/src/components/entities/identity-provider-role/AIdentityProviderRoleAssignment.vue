@@ -77,7 +77,7 @@ export default defineComponent({
             value_is_regex: false,
         });
 
-        const $v = useValidup(new RoleMappingAttributesValidator(), form);
+        const v = useValidup(new RoleMappingAttributesValidator(), form);
 
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
@@ -133,7 +133,7 @@ export default defineComponent({
         return {
             display,
             toggleDisplay,
-            $v,
+            v,
             translationsDefault,
             manager,
             handleSaveOrCreate,
@@ -188,31 +188,31 @@ export default defineComponent({
         >
             <VCFormGroup
                 :label="true"
-                :validation="useFieldValidation($v.fields.name)"
+                :validation="useFieldValidation(v.fields.name)"
             >
                 <template #label>
                     Name
                 </template>
-                <VCFormInput v-model="$v.fields.name.$model.value" />
+                <VCFormInput v-model="v.fields.name.$model.value" />
             </VCFormGroup>
             <VCFormGroup
                 :label="true"
-                :validation="useFieldValidation($v.fields.value)"
+                :validation="useFieldValidation(v.fields.value)"
             >
                 <template #label>
                     Value
                 </template>
-                <VCFormInput v-model="$v.fields.value.$model.value" />
+                <VCFormInput v-model="v.fields.value.$model.value" />
             </VCFormGroup>
             <VCFormGroup
                 :label="true"
-                :validation="useFieldValidation($v.fields.value_is_regex)"
+                :validation="useFieldValidation(v.fields.value_is_regex)"
             >
                 <template #label>
                     Regex
                 </template>
                 <VCFormSwitch
-                    v-model="$v.fields.value_is_regex.$model.value"
+                    v-model="v.fields.value_is_regex.$model.value"
                     :label-content="translationsDefault.valueIsRegex.value"
                 />
             </VCFormGroup>

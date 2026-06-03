@@ -18,7 +18,7 @@ export default defineComponent({
         // Empty container — registers as the 'type' child of the
         // parent `<APolicyForm>` so it can extract `types` via
         // `extractValidupResultsFromChild('type')`.
-        const $v = useValidup(new Container<typeof form>(), form, { name: 'type' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(data: Partial<IdentityPolicy> = {}) {
             form.types = data.types || [];
@@ -38,14 +38,14 @@ export default defineComponent({
 
         return {
             handleUpdated,
-            $v,
+            v,
         };
     },
 });
 </script>
 <template>
     <AFormInputList
-        :names="$v.fields.types.$model.value"
+        :names="v.fields.types.$model.value"
         :min-items="1"
         @changed="handleUpdated"
     >

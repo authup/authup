@@ -41,7 +41,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
         // Detached so it doesn't register with the parent OAuth2 form
         // collector — it's a sibling helper, not part of the submit
         // payload.
-        const $v = useValidup(new DiscoveryUrlValidator(), form, { detached: true });
+        const v = useValidup(new DiscoveryUrlValidator(), form, { detached: true });
 
         const lookupValid = ref(false);
         const message = ref<string | null>(null);
@@ -49,7 +49,7 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
         const apiClient = new Client();
 
         const lookup = async () => {
-            if (busy.value || $v.fields.url.$invalid.value) {
+            if (busy.value || v.fields.url.$invalid.value) {
                 return;
             }
 
@@ -75,10 +75,10 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
             }
         };
 
-        const isDisabled = computed(() => busy.value || !form.url || $v.$invalid.value);
+        const isDisabled = computed(() => busy.value || !form.url || v.$invalid.value);
 
         return {
-            $v,
+            v,
             message,
             lookupValid,
             isDisabled,
@@ -93,12 +93,12 @@ export default AIdentityProviderOAuth2Discovery;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.url)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.url)">
             <template #label>
                 Discovery
             </template>
             <VCFormInput
-                v-model="$v.fields.url.$model.value"
+                v-model="v.fields.url.$model.value"
                 :class="{ 'is-valid': lookupValid }"
                 placeholder="https://example.com/.well-known/openid-configuration"
             />

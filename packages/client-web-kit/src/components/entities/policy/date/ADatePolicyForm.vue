@@ -23,7 +23,7 @@ export default defineComponent({
         // an empty `Container` registers the child slot ('type') with
         // the parent `<APolicyForm>` collector so it can extract this
         // form's state via `extractValidupResultsFromChild('type')`.
-        const $v = useValidup(new Container<typeof form>(), form, { name: 'type' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(data: Partial<DatePolicy> = {}) {
             assignFormProperties(form, data as Record<string, unknown>);
@@ -39,13 +39,13 @@ export default defineComponent({
         const handleUpdated = () => {
             setup.emit('updated', {
                 data: form,
-                valid: !$v.$invalid.value,
+                valid: !v.$invalid.value,
             });
         };
 
         return {
             handleUpdated,
-            $v,
+            v,
             useFieldValidation,
         };
     },
@@ -53,23 +53,23 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.start)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.start)">
             <template #label>
                 Start
             </template>
             <VCFormInput
-                v-model="$v.fields.start.$model.value"
+                v-model="v.fields.start.$model.value"
                 placeholder="YYYY-MM-DD"
                 @change="handleUpdated"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.end)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.end)">
             <template #label>
                 End
             </template>
             <VCFormInput
-                v-model="$v.fields.end.$model.value"
+                v-model="v.fields.end.$model.value"
                 placeholder="YYYY-MM-DD"
                 @change="handleUpdated"
             />

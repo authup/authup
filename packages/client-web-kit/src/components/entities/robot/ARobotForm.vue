@@ -65,7 +65,7 @@ export const ARobotForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(
+        const v = useValidup(
             new RobotValidator(),
             form,
             { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
@@ -108,7 +108,7 @@ export const ARobotForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if (busy.value || $v.$invalid.value) {
+            if (busy.value || v.$invalid.value) {
                 return;
             }
 
@@ -138,7 +138,7 @@ export const ARobotForm = defineComponent({
         return {
             busy,
             form,
-            $v,
+            v,
             isEditing,
             isNameFixed,
             isRealmLocked,
@@ -171,27 +171,27 @@ export default ARobotForm;
                     </VCFormGroup>
                 </template>
 
-                <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+                <VCFormGroup :validation="useFieldValidation(v.fields.name)">
                     <template #label>
                         {{ translationsDefault.name }}
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.name.$model.value"
+                        v-model="v.fields.name.$model.value"
                         :disabled="isNameFixed"
                     />
                 </VCFormGroup>
 
-                <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+                <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
                     <template #label>
                         {{ translationsDefault.displayName }}
                     </template>
                     <VCFormInput
-                        :model-value="$v.fields.display_name.$model.value ?? ''"
-                        @update:model-value="(v: string) => { $v.fields.display_name.$model.value = v; }"
+                        :model-value="v.fields.display_name.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
                     />
                 </VCFormGroup>
 
-                <VCFormGroup :validation="useFieldValidation($v.fields.secret)">
+                <VCFormGroup :validation="useFieldValidation(v.fields.secret)">
                     <template #label>
                         {{ translationsDefault.secret }}<span
                             v-if="isSecretHashed"
@@ -205,8 +205,8 @@ export default ARobotForm;
                         </span>
                     </template>
                     <VCFormInput
-                        :model-value="$v.fields.secret.$model.value ?? ''"
-                        @update:model-value="(v: string) => { $v.fields.secret.$model.value = v; }"
+                        :model-value="v.fields.secret.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
                     />
                 </VCFormGroup>
 
@@ -223,7 +223,7 @@ export default ARobotForm;
                 <AFormSubmit
                     :is-busy="busy"
                     :is-editing="isEditing"
-                    :is-invalid="$v.$invalid.value"
+                    :is-invalid="v.$invalid.value"
                     @submit="submit"
                 />
             </div>

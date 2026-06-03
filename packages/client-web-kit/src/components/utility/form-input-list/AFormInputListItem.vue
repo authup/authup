@@ -39,10 +39,10 @@ export default defineComponent({
     setup(props, ctx) {
         const form = reactive({ name: props.name ?? '' });
 
-        const $v = useValidup(new FormInputListItemValidator(), form, { detached: true });
+        const v = useValidup(new FormInputListItemValidator(), form, { detached: true });
 
         const handleUpdated = () => {
-            ctx.emit('updated', $v.fields.name.$model.value);
+            ctx.emit('updated', v.fields.name.$model.value);
         };
 
         const handleDeleted = () => {
@@ -52,16 +52,16 @@ export default defineComponent({
         return {
             handleUpdated,
             handleDeleted,
-            $v,
+            v,
             useFieldValidation,
         };
     },
 });
 </script>
 <template>
-    <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+    <VCFormGroup :validation="useFieldValidation(v.fields.name)">
         <VCFormInput
-            v-model="$v.fields.name.$model.value"
+            v-model="v.fields.name.$model.value"
             @change="handleUpdated"
         >
             <template #groupAppend>

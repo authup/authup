@@ -67,7 +67,7 @@ export default defineComponent({
         // Shared backend validator from @authup/core-kit. Registers
         // under the parent `<APolicyForm>` collector via `name: 'basic'`
         // so the parent extracts via `extractValidupResultsFromChild('basic')`.
-        const $v = useValidup(
+        const v = useValidup(
             new PolicyValidator(),
             form,
             {
@@ -90,7 +90,7 @@ export default defineComponent({
         const handleUpdated = () => {
             setup.emit('updated', {
                 data: form,
-                valid: !$v.$invalid.value,
+                valid: !v.$invalid.value,
             });
         };
 
@@ -99,7 +99,7 @@ export default defineComponent({
             realmId,
             handleUpdated,
             typeOptions,
-            $v,
+            v,
             useFieldValidation,
         };
     },
@@ -108,39 +108,39 @@ export default defineComponent({
 <template>
     <div class="row">
         <div class="col">
-            <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+            <VCFormGroup :validation="useFieldValidation(v.fields.name)">
                 <template #label>
                     Name
                 </template>
                 <VCFormInput
-                    v-model="$v.fields.name.$model.value"
+                    v-model="v.fields.name.$model.value"
                     @change="handleUpdated"
                 />
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+            <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
                 <template #label>
                     Display Name
                 </template>
                 <VCFormInput
-                    :model-value="$v.fields.display_name.$model.value ?? ''"
-                    @update:model-value="(v: string) => { $v.fields.display_name.$model.value = v; }"
+                    :model-value="v.fields.display_name.$model.value ?? ''"
+                    @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
                     @change="handleUpdated"
                 />
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.description)">
+            <VCFormGroup :validation="useFieldValidation(v.fields.description)">
                 <template #label>
                     Description
                 </template>
                 <VCFormTextarea
-                    :model-value="$v.fields.description.$model.value ?? ''"
+                    :model-value="v.fields.description.$model.value ?? ''"
                     rows="4"
-                    @update:model-value="(v: string) => { $v.fields.description.$model.value = v; }"
+                    @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
                     @change="handleUpdated"
                 />
             </VCFormGroup>
-            <VCFormGroup :validation="useFieldValidation($v.fields.invert)">
+            <VCFormGroup :validation="useFieldValidation(v.fields.invert)">
                 <VCFormSwitch
-                    v-model="$v.fields.invert.$model.value"
+                    v-model="v.fields.invert.$model.value"
                     :label="true"
                     @change="handleUpdated"
                 >
@@ -156,13 +156,13 @@ export default defineComponent({
             v-if="!realmId && !isEditing"
             class="col"
         >
-            <VCFormGroup :validation="useFieldValidation($v.fields.realm_id)">
+            <VCFormGroup :validation="useFieldValidation(v.fields.realm_id)">
                 <template #label>
                     Realm
                 </template>
                 <ARealmPicker
-                    :value="$v.fields.realm_id.$model.value"
-                    @change="(value: string[]) => { $v.fields.realm_id.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
+                    :value="v.fields.realm_id.$model.value"
+                    @change="(value: string[]) => { v.fields.realm_id.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
                 />
             </VCFormGroup>
         </div>

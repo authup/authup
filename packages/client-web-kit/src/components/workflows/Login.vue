@@ -66,7 +66,7 @@ export default defineComponent({
             realm_id: '',
         });
 
-        const $v = useValidup(new LoginCredentialsValidator(), form);
+        const v = useValidup(new LoginCredentialsValidator(), form);
 
         const busy = ref(false);
 
@@ -146,12 +146,12 @@ export default defineComponent({
         // type="submit", which the composable already sets.
         const submitButton = useSubmitButton({
             loading: busy,
-            disabled: computed(() => busy.value || $v.$invalid.value),
+            disabled: computed(() => busy.value || v.$invalid.value),
         });
 
         return {
             updateRealmId,
-            $v,
+            v,
             form,
             submit,
             busy,
@@ -172,19 +172,19 @@ export default defineComponent({
             </h1>
         </div>
         <form @submit.prevent="submit">
-            <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+            <VCFormGroup :validation="useFieldValidation(v.fields.name)">
                 <template #label>
                     Name
                 </template>
-                <VCFormInput v-model="$v.fields.name.$model.value" />
+                <VCFormInput v-model="v.fields.name.$model.value" />
             </VCFormGroup>
 
-            <VCFormGroup :validation="useFieldValidation($v.fields.password)">
+            <VCFormGroup :validation="useFieldValidation(v.fields.password)">
                 <template #label>
                     Password
                 </template>
                 <VCFormInput
-                    v-model="$v.fields.password.$model.value"
+                    v-model="v.fields.password.$model.value"
                     type="password"
                 />
             </VCFormGroup>

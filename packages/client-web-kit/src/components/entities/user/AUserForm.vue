@@ -82,7 +82,7 @@ export const AUserForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(
+        const v = useValidup(
             new UserValidator(),
             form,
             { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
@@ -120,7 +120,7 @@ export const AUserForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if (busy.value || $v.$invalid.value) {
+            if (busy.value || v.$invalid.value) {
                 return;
             }
 
@@ -133,11 +133,11 @@ export const AUserForm = defineComponent({
         };
 
         const onNameChange = (input: string) => {
-            $v.fields.name.$model.value = input;
+            v.fields.name.$model.value = input;
 
-            const currentEmail = $v.fields.email.$model.value as string;
+            const currentEmail = v.fields.email.$model.value as string;
             if (!currentEmail || isUserFakeEmail(currentEmail)) {
-                $v.fields.email.$model.value = buildUserFakeEmail(input);
+                v.fields.email.$model.value = buildUserFakeEmail(input);
             }
         };
 
@@ -158,7 +158,7 @@ export const AUserForm = defineComponent({
         return {
             busy,
             form,
-            $v,
+            v,
             isEditing,
             showRealmPicker,
             translationsDefault,
@@ -176,33 +176,33 @@ export default AUserForm;
     <form @submit.prevent="submit">
         <div :class="showRealmPicker ? 'grid grid-cols-1 md:grid-cols-2 gap-2' : ''">
             <div>
-                <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+                <VCFormGroup :validation="useFieldValidation(v.fields.name)">
                     <template #label>
                         {{ translationsDefault.name }}
                     </template>
                     <VCFormInput
-                        :model-value="$v.fields.name.$model.value"
+                        :model-value="v.fields.name.$model.value"
                         :disabled="form.name_locked"
                         @update:model-value="onNameChange"
                     />
                 </VCFormGroup>
 
-                <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+                <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
                     <template #label>
                         {{ translationsDefault.displayName }}
                     </template>
                     <VCFormInput
-                        :model-value="$v.fields.display_name.$model.value ?? ''"
-                        @update:model-value="(v: string) => { $v.fields.display_name.$model.value = v; }"
+                        :model-value="v.fields.display_name.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
                     />
                 </VCFormGroup>
 
-                <VCFormGroup :validation="useFieldValidation($v.fields.email)">
+                <VCFormGroup :validation="useFieldValidation(v.fields.email)">
                     <template #label>
                         {{ translationsDefault.email }}
                     </template>
                     <VCFormInput
-                        v-model="$v.fields.email.$model.value"
+                        v-model="v.fields.email.$model.value"
                         type="email"
                         placeholder="...@..."
                     />
@@ -249,7 +249,7 @@ export default AUserForm;
                 <AFormSubmit
                     :is-busy="busy"
                     :is-editing="isEditing"
-                    :is-invalid="$v.$invalid.value"
+                    :is-invalid="v.$invalid.value"
                     @submit="submit"
                 />
             </div>

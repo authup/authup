@@ -70,14 +70,14 @@ export default defineComponent({
         // `stopPropagation: true` mirrors vuelidate's `$stopPropagation`
         // — don't register THIS form with an even-higher-level collector
         // (no real one exists today, but it future-proofs the contract).
-        const $v = useValidup(new Container(), reactive({}), { stopPropagation: true });
+        const v = useValidup(new Container(), reactive({}), { stopPropagation: true });
 
         // The parent's `$invalid` only includes the parent's own issues
         // (which is always empty here); aggregate the children's status
         // for the submit gate.
         const isInvalidComputed = computed(() => {
-            const basic = $v.$getResultsForChild('basic');
-            const type = $v.$getResultsForChild('type');
+            const basic = v.$getResultsForChild('basic');
+            const type = v.$getResultsForChild('type');
             return !typeComputed.value ||
                 !!basic?.$invalid.value ||
                 !!type?.$invalid.value;
@@ -92,8 +92,8 @@ export default defineComponent({
                 items = [],
                 ...data
             } = {
-                ...extractValidupResultsFromChild($v, 'basic'),
-                ...extractValidupResultsFromChild($v, 'type'),
+                ...extractValidupResultsFromChild(v, 'basic'),
+                ...extractValidupResultsFromChild(v, 'type'),
             } as Partial<Omit<Policy, 'children'>> & { items: string[] };
 
             if (typeComputed.value) {

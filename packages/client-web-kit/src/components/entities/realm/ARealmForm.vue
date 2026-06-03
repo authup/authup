@@ -63,7 +63,7 @@ export const ARealmForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
 
-        const $v = useValidup(
+        const v = useValidup(
             new RealmValidator(),
             form,
             { group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)) },
@@ -97,7 +97,7 @@ export const ARealmForm = defineComponent({
         initForm();
 
         const submit = async () => {
-            if ($v.$invalid.value) {
+            if (v.$invalid.value) {
                 return;
             }
 
@@ -117,7 +117,7 @@ export const ARealmForm = defineComponent({
 
         return {
             busy,
-            $v,
+            v,
             isEditing,
             isNameEmpty,
             isMaster,
@@ -135,12 +135,12 @@ export default ARealmForm;
 
 <template>
     <form @submit.prevent="submit">
-        <VCFormGroup :validation="useFieldValidation($v.fields.name)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.name)">
             <template #label>
                 {{ translationsDefault.name }}
             </template>
             <VCFormInput
-                v-model="$v.fields.name.$model.value"
+                v-model="v.fields.name.$model.value"
                 :disabled="isMaster"
             />
         </VCFormGroup>
@@ -159,31 +159,31 @@ export default ARealmForm;
             </button>
         </div>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.display_name)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.display_name)">
             <template #label>
                 {{ translationsDefault.displayName }}
             </template>
             <VCFormInput
-                :model-value="$v.fields.display_name.$model.value ?? ''"
-                @update:model-value="(v: string) => { $v.fields.display_name.$model.value = v; }"
+                :model-value="v.fields.display_name.$model.value ?? ''"
+                @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
             />
         </VCFormGroup>
 
-        <VCFormGroup :validation="useFieldValidation($v.fields.description)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.description)">
             <template #label>
                 {{ translationsDefault.description }}
             </template>
             <VCFormTextarea
-                :model-value="$v.fields.description.$model.value ?? ''"
+                :model-value="v.fields.description.$model.value ?? ''"
                 :rows="4"
-                @update:model-value="(v: string) => { $v.fields.description.$model.value = v; }"
+                @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
             />
         </VCFormGroup>
 
         <AFormSubmit
             :is-busy="busy"
             :is-editing="isEditing"
-            :is-invalid="$v.$invalid.value"
+            :is-invalid="v.$invalid.value"
             @submit="submit"
         />
     </form>

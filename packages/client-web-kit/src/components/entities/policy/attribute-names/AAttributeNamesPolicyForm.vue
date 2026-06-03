@@ -15,7 +15,7 @@ export default defineComponent({
     setup(props, setup) {
         const form = reactive<{ names: string[] }>({ names: [] });
 
-        const $v = useValidup(new Container<typeof form>(), form, { name: 'type' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(data: Partial<AttributeNamesPolicy> = {}) {
             form.names = data.names || [];
@@ -35,14 +35,14 @@ export default defineComponent({
 
         return {
             handleUpdated,
-            $v,
+            v,
         };
     },
 });
 </script>
 <template>
     <AFormInputList
-        :names="$v.fields.names.$model.value"
+        :names="v.fields.names.$model.value"
         :min-items="1"
         @changed="handleUpdated"
     />

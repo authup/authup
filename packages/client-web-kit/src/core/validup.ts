@@ -25,7 +25,7 @@ export { getSeverity };
  * `$getResultsForChild` walk with `@validup/vue`'s typed equivalent.
  *
  * Returns a plain `Record<string, any>` for ergonomic spreading into a
- * parent submit body (`{ ...extract($v, 'basic'), ...extract($v, 'type') }`).
+ * parent submit body (`{ ...extract(v, 'basic'), ...extract(v, 'type') }`).
  * Returns an empty object when the named child is not registered (mirrors
  * the legacy permissive contract — composing forms that conditionally
  * mount sub-composables should stay graceful).

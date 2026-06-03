@@ -25,7 +25,7 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
     setup(props) {
         const form = reactive({ user: '', password: '' });
 
-        const $v = useValidup(new Container<typeof form>(), form, { name: 'credentials' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'credentials' });
 
         function init() {
             if (!props.entity) return;
@@ -36,7 +36,7 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
         onChange(updated, () => init());
         init();
 
-        return { $v, useFieldValidation };
+        return { v, useFieldValidation };
     },
 });
 
@@ -45,18 +45,18 @@ export default AIdentityProviderLdapCredentialsFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.user)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.user)">
             <template #label>
                 User
             </template>
-            <VCFormInput v-model="$v.fields.user.$model.value" />
+            <VCFormInput v-model="v.fields.user.$model.value" />
         </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation($v.fields.password)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.password)">
             <template #label>
                 Password
             </template>
             <VCFormInput
-                v-model="$v.fields.password.$model.value"
+                v-model="v.fields.password.$model.value"
                 type="password"
                 autocomplete="current-password"
             />

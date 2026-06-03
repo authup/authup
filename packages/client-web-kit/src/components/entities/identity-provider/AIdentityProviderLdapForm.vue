@@ -62,11 +62,11 @@ export const AIdentityProviderLdapForm = defineComponent({
         const isEditing = useIsEditing(manager.data);
         const busy = ref(false);
         // Parent collector — see APolicyForm for the same pattern.
-        const $v = useValidup(new Container(), reactive({}), { stopPropagation: true });
+        const v = useValidup(new Container(), reactive({}), { stopPropagation: true });
 
         const isInvalid = computed(() => {
             const slots = ['basic', 'connection', 'credentials', 'group', 'user'] as const;
-            return slots.some((slot) => !!$v.$getResultsForChild(slot)?.$invalid.value);
+            return slots.some((slot) => !!v.$getResultsForChild(slot)?.$invalid.value);
         });
 
         const submit = async () => {
@@ -77,11 +77,11 @@ export const AIdentityProviderLdapForm = defineComponent({
             busy.value = true;
             try {
                 const data: Partial<IdentityProvider> = {
-                    ...extractValidupResultsFromChild($v, 'basic'),
-                    ...extractValidupResultsFromChild($v, 'connection'),
-                    ...extractValidupResultsFromChild($v, 'credentials'),
-                    ...extractValidupResultsFromChild($v, 'group'),
-                    ...extractValidupResultsFromChild($v, 'user'),
+                    ...extractValidupResultsFromChild(v, 'basic'),
+                    ...extractValidupResultsFromChild(v, 'connection'),
+                    ...extractValidupResultsFromChild(v, 'credentials'),
+                    ...extractValidupResultsFromChild(v, 'group'),
+                    ...extractValidupResultsFromChild(v, 'user'),
                     protocol: IdentityProviderProtocol.LDAP,
                 };
 

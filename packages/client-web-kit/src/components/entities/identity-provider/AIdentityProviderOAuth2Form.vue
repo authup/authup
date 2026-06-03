@@ -85,13 +85,13 @@ export const AIdentityProviderOAuth2Form = defineComponent({
 
         const busy = ref(false);
         // Parent collector — see APolicyForm for the same pattern.
-        const $v = useValidup(new Container(), reactive({}), { stopPropagation: true });
+        const v = useValidup(new Container(), reactive({}), { stopPropagation: true });
         const isEditing = useIsEditing(manager.data);
 
         const isInvalid = computed(() => {
-            const basic = $v.$getResultsForChild('basic');
-            const client = $v.$getResultsForChild('client');
-            const endpoint = $v.$getResultsForChild('endpoint');
+            const basic = v.$getResultsForChild('basic');
+            const client = v.$getResultsForChild('client');
+            const endpoint = v.$getResultsForChild('endpoint');
             return !!basic?.$invalid.value ||
                 !!client?.$invalid.value ||
                 !!endpoint?.$invalid.value;
@@ -139,9 +139,9 @@ export const AIdentityProviderOAuth2Form = defineComponent({
             if (isInvalid.value) return;
 
             const data: Partial<IdentityProvider> = {
-                ...extractValidupResultsFromChild($v, 'basic'),
-                ...extractValidupResultsFromChild($v, 'client'),
-                ...extractValidupResultsFromChild($v, 'endpoint'),
+                ...extractValidupResultsFromChild(v, 'basic'),
+                ...extractValidupResultsFromChild(v, 'client'),
+                ...extractValidupResultsFromChild(v, 'endpoint'),
             };
 
             if (protocolEff.value) {

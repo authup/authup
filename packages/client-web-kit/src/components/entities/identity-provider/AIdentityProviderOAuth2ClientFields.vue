@@ -22,7 +22,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
     setup(props) {
         const form = reactive({ client_id: '', client_secret: '' });
 
-        const $v = useValidup(new Container<typeof form>(), form, { name: 'client' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'client' });
 
         function assign() {
             assignFormProperties(form, props.entity);
@@ -32,7 +32,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
         onChange(updatedAt, () => assign());
         assign();
 
-        return { $v, useFieldValidation };
+        return { v, useFieldValidation };
     },
 });
 
@@ -41,18 +41,18 @@ export default AIdentityProviderOAuth2ClientFields;
 
 <template>
     <div>
-        <VCFormGroup :validation="useFieldValidation($v.fields.client_id)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.client_id)">
             <template #label>
                 Client ID
             </template>
-            <VCFormInput v-model="$v.fields.client_id.$model.value" />
+            <VCFormInput v-model="v.fields.client_id.$model.value" />
         </VCFormGroup>
-        <VCFormGroup :validation="useFieldValidation($v.fields.client_secret)">
+        <VCFormGroup :validation="useFieldValidation(v.fields.client_secret)">
             <template #label>
                 Client Secret
             </template>
             <VCFormInput
-                v-model="$v.fields.client_secret.$model.value"
+                v-model="v.fields.client_secret.$model.value"
                 type="password"
                 autocomplete="new-password"
             />
