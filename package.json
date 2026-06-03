@@ -48,7 +48,7 @@
         "@vitest/coverage-v8": "^4.1.6",
         "cross-env": "^10.1.0",
         "eslint": "^10.3.0",
-        "eslint-plugin-vue": "^10.8.0",
+        "eslint-plugin-vue": "^10.9.2",
         "husky": "^9.1.7",
         "lint-staged": "^17.0.4",
         "nx": "^22.7.1",
