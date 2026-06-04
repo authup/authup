@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidationChain, createValidator } from '@validup/adapter-validator';
+import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
+import { z } from 'zod';
 import type { ClientRole } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
@@ -19,23 +20,13 @@ export class ClientRoleRequestValidator extends Container<
         this.mount(
             'client_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID();
-            }),
+            createValidator(z.uuid()),
         );
 
         this.mount(
             'role_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID();
-            }),
+            createValidator(z.uuid()),
         );
     }
 }

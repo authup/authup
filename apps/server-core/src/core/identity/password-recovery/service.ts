@@ -9,9 +9,10 @@ import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import { PasswordRecoveryDisabledError } from './disabled.ts';
 import { EmailVerificationRequiredError } from './email-verification-required.ts';
 import { ResetTokenExpiredError } from './token-expired.ts';
-import { createValidationChain, createValidator } from '@validup/adapter-validator';
+import { createValidator } from '@validup/zod';
 import { randomBytes } from 'node:crypto';
 import { Container } from 'validup';
+import { z } from 'zod';
 import { UserCredentialsService } from '../../authentication/credential/entities/user/module.ts';
 import type {
     IPasswordRecoveryService,
@@ -140,29 +141,20 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
 
         const oneOfContainer = new Container({ oneOf: true });
 
-        oneOfContainer.mount('email', createValidator(() => {
-            const chain = createValidationChain();
-            return chain
-                .exists()
-                .notEmpty()
-                .trim()
-                .toLowerCase()
-                .isEmail()
-                .matches(/^[^A-Z]+$/)
-                .withMessage('Email must be lowercase.');
-        }));
+        oneOfContainer.mount(
+            'email',
+            createValidator(
+                z.string()
+                    .trim()
+                    .toLowerCase()
+                    .email()
+                    .regex(/^[^A-Z]+$/, { message: 'Email must be lowercase.' }),
+            ),
+        );
 
         oneOfContainer.mount(
             'name',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isString()
-                    .trim()
-                    .toLowerCase();
-            }),
+            createValidator(z.string().trim().toLowerCase().min(1)),
         );
 
         validator.mount(oneOfContainer);
@@ -170,12 +162,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         validator.mount(
             'realm_id',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain.exists()
-                    .isUUID()
-                    .optional({ values: 'null' });
-            }),
+            createValidator(z.uuid().nullable()),
         );
 
         return validator.run(data);
@@ -187,29 +174,17 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         const oneOfContainer = new Container({ oneOf: true });
         oneOfContainer.mount(
             'email',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
+            createValidator(
+                z.string()
                     .trim()
                     .toLowerCase()
-                    .isEmail()
-                    .matches(/^[^A-Z]+$/)
-                    .withMessage('Email must be lowercase.');
-            }),
+                    .email()
+                    .regex(/^[^A-Z]+$/, { message: 'Email must be lowercase.' }),
+            ),
         );
         oneOfContainer.mount(
             'name',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isString()
-                    .trim()
-                    .toLowerCase();
-            }),
+            createValidator(z.string().trim().toLowerCase().min(1)),
         );
 
         validator.mount(oneOfContainer);
@@ -217,41 +192,17 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         validator.mount(
             'realm_id',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID()
-                    .optional({ values: 'null' });
-            }),
+            createValidator(z.uuid().nullable()),
         );
 
         validator.mount(
             'token',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isLength({
-                        min: 3,
-                        max: 256, 
-                    });
-            }),
+            createValidator(z.string().min(3).max(256)),
         );
 
         validator.mount(
             'password',
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isLength({
-                        min: 5,
-                        max: 512, 
-                    });
-            }),
+            createValidator(z.string().min(5).max(512)),
         );
 
         return validator.run(data);

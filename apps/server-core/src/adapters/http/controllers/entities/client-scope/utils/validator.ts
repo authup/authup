@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidationChain, createValidator } from '@validup/adapter-validator';
+import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
+import { z } from 'zod';
 import type { ClientScopeEntity } from '../../../../../database/domains/index.ts';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
@@ -17,23 +18,13 @@ export class ClientScopeRequestValidator extends Container<ClientScopeEntity> {
         this.mount(
             'client_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID();
-            }),
+            createValidator(z.uuid()),
         );
 
         this.mount(
             'scope_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID();
-            }),
+            createValidator(z.uuid()),
         );
     }
 }

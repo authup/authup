@@ -84,7 +84,6 @@
         "@routup/prometheus": "^4.0.0",
         "@routup/rate-limit": "^4.0.0",
         "@routup/swagger-ui": "^4.0.0",
-        "@validup/adapter-validator": "^0.3.2",
         "better-sqlite3": "^12.10.0",
         "citty": "^0.2.2",
         "confinity": "^1.0.0-beta.1",

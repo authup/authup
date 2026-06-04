@@ -5,8 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createValidationChain, createValidator } from '@validup/adapter-validator';
+import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
+import { z } from 'zod';
 import type { UserAttribute } from '@authup/core-kit';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 
@@ -19,49 +20,22 @@ export class UserAttributeRequestValidator extends Container<
         this.mount(
             'name',
             { group: RequestHandlerOperation.CREATE },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isString()
-                    .isLength({
-                        min: 3,
-                        max: 255, 
-                    });
-            }),
+            createValidator(z.string().min(3).max(255)),
         );
 
         this.mount(
             'user_id',
             {
                 group: RequestHandlerOperation.CREATE,
-                optional: true, 
+                optional: true,
             },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID()
-                    .optional({ values: 'null' });
-            }),
+            createValidator(z.uuid().nullable()),
         );
 
         this.mount(
             'value',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .notEmpty()
-                    .isString()
-                    .isLength({
-                        min: 3,
-                        max: 512, 
-                    })
-                    .optional({ nullable: true });
-            }),
+            createValidator(z.string().min(3).max(512).nullable()),
         );
     }
 }
