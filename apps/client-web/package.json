@@ -44,7 +44,7 @@
         "@nuxtjs/google-fonts": "^3.2.0",
         "@pinia/nuxt": "^0.11.3",
         "@tailwindcss/vite": "^4.3.0",
-        "@validup/vue": "^0.3.2",
+        "@validup/vue": "^0.3.3",
         "@vuecs/button": "^1.0.2",
         "@vuecs/core": "^3.1.1",
         "@vuecs/countdown": "^2.0.2",
@@ -70,7 +70,7 @@
         "rapiq": "^0.9.0",
         "tailwindcss": "^4.3.0",
         "universal-cookie": "^8.1.2",
-        "validup": "^0.5.0",
+        "validup": "^0.5.1",
         "vue": "^3.5.34",
         "vue-router": "^5.0.7"
     },

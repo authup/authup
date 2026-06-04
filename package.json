@@ -75,6 +75,6 @@
     "overrides": {
         "typeorm": "0.3.28",
         "vue": "3.5.35",
-        "validup": "^0.5.0"
+        "validup": "^0.5.1"
     }
 }
