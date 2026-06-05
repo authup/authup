@@ -76,7 +76,7 @@
         "@vuecs/button": "^1.0.2",
         "@vuecs/core": "^3.1.1",
         "@vuecs/elements": "^1.2.1",
-        "@vuecs/forms": "^5.0.1",
+        "@vuecs/forms": "^5.1.0",
         "@vuecs/icon": "^1.0.1",
         "@vuecs/list": "^1.0.2",
         "@vuecs/overlays": "^1.0.2",
