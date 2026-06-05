@@ -26,9 +26,17 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
                 .toLowerCase()
                 .min(3)
                 .max(128)
-                .refine(
-                    (value) => isPolicyNameValid(value, { throwOnFailure: true }),
-                ),
+                .check((ctx) => {
+                    try {
+                        isPolicyNameValid(ctx.value, { throwOnFailure: true });
+                    } catch (e) {
+                        ctx.issues.push({
+                            input: ctx.value,
+                            code: 'custom',
+                            message: e instanceof Error ? e.message : 'The policy name is not valid.',
+                        });
+                    }
+                }),
         );
 
         this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator);

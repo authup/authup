@@ -34,7 +34,7 @@ export const ARealms = defineComponent({
         });
 
         const translationsName = useTranslation({
-            namespace: TranslatorTranslationNamespace.VUECS,
+            namespace: TranslatorTranslationNamespace.DEFAULT,
             key: TranslatorTranslationDefaultKey.REALMS,
         });
 

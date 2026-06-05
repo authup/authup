@@ -10,7 +10,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/authup/authup.git",
-        "directory": "packages/client-web"
+        "directory": "apps/client-web"
     },
     "scripts": {
         "build": "nuxt prepare && nuxi typecheck && nuxt build && node postbuild.mjs",

@@ -10,11 +10,9 @@ import { getSeverity } from '@validup/vue';
 import type { ObjectLiteral } from 'validup';
 
 /**
- * Re-export of `@validup/vue`'s `getSeverity()` — kept under the legacy
- * `getVuelidateSeverity` name for one migration cycle so consumer call
- * sites don't have to rename in lockstep. The behaviour is identical:
- * `'error'` when the field is `$invalid && $dirty`, `'warning'` for
- * pending-but-dirty, `undefined` for pristine.
+ * Re-export of `@validup/vue`'s `getSeverity()`: `'error'` when the field is
+ * `$invalid && $dirty`, `'warning'` for pending-but-dirty, `undefined` for
+ * pristine.
  */
 export { getSeverity };
 
