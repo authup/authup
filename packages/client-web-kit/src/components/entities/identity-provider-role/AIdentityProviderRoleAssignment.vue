@@ -145,7 +145,7 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="list-item flex-col">
+    <div class="flex flex-col">
         <div class="flex flex-row">
             <div class="me-2">
                 <button

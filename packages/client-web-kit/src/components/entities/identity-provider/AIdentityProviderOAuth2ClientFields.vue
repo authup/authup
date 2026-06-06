@@ -10,7 +10,7 @@ import { assignFormProperties } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
-import { defineComponent, reactive } from 'vue';
+import { defineComponent, reactive, ref } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
@@ -26,6 +26,8 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
     setup(props) {
         const form = reactive({ client_id: '', client_secret: '' });
 
+        const secretShow = ref(false);
+
         const v = useValidup(new Container<typeof form>(), form, { name: 'client' });
 
         function assign() {
@@ -36,7 +38,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
         onChange(updatedAt, () => assign());
         assign();
 
-        return { v };
+        return { v, secretShow };
     },
 });
 
@@ -66,9 +68,19 @@ export default AIdentityProviderOAuth2ClientFields;
                 </template>
                 <VCFormInput
                     v-model="v.fields.client_secret.$model.value"
-                    type="password"
+                    :type="secretShow ? 'text' : 'password'"
                     autocomplete="new-password"
-                />
+                >
+                    <template #groupAppend>
+                        <button
+                            class="btn"
+                            type="button"
+                            @click.prevent="secretShow = !secretShow"
+                        >
+                            <VCIcon :name="secretShow ? 'fa6-solid:eye-slash' : 'fa6-solid:eye'" />
+                        </button>
+                    </template>
+                </VCFormInput>
             </VCFormGroup>
         </IFieldValidation>
     </div>

@@ -126,7 +126,10 @@ export default defineComponent({
 <template>
     <div class="flex flex-col">
         <h6>General</h6>
-        <APolicyBasicForm :entity="data" />
+        <APolicyBasicForm
+            :entity="data"
+            :type="typeComputed"
+        />
 
         <template v-if="typeComputed">
             <slot

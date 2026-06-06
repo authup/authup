@@ -5,6 +5,7 @@ import {
     defineComponent,
     reactive,
     toRef,
+    watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
 import { 
@@ -37,7 +38,10 @@ export default defineComponent({
 
         IFieldValidation,
     },
-    props: { entity: { type: Object as PropType<Policy> } },
+    props: {
+        entity: { type: Object as PropType<Policy> },
+        type: { type: String as PropType<string | null>, default: undefined },
+    },
     emits: ['updated'],
     setup(props, setup) {
         const entity = toRef(props, 'entity');
@@ -47,6 +51,7 @@ export default defineComponent({
             display_name: '',
             description: '',
             realm_id: '',
+            type: '',
         });
 
         const store = injectStore();
@@ -92,6 +97,20 @@ export default defineComponent({
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
+
+        // `type` is the policy discriminator owned by the parent
+        // <APolicyForm>, not edited here. It's mounted (required on
+        // CREATE) in the shared PolicyValidator, so feed the parent's
+        // resolved value into the validated state — otherwise the basic
+        // sub-form is permanently invalid and the submit button never
+        // enables.
+        watch(
+            () => props.type,
+            (value) => {
+                form.type = value ?? '';
+            },
+            { immediate: true },
+        );
 
         const handleUpdated = () => {
             setup.emit('updated', {

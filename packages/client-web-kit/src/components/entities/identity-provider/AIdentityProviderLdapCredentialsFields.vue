@@ -10,7 +10,7 @@ import { assignFormProperties } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
-import { defineComponent, reactive } from 'vue';
+import { defineComponent, reactive, ref } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
@@ -29,6 +29,8 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
     setup(props) {
         const form = reactive({ user: '', password: '' });
 
+        const passwordShow = ref(false);
+
         const v = useValidup(new Container<typeof form>(), form, { name: 'credentials' });
 
         function init() {
@@ -40,7 +42,7 @@ export const AIdentityProviderLdapCredentialsFields = defineComponent({
         onChange(updated, () => init());
         init();
 
-        return { v };
+        return { v, passwordShow };
     },
 });
 
@@ -70,9 +72,19 @@ export default AIdentityProviderLdapCredentialsFields;
                 </template>
                 <VCFormInput
                     v-model="v.fields.password.$model.value"
-                    type="password"
+                    :type="passwordShow ? 'text' : 'password'"
                     autocomplete="current-password"
-                />
+                >
+                    <template #groupAppend>
+                        <button
+                            class="btn"
+                            type="button"
+                            @click.prevent="passwordShow = !passwordShow"
+                        >
+                            <VCIcon :name="passwordShow ? 'fa6-solid:eye-slash' : 'fa6-solid:eye'" />
+                        </button>
+                    </template>
+                </VCFormInput>
             </VCFormGroup>
         </IFieldValidation>
     </div>
