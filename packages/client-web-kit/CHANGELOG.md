@@ -1,5 +1,49 @@
 # Change Log
 
+## [1.0.0-beta.44](https://github.com/authup/authup/compare/v1.0.0-beta.42...v1.0.0-beta.44) (2026-06-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* migrate forms to validup-vue and nav to @vuecs/navigation ([#3086](https://github.com/authup/authup/issues/3086))
+* **icons:** drop @fortawesome/fontawesome-free, route all icons thr… ([#3082](https://github.com/authup/authup/issues/3082))
+* migrate from Bootstrap to Tailwind v4 (+ vuecs theme-tailwind) ([#3075](https://github.com/authup/authup/issues/3075))
+* consumers of `@authup/client-web-kit` must install `@vuecs/{core,button,elements,forms,icon,list,overlays,pagination, table}` 1.x as peer deps and pre-install `@vuecs/core` *before* any per-package vuecs plugin (the kit no longer installs `@vuecs/forms` / `@vuecs/pagination` to avoid freezing the theme manager).
+
+### Features
+
+* **icons:** drop @fortawesome/fontawesome-free, route all icons thr… ([#3082](https://github.com/authup/authup/issues/3082)) ([b50c117](https://github.com/authup/authup/commit/b50c11701f6310cec310f25d14778a15a14b2e50))
+* migrate forms to validup-vue and nav to @vuecs/navigation ([#3086](https://github.com/authup/authup/issues/3086)) ([ce88592](https://github.com/authup/authup/commit/ce885927b01fa0550a059b3c99f1809318671fa6))
+* migrate from Bootstrap to Tailwind v4 (+ vuecs theme-tailwind) ([#3075](https://github.com/authup/authup/issues/3075)) ([a49d1da](https://github.com/authup/authup/commit/a49d1da9ed4509f9bb4d24e6578286367a635cc4))
+* migrate to vuecs 1.x packages, drop bootstrap-vue-next ([#3069](https://github.com/authup/authup/issues/3069)) ([61e828c](https://github.com/authup/authup/commit/61e828cc595a316429013c3a9ecd708e2f265e22))
+* **theme,app:** light/dark color-mode toggle + chrome refactor + post-Tailwind-v4 polish ([#3077](https://github.com/authup/authup/issues/3077)) ([fd4002d](https://github.com/authup/authup/commit/fd4002d6607d01064782864d99d1991c89f0d2fb))
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([5159a23](https://github.com/authup/authup/commit/5159a233a5978bc910119b68f27130e0c2d570a7))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/core-http-kit bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/core-kit bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/errors bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/kit bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/specs bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/core-http-kit bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/core-kit bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/errors bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/kit bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+    * @authup/specs bumped from ^1.0.0-beta.42 to ^1.0.0-beta.44
+
 ## [1.0.0-beta.42](https://github.com/authup/authup/compare/v1.0.0-beta.41...v1.0.0-beta.42) (2026-05-15)
 
 
