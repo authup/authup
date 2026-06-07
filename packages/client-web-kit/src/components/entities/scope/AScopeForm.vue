@@ -6,7 +6,7 @@
   -->
 <script lang="ts">
 import { EntityType, ScopeValidator } from '@authup/core-kit';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { 
     TranslatorTranslationDefaultKey, 
@@ -107,6 +107,10 @@ export const AScopeForm = defineComponent({
             }
 
             assignFormProperties(form, manager.data.value);
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+            }
         }
 
         watch(updatedAt, (val, oldVal) => {

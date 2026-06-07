@@ -13,7 +13,7 @@ import {
     injectStore, 
     storeToRefs, 
 } from '../../../core';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, generateName } from '@authup/kit';
 import type { Policy } from '@authup/core-kit';
 import { PolicyValidator } from '@authup/core-kit';
 import type { FormOption } from '@vuecs/forms';
@@ -99,6 +99,10 @@ export default defineComponent({
         onChange(updatedAt, () => assign(props.entity));
 
         assign(props.entity);
+
+        if (form.name.length === 0) {
+            form.name = generateName();
+        }
 
         // `type` is the policy discriminator owned by the parent
         // <APolicyForm>, not edited here. It's mounted (required on

@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { ValidatorGroup, createNanoID } from '@authup/kit';
+import { ValidatorGroup, createNanoID, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { 
     TranslatorTranslationDefaultKey, 
@@ -96,6 +96,10 @@ export const ARobotForm = defineComponent({
             // can't overwrite a locked name / realm.
             if (props.name) form.name = props.name;
             if (props.realmId) form.realm_id = props.realmId;
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+            }
 
             if (form.secret.length === 0) {
                 generateSecret();

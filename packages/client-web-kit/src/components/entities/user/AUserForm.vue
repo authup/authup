@@ -12,7 +12,7 @@ import {
     buildUserFakeEmail, 
     isUserFakeEmail, 
 } from '@authup/core-kit';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, generateName } from '@authup/kit';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationNamespace,
@@ -106,6 +106,14 @@ export const AUserForm = defineComponent({
             }
 
             assignFormProperties(form, manager.data.value);
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+
+                if (!form.email || isUserFakeEmail(form.email)) {
+                    form.email = buildUserFakeEmail(form.name);
+                }
+            }
 
             // Locked-realm prop wins over any realm_id pulled from the
             // loaded entity — apply after assign.

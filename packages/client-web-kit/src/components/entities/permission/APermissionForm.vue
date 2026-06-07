@@ -7,7 +7,7 @@
 <script lang="ts">
 import type { Permission } from '@authup/core-kit';
 import { EntityType, PermissionValidator } from '@authup/core-kit';
-import { DecisionStrategy, ValidatorGroup } from '@authup/kit';
+import { DecisionStrategy, ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { 
     TranslatorTranslationDefaultKey, 
@@ -118,6 +118,10 @@ export const APermissionForm = defineComponent({
 
         function initForm() {
             assignFormProperties(form, manager.data.value);
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+            }
 
             if (realmId.value) {
                 form.realm_id = realmId.value;
