@@ -26,7 +26,7 @@ const NOUNS = [
 ].join(' ').split(' ');
 
 function pick(list: readonly string[]): string {
-    return list[Math.floor(Math.random() * list.length)];
+    return list[Math.floor(Math.random() * list.length)] ?? '';
 }
 
 /**
