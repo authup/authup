@@ -7,7 +7,7 @@
 <script lang="ts">
 import type { IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderValidator } from '@authup/core-kit';
-import { ValidatorGroup, createNanoID } from '@authup/kit';
+import { ValidatorGroup, generateName } from '@authup/kit';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationNamespace,
@@ -24,9 +24,11 @@ import {
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
+import { ANameInput } from '../../utility';
 
 export const AIdentityProviderBasicFields = defineComponent({
     components: {
+        ANameInput,
         VCFormGroup,
         VCFormInput,
         VCFormSwitch,
@@ -58,10 +60,6 @@ export const AIdentityProviderBasicFields = defineComponent({
 
         const isNameEmpty = computed(() => !form.name || form.name.length === 0);
 
-        function generateId() {
-            form.name = createNanoID();
-        }
-
         const update = () => {
             setup.emit('updated', {
                 data: form,
@@ -73,7 +71,7 @@ export const AIdentityProviderBasicFields = defineComponent({
             assignFormProperties(form, data);
 
             if (isNameEmpty.value) {
-                generateId();
+                form.name = generateName();
             }
         }
 
@@ -98,15 +96,15 @@ export const AIdentityProviderBasicFields = defineComponent({
             update();
         };
 
-        const onGenerate = () => {
-            generateId();
+        const onNameUpdate = (value: string) => {
+            form.name = value;
             update();
         };
 
         return {
             v,
             translationsDefault,
-            onGenerate,
+            onNameUpdate,
             onEnabledChange,
         };
     },
@@ -125,19 +123,12 @@ export default AIdentityProviderBasicFields;
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
-                <VCFormInput v-model="v.fields.name.$model.value" />
+                <ANameInput
+                    :model-value="v.fields.name.$model.value"
+                    @update:model-value="onNameUpdate"
+                />
             </VCFormGroup>
         </IFieldValidation>
-
-        <div class="mb-3">
-            <button
-                type="button"
-                class="btn btn-xs btn-dark"
-                @click.prevent="onGenerate"
-            >
-                <VCIcon name="fa6-solid:arrows-rotate" /> Generate
-            </button>
-        </div>
 
         <IFieldValidation
             v-slot="{ value }"

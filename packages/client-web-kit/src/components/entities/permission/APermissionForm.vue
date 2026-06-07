@@ -35,6 +35,7 @@ import {
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -56,6 +57,7 @@ function decisionStrategyHint(value: string): string {
 
 export const APermissionForm = defineComponent({
     components: {
+        ANameInput,
         ARealmPicker,
         AFormSubmit,
         VCFormGroup,
@@ -189,7 +191,7 @@ export default APermissionForm;
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
-                <VCFormInput
+                <ANameInput
                     v-model="v.fields.name.$model.value"
                     :disabled="isBuiltIn"
                 />

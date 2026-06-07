@@ -27,6 +27,7 @@ import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     AToggleButton,
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -38,6 +39,7 @@ export const ARobotForm = defineComponent({
     components: {
         ARealms,
         AFormSubmit,
+        ANameInput,
         AToggleButton,
         VCFormGroup,
         VCFormInput,
@@ -180,7 +182,7 @@ export default ARobotForm;
                         <template #label>
                             {{ translationsDefault.name }}
                         </template>
-                        <VCFormInput
+                        <ANameInput
                             v-model="v.fields.name.$model.value"
                             :disabled="isNameFixed"
                         />

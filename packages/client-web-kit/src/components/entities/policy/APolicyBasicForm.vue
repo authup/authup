@@ -27,9 +27,11 @@ import { BuiltInPolicyType } from '@authup/access';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
 import { ARealmPicker } from '../realm';
 import { IFieldValidation } from '@ilingo/validup-vue';
+import { ANameInput } from '../../utility';
 
 export default defineComponent({
     components: {
+        ANameInput,
         ARealmPicker,
         VCFormInput,
         VCFormSwitch,
@@ -140,9 +142,9 @@ export default defineComponent({
                     <template #label>
                         Name
                     </template>
-                    <VCFormInput
-                        v-model="v.fields.name.$model.value"
-                        @change="handleUpdated"
+                    <ANameInput
+                        :model-value="v.fields.name.$model.value"
+                        @update:model-value="(next: string) => { v.fields.name.$model.value = next; handleUpdated(); }"
                     />
                 </VCFormGroup>
             </IFieldValidation>

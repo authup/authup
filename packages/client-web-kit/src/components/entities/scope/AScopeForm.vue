@@ -29,6 +29,7 @@ import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -37,6 +38,7 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AScopeForm = defineComponent({
     components: {
+        ANameInput,
         ARealmPicker,
         AFormSubmit,
         VCFormGroup,
@@ -159,7 +161,7 @@ export default AScopeForm;
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
-                <VCFormInput
+                <ANameInput
                     v-model="v.fields.name.$model.value"
                     :disabled="isNameFixed"
                 />

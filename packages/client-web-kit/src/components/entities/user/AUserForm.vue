@@ -32,6 +32,7 @@ import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     AToggleButton,
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -43,6 +44,7 @@ export const AUserForm = defineComponent({
     components: {
         ARealms,
         AFormSubmit,
+        ANameInput,
         AToggleButton,
         VCFormGroup,
         VCFormInput,
@@ -185,7 +187,7 @@ export default AUserForm;
                         <template #label>
                             {{ translationsDefault.name }}
                         </template>
-                        <VCFormInput
+                        <ANameInput
                             :model-value="v.fields.name.$model.value"
                             :disabled="form.name_locked"
                             @update:model-value="onNameChange"

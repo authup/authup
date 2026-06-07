@@ -29,6 +29,7 @@ import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -37,6 +38,7 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const ARoleForm = defineComponent({
     components: {
+        ANameInput,
         ARealmPicker,
         AFormSubmit,
         VCFormGroup,
@@ -150,7 +152,7 @@ export default ARoleForm;
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
-                <VCFormInput v-model="v.fields.name.$model.value" />
+                <ANameInput v-model="v.fields.name.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
 
