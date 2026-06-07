@@ -1,7 +1,8 @@
 <script lang="ts">
 import type { AttributeNamesPolicy } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
-import useVuelidate from '@vuelidate/core';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../../composables';
@@ -14,7 +15,7 @@ export default defineComponent({
     setup(props, setup) {
         const form = reactive<{ names: string[] }>({ names: [] });
 
-        const vuelidate = useVuelidate({ names: {} }, form, { $registerAs: 'type' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(data: Partial<AttributeNamesPolicy> = {}) {
             form.names = data.names || [];
@@ -34,15 +35,14 @@ export default defineComponent({
 
         return {
             handleUpdated,
-
-            vuelidate,
+            v,
         };
     },
 });
 </script>
 <template>
     <AFormInputList
-        :names="vuelidate.names.$model"
+        :names="v.fields.names.$model.value"
         :min-items="1"
         @changed="handleUpdated"
     />

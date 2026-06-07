@@ -12,7 +12,7 @@ import type { Realm } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup,
+    TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
 } from '../../../core';
@@ -34,12 +34,12 @@ export const ARealms = defineComponent({
         });
 
         const translationsName = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationNamespace.DEFAULT,
             key: TranslatorTranslationDefaultKey.REALMS,
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationNamespace.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationsName },
         });

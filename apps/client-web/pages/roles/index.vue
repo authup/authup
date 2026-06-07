@@ -3,11 +3,9 @@ import type { Role } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { definePageMeta, useToast } from '#imports';
 import { defineNuxtComponent } from '#app';
-import DomainEntityNav from '../../components/DomainEntityNav';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
-    components: { DomainEntityNav },
     setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -24,13 +22,13 @@ export default defineNuxtComponent({
         const items = [
             {
                 name: 'overview',
-                urlSuffix: '',
                 icon: 'fa6-solid:bars',
+                url: '/roles',
             },
             {
                 name: 'add',
-                urlSuffix: '/add',
                 icon: 'fa6-solid:plus',
+                url: '/roles/add',
             },
         ];
 
@@ -71,10 +69,10 @@ export default defineNuxtComponent({
         </h1>
         <div class="content-wrapper">
             <div class="content-sidebar flex-col">
-                <DomainEntityNav
-                    :items="items"
-                    path="/roles"
-                    direction="vertical"
+                <VCNavItems
+                    :data="items"
+                    variant="pills"
+                    orientation="vertical"
                 />
             </div>
             <div class="content-container">

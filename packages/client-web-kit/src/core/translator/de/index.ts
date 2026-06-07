@@ -7,5 +7,4 @@
 
 export * from './client';
 export * from './default';
-export * from './vuelidate';
 export * from './vuecs';

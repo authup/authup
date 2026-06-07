@@ -4,7 +4,7 @@ import { injectHTTPClient } from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import {
     createError,
     definePageMeta,
@@ -23,19 +23,6 @@ export default defineComponent({
             ],
         });
 
-        const items = [
-            {
-                name: 'General',
-                icon: 'fa6-solid:bars',
-                urlSuffix: '',
-            },
-            {
-                name: 'Roles',
-                icon: 'fa6-solid:masks-theater',
-                urlSuffix: 'roles',
-            },
-        ];
-
         const toast = useToast();
         const route = useRoute();
 
@@ -49,6 +36,24 @@ export default defineComponent({
             await navigateTo({ path: '/identity-providers' });
             throw createError({});
         }
+
+        const items = computed(() => [
+            {
+                name: '',
+                icon: 'fa6-solid:arrow-left',
+                url: '/identity-providers',
+            },
+            {
+                name: 'General',
+                icon: 'fa6-solid:bars',
+                url: `/identity-providers/${entity.value.id}`,
+            },
+            {
+                name: 'Roles',
+                icon: 'fa6-solid:masks-theater',
+                url: `/identity-providers/${entity.value.id}/roles`,
+            },
+        ]);
 
         const handleUpdated = (e: IdentityProvider) => {
             toast.show({
@@ -85,10 +90,9 @@ export default defineComponent({
             <span class="sub-title ms-1">Details</span>
         </h1>
         <div class="mb-2">
-            <DomainEntityNav
-                :path="'/identity-providers/'+entity.id"
-                :items="items"
-                :prev-link="true"
+            <VCNavItems
+                :data="items"
+                variant="pills"
             />
         </div>
         <div>

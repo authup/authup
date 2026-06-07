@@ -5,12 +5,14 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import useVuelidate from '@vuelidate/core';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import {
     computed,
     defineComponent,
     nextTick,
+    reactive,
     ref,
 } from 'vue';
 import type {
@@ -20,7 +22,7 @@ import type {
 import { EntityType, IdentityProviderProtocol } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import {
-    extractVuelidateResultsFromChild,
+    extractValidupResultsFromChild,
     injectHTTPClient,
 } from '../../../core';
 import { onChange, useIsEditing } from '../../../composables';
@@ -82,8 +84,18 @@ export const AIdentityProviderOAuth2Form = defineComponent({
         });
 
         const busy = ref(false);
-        const $v = useVuelidate({ $stopPropagation: true });
+        // Parent collector — see APolicyForm for the same pattern.
+        const v = useValidup(new Container(), reactive({}), { stopPropagation: true });
         const isEditing = useIsEditing(manager.data);
+
+        const isInvalid = computed(() => {
+            const basic = v.$getResultsForChild('basic');
+            const client = v.$getResultsForChild('client');
+            const endpoint = v.$getResultsForChild('endpoint');
+            return !!basic?.$invalid.value ||
+                !!client?.$invalid.value ||
+                !!endpoint?.$invalid.value;
+        });
 
         const authorizeUri = computed<string>(() => {
             if (!manager.data.value) return '';
@@ -124,12 +136,12 @@ export const AIdentityProviderOAuth2Form = defineComponent({
         initForm();
 
         const submit = async () => {
-            if ($v.value.$invalid) return;
+            if (isInvalid.value) return;
 
             const data: Partial<IdentityProvider> = {
-                ...extractVuelidateResultsFromChild($v, 'basic'),
-                ...extractVuelidateResultsFromChild($v, 'client'),
-                ...extractVuelidateResultsFromChild($v, 'endpoint'),
+                ...extractValidupResultsFromChild(v, 'basic'),
+                ...extractValidupResultsFromChild(v, 'client'),
+                ...extractValidupResultsFromChild(v, 'endpoint'),
             };
 
             if (protocolEff.value) {
@@ -148,8 +160,8 @@ export const AIdentityProviderOAuth2Form = defineComponent({
         return {
             data: manager.data,
             busy,
-            vuelidate: $v,
             isEditing,
+            isInvalid,
             protocolEff,
             presetEff,
             authorizeUri,
@@ -246,7 +258,7 @@ export default AIdentityProviderOAuth2Form;
         <AFormSubmit
             :is-busy="busy"
             :is-editing="isEditing"
-            :is-invalid="vuelidate.$invalid"
+            :is-invalid="isInvalid"
             @submit="submit"
         />
     </form>

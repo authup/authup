@@ -5,10 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { createValidup } from '@validup/vue';
+import { OptionalValue } from 'validup';
 import type { App, Component } from 'vue';
 import * as components from './components/entities';
 import {
-    installHTTPClient, 
+    installHTTPClient,
     installHTTPClientAuthenticationHook,
     installSocketManager,
     installStore,
@@ -71,6 +73,19 @@ export function install(app: App, options: Options): void {
     });
 
     installTranslator(app, { locale: options.translatorLocale });
+
+    // Register @validup/vue's `createValidup` plugin with authup's
+    // form-friendly defaults: treat `undefined`, `null`, and empty strings
+    // as "missing" for every mount that declares `optional: true` without
+    // its own `optionalValue` override, and emit `null` to the backend
+    // for those missing fields. Matches the entity-validator pattern
+    // across the codebase (every nullable FK / optional string column is
+    // typed as `z.X().nullable()` — a blank input should land as `null`,
+    // not `''`).
+    app.use(createValidup({
+        optionalValue: [OptionalValue.UNDEFINED, OptionalValue.NULL, OptionalValue.EMPTY_STRING],
+        optionalAs: null,
+    }));
 
     installComponents(app, options.components);
 

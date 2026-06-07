@@ -10,7 +10,8 @@ import { isPolicyNameValid } from '@authup/core-kit';
 import { isObject } from 'smob';
 import type { ValidatorContext } from 'validup';
 import { Container } from 'validup';
-import { createValidationChain, createValidator } from '@validup/adapter-validator';
+import { createValidator } from '@validup/zod';
+import { z } from 'zod';
 import type { PolicyEntity } from '../../../../../database/domains/index.ts';
 import { RequestHandlerOperation } from '../../../../request/index.ts';
 import { PolicyAttributesValidator } from './attributes-validator.ts';
@@ -19,89 +20,59 @@ export class PolicyValidator extends Container<PolicyEntity & { parent_id?: stri
     protected initialize() {
         super.initialize();
 
-        const nameValidator = createValidator(() => {
-            const chain = createValidationChain();
-            return chain
-                .exists()
-                .notEmpty()
-                .isString()
+        const nameValidator = createValidator(
+            z.string()
                 .trim()
                 .toLowerCase()
-                .isLength({
-                    min: 3,
-                    max: 128,
-                })
-                .custom((value) => isPolicyNameValid(value, { throwOnFailure: true }));
-        });
+                .min(3)
+                .max(128)
+                .check((ctx) => {
+                    try {
+                        isPolicyNameValid(ctx.value, { throwOnFailure: true });
+                    } catch (e) {
+                        ctx.issues.push({
+                            input: ctx.value,
+                            code: 'custom',
+                            message: e instanceof Error ? e.message : 'The policy name is not valid.',
+                        });
+                    }
+                }),
+        );
 
         this.mount('name', { group: RequestHandlerOperation.CREATE }, nameValidator);
         this.mount('name', {
             group: RequestHandlerOperation.UPDATE,
-            optional: true, 
+            optional: true,
         }, nameValidator);
 
         this.mount(
             'display_name',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .isString()
-                    .isLength({
-                        min: 3,
-                        max: 256, 
-                    })
-                    .optional({ values: 'null' });
-            }),
+            createValidator(z.string().min(3).max(256).nullable()),
         );
 
         this.mount(
             'invert',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .isBoolean();
-            }),
+            createValidator(z.boolean()),
         );
 
         this.mount(
             'type',
             { group: RequestHandlerOperation.CREATE },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isString()
-                    .isLength({
-                        min: 3,
-                        max: 128, 
-                    });
-            }),
+            createValidator(z.string().min(3).max(128)),
         );
 
         this.mount(
             'parent_id',
             { optional: true },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID()
-                    .optional({ values: 'null' });
-            }),
+            createValidator(z.uuid().nullable()),
         );
 
         this.mount(
             'realm_id',
             { group: RequestHandlerOperation.CREATE },
-            createValidator(() => {
-                const chain = createValidationChain();
-                return chain
-                    .exists()
-                    .isUUID()
-                    .optional({ values: 'null' });
-            }),
+            createValidator(z.uuid().nullable()),
         );
 
         this.mount({ optional: true }, new PolicyAttributesValidator({}));

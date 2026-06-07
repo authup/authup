@@ -17,7 +17,7 @@ export type SocketManagerInstallOptions = {
     baseURL: string
 };
 
-export function installSocketManager(app: App, options : SocketManagerInstallOptions) {
+export function installSocketManager(app: App, options: SocketManagerInstallOptions) {
     const storeCreator = injectStoreFactory(app);
     const store = storeCreator(options.pinia);
     const { accessToken } = storeToRefs(store);

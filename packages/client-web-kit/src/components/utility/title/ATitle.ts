@@ -7,7 +7,7 @@
 
 import type { PropType, SlotsType } from 'vue';
 import { defineComponent } from 'vue';
-import { TranslatorTranslationDefaultKey, TranslatorTranslationGroup, useTranslation } from '../../../core';
+import { TranslatorTranslationDefaultKey, TranslatorTranslationNamespace, useTranslation } from '../../../core';
 import type { TitleSlotProps } from './type';
 import { buildTitle } from './module';
 
@@ -26,7 +26,7 @@ export const ATitle = defineComponent({
     }>,
     setup(props, { slots }) {
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.DEFAULT,
+            namespace: TranslatorTranslationNamespace.DEFAULT,
             key: TranslatorTranslationDefaultKey.OVERVIEW,
         });
 

@@ -2,7 +2,7 @@
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import type { TranslatorTranslationDefaultKey } from '../../../core';
-import { TranslatorTranslationGroup } from '../../../core';
+import { TranslatorTranslationNamespace } from '../../../core';
 import { ATranslation } from './ATranslation';
 
 export default defineComponent({
@@ -14,13 +14,13 @@ export default defineComponent({
         },
     },
     setup() {
-        return { TranslatorTranslationGroup };
+        return { TranslatorTranslationNamespace };
     },
 });
 </script>
 <template>
     <ATranslation
-        :group="TranslatorTranslationGroup.DEFAULT"
+        :group="TranslatorTranslationNamespace.DEFAULT"
         :name="name"
     />
 </template>

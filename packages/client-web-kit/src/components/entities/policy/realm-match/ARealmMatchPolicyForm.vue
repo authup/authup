@@ -1,19 +1,22 @@
 <script lang="ts">
 import { type PropType, defineComponent, reactive } from 'vue';
-import useVuelidate from '@vuelidate/core';
-import type { Policy } from '@authup/core-kit';
-import { IVuelidate } from '@ilingo/vuelidate';
-import { VCFormGroup } from '@vuecs/forms';
-import type { RealmMatchPolicy } from '@authup/access';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import { assignFormProperties } from '../../../../core';
+import type { Policy } from '@authup/core-kit';
+import { VCFormGroup, VCFormSwitch } from '@vuecs/forms';
+import type { RealmMatchPolicy } from '@authup/access';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        AFormInputList,
-        VCFormGroup,
-        IVuelidate,
+        AFormInputList, 
+        VCFormGroup, 
+        VCFormSwitch,
+
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
@@ -25,20 +28,11 @@ export default defineComponent({
             attribute_name: [] as string[],
         });
 
-        const vuelidate = useVuelidate({
-            attribute_name_strict: {},
-            attribute_null_match_all: {},
-            identity_master_match_all: {},
-            attribute_name: {},
-        }, form, { $registerAs: 'type' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(input: Partial<RealmMatchPolicy> = {}) {
-            const {
-                attribute_name, 
-                ...data 
-            } = input;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            assignFormProperties(form, data as Record<string, any>);
+            const { attribute_name, ...data } = input;
+            assignFormProperties(form, data as Record<string, unknown>);
             if (attribute_name) {
                 form.attribute_name = typeof attribute_name === 'string' ? [attribute_name] : attribute_name;
             } else {
@@ -56,7 +50,7 @@ export default defineComponent({
         const handleUpdated = () => {
             setup.emit('updated', {
                 data: form,
-                valid: !vuelidate.value.$invalid,
+                valid: !v.$invalid.value,
             });
         };
 
@@ -68,8 +62,7 @@ export default defineComponent({
         return {
             handleUpdated,
             handleAttributeNameChanged,
-
-            vuelidate,
+            v,
         };
     },
 });
@@ -77,83 +70,75 @@ export default defineComponent({
 <template>
     <div class="row">
         <div class="col-7">
-            <IVuelidate :validation="vuelidate.attribute_name">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <AFormInputList
-                            :names="vuelidate.attribute_name.$model"
-                            @changed="handleAttributeNameChanged"
-                        />
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.attribute_name"
+            >
+                <VCFormGroup :validation="value">
+                    <AFormInputList
+                        :names="v.fields.attribute_name.$model.value"
+                        @changed="handleAttributeNameChanged"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
         <div class="col-5">
-            <IVuelidate :validation="vuelidate.attribute_name_strict">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.attribute_name_strict"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.attribute_name_strict.$model.value"
+                        :label="true"
+                        @change="handleUpdated"
                     >
-                        <VCFormSwitch
-                            v-model="vuelidate.attribute_name_strict.$model"
-                            :label="true"
-                            @change="handleUpdated"
-                        >
-                            <template #label="iProps">
-                                <label :for="iProps.id">
-                                    Only match if the attribute is strict equal to the name?
-                                </label>
-                            </template>
-                        </VCFormSwitch>
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
-            <IVuelidate :validation="vuelidate.attribute_null_match_all">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Only match if the attribute is strict equal to the name?
+                            </label>
+                        </template>
+                    </VCFormSwitch>
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.attribute_null_match_all"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.attribute_null_match_all.$model.value"
+                        :label="true"
+                        @change="handleUpdated"
                     >
-                        <VCFormSwitch
-                            v-model="vuelidate.attribute_null_match_all.$model"
-                            :label="true"
-                            @change="handleUpdated"
-                        >
-                            <template #label="iProps">
-                                <label :for="iProps.id">
-                                    Determines if resources with null realm-id/name value should match all identity realms.<br>
-                                    If true, any identity realm can access resources with null realm-id/name values.
-                                </label>
-                            </template>
-                        </VCFormSwitch>
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
-            <IVuelidate :validation="vuelidate.identity_master_match_all">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Determines if resources with null realm-id/name value should match all identity realms.<br>
+                                If true, any identity realm can access resources with null realm-id/name values.
+                            </label>
+                        </template>
+                    </VCFormSwitch>
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.identity_master_match_all"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.identity_master_match_all.$model.value"
+                        :label="true"
+                        @change="handleUpdated"
                     >
-                        <VCFormSwitch
-                            v-model="vuelidate.identity_master_match_all.$model"
-                            :label="true"
-                            @change="handleUpdated"
-                        >
-                            <template #label="iProps">
-                                <label :for="iProps.id">
-                                    Specifies whether the master realm of an identity should match all realm-id/name attributes, including null.<br>
-                                    If true, the master realm can access any resource regardless of its realm value.
-                                </label>
-                            </template>
-                        </VCFormSwitch>
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Specifies whether the master realm of an identity should match all realm-id/name attributes, including null.<br>
+                                If true, the master realm can access any resource regardless of its realm value.
+                            </label>
+                        </template>
+                    </VCFormSwitch>
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
     </div>
 </template>

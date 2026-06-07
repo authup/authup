@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LinesRecord } from 'ilingo';
+import type { Translations } from 'ilingo';
 import { TranslatorTranslationClientKey } from '../constants';
 
-export const TranslatorTranslationClientEnglish : LinesRecord = {
+export const TranslatorTranslationClientEnglish : Translations = {
     [TranslatorTranslationClientKey.NAME_HINT]: 'Something users will recognize and trust',
     [TranslatorTranslationClientKey.DESCRIPTION_HINT]: 'Displayed to all users of this application',
     [TranslatorTranslationClientKey.REDIRECT_URI_HINT]: 'URI pattern a browser can redirect to after a successful login',

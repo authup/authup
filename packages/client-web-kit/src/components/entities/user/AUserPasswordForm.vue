@@ -5,24 +5,73 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { 
-    defineComponent, 
-    reactive, 
-    ref, 
-    toRef, 
+import {
+    defineComponent,
+    reactive,
+    ref,
 } from 'vue';
 import type { PropType } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
-import useVuelidate from '@vuelidate/core';
+import { useValidup } from '@validup/vue';
+import { injectHTTPClient, wrapFnWithBusyState  } from '../../../core';
+import { createValidator } from '@validup/zod';
 import {
-    maxLength,
-    minLength,
-    required,
-    sameAs,
-} from '@vuelidate/validators';
-import { injectHTTPClient, wrapFnWithBusyState } from '../../../core';
+    Container,
+    ValidupError,
+    defineIssueItem,
+} from 'validup';
+import type { Validator } from 'validup';
+import { z } from 'zod';
 import { AFormSubmit } from '../../utility';
+import { IFieldValidation } from '@ilingo/validup-vue';
+
+// Cross-field equality between `password` and `password_repeat` — runs
+// as a second mount on `password_repeat` so the first mount's length
+// validator surfaces its own message independently.
+const sameAsPassword: Validator = (ctx) => {
+    const { value } = ctx;
+    // If the value isn't a string at this point, the prior length
+    // validator already failed — defer to its issue rather than adding
+    // a confusing "doesn't match" alongside.
+    if (typeof value !== 'string') {
+        return value;
+    }
+    const { password } = ctx.data as { password?: unknown };
+    if (value !== password) {
+        // Bare-code path (defaults to `VALUE_INVALID`) + explicit
+        // message. Parameterized `SAME_AS` would surface the contract
+        // via `data: { other: 'password' }`, but `DefineIssueItemData`'s
+        // overload selection in validup 0.4 didn't accept the literal
+        // — bare-code + message gets the same end-user experience and
+        // sidesteps the type-juggling. validup's run loop prefixes the
+        // mount key on re-throw, so the issue lands under
+        // `password_repeat` in `$errors`.
+        const path: PropertyKey[] = [];
+        throw new ValidupError([defineIssueItem({
+            path,
+            message: 'Must match the password.',
+        })]);
+    }
+    return value;
+};
+
+// Inline validator — there's no `UserPasswordValidator` in core-kit;
+// `UserValidator` covers `password` for the entity-edit path. This
+// password-only form has its own length + match contract.
+class UserPasswordValidator extends Container<{ password: string; password_repeat: string }> {
+    protected override initialize() {
+        super.initialize();
+
+        const passwordValidator = createValidator(z.string().min(5).max(100));
+        this.mount('password', passwordValidator);
+
+        // Two mounts on `password_repeat` — length first, equality second.
+        // Container runs mounts in order; a failure in the first short-
+        // circuits the key, so consumers only see one issue at a time.
+        this.mount('password_repeat', passwordValidator);
+        this.mount('password_repeat', sameAsPassword);
+    }
+}
 
 export const AUserPasswordForm = defineComponent({
     components: {
@@ -30,7 +79,8 @@ export const AUserPasswordForm = defineComponent({
         VCFormInput,
         VCFormSwitch,
         AFormSubmit,
-        IVuelidate,
+
+        IFieldValidation,
     },
     props: {
         id: {
@@ -48,23 +98,13 @@ export const AUserPasswordForm = defineComponent({
         });
 
         const passwordShow = ref(false);
-        const passwordRef = toRef(form, 'password');
 
-        const $v = useVuelidate({
-            password: {
-                required,
-                minLength: minLength(5),
-                maxLength: maxLength(100),
-            },
-            password_repeat: {
-                minLength: minLength(5),
-                maxLength: maxLength(100),
-                sameAs: sameAs(passwordRef),
-            },
-        }, form);
+        const v = useValidup(new UserPasswordValidator(), form);
 
         const submit = wrapFnWithBusyState(busy, async () => {
-            if ($v.value.$invalid) return;
+            // `v.$invalid` already covers length + password-repeat match
+            // (the `sameAsPassword` validator above).
+            if (v.$invalid.value) return;
             if (!props.id) return;
 
             try {
@@ -84,7 +124,7 @@ export const AUserPasswordForm = defineComponent({
         return {
             busy,
             passwordShow,
-            vuelidate: $v,
+            v,
             submit,
         };
     },
@@ -98,41 +138,37 @@ export default AUserPasswordForm;
         class="flex flex-col gap-3"
         @submit.prevent="submit"
     >
-        <IVuelidate :validation="vuelidate.password">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Password
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.password.$model"
-                        :type="passwordShow ? 'text' : 'password'"
-                        autocomplete="new-password"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.password"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Password
+                </template>
+                <VCFormInput
+                    v-model="v.fields.password.$model.value"
+                    :type="passwordShow ? 'text' : 'password'"
+                    autocomplete="new-password"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <IVuelidate :validation="vuelidate.password_repeat">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Password repeat
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.password_repeat.$model"
-                        :type="passwordShow ? 'text' : 'password'"
-                        autocomplete="new-password"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.password_repeat"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Password repeat
+                </template>
+                <VCFormInput
+                    v-model="v.fields.password_repeat.$model.value"
+                    :type="passwordShow ? 'text' : 'password'"
+                    autocomplete="new-password"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
         <div>
             <VCFormSwitch
@@ -158,7 +194,7 @@ export default AUserPasswordForm;
             <AFormSubmit
                 :is-busy="busy"
                 :is-editing="true"
-                :is-invalid="vuelidate.$invalid"
+                :is-invalid="v.$invalid.value"
                 @submit="submit"
             />
         </div>

@@ -3,7 +3,7 @@ import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import {
     definePageMeta,
     useToast,
@@ -20,39 +20,6 @@ export default defineComponent({
             ],
         });
 
-        const items = [
-            {
-                name: 'General',
-                icon: 'fa6-solid:bars',
-                urlSuffix: '',
-            },
-            {
-                name: 'Policies',
-                icon: 'fa6-solid:shield-halved',
-                urlSuffix: 'policies',
-            },
-            {
-                name: 'Users',
-                icon: 'fa6-solid:user',
-                urlSuffix: 'users',
-            },
-            {
-                name: 'Clients',
-                icon: 'fa6-solid:ghost',
-                urlSuffix: 'clients',
-            },
-            {
-                name: 'Robots',
-                icon: 'fa6-solid:robot',
-                urlSuffix: 'robots',
-            },
-            {
-                name: 'Roles',
-                icon: 'fa6-solid:user-group',
-                urlSuffix: 'roles',
-            },
-        ];
-
         const toast = useToast();
         const route = useRoute();
 
@@ -66,6 +33,44 @@ export default defineComponent({
             await navigateTo({ path: '/permissions' });
             throw createError({});
         }
+
+        const items = computed(() => [
+            {
+                name: '',
+                icon: 'fa6-solid:arrow-left',
+                url: '/permissions',
+            },
+            {
+                name: 'General',
+                icon: 'fa6-solid:bars',
+                url: `/permissions/${entity.value.id}`,
+            },
+            {
+                name: 'Policies',
+                icon: 'fa6-solid:shield-halved',
+                url: `/permissions/${entity.value.id}/policies`,
+            },
+            {
+                name: 'Users',
+                icon: 'fa6-solid:user',
+                url: `/permissions/${entity.value.id}/users`,
+            },
+            {
+                name: 'Clients',
+                icon: 'fa6-solid:ghost',
+                url: `/permissions/${entity.value.id}/clients`,
+            },
+            {
+                name: 'Robots',
+                icon: 'fa6-solid:robot',
+                url: `/permissions/${entity.value.id}/robots`,
+            },
+            {
+                name: 'Roles',
+                icon: 'fa6-solid:user-group',
+                url: `/permissions/${entity.value.id}/roles`,
+            },
+        ]);
 
         const handleUpdated = (e: Permission) => {
             if (toast) {
@@ -109,10 +114,9 @@ export default defineComponent({
             </span>
         </h1>
         <div class="mb-2">
-            <DomainEntityNav
-                :items="items"
-                :path="`/permissions/${entity.id}`"
-                :prev-link="true"
+            <VCNavItems
+                :data="items"
+                variant="pills"
             />
         </div>
 

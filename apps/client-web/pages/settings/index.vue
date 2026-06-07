@@ -1,14 +1,12 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
-import DomainEntityNav from '../../components/DomainEntityNav';
 import AccountSVG from '../../components/svg/AccountSVG';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
     components: {
-        DomainEntityNav,
-        AccountSVG, 
+        AccountSVG,
     },
     setup() {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
@@ -17,12 +15,12 @@ export default defineComponent({
             {
                 name: 'Account',
                 icon: 'fa6-solid:bars',
-                urlSuffix: '',
+                url: '/settings',
             },
             {
                 name: 'Security',
                 icon: 'fa6-solid:lock',
-                urlSuffix: '/security',
+                url: '/settings/security',
             },
         ];
 
@@ -44,10 +42,10 @@ export default defineComponent({
         </h1>
         <div class="content-wrapper">
             <div class="content-sidebar flex-col">
-                <DomainEntityNav
-                    :items="items"
-                    path="/settings"
-                    direction="vertical"
+                <VCNavItems
+                    :data="items"
+                    variant="pills"
+                    orientation="vertical"
                 />
             </div>
             <div class="content-container">

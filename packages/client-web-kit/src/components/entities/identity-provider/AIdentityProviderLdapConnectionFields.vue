@@ -7,20 +7,21 @@
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import { assignFormProperties } from '../../../core';
-import useVuelidate from '@vuelidate/core';
-import { numeric, required } from '@vuelidate/validators';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import { onChange, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AIdentityProviderLdapConnectionFields = defineComponent({
     components: {
-        IVuelidate,
-        VCFormGroup,
-        VCFormInput,
+        VCFormGroup, 
+        VCFormInput, 
         VCFormSwitch,
+
+        IFieldValidation,
     },
     props: {
         entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
@@ -38,12 +39,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
             base_dn: '',
         });
 
-        const $v = useVuelidate({
-            url: { required },
-            timeout: { numeric },
-            start_tls: { required },
-            base_dn: { required },
-        }, form, { $registerAs: 'connection' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'connection' });
 
         function init() {
             if (!props.entity) return;
@@ -57,15 +53,15 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
 
         const onTimeoutChange = (input: string) => {
             if (input.trim() === '') {
-                $v.value.timeout.$model = 0;
+                v.fields.timeout.$model.value = 0;
                 return;
             }
             const intValue = Number.parseInt(input, 10);
-            $v.value.timeout.$model = Number.isNaN(intValue) ? 0 : intValue;
+            v.fields.timeout.$model.value = Number.isNaN(intValue) ? 0 : intValue;
         };
 
         return {
-            vuelidate: $v,
+            v,
             onTimeoutChange,
         };
     },
@@ -76,74 +72,66 @@ export default AIdentityProviderLdapConnectionFields;
 
 <template>
     <div>
-        <IVuelidate :validation="vuelidate.url">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        URL
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.url.$model"
-                        placeholder="<scheme>://<address>:<port>"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.url"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    URL
+                </template>
+                <VCFormInput
+                    v-model="v.fields.url.$model.value"
+                    placeholder="<scheme>://<address>:<port>"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <IVuelidate :validation="vuelidate.timeout">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Timeout
-                    </template>
-                    <VCFormInput
-                        :model-value="String(vuelidate.timeout.$model)"
-                        type="number"
-                        @update:model-value="onTimeoutChange"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.timeout"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Timeout
+                </template>
+                <VCFormInput
+                    :model-value="String(v.fields.timeout.$model.value)"
+                    type="number"
+                    @update:model-value="onTimeoutChange"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <IVuelidate :validation="vuelidate.start_tls">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        StartTLS
-                    </template>
-                    <VCFormSwitch
-                        v-model="vuelidate.start_tls.$model"
-                        :label="true"
-                        label-content="Enable StartTLS process?"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.start_tls"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    StartTLS
+                </template>
+                <VCFormSwitch
+                    v-model="v.fields.start_tls.$model.value"
+                    :label="true"
+                    label-content="Enable StartTLS process?"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
 
-        <IVuelidate :validation="vuelidate.base_dn">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Base DN
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.base_dn.$model"
-                        placeholder="e.g. dc=example,dc=com"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.base_dn"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Base DN
+                </template>
+                <VCFormInput
+                    v-model="v.fields.base_dn.$model.value"
+                    placeholder="e.g. dc=example,dc=com"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

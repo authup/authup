@@ -7,18 +7,19 @@
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
 import { assignFormProperties } from '../../../core';
-import useVuelidate from '@vuelidate/core';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import { onChange, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AIdentityProviderLdapUserFields = defineComponent({
     components: {
-        IVuelidate, 
         VCFormGroup, 
         VCFormInput, 
+        IFieldValidation, 
     },
     props: {
         entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
@@ -34,13 +35,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
             user_display_name_attribute: '',
         });
 
-        const $v = useVuelidate({
-            user_filter: {},
-            user_base_dn: {},
-            user_name_attribute: {},
-            user_mail_attribute: {},
-            user_display_name_attribute: {},
-        }, form, { $registerAs: 'user' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'user' });
 
         function init() {
             if (!props.entity) return;
@@ -51,7 +46,7 @@ export const AIdentityProviderLdapUserFields = defineComponent({
         onChange(updated, () => init());
         init();
 
-        return { vuelidate: $v };
+        return { v };
     },
 });
 
@@ -60,73 +55,63 @@ export default AIdentityProviderLdapUserFields;
 
 <template>
     <div>
-        <IVuelidate :validation="vuelidate.user_filter">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Filter
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.user_filter.$model"
-                        placeholder="(|({name_attribute}={{input}})({mail_attribute}={{input}}))"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.user_base_dn">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Base DN
-                    </template>
-                    <VCFormInput v-model="vuelidate.user_base_dn.$model" />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.user_name_attribute">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Name Attribute
-                    </template>
-                    <VCFormInput v-model="vuelidate.user_name_attribute.$model" />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.user_mail_attribute">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Mail Attribute
-                    </template>
-                    <VCFormInput v-model="vuelidate.user_mail_attribute.$model" />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.user_display_name_attribute">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        DisplayName Attribute
-                    </template>
-                    <VCFormInput v-model="vuelidate.user_display_name_attribute.$model" />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.user_filter"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Filter
+                </template>
+                <VCFormInput
+                    v-model="v.fields.user_filter.$model.value"
+                    placeholder="(|({name_attribute}={{input}})({mail_attribute}={{input}}))"
+                />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.user_base_dn"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Base DN
+                </template>
+                <VCFormInput v-model="v.fields.user_base_dn.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.user_name_attribute"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Name Attribute
+                </template>
+                <VCFormInput v-model="v.fields.user_name_attribute.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.user_mail_attribute"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Mail Attribute
+                </template>
+                <VCFormInput v-model="v.fields.user_mail_attribute.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.user_display_name_attribute"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    DisplayName Attribute
+                </template>
+                <VCFormInput v-model="v.fields.user_display_name_attribute.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

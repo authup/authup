@@ -1,21 +1,32 @@
 <script lang="ts">
 import {
-    type PropType, 
-    computed, 
-    defineComponent, 
-    reactive, 
+    type PropType,
+    computed,
+    defineComponent,
+    reactive,
     toRef,
+    watch,
 } from 'vue';
-import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import { useValidup } from '@validup/vue';
+import { 
+    assignFormProperties, 
+    injectStore, 
+    storeToRefs, 
+} from '../../../core';
+import { ValidatorGroup } from '@authup/kit';
 import type { Policy } from '@authup/core-kit';
-import { IVuelidate } from '@ilingo/vuelidate';
+import { PolicyValidator } from '@authup/core-kit';
 import type { FormOption } from '@vuecs/forms';
-import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
+import {
+    VCFormGroup,
+    VCFormInput,
+    VCFormSwitch,
+    VCFormTextarea,
+} from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
-import { assignFormProperties, injectStore, storeToRefs } from '../../../core';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
 import { ARealmPicker } from '../realm';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
@@ -23,9 +34,14 @@ export default defineComponent({
         VCFormInput,
         VCFormSwitch,
         VCFormGroup,
-        IVuelidate,
+        VCFormTextarea,
+
+        IFieldValidation,
     },
-    props: { entity: { type: Object as PropType<Policy> } },
+    props: {
+        entity: { type: Object as PropType<Policy> },
+        type: { type: String as PropType<string | null>, default: undefined },
+    },
     emits: ['updated'],
     setup(props, setup) {
         const entity = toRef(props, 'entity');
@@ -35,6 +51,7 @@ export default defineComponent({
             display_name: '',
             description: '',
             realm_id: '',
+            type: '',
         });
 
         const store = injectStore();
@@ -51,30 +68,24 @@ export default defineComponent({
                 null;
         });
 
-        const typeOptions : FormOption[] = [
+        const typeOptions: FormOption[] = [
             ...Object.values(BuiltInPolicyType).map((type) => ({
                 label: type,
                 value: type,
             })),
         ];
 
-        const vuelidate = useVuelidate({
-            name: {
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(128),
+        // Shared backend validator from @authup/core-kit. Registers
+        // under the parent `<APolicyForm>` collector via `name: 'basic'`
+        // so the parent extracts via `extractValidupResultsFromChild('basic')`.
+        const v = useValidup(
+            new PolicyValidator(),
+            form,
+            {
+                name: 'basic',
+                group: computed(() => (isEditing.value ? ValidatorGroup.UPDATE : ValidatorGroup.CREATE)),
             },
-            invert: {},
-            display_name: {
-                minLength: minLength(3),
-                maxLength: maxLength(256),
-            },
-            description: {
-                minLength: minLength(5),
-                maxLength: maxLength(4096),
-            },
-            realm_id: {},
-        }, form, { $registerAs: 'basic' });
+        );
 
         function assign(data: Partial<Policy> = {}) {
             assignFormProperties(form, data);
@@ -87,20 +98,33 @@ export default defineComponent({
 
         assign(props.entity);
 
+        // `type` is the policy discriminator owned by the parent
+        // <APolicyForm>, not edited here. It's mounted (required on
+        // CREATE) in the shared PolicyValidator, so feed the parent's
+        // resolved value into the validated state — otherwise the basic
+        // sub-form is permanently invalid and the submit button never
+        // enables.
+        watch(
+            () => props.type,
+            (value) => {
+                form.type = value ?? '';
+            },
+            { immediate: true },
+        );
+
         const handleUpdated = () => {
             setup.emit('updated', {
                 data: form,
-                valid: !vuelidate.value.$invalid,
+                valid: !v.$invalid.value,
             });
         };
 
         return {
             isEditing,
             realmId,
-
             handleUpdated,
             typeOptions,
-            vuelidate,
+            v,
         };
     },
 });
@@ -108,96 +132,88 @@ export default defineComponent({
 <template>
     <div class="row">
         <div class="col">
-            <IVuelidate :validation="vuelidate.name">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Name
+                    </template>
+                    <VCFormInput
+                        v-model="v.fields.name.$model.value"
+                        @change="handleUpdated"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.display_name"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Display Name
+                    </template>
+                    <VCFormInput
+                        :model-value="v.fields.display_name.$model.value ?? ''"
+                        @update:model-value="(next: string) => { v.fields.display_name.$model.value = next; }"
+                        @change="handleUpdated"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.description"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Description
+                    </template>
+                    <VCFormTextarea
+                        :model-value="v.fields.description.$model.value ?? ''"
+                        rows="4"
+                        @update:model-value="(next: string) => { v.fields.description.$model.value = next; }"
+                        @change="handleUpdated"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.invert"
+            >
+                <VCFormGroup :validation="value">
+                    <VCFormSwitch
+                        v-model="v.fields.invert.$model.value"
+                        :label="true"
+                        @change="handleUpdated"
                     >
-                        <template #label>
-                            Name
+                        <template #label="iProps">
+                            <label :for="iProps.id">
+                                Invert?
+                            </label>
                         </template>
-                        <VCFormInput
-                            v-model="vuelidate.name.$model"
-                            @change="handleUpdated"
-                        />
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
-            <IVuelidate :validation="vuelidate.display_name">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            Display Name
-                        </template>
-                        <VCFormInput
-                            v-model="vuelidate.display_name.$model"
-                            @change="handleUpdated"
-                        />
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
-            <IVuelidate :validation="vuelidate.description">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            Description
-                        </template>
-                        <VCFormTextarea
-                            v-model="vuelidate.description.$model"
-                            rows="4"
-                            @change="handleUpdated"
-                        />
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
-            <IVuelidate :validation="vuelidate.invert">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <VCFormSwitch
-                            v-model="vuelidate.invert.$model"
-                            :label="true"
-                            @change="handleUpdated"
-                        >
-                            <template #label="iProps">
-                                <label :for="iProps.id">
-                                    Invert?
-                                </label>
-                            </template>
-                        </VCFormSwitch>
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
+                    </VCFormSwitch>
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
         <div
             v-if="!realmId && !isEditing"
             class="col"
         >
-            <IVuelidate :validation="vuelidate.invert">
-                <template #default="props">
-                    <VCFormGroup
-                        :validation-messages="props.data"
-                        :validation-severity="props.severity"
-                    >
-                        <template #label>
-                            Realm
-                        </template>
-                        <ARealmPicker
-                            :value="vuelidate.realm_id.$model"
-                            @change="(value: string[]) => { vuelidate.realm_id.$model = value.length > 0 ? value[0] ?? '' : ''; }"
-                        />
-                    </VCFormGroup>
-                </template>
-            </IVuelidate>
+            <IFieldValidation
+                v-slot="{ value }"
+                :field="v.fields.realm_id"
+            >
+                <VCFormGroup :validation="value">
+                    <template #label>
+                        Realm
+                    </template>
+                    <ARealmPicker
+                        :value="v.fields.realm_id.$model.value"
+                        @change="(value: string[]) => { v.fields.realm_id.$model.value = value.length > 0 ? value[0] ?? '' : ''; }"
+                    />
+                </VCFormGroup>
+            </IFieldValidation>
         </div>
     </div>
 </template>

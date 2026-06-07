@@ -1,14 +1,14 @@
 <script lang="ts">
 import {
-    type PropType, 
-    computed, 
-    defineComponent, 
+    type PropType,
+    computed,
+    defineComponent,
     reactive,
 } from 'vue';
-import useVuelidate from '@vuelidate/core';
-import { maxValue, minValue } from '@vuelidate/validators';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
+import { assignFormProperties } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
-import { IVuelidate } from '@ilingo/vuelidate';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormGroup, VCFormInput, VCFormSelect } from '@vuecs/forms';
 import {
@@ -18,15 +18,16 @@ import {
     isIntervalForDayOfYear,
 } from '@authup/access';
 import type { TimePolicy } from '@authup/access';
-import { assignFormProperties } from '../../../../core';
 import { onChange, useUpdatedAt } from '../../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        VCFormInput,
-        VCFormGroup,
+        VCFormInput, 
+        VCFormGroup, 
         VCFormSelect,
-        IVuelidate,
+
+        IFieldValidation,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
@@ -40,33 +41,16 @@ export default defineComponent({
             day_of_year: '',
         });
 
-        const intervalOptions : FormOption[] = Object.values(TimePolicyInterval)
+        const intervalOptions: FormOption[] = Object.values(TimePolicyInterval)
             .map((el) => ({
                 label: el,
                 value: el,
             } satisfies FormOption));
 
-        const vuelidate = useVuelidate({
-            start: {},
-            end: {},
-            interval: {},
-            day_of_week: {
-                minValue: minValue(0),
-                maxValue: maxValue(6),
-            },
-            day_of_month: {
-                minValue: minValue(1),
-                maxValue: maxValue(31),
-            },
-            day_of_year: {
-                minValue: minValue(1),
-                maxValue: maxValue(365),
-            },
-        }, form, { $registerAs: 'type' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(data: Partial<TimePolicy> = {}) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            assignFormProperties(form, data as Record<string, any>);
+            assignFormProperties(form, data as Record<string, unknown>);
         }
 
         setup.expose({ assign });
@@ -77,178 +61,168 @@ export default defineComponent({
         assign(props.entity);
 
         const displayIntervalForDayOfWeek = computed(
-            () => isIntervalForDayOfWeek(vuelidate.value.interval.$model),
+            () => isIntervalForDayOfWeek(v.fields.interval.$model.value),
         );
 
         const displayIntervalForDayOfMonth = computed(
-            () => isIntervalForDayOfMonth(vuelidate.value.interval.$model),
+            () => isIntervalForDayOfMonth(v.fields.interval.$model.value),
         );
 
         const displayIntervalForDayOfYear = computed(
-            () => isIntervalForDayOfYear(vuelidate.value.interval.$model),
+            () => isIntervalForDayOfYear(v.fields.interval.$model.value),
         );
 
         const handleUpdated = () => {
             setup.emit('updated', {
                 data: form,
-                valid: !vuelidate.value.$invalid,
+                valid: !v.$invalid.value,
             });
         };
 
         const handleIntervalUpdated = (value: string) => {
             if (!isIntervalForDayOfWeek(value)) {
-                vuelidate.value.day_of_week.$model = '';
+                v.fields.day_of_week.$model.value = '';
             }
-
             if (!isIntervalForDayOfMonth(value)) {
-                vuelidate.value.day_of_month.$model = '';
+                v.fields.day_of_month.$model.value = '';
             }
-
             if (!isIntervalForDayOfYear(value)) {
-                vuelidate.value.day_of_year.$model = '';
+                v.fields.day_of_year.$model.value = '';
             }
-
             handleUpdated();
         };
 
         return {
             handleUpdated,
             handleIntervalUpdated,
-
-            intervalOptions,
-            vuelidate,
-
             displayIntervalForDayOfWeek,
             displayIntervalForDayOfMonth,
             displayIntervalForDayOfYear,
+            intervalOptions,
+            v,
         };
     },
 });
 </script>
 <template>
     <div>
-        <IVuelidate :validation="vuelidate.start">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Start
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.start.$model"
-                        placeholder="00:00:00"
-                        @change="handleUpdated"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
-
-        <IVuelidate :validation="vuelidate.end">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        End
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.end.$model"
-                        placeholder="00:00:00"
-                        @change="handleUpdated"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.interval">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Interval
-                    </template>
-                    <VCFormSelect
-                        v-model="vuelidate.interval.$model"
-                        :options="intervalOptions"
-                        @change="handleIntervalUpdated"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
-
         <div class="row">
+            <div class="col">
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.start"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Start
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.start.$model.value"
+                            placeholder="HH:MM"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+            </div>
+            <div class="col">
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.end"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            End
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.end.$model.value"
+                            placeholder="HH:MM"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.interval"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Interval
+                        </template>
+                        <VCFormSelect
+                            v-model="v.fields.interval.$model.value"
+                            :options="intervalOptions"
+                            :option-default="true"
+                            @change="handleIntervalUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
+            </div>
             <div
                 v-if="displayIntervalForDayOfWeek"
                 class="col"
             >
-                <IVuelidate :validation="vuelidate.day_of_week">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                Day of Week
-                            </template>
-                            <VCFormInput
-                                v-model="vuelidate.day_of_week.$model"
-                                placeholder="0-6"
-                                type="number"
-                                @change="handleUpdated"
-                            />
-                        </VCFormGroup>
-                    </template>
-                </IVuelidate>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.day_of_week"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Day of Week
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.day_of_week.$model.value"
+                            placeholder="0-6"
+                            type="number"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
             <div
                 v-if="displayIntervalForDayOfMonth"
                 class="col"
             >
-                <IVuelidate :validation="vuelidate.day_of_month">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                Day of Month
-                            </template>
-                            <VCFormInput
-                                v-model="vuelidate.day_of_month.$model"
-                                placeholder="1-31"
-                                type="number"
-                                @change="handleUpdated"
-                            />
-                        </VCFormGroup>
-                    </template>
-                </IVuelidate>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.day_of_month"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Day of Month
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.day_of_month.$model.value"
+                            placeholder="1-31"
+                            type="number"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
             <div
                 v-if="displayIntervalForDayOfYear"
                 class="col"
             >
-                <IVuelidate :validation="vuelidate.day_of_year">
-                    <template #default="props">
-                        <VCFormGroup
-                            :validation-messages="props.data"
-                            :validation-severity="props.severity"
-                        >
-                            <template #label>
-                                Day of Year
-                            </template>
-                            <VCFormInput
-                                v-model="vuelidate.day_of_year.$model"
-                                type="number"
-                                placeholder="1-365"
-                                @change="handleUpdated"
-                            />
-                        </VCFormGroup>
-                    </template>
-                </IVuelidate>
+                <IFieldValidation
+                    v-slot="{ value }"
+                    :field="v.fields.day_of_year"
+                >
+                    <VCFormGroup :validation="value">
+                        <template #label>
+                            Day of Year
+                        </template>
+                        <VCFormInput
+                            v-model="v.fields.day_of_year.$model.value"
+                            type="number"
+                            placeholder="1-365"
+                            @change="handleUpdated"
+                        />
+                    </VCFormGroup>
+                </IFieldValidation>
             </div>
         </div>
     </div>

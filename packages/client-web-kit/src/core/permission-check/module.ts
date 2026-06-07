@@ -9,9 +9,9 @@ import type { IdentityPolicyData, PermissionEvaluationContext } from '@authup/ac
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import type { Ref } from 'vue';
 import {
-    onMounted, 
-    onUnmounted, 
-    ref, 
+    onMounted,
+    onUnmounted,
+    ref,
     watch,
 } from 'vue';
 import type { Store } from '../store';

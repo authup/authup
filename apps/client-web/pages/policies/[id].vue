@@ -3,7 +3,7 @@ import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Policy } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import {
     definePageMeta,
     useToast,
@@ -20,14 +20,6 @@ export default defineComponent({
             ],
         });
 
-        const items = [
-            {
-                name: 'General',
-                icon: 'fa6-solid:bars',
-                urlSuffix: '',
-            },
-        ];
-
         const toast = useToast();
         const route = useRoute();
 
@@ -41,6 +33,19 @@ export default defineComponent({
             await navigateTo({ path: '/policies' });
             throw createError({});
         }
+
+        const items = computed(() => [
+            {
+                name: '',
+                icon: 'fa6-solid:arrow-left',
+                url: '/policies',
+            },
+            {
+                name: 'General',
+                icon: 'fa6-solid:bars',
+                url: `/policies/${entity.value.id}`,
+            },
+        ]);
 
         const handleUpdated = (e: Policy) => {
             if (toast) {
@@ -84,10 +89,9 @@ export default defineComponent({
             </span>
         </h1>
         <div class="mb-2">
-            <DomainEntityNav
-                :items="items"
-                :path="`/policies/${entity.id}`"
-                :prev-link="true"
+            <VCNavItems
+                :data="items"
+                variant="pills"
             />
         </div>
 

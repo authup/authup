@@ -14,10 +14,10 @@ import type {
 import type { EventFullName, STCEventContext } from '@authup/core-realtime-kit';
 import { EventNameSuffix, buildEventFullName } from '@authup/core-realtime-kit';
 import {
-    computed, 
-    isRef, 
-    onMounted, 
-    onUnmounted, 
+    computed,
+    isRef,
+    onMounted,
+    onUnmounted,
     watch,
 } from 'vue';
 import { injectStore, storeToRefs } from '../../../../core/store';

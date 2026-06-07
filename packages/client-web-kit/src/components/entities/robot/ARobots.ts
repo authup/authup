@@ -12,7 +12,7 @@ import type { Robot } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
     TranslatorTranslationDefaultKey,
-    TranslatorTranslationGroup, 
+    TranslatorTranslationNamespace, 
     TranslatorTranslationVuecsKey, 
     useTranslation,
 } from '../../../core';
@@ -34,12 +34,12 @@ export const ARobots = defineComponent({
         });
 
         const translationName = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationNamespace.DEFAULT,
             key: TranslatorTranslationDefaultKey.ROBOTS,
         });
 
         const translation = useTranslation({
-            group: TranslatorTranslationGroup.VUECS,
+            namespace: TranslatorTranslationNamespace.VUECS,
             key: TranslatorTranslationVuecsKey.NO_MORE,
             data: { name: translationName },
         });

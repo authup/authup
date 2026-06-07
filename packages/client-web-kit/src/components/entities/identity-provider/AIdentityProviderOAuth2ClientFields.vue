@@ -7,36 +7,28 @@
 <script lang="ts">
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
 import { assignFormProperties } from '../../../core';
-import useVuelidate from '@vuelidate/core';
-import { maxLength, minLength, required } from '@vuelidate/validators';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
-import { defineComponent, reactive } from 'vue';
+import { defineComponent, reactive, ref } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import { IVuelidate } from '@ilingo/vuelidate';
 import { onChange, useUpdatedAt } from '../../../composables';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AIdentityProviderOAuth2ClientFields = defineComponent({
     components: {
-        IVuelidate, 
         VCFormGroup, 
         VCFormInput, 
+        IFieldValidation, 
     },
     props: { entity: { type: Object as PropType<Partial<OAuth2IdentityProvider>> } },
     emits: ['updated'],
     setup(props) {
         const form = reactive({ client_id: '', client_secret: '' });
 
-        const $v = useVuelidate({
-            client_id: {
-                required,
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-            client_secret: {
-                minLength: minLength(3),
-                maxLength: maxLength(128),
-            },
-        }, form, { $registerAs: 'client' });
+        const secretShow = ref(false);
+
+        const v = useValidup(new Container<typeof form>(), form, { name: 'client' });
 
         function assign() {
             assignFormProperties(form, props.entity);
@@ -46,7 +38,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
         onChange(updatedAt, () => assign());
         assign();
 
-        return { vuelidate: $v };
+        return { v, secretShow };
     },
 });
 
@@ -55,35 +47,41 @@ export default AIdentityProviderOAuth2ClientFields;
 
 <template>
     <div>
-        <IVuelidate :validation="vuelidate.client_id">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.client_id"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Client ID
+                </template>
+                <VCFormInput v-model="v.fields.client_id.$model.value" />
+            </VCFormGroup>
+        </IFieldValidation>
+        <IFieldValidation
+            v-slot="{ value }"
+            :field="v.fields.client_secret"
+        >
+            <VCFormGroup :validation="value">
+                <template #label>
+                    Client Secret
+                </template>
+                <VCFormInput
+                    v-model="v.fields.client_secret.$model.value"
+                    :type="secretShow ? 'text' : 'password'"
+                    autocomplete="new-password"
                 >
-                    <template #label>
-                        Client ID
+                    <template #groupAppend>
+                        <button
+                            class="btn"
+                            type="button"
+                            @click.prevent="secretShow = !secretShow"
+                        >
+                            <VCIcon :name="secretShow ? 'fa6-solid:eye-slash' : 'fa6-solid:eye'" />
+                        </button>
                     </template>
-                    <VCFormInput v-model="vuelidate.client_id.$model" />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
-        <IVuelidate :validation="vuelidate.client_secret">
-            <template #default="props">
-                <VCFormGroup
-                    :validation-messages="props.data"
-                    :validation-severity="props.severity"
-                >
-                    <template #label>
-                        Client Secret
-                    </template>
-                    <VCFormInput
-                        v-model="vuelidate.client_secret.$model"
-                        type="password"
-                        autocomplete="new-password"
-                    />
-                </VCFormGroup>
-            </template>
-        </IVuelidate>
+                </VCFormInput>
+            </VCFormGroup>
+        </IFieldValidation>
     </div>
 </template>

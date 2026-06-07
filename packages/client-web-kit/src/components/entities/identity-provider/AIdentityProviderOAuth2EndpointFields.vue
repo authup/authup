@@ -9,19 +9,22 @@
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
-import useVuelidate from '@vuelidate/core';
-import { required, url } from '@vuelidate/validators';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
+import { assignFormProperties } from '../../../core';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import { assignFormProperties, getVuelidateSeverity, useTranslationsForNestedValidation } from '../../../core';
 import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery.vue';
+import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        VCFormGroup, 
-        VCFormInput, 
-        AIdentityProviderOAuth2Discovery, 
+        VCFormGroup,
+        VCFormInput,
+        AIdentityProviderOAuth2Discovery,
+
+        IFieldValidation,
     },
     props: {
         entity: { type: Object as PropType<Partial<OAuth2IdentityProvider>> },
@@ -38,17 +41,7 @@ export default defineComponent({
             user_info_url: '',
         });
 
-        const $v = useVuelidate({
-            token_url: {
-                required,
-                url,
-            },
-            authorize_url: {
-                required,
-                url,
-            },
-            user_info_url: { url },
-        }, form, { $registerAs: 'endpoint' });
+        const v = useValidup(new Container<typeof form>(), form, { name: 'endpoint' });
 
         function init() {
             form.token_url = '';
@@ -65,18 +58,14 @@ export default defineComponent({
 
         init();
 
-        const validationMessages = useTranslationsForNestedValidation($v.value);
-
         const handleDiscoveryLookup = (data: OpenIDProviderMetadata) => {
             form.authorize_url = data.authorization_endpoint;
             form.token_url = data.token_endpoint;
         };
 
         return {
-            $v,
-            validationMessages,
+            v,
             handleDiscoveryLookup,
-            getVuelidateSeverity,
         };
     },
 });
@@ -86,43 +75,55 @@ export default defineComponent({
         v-if="discovery"
         @lookup="handleDiscoveryLookup"
     />
-    <VCFormGroup
-        :label="true"
-        :validation-messages="validationMessages.token_url.value"
-        :validation-severity="getVuelidateSeverity($v.token_url)"
+    <IFieldValidation
+        v-slot="{ value }"
+        :field="v.fields.token_url"
     >
-        <template #label>
-            Token
-        </template>
-        <VCFormInput
-            v-model="$v.token_url.$model"
-            placeholder="https://..."
-        />
-    </VCFormGroup>
-    <VCFormGroup
-        :label="true"
-        :validation-messages="validationMessages.authorize_url.value"
-        :validation-severity="getVuelidateSeverity($v.authorize_url)"
+        <VCFormGroup
+            :label="true"
+            :validation="value"
+        >
+            <template #label>
+                Token
+            </template>
+            <VCFormInput
+                v-model="v.fields.token_url.$model.value"
+                placeholder="https://..."
+            />
+        </VCFormGroup>
+    </IFieldValidation>
+    <IFieldValidation
+        v-slot="{ value }"
+        :field="v.fields.authorize_url"
     >
-        <template #label>
-            Authorize
-        </template>
-        <VCFormInput
-            v-model="$v.authorize_url.$model"
-            placeholder="https://..."
-        />
-    </VCFormGroup>
-    <VCFormGroup
-        :label="true"
-        :validation-messages="validationMessages.user_info_url.value"
-        :validation-severity="getVuelidateSeverity($v.user_info_url)"
+        <VCFormGroup
+            :label="true"
+            :validation="value"
+        >
+            <template #label>
+                Authorize
+            </template>
+            <VCFormInput
+                v-model="v.fields.authorize_url.$model.value"
+                placeholder="https://..."
+            />
+        </VCFormGroup>
+    </IFieldValidation>
+    <IFieldValidation
+        v-slot="{ value }"
+        :field="v.fields.user_info_url"
     >
-        <template #label>
-            UserInfo
-        </template>
-        <VCFormInput
-            v-model="$v.user_info_url.$model"
-            placeholder="https://..."
-        />
-    </VCFormGroup>
+        <VCFormGroup
+            :label="true"
+            :validation="value"
+        >
+            <template #label>
+                UserInfo
+            </template>
+            <VCFormInput
+                v-model="v.fields.user_info_url.$model.value"
+                placeholder="https://..."
+            />
+        </VCFormGroup>
+    </IFieldValidation>
 </template>

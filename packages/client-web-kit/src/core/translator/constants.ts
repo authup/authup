@@ -5,13 +5,21 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export enum TranslatorTranslationGroup {
+/**
+ * Catalog namespace names registered by `installTranslator`. Mirrors
+ * ilingo 6's catalog terminology — namespaces are the dotted root paths
+ * under each locale.
+ *
+ * The `validup` namespace (validation-message catalogs for `IssueCode`
+ * keys) is registered automatically by `@ilingo/validup-vue`'s install
+ * and is **not** part of this enum.
+ */
+export enum TranslatorTranslationNamespace {
     DEFAULT = 'default',
 
     CLIENT = 'authupClient',
 
     VUECS = 'vuecs',
-    VUELIDATE = 'vuelidate',
 }
 
 export enum TranslatorTranslationVuecsKey {

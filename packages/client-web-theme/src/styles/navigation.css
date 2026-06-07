@@ -85,25 +85,109 @@ button.vc-nav-link {
     height: 1rem;
 }
 
-.vc-nav-items .vc-nav-item .vc-nav-link,
-.vc-nav-items .vc-nav-item:hover .vc-nav-link,
-.vc-nav-items .vc-nav-item.active .vc-nav-link {
+.vc-nav-items:not(.vc-nav-items--pills) .vc-nav-item .vc-nav-link,
+.vc-nav-items:not(.vc-nav-items--pills) .vc-nav-item:hover .vc-nav-link,
+.vc-nav-items:not(.vc-nav-items--pills) .vc-nav-item.active .vc-nav-link {
     border-left-color: var(--authup-brand-tan) !important;
 }
 
-.vc-nav-items .vc-nav-link.active:not(.vc-nav-link-root),
+.vc-nav-items:not(.vc-nav-items--pills) .vc-nav-link.active:not(.vc-nav-link-root),
 
-.vc-nav-items .vc-nav-link:active,
-.vc-nav-items .vc-nav-link:hover,
-
-.vc-nav-items .vc-nav-link.router-link-active:not(.vc-nav-link-root),
-.vc-nav-items .vc-nav-link.nuxt-link-active:not(.vc-nav-link-root),
-
-.vc-nav-items .vc-nav-link.router-link-exact-active,
-.vc-nav-items .vc-nav-link.nuxt-link-exact-active {
+.vc-nav-items:not(.vc-nav-items--pills) .vc-nav-link:active,
+.vc-nav-items:not(.vc-nav-items--pills) .vc-nav-link:hover {
     cursor: pointer;
     color: #ffffff;
     background: var(--authup-brand-indigo) !important;
+}
+
+/*
+ * Domain-entity pills (variant="pills" on <VCNavItems>). Ported from the
+ * former buildNav `.nav.nav-pills` joined-tab look. Must stay UNLAYERED:
+ * @vuecs/navigation's own pills CSS is unlayered, and any rule placed in
+ * `@layer components` always loses to unlayered rules regardless of
+ * specificity. Active state targets the explicit `.active` class VCLink
+ * sets from the resolved item state (exactly one best match), so there is
+ * no double-lighting on child routes.
+ *
+ * The flex-direction reset is required because authup does NOT import
+ * @vuecs/navigation's structural `assets/index.css` (only its class-name
+ * markers reach the JIT corpus via `@source`). theme-tailwind's
+ * `navigation.group` always carries `flex-col`; without re-asserting
+ * `row` here a horizontal pill bar would stack vertically. Unlayered, so
+ * it beats the `flex-col` Tailwind utility (utilities layer).
+ */
+.vc-nav-items--pills {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0;
+}
+
+.vc-nav-items--pills.vc-nav-items--vertical {
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.vc-nav-items--pills .vc-nav-link--pills {
+    display: flex;
+    width: 100%;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-muted);
+    color: var(--color-fg);
+    cursor: pointer;
+    border-radius: 0;
+}
+
+/*
+ * The negative margin lives on the flex ITEM (the `<li>`), not the link:
+ * the `<li>` is what flexbox lays out, so pulling it overlaps adjacent
+ * 1px borders into a shared seam. A margin on the link only shifts it
+ * inside its own item box and leaves a visible gap between items.
+ */
+.vc-nav-items--pills:not(.vc-nav-items--vertical) .vc-nav-item--pills {
+    margin-left: -1px;
+}
+
+.vc-nav-items--pills:not(.vc-nav-items--vertical) .vc-nav-item--pills:first-child {
+    margin-left: 0;
+}
+
+.vc-nav-items--pills:not(.vc-nav-items--vertical) .vc-nav-item--pills:first-child .vc-nav-link--pills {
+    border-top-left-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+}
+
+.vc-nav-items--pills:not(.vc-nav-items--vertical) .vc-nav-item--pills:last-child .vc-nav-link--pills {
+    border-top-right-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+.vc-nav-items--pills.vc-nav-items--vertical .vc-nav-item--pills {
+    margin-top: -1px;
+}
+
+.vc-nav-items--pills.vc-nav-items--vertical .vc-nav-item--pills:first-child {
+    margin-top: 0;
+}
+
+.vc-nav-items--pills.vc-nav-items--vertical .vc-nav-item--pills:first-child .vc-nav-link--pills {
+    border-top-left-radius: 0.375rem;
+    border-top-right-radius: 0.375rem;
+}
+
+.vc-nav-items--pills.vc-nav-items--vertical .vc-nav-item--pills:last-child .vc-nav-link--pills {
+    border-bottom-left-radius: 0.375rem;
+    border-bottom-right-radius: 0.375rem;
+}
+
+.vc-nav-items--pills .vc-nav-link--pills:hover {
+    background-color: var(--color-bg-muted);
+    color: var(--color-fg);
+}
+
+.vc-nav-items--pills .vc-nav-link--pills.active {
+    background-color: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+    color: var(--color-on-primary);
 }
 
 /*

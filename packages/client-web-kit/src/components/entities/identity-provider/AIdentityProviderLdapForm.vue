@@ -7,14 +7,17 @@
 <script lang="ts">
 import type { IdentityProvider } from '@authup/core-kit';
 import { EntityType, IdentityProviderProtocol } from '@authup/core-kit';
-import useVuelidate from '@vuelidate/core';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import {
+    computed,
     defineComponent,
+    reactive,
     ref,
 } from 'vue';
 import { useIsEditing } from '../../../composables';
-import { extractVuelidateResultsFromChild } from '../../../core';
+import { extractValidupResultsFromChild } from '../../../core';
 import {
     AFormSubmit,
     defineEntityManager,
@@ -58,21 +61,27 @@ export const AIdentityProviderLdapForm = defineComponent({
 
         const isEditing = useIsEditing(manager.data);
         const busy = ref(false);
-        const $v = useVuelidate({ $stopPropagation: true });
+        // Parent collector — see APolicyForm for the same pattern.
+        const v = useValidup(new Container(), reactive({}), { stopPropagation: true });
+
+        const isInvalid = computed(() => {
+            const slots = ['basic', 'connection', 'credentials', 'group', 'user'] as const;
+            return slots.some((slot) => !!v.$getResultsForChild(slot)?.$invalid.value);
+        });
 
         const submit = async () => {
-            if (busy.value || $v.value.$invalid) {
+            if (busy.value || isInvalid.value) {
                 return;
             }
 
             busy.value = true;
             try {
                 const data: Partial<IdentityProvider> = {
-                    ...extractVuelidateResultsFromChild($v, 'basic'),
-                    ...extractVuelidateResultsFromChild($v, 'connection'),
-                    ...extractVuelidateResultsFromChild($v, 'credentials'),
-                    ...extractVuelidateResultsFromChild($v, 'group'),
-                    ...extractVuelidateResultsFromChild($v, 'user'),
+                    ...extractValidupResultsFromChild(v, 'basic'),
+                    ...extractValidupResultsFromChild(v, 'connection'),
+                    ...extractValidupResultsFromChild(v, 'credentials'),
+                    ...extractValidupResultsFromChild(v, 'group'),
+                    ...extractValidupResultsFromChild(v, 'user'),
                     protocol: IdentityProviderProtocol.LDAP,
                 };
 
@@ -85,8 +94,8 @@ export const AIdentityProviderLdapForm = defineComponent({
         return {
             data: manager.data,
             busy,
-            vuelidate: $v,
             isEditing,
+            isInvalid,
             ldapProtocol: IdentityProviderProtocol.LDAP,
             submit,
         };
@@ -153,7 +162,7 @@ export default AIdentityProviderLdapForm;
         <AFormSubmit
             :is-busy="busy"
             :is-editing="isEditing"
-            :is-invalid="vuelidate.$invalid"
+            :is-invalid="isInvalid"
             @submit="submit"
         />
     </form>

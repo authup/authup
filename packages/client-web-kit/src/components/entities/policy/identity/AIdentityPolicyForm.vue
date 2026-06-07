@@ -1,7 +1,8 @@
 <script lang="ts">
 import type { IdentityPolicy } from '@authup/access';
 import type { Policy } from '@authup/core-kit';
-import useVuelidate from '@vuelidate/core';
+import { Container } from 'validup';
+import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../../composables';
@@ -14,7 +15,10 @@ export default defineComponent({
     setup(props, setup) {
         const form = reactive<{ types: string[] }>({ types: [] });
 
-        const vuelidate = useVuelidate({ types: {} }, form, { $registerAs: 'type' });
+        // Empty container — registers as the 'type' child of the
+        // parent `<APolicyForm>` so it can extract `types` via
+        // `extractValidupResultsFromChild('type')`.
+        const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
         function assign(data: Partial<IdentityPolicy> = {}) {
             form.types = data.types || [];
@@ -34,15 +38,14 @@ export default defineComponent({
 
         return {
             handleUpdated,
-
-            vuelidate,
+            v,
         };
     },
 });
 </script>
 <template>
     <AFormInputList
-        :names="vuelidate.types.$model"
+        :names="v.fields.types.$model.value"
         :min-items="1"
         @changed="handleUpdated"
     >

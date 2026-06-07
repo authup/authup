@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { LinesRecord } from 'ilingo';
+import type { Translations } from 'ilingo';
 import { TranslatorTranslationVuecsKey } from '../constants';
 
-export const TranslatorTranslationVuecsGerman : LinesRecord = { [TranslatorTranslationVuecsKey.NO_MORE]: 'Keine weiteren {{name}} verfügbar' };
+export const TranslatorTranslationVuecsGerman : Translations = { [TranslatorTranslationVuecsKey.NO_MORE]: 'Keine weiteren {{name}} verfügbar' };
