@@ -27,6 +27,7 @@ import installOverlays from '@vuecs/overlays';
 import installPagination from '@vuecs/pagination';
 import installTable from '@vuecs/table';
 import installIcon from '@vuecs/icon';
+import installNavigation from '@vuecs/navigation';
 
 import { defineNuxtPlugin } from '#imports';
 
@@ -35,13 +36,6 @@ addCollection(faBrands);
 
 export default defineNuxtPlugin({
     // Name this plugin so other plugins can express ordering against it.
-    // `vuecs-navigation` MUST depend on this — `@vuecs/navigation`'s
-    // `install()` calls `installThemeManager(app, {})` with no themes,
-    // and `installThemeManager` is first-install-wins. If vuecs-navigation
-    // runs before this plugin, the authup theme below is silently
-    // dropped at theme-manager creation time, and every component renders
-    // with only its `vc-*` defaults (no Tailwind utility classes — fields
-    // look unstyled).
     name: 'vuecs',
     // Runs AFTER `authup:kit` because `injectTranslatorLocale()` below
     // requires the ilingo locale provider that `installTranslator()`
@@ -86,6 +80,12 @@ export default defineNuxtPlugin({
         ctx.vueApp.use(installPagination);
         ctx.vueApp.use(installTable);
         ctx.vueApp.use(installIcon);
+        // Registry-only install (@vuecs/navigation 4.x): no item list and no
+        // NavigationManager — each `<VCNavItems>` owns its items via `:data`.
+        // Installed here (after `app.use(vuecs)`) so the theme manager already
+        // carries the authup themes before navigation's own
+        // `installThemeManager` call runs.
+        ctx.vueApp.use(installNavigation);
 
         ctx.vueApp.use(installCountdown);
         ctx.vueApp.use(installTimeago, { locales: { de } });

@@ -140,7 +140,7 @@
         "@vuecs/icons-font-awesome": "^1.0.2",
         "@vuecs/link": "^2.0.1",
         "@vuecs/list": "^1.0.2",
-        "@vuecs/navigation": "^3.0.2",
+        "@vuecs/navigation": "^4.0.0",
         "@vuecs/overlays": "^1.0.2",
         "@vuecs/pagination": "^2.1.1",
         "@vuecs/placeholder": "^1.0.2",

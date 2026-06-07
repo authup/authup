@@ -9,14 +9,15 @@
 import { injectHTTPClient, injectStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { computed, defineNuxtComponent } from '#imports';
+import { Navigation } from '../config/layout';
 
 export default defineNuxtComponent({
     setup() {
         const store = injectStore();
         const {
-            loggedIn, 
-            accessTokenExpireDate: tokenExpireDate, 
-            realmManagement, 
+            loggedIn,
+            accessTokenExpireDate: tokenExpireDate,
+            realmManagement,
         } = storeToRefs(store);
 
         const tokenExpiresIn = computed(() => {
@@ -30,11 +31,26 @@ export default defineNuxtComponent({
         const api = injectHTTPClient();
         const docsUrl = computed(() => new URL('docs/', api.getBaseURL()).href);
 
+        // The sidebar resolver filters items against the live session via
+        // an `await`ed permission check. The reactive reads happen AFTER
+        // that await, so `<VCNavItems>` can't auto-track them — the
+        // explicit `:watch` list re-runs the resolver on every session
+        // transition (login/logout, identity change, realm switch).
+        const navigation = new Navigation(store);
+        const sideItems = () => navigation.getSideItems();
+        const sideItemsWatch = [
+            () => store.loggedIn,
+            () => store.userId,
+            () => store.realmManagement,
+        ];
+
         return {
             loggedIn,
             tokenExpiresIn,
             docsUrl,
             realmManagement,
+            sideItems,
+            sideItemsWatch,
         };
     },
 });
@@ -64,7 +80,8 @@ export default defineNuxtComponent({
             -->
             <VCNavItems
                 class="sidebar-menu nav flex-col"
-                :level="1"
+                :data="sideItems"
+                :watch="sideItemsWatch"
             />
 
             <div class="mt-auto">

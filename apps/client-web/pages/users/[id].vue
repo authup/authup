@@ -3,14 +3,12 @@ import { injectHTTPClient } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import { definePageMeta, useToast } from '#imports';
 import { createError, navigateTo, useRoute } from '#app';
 import { LayoutKey } from '../../config/layout';
-import DomainEntityNav from '../../components/DomainEntityNav';
 
 export default defineComponent({
-    components: { DomainEntityNav },
     async setup() {
         definePageMeta({
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
@@ -21,24 +19,6 @@ export default defineComponent({
                 PermissionName.USER_ROLE_DELETE,
             ],
         });
-
-        const items = [
-            {
-                name: 'General',
-                icon: 'fa6-solid:bars',
-                urlSuffix: '',
-            },
-            {
-                name: 'Permissions',
-                icon: 'fa6-solid:user-secret',
-                urlSuffix: 'permissions',
-            },
-            {
-                name: 'Roles',
-                icon: 'fa6-solid:user-group',
-                urlSuffix: 'roles',
-            },
-        ];
 
         const toast = useToast();
         const route = useRoute();
@@ -53,6 +33,29 @@ export default defineComponent({
             await navigateTo({ path: '/users' });
             throw createError({});
         }
+
+        const items = computed(() => [
+            {
+                name: '',
+                icon: 'fa6-solid:arrow-left',
+                url: '/users',
+            },
+            {
+                name: 'General',
+                icon: 'fa6-solid:bars',
+                url: `/users/${entity.value.id}`,
+            },
+            {
+                name: 'Permissions',
+                icon: 'fa6-solid:user-secret',
+                url: `/users/${entity.value.id}/permissions`,
+            },
+            {
+                name: 'Roles',
+                icon: 'fa6-solid:user-group',
+                url: `/users/${entity.value.id}/roles`,
+            },
+        ]);
 
         const handleUpdated = (e: User) => {
             if (toast) {
@@ -96,10 +99,9 @@ export default defineComponent({
             </span>
         </h1>
         <div class="mb-2">
-            <DomainEntityNav
-                :items="items"
-                :path="`/users/${entity.id}`"
-                :prev-link="true"
+            <VCNavItems
+                :data="items"
+                variant="pills"
             />
         </div>
 

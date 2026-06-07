@@ -3,7 +3,7 @@ import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Scope } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import {
     definePageMeta,
     useToast,
@@ -20,19 +20,6 @@ export default defineComponent({
             ],
         });
 
-        const items = [
-            {
-                name: 'General',
-                icon: 'fa6-solid:bars',
-                urlSuffix: '',
-            },
-            {
-                name: 'Clients',
-                icon: 'fa6-solid:ghost',
-                urlSuffix: '/clients',
-            },
-        ];
-
         const toast = useToast();
         const route = useRoute();
 
@@ -46,6 +33,24 @@ export default defineComponent({
             await navigateTo({ path: '/scopes' });
             throw createError({});
         }
+
+        const items = computed(() => [
+            {
+                name: '',
+                icon: 'fa6-solid:arrow-left',
+                url: '/scopes',
+            },
+            {
+                name: 'General',
+                icon: 'fa6-solid:bars',
+                url: `/scopes/${entity.value.id}`,
+            },
+            {
+                name: 'Clients',
+                icon: 'fa6-solid:ghost',
+                url: `/scopes/${entity.value.id}/clients`,
+            },
+        ]);
 
         const handleUpdated = (e: Scope) => {
             if (toast) {
@@ -86,10 +91,9 @@ export default defineComponent({
             <span class="sub-title ms-1">Details</span>
         </h1>
         <div class="mb-2">
-            <DomainEntityNav
-                :path="'/scopes/'+entity.id"
-                :items="items"
-                :prev-link="true"
+            <VCNavItems
+                :data="items"
+                variant="pills"
             />
         </div>
         <div>

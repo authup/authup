@@ -8,15 +8,9 @@
 import { type Store } from '@authup/client-web-kit';
 import type { IdentityPolicyData } from '@authup/access';
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
-import type {
-    NavigationItem,
-    NavigationItemNormalized,
-} from '@vuecs/navigation';
+import type { NavigationItem } from '@vuecs/navigation';
 
-import {
-    LayoutSideDefaultNavigation,
-    LayoutTopNavigation,
-} from './contants';
+import { LayoutSideDefaultNavigation } from './contants';
 import type { NavigationItemMeta } from './types';
 
 export class Navigation {
@@ -43,18 +37,15 @@ export class Navigation {
         }
     }
 
-    async getItems(level: number, parent?: NavigationItemNormalized): Promise<NavigationItem[]> {
-        if (level === 0) {
-            return this.reduce(LayoutTopNavigation);
-        }
-
-        if (parent) {
-            if (level === 1) {
-                return this.reduce(LayoutSideDefaultNavigation);
-            }
-        }
-
-        return [];
+    /**
+     * Resolve the sidebar navigation items, filtered against the current
+     * session (login state + permissions). Used as the `:data` resolver of
+     * the sidebar's `<VCNavItems>`; the permission checks run after an
+     * `await`, so the component re-runs this via its `:watch` whenever the
+     * session changes.
+     */
+    getSideItems(): Promise<NavigationItem[]> {
+        return this.reduce(LayoutSideDefaultNavigation);
     }
 
     protected async reduce(items: NavigationItem[]) : Promise<NavigationItem[]> {

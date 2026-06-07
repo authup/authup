@@ -8,6 +8,7 @@
 import { LanguageSwitcherDropdown, injectStore } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { defineNuxtComponent, ref, useColorMode } from '#imports';
+import { LayoutTopNavigation } from '../config/layout';
 
 export default defineNuxtComponent({
     components: { LanguageSwitcherDropdown },
@@ -17,6 +18,11 @@ export default defineNuxtComponent({
             loggedIn,
             user,
         } = storeToRefs(store);
+
+        // Top nav is a single un-gated entry — pass it as a static
+        // array straight to `<VCNavItems :data>` (no permission filter,
+        // no resolver, no registry).
+        const topItems = LayoutTopNavigation;
 
         const displayNav = ref(false);
         const toggleNav = () => {
@@ -36,6 +42,7 @@ export default defineNuxtComponent({
         return {
             loggedIn,
             user,
+            topItems,
             toggleNav,
             displayNav,
             isDark,
@@ -73,7 +80,7 @@ export default defineNuxtComponent({
                 >
                     <VCNavItems
                         class="navbar-nav"
-                        :level="0"
+                        :data="topItems"
                     />
 
                     <ul class="navbar-nav vc-nav-items navbar-gadgets">

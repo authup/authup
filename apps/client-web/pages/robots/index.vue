@@ -22,13 +22,13 @@ export default defineComponent({
         const items = [
             {
                 name: 'overview',
-                urlSuffix: '',
                 icon: 'fa6-solid:bars',
+                url: '/robots',
             },
             {
                 name: 'add',
-                urlSuffix: '/add',
                 icon: 'fa6-solid:plus',
+                url: '/robots/add',
             },
         ];
 
@@ -69,10 +69,10 @@ export default defineComponent({
         </h1>
         <div class="content-wrapper">
             <div class="content-sidebar flex-col">
-                <DomainEntityNav
-                    :items="items"
-                    path="/robots"
-                    direction="vertical"
+                <VCNavItems
+                    :data="items"
+                    variant="pills"
+                    orientation="vertical"
                 />
             </div>
             <div class="content-container">

@@ -23,13 +23,13 @@ export default defineNuxtComponent({
         const items = [
             {
                 name: 'overview',
-                urlSuffix: '',
                 icon: 'fa6-solid:bars',
+                url: '/permissions',
             },
             {
                 name: 'add',
-                urlSuffix: '/add',
                 icon: 'fa6-solid:plus',
+                url: '/permissions/add',
             },
         ];
 
@@ -70,10 +70,10 @@ export default defineNuxtComponent({
         </h1>
         <div class="content-wrapper">
             <div class="content-sidebar flex-col">
-                <DomainEntityNav
-                    :items="items"
-                    path="/permissions"
-                    direction="vertical"
+                <VCNavItems
+                    :data="items"
+                    variant="pills"
+                    orientation="vertical"
                 />
             </div>
             <div class="content-container">

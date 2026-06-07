@@ -3,7 +3,7 @@ import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Role } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import {
     definePageMeta,
     useToast,
@@ -23,29 +23,6 @@ export default defineComponent({
             ],
         });
 
-        const items = [
-            {
-                name: 'General',
-                icon: 'fa6-solid:bars',
-                urlSuffix: '',
-            },
-            {
-                name: 'Clients',
-                icon: 'fa6-solid:ghost',
-                urlSuffix: 'clients',
-            },
-            {
-                name: 'Permissions',
-                icon: 'fa6-solid:user-secret',
-                urlSuffix: 'permissions',
-            },
-            {
-                name: 'Users',
-                icon: 'fa6-solid:user',
-                urlSuffix: 'users',
-            },
-        ];
-
         const toast = useToast();
         const route = useRoute();
 
@@ -59,6 +36,34 @@ export default defineComponent({
             await navigateTo({ path: '/roles' });
             throw createError({});
         }
+
+        const items = computed(() => [
+            {
+                name: '',
+                icon: 'fa6-solid:arrow-left',
+                url: '/roles',
+            },
+            {
+                name: 'General',
+                icon: 'fa6-solid:bars',
+                url: `/roles/${entity.value.id}`,
+            },
+            {
+                name: 'Clients',
+                icon: 'fa6-solid:ghost',
+                url: `/roles/${entity.value.id}/clients`,
+            },
+            {
+                name: 'Permissions',
+                icon: 'fa6-solid:user-secret',
+                url: `/roles/${entity.value.id}/permissions`,
+            },
+            {
+                name: 'Users',
+                icon: 'fa6-solid:user',
+                url: `/roles/${entity.value.id}/users`,
+            },
+        ]);
 
         const handleUpdated = (e: Role) => {
             if (toast) {
@@ -99,10 +104,9 @@ export default defineComponent({
             <span class="sub-title ms-1">Details</span>
         </h1>
         <div class="mb-2">
-            <DomainEntityNav
-                :path="'/roles/'+entity.id"
-                :items="items"
-                :prev-link="true"
+            <VCNavItems
+                :data="items"
+                variant="pills"
             />
         </div>
         <div>

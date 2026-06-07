@@ -3,7 +3,7 @@ import { injectHTTPClient } from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
-import { defineComponent, ref } from 'vue';
+import { computed, defineComponent, ref } from 'vue';
 import {
     definePageMeta,
     useToast,
@@ -23,24 +23,6 @@ export default defineComponent({
             ],
         });
 
-        const items = [
-            {
-                name: 'General',
-                icon: 'fa6-solid:bars',
-                urlSuffix: '',
-            },
-            {
-                name: 'Permissions',
-                icon: 'fa6-solid:user-secret',
-                urlSuffix: 'permissions',
-            },
-            {
-                name: 'Roles',
-                icon: 'fa6-solid:user-group',
-                urlSuffix: 'roles',
-            },
-        ];
-
         const toast = useToast();
         const route = useRoute();
 
@@ -54,6 +36,29 @@ export default defineComponent({
             await navigateTo({ path: '/robots' });
             createError({});
         }
+
+        const items = computed(() => [
+            {
+                name: '',
+                icon: 'fa6-solid:arrow-left',
+                url: '/robots',
+            },
+            {
+                name: 'General',
+                icon: 'fa6-solid:bars',
+                url: `/robots/${entity.value.id}`,
+            },
+            {
+                name: 'Permissions',
+                icon: 'fa6-solid:user-secret',
+                url: `/robots/${entity.value.id}/permissions`,
+            },
+            {
+                name: 'Roles',
+                icon: 'fa6-solid:user-group',
+                url: `/robots/${entity.value.id}/roles`,
+            },
+        ]);
 
         const handleUpdated = (e: Robot) => {
             if (toast) {
@@ -94,10 +99,9 @@ export default defineComponent({
             <span class="sub-title ms-1">Details</span>
         </h1>
         <div class="mb-2">
-            <DomainEntityNav
-                :path="'/robots/'+entity.id"
-                :items="items"
-                :prev-link="true"
+            <VCNavItems
+                :data="items"
+                variant="pills"
             />
         </div>
         <div>
