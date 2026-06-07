@@ -89,9 +89,29 @@ export function createApp(payload: HydrationPayload) : {
 
     providePayload(payload, app);
 
-    // Install vuecs BEFORE the kit / per-package plugins so the theme
-    // manager is populated when components mount (see the matching note
-    // in `apps/client-web/plugins/vuecs.ts`).
+    // Install the kit FIRST so `installTranslator()` provides the ilingo
+    // locale before `buildSubmitButtonDefaults()` (below) reads it via
+    // `useTranslation`. Mirrors apps/client-web where the `authup:kit`
+    // plugin runs before the `vuecs` plugin (`dependsOn: ['authup']`).
+    // The kit's `install()` only registers components (no render) and
+    // deliberately does NOT install a theme manager, so installing vuecs
+    // afterwards is still in time for the first render.
+    install(app, {
+        baseURL: payload?.config?.baseURL,
+        pinia,
+    });
+
+    // `buildSubmitButtonDefaults()` calls `useTranslation` → `injectIlingo`,
+    // which reads the ilingo instance via `inject()`. Outside a component
+    // setup there is no active injection context, so it must run inside
+    // `app.runWithContext()` to see the app-level provide that
+    // `installTranslator` (via `install` above) registered. apps/client-web
+    // gets this for free because Nuxt runs plugin `setup()` within an
+    // injection context.
+    const submitButton = app.runWithContext(() => buildSubmitButtonDefaults());
+
+    // Install vuecs BEFORE the per-package plugins (forms/icon/pagination)
+    // so the theme manager carries authup's themes before they run.
     app.use(vuecs, {
         // Register both themes side-by-side (mirrors the Nuxt plugin).
         // Kit theme first, app theme layers on top.
@@ -102,17 +122,12 @@ export function createApp(payload: HydrationPayload) : {
             // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`
             // resolve to locale-reactive labels with no per-call work.
             // Mirrors the Nuxt plugin in apps/client-web/plugins/vuecs.ts.
-            submitButton: buildSubmitButtonDefaults(),
+            submitButton,
         },
     });
     app.use(installForms);
     app.use(installIcon);
     app.use(installPagination);
-
-    install(app, {
-        baseURL: payload?.config?.baseURL,
-        pinia,
-    });
 
     return {
         app,
