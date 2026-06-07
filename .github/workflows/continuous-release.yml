@@ -1,0 +1,41 @@
+name: Continuous Release
+
+on:
+    push:
+        branches: [develop, master, next, beta, alpha]
+        paths-ignore:
+            - 'docs/**'
+    pull_request:
+        types: [ opened, synchronize ]
+        paths-ignore:
+            - 'docs/**'
+
+env:
+    NODE_VERSION: 24
+
+permissions:
+    contents: read
+    pull-requests: write
+
+defaults:
+    run:
+        shell: bash
+
+jobs:
+    publish:
+        name: Publish preview release
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v6
+
+            -   name: Install
+                uses: ./.github/actions/install
+                with:
+                    node-version: ${{ env.NODE_VERSION }}
+
+            -   name: Build
+                uses: ./.github/actions/build
+
+            -   name: Publish preview release
+                run: npx pkg-pr-new publish './packages/*' './apps/*'
