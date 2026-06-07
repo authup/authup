@@ -128,7 +128,9 @@ The repository contains the following packages:
 |-----------------------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------------------|
 | [access](packages/access)                                       | Library     | A package for evaluating permissions and policies.                                                        |
 | [client-web-kit](packages/client-web-kit)                       | Library     | A package containing reusable components, composition aids and utilities for the web application.         |
+| [client-web-kit-theme](packages/client-web-kit-theme)           | Library     | Kit-level vuecs theme composing `@vuecs/theme-tailwind` with overrides `@authup/client-web-kit` needs.    |
 | [client-web-nuxt](packages/client-web-nuxt)                     | Library     | A package for the integration in a nuxt web application.                                                  |
+| [client-web-theme](packages/client-web-theme)                   | Library     | Authup app theme for vuecs components, built on `@vuecs/theme-tailwind`; ships a single CSS entry.        |
 | [core-kit](packages/core-kit)                                   | Library     | A package providing functions, interfaces and utilities for the core service.                             |
 | [core-http-kit](packages/core-http-kit)                         | Library     | A package providing a http client with different sub api clients for resources and workflows.             |
 | [core-realtime-kit](packages/core-realtime-kit)                 | Library     | A package for the core socket service.                                                                    |

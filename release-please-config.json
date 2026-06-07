@@ -11,7 +11,9 @@
 
         "packages/access": {"component": "access"},
         "packages/client-web-kit": {"component": "client-web-kit"},
+        "packages/client-web-kit-theme": {"component": "client-web-kit-theme"},
         "packages/client-web-nuxt": {"component": "client-web-nuxt"},
+        "packages/client-web-theme": {"component": "client-web-theme"},
         "packages/core-http-kit": {"component": "core-http-kit"},
         "packages/core-kit": {"component": "core-kit"},
         "packages/core-realtime-kit": {"component": "core-realtime-kit"},
@@ -43,7 +45,9 @@
 
                 "access",
                 "client-web-kit",
+                "client-web-kit-theme",
                 "client-web-nuxt",
+                "client-web-theme",
                 "core-http-kit",
                 "core-kit",
                 "core-realtime-kit",
