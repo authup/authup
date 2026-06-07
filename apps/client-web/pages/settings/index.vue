@@ -5,9 +5,7 @@ import AccountSVG from '../../components/svg/AccountSVG';
 import { LayoutKey } from '../../config/layout';
 
 export default defineComponent({
-    components: {
-        AccountSVG,
-    },
+    components: { AccountSVG },
     setup() {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
