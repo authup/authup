@@ -8,6 +8,7 @@
 import { generateName } from '@authup/kit';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
+import { extend } from '@vuecs/core';
 import { VCFormInput } from '@vuecs/forms';
 import {
     TranslatorTranslationDefaultKey,
@@ -54,6 +55,13 @@ export const ANameInput = defineComponent({
 
         const buttonLabel = computed(() => props.label ?? translationsDefault.generate.value);
 
+        // Square the input's right corners so it merges seamlessly with the
+        // appended regenerate button into a single rounded element. The `!`
+        // suffix beats the theme's `rounded-md` shorthand on `root`.
+        const inputThemeClass = computed(() => (props.disabled ?
+            undefined :
+            { root: extend('rounded-r-none!') }));
+
         const onUpdate = (value: string) => {
             emit('update:modelValue', value);
         };
@@ -64,6 +72,7 @@ export const ANameInput = defineComponent({
 
         return {
             buttonLabel,
+            inputThemeClass,
             onUpdate,
             generate,
         };
@@ -78,6 +87,7 @@ export default ANameInput;
         :model-value="modelValue ?? ''"
         :disabled="disabled"
         :group="!disabled"
+        :theme-class="inputThemeClass"
         @update:model-value="onUpdate"
     >
         <template
