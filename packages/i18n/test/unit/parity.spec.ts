@@ -79,6 +79,10 @@ describe('locale parity', () => {
         expect(authoredLocales).toContain(DEFAULT_LOCALE);
     });
 
+    it('authors the de locale as documented', () => {
+        expect(authoredLocales).toContain('de');
+    });
+
     for (const locale of authoredLocales) {
         describe(`locale "${locale}"`, () => {
             for (const namespace of Object.values(TranslatorTranslationNamespace)) {
