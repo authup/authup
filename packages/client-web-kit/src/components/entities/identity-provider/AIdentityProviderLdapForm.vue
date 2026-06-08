@@ -23,11 +23,11 @@ import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
-import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields.vue';
-import { AIdentityProviderLdapConnectionFields } from './AIdentityProviderLdapConnectionFields.vue';
-import { AIdentityProviderLdapCredentialsFields } from './AIdentityProviderLdapCredentialsFields.vue';
-import { AIdentityProviderLdapGroupFields } from './AIdentityProviderLdapGroupFields.vue';
-import { AIdentityProviderLdapUserFields } from './AIdentityProviderLdapUserFields.vue';
+import AIdentityProviderBasicFields from './AIdentityProviderBasicFields.vue';
+import AIdentityProviderLdapConnectionFields from './AIdentityProviderLdapConnectionFields.vue';
+import AIdentityProviderLdapCredentialsFields from './AIdentityProviderLdapCredentialsFields.vue';
+import AIdentityProviderLdapGroupFields from './AIdentityProviderLdapGroupFields.vue';
+import AIdentityProviderLdapUserFields from './AIdentityProviderLdapUserFields.vue';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
 export const AIdentityProviderLdapForm = defineComponent({

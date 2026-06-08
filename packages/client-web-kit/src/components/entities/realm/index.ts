@@ -6,6 +6,6 @@
  */
 
 export { ARealm } from './ARealm';
-export { ARealmForm } from './ARealmForm.vue';
+export { default as ARealmForm } from './ARealmForm.vue';
 export { ARealmPicker } from './ARealmPicker';
 export { ARealms } from './ARealms';

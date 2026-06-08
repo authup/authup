@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export { ARoleForm } from './ARoleForm.vue';
+export { default as ARoleForm } from './ARoleForm.vue';
 export { ARoles } from './ARoles';
 export { ARole } from './ARole';

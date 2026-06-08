@@ -6,6 +6,6 @@
  */
 
 export { AUser } from './AUser';
-export { AUserForm } from './AUserForm.vue';
+export { default as AUserForm } from './AUserForm.vue';
 export { AUsers } from './AUsers';
-export { AUserPasswordForm } from './AUserPasswordForm.vue';
+export { default as AUserPasswordForm } from './AUserPasswordForm.vue';

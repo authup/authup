@@ -15,7 +15,7 @@ import { assignFormProperties } from '../../../core';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import { AIdentityProviderOAuth2Discovery } from './AIdentityProviderOAuth2Discovery.vue';
+import AIdentityProviderOAuth2Discovery from './AIdentityProviderOAuth2Discovery.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({

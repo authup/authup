@@ -15,9 +15,9 @@ import { IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '
 import type { IdentityProvider, IdentityProviderPreset } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
-import { AIdentityProviderLdapForm } from './AIdentityProviderLdapForm.vue';
+import AIdentityProviderLdapForm from './AIdentityProviderLdapForm.vue';
 import AIdentityProviderPicker from './AIdentityProviderPicker.vue';
-import { AIdentityProviderOAuth2Form } from './AIdentityProviderOAuth2Form.vue';
+import AIdentityProviderOAuth2Form from './AIdentityProviderOAuth2Form.vue';
 
 export const AIdentityProviderForm = defineComponent({
     components: {

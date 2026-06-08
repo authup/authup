@@ -7,5 +7,5 @@
 
 export { APermission } from './APermission';
 export { APermissionCheck } from './APermissionCheck';
-export { APermissionForm } from './APermissionForm.vue';
+export { default as APermissionForm } from './APermissionForm.vue';
 export { APermissions } from './APermissions';
