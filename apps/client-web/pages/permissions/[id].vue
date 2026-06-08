@@ -39,43 +39,36 @@ export default defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.COMMON, 
                     key: TranslatorTranslationCommonKey.GENERAL, 
-                    as: 'general', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.POLICY, 
                     count: 2, 
-                    as: 'policies', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.USER, 
                     count: 2, 
-                    as: 'users', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.CLIENT, 
                     count: 2, 
-                    as: 'clients', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.ROBOT, 
                     count: 2, 
-                    as: 'robots', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.ROLE, 
                     count: 2, 
-                    as: 'roles', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.PERMISSION, 
                     count: 1, 
-                    as: 'permission', 
                 },
             ],
         );
@@ -110,27 +103,27 @@ export default defineComponent({
                 url: `/permissions/${entity.value.id}`,
             },
             {
-                name: translationsDefault.policies,
+                name: translationsDefault.policy,
                 icon: 'fa6-solid:shield-halved',
                 url: `/permissions/${entity.value.id}/policies`,
             },
             {
-                name: translationsDefault.users,
+                name: translationsDefault.user,
                 icon: 'fa6-solid:user',
                 url: `/permissions/${entity.value.id}/users`,
             },
             {
-                name: translationsDefault.clients,
+                name: translationsDefault.client,
                 icon: 'fa6-solid:ghost',
                 url: `/permissions/${entity.value.id}/clients`,
             },
             {
-                name: translationsDefault.robots,
+                name: translationsDefault.robot,
                 icon: 'fa6-solid:robot',
                 url: `/permissions/${entity.value.id}/robots`,
             },
             {
-                name: translationsDefault.roles,
+                name: translationsDefault.role,
                 icon: 'fa6-solid:user-group',
                 url: `/permissions/${entity.value.id}/roles`,
             },

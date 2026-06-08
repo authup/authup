@@ -37,7 +37,6 @@ export default defineNuxtComponent({
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.SCOPE, 
                     count: 2, 
-                    as: 'scopes', 
                 },
             ],
         );
@@ -108,7 +107,7 @@ export default defineNuxtComponent({
             :item="{class: ''}"
         >
             <template #header>
-                <span>{{ translationsDefault.scopes }}</span>
+                <span>{{ translationsDefault.scope }}</span>
             </template>
             <template #item="props">
                 <VCFormSwitch

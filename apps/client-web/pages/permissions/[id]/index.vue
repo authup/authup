@@ -33,7 +33,6 @@ export default defineNuxtComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON, 
                 key: TranslatorTranslationCommonKey.GENERAL, 
-                as: 'general', 
             },
         ]);
 

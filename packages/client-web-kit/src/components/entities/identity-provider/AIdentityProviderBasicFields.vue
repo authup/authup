@@ -86,17 +86,14 @@ export const AIdentityProviderBasicFields = defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
-                as: 'displayName', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.NAME, 
-                as: 'name', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.DESCRIPTION, 
-                as: 'description', 
             },
         ]);
 

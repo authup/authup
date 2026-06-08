@@ -84,23 +84,19 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.ACTION, 
                 key: TranslatorTranslationActionKey.LOGIN, 
-                as: 'login', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.NAME, 
-                as: 'name', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.PASSWORD, 
-                as: 'password', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY, 
                 key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER, 
                 count: 2, 
-                as: 'identityProviders', 
             },
         ]);
 
@@ -274,7 +270,7 @@ export default defineComponent({
                 :footer="false"
             >
                 <template #header>
-                    <ATitle :text="translationsDefault.identityProviders" />
+                    <ATitle :text="translationsDefault.identityProvider" />
                 </template>
                 <template #footer="props">
                     <APagination

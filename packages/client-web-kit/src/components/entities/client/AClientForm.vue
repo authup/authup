@@ -189,38 +189,31 @@ export default defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.ACTION, 
                     key: TranslatorTranslationActionKey.GENERATE, 
-                    as: 'generate', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.NAME, 
-                    as: 'name', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
-                    as: 'displayName', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DESCRIPTION, 
-                    as: 'description', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.REALM, 
                     count: 1, 
-                    as: 'realm', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.REDIRECT_URIS, 
-                    as: 'redirectUris', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.SECRET, 
-                    as: 'secret', 
                 },
             ],
         );

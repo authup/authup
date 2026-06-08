@@ -12,34 +12,32 @@ import { useTranslation } from './singleton';
 
 /**
  * One entry of a {@see useTranslations} batch. Carries a full ilingo
- * lookup context (namespace + key, plus optional `count` for plural
- * selection and `data` for interpolation) and an optional `as` alias
- * that overrides the output map key — used to keep distinct accessors
- * for the singular vs. plural form of the same entity key (which would
- * otherwise collide), e.g. `{ key: ENTITY.CLIENT, count: 2, as: 'clients' }`.
+ * lookup context: `namespace` + `key`, plus optional `count` for plural
+ * selection (`count: 1` → singular, any other → plural) and `data` for
+ * interpolation. The output map is keyed by `key`, so a single batch must
+ * not list the same `key` twice.
  */
-export type TranslationsInput = GetContextReactive & { as?: string };
+export type TranslationsInput = GetContextReactive;
 
 type TranslationsInputNamespaced = Omit<TranslationsInput, 'namespace'>;
 
-type OutputKey<T extends TranslationsInput> = T['as'] extends string ?
-    T['as'] :
-    (T['key'] extends string ? T['key'] : string);
+type OutputKey<T extends TranslationsInput> = T['key'] extends string ?
+    T['key'] :
+    string;
 
 /**
  * Resolve a batch of translations spanning any number of namespaces.
  * Each element supplies its own `namespace`; the result is a reactive
  * keyed map of unwrapped strings — access as `map.key` (no `.value`) in
  * script, interpolation, and attribute bindings alike. The output key is
- * the element's `as` alias when present, otherwise its `key`.
+ * the element's `key`.
  */
 export function useTranslations<const T extends readonly TranslationsInput[]>(
     elements: T,
 ): Record<OutputKey<T[number]>, string> {
     const output = {} as Record<string, Ref<string>>;
     for (const element of elements) {
-        const { as, ...ctx } = element;
-        output[as ?? ctx.key] = useTranslation(ctx);
+        output[element.key] = useTranslation(element);
     }
 
     return reactive(output) as unknown as Record<OutputKey<T[number]>, string>;

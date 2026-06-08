@@ -85,7 +85,6 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.VALUE_IS_REGEX, 
-                as: 'valueIsRegex', 
             },
         ]);
 

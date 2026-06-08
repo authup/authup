@@ -49,7 +49,6 @@ export const ANameInput = defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.ACTION, 
                 key: TranslatorTranslationActionKey.GENERATE, 
-                as: 'generate', 
             },
         ]);
 

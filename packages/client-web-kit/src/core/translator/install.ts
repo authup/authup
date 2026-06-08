@@ -25,8 +25,9 @@ import type { TranslatorInstallOptions } from './types';
  * rather than globally — keeps the form's `components: {}` registry as
  * the single source of truth for what's used in its template.
  *
- * Authup-specific catalogs (`authupClient`, `default`, `vuecs`,
- * `authupError`) ship through the same `MemoryStore`. The authored
+ * Authup-specific catalogs (`authupEntity`, `authupField`,
+ * `authupAction`, `authupCommon`, `authupClient`, `authupApp`,
+ * `vuecs`, `authupError`) ship through the same `MemoryStore`. The authored
  * translations live in the framework-agnostic `@authup/i18n` package,
  * which already exports them as an ilingo `CatalogNode` (`CATALOGS`) —
  * the canonical ingestion format — so this install just hands it to the

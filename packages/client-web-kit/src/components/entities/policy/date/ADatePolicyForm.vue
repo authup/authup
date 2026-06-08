@@ -38,12 +38,10 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.START, 
-                as: 'start', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.END, 
-                as: 'end', 
             },
         ]);
 

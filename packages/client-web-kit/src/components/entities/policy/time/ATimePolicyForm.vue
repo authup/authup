@@ -58,32 +58,26 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.START, 
-                as: 'start', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.END, 
-                as: 'end', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.INTERVAL, 
-                as: 'interval', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.DAY_OF_WEEK, 
-                as: 'dayOfWeek', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.DAY_OF_MONTH, 
-                as: 'dayOfMonth', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.DAY_OF_YEAR, 
-                as: 'dayOfYear', 
             },
         ]);
 

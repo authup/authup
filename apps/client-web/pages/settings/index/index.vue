@@ -33,7 +33,6 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON, 
                 key: TranslatorTranslationCommonKey.GENERAL, 
-                as: 'general', 
             },
         ]);
 

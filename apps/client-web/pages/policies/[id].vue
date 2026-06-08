@@ -38,13 +38,11 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON, 
                 key: TranslatorTranslationCommonKey.GENERAL, 
-                as: 'general', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY, 
                 key: TranslatorTranslationEntityKey.POLICY, 
                 count: 1, 
-                as: 'policy', 
             },
         ]);
 

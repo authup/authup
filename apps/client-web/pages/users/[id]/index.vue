@@ -32,12 +32,10 @@ export default defineNuxtComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON, 
                 key: TranslatorTranslationCommonKey.GENERAL, 
-                as: 'general', 
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.PASSWORD, 
-                as: 'password', 
             },
         ]);
 

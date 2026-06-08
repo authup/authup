@@ -42,19 +42,16 @@ export default defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.COMMON, 
                     key: TranslatorTranslationCommonKey.GENERAL, 
-                    as: 'general', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.ROLE, 
                     count: 2, 
-                    as: 'roles', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER, 
                     count: 1, 
-                    as: 'identityProvider', 
                 },
             ],
         );
@@ -89,7 +86,7 @@ export default defineComponent({
                 url: `/identity-providers/${entity.value.id}`,
             },
             {
-                name: translationsDefault.roles,
+                name: translationsDefault.role,
                 icon: 'fa6-solid:masks-theater',
                 url: `/identity-providers/${entity.value.id}/roles`,
             },

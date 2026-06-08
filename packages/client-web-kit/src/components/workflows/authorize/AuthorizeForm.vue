@@ -40,17 +40,14 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON, 
                 key: TranslatorTranslationCommonKey.APPLICATION, 
-                as: 'application', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ACTION, 
                 key: TranslatorTranslationActionKey.ABORT, 
-                as: 'abort', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ACTION, 
                 key: TranslatorTranslationActionKey.AUTHORIZE, 
-                as: 'authorize', 
             },
         ]);
 

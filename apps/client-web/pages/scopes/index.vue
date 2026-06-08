@@ -34,18 +34,15 @@ export default defineNuxtComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON, 
                 key: TranslatorTranslationCommonKey.OVERVIEW, 
-                as: 'overview', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ACTION, 
                 key: TranslatorTranslationActionKey.ADD, 
-                as: 'add', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY, 
                 key: TranslatorTranslationEntityKey.SCOPE, 
-                count: 1, 
-                as: 'scope', 
+                count: 2, 
             },
         ]);
 
@@ -78,7 +75,14 @@ export default defineNuxtComponent({
                     body: await translate({
                         namespace: TranslatorTranslationNamespace.APP,
                         key: TranslatorTranslationAppKey.ENTITY_DELETED,
-                        data: { entity: translationsDefault.scope, name: e.name },
+                        data: {
+                            entity: await translate({
+                                namespace: TranslatorTranslationNamespace.ENTITY, 
+                                key: TranslatorTranslationEntityKey.SCOPE, 
+                                count: 1, 
+                            }),
+                            name: e.name, 
+                        },
                     }),
                 });
             }

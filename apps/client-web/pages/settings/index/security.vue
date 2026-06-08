@@ -27,7 +27,6 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.FIELD, 
                 key: TranslatorTranslationFieldKey.PASSWORD, 
-                as: 'password', 
             },
         ]);
 

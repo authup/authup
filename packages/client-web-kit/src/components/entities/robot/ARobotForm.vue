@@ -137,32 +137,26 @@ export const ARobotForm = defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.ACTION, 
                     key: TranslatorTranslationActionKey.GENERATE, 
-                    as: 'generate', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.HASHED, 
-                    as: 'hashed', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.NAME, 
-                    as: 'name', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
-                    as: 'displayName', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DESCRIPTION, 
-                    as: 'description', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.SECRET, 
-                    as: 'secret', 
                 },
             ],
         );

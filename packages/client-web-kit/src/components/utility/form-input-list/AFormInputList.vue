@@ -41,7 +41,6 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.ACTION, 
                 key: TranslatorTranslationActionKey.ADD, 
-                as: 'add', 
             },
         ]);
 

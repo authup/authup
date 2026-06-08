@@ -159,42 +159,34 @@ export const AUserForm = defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.COMMON, 
                     key: TranslatorTranslationCommonKey.ACTIVE, 
-                    as: 'active', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.COMMON, 
                     key: TranslatorTranslationCommonKey.INACTIVE, 
-                    as: 'inactive', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
-                    as: 'displayName', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.EMAIL, 
-                    as: 'email', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.COMMON, 
                     key: TranslatorTranslationCommonKey.LOCKED, 
-                    as: 'locked', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.COMMON, 
                     key: TranslatorTranslationCommonKey.NOT_LOCKED, 
-                    as: 'notLocked', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.NAME, 
-                    as: 'name', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DESCRIPTION, 
-                    as: 'description', 
                 },
             ],
         );

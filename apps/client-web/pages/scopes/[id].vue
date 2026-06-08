@@ -38,19 +38,16 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON, 
                 key: TranslatorTranslationCommonKey.GENERAL, 
-                as: 'general', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY, 
                 key: TranslatorTranslationEntityKey.CLIENT, 
                 count: 2, 
-                as: 'clients', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY, 
                 key: TranslatorTranslationEntityKey.SCOPE, 
                 count: 1, 
-                as: 'scope', 
             },
         ]);
 
@@ -84,7 +81,7 @@ export default defineComponent({
                 url: `/scopes/${entity.value.id}`,
             },
             {
-                name: translationsDefault.clients,
+                name: translationsDefault.client,
                 icon: 'fa6-solid:ghost',
                 url: `/scopes/${entity.value.id}/clients`,
             },

@@ -161,28 +161,23 @@ export const APermissionForm = defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.NAME, 
-                    as: 'name', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
-                    as: 'displayName', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DESCRIPTION, 
-                    as: 'description', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
                     key: TranslatorTranslationFieldKey.DECISION_STRATEGY, 
-                    as: 'decisionStrategy', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.REALM, 
                     count: 1, 
-                    as: 'realm', 
                 },
             ],
         );

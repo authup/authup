@@ -38,25 +38,21 @@ export default defineComponent({
             {
                 namespace: TranslatorTranslationNamespace.COMMON, 
                 key: TranslatorTranslationCommonKey.GENERAL, 
-                as: 'general', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY, 
                 key: TranslatorTranslationEntityKey.PERMISSION, 
                 count: 2, 
-                as: 'permissions', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY, 
                 key: TranslatorTranslationEntityKey.ROLE, 
                 count: 2, 
-                as: 'roles', 
             },
             {
                 namespace: TranslatorTranslationNamespace.ENTITY, 
                 key: TranslatorTranslationEntityKey.USER, 
                 count: 1, 
-                as: 'user', 
             },
         ]);
 
@@ -90,12 +86,12 @@ export default defineComponent({
                 url: `/users/${entity.value.id}`,
             },
             {
-                name: translationsDefault.permissions,
+                name: translationsDefault.permission,
                 icon: 'fa6-solid:user-secret',
                 url: `/users/${entity.value.id}/permissions`,
             },
             {
-                name: translationsDefault.roles,
+                name: translationsDefault.role,
                 icon: 'fa6-solid:user-group',
                 url: `/users/${entity.value.id}/roles`,
             },

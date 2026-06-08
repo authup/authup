@@ -39,13 +39,11 @@ export default defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.COMMON, 
                     key: TranslatorTranslationCommonKey.GENERAL, 
-                    as: 'general', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.REALM, 
                     count: 1, 
-                    as: 'realm', 
                 },
             ],
         );

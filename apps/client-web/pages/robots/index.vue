@@ -34,18 +34,15 @@ export default defineComponent({
                 {
                     namespace: TranslatorTranslationNamespace.COMMON, 
                     key: TranslatorTranslationCommonKey.OVERVIEW, 
-                    as: 'overview', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ACTION, 
                     key: TranslatorTranslationActionKey.ADD, 
-                    as: 'add', 
                 },
                 {
                     namespace: TranslatorTranslationNamespace.ENTITY, 
                     key: TranslatorTranslationEntityKey.ROBOT, 
-                    count: 1, 
-                    as: 'robot', 
+                    count: 2, 
                 },
             ],
         );
@@ -79,7 +76,14 @@ export default defineComponent({
                     body: await translate({
                         namespace: TranslatorTranslationNamespace.APP,
                         key: TranslatorTranslationAppKey.ENTITY_DELETED,
-                        data: { entity: translationsDefault.robot, name: e.name },
+                        data: {
+                            entity: await translate({
+                                namespace: TranslatorTranslationNamespace.ENTITY, 
+                                key: TranslatorTranslationEntityKey.ROBOT, 
+                                count: 1, 
+                            }),
+                            name: e.name, 
+                        },
                     }),
                 });
             }
