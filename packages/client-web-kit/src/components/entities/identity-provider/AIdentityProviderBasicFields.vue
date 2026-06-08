@@ -9,10 +9,10 @@ import type { IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderValidator } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForNamespace, 
+    useTranslations,
 } from '../../../core';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -82,14 +82,23 @@ export const AIdentityProviderBasicFields = defineComponent({
 
         assign(props.entity);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                as: 'displayName', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.NAME, 
+                as: 'name', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                as: 'description', 
+            },
+        ]);
 
         const onEnabledChange = (value: boolean) => {
             v.fields.enabled.$model.value = value;

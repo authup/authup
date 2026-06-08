@@ -1,9 +1,11 @@
 <script lang="ts">
 import {
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     injectHTTPClient,
+    useTranslations,
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -35,16 +37,37 @@ export default defineComponent({
 
         const entity = ref<Role>(null!);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-                { key: TranslatorTranslationDefaultKey.CLIENTS },
-                { key: TranslatorTranslationDefaultKey.PERMISSIONS },
-                { key: TranslatorTranslationDefaultKey.USERS },
-                { key: TranslatorTranslationDefaultKey.ROLE },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+                as: 'general', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.CLIENT, 
+                count: 2, 
+                as: 'clients', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.PERMISSION, 
+                count: 2, 
+                as: 'permissions', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.USER, 
+                count: 2, 
+                as: 'users', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.ROLE, 
+                count: 1, 
+                as: 'role', 
+            },
+        ]);
 
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,

@@ -2,9 +2,9 @@
 
 import {
     APermissionForm,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
-    useTranslationsForNamespace,
+    useTranslations,
 } from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
@@ -29,12 +29,13 @@ export default defineNuxtComponent({
             ],
         });
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+                as: 'general', 
+            },
+        ]);
 
         const handleUpdated = (e: Permission) => {
             emit('updated', e);

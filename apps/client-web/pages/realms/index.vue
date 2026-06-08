@@ -2,9 +2,12 @@
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
+    useTranslations,
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -24,12 +27,24 @@ export default defineNuxtComponent({
             ],
         });
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.OVERVIEW },
-                { key: TranslatorTranslationDefaultKey.ADD },
-                { key: TranslatorTranslationDefaultKey.REALM },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.OVERVIEW, 
+                    as: 'overview', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ACTION, 
+                    key: TranslatorTranslationActionKey.ADD, 
+                    as: 'add', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.REALM, 
+                    count: 1, 
+                    as: 'realm', 
+                },
             ],
         );
 

@@ -2,9 +2,12 @@
 import type { Robot } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
+    useTranslations,
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -26,12 +29,24 @@ export default defineComponent({
 
         const toast = useToast();
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.OVERVIEW },
-                { key: TranslatorTranslationDefaultKey.ADD },
-                { key: TranslatorTranslationDefaultKey.ROBOT },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.OVERVIEW, 
+                    as: 'overview', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ACTION, 
+                    key: TranslatorTranslationActionKey.ADD, 
+                    as: 'add', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.ROBOT, 
+                    count: 1, 
+                    as: 'robot', 
+                },
             ],
         );
 

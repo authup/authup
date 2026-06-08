@@ -14,9 +14,12 @@ import {
     defineTranslations,
 } from 'ilingo';
 import type {
+    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
     TranslatorTranslationClientKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationVuecsKey,
 } from '../constants';
 import {
@@ -24,17 +27,23 @@ import {
 } from '../constants';
 import type { NamespaceTranslations } from '../types';
 import {
+    TranslatorTranslationActionEnglish,
     TranslatorTranslationAppEnglish,
     TranslatorTranslationClientEnglish,
-    TranslatorTranslationDefaultEnglish,
+    TranslatorTranslationCommonEnglish,
+    TranslatorTranslationEntityEnglish,
     TranslatorTranslationErrorEnglish,
+    TranslatorTranslationFieldEnglish,
     TranslatorTranslationVuecsEnglish,
 } from './en';
 import {
+    TranslatorTranslationActionGerman,
     TranslatorTranslationAppGerman,
     TranslatorTranslationClientGerman,
-    TranslatorTranslationDefaultGerman,
+    TranslatorTranslationCommonGerman,
+    TranslatorTranslationEntityGerman,
     TranslatorTranslationErrorGerman,
+    TranslatorTranslationFieldGerman,
     TranslatorTranslationVuecsGerman,
 } from './de';
 
@@ -48,7 +57,10 @@ export * from './de';
  * the compile-time complement to the runtime locale-parity test.
  */
 type LocaleNamespaces = {
-    default: NamespaceTranslations<`${TranslatorTranslationDefaultKey}`>,
+    entity: NamespaceTranslations<`${TranslatorTranslationEntityKey}`>,
+    field: NamespaceTranslations<`${TranslatorTranslationFieldKey}`>,
+    action: NamespaceTranslations<`${TranslatorTranslationActionKey}`>,
+    common: NamespaceTranslations<`${TranslatorTranslationCommonKey}`>,
     client: NamespaceTranslations<`${TranslatorTranslationClientKey}`>,
     app: NamespaceTranslations<`${TranslatorTranslationAppKey}`>,
     vuecs: NamespaceTranslations<`${TranslatorTranslationVuecsKey}`>,
@@ -62,7 +74,10 @@ type LocaleNamespaces = {
  */
 function defineAuthupLocale(code: string, namespaces: LocaleNamespaces) {
     const children: NamespaceChild[] = [
-        defineNamespace(TranslatorTranslationNamespace.DEFAULT, [defineTranslations(namespaces.default)]),
+        defineNamespace(TranslatorTranslationNamespace.ENTITY, [defineTranslations(namespaces.entity)]),
+        defineNamespace(TranslatorTranslationNamespace.FIELD, [defineTranslations(namespaces.field)]),
+        defineNamespace(TranslatorTranslationNamespace.ACTION, [defineTranslations(namespaces.action)]),
+        defineNamespace(TranslatorTranslationNamespace.COMMON, [defineTranslations(namespaces.common)]),
         defineNamespace(TranslatorTranslationNamespace.CLIENT, [defineTranslations(namespaces.client)]),
         defineNamespace(TranslatorTranslationNamespace.APP, [defineTranslations(namespaces.app)]),
         defineNamespace(TranslatorTranslationNamespace.VUECS, [defineTranslations(namespaces.vuecs)]),
@@ -90,14 +105,20 @@ function defineAuthupLocale(code: string, namespaces: LocaleNamespaces) {
  */
 export const CATALOGS = defineCatalog([
     defineAuthupLocale('en', {
-        default: TranslatorTranslationDefaultEnglish,
+        entity: TranslatorTranslationEntityEnglish,
+        field: TranslatorTranslationFieldEnglish,
+        action: TranslatorTranslationActionEnglish,
+        common: TranslatorTranslationCommonEnglish,
         client: TranslatorTranslationClientEnglish,
         app: TranslatorTranslationAppEnglish,
         vuecs: TranslatorTranslationVuecsEnglish,
         error: TranslatorTranslationErrorEnglish,
     }),
     defineAuthupLocale('de', {
-        default: TranslatorTranslationDefaultGerman,
+        entity: TranslatorTranslationEntityGerman,
+        field: TranslatorTranslationFieldGerman,
+        action: TranslatorTranslationActionGerman,
+        common: TranslatorTranslationCommonGerman,
         client: TranslatorTranslationClientGerman,
         app: TranslatorTranslationAppGerman,
         vuecs: TranslatorTranslationVuecsGerman,

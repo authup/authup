@@ -15,7 +15,7 @@ import {
     ref,
 } from 'vue';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
     injectHTTPClient,
     injectStore,
@@ -62,8 +62,8 @@ export default defineComponent({
         const client = ref<Client | null>(null);
 
         const loadingText = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.LOADING,
+            namespace: TranslatorTranslationNamespace.COMMON,
+            key: TranslatorTranslationCommonKey.LOADING,
         });
 
         const resolve = async () => {

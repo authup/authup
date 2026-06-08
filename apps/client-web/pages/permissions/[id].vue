@@ -1,9 +1,11 @@
 <script lang="ts">
 import {
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     injectHTTPClient,
+    useTranslations,
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -32,16 +34,49 @@ export default defineComponent({
 
         const entity = ref<Permission>(null!);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-                { key: TranslatorTranslationDefaultKey.POLICIES },
-                { key: TranslatorTranslationDefaultKey.USERS },
-                { key: TranslatorTranslationDefaultKey.CLIENTS },
-                { key: TranslatorTranslationDefaultKey.ROBOTS },
-                { key: TranslatorTranslationDefaultKey.ROLES },
-                { key: TranslatorTranslationDefaultKey.PERMISSION },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.GENERAL, 
+                    as: 'general', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.POLICY, 
+                    count: 2, 
+                    as: 'policies', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.USER, 
+                    count: 2, 
+                    as: 'users', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.CLIENT, 
+                    count: 2, 
+                    as: 'clients', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.ROBOT, 
+                    count: 2, 
+                    as: 'robots', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.ROLE, 
+                    count: 2, 
+                    as: 'roles', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.PERMISSION, 
+                    count: 1, 
+                    as: 'permission', 
+                },
             ],
         );
 

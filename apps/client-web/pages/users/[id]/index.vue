@@ -3,9 +3,10 @@
 import {
     AUserForm,
     AUserPasswordForm,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
-    useTranslationsForNamespace,
+    useTranslations,
 } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import type { PropType } from 'vue';
@@ -27,13 +28,18 @@ export default defineNuxtComponent({
     async setup(props, { emit }) {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-                { key: TranslatorTranslationDefaultKey.PASSWORD },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+                as: 'general', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.PASSWORD, 
+                as: 'password', 
+            },
+        ]);
 
         const handleUpdated = (e: User) => {
             emit('updated', e);

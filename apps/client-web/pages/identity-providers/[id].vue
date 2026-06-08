@@ -2,9 +2,11 @@
 
 import {
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     injectHTTPClient,
+    useTranslations,
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -35,12 +37,25 @@ export default defineComponent({
 
         const entity = ref<IdentityProvider>(null!);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-                { key: TranslatorTranslationDefaultKey.ROLES },
-                { key: TranslatorTranslationDefaultKey.IDENTITY_PROVIDER },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.GENERAL, 
+                    as: 'general', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.ROLE, 
+                    count: 2, 
+                    as: 'roles', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER, 
+                    count: 1, 
+                    as: 'identityProvider', 
+                },
             ],
         );
 

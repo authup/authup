@@ -3,9 +3,12 @@
 import type { Scope } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
+    useTranslations,
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -27,14 +30,24 @@ export default defineNuxtComponent({
 
         const toast = useToast();
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.OVERVIEW },
-                { key: TranslatorTranslationDefaultKey.ADD },
-                { key: TranslatorTranslationDefaultKey.SCOPE },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.OVERVIEW, 
+                as: 'overview', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION, 
+                key: TranslatorTranslationActionKey.ADD, 
+                as: 'add', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.SCOPE, 
+                count: 1, 
+                as: 'scope', 
+            },
+        ]);
 
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,

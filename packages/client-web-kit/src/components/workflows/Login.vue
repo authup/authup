@@ -12,12 +12,14 @@ import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/c
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { useValidup } from '@validup/vue';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationClientKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     injectHTTPClient,
     injectStore,
-    useTranslationsForNamespace,
+    useTranslations,
     useTranslator,
 } from '../../core';
 import { createValidator } from '@validup/zod';
@@ -78,15 +80,29 @@ export default defineComponent({
 
         const v = useValidup(new LoginCredentialsValidator(), form);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.LOGIN },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.PASSWORD },
-                { key: TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ACTION, 
+                key: TranslatorTranslationActionKey.LOGIN, 
+                as: 'login', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.NAME, 
+                as: 'name', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.PASSWORD, 
+                as: 'password', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER, 
+                count: 2, 
+                as: 'identityProviders', 
+            },
+        ]);
 
         const translate = useTranslator();
 

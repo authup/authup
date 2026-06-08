@@ -1,9 +1,11 @@
 <script lang="ts">
 import {
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     injectHTTPClient,
+    useTranslations,
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -32,13 +34,19 @@ export default defineComponent({
 
         const entity = ref<Policy>(null!);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-                { key: TranslatorTranslationDefaultKey.POLICY },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+                as: 'general', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.POLICY, 
+                count: 1, 
+                as: 'policy', 
+            },
+        ]);
 
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,

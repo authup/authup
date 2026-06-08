@@ -10,9 +10,9 @@ import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import { VCFormInput } from '@vuecs/forms';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationActionKey,
     TranslatorTranslationNamespace,
-    useTranslationsForNamespace,
+    useTranslations,
 } from '../../core';
 
 /**
@@ -45,12 +45,13 @@ export const ANameInput = defineComponent({
     },
     emits: ['update:modelValue'],
     setup(props, { emit }) {
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.GENERATE },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ACTION, 
+                key: TranslatorTranslationActionKey.GENERATE, 
+                as: 'generate', 
+            },
+        ]);
 
         const buttonLabel = computed(() => props.label ?? translationsDefault.generate);
 

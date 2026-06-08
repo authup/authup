@@ -15,6 +15,7 @@ import type { LayoutKey } from './contants';
 export type NavigationItemTranslation = {
     namespace: string,
     key: string,
+    count?: number,
 };
 
 export type NavigationItemMeta = {

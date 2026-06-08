@@ -10,10 +10,12 @@ import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationClientKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
     injectHTTPClient,
+    useTranslations,
     useTranslationsForNamespace,
 } from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
@@ -34,14 +36,23 @@ export default defineComponent({
     setup(props) {
         const httpClient = injectHTTPClient();
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.APPLICATION },
-                { key: TranslatorTranslationDefaultKey.ABORT },
-                { key: TranslatorTranslationDefaultKey.AUTHORIZE },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.APPLICATION, 
+                as: 'application', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION, 
+                key: TranslatorTranslationActionKey.ABORT, 
+                as: 'abort', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION, 
+                key: TranslatorTranslationActionKey.AUTHORIZE, 
+                as: 'authorize', 
+            },
+        ]);
 
         const translationsClient = useTranslationsForNamespace(
             TranslatorTranslationNamespace.CLIENT,

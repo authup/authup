@@ -1,9 +1,9 @@
 <script lang="ts">
 import {
     ARealmForm,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
-    useTranslationsForNamespace,
+    useTranslations,
 } from '@authup/client-web-kit';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
@@ -28,10 +28,13 @@ export default defineNuxtComponent({
             ],
         });
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.GENERAL, 
+                    as: 'general', 
+                },
             ],
         );
 

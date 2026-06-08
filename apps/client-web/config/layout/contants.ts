@@ -8,8 +8,9 @@
 import type { NavigationItem } from '@vuecs/navigation';
 import { PermissionName } from '@authup/core-kit';
 import {
+    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
 } from '@authup/client-web-kit';
 import type { NavigationItemMeta } from './types';
@@ -52,7 +53,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:building',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.REALMS },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.REALM, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.REALM_READ,
                 PermissionName.REALM_CREATE,
@@ -68,7 +73,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:cube',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.CLIENTS },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.CLIENT, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.CLIENT_READ,
                 PermissionName.CLIENT_CREATE,
@@ -84,7 +93,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:meteor',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.SCOPES },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.SCOPE, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.SCOPE_READ,
                 PermissionName.SCOPE_CREATE,
@@ -100,7 +113,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:atom',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.IDENTITY_PROVIDER_READ,
                 PermissionName.IDENTITY_PROVIDER_CREATE,
@@ -116,7 +133,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:robot',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.ROBOTS },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.ROBOT, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.ROBOT_READ,
                 PermissionName.ROBOT_CREATE,
@@ -132,7 +153,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:user',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.USERS },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.USER, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.USER_READ,
                 PermissionName.USER_CREATE,
@@ -148,7 +173,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:masks-theater',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.ROLES },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.ROLE, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.ROLE_READ,
                 PermissionName.ROLE_CREATE,
@@ -167,7 +196,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:scale-balanced',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.POLICIES },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.POLICY, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.PERMISSION_READ,
                 PermissionName.PERMISSION_CREATE,
@@ -183,7 +216,11 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:key',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_IN]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.PERMISSIONS },
+            i18n: {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.PERMISSION, 
+                count: 2, 
+            },
             [LayoutKey.REQUIRED_PERMISSIONS]: [
                 PermissionName.PERMISSION_READ,
                 PermissionName.PERMISSION_CREATE,
@@ -204,7 +241,7 @@ export const LayoutSideDefaultNavigation : NavigationItem<NavigationItemMeta>[] 
         icon: 'fa6-solid:right-to-bracket',
         meta: {
             [LayoutKey.REQUIRED_LOGGED_OUT]: true,
-            i18n: { namespace: TranslatorTranslationNamespace.DEFAULT, key: TranslatorTranslationDefaultKey.LOGIN },
+            i18n: { namespace: TranslatorTranslationNamespace.ACTION, key: TranslatorTranslationActionKey.LOGIN },
         },
     },
     {

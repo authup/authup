@@ -3,10 +3,10 @@
 import {
     AUserForm,
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
     injectStore,
-    useTranslationsForNamespace,
+    useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
@@ -29,12 +29,13 @@ export default defineComponent({
             userId,
         } = storeToRefs(store);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+                as: 'general', 
+            },
+        ]);
 
         const translate = useTranslator();
 

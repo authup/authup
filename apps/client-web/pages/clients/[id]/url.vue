@@ -2,8 +2,9 @@
 import {
     AClientScopes,
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
+    useTranslations,
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
@@ -30,10 +31,14 @@ export default defineNuxtComponent({
         const scopes = ref<string[]>([]);
         const redirectUri = ref<string>('');
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.SCOPES },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.SCOPE, 
+                    count: 2, 
+                    as: 'scopes', 
+                },
             ],
         );
 

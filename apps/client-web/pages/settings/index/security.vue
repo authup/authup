@@ -3,10 +3,10 @@ import { storeToRefs } from 'pinia';
 import {
     AUserPasswordForm,
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     injectStore,
-    useTranslationsForNamespace,
+    useTranslations,
     useTranslator,
 } from '@authup/client-web-kit';
 import { definePageMeta, useToast } from '#imports';
@@ -23,12 +23,13 @@ export default defineComponent({
         const store = injectStore();
         const { userId } = storeToRefs(store);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.PASSWORD },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.PASSWORD, 
+                as: 'password', 
+            },
+        ]);
 
         const translate = useTranslator();
 

@@ -8,10 +8,10 @@ import {
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForNamespace,
+    useTranslations,
 } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import type { FormOption } from '@vuecs/forms';
@@ -54,17 +54,38 @@ export default defineComponent({
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.START },
-                { key: TranslatorTranslationDefaultKey.END },
-                { key: TranslatorTranslationDefaultKey.INTERVAL },
-                { key: TranslatorTranslationDefaultKey.DAY_OF_WEEK },
-                { key: TranslatorTranslationDefaultKey.DAY_OF_MONTH },
-                { key: TranslatorTranslationDefaultKey.DAY_OF_YEAR },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.START, 
+                as: 'start', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.END, 
+                as: 'end', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.INTERVAL, 
+                as: 'interval', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.DAY_OF_WEEK, 
+                as: 'dayOfWeek', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.DAY_OF_MONTH, 
+                as: 'dayOfMonth', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.DAY_OF_YEAR, 
+                as: 'dayOfYear', 
+            },
+        ]);
 
         function assign(data: Partial<TimePolicy> = {}) {
             assignFormProperties(form, data as Record<string, unknown>);

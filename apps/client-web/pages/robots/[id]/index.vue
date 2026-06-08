@@ -2,9 +2,9 @@
 
 import {
     ARobotForm,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
-    useTranslationsForNamespace,
+    useTranslations,
 } from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
 import type { PropType } from 'vue';
@@ -23,10 +23,13 @@ export default defineNuxtComponent({
     setup(props, { emit }) {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.GENERAL, 
+                    as: 'general', 
+                },
             ],
         );
 

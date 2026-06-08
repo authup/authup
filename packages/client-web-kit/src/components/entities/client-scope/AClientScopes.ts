@@ -11,7 +11,7 @@ import { defineComponent } from 'vue';
 import type { ClientScope } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
@@ -34,8 +34,8 @@ export const AClientScopes = defineComponent({
         });
 
         const translationClientScopes = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.CLIENT_SCOPES,
+            namespace: TranslatorTranslationNamespace.FIELD,
+            key: TranslatorTranslationFieldKey.CLIENT_SCOPES,
         });
 
         const translation = useTranslation({

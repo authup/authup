@@ -14,10 +14,11 @@ import {
 } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForNamespace, 
+    useTranslations,
 } from '../../../core';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -153,17 +154,48 @@ export const AUserForm = defineComponent({
             }
         };
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.ACTIVE },
-                { key: TranslatorTranslationDefaultKey.INACTIVE },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.EMAIL },
-                { key: TranslatorTranslationDefaultKey.LOCKED },
-                { key: TranslatorTranslationDefaultKey.NOT_LOCKED },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.ACTIVE, 
+                    as: 'active', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.INACTIVE, 
+                    as: 'inactive', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                    as: 'displayName', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.EMAIL, 
+                    as: 'email', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.LOCKED, 
+                    as: 'locked', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.NOT_LOCKED, 
+                    as: 'notLocked', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.NAME, 
+                    as: 'name', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                    as: 'description', 
+                },
             ],
         );
 

@@ -1,9 +1,12 @@
 <script lang="ts">
 import {
     TranslatorTranslationAppKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     injectHTTPClient,
+    useTranslations,
     useTranslationsForNamespace,
     useTranslator,
 } from '@authup/client-web-kit';
@@ -34,15 +37,42 @@ export default defineComponent({
 
         const entity = ref<Client>(null!);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-                { key: TranslatorTranslationDefaultKey.SCOPES },
-                { key: TranslatorTranslationDefaultKey.URL },
-                { key: TranslatorTranslationDefaultKey.PERMISSIONS },
-                { key: TranslatorTranslationDefaultKey.ROLES },
-                { key: TranslatorTranslationDefaultKey.CLIENT },
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.GENERAL, 
+                    as: 'general', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.SCOPE, 
+                    count: 2, 
+                    as: 'scopes', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.URL, 
+                    as: 'url', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.PERMISSION, 
+                    count: 2, 
+                    as: 'permissions', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.ROLE, 
+                    count: 2, 
+                    as: 'roles', 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.CLIENT, 
+                    count: 1, 
+                    as: 'client', 
+                },
             ],
         );
 

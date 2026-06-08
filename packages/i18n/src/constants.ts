@@ -16,7 +16,13 @@
  * `ErrorCode`), resolved client-side from a server error's code + data.
  */
 export enum TranslatorTranslationNamespace {
-    DEFAULT = 'default',
+    ENTITY = 'authupEntity',
+
+    FIELD = 'authupField',
+
+    ACTION = 'authupAction',
+
+    COMMON = 'authupCommon',
 
     CLIENT = 'authupClient',
 
@@ -24,7 +30,7 @@ export enum TranslatorTranslationNamespace {
 
     ERROR = 'authupError',
 
-    APP = 'app',
+    APP = 'authupApp',
 }
 
 export enum TranslatorTranslationVuecsKey {
@@ -51,9 +57,9 @@ export enum TranslatorTranslationClientKey {
  * App-only chrome: navigation labels, page-title decoration
  * (management/details), the sidebar session countdown, header
  * accessibility labels, and the parameterized success toasts. These live
- * apart from {@see TranslatorTranslationDefaultKey} because they are
- * consumed exclusively by `apps/client-web`, never by the reusable
- * `@authup/client-web-kit` components.
+ * apart from the shared entity/field/action/common namespaces because
+ * they are consumed exclusively by `apps/client-web`, never by the
+ * reusable `@authup/client-web-kit` components.
  */
 export enum TranslatorTranslationAppKey {
     HOME = 'home',
@@ -88,63 +94,77 @@ export enum TranslatorTranslationAppKey {
     ACCOUNT_UPDATED = 'accountUpdated',
 }
 
-export enum TranslatorTranslationDefaultKey {
-    ADD = 'add',
-    CREATE = 'create',
-    DELETE = 'delete',
-    GENERATE = 'generate',
-    UPDATE = 'update',
+/**
+ * Entity-type nouns. Each key resolves to an ilingo plural node, so the
+ * singular vs. plural form is selected by the `count` passed at the call
+ * site (`count: 1` → singular, any other → plural) rather than by a
+ * separate `*S` key. Registered under the `authupEntity` namespace.
+ */
+export enum TranslatorTranslationEntityKey {
+    CLIENT = 'client',
+    IDENTITY_PROVIDER = 'identityProvider',
+    PERMISSION = 'permission',
+    POLICY = 'policy',
+    REALM = 'realm',
+    ROBOT = 'robot',
+    ROLE = 'role',
+    SCOPE = 'scope',
+    USER = 'user',
+}
 
-    ACTIVE = 'active',
-    INACTIVE = 'inactive',
-
-    LOCKED = 'locked',
-    NOT_LOCKED = 'notLocked',
-
-    VALUE_IS_REGEX = 'valueIsRegex',
-
-    GENERAL = 'general',
-    LOGIN = 'login',
+/**
+ * Entity attribute / form-field labels. Registered under the
+ * `authupField` namespace.
+ */
+export enum TranslatorTranslationFieldKey {
+    NAME = 'name',
+    DISPLAY_NAME = 'displayName',
+    EMAIL = 'email',
+    EXTERNAL_ID = 'externalId',
+    DESCRIPTION = 'description',
+    SECRET = 'secret',
+    REDIRECT_URIS = 'redirectUris',
     PASSWORD = 'password',
+    DECISION_STRATEGY = 'decisionStrategy',
+    HASHED = 'hashed',
+    URL = 'url',
+    CLIENT_SCOPES = 'clientScopes',
     START = 'start',
     END = 'end',
     INTERVAL = 'interval',
     DAY_OF_WEEK = 'dayOfWeek',
     DAY_OF_MONTH = 'dayOfMonth',
     DAY_OF_YEAR = 'dayOfYear',
-    URL = 'url',
-    APPLICATION = 'application',
+    VALUE_IS_REGEX = 'valueIsRegex',
+}
+
+/**
+ * Action verbs / button labels. Registered under the `authupAction`
+ * namespace.
+ */
+export enum TranslatorTranslationActionKey {
+    ADD = 'add',
+    CREATE = 'create',
+    DELETE = 'delete',
+    GENERATE = 'generate',
+    UPDATE = 'update',
     AUTHORIZE = 'authorize',
     ABORT = 'abort',
-    LOADING = 'loading',
+    LOGIN = 'login',
+}
 
-    CLIENT = 'client',
-    CLIENTS = 'clients',
-    CLIENT_SCOPES = 'clientScopes',
-    DISPLAY_NAME = 'displayName',
-    EMAIL = 'email',
-    EXTERNAL_ID = 'externalId',
-    HASHED = 'hashed',
+/**
+ * Generic UI vocabulary that is neither an entity noun, a field label,
+ * nor an action: page-section labels, status terms, and misc. Registered
+ * under the `authupCommon` namespace.
+ */
+export enum TranslatorTranslationCommonKey {
+    GENERAL = 'general',
     OVERVIEW = 'overview',
-    IDENTITY_PROVIDER = 'identityProvider',
-    IDENTITY_PROVIDERS = 'identityProviders',
-    NAME = 'name',
-    DECISION_STRATEGY = 'decisionStrategy',
-    DESCRIPTION = 'description',
-    PERMISSION = 'permission',
-    PERMISSIONS = 'permissions',
-    POLICY = 'policy',
-    POLICIES = 'policies',
-    REALM = 'realm',
-    ROBOT = 'robot',
-    ROBOTS = 'robots',
-    REALMS = 'realms',
-    ROLE = 'role',
-    ROLES = 'roles',
-    SCOPE = 'scope',
-    SCOPES = 'scopes',
-    SECRET = 'secret',
-    REDIRECT_URIS = 'redirectUris',
-    USER = 'user',
-    USERS = 'users',
+    LOADING = 'loading',
+    ACTIVE = 'active',
+    INACTIVE = 'inactive',
+    LOCKED = 'locked',
+    NOT_LOCKED = 'notLocked',
+    APPLICATION = 'application',
 }

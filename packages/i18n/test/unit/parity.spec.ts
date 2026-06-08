@@ -11,9 +11,12 @@ import { describe, expect, it } from 'vitest';
 import {
     CATALOGS,
     DEFAULT_LOCALE,
+    TranslatorTranslationActionKey,
     TranslatorTranslationAppKey,
     TranslatorTranslationClientKey,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
 } from '../../src';
@@ -23,7 +26,10 @@ import {
  * authored locale must match exactly (no missing keys, no extras).
  */
 const EXPECTED_KEYS: Record<`${TranslatorTranslationNamespace}`, string[]> = {
-    [TranslatorTranslationNamespace.DEFAULT]: Object.values(TranslatorTranslationDefaultKey),
+    [TranslatorTranslationNamespace.ENTITY]: Object.values(TranslatorTranslationEntityKey),
+    [TranslatorTranslationNamespace.FIELD]: Object.values(TranslatorTranslationFieldKey),
+    [TranslatorTranslationNamespace.ACTION]: Object.values(TranslatorTranslationActionKey),
+    [TranslatorTranslationNamespace.COMMON]: Object.values(TranslatorTranslationCommonKey),
     [TranslatorTranslationNamespace.CLIENT]: Object.values(TranslatorTranslationClientKey),
     [TranslatorTranslationNamespace.APP]: Object.values(TranslatorTranslationAppKey),
     [TranslatorTranslationNamespace.VUECS]: Object.values(TranslatorTranslationVuecsKey),
@@ -87,8 +93,8 @@ describe('locale parity', () => {
                 it(`namespace "${namespace}" has non-empty values`, () => {
                     for (const key of expectedKeys) {
                         const value = translations[key];
-                        // A value is either a plain string or an ilingo
-                        // PluralNode (an object of count-bucket → string).
+                        // A value is either a plain string or an ilingo plural
+                        // node (`{ type: 'plural', data: { one, other, ... } }`).
                         // Assert non-emptiness without assuming it is a string.
                         if (typeof value === 'string') {
                             expect(value.trim().length).toBeGreaterThan(0);
@@ -96,7 +102,10 @@ describe('locale parity', () => {
                             expect(value).toBeTypeOf('object');
                             expect(value).not.toBeNull();
 
-                            const buckets = Object.values(value as Record<string, unknown>);
+                            const node = value as { type?: string, data?: Record<string, unknown> };
+                            expect(node.type).toBe('plural');
+
+                            const buckets = Object.values(node.data ?? {});
                             expect(buckets.length).toBeGreaterThan(0);
                             for (const bucket of buckets) {
                                 expect(typeof bucket).toBe('string');

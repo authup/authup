@@ -3,10 +3,10 @@ import { type PropType, defineComponent, reactive } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     assignFormProperties,
-    useTranslationsForNamespace,
+    useTranslations,
 } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
@@ -34,13 +34,18 @@ export default defineComponent({
         // form's state via `extractValidupResultsFromChild('type')`.
         const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.START },
-                { key: TranslatorTranslationDefaultKey.END },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.START, 
+                as: 'start', 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.END, 
+                as: 'end', 
+            },
+        ]);
 
         function assign(data: Partial<DatePolicy> = {}) {
             assignFormProperties(form, data as Record<string, unknown>);

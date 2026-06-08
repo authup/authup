@@ -2,9 +2,9 @@
 
 import {
     ARoleForm,
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationCommonKey,
     TranslatorTranslationNamespace,
-    useTranslationsForNamespace,
+    useTranslations,
 } from '@authup/client-web-kit';
 import type { Role } from '@authup/core-kit';
 import type { PropType } from 'vue';
@@ -23,12 +23,13 @@ export default defineNuxtComponent({
     setup(props, { emit }) {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.GENERAL },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+                as: 'general', 
+            },
+        ]);
 
         const handleUpdated = (e: Role) => {
             emit('updated', e);
