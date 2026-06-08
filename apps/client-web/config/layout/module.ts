@@ -11,16 +11,19 @@ import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import type { NavigationItem } from '@vuecs/navigation';
 
 import { LayoutSideDefaultNavigation } from './contants';
-import type { NavigationItemMeta } from './types';
+import type { NavigationItemMeta, NavigationTranslate } from './types';
 
 export class Navigation {
     protected initialized : boolean;
 
     protected store: Store;
 
-    constructor(store: Store) {
+    protected translate?: NavigationTranslate;
+
+    constructor(store: Store, translate?: NavigationTranslate) {
         this.initialized = false;
         this.store = store;
+        this.translate = translate;
     }
 
     async initialize(): Promise<void> {
@@ -61,62 +64,58 @@ export class Navigation {
     }
 
     protected async reduceItem(item: NavigationItem<NavigationItemMeta>) : Promise<NavigationItem | undefined> {
-        if (!item.meta) {
-            return item;
-        }
+        if (item.meta) {
+            const { loggedIn } = this.store;
+            let identity: IdentityPolicyData | undefined;
+            if (this.store.userId) {
+                identity = {
+                    type: 'user',
+                    id: this.store.userId,
+                };
+            }
 
-        const { loggedIn } = this.store;
-        let identity: IdentityPolicyData | undefined;
-        if (this.store.userId) {
-            identity = {
-                type: 'user',
-                id: this.store.userId,
-            };
-        }
+            if (
+                typeof item.meta.requireLoggedIn !== 'undefined' &&
+                    item.meta.requireLoggedIn &&
+                    !loggedIn
+            ) {
+                return undefined;
+            }
 
-        if (
-            typeof item.meta.requireLoggedIn !== 'undefined' &&
-                item.meta.requireLoggedIn &&
-                !loggedIn
-        ) {
-            return undefined;
-        }
+            if (
+                typeof item.meta.requireLoggedOut !== 'undefined' &&
+                    item.meta.requireLoggedOut &&
+                    loggedIn
+            ) {
+                return undefined;
+            }
 
-        if (
-            typeof item.meta.requireLoggedOut !== 'undefined' &&
-                item.meta.requireLoggedOut &&
-                loggedIn
-        ) {
-            return undefined;
-        }
+            if (item.meta.requirePermissions) {
+                const permissions : string[] = Array.isArray(item.meta.requirePermissions) ?
+                    item.meta.requirePermissions :
+                    [item.meta.requirePermissions];
 
-        let canPass = true;
-
-        if (item.meta.requirePermissions) {
-            const permissions : string[] = Array.isArray(item.meta.requirePermissions) ?
-                item.meta.requirePermissions :
-                [item.meta.requirePermissions];
-
-            if (permissions.length > 0) {
-                try {
-                    await this.store.permissionEvaluator.preEvaluateOneOf({
-                        name: permissions,
-                        input: new PolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
-                    });
-                } catch {
-                    canPass = false;
+                if (permissions.length > 0) {
+                    try {
+                        await this.store.permissionEvaluator.preEvaluateOneOf({
+                            name: permissions,
+                            input: new PolicyData({ [BuiltInPolicyType.IDENTITY]: identity }),
+                        });
+                    } catch {
+                        return undefined;
+                    }
                 }
             }
-        }
 
-        if (canPass) {
-            if (item.children) {
-                item.children = await this.reduce(item.children);
+            if (this.translate && item.meta.i18n) {
+                item.name = await this.translate(item.meta.i18n);
             }
-
-            return item;
         }
 
-        return undefined;
+        if (item.children) {
+            item.children = await this.reduce(item.children);
+        }
+
+        return item;
     }
 }

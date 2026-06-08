@@ -1,5 +1,12 @@
 <script lang="ts">
-import { injectHTTPClient } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
@@ -36,6 +43,27 @@ export default defineComponent({
             throw createError({});
         }
 
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERAL },
+                { key: TranslatorTranslationDefaultKey.SCOPES },
+                { key: TranslatorTranslationDefaultKey.URL },
+                { key: TranslatorTranslationDefaultKey.PERMISSIONS },
+                { key: TranslatorTranslationDefaultKey.ROLES },
+                { key: TranslatorTranslationDefaultKey.CLIENT },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.DETAILS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         const items = computed(() => [
             {
                 name: '',
@@ -43,37 +71,41 @@ export default defineComponent({
                 url: '/clients',
             },
             {
-                name: 'General',
+                name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
                 url: `/clients/${entity.value.id}`,
             },
             {
-                name: 'Scopes',
+                name: translationsDefault.scopes,
                 icon: 'fa6-solid:meteor',
                 url: `/clients/${entity.value.id}/scopes`,
             },
             {
-                name: 'URL',
+                name: translationsDefault.url,
                 icon: 'fa6-solid:link',
                 url: `/clients/${entity.value.id}/url`,
             },
             {
-                name: 'Permissions',
+                name: translationsDefault.permissions,
                 icon: 'fa6-solid:user-secret',
                 url: `/clients/${entity.value.id}/permissions`,
             },
             {
-                name: 'Roles',
+                name: translationsDefault.roles,
                 icon: 'fa6-solid:user-group',
                 url: `/clients/${entity.value.id}/roles`,
             },
         ]);
 
-        const handleUpdated = (e: Client) => {
+        const handleUpdated = async (e: Client) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The client was successfully updated.', 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_UPDATED,
+                        data: { entity: translationsDefault.client },
+                    }),
                 });
             }
 
@@ -84,7 +116,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: e.message, 
+                    body: e.message,
                 });
             }
         };
@@ -94,6 +126,7 @@ export default defineComponent({
             items,
             handleUpdated,
             handleFailed,
+            translationsApp,
         };
     },
 });
@@ -105,7 +138,7 @@ export default defineComponent({
                 name="fa6-solid:cube"
                 class="me-1"
             /> {{ entity.name }}
-            <span class="sub-title ms-1">Details</span>
+            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
         </h1>
         <div class="mb-2">
             <VCNavItems

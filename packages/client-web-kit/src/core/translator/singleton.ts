@@ -8,6 +8,7 @@
 import type { Composable, FieldState } from '@validup/vue';
 import {
     useTranslation as _useTranslation,
+    injectIlingo,
     injectLocale,
 } from '@ilingo/vue';
 import {
@@ -16,6 +17,7 @@ import {
 } from '@ilingo/validup-vue';
 import type { FieldTranslations } from '@ilingo/validup-vue';
 import type { GetContextReactive } from '@ilingo/vue';
+import type { GetContext } from 'ilingo';
 import type { ObjectLiteral } from 'validup';
 import type { Ref } from 'vue';
 
@@ -25,6 +27,23 @@ export function injectTranslatorLocale(): Ref<string> {
 
 export function useTranslation(input: GetContextReactive): Ref<string> {
     return _useTranslation(input);
+}
+
+/**
+ * Imperative counterpart to {@see useTranslation} for non-reactive,
+ * event-time lookups — toast bodies built when a mutation resolves, or
+ * nav-label resolution inside the async `Navigation.reduce()` pipeline,
+ * where a render-time `Ref` is the wrong shape. Captures the injected
+ * ilingo instance + locale `Ref` at call site (so it must run in
+ * `setup()`), then returns a translate function that reads the current
+ * `locale.value` on each invocation. Missing keys resolve to the bare
+ * key value rather than `undefined`.
+ */
+export function useTranslator(): (ctx: GetContext) => Promise<string> {
+    const ilingo = injectIlingo();
+    const locale = injectLocale();
+
+    return async (ctx) => (await ilingo.get({ ...ctx, locale: locale.value })) ?? ctx.key;
 }
 
 /**

@@ -1,5 +1,10 @@
 <script lang="ts">
-import { ARealmForm } from '@authup/client-web-kit';
+import {
+    ARealmForm,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';
@@ -23,6 +28,13 @@ export default defineNuxtComponent({
             ],
         });
 
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERAL },
+            ],
+        );
+
         const handleUpdated = (e: Realm) => {
             emit('updated', e);
         };
@@ -34,6 +46,7 @@ export default defineNuxtComponent({
         return {
             handleUpdated,
             handleFailed,
+            translationsDefault,
         };
     },
 });
@@ -41,7 +54,7 @@ export default defineNuxtComponent({
 <template>
     <div>
         <h6 class="title">
-            General
+            {{ translationsDefault.general }}
         </h6>
         <ARealmForm
             :entity="entity"

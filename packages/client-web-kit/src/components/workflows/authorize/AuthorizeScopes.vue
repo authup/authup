@@ -9,7 +9,12 @@ import type { Client, Scope } from '@authup/core-kit';
 import { deserializeOAuth2Scope } from '@authup/specs';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import { injectHTTPClient } from '../../../core';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslationsForNamespace,
+} from '../../../core';
 import AuthorizeScope from './AuthorizeScope.vue';
 
 export default defineComponent({
@@ -24,6 +29,16 @@ export default defineComponent({
     },
     setup(props) {
         const httpClient = injectHTTPClient();
+
+        const translationsClient = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
+            [
+                {
+                    key: TranslatorTranslationClientKey.SCOPE_GRANT_INTRO,
+                    data: { client: props.client.name },
+                },
+            ],
+        );
 
         const scopesRequestedNormalized = computed<string[]>(() => {
             if (!props.scopesRequested) {
@@ -59,6 +74,7 @@ export default defineComponent({
         return {
             scopesRequestedNormalized,
             scopesAvailableNormalized,
+            translationsClient,
         };
     },
 });
@@ -66,7 +82,7 @@ export default defineComponent({
 <template>
     <div v-if="scopesAvailableNormalized.length > 0">
         <div>
-            This will allow the <strong>{{ client.name }}</strong> application to
+            {{ translationsClient.scopeGrantIntro }}
         </div>
         <div class="flex-col">
             <template

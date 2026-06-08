@@ -1,5 +1,12 @@
 <script lang="ts">
-import { injectHTTPClient } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
@@ -34,6 +41,28 @@ export default defineComponent({
             throw createError({});
         }
 
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERAL },
+                { key: TranslatorTranslationDefaultKey.POLICIES },
+                { key: TranslatorTranslationDefaultKey.USERS },
+                { key: TranslatorTranslationDefaultKey.CLIENTS },
+                { key: TranslatorTranslationDefaultKey.ROBOTS },
+                { key: TranslatorTranslationDefaultKey.ROLES },
+                { key: TranslatorTranslationDefaultKey.PERMISSION },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.DETAILS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         const items = computed(() => [
             {
                 name: '',
@@ -41,42 +70,46 @@ export default defineComponent({
                 url: '/permissions',
             },
             {
-                name: 'General',
+                name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
                 url: `/permissions/${entity.value.id}`,
             },
             {
-                name: 'Policies',
+                name: translationsDefault.policies,
                 icon: 'fa6-solid:shield-halved',
                 url: `/permissions/${entity.value.id}/policies`,
             },
             {
-                name: 'Users',
+                name: translationsDefault.users,
                 icon: 'fa6-solid:user',
                 url: `/permissions/${entity.value.id}/users`,
             },
             {
-                name: 'Clients',
+                name: translationsDefault.clients,
                 icon: 'fa6-solid:ghost',
                 url: `/permissions/${entity.value.id}/clients`,
             },
             {
-                name: 'Robots',
+                name: translationsDefault.robots,
                 icon: 'fa6-solid:robot',
                 url: `/permissions/${entity.value.id}/robots`,
             },
             {
-                name: 'Roles',
+                name: translationsDefault.roles,
                 icon: 'fa6-solid:user-group',
                 url: `/permissions/${entity.value.id}/roles`,
             },
         ]);
 
-        const handleUpdated = (e: Permission) => {
+        const handleUpdated = async (e: Permission) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The permission was successfully updated.', 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_UPDATED,
+                        data: { entity: translationsDefault.permission },
+                    }),
                 });
             }
 
@@ -97,6 +130,7 @@ export default defineComponent({
             entity,
             handleUpdated,
             handleFailed,
+            translationsApp,
         };
     },
 });
@@ -110,7 +144,7 @@ export default defineComponent({
             />
             {{ entity.name }}
             <span class="sub-title ms-1">
-                Details
+                {{ translationsApp.details }}
             </span>
         </h1>
         <div class="mb-2">

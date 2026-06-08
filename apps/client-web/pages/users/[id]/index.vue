@@ -1,6 +1,12 @@
 <script lang="ts">
 
-import { AUserForm, AUserPasswordForm } from '@authup/client-web-kit';
+import {
+    AUserForm,
+    AUserPasswordForm,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
@@ -21,6 +27,14 @@ export default defineNuxtComponent({
     async setup(props, { emit }) {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERAL },
+                { key: TranslatorTranslationDefaultKey.PASSWORD },
+            ],
+        );
+
         const handleUpdated = (e: User) => {
             emit('updated', e);
         };
@@ -32,6 +46,7 @@ export default defineNuxtComponent({
         return {
             handleUpdated,
             handleFailed,
+            translationsDefault,
         };
     },
 });
@@ -40,7 +55,7 @@ export default defineNuxtComponent({
     <div class="row">
         <div class="col-7">
             <h6 class="title">
-                General
+                {{ translationsDefault.general }}
             </h6>
 
             <AUserForm
@@ -52,7 +67,7 @@ export default defineNuxtComponent({
         </div>
         <div class="col-5">
             <h6 class="title">
-                Password
+                {{ translationsDefault.password }}
             </h6>
 
             <AUserPasswordForm

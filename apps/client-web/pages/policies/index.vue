@@ -1,8 +1,15 @@
 <script lang="ts">
 import type { Policy } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { definePageMeta, useToast } from '#imports';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import { defineNuxtComponent } from '#app';
+import { computed, definePageMeta, useToast } from '#imports';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
@@ -19,24 +26,46 @@ export default defineNuxtComponent({
 
         const toast = useToast();
 
-        const items = [
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.OVERVIEW },
+                { key: TranslatorTranslationDefaultKey.ADD },
+                { key: TranslatorTranslationDefaultKey.POLICY },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.MANAGEMENT },
+            ],
+        );
+
+        const translate = useTranslator();
+
+        const items = computed(() => [
             {
-                name: 'overview',
+                name: translationsDefault.overview,
                 icon: 'fa6-solid:bars',
                 url: '/policies',
             },
             {
-                name: 'add',
+                name: translationsDefault.add,
                 icon: 'fa6-solid:plus',
                 url: '/policies/add',
             },
-        ];
+        ]);
 
-        const handleDeleted = (e: Policy) => {
+        const handleDeleted = async (e: Policy) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: `The policy ${e.name} was successfully deleted.`, 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_DELETED,
+                        data: { entity: translationsDefault.policy, name: e.name },
+                    }),
                 });
             }
         };
@@ -45,7 +74,7 @@ export default defineNuxtComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message, 
+                    body: e.message,
                 });
             }
         };
@@ -54,6 +83,8 @@ export default defineNuxtComponent({
             handleDeleted,
             handleFailed,
             items,
+            translationsDefault,
+            translationsApp,
         };
     },
 });
@@ -64,8 +95,8 @@ export default defineNuxtComponent({
             <VCIcon
                 name="fa6-solid:scale-balanced"
                 class="me-1"
-            /> Policy
-            <span class="sub-title ms-1">Management</span>
+            /> {{ translationsDefault.policy }}
+            <span class="sub-title ms-1">{{ translationsApp.management }}</span>
         </h1>
         <div class="content-wrapper">
             <div class="content-sidebar flex-col">

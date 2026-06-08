@@ -5,9 +5,20 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { LanguageSwitcherDropdown, injectStore } from '@authup/client-web-kit';
+import {
+    LanguageSwitcherDropdown,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
+    injectStore,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
-import { defineNuxtComponent, ref, useColorMode } from '#imports';
+import { 
+    computed, 
+    defineNuxtComponent, 
+    ref, 
+    useColorMode, 
+} from '#imports';
 import { LayoutTopNavigation } from '../config/layout';
 
 export default defineNuxtComponent({
@@ -19,10 +30,24 @@ export default defineNuxtComponent({
             user,
         } = storeToRefs(store);
 
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.GENERAL },
+                { key: TranslatorTranslationAppKey.TOGGLE_NAVIGATION },
+                { key: TranslatorTranslationAppKey.SWITCH_TO_LIGHT_MODE },
+                { key: TranslatorTranslationAppKey.SWITCH_TO_DARK_MODE },
+            ],
+        );
+
         // Top nav is a single un-gated entry — pass it as a static
         // array straight to `<VCNavItems :data>` (no permission filter,
-        // no resolver, no registry).
-        const topItems = LayoutTopNavigation;
+        // no resolver, no registry). The label is re-derived from the
+        // catalog so it follows the active locale.
+        const topItems = computed(() => LayoutTopNavigation.map((item) => ({
+            ...item,
+            name: translationsApp.general,
+        })));
 
         const displayNav = ref(false);
         const toggleNav = () => {
@@ -47,6 +72,7 @@ export default defineNuxtComponent({
             displayNav,
             isDark,
             toggleColorMode,
+            translationsApp,
         };
     },
 });
@@ -61,7 +87,7 @@ export default defineNuxtComponent({
                         class="toggle-trigger"
                         @click="toggleNav"
                     >
-                        <span class="sr-only">Toggle navigation</span>
+                        <span class="sr-only">{{ translationsApp.toggleNavigation }}</span>
                         <span class="icon-bar" />
                         <span class="icon-bar" />
                         <span class="icon-bar" />
@@ -88,7 +114,7 @@ export default defineNuxtComponent({
                             <button
                                 type="button"
                                 class="vc-nav-link"
-                                :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+                                :aria-label="isDark ? translationsApp.switchToLightMode : translationsApp.switchToDarkMode"
                                 :aria-pressed="isDark ? 'true' : 'false'"
                                 @click.prevent="toggleColorMode"
                             >

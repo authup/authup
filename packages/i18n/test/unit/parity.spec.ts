@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import {
     CATALOGS,
     DEFAULT_LOCALE,
+    TranslatorTranslationAppKey,
     TranslatorTranslationClientKey,
     TranslatorTranslationDefaultKey,
     TranslatorTranslationNamespace,
@@ -24,6 +25,7 @@ import {
 const EXPECTED_KEYS: Record<`${TranslatorTranslationNamespace}`, string[]> = {
     [TranslatorTranslationNamespace.DEFAULT]: Object.values(TranslatorTranslationDefaultKey),
     [TranslatorTranslationNamespace.CLIENT]: Object.values(TranslatorTranslationClientKey),
+    [TranslatorTranslationNamespace.APP]: Object.values(TranslatorTranslationAppKey),
     [TranslatorTranslationNamespace.VUECS]: Object.values(TranslatorTranslationVuecsKey),
     [TranslatorTranslationNamespace.ERROR]: Object.values(ErrorCode),
 };

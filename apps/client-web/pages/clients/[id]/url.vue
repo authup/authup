@@ -1,5 +1,11 @@
 <script lang="ts">
-import { AClientScopes } from '@authup/client-web-kit';
+import {
+    AClientScopes,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
 import { VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import type { BuildInput } from 'rapiq';
@@ -23,6 +29,23 @@ export default defineNuxtComponent({
     setup(props) {
         const scopes = ref<string[]>([]);
         const redirectUri = ref<string>('');
+
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.SCOPES },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.URL_GENERATOR },
+                { key: TranslatorTranslationAppKey.URL_GENERATOR_HINT },
+                { key: TranslatorTranslationAppKey.REDIRECT_URL },
+                { key: TranslatorTranslationAppKey.GENERATED_URL },
+            ],
+        );
 
         const config = useRuntimeConfig();
 
@@ -62,15 +85,17 @@ export default defineNuxtComponent({
             redirectUri,
             generatedUrl,
             scopes,
+            translationsDefault,
+            translationsApp,
         };
     },
 });
 </script>
 <template>
     <div>
-        <h6>URL Generator</h6>
+        <h6>{{ translationsApp.urlGenerator }}</h6>
         <div class="mb-1">
-            Generate an authorize url by picking the scopes it needs to function.
+            {{ translationsApp.urlGeneratorHint }}
         </div>
         <AClientScopes
             :header="true"
@@ -78,7 +103,7 @@ export default defineNuxtComponent({
             :item="{class: ''}"
         >
             <template #header>
-                <span>Scopes</span>
+                <span>{{ translationsDefault.scopes }}</span>
             </template>
             <template #item="props">
                 <VCFormSwitch
@@ -96,7 +121,7 @@ export default defineNuxtComponent({
         </AClientScopes>
         <VCFormGroup>
             <template #label>
-                Redirect URL
+                {{ translationsApp.redirectUrl }}
             </template>
             <template #default>
                 <VCFormInput
@@ -107,7 +132,7 @@ export default defineNuxtComponent({
         </VCFormGroup>
         <VCFormGroup>
             <template #label>
-                Generated URL
+                {{ translationsApp.generatedUrl }}
             </template>
             <template #default>
                 <VCFormInput

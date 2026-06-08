@@ -1,8 +1,15 @@
 <script lang="ts">
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { definePageMeta, useToast } from '#imports';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import { defineNuxtComponent } from '#app';
+import { computed, definePageMeta, useToast } from '#imports';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
@@ -17,24 +24,46 @@ export default defineNuxtComponent({
             ],
         });
 
-        const items = [
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.OVERVIEW },
+                { key: TranslatorTranslationDefaultKey.ADD },
+                { key: TranslatorTranslationDefaultKey.REALM },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.MANAGEMENT },
+            ],
+        );
+
+        const translate = useTranslator();
+
+        const items = computed(() => [
             {
-                name: 'overview',
+                name: translationsDefault.overview,
                 icon: 'fa6-solid:bars',
                 url: '/realms',
             },
             {
-                name: 'add',
+                name: translationsDefault.add,
                 icon: 'fa6-solid:plus',
                 url: '/realms/add',
             },
-        ];
+        ]);
 
-        const handleDeleted = (e: Realm) => {
+        const handleDeleted = async (e: Realm) => {
             const toast = useToast();
             toast.show({
                 variant: 'success',
-                body: `The realm ${e.name} was successfully deleted.`, 
+                body: await translate({
+                    namespace: TranslatorTranslationNamespace.APP,
+                    key: TranslatorTranslationAppKey.ENTITY_DELETED,
+                    data: { entity: translationsDefault.realm, name: e.name },
+                }),
             });
         };
 
@@ -42,7 +71,7 @@ export default defineNuxtComponent({
             const toast = useToast();
             toast.show({
                 variant: 'warning',
-                body: e.message, 
+                body: e.message,
             });
         };
 
@@ -50,6 +79,8 @@ export default defineNuxtComponent({
             handleDeleted,
             handleFailed,
             items,
+            translationsDefault,
+            translationsApp,
         };
     },
 });
@@ -60,8 +91,8 @@ export default defineNuxtComponent({
             <VCIcon
                 name="fa6-solid:building"
                 class="me-1"
-            /> Realm
-            <span class="sub-title ms-1">Management</span>
+            /> {{ translationsDefault.realm }}
+            <span class="sub-title ms-1">{{ translationsApp.management }}</span>
         </h1>
         <div class="content-wrapper">
             <div class="content-sidebar flex-col">

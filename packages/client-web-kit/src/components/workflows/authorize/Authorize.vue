@@ -14,7 +14,13 @@ import {
     h, 
     ref,
 } from 'vue';
-import { injectHTTPClient, injectStore } from '../../../core';
+import {
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    injectStore,
+    useTranslation,
+} from '../../../core';
 import Login from '../Login.vue';
 import AuthorizeForm from './AuthorizeForm.vue';
 import AuthorizeText from './AuthorizeText.vue';
@@ -55,6 +61,11 @@ export default defineComponent({
         const error = ref<Error | null>(null);
         const client = ref<Client | null>(null);
 
+        const loadingText = useTranslation({
+            namespace: TranslatorTranslationNamespace.DEFAULT,
+            key: TranslatorTranslationDefaultKey.LOADING,
+        });
+
         const resolve = async () => {
             if (props.error) {
                 error.value = props.error;
@@ -94,7 +105,7 @@ export default defineComponent({
             if (!loggedIn.value) {
                 return wrapChild(h(Suspense, {}, {
                     default: () => h(Login, { codeRequest: props.codeRequest }),
-                    fallback: () => h(AuthorizeText, { message: 'Loading...' }),
+                    fallback: () => h(AuthorizeText, { message: loadingText.value }),
                 }));
             }
 
@@ -108,7 +119,7 @@ export default defineComponent({
                     client: client.value!,
                     scopes: props.scopes,
                 }),
-                fallback: () => h(AuthorizeText, { message: 'Loading...' }),
+                fallback: () => h(AuthorizeText, { message: loadingText.value }),
             }));
         };
     },

@@ -302,7 +302,7 @@ export default defineComponent({
                             <VCFormSwitch
                                 v-model="v.fields.is_confidential.$model.value"
                                 :label="true"
-                                :label-content="translationsClient.isConfidential.value"
+                                :label-content="translationsClient.isConfidential"
                             />
                         </VCFormGroup>
                     </IFieldValidation>
@@ -316,7 +316,7 @@ export default defineComponent({
                             <VCFormSwitch
                                 v-model="v.fields.secret_hashed.$model.value"
                                 :label="true"
-                                :label-content="translationsClient.hashSecret.value"
+                                :label-content="translationsClient.hashSecret"
                             />
                         </VCFormGroup>
                     </IFieldValidation>
@@ -330,7 +330,7 @@ export default defineComponent({
                             <VCFormSwitch
                                 v-model="v.fields.active.$model.value"
                                 :label="true"
-                                :label-content="translationsClient.isActive.value"
+                                :label-content="translationsClient.isActive"
                             />
                         </VCFormGroup>
                     </IFieldValidation>

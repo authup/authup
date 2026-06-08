@@ -1,6 +1,11 @@
 <script lang="ts">
 
-import { ARobotForm } from '@authup/client-web-kit';
+import {
+    ARobotForm,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
@@ -18,6 +23,13 @@ export default defineNuxtComponent({
     setup(props, { emit }) {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERAL },
+            ],
+        );
+
         const handleUpdated = (e: Robot) => {
             emit('updated', e);
         };
@@ -29,6 +41,7 @@ export default defineNuxtComponent({
         return {
             handleUpdated,
             handleFailed,
+            translationsDefault,
         };
     },
 });
@@ -36,7 +49,7 @@ export default defineNuxtComponent({
 <template>
     <div>
         <h6 class="title">
-            General
+            {{ translationsDefault.general }}
         </h6>
         <ARobotForm
             :entity="entity"

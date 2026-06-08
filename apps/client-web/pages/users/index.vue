@@ -1,8 +1,15 @@
 <script lang="ts">
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import { definePageMeta, useToast } from '#imports';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import { defineNuxtComponent } from '#app';
+import { computed, definePageMeta, useToast } from '#imports';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
@@ -19,24 +26,46 @@ export default defineNuxtComponent({
 
         const toast = useToast();
 
-        const items = [
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.OVERVIEW },
+                { key: TranslatorTranslationDefaultKey.ADD },
+                { key: TranslatorTranslationDefaultKey.USER },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.MANAGEMENT },
+            ],
+        );
+
+        const translate = useTranslator();
+
+        const items = computed(() => [
             {
-                name: 'overview',
+                name: translationsDefault.overview,
                 icon: 'fa6-solid:bars',
                 url: '/users',
             },
             {
-                name: 'add',
+                name: translationsDefault.add,
                 icon: 'fa6-solid:plus',
                 url: '/users/add',
             },
-        ];
+        ]);
 
-        const handleDeleted = (e: User) => {
+        const handleDeleted = async (e: User) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: `The user ${e.name} was successfully deleted.`, 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_DELETED,
+                        data: { entity: translationsDefault.user, name: e.name },
+                    }),
                 });
             }
         };
@@ -45,7 +74,7 @@ export default defineNuxtComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message, 
+                    body: e.message,
                 });
             }
         };
@@ -54,6 +83,8 @@ export default defineNuxtComponent({
             items,
             handleFailed,
             handleDeleted,
+            translationsDefault,
+            translationsApp,
         };
     },
 });
@@ -64,9 +95,9 @@ export default defineNuxtComponent({
             <VCIcon
                 name="fa6-solid:user"
                 class="me-1"
-            /> User
+            /> {{ translationsDefault.user }}
             <span class="sub-title ms-1">
-                Management
+                {{ translationsApp.management }}
             </span>
         </h1>
         <div class="content-wrapper">

@@ -13,18 +13,25 @@ import {
     defineNamespace,
     defineTranslations,
 } from 'ilingo';
-import type { TranslatorTranslationClientKey, TranslatorTranslationDefaultKey, TranslatorTranslationVuecsKey } from '../constants';
+import type {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationVuecsKey,
+} from '../constants';
 import {
     TranslatorTranslationNamespace,
 } from '../constants';
 import type { NamespaceTranslations } from '../types';
 import {
+    TranslatorTranslationAppEnglish,
     TranslatorTranslationClientEnglish,
     TranslatorTranslationDefaultEnglish,
     TranslatorTranslationErrorEnglish,
     TranslatorTranslationVuecsEnglish,
 } from './en';
 import {
+    TranslatorTranslationAppGerman,
     TranslatorTranslationClientGerman,
     TranslatorTranslationDefaultGerman,
     TranslatorTranslationErrorGerman,
@@ -43,6 +50,7 @@ export * from './de';
 type LocaleNamespaces = {
     default: NamespaceTranslations<`${TranslatorTranslationDefaultKey}`>,
     client: NamespaceTranslations<`${TranslatorTranslationClientKey}`>,
+    app: NamespaceTranslations<`${TranslatorTranslationAppKey}`>,
     vuecs: NamespaceTranslations<`${TranslatorTranslationVuecsKey}`>,
     error: NamespaceTranslations<`${ErrorCode}`>,
 };
@@ -56,6 +64,7 @@ function defineAuthupLocale(code: string, namespaces: LocaleNamespaces) {
     const children: NamespaceChild[] = [
         defineNamespace(TranslatorTranslationNamespace.DEFAULT, [defineTranslations(namespaces.default)]),
         defineNamespace(TranslatorTranslationNamespace.CLIENT, [defineTranslations(namespaces.client)]),
+        defineNamespace(TranslatorTranslationNamespace.APP, [defineTranslations(namespaces.app)]),
         defineNamespace(TranslatorTranslationNamespace.VUECS, [defineTranslations(namespaces.vuecs)]),
         defineNamespace(TranslatorTranslationNamespace.ERROR, [defineTranslations(namespaces.error)]),
     ];
@@ -83,12 +92,14 @@ export const CATALOGS = defineCatalog([
     defineAuthupLocale('en', {
         default: TranslatorTranslationDefaultEnglish,
         client: TranslatorTranslationClientEnglish,
+        app: TranslatorTranslationAppEnglish,
         vuecs: TranslatorTranslationVuecsEnglish,
         error: TranslatorTranslationErrorEnglish,
     }),
     defineAuthupLocale('de', {
         default: TranslatorTranslationDefaultGerman,
         client: TranslatorTranslationClientGerman,
+        app: TranslatorTranslationAppGerman,
         vuecs: TranslatorTranslationVuecsGerman,
         error: TranslatorTranslationErrorGerman,
     }),

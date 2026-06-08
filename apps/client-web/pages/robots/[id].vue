@@ -1,5 +1,12 @@
 <script lang="ts">
-import { injectHTTPClient } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
@@ -37,6 +44,25 @@ export default defineComponent({
             createError({});
         }
 
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERAL },
+                { key: TranslatorTranslationDefaultKey.PERMISSIONS },
+                { key: TranslatorTranslationDefaultKey.ROLES },
+                { key: TranslatorTranslationDefaultKey.ROBOT },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.DETAILS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         const items = computed(() => [
             {
                 name: '',
@@ -44,27 +70,31 @@ export default defineComponent({
                 url: '/robots',
             },
             {
-                name: 'General',
+                name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
                 url: `/robots/${entity.value.id}`,
             },
             {
-                name: 'Permissions',
+                name: translationsDefault.permissions,
                 icon: 'fa6-solid:user-secret',
                 url: `/robots/${entity.value.id}/permissions`,
             },
             {
-                name: 'Roles',
+                name: translationsDefault.roles,
                 icon: 'fa6-solid:user-group',
                 url: `/robots/${entity.value.id}/roles`,
             },
         ]);
 
-        const handleUpdated = (e: Robot) => {
+        const handleUpdated = async (e: Robot) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The robot was successfully updated.', 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_UPDATED,
+                        data: { entity: translationsDefault.robot },
+                    }),
                 });
             }
 
@@ -85,6 +115,7 @@ export default defineComponent({
             items,
             handleUpdated,
             handleFailed,
+            translationsApp,
         };
     },
 });
@@ -96,7 +127,7 @@ export default defineComponent({
                 name="fa6-solid:robot"
                 class="me-1"
             /> {{ entity.name }}
-            <span class="sub-title ms-1">Details</span>
+            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
         </h1>
         <div class="mb-2">
             <VCNavItems

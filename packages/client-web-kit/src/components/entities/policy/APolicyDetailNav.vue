@@ -7,6 +7,11 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationNamespace,
+    useTranslation,
+} from '../../../core';
 
 export default defineComponent({
     props: {
@@ -17,12 +22,17 @@ export default defineComponent({
     },
     emits: ['click'],
     setup(props, { emit }) {
+        const viewPolicyDetails = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.VIEW_POLICY_DETAILS,
+        });
+
         const handleClick = (e: Event) => {
             e.preventDefault();
             emit('click', props.policyId);
         };
 
-        return { handleClick };
+        return { handleClick, viewPolicyDetails };
     },
 });
 </script>
@@ -30,8 +40,8 @@ export default defineComponent({
     <button
         type="button"
         class="btn btn-xs btn-outline-info"
-        title="View policy details"
-        aria-label="View policy details"
+        :title="viewPolicyDetails"
+        :aria-label="viewPolicyDetails"
         @click="handleClick"
     >
         <VCIcon name="fa6-solid:eye" />

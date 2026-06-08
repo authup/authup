@@ -228,7 +228,7 @@ export default defineComponent({
                     </template>
                     <VCFormSwitch
                         v-model="v.fields.value_is_regex.$model.value"
-                        :label-content="translationsDefault.valueIsRegex.value"
+                        :label-content="translationsDefault.valueIsRegex"
                     />
                 </VCFormGroup>
             </IFieldValidation>

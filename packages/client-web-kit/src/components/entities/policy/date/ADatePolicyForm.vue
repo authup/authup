@@ -2,7 +2,12 @@
 import { type PropType, defineComponent, reactive } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties } from '../../../../core';
+import {
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    assignFormProperties,
+    useTranslationsForNamespace,
+} from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import type { DatePolicy } from '@authup/access';
@@ -29,6 +34,14 @@ export default defineComponent({
         // form's state via `extractValidupResultsFromChild('type')`.
         const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
 
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.START },
+                { key: TranslatorTranslationDefaultKey.END },
+            ],
+        );
+
         function assign(data: Partial<DatePolicy> = {}) {
             assignFormProperties(form, data as Record<string, unknown>);
         }
@@ -50,6 +63,7 @@ export default defineComponent({
         return {
             handleUpdated,
             v,
+            translationsDefault,
         };
     },
 });
@@ -62,7 +76,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Start
+                    {{ translationsDefault.start }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.start.$model.value"
@@ -78,7 +92,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    End
+                    {{ translationsDefault.end }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.end.$model.value"

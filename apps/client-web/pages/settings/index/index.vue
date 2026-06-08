@@ -1,6 +1,14 @@
 <script lang="ts">
 
-import { AUserForm, injectStore } from '@authup/client-web-kit';
+import {
+    AUserForm,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    injectStore,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
 import { definePageMeta, useToast } from '#imports';
@@ -17,14 +25,26 @@ export default defineComponent({
         const store = injectStore();
 
         const {
-            user, 
-            userId, 
+            user,
+            userId,
         } = storeToRefs(store);
 
-        const handleUpdated = (entity: User) => {
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERAL },
+            ],
+        );
+
+        const translate = useTranslator();
+
+        const handleUpdated = async (entity: User) => {
             toast.show({
                 variant: 'success',
-                body: 'The account was successfully updated.', 
+                body: await translate({
+                    namespace: TranslatorTranslationNamespace.APP,
+                    key: TranslatorTranslationAppKey.ACCOUNT_UPDATED,
+                }),
             });
 
             store.setUser(entity);
@@ -33,7 +53,7 @@ export default defineComponent({
         const handleFailed = (e: Error) => {
             toast.show({
                 variant: 'warning',
-                body: e.message, 
+                body: e.message,
             });
         };
 
@@ -42,6 +62,7 @@ export default defineComponent({
             userId,
             handleUpdated,
             handleFailed,
+            translationsDefault,
         };
     },
 });
@@ -49,7 +70,7 @@ export default defineComponent({
 <template>
     <div>
         <h6 class="title">
-            General
+            {{ translationsDefault.general }}
         </h6>
         <UserForm
             :can-manage="false"

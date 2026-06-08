@@ -15,4 +15,11 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.IS_CONFIDENTIAL]: 'Ist vertraulich?',
     [TranslatorTranslationClientKey.IS_ACTIVE]: 'Ist aktiv?',
     [TranslatorTranslationClientKey.HASH_SECRET]: 'Geheimnis hashen?',
+
+    [TranslatorTranslationClientKey.LOGIN_FAILED]: 'Der Anmeldevorgang ist fehlgeschlagen',
+    [TranslatorTranslationClientKey.SCOPE_GRANT_INTRO]: 'Dies erlaubt der Anwendung {{client}},',
+    [TranslatorTranslationClientKey.ONCE_AUTHORIZED_REDIRECT]: 'Nach der Autorisierung werden Sie weitergeleitet zu:',
+    [TranslatorTranslationClientKey.GOVERNED_BY]: 'Diese Anwendung unterliegt den Datenschutz- und Nutzungsbedingungen der Anwendung {{client}}.',
+    [TranslatorTranslationClientKey.ACTIVE_SINCE]: 'Aktiv seit',
+    [TranslatorTranslationClientKey.VIEW_POLICY_DETAILS]: 'Richtliniendetails anzeigen',
 };

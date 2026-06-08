@@ -52,7 +52,7 @@ export const ANameInput = defineComponent({
             ],
         );
 
-        const buttonLabel = computed(() => props.label ?? translationsDefault.generate.value);
+        const buttonLabel = computed(() => props.label ?? translationsDefault.generate);
 
         const onUpdate = (value: string) => {
             emit('update:modelValue', value);

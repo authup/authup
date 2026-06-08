@@ -7,18 +7,20 @@
 
 import type { GetContext } from 'ilingo';
 import type { Ref } from 'vue';
+import { reactive } from 'vue';
 import { useTranslation } from './singleton';
 
 type Input = Omit<GetContext, 'namespace'>;
 
 /**
  * Resolve a batch of translations under a single namespace. Returns a
- * keyed map of `Ref<string>`s, one per element.
+ * reactive keyed map of unwrapped strings — access as `map.key` (no
+ * `.value`) in script, interpolation, and attribute bindings alike.
  */
 export function useTranslationsForNamespace<T extends Input>(
     namespace: string,
     elements: T[],
-): Record<`${T['key']}`, Ref<string>> {
+): Record<`${T['key']}`, string> {
     const output = {} as Record<string, Ref<string>>;
     for (const element of elements) {
         output[element.key] = useTranslation({
@@ -27,5 +29,5 @@ export function useTranslationsForNamespace<T extends Input>(
         });
     }
 
-    return output;
+    return reactive(output) as unknown as Record<`${T['key']}`, string>;
 }

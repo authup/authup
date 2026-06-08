@@ -1,6 +1,14 @@
 <script lang="ts">
 import { storeToRefs } from 'pinia';
-import { AUserPasswordForm, injectStore } from '@authup/client-web-kit';
+import {
+    AUserPasswordForm,
+    TranslatorTranslationAppKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    injectStore,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import { definePageMeta, useToast } from '#imports';
 import { defineComponent } from 'vue';
 import { LayoutKey } from '~/config/layout';
@@ -15,11 +23,23 @@ export default defineComponent({
         const store = injectStore();
         const { userId } = storeToRefs(store);
 
-        const handleUpdated = () => {
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.PASSWORD },
+            ],
+        );
+
+        const translate = useTranslator();
+
+        const handleUpdated = async () => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The account was successfully updated.', 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ACCOUNT_UPDATED,
+                    }),
                 });
             }
         };
@@ -28,7 +48,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'warning',
-                    body: e.message, 
+                    body: e.message,
                 });
             }
         };
@@ -37,6 +57,7 @@ export default defineComponent({
             id: userId,
             handleUpdated,
             handleFailed,
+            translationsDefault,
         };
     },
 });
@@ -44,7 +65,7 @@ export default defineComponent({
 <template>
     <div>
         <h6 class="title">
-            Password
+            {{ translationsDefault.password }}
         </h6>
         <AUserPasswordForm
             :id="id"

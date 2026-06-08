@@ -11,7 +11,15 @@ import {
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { useValidup } from '@validup/vue';
-import { injectHTTPClient, injectStore } from '../../core';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    injectStore,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '../../core';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
@@ -70,6 +78,18 @@ export default defineComponent({
 
         const v = useValidup(new LoginCredentialsValidator(), form);
 
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.LOGIN },
+                { key: TranslatorTranslationDefaultKey.NAME },
+                { key: TranslatorTranslationDefaultKey.PASSWORD },
+                { key: TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         const busy = ref(false);
 
         const realmId = computed(() => {
@@ -123,7 +143,12 @@ export default defineComponent({
 
                 emit('done');
             } catch (e: unknown) {
-                emit('failed', e instanceof Error ? e.message : 'The login operation failed');
+                emit('failed', e instanceof Error ?
+                    e.message :
+                    await translate({
+                        namespace: TranslatorTranslationNamespace.CLIENT,
+                        key: TranslatorTranslationClientKey.LOGIN_FAILED,
+                    }));
             }
         };
 
@@ -161,6 +186,7 @@ export default defineComponent({
             identityProviderQuery,
             identityProviderRef,
             buildIdentityProviderURL,
+            translationsDefault,
         };
     },
 });
@@ -169,7 +195,7 @@ export default defineComponent({
     <div>
         <div class="text-center">
             <h1 class="font-bold">
-                Login
+                {{ translationsDefault.login }}
             </h1>
         </div>
         <form @submit.prevent="submit">
@@ -179,7 +205,7 @@ export default defineComponent({
             >
                 <VCFormGroup :validation="value">
                     <template #label>
-                        Name
+                        {{ translationsDefault.name }}
                     </template>
                     <VCFormInput v-model="v.fields.name.$model.value" />
                 </VCFormGroup>
@@ -191,7 +217,7 @@ export default defineComponent({
             >
                 <VCFormGroup :validation="value">
                     <template #label>
-                        Password
+                        {{ translationsDefault.password }}
                     </template>
                     <VCFormInput
                         v-model="v.fields.password.$model.value"
@@ -213,7 +239,7 @@ export default defineComponent({
             -->
             <VCButton
                 v-bind="submitButton"
-                label="Login"
+                :label="translationsDefault.login"
                 class="w-full"
             />
 
@@ -232,7 +258,7 @@ export default defineComponent({
                 :footer="false"
             >
                 <template #header>
-                    <ATitle :text="'Identity Providers'" />
+                    <ATitle :text="translationsDefault.identityProviders" />
                 </template>
                 <template #footer="props">
                     <APagination
