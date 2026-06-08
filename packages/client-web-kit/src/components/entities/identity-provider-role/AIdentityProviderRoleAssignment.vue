@@ -11,10 +11,10 @@ import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import { 
-    TranslatorTranslationDefaultKey, 
-    TranslatorTranslationNamespace, 
-    assignFormProperties, 
-    useTranslationsForNamespace, 
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+    assignFormProperties,
+    useTranslations,
 } from '../../../core';
 import { z } from 'zod';
 import type { PropType } from 'vue';
@@ -81,12 +81,12 @@ export default defineComponent({
 
         const v = useValidup(new RoleMappingAttributesValidator(), form);
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
-            [
-                { key: TranslatorTranslationDefaultKey.VALUE_IS_REGEX },
-            ],
-        );
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.VALUE_IS_REGEX, 
+            },
+        ]);
 
         const manager = defineEntityManager({
             type: `${EntityType.IDENTITY_PROVIDER_ROLE_MAPPING}`,
@@ -228,7 +228,7 @@ export default defineComponent({
                     </template>
                     <VCFormSwitch
                         v-model="v.fields.value_is_regex.$model.value"
-                        :label-content="translationsDefault.valueIsRegex.value"
+                        :label-content="translationsDefault.valueIsRegex"
                     />
                 </VCFormGroup>
             </IFieldValidation>

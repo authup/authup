@@ -5,11 +5,12 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { LOCALES } from '@authup/i18n';
 import { injectLocale } from '@ilingo/vue';
 import {
-    computed, 
-    defineComponent, 
-    h, 
+    computed,
+    defineComponent,
+    h,
     ref,
 } from 'vue';
 
@@ -24,18 +25,18 @@ const LanguageSwitcherDropdown = defineComponent({
         const opened = ref(false);
 
         const locale = injectLocale();
-        const locales = ['de', 'en'];
 
-        const elements = computed(() => {
-            const output = [];
-            for (const locale_ of locales) {
-                output.push({
-                    value: locale_,
-                    active: locale.value === locale_,
-                });
-            }
+        const elements = computed(() => LOCALES.map((descriptor) => ({
+            value: descriptor.code,
+            label: descriptor.nativeName,
+            active: locale.value === descriptor.code,
+        })));
 
-            return output;
+        const activeCode = computed(() => {
+            const match = LOCALES.find(
+                (descriptor) => descriptor.code === locale.value,
+            );
+            return match ? match.code : locale.value;
         });
 
         const setLocale = (input: string) => {
@@ -55,7 +56,7 @@ const LanguageSwitcherDropdown = defineComponent({
                     opened.value = !opened.value;
                 },
             }, [
-                locale.value,
+                activeCode.value,
             ]),
             h('div', {
                 class: [
@@ -73,7 +74,7 @@ const LanguageSwitcherDropdown = defineComponent({
                     'dropdown-item',
                     element.active ? 'active' : '',
                 ],
-            }, [element.value]))),
+            }, [element.label]))),
         ]);
     },
 });

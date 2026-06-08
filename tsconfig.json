@@ -15,6 +15,7 @@
             "@authup/core-kit": ["packages/core-kit/src"],
             "@authup/core-realtime-kit": ["packages/core-realtime-kit/src"],
             "@authup/errors": ["packages/errors/src"],
+            "@authup/i18n": ["packages/i18n/src"],
             "@authup/kit": ["packages/kit/src"],
             "@authup/server-adapter-kit": ["packages/server-adapter-kit/src"],
             "@authup/server-adapter-node": ["packages/server-adapter-node/src"],

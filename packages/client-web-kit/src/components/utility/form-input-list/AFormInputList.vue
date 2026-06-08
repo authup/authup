@@ -13,13 +13,14 @@ import {
     ref,
 } from 'vue';
 import AFormInputListItem from './AFormInputListItem.vue';
-import { ATranslationDefault } from '../translation';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationNamespace,
+    useTranslations,
+} from '../../../core';
 
 export default defineComponent({
-    components: {
-        ATranslationDefault,
-        AFormInputListItem,
-    },
+    components: { AFormInputListItem },
     props: {
         names: {
             type: Array as PropType<string[]>,
@@ -36,6 +37,13 @@ export default defineComponent({
     },
     emits: ['changed'],
     setup(props, setup) {
+        const translationsAction = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ACTION, 
+                key: TranslatorTranslationActionKey.ADD, 
+            },
+        ]);
+
         let counter = 0;
         const items = ref<{
             id: number,
@@ -109,6 +117,8 @@ export default defineComponent({
             handleUpdated,
 
             items,
+
+            translationsAction,
         };
     },
 });
@@ -128,7 +138,7 @@ export default defineComponent({
                     :disabled="!canAdd"
                     @click.prevent="add()"
                 >
-                    <VCIcon name="fa6-solid:plus" /> <ATranslationDefault :name="'add'" />
+                    <VCIcon name="fa6-solid:plus" /> {{ translationsAction.add }}
                 </button>
             </div>
         </div>

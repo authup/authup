@@ -11,7 +11,7 @@ import { defineComponent } from 'vue';
 import type { Realm } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
@@ -34,8 +34,9 @@ export const ARealms = defineComponent({
         });
 
         const translationsName = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.REALMS,
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.REALM,
+            count: 2,
         });
 
         const translation = useTranslation({

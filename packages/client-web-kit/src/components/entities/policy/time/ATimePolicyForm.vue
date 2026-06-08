@@ -7,7 +7,12 @@ import {
 } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties } from '../../../../core';
+import {
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+    assignFormProperties,
+    useTranslations,
+} from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormGroup, VCFormInput, VCFormSelect } from '@vuecs/forms';
@@ -48,6 +53,33 @@ export default defineComponent({
             } satisfies FormOption));
 
         const v = useValidup(new Container<typeof form>(), form, { name: 'type' });
+
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.START, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.END, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.INTERVAL, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.DAY_OF_WEEK, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.DAY_OF_MONTH, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD, 
+                key: TranslatorTranslationFieldKey.DAY_OF_YEAR, 
+            },
+        ]);
 
         function assign(data: Partial<TimePolicy> = {}) {
             assignFormProperties(form, data as Record<string, unknown>);
@@ -100,6 +132,7 @@ export default defineComponent({
             displayIntervalForDayOfYear,
             intervalOptions,
             v,
+            translationsDefault,
         };
     },
 });
@@ -114,7 +147,7 @@ export default defineComponent({
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            Start
+                            {{ translationsDefault.start }}
                         </template>
                         <VCFormInput
                             v-model="v.fields.start.$model.value"
@@ -131,7 +164,7 @@ export default defineComponent({
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            End
+                            {{ translationsDefault.end }}
                         </template>
                         <VCFormInput
                             v-model="v.fields.end.$model.value"
@@ -150,7 +183,7 @@ export default defineComponent({
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            Interval
+                            {{ translationsDefault.interval }}
                         </template>
                         <VCFormSelect
                             v-model="v.fields.interval.$model.value"
@@ -171,7 +204,7 @@ export default defineComponent({
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            Day of Week
+                            {{ translationsDefault.dayOfWeek }}
                         </template>
                         <VCFormInput
                             v-model="v.fields.day_of_week.$model.value"
@@ -192,7 +225,7 @@ export default defineComponent({
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            Day of Month
+                            {{ translationsDefault.dayOfMonth }}
                         </template>
                         <VCFormInput
                             v-model="v.fields.day_of_month.$model.value"
@@ -213,7 +246,7 @@ export default defineComponent({
                 >
                     <VCFormGroup :validation="value">
                         <template #label>
-                            Day of Year
+                            {{ translationsDefault.dayOfYear }}
                         </template>
                         <VCFormInput
                             v-model="v.fields.day_of_year.$model.value"

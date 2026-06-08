@@ -1,6 +1,15 @@
 <script lang="ts">
 
-import { injectHTTPClient } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
@@ -28,6 +37,34 @@ export default defineComponent({
 
         const entity = ref<IdentityProvider>(null!);
 
+        const translationsDefault = useTranslations(
+            [
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.GENERAL, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.ROLE, 
+                    count: 2, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER, 
+                    count: 1, 
+                },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.DETAILS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         try {
             entity.value = await injectHTTPClient()
                 .identityProvider
@@ -44,21 +81,25 @@ export default defineComponent({
                 url: '/identity-providers',
             },
             {
-                name: 'General',
+                name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
                 url: `/identity-providers/${entity.value.id}`,
             },
             {
-                name: 'Roles',
+                name: translationsDefault.role,
                 icon: 'fa6-solid:masks-theater',
                 url: `/identity-providers/${entity.value.id}/roles`,
             },
         ]);
 
-        const handleUpdated = (e: IdentityProvider) => {
+        const handleUpdated = async (e: IdentityProvider) => {
             toast.show({
                 variant: 'success',
-                body: 'The identity-provider was successfully updated.', 
+                body: await translate({
+                    namespace: TranslatorTranslationNamespace.APP,
+                    key: TranslatorTranslationAppKey.ENTITY_UPDATED,
+                    data: { entity: translationsDefault.identityProvider },
+                }),
             });
 
             extendObject(entity.value, e);
@@ -67,7 +108,7 @@ export default defineComponent({
         const handleFailed = (e: Error) => {
             toast.show({
                 variant: 'warning',
-                body: e.message, 
+                body: e.message,
             });
         };
 
@@ -76,6 +117,7 @@ export default defineComponent({
             items,
             handleUpdated,
             handleFailed,
+            translationsApp,
         };
     },
 });
@@ -87,7 +129,7 @@ export default defineComponent({
                 name="fa6-solid:atom"
                 class="me-1"
             /> {{ entity.name }}
-            <span class="sub-title ms-1">Details</span>
+            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
         </h1>
         <div class="mb-2">
             <VCNavItems

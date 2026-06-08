@@ -5,27 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import {
-    MemoryStore,
-    defineCatalog,
-    defineLocale,
-    defineNamespace,
-    defineTranslations,
-} from 'ilingo';
+import { CATALOGS } from '@authup/i18n';
+import { MemoryStore } from 'ilingo';
 import { install as installIlingoVue } from '@ilingo/vue';
 import { install as installIlingoValidup } from '@ilingo/validup-vue';
 import type { App } from 'vue';
-import { TranslatorTranslationNamespace } from './constants';
-import {
-    TranslatorTranslationClientGerman,
-    TranslatorTranslationDefaultGerman,
-    TranslatorTranslationVuecsGerman,
-} from './de';
-import {
-    TranslatorTranslationClientEnglish,
-    TranslatorTranslationDefaultEnglish,
-    TranslatorTranslationVuecsEnglish,
-} from './en';
 import type { TranslatorInstallOptions } from './types';
 
 /**
@@ -41,12 +25,13 @@ import type { TranslatorInstallOptions } from './types';
  * rather than globally — keeps the form's `components: {}` registry as
  * the single source of truth for what's used in its template.
  *
- * Authup-specific catalogs (`authupClient`, `default`, `vuecs`) ship
- * through the same `MemoryStore` — the descriptor-tree shape required
- * by ilingo 6 is built via `defineCatalog` / `defineLocale` /
- * `defineNamespace` / `defineTranslations` so the type system tracks
- * the namespace tree and a misspelled namespace name is a compile
- * error.
+ * Authup-specific catalogs (`authupEntity`, `authupField`,
+ * `authupAction`, `authupCommon`, `authupClient`, `authupApp`,
+ * `vuecs`, `authupError`) ship through the same `MemoryStore`. The authored
+ * translations live in the framework-agnostic `@authup/i18n` package,
+ * which already exports them as an ilingo `CatalogNode` (`CATALOGS`) —
+ * the canonical ingestion format — so this install just hands it to the
+ * store directly with no per-consumer reconstruction.
  *
  * Zod-driven validators flow through `@validup/zod`'s
  * `createValidator()`, which maps each `ZodIssue` to a specific validup
@@ -63,33 +48,8 @@ import type { TranslatorInstallOptions } from './types';
  * authup's frontend moved off `vuelidate` to `@validup/vue`.
  */
 export function installTranslator(app: App, options: TranslatorInstallOptions = {}) {
-    const catalog = defineCatalog([
-        defineLocale('en', [
-            defineNamespace(TranslatorTranslationNamespace.CLIENT, [
-                defineTranslations(TranslatorTranslationClientEnglish),
-            ]),
-            defineNamespace(TranslatorTranslationNamespace.DEFAULT, [
-                defineTranslations(TranslatorTranslationDefaultEnglish),
-            ]),
-            defineNamespace(TranslatorTranslationNamespace.VUECS, [
-                defineTranslations(TranslatorTranslationVuecsEnglish),
-            ]),
-        ]),
-        defineLocale('de', [
-            defineNamespace(TranslatorTranslationNamespace.CLIENT, [
-                defineTranslations(TranslatorTranslationClientGerman),
-            ]),
-            defineNamespace(TranslatorTranslationNamespace.DEFAULT, [
-                defineTranslations(TranslatorTranslationDefaultGerman),
-            ]),
-            defineNamespace(TranslatorTranslationNamespace.VUECS, [
-                defineTranslations(TranslatorTranslationVuecsGerman),
-            ]),
-        ]),
-    ]);
-
     installIlingoVue(app, {
-        store: new MemoryStore({ data: catalog }),
+        store: new MemoryStore({ data: CATALOGS }),
         locale: options.locale,
     });
     installIlingoValidup(app);

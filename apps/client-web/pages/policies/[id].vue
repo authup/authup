@@ -1,5 +1,14 @@
 <script lang="ts">
-import { injectHTTPClient } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { Policy } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
@@ -25,6 +34,27 @@ export default defineComponent({
 
         const entity = ref<Policy>(null!);
 
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.POLICY, 
+                count: 1, 
+            },
+        ]);
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.DETAILS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         try {
             entity.value = await injectHTTPClient()
                 .policy
@@ -41,17 +71,21 @@ export default defineComponent({
                 url: '/policies',
             },
             {
-                name: 'General',
+                name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
                 url: `/policies/${entity.value.id}`,
             },
         ]);
 
-        const handleUpdated = (e: Policy) => {
+        const handleUpdated = async (e: Policy) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The policy was successfully updated.', 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_UPDATED,
+                        data: { entity: translationsDefault.policy },
+                    }),
                 });
             }
 
@@ -72,6 +106,7 @@ export default defineComponent({
             entity,
             handleUpdated,
             handleFailed,
+            translationsApp,
         };
     },
 });
@@ -85,7 +120,7 @@ export default defineComponent({
             />
             {{ entity.name }}
             <span class="sub-title ms-1">
-                Details
+                {{ translationsApp.details }}
             </span>
         </h1>
         <div class="mb-2">

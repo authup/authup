@@ -16,7 +16,7 @@ import {
     defineEntityCollectionVProps,
 } from '../../utility';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
@@ -34,8 +34,9 @@ export const AScopes = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.SCOPES,
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.SCOPE,
+            count: 2,
         });
 
         const translation = useTranslation({

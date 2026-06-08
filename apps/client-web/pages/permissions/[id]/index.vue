@@ -1,6 +1,11 @@
 <script lang="ts">
 
-import { APermissionForm } from '@authup/client-web-kit';
+import {
+    APermissionForm,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationNamespace,
+    useTranslations,
+} from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';
@@ -24,6 +29,13 @@ export default defineNuxtComponent({
             ],
         });
 
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+            },
+        ]);
+
         const handleUpdated = (e: Permission) => {
             emit('updated', e);
         };
@@ -35,6 +47,7 @@ export default defineNuxtComponent({
         return {
             handleUpdated,
             handleFailed,
+            translationsDefault,
         };
     },
 });
@@ -42,7 +55,7 @@ export default defineNuxtComponent({
 <template>
     <div>
         <h6 class="title">
-            General
+            {{ translationsDefault.general }}
         </h6>
         <APermissionForm
             :entity="entity"

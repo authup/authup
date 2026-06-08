@@ -7,11 +7,12 @@
 <script lang="ts">
 import { ValidatorGroup, createNanoID, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
-import { 
-    TranslatorTranslationDefaultKey, 
-    TranslatorTranslationNamespace, 
-    assignFormProperties, 
-    useTranslationsForNamespace, 
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+    assignFormProperties,
+    useTranslations,
 } from '../../../core';
 import type { PropType } from 'vue';
 import {
@@ -131,15 +132,32 @@ export const ARobotForm = defineComponent({
             }
         };
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.GENERATE },
-                { key: TranslatorTranslationDefaultKey.HASHED },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.SECRET },
+                {
+                    namespace: TranslatorTranslationNamespace.ACTION, 
+                    key: TranslatorTranslationActionKey.GENERATE, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.HASHED, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.NAME, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.SECRET, 
+                },
             ],
         );
 

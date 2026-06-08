@@ -8,13 +8,14 @@
 import { EntityType, RoleValidator } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
-import { 
-    TranslatorTranslationDefaultKey, 
-    TranslatorTranslationNamespace, 
-    assignFormProperties, 
-    injectStore, 
-    storeToRefs, 
-    useTranslationsForNamespace, 
+import {
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+    assignFormProperties,
+    injectStore,
+    storeToRefs,
+    useTranslations,
 } from '../../../core';
 import type { PropType } from 'vue';
 import {
@@ -122,13 +123,25 @@ export const ARoleForm = defineComponent({
             await manager.createOrUpdate(form);
         };
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.REALM },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.NAME, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.REALM, 
+                    count: 1, 
+                },
             ],
         );
 

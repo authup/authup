@@ -9,7 +9,15 @@
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
-import { injectHTTPClient } from '../../../core';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslations,
+    useTranslationsForNamespace,
+} from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({
@@ -27,6 +35,33 @@ export default defineComponent({
     },
     setup(props) {
         const httpClient = injectHTTPClient();
+
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.APPLICATION, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION, 
+                key: TranslatorTranslationActionKey.ABORT, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION, 
+                key: TranslatorTranslationActionKey.AUTHORIZE, 
+            },
+        ]);
+
+        const translationsClient = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.ONCE_AUTHORIZED_REDIRECT },
+                { key: TranslatorTranslationClientKey.ACTIVE_SINCE },
+                {
+                    key: TranslatorTranslationClientKey.GOVERNED_BY,
+                    data: { client: props.client.name },
+                },
+            ],
+        );
 
         const abort = () => {
             const url = new URL(`${props.codeRequest.redirect_uri}`);
@@ -71,6 +106,8 @@ export default defineComponent({
         return {
             authorize,
             abort,
+            translationsDefault,
+            translationsClient,
         };
     },
 });
@@ -79,7 +116,7 @@ export default defineComponent({
     <div class="flex-col flex gap-2">
         <div class="text-center">
             <h5 class="text-fg-muted mb-1">
-                Application
+                {{ translationsDefault.application }}
             </h5>
             <h1 class="font-bold">
                 {{ client.name }}
@@ -99,7 +136,7 @@ export default defineComponent({
                 </div>
                 <div class="ms-1">
                     <small>
-                        Once authorized, you will be redirected to: <strong>{{ codeRequest.redirect_uri }}</strong>
+                        {{ translationsClient.onceAuthorizedRedirect }} <strong>{{ codeRequest.redirect_uri }}</strong>
                     </small>
                 </div>
             </div>
@@ -109,11 +146,7 @@ export default defineComponent({
                 </div>
                 <div class="ms-1">
                     <small>
-                        This application is governed by the
-                        <strong>
-                            {{ client.name }}
-                        </strong>
-                        application's Privacy Policy and Terms of Service.
+                        {{ translationsClient.governedBy }}
                     </small>
                 </div>
             </div>
@@ -123,7 +156,7 @@ export default defineComponent({
                 </div>
                 <div class="ms-1">
                     <small>
-                        Active since {{ client.created_at }}
+                        {{ translationsClient.activeSince }} {{ client.created_at }}
                     </small>
                 </div>
             </div>
@@ -136,7 +169,7 @@ export default defineComponent({
                     class="btn w-full btn-secondary"
                     @click.prevent="abort"
                 >
-                    Abort
+                    {{ translationsDefault.abort }}
                 </button>
             </div>
             <div class="col-6">
@@ -145,7 +178,7 @@ export default defineComponent({
                     class="btn w-full btn-primary"
                     @click.prevent="authorize"
                 >
-                    Authorize
+                    {{ translationsDefault.authorize }}
                 </button>
             </div>
         </div>

@@ -1,0 +1,66 @@
+{
+    "name": "@authup/i18n",
+    "type": "module",
+    "version": "1.0.0-beta.44",
+    "description": "Framework-agnostic translation catalogs and locale registry.",
+    "license": "Apache-2.0",
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs"
+        }
+    },
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
+        "build:js": "tsdown",
+        "build": "rimraf ./dist && npm run build:js && npm run build:types",
+        "test": "cross-env NODE_ENV=test vitest run test/unit",
+        "test:coverage": "cross-env NODE_ENV=test vitest run --coverage"
+    },
+    "engines": {
+        "node": "^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0"
+    },
+    "keywords": [
+        "auth",
+        "i18n",
+        "translation",
+        "localization",
+        "locale",
+        "ilingo"
+    ],
+    "author": {
+        "name": "Peter Placzek",
+        "email": "contact@tada5hi.net",
+        "url": "https://github.com/tada5hi"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/authup/authup.git",
+        "directory": "packages/i18n"
+    },
+    "bugs": {
+        "url": "https://github.com/authup/authup/issues"
+    },
+    "homepage": "https://github.com/authup/authup#readme",
+    "dependencies": {
+        "ilingo": "^6.0.0"
+    },
+    "devDependencies": {
+        "@authup/errors": "^1.0.0-beta.44",
+        "validup": "^0.5.1",
+        "vitest": "^4.0.14"
+    },
+    "peerDependencies": {
+        "@authup/errors": "^1.0.0-beta.44",
+        "validup": "^0.5.1"
+    },
+    "publishConfig": {
+        "access": "public"
+    }
+}

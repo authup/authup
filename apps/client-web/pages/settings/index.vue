@@ -1,5 +1,10 @@
 <script lang="ts">
-import { defineComponent } from 'vue';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
+import { computed, defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
 import AccountSVG from '../../components/svg/AccountSVG';
 import { LayoutKey } from '../../config/layout';
@@ -9,20 +14,30 @@ export default defineComponent({
     setup() {
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
-        const items = [
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.ACCOUNT },
+                { key: TranslatorTranslationAppKey.SECURITY },
+                { key: TranslatorTranslationAppKey.SETTINGS },
+                { key: TranslatorTranslationAppKey.MANAGEMENT },
+            ],
+        );
+
+        const items = computed(() => [
             {
-                name: 'Account',
+                name: translationsApp.account,
                 icon: 'fa6-solid:bars',
                 url: '/settings',
             },
             {
-                name: 'Security',
+                name: translationsApp.security,
                 icon: 'fa6-solid:lock',
                 url: '/settings/security',
             },
-        ];
+        ]);
 
-        return { items };
+        return { items, translationsApp };
     },
 });
 </script>
@@ -33,9 +48,9 @@ export default defineComponent({
         </div>
         <h1 class="title no-border mb-3">
             <VCIcon name="fa6-solid:gear" />
-            Settings
+            {{ translationsApp.settings }}
             <span class="sub-title ms-1">
-                Management
+                {{ translationsApp.management }}
             </span>
         </h1>
         <div class="content-wrapper">

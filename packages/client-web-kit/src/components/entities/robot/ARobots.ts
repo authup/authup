@@ -11,8 +11,8 @@ import { defineComponent } from 'vue';
 import type { Robot } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
-    TranslatorTranslationDefaultKey,
-    TranslatorTranslationNamespace, 
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey, 
     useTranslation,
 } from '../../../core';
@@ -34,8 +34,9 @@ export const ARobots = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.ROBOTS,
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.ROBOT,
+            count: 2,
         });
 
         const translation = useTranslation({

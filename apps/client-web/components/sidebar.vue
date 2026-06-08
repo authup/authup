@@ -6,7 +6,15 @@
   -->
 <script lang="ts">
 
-import { injectHTTPClient, injectStore } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    injectStore,
+    injectTranslatorLocale,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { computed, defineNuxtComponent } from '#imports';
 import { Navigation } from '../config/layout';
@@ -31,18 +39,33 @@ export default defineNuxtComponent({
         const api = injectHTTPClient();
         const docsUrl = computed(() => new URL('docs/', api.getBaseURL()).href);
 
+        const translate = useTranslator();
+        const locale = injectTranslatorLocale();
+
         // The sidebar resolver filters items against the live session via
         // an `await`ed permission check. The reactive reads happen AFTER
         // that await, so `<VCNavItems>` can't auto-track them — the
         // explicit `:watch` list re-runs the resolver on every session
-        // transition (login/logout, identity change, realm switch).
-        const navigation = new Navigation(store);
+        // transition (login/logout, identity change, realm switch) plus
+        // locale changes (so the labels re-translate on language switch).
+        const navigation = new Navigation(store, translate);
         const sideItems = () => navigation.getSideItems();
         const sideItemsWatch = [
             () => store.loggedIn,
             () => store.userId,
             () => store.realmManagement,
+            () => locale.value,
         ];
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.SESSION_RENEW },
+                { key: TranslatorTranslationAppKey.MINUTES },
+                { key: TranslatorTranslationAppKey.SECONDS },
+                { key: TranslatorTranslationAppKey.API_DOCS },
+            ],
+        );
 
         return {
             loggedIn,
@@ -51,6 +74,7 @@ export default defineNuxtComponent({
             realmManagement,
             sideItems,
             sideItemsWatch,
+            translationsApp,
         };
     },
 });
@@ -95,8 +119,11 @@ export default defineNuxtComponent({
                                 <VCIcon
                                     name="fa6-solid:clock"
                                     class="pe-1"
-                                /> The session will be renewed in
-                                <span class="text-success-600">{{ props.minutes }} minute(s), {{ props.seconds }} second(s)</span>.
+                                /> {{ translationsApp.sessionRenew }}
+                                <span class="text-success-600">
+                                    {{ props.minutes }} {{ translationsApp.minutes }},
+                                    {{ props.seconds }} {{ translationsApp.seconds }}
+                                </span>.
                             </template>
                         </VCCountdown>
                     </small>
@@ -109,7 +136,7 @@ export default defineNuxtComponent({
                             :href="docsUrl"
                             target="_blank"
                         >
-                            <VCIcon name="fa6-solid:file" /> <span class="nav-link-text">API Docs</span>
+                            <VCIcon name="fa6-solid:file" /> <span class="nav-link-text">{{ translationsApp.apiDocs }}</span>
                         </a>
                     </li>
                 </ul>

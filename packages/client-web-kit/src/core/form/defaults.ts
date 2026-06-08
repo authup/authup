@@ -8,7 +8,7 @@
 import type { ComponentDefaultValues } from '@vuecs/core';
 import type { SubmitButtonDefaults } from '@vuecs/forms';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationActionKey,
     TranslatorTranslationNamespace,
     useTranslation,
 } from '../translator';
@@ -27,12 +27,12 @@ import {
 export function buildSubmitButtonDefaults(): ComponentDefaultValues<SubmitButtonDefaults> {
     return {
         createText: useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.CREATE,
+            namespace: TranslatorTranslationNamespace.ACTION,
+            key: TranslatorTranslationActionKey.CREATE,
         }),
         updateText: useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.UPDATE,
+            namespace: TranslatorTranslationNamespace.ACTION,
+            key: TranslatorTranslationActionKey.UPDATE,
         }),
         createIcon: 'fa6-solid:plus',
         updateIcon: 'fa6-solid:floppy-disk',

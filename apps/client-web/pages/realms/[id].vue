@@ -1,5 +1,14 @@
 <script lang="ts">
-import { injectHTTPClient } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
@@ -25,6 +34,29 @@ export default defineComponent({
 
         const entity = ref<Realm>(null!);
 
+        const translationsDefault = useTranslations(
+            [
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.GENERAL, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.REALM, 
+                    count: 1, 
+                },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.DETAILS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         try {
             entity.value = await injectHTTPClient()
                 .realm
@@ -41,17 +73,21 @@ export default defineComponent({
                 url: '/realms',
             },
             {
-                name: 'General',
+                name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
                 url: `/realms/${entity.value.id}`,
             },
         ]);
 
-        const handleUpdated = (e: Realm) => {
+        const handleUpdated = async (e: Realm) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The realm was successfully updated.', 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_UPDATED,
+                        data: { entity: translationsDefault.realm },
+                    }),
                 });
             }
 
@@ -72,6 +108,7 @@ export default defineComponent({
             items,
             handleUpdated,
             handleFailed,
+            translationsApp,
         };
     },
 });
@@ -83,7 +120,7 @@ export default defineComponent({
                 name="fa6-solid:building"
                 class="me-1"
             /> {{ entity.name }}
-            <span class="sub-title ms-1">Details</span>
+            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
         </h1>
         <div class="mb-2">
             <VCNavItems

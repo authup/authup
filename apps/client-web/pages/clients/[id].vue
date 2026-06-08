@@ -1,5 +1,15 @@
 <script lang="ts">
-import { injectHTTPClient } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
@@ -27,6 +37,48 @@ export default defineComponent({
 
         const entity = ref<Client>(null!);
 
+        const translationsDefault = useTranslations(
+            [
+                {
+                    namespace: TranslatorTranslationNamespace.COMMON, 
+                    key: TranslatorTranslationCommonKey.GENERAL, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.SCOPE, 
+                    count: 2, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.URL, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.PERMISSION, 
+                    count: 2, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.ROLE, 
+                    count: 2, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.CLIENT, 
+                    count: 1, 
+                },
+            ],
+        );
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.DETAILS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         try {
             entity.value = await injectHTTPClient()
                 .client
@@ -43,37 +95,41 @@ export default defineComponent({
                 url: '/clients',
             },
             {
-                name: 'General',
+                name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
                 url: `/clients/${entity.value.id}`,
             },
             {
-                name: 'Scopes',
+                name: translationsDefault.scope,
                 icon: 'fa6-solid:meteor',
                 url: `/clients/${entity.value.id}/scopes`,
             },
             {
-                name: 'URL',
+                name: translationsDefault.url,
                 icon: 'fa6-solid:link',
                 url: `/clients/${entity.value.id}/url`,
             },
             {
-                name: 'Permissions',
+                name: translationsDefault.permission,
                 icon: 'fa6-solid:user-secret',
                 url: `/clients/${entity.value.id}/permissions`,
             },
             {
-                name: 'Roles',
+                name: translationsDefault.role,
                 icon: 'fa6-solid:user-group',
                 url: `/clients/${entity.value.id}/roles`,
             },
         ]);
 
-        const handleUpdated = (e: Client) => {
+        const handleUpdated = async (e: Client) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The client was successfully updated.', 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_UPDATED,
+                        data: { entity: translationsDefault.client },
+                    }),
                 });
             }
 
@@ -84,7 +140,7 @@ export default defineComponent({
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: e.message, 
+                    body: e.message,
                 });
             }
         };
@@ -94,6 +150,7 @@ export default defineComponent({
             items,
             handleUpdated,
             handleFailed,
+            translationsApp,
         };
     },
 });
@@ -105,7 +162,7 @@ export default defineComponent({
                 name="fa6-solid:cube"
                 class="me-1"
             /> {{ entity.name }}
-            <span class="sub-title ms-1">Details</span>
+            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
         </h1>
         <div class="mb-2">
             <VCNavItems

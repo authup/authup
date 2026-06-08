@@ -10,7 +10,7 @@ import { defineComponent } from 'vue';
 import type { Policy } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
@@ -33,8 +33,9 @@ export const APolicies = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.POLICIES,
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.POLICY,
+            count: 2,
         });
 
         const translation = useTranslation({

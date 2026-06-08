@@ -11,7 +11,7 @@ import { defineComponent } from 'vue';
 import type { User } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
@@ -34,8 +34,9 @@ export const AUsers = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.USERS,
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.USER,
+            count: 2,
         });
 
         const translation = useTranslation({

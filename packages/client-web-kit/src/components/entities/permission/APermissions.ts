@@ -10,7 +10,7 @@ import { defineComponent } from 'vue';
 import type { Permission } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
@@ -33,8 +33,9 @@ export const APermissions = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.PERMISSIONS,
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.PERMISSION,
+            count: 2,
         });
 
         const translation = useTranslation({

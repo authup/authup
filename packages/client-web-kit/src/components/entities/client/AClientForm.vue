@@ -14,14 +14,17 @@ import {
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
-import { 
-    TranslatorTranslationClientKey, 
-    TranslatorTranslationDefaultKey, 
-    TranslatorTranslationNamespace, 
-    assignFormProperties, 
-    injectStore, 
-    storeToRefs, 
-    useTranslationsForNamespace, 
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+    assignFormProperties,
+    injectStore,
+    storeToRefs,
+    useTranslations,
+    useTranslationsForNamespace,
 } from '../../../core';
 import { type Client, ClientValidator, EntityType } from '@authup/core-kit';
 import {
@@ -181,16 +184,37 @@ export default defineComponent({
             ],
         );
 
-        const translationsDefault = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.DEFAULT,
+        const translationsDefault = useTranslations(
             [
-                { key: TranslatorTranslationDefaultKey.GENERATE },
-                { key: TranslatorTranslationDefaultKey.NAME },
-                { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
-                { key: TranslatorTranslationDefaultKey.DESCRIPTION },
-                { key: TranslatorTranslationDefaultKey.REALM },
-                { key: TranslatorTranslationDefaultKey.REDIRECT_URIS },
-                { key: TranslatorTranslationDefaultKey.SECRET },
+                {
+                    namespace: TranslatorTranslationNamespace.ACTION, 
+                    key: TranslatorTranslationActionKey.GENERATE, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.NAME, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.ENTITY, 
+                    key: TranslatorTranslationEntityKey.REALM, 
+                    count: 1, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.REDIRECT_URIS, 
+                },
+                {
+                    namespace: TranslatorTranslationNamespace.FIELD, 
+                    key: TranslatorTranslationFieldKey.SECRET, 
+                },
             ],
         );
 
@@ -302,7 +326,7 @@ export default defineComponent({
                             <VCFormSwitch
                                 v-model="v.fields.is_confidential.$model.value"
                                 :label="true"
-                                :label-content="translationsClient.isConfidential.value"
+                                :label-content="translationsClient.isConfidential"
                             />
                         </VCFormGroup>
                     </IFieldValidation>
@@ -316,7 +340,7 @@ export default defineComponent({
                             <VCFormSwitch
                                 v-model="v.fields.secret_hashed.$model.value"
                                 :label="true"
-                                :label-content="translationsClient.hashSecret.value"
+                                :label-content="translationsClient.hashSecret"
                             />
                         </VCFormGroup>
                     </IFieldValidation>
@@ -330,7 +354,7 @@ export default defineComponent({
                             <VCFormSwitch
                                 v-model="v.fields.active.$model.value"
                                 :label="true"
-                                :label-content="translationsClient.isActive.value"
+                                :label-content="translationsClient.isActive"
                             />
                         </VCFormGroup>
                     </IFieldValidation>

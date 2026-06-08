@@ -11,7 +11,7 @@ import { defineComponent } from 'vue';
 import type { IdentityProvider } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
 import {
-    TranslatorTranslationDefaultKey,
+    TranslatorTranslationEntityKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
     useTranslation,
@@ -35,8 +35,9 @@ export const AIdentityProviders = defineComponent({
         });
 
         const translationName = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.IDENTITY_PROVIDERS,
+            namespace: TranslatorTranslationNamespace.ENTITY,
+            key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER,
+            count: 2,
         });
 
         const translation = useTranslation({

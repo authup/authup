@@ -1,5 +1,14 @@
 <script lang="ts">
-import { injectHTTPClient } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
+    useTranslations,
+    useTranslationsForNamespace,
+    useTranslator,
+} from '@authup/client-web-kit';
 import type { Scope } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
@@ -25,6 +34,32 @@ export default defineComponent({
 
         const entity = ref<Scope>(null!);
 
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON, 
+                key: TranslatorTranslationCommonKey.GENERAL, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.CLIENT, 
+                count: 2, 
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY, 
+                key: TranslatorTranslationEntityKey.SCOPE, 
+                count: 1, 
+            },
+        ]);
+
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.DETAILS },
+            ],
+        );
+
+        const translate = useTranslator();
+
         try {
             entity.value = await injectHTTPClient()
                 .scope
@@ -41,22 +76,26 @@ export default defineComponent({
                 url: '/scopes',
             },
             {
-                name: 'General',
+                name: translationsDefault.general,
                 icon: 'fa6-solid:bars',
                 url: `/scopes/${entity.value.id}`,
             },
             {
-                name: 'Clients',
+                name: translationsDefault.client,
                 icon: 'fa6-solid:ghost',
                 url: `/scopes/${entity.value.id}/clients`,
             },
         ]);
 
-        const handleUpdated = (e: Scope) => {
+        const handleUpdated = async (e: Scope) => {
             if (toast) {
                 toast.show({
                     variant: 'success',
-                    body: 'The scope was successfully updated.', 
+                    body: await translate({
+                        namespace: TranslatorTranslationNamespace.APP,
+                        key: TranslatorTranslationAppKey.ENTITY_UPDATED,
+                        data: { entity: translationsDefault.scope },
+                    }),
                 });
             }
 
@@ -77,6 +116,7 @@ export default defineComponent({
             items,
             handleUpdated,
             handleFailed,
+            translationsApp,
         };
     },
 });
@@ -88,7 +128,7 @@ export default defineComponent({
                 name="fa6-solid:meteor"
                 class="me-1"
             /> {{ entity.name }}
-            <span class="sub-title ms-1">Details</span>
+            <span class="sub-title ms-1">{{ translationsApp.details }}</span>
         </h1>
         <div class="mb-2">
             <VCNavItems

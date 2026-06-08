@@ -23,9 +23,9 @@ import {
 import type { EntityType } from '@authup/core-kit';
 import type { EntityAPISlim } from '@authup/core-http-kit';
 import {
-    TranslatorTranslationDefaultKey, 
-    TranslatorTranslationNamespace, 
-    injectHTTPClient, 
+    TranslatorTranslationActionKey,
+    TranslatorTranslationNamespace,
+    injectHTTPClient,
     useTranslation, 
     wrapFnWithBusyState,
 } from '../../../core';
@@ -94,8 +94,8 @@ const AEntityDelete = defineComponent({
         });
 
         const translation = useTranslation({
-            namespace: TranslatorTranslationNamespace.DEFAULT,
-            key: TranslatorTranslationDefaultKey.DELETE,
+            namespace: TranslatorTranslationNamespace.ACTION,
+            key: TranslatorTranslationActionKey.DELETE,
         });
 
         const render = () => {
