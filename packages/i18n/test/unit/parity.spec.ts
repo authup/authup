@@ -83,6 +83,14 @@ describe('locale parity', () => {
         expect(authoredLocales).toContain('de');
     });
 
+    it('authors the fr locale as documented', () => {
+        expect(authoredLocales).toContain('fr');
+    });
+
+    it('authors the es locale as documented', () => {
+        expect(authoredLocales).toContain('es');
+    });
+
     for (const locale of authoredLocales) {
         describe(`locale "${locale}"`, () => {
             for (const namespace of Object.values(TranslatorTranslationNamespace)) {

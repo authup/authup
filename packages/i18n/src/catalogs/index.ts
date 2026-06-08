@@ -46,9 +46,31 @@ import {
     TranslatorTranslationFieldGerman,
     TranslatorTranslationVuecsGerman,
 } from './de';
+import {
+    TranslatorTranslationActionFrench,
+    TranslatorTranslationAppFrench,
+    TranslatorTranslationClientFrench,
+    TranslatorTranslationCommonFrench,
+    TranslatorTranslationEntityFrench,
+    TranslatorTranslationErrorFrench,
+    TranslatorTranslationFieldFrench,
+    TranslatorTranslationVuecsFrench,
+} from './fr';
+import {
+    TranslatorTranslationActionSpanish,
+    TranslatorTranslationAppSpanish,
+    TranslatorTranslationClientSpanish,
+    TranslatorTranslationCommonSpanish,
+    TranslatorTranslationEntitySpanish,
+    TranslatorTranslationErrorSpanish,
+    TranslatorTranslationFieldSpanish,
+    TranslatorTranslationVuecsSpanish,
+} from './es';
 
 export * from './en';
 export * from './de';
+export * from './fr';
+export * from './es';
 
 /**
  * The complete set of namespaces a single authored locale must provide.
@@ -93,11 +115,9 @@ function defineAuthupLocale(code: string, namespaces: LocaleNamespaces) {
  * own `define*` helpers so the descriptor shape (and namespace names) are
  * validated by ilingo's types rather than reconstructed by each consumer.
  *
- * Only locales present here are translated. `fr`/`es` are declared in
- * `LOCALES` (for the switcher + architecture) but not yet authored, so
- * they're absent here; ilingo's BCP-47 fallback resolves them to `en`
- * until a later phase fills them in. The locale-parity test walks this
- * node tree, so it only enforces parity over authored locales.
+ * All locales declared in `LOCALES` (`en`, `de`, `fr`, `es`) are authored
+ * here. The locale-parity test walks this node tree to enforce that every
+ * authored locale provides exactly the canonical key set per namespace.
  *
  * Eager today; a later phase converts the per-locale values to a
  * `LoaderStore` with dynamic `import()` loaders so non-default locales
@@ -123,5 +143,25 @@ export const CATALOGS = defineCatalog([
         app: TranslatorTranslationAppGerman,
         vuecs: TranslatorTranslationVuecsGerman,
         error: TranslatorTranslationErrorGerman,
+    }),
+    defineAuthupLocale('fr', {
+        entity: TranslatorTranslationEntityFrench,
+        field: TranslatorTranslationFieldFrench,
+        action: TranslatorTranslationActionFrench,
+        common: TranslatorTranslationCommonFrench,
+        client: TranslatorTranslationClientFrench,
+        app: TranslatorTranslationAppFrench,
+        vuecs: TranslatorTranslationVuecsFrench,
+        error: TranslatorTranslationErrorFrench,
+    }),
+    defineAuthupLocale('es', {
+        entity: TranslatorTranslationEntitySpanish,
+        field: TranslatorTranslationFieldSpanish,
+        action: TranslatorTranslationActionSpanish,
+        common: TranslatorTranslationCommonSpanish,
+        client: TranslatorTranslationClientSpanish,
+        app: TranslatorTranslationAppSpanish,
+        vuecs: TranslatorTranslationVuecsSpanish,
+        error: TranslatorTranslationErrorSpanish,
     }),
 ]);

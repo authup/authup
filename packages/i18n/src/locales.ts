@@ -12,12 +12,11 @@ import type { LocaleDescriptor } from './types';
  * name in its own language — what the language switcher should display.
  * Order is the display order in the switcher.
  *
- * `en` and `de` are authored fully; `fr` and `es` are wired here so the
- * architecture (switcher, loaders, parity test) treats them as
- * first-class — their catalogs are filled in a later phase. A locale
- * being *supported* (listed here) is therefore distinct from being
- * *authored* (present in `CATALOGS`): selecting `fr`/`es` today resolves
- * to `en` via ilingo's BCP-47 fallback.
+ * All four (`en`, `de`, `fr`, `es`) are authored fully in `CATALOGS`;
+ * the locale-parity test enforces that each provides exactly the
+ * canonical key set per namespace. BCP-47 narrowing (`de-AT` → `de`)
+ * plus the `DEFAULT_LOCALE` fallback still resolves any unauthored
+ * variant to a supported base locale.
  */
 export const LOCALES = [
     { code: 'en', nativeName: 'English' },
