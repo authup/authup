@@ -6,7 +6,7 @@
   -->
 <script lang="ts">
 import { EntityType, ScopeValidator } from '@authup/core-kit';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { 
     TranslatorTranslationDefaultKey, 
@@ -29,6 +29,7 @@ import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -37,6 +38,7 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const AScopeForm = defineComponent({
     components: {
+        ANameInput,
         ARealmPicker,
         AFormSubmit,
         VCFormGroup,
@@ -105,6 +107,10 @@ export const AScopeForm = defineComponent({
             }
 
             assignFormProperties(form, manager.data.value);
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+            }
         }
 
         watch(updatedAt, (val, oldVal) => {
@@ -159,7 +165,7 @@ export default AScopeForm;
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
-                <VCFormInput
+                <ANameInput
                     v-model="v.fields.name.$model.value"
                     :disabled="isNameFixed"
                 />

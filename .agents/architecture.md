@@ -864,7 +864,7 @@ equivalents:
 ### Tailwind v4 migration
 
 The theme stack moved from `@vuecs/theme-bootstrap` (4.x) + raw
-Bootstrap CSS to `@vuecs/theme-tailwind` (1.x) + Tailwind v4 + a
+Bootstrap CSS to `@vuecs/theme-tailwind` (3.x) + Tailwind v4 + a
 new `@authup/client-web-theme` package.
 
 - **`@authup/client-web-theme`** (`packages/client-web-theme/`) —

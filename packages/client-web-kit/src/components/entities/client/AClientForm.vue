@@ -24,11 +24,17 @@ import {
     useTranslationsForNamespace, 
 } from '../../../core';
 import { type Client, ClientValidator, EntityType } from '@authup/core-kit';
-import { ValidatorGroup, createNanoID, isBCryptHash } from '@authup/kit';
+import {
+    ValidatorGroup,
+    createNanoID,
+    generateName,
+    isBCryptHash,
+} from '@authup/kit';
 import { ARealmPicker } from '../realm';
 import {
     AFormInputList,
     AFormSubmit,
+    ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -38,6 +44,7 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 export default defineComponent({
     components: {
         AFormSubmit,
+        ANameInput,
         ARealmPicker,
         AFormInputList,
 
@@ -117,6 +124,10 @@ export default defineComponent({
             }
 
             assignFormProperties(form, manager.data.value);
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+            }
 
             form.realm_id = realmId.value ?? '';
 
@@ -227,7 +238,7 @@ export default defineComponent({
                     <template #label>
                         {{ translationsDefault.name }}
                     </template>
-                    <VCFormInput
+                    <ANameInput
                         v-model="v.fields.name.$model.value"
                         :disabled="isNameFixed"
                     />

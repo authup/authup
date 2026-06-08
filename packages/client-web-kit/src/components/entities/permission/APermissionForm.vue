@@ -7,7 +7,7 @@
 <script lang="ts">
 import type { Permission } from '@authup/core-kit';
 import { EntityType, PermissionValidator } from '@authup/core-kit';
-import { DecisionStrategy, ValidatorGroup } from '@authup/kit';
+import { DecisionStrategy, ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { 
     TranslatorTranslationDefaultKey, 
@@ -35,6 +35,7 @@ import {
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -56,6 +57,7 @@ function decisionStrategyHint(value: string): string {
 
 export const APermissionForm = defineComponent({
     components: {
+        ANameInput,
         ARealmPicker,
         AFormSubmit,
         VCFormGroup,
@@ -116,6 +118,10 @@ export const APermissionForm = defineComponent({
 
         function initForm() {
             assignFormProperties(form, manager.data.value);
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+            }
 
             if (realmId.value) {
                 form.realm_id = realmId.value;
@@ -189,7 +195,7 @@ export default APermissionForm;
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
-                <VCFormInput
+                <ANameInput
                     v-model="v.fields.name.$model.value"
                     :disabled="isBuiltIn"
                 />

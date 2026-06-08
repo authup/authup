@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { ValidatorGroup, createNanoID } from '@authup/kit';
+import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { 
     TranslatorTranslationDefaultKey, 
@@ -28,6 +28,7 @@ import { useIsEditing, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import {
     AFormSubmit,
+    ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -35,6 +36,7 @@ import {
 export const ARealmForm = defineComponent({
     components: {
         AFormSubmit,
+        ANameInput,
         VCFormGroup,
         VCFormInput,
         VCFormTextarea,
@@ -72,20 +74,14 @@ export const ARealmForm = defineComponent({
         );
 
         const updatedAt = useUpdatedAt(props.entity);
-        const isNameEmpty = computed(() => !form.name || form.name.length === 0);
         const isMaster = computed(() => manager.data.value &&
             manager.data.value.name === REALM_MASTER_NAME);
-        const isCreating = computed(() => !manager.data.value || !manager.data.value.id);
-
-        const generateName = () => {
-            form.name = createNanoID();
-        };
 
         function initForm() {
             assignFormProperties(form, manager.data.value);
 
             if (form.name.length === 0) {
-                generateName();
+                form.name = generateName();
             }
         }
 
@@ -109,7 +105,6 @@ export const ARealmForm = defineComponent({
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
-                { key: TranslatorTranslationDefaultKey.GENERATE },
                 { key: TranslatorTranslationDefaultKey.NAME },
                 { key: TranslatorTranslationDefaultKey.DISPLAY_NAME },
                 { key: TranslatorTranslationDefaultKey.DESCRIPTION },
@@ -121,11 +116,8 @@ export const ARealmForm = defineComponent({
             busy,
             v,
             isEditing,
-            isNameEmpty,
             isMaster,
-            isCreating,
             translationsDefault,
-            generateName,
             submit,
         };
     },
@@ -144,26 +136,12 @@ export default ARealmForm;
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
-                <VCFormInput
+                <ANameInput
                     v-model="v.fields.name.$model.value"
                     :disabled="isMaster"
                 />
             </VCFormGroup>
         </IFieldValidation>
-
-        <div
-            v-if="isCreating"
-            class="mb-3"
-        >
-            <button
-                type="button"
-                class="btn btn-xs"
-                :class="{ 'btn-dark': isNameEmpty, 'btn-warning': !isNameEmpty }"
-                @click.prevent="generateName"
-            >
-                <VCIcon name="fa6-solid:wrench" /> {{ translationsDefault.generate }}
-            </button>
-        </div>
 
         <IFieldValidation
             v-slot="{ value }"

@@ -12,7 +12,7 @@ import {
     buildUserFakeEmail, 
     isUserFakeEmail, 
 } from '@authup/core-kit';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, generateName } from '@authup/kit';
 import {
     TranslatorTranslationDefaultKey,
     TranslatorTranslationNamespace,
@@ -32,6 +32,7 @@ import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     AToggleButton,
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -43,6 +44,7 @@ export const AUserForm = defineComponent({
     components: {
         ARealms,
         AFormSubmit,
+        ANameInput,
         AToggleButton,
         VCFormGroup,
         VCFormInput,
@@ -104,6 +106,14 @@ export const AUserForm = defineComponent({
             }
 
             assignFormProperties(form, manager.data.value);
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+
+                if (!form.email || isUserFakeEmail(form.email)) {
+                    form.email = buildUserFakeEmail(form.name);
+                }
+            }
 
             // Locked-realm prop wins over any realm_id pulled from the
             // loaded entity — apply after assign.
@@ -185,7 +195,7 @@ export default AUserForm;
                         <template #label>
                             {{ translationsDefault.name }}
                         </template>
-                        <VCFormInput
+                        <ANameInput
                             :model-value="v.fields.name.$model.value"
                             :disabled="form.name_locked"
                             @update:model-value="onNameChange"

@@ -6,7 +6,7 @@
   -->
 <script lang="ts">
 import { EntityType, RoleValidator } from '@authup/core-kit';
-import { ValidatorGroup } from '@authup/kit';
+import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { 
     TranslatorTranslationDefaultKey, 
@@ -29,6 +29,7 @@ import { VCFormGroup, VCFormInput, VCFormTextarea } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -37,6 +38,7 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 
 export const ARoleForm = defineComponent({
     components: {
+        ANameInput,
         ARealmPicker,
         AFormSubmit,
         VCFormGroup,
@@ -97,6 +99,10 @@ export const ARoleForm = defineComponent({
 
         function initForm() {
             assignFormProperties(form, manager.data.value);
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+            }
         }
 
         watch(updatedAt, (val, oldVal) => {
@@ -150,7 +156,7 @@ export default ARoleForm;
                 <template #label>
                     {{ translationsDefault.name }}
                 </template>
-                <VCFormInput v-model="v.fields.name.$model.value" />
+                <ANameInput v-model="v.fields.name.$model.value" />
             </VCFormGroup>
         </IFieldValidation>
 

@@ -1,0 +1,102 @@
+<!--
+  - Copyright (c) 2026.
+  - Author Peter Placzek (tada5hi)
+  - For the full copyright and license information,
+  - view the LICENSE file that was distributed with this source code.
+  -->
+<script lang="ts">
+import { generateName } from '@authup/kit';
+import type { PropType } from 'vue';
+import { computed, defineComponent } from 'vue';
+import { VCFormInput } from '@vuecs/forms';
+import {
+    TranslatorTranslationDefaultKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+} from '../../core';
+
+/**
+ * Name input with an attached "regenerate" button rendered inside the
+ * `VCFormInput` group append slot. Clicking the button emits a freshly
+ * generated, slug-safe entity name (e.g. `brave-otter-1a2b3c`) through the
+ * same `update:modelValue` channel as typing, so callers can bind it with
+ * `v-model` or `:model-value` + `@update:model-value` exactly like a plain
+ * `<VCFormInput>`.
+ *
+ * When `disabled` is set (built-in / name-locked / master entities) the append
+ * button is omitted and a plain disabled input is rendered.
+ */
+export const ANameInput = defineComponent({
+    name: 'ANameInput',
+    components: { VCFormInput },
+    props: {
+        modelValue: {
+            type: String as PropType<string | null | undefined>,
+            default: '',
+        },
+        disabled: {
+            type: Boolean,
+            default: false,
+        },
+        label: {
+            type: String as PropType<string | undefined>,
+            default: undefined,
+        },
+    },
+    emits: ['update:modelValue'],
+    setup(props, { emit }) {
+        const translationsDefault = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.DEFAULT,
+            [
+                { key: TranslatorTranslationDefaultKey.GENERATE },
+            ],
+        );
+
+        const buttonLabel = computed(() => props.label ?? translationsDefault.generate.value);
+
+        const onUpdate = (value: string) => {
+            emit('update:modelValue', value);
+        };
+
+        const generate = () => {
+            emit('update:modelValue', generateName());
+        };
+
+        return {
+            buttonLabel,
+            onUpdate,
+            generate,
+        };
+    },
+});
+
+export default ANameInput;
+</script>
+
+<template>
+    <VCFormInput
+        :model-value="modelValue ?? ''"
+        :disabled="disabled"
+        :group="!disabled"
+        @update:model-value="onUpdate"
+    >
+        <template
+            v-if="!disabled"
+            #groupAppend="{ class: appendClass }"
+        >
+            <button
+                type="button"
+                :class="appendClass"
+                class="cursor-pointer transition-colors hover:bg-bg-elevated"
+                :aria-label="buttonLabel"
+                :title="buttonLabel"
+                @click.prevent="generate"
+            >
+                <VCIcon
+                    aria-hidden="true"
+                    name="fa6-solid:arrows-rotate"
+                />
+            </button>
+        </template>
+    </VCFormInput>
+</template>

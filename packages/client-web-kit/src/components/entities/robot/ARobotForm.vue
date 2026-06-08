@@ -5,7 +5,7 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { ValidatorGroup, createNanoID } from '@authup/kit';
+import { ValidatorGroup, createNanoID, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import { 
     TranslatorTranslationDefaultKey, 
@@ -27,6 +27,7 @@ import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
+    ANameInput,
     AToggleButton,
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -38,6 +39,7 @@ export const ARobotForm = defineComponent({
     components: {
         ARealms,
         AFormSubmit,
+        ANameInput,
         AToggleButton,
         VCFormGroup,
         VCFormInput,
@@ -94,6 +96,10 @@ export const ARobotForm = defineComponent({
             // can't overwrite a locked name / realm.
             if (props.name) form.name = props.name;
             if (props.realmId) form.realm_id = props.realmId;
+
+            if (form.name.length === 0) {
+                form.name = generateName();
+            }
 
             if (form.secret.length === 0) {
                 generateSecret();
@@ -180,7 +186,7 @@ export default ARobotForm;
                         <template #label>
                             {{ translationsDefault.name }}
                         </template>
-                        <VCFormInput
+                        <ANameInput
                             v-model="v.fields.name.$model.value"
                             :disabled="isNameFixed"
                         />
