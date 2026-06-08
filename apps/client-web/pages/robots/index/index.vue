@@ -97,7 +97,6 @@ export default defineComponent({
                 :data="props.data"
                 :columns="columns"
                 :busy="props.busy"
-                bordered
             >
                 <template #cell-created_at="{ row }: { row: any }">
                     <VCTimeago :datetime="row.created_at" />

@@ -6,11 +6,26 @@
   -->
 <script lang="ts">
 
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
 import { defineComponent } from 'vue';
 import { VCToaster } from '@vuecs/overlays';
 
 export default defineComponent({
     components: { VCToaster },
+    setup() {
+        const translationsApp = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.APP,
+            [
+                { key: TranslatorTranslationAppKey.MADE_WITH },
+            ],
+        );
+
+        return { translationsApp };
+    },
     computed: {
         year() {
             return new Date().getFullYear();
@@ -23,6 +38,9 @@ export default defineComponent({
         <div class="page-footer">
             <div class="copyright">
                 &copy; Authup {{ year }}
+            </div>
+            <div class="made-with">
+                {{ translationsApp.madeWith }} 💚
             </div>
         </div>
         <!--

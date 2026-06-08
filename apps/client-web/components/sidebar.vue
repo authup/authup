@@ -132,7 +132,7 @@ export default defineNuxtComponent({
                 <ul class="sidebar-menu vc-nav-items nav flex-col">
                     <li class="vc-nav-item">
                         <a
-                            class="vc-nav-link nav-link"
+                            class="vc-nav-link nav-link flex items-center gap-2 text-sm"
                             :href="docsUrl"
                             target="_blank"
                         >

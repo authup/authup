@@ -9,7 +9,10 @@
     box-shadow: 0px 6px 0px 0px rgba(0, 0, 0, 0.3) inset;
     background-color: var(--authup-chrome-bg);
     padding: 10px 0px 4px 0px;
-    text-align: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--authup-chrome-fg-muted);
 }
 
@@ -17,8 +20,19 @@
     flex: none;
 }
 
+/* "Made with 💚" credit — pinned to the bottom-right corner and taken
+   out of flow, so the copyright stays centered and the footer keeps its
+   one-line height (the layout budgets `calc(100% - 34px)` for it; a
+   second line would overflow the viewport and force a scrollbar). */
+.page-footer .made-with {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 4px;
+    font-size: 0.75rem;
+}
+
 .page-footer .copyright a {
     flex: none;
     text-decoration: none;
-    color: var(--authup-brand-coral);
+    color: var(--authup-rose);
 }

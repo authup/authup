@@ -74,6 +74,7 @@ export enum TranslatorTranslationAppKey {
     MANAGEMENT = 'management',
     DETAILS = 'details',
     API_DOCS = 'apiDocs',
+    MADE_WITH = 'madeWith',
 
     URL_GENERATOR = 'urlGenerator',
     URL_GENERATOR_HINT = 'urlGeneratorHint',

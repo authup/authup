@@ -13,16 +13,17 @@ import {
     useTranslationsForNamespace,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
-import { 
-    computed, 
-    defineNuxtComponent, 
-    ref, 
-    useColorMode, 
+import {
+    computed,
+    defineNuxtComponent,
+    ref,
+    useColorMode,
 } from '#imports';
 import { LayoutTopNavigation } from '../config/layout';
+import LogoSVG from './svg/LogoSVG';
 
 export default defineNuxtComponent({
-    components: { LanguageSwitcherDropdown },
+    components: { LanguageSwitcherDropdown, LogoSVG },
     setup() {
         const store = injectStore();
         const {
@@ -94,7 +95,13 @@ export default defineNuxtComponent({
                     </button>
                 </div>
                 <div class="logo">
-                    Authup
+                    <LogoSVG
+                        :width="32"
+                        :height="32"
+                    />
+                    <div class="logo-text">
+                        <span>A</span>u<span>t</span>h<span>u</span>p
+                    </div>
                 </div>
             </div>
 

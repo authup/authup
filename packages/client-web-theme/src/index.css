@@ -30,95 +30,126 @@
    ------------------------------------------------------------------ */
 @layer base {
     /*
-     * Authup brand tokens. Three shapes:
+     * Authup theme tokens — three groups:
      *
-     *   1. Chrome (header, sidebar, footer, dropdown menus) flips with
-     *      mode. Light-mode defaults alias `--vc-color-bg-elevated` /
-     *      `-fg` / `-border` etc. so the chrome reads as a light
-     *      surface distinct from the page-content bg. The `.dark`
-     *      block below overrides them to authup's historical dark
-     *      chrome palette (≈32% L), which is intentionally lighter
-     *      than the page-content bg so the hierarchy reads
-     *      content < chrome (chrome floats above content).
+     *   1. Themeable SURFACES (`--authup-surface-*` + `--authup-on-surface*`)
+     *      flip between light (`:root`) and dark (`.dark`). They own the
+     *      content layer: page backdrop, content area, cards, list wells,
+     *      borders, body + secondary text. Bridged into the vuecs semantic
+     *      tokens (`--vc-color-bg*` / `-fg*` / `-border`) below, so every
+     *      `<VC*>` component AND authup's own content CSS resolve to them
+     *      from one source of truth.
      *
-     *   2. Content tokens (body, page-content, lists, cards) reference
-     *      `--vc-color-bg` / `--vc-color-fg` / `--vc-color-bg-muted` /
-     *      `--vc-color-bg-elevated` / `--vc-color-border` directly —
-     *      `@vuecs/design`'s `.dark` block flips those automatically,
-     *      so consumers get dark mode for free without per-class
-     *      overrides here.
+     *   2. CHROME slate ramp (`--authup-slate-*`) is CONSTANT across modes —
+     *      the brand signature. Header / sidebar / footer / navbar-dropdown
+     *      stay dark slate in BOTH light and dark mode; only their text is
+     *      light. The `--authup-chrome-*` tokens the chrome stylesheets read
+     *      are aliased onto the slate ramp (names kept so header/sidebar/
+     *      footer/navbar CSS needs no edits).
      *
-     *   3. Brand accents (golden, coral, indigo) carry the authup
-     *      identity and are hard-coded; they look fine on both light
-     *      and dark backgrounds.
+     *   3. Brand ACCENTS (periwinkle / rose / salmon / green) carry the
+     *      authup identity, hard-coded and constant across modes. Periwinkle
+     *      doubles as the `primary` palette (buttons, active nav/pills).
      */
     :root {
-        /* Chrome — light-mode defaults, alias semantic vuecs tokens */
-        --authup-chrome-bg:                 var(--vc-color-bg-elevated);
-        --authup-chrome-bg-elevated:        var(--vc-color-bg-muted);
-        --authup-chrome-fg:                 var(--vc-color-fg);
-        --authup-chrome-fg-muted:           var(--vc-color-fg-muted);
-        --authup-chrome-border:             var(--vc-color-border);
+        /* Brand accents — constant across themes */
+        --authup-periwinkle:                #6d7fcc;  /* primary accent — active pill / nav link bg */
+        --authup-rose:                      #cc8181;  /* sub-titles, footprints, secondary accent */
+        --authup-salmon:                    #ff5b5b;  /* dropdown hover text */
+        --authup-green:                     #4f9d6b;  /* brand green — the 💚 in the footer credit */
 
-        /* Brand accents — unchanged across modes */
-        --authup-brand-gold:                #baa875;
-        --authup-brand-coral:               #ff5b5b;
-        --authup-brand-indigo:              #6d7fcc;
-        --authup-brand-tan:                 #c8b98d;
+        /* Chrome slate ramp — constant across themes (brand signature) */
+        --authup-slate-900:                 #30373e;  /* body text, pagination active */
+        --authup-slate-800:                 #34353a;  /* header / sidebar / footer chrome */
+        --authup-slate-700:                 #40434e;  /* navbar dropdown menu */
+        --authup-slate-600:                 #5b646c;  /* nav pill default text */
+        --authup-slate-400:                 #aeb2b7;  /* chrome muted text */
+        --authup-slate-300:                 #949da5;  /* link default */
+
+        /* Chrome semantic aliases — what header/sidebar/footer/navbar read */
+        --authup-chrome-bg:                 var(--authup-slate-800);
+        --authup-chrome-bg-elevated:        var(--authup-slate-700);
+        --authup-chrome-fg:                 #e8e6e2;
+        --authup-chrome-fg-muted:           var(--authup-slate-400);
+        --authup-chrome-border:             var(--authup-slate-700);
+
+        /* Themeable surfaces — light */
+        --authup-surface-app:               #d5d8da;
+        --authup-surface-content:           #f7f5f2;
+        --authup-surface-card:              #ffffff;
+        --authup-surface-raised:            #ececec;
+        --authup-surface-active:            #d7d3d3;
+        --authup-on-surface:                #30373e;
+        --authup-on-surface-muted:          #5b646c;
+        --authup-surface-border:            #dedede;
+        --authup-surface-border-soft:       #eeeeee;
+
+        /*
+         * Bridge surfaces → vuecs semantic tokens. Both authup's content CSS
+         * and every `<VC*>` component read `--vc-color-*`; pointing those at
+         * the surface tokens means a single source drives both. Declared in
+         * `:root` (base layer) — beats `@vuecs/design`'s defaults (vuecs
+         * layer) regardless of specificity, per the layer order in
+         * `@authup/client-web-kit-theme`. Resolves per-element, so the
+         * `.dark` surface flips below propagate automatically.
+         */
+        --vc-color-bg:                      var(--authup-surface-content);
+        --vc-color-bg-muted:                var(--authup-surface-raised);
+        --vc-color-bg-elevated:             var(--authup-surface-card);
+        --vc-color-fg:                      var(--authup-on-surface);
+        --vc-color-fg-muted:                var(--authup-on-surface-muted);
+        --vc-color-border:                  var(--authup-surface-border);
+
+        /*
+         * Primary palette → brand periwinkle (#6d7fcc — the prior
+         * `vc-primary = indigo` decision). `@vuecs/theme-tailwind` rebinds
+         * `--color-primary-* ← --vc-color-primary-*`, so every `primary`
+         * utility/component (buttons, active states, rings, the compat
+         * `.btn-primary`) adopts periwinkle. Shades are color-mixed from the
+         * brand var so the whole scale stays in sync; the pure brand sits at
+         * 600 — what shade buttons and active states paint.
+         * `--vc-color-on-primary` stays the vuecs default (#fff), legible on
+         * periwinkle 600.
+         */
+        --vc-color-primary-50:  color-mix(in oklab, var(--authup-periwinkle) 8%,  white);
+        --vc-color-primary-100: color-mix(in oklab, var(--authup-periwinkle) 16%, white);
+        --vc-color-primary-200: color-mix(in oklab, var(--authup-periwinkle) 32%, white);
+        --vc-color-primary-300: color-mix(in oklab, var(--authup-periwinkle) 52%, white);
+        --vc-color-primary-400: color-mix(in oklab, var(--authup-periwinkle) 74%, white);
+        --vc-color-primary-500: color-mix(in oklab, var(--authup-periwinkle) 90%, white);
+        --vc-color-primary-600: var(--authup-periwinkle);
+        --vc-color-primary-700: color-mix(in oklab, var(--authup-periwinkle) 82%, black);
+        --vc-color-primary-800: color-mix(in oklab, var(--authup-periwinkle) 64%, black);
+        --vc-color-primary-900: color-mix(in oklab, var(--authup-periwinkle) 50%, black);
+        --vc-color-primary-950: color-mix(in oklab, var(--authup-periwinkle) 32%, black);
     }
 
     /*
-     * Dark-mode overrides. Two distinct moves:
+     * Dark mode — flip ONLY the themeable surfaces. The chrome slate ramp
+     * and brand accents are constant (defined in `:root`), and the
+     * `--vc-color-*` bridge + primary palette resolve per-element, so they
+     * pick up these dark surface values automatically with no further
+     * overrides.
      *
-     *   a) Restore the historical authup chrome palette
-     *      (#34353a ≈ 32% L) so the dark chrome stays the
-     *      recognizable warm dark grey, rather than vuecs's
-     *      `bg-elevated` value (neutral-800 ≈ 27% L) which would
-     *      blend into the page-content bg.
+     * Surfaces stay genuinely dark so the light dark-mode `--vc-color-fg`
+     * (`--authup-on-surface` = #e8e6e2) keeps high contrast — the ramp
+     * climbs app < content < card < raised < active.
      *
-     *   b) Soften the content background. vuecs/design's `.dark` puts
-     *      `--vc-color-bg` at neutral-900 (≈20.5% L) — near-black —
-     *      which feels harsh against the warmer ~32% L chrome.
-     *      Raise it to a softer dark (oklch 23%, ≈ #2a2c30) so
-     *      the difference between content and chrome reads as a
-     *      gentle tonal step rather than a near-black cliff.
+     * Works from inside `@layer base` because `@vuecs/design` 1.0.1+ wraps
+     * its `.dark` token defaults in `@layer vuecs`, positioned earlier than
+     * `base` — see `@authup/client-web-kit-theme/src/index.css` for the
+     * `@layer theme, vuecs, base, components, utilities;` declaration.
      */
     .dark {
-        --authup-chrome-bg:                 #34353a;
-        --authup-chrome-bg-elevated:        #3f4147;
-        --authup-chrome-fg:                 #ffffff;
-        --authup-chrome-fg-muted:           #aeb2b7;
-        --authup-chrome-border:             #333333;
-
-        /*
-         * Soften the content background. `@vuecs/design`'s `.dark`
-         * puts `--vc-color-bg` at neutral-900 (~20.5% L) — near-black.
-         * Lift it so the content surface pairs with authup's warm dark
-         * chrome as a gentle tonal step rather than a near-black cliff.
-         * Works from inside `@layer base` because `@vuecs/design` 1.0.1+
-         * wraps its `.dark` defaults in `@layer vuecs`, and our kit theme
-         * positions `vuecs` earlier than `base` in the layer order — see
-         * `@authup/client-web-kit-theme/src/index.css` for the
-         * `@layer theme, vuecs, base, components, utilities;`
-         * declaration. Pre-1.0.1, vuecs defined `.dark` at the top
-         * level (outside any layer) and this override had to be
-         * hoisted out of `@layer base` to win the cascade.
-         */
-        --vc-color-bg: var(--vc-color-neutral-400);
-
-        /*
-         * With the lighter base above, vuecs's default muted surface
-         * (neutral-800, near-black) reads as a too-dark cliff — visible
-         * on `.nav-pills .nav-link` backgrounds and the generated
-         * `disabled:bg-bg-muted` utility. Pull it up to a subtle step
-         * darker than the base instead. `--vc-color-bg-elevated` is
-         * deliberately left at the vuecs default: `.btn-secondary`
-         * (`bg-bg-elevated text-fg`) relies on a dark elevated surface
-         * for its light `text-fg` to stay legible.
-         */
-        --vc-color-bg-muted: var(--vc-color-neutral-500);
-
-        --vc-color-border: var(--vc-color-neutral-500);
+        --authup-surface-app:               #16171a;
+        --authup-surface-content:           #1f2024;
+        --authup-surface-card:              #26272c;
+        --authup-surface-raised:            #2d2f35;
+        --authup-surface-active:            #34373d;
+        --authup-on-surface:                #e8e6e2;
+        --authup-on-surface-muted:          #9ca1a8;
+        --authup-surface-border:            #34363c;
+        --authup-surface-border-soft:       #2a2c31;
     }
 
     /*

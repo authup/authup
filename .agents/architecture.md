@@ -909,6 +909,43 @@ new `@authup/client-web-theme` package.
   `info-*` (50–950). Note: `error`, not `danger`; theme-tailwind
   does not ship a `secondary` or `light`/`dark` palette (Bootstrap
   names map onto `bg-bg-elevated` / `bg-bg-muted` / `bg-fg`).
+- **Authup theme tokens** (`packages/client-web-theme/src/index.css`,
+  `@layer base`) — authup defines its identity in three token groups and
+  bridges them onto the vuecs semantic layer so a single source drives
+  both the `<VC*>` components and authup's hand-written chrome/content CSS:
+  - **Themeable surfaces** (`--authup-surface-*`, `--authup-on-surface*`) —
+    flip light (`:root`) → dark (`.dark`). They own the content layer
+    (page backdrop, content area, cards, list wells, borders, body +
+    secondary text) as a monotonic dark ramp
+    (`app #16171a < content #1f2024 < card #26272c < raised #2d2f35 <
+    active #34373d`). The `:root` block **bridges** them onto vuecs:
+    `--vc-color-bg ← surface-content`, `-bg-muted ← surface-raised`,
+    `-bg-elevated ← surface-card`, `-fg ← on-surface`,
+    `-fg-muted ← on-surface-muted`, `-border ← surface-border`. The
+    bridge lives in `:root` only and resolves per-element, so the `.dark`
+    surface flips propagate automatically (it beats `@vuecs/design`'s
+    vuecs-layer defaults via the kit-theme layer order). Surfaces stay
+    genuinely dark in dark mode so the light `--vc-color-fg` keeps
+    contrast — the predecessor `var(--vc-color-neutral-400/500)` was a
+    light-mid grey (light-on-light, ~1.7:1, unreadable).
+  - **Chrome slate ramp** (`--authup-slate-900…300`) — **constant across
+    both modes** (the brand signature). Header / sidebar / footer /
+    navbar-dropdown stay dark slate even in light mode; only their text is
+    light. The `--authup-chrome-*` tokens the chrome stylesheets read are
+    aliased onto the slate ramp (`chrome-bg ← slate-800`,
+    `chrome-bg-elevated ← slate-700`, `chrome-fg = #e8e6e2`,
+    `chrome-fg-muted ← slate-400`), so the chrome CSS files need no edits.
+  - **Brand accents** — `--authup-periwinkle #6d7fcc` (primary accent —
+    active pill / nav-link background; also drives the
+    `--vc-color-primary-*` scale via color-mix, rebound to
+    `--color-primary-*` by theme-tailwind), `--authup-rose #cc8181`
+    (sub-titles, `.foot-print`s, secondary accent), `--authup-salmon
+    #ff5b5b` (dropdown hover text — its only live use), `--authup-green
+    #4f9d6b` (brand green — the 💚 in the footer "Made with 💚" credit).
+    Constant across modes. The former
+    `--authup-brand-{gold,coral,indigo,tan}` names are gone — gold/tan
+    usages (title bars, sidebar header, logo wordmark, nav active) folded
+    into periwinkle; coral → salmon.
 - **Tailwind v4 breaking changes** — UI work needs to follow the v4
   syntax, not v3:
   - Important modifier is a **suffix**: `text-3xl!`, not `!text-3xl`.

@@ -26,16 +26,15 @@
 
 /*
  * Active / hover state foreground is pinned to white in BOTH modes:
- * the background is a saturated brand color (`--authup-brand-tan`
- * here, `--authup-brand-indigo` below) that does not flip with
- * light/dark mode. Using `--authup-chrome-fg` would paint dark text
- * on the brand background in light mode — unreadable on indigo,
- * weak on tan.
+ * the background is the saturated brand accent (`--authup-periwinkle`)
+ * that does not flip with light/dark mode. Using `--authup-chrome-fg`
+ * would paint dark text on the periwinkle background in light mode —
+ * unreadable.
  */
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:hover > .vc-nav-link,
 .vc-nav-items .vc-nav-item.vc-nav-item-nested:active > .vc-nav-link,
 .vc-nav-items .vc-nav-item.vc-nav-item-nested.active > .vc-nav-link {
-    background: var(--authup-brand-tan);
+    background: var(--authup-periwinkle);
     color: #ffffff;
 }
 
@@ -88,7 +87,7 @@ button.vc-nav-link {
 .vc-nav-items:not(.vc-nav-items--pills) .vc-nav-item .vc-nav-link,
 .vc-nav-items:not(.vc-nav-items--pills) .vc-nav-item:hover .vc-nav-link,
 .vc-nav-items:not(.vc-nav-items--pills) .vc-nav-item.active .vc-nav-link {
-    border-left-color: var(--authup-brand-tan) !important;
+    border-left-color: var(--authup-periwinkle) !important;
 }
 
 .vc-nav-items:not(.vc-nav-items--pills) .vc-nav-link.active:not(.vc-nav-link-root),
@@ -97,7 +96,7 @@ button.vc-nav-link {
 .vc-nav-items:not(.vc-nav-items--pills) .vc-nav-link:hover {
     cursor: pointer;
     color: #ffffff;
-    background: var(--authup-brand-indigo) !important;
+    background: var(--authup-periwinkle) !important;
 }
 
 /*
