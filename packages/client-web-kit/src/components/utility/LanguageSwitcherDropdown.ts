@@ -33,7 +33,9 @@ const LanguageSwitcherDropdown = defineComponent({
         })));
 
         const activeCode = computed(() => {
-            const match = LOCALES.find((descriptor) => descriptor.code === locale.value);
+            const match = LOCALES.find(
+                (descriptor) => descriptor.code === locale.value,
+            );
             return match ? match.code : locale.value;
         });
 
