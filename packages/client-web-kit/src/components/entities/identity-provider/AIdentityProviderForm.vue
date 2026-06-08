@@ -19,7 +19,7 @@ import AIdentityProviderLdapForm from './AIdentityProviderLdapForm.vue';
 import AIdentityProviderPicker from './AIdentityProviderPicker.vue';
 import AIdentityProviderOAuth2Form from './AIdentityProviderOAuth2Form.vue';
 
-export const AIdentityProviderForm = defineComponent({
+export default defineComponent({
     components: {
         AIdentityProviderLdapForm,
         AIdentityProviderOAuth2Form,
@@ -103,7 +103,6 @@ export const AIdentityProviderForm = defineComponent({
     },
 });
 
-export default AIdentityProviderForm;
 </script>
 
 <template>

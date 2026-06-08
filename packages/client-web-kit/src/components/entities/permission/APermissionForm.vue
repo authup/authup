@@ -56,7 +56,7 @@ function decisionStrategyHint(value: string): string {
     }
 }
 
-export const APermissionForm = defineComponent({
+export default defineComponent({
     components: {
         ANameInput,
         ARealmPicker,
@@ -198,7 +198,6 @@ export const APermissionForm = defineComponent({
     },
 });
 
-export default APermissionForm;
 </script>
 
 <template>

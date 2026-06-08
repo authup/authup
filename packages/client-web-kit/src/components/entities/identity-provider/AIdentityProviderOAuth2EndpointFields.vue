@@ -27,7 +27,7 @@ export default defineComponent({
         IFieldValidation,
     },
     props: {
-        entity: { type: Object as PropType<Partial<OAuth2IdentityProvider>> },
+        entity: { type: Object as PropType<Partial<IdentityProvider>> },
         discovery: {
             type: Boolean,
             default: false,
@@ -50,7 +50,7 @@ export default defineComponent({
 
             if (!props.entity) return;
 
-            assignFormProperties(form, props.entity);
+            assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>);
         }
 
         const updated = useUpdatedAt(props.entity as IdentityProvider);

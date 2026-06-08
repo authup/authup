@@ -37,7 +37,7 @@ import AIdentityProviderOAuth2EndpointFields from './AIdentityProviderOAuth2Endp
 import { AIdentityProviderPreset } from './AIdentityProviderPreset';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
-export const AIdentityProviderOAuth2Form = defineComponent({
+export default defineComponent({
     components: {
         AFormSubmit,
         AIdentityProviderBasicFields,
@@ -172,7 +172,6 @@ export const AIdentityProviderOAuth2Form = defineComponent({
     },
 });
 
-export default AIdentityProviderOAuth2Form;
 </script>
 
 <template>

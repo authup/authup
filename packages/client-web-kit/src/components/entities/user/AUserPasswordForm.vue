@@ -73,7 +73,7 @@ class UserPasswordValidator extends Container<{ password: string; password_repea
     }
 }
 
-export const AUserPasswordForm = defineComponent({
+export default defineComponent({
     components: {
         VCFormGroup,
         VCFormInput,
@@ -130,7 +130,6 @@ export const AUserPasswordForm = defineComponent({
     },
 });
 
-export default AUserPasswordForm;
 </script>
 
 <template>

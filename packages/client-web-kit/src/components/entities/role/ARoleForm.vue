@@ -37,7 +37,7 @@ import {
 import { ARealmPicker } from '../realm';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
-export const ARoleForm = defineComponent({
+export default defineComponent({
     components: {
         ANameInput,
         ARealmPicker,
@@ -156,7 +156,6 @@ export const ARoleForm = defineComponent({
     },
 });
 
-export default ARoleForm;
 </script>
 
 <template>

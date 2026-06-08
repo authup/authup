@@ -31,7 +31,7 @@ class DiscoveryUrlValidator extends Container<{ url: string }> {
     }
 }
 
-export const AIdentityProviderOAuth2Discovery = defineComponent({
+export default defineComponent({
     components: {
         VCFormGroup, 
         VCFormInput, 
@@ -91,7 +91,6 @@ export const AIdentityProviderOAuth2Discovery = defineComponent({
     },
 });
 
-export default AIdentityProviderOAuth2Discovery;
 </script>
 
 <template>

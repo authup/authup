@@ -30,7 +30,7 @@ import AIdentityProviderLdapGroupFields from './AIdentityProviderLdapGroupFields
 import AIdentityProviderLdapUserFields from './AIdentityProviderLdapUserFields.vue';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
-export const AIdentityProviderLdapForm = defineComponent({
+export default defineComponent({
     components: {
         AFormSubmit,
         AIdentityProviderBasicFields,
@@ -102,7 +102,6 @@ export const AIdentityProviderLdapForm = defineComponent({
     },
 });
 
-export default AIdentityProviderLdapForm;
 </script>
 
 <template>

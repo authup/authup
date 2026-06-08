@@ -36,7 +36,7 @@ import {
 import { ARealms } from '../realm';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
-export const ARobotForm = defineComponent({
+export default defineComponent({
     components: {
         ARealms,
         AFormSubmit,
@@ -177,7 +177,6 @@ export const ARobotForm = defineComponent({
     },
 });
 
-export default ARobotForm;
 </script>
 
 <template>

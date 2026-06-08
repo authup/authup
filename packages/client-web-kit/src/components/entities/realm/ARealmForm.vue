@@ -34,7 +34,7 @@ import {
     defineEntityVEmitOptions,
 } from '../../utility';
 
-export const ARealmForm = defineComponent({
+export default defineComponent({
     components: {
         AFormSubmit,
         ANameInput,
@@ -136,7 +136,6 @@ export const ARealmForm = defineComponent({
     },
 });
 
-export default ARealmForm;
 </script>
 
 <template>
