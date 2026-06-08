@@ -34,15 +34,6 @@ export default defineComponent({
 
         const entity = ref<Client>(null!);
 
-        try {
-            entity.value = await injectHTTPClient()
-                .client
-                .getOne(route.params.id as string, { fields: ['+secret'] });
-        } catch {
-            await navigateTo({ path: '/clients' });
-            throw createError({});
-        }
-
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
@@ -63,6 +54,15 @@ export default defineComponent({
         );
 
         const translate = useTranslator();
+
+        try {
+            entity.value = await injectHTTPClient()
+                .client
+                .getOne(route.params.id as string, { fields: ['+secret'] });
+        } catch {
+            await navigateTo({ path: '/clients' });
+            throw createError({});
+        }
 
         const items = computed(() => [
             {

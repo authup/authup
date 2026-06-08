@@ -32,15 +32,6 @@ export default defineComponent({
 
         const entity = ref<Scope>(null!);
 
-        try {
-            entity.value = await injectHTTPClient()
-                .scope
-                .getOne(route.params.id as string);
-        } catch {
-            await navigateTo({ path: '/scopes' });
-            throw createError({});
-        }
-
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
@@ -58,6 +49,15 @@ export default defineComponent({
         );
 
         const translate = useTranslator();
+
+        try {
+            entity.value = await injectHTTPClient()
+                .scope
+                .getOne(route.params.id as string);
+        } catch {
+            await navigateTo({ path: '/scopes' });
+            throw createError({});
+        }
 
         const items = computed(() => [
             {

@@ -35,15 +35,6 @@ export default defineComponent({
 
         const entity = ref<Robot>(null!);
 
-        try {
-            entity.value = await injectHTTPClient()
-                .robot
-                .getOne(route.params.id as string, { fields: ['+secret'] });
-        } catch {
-            await navigateTo({ path: '/robots' });
-            createError({});
-        }
-
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
@@ -62,6 +53,15 @@ export default defineComponent({
         );
 
         const translate = useTranslator();
+
+        try {
+            entity.value = await injectHTTPClient()
+                .robot
+                .getOne(route.params.id as string, { fields: ['+secret'] });
+        } catch {
+            await navigateTo({ path: '/robots' });
+            createError({});
+        }
 
         const items = computed(() => [
             {

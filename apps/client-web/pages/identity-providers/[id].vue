@@ -35,15 +35,6 @@ export default defineComponent({
 
         const entity = ref<IdentityProvider>(null!);
 
-        try {
-            entity.value = await injectHTTPClient()
-                .identityProvider
-                .getOne(route.params.id as string);
-        } catch {
-            await navigateTo({ path: '/identity-providers' });
-            throw createError({});
-        }
-
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
@@ -61,6 +52,15 @@ export default defineComponent({
         );
 
         const translate = useTranslator();
+
+        try {
+            entity.value = await injectHTTPClient()
+                .identityProvider
+                .getOne(route.params.id as string);
+        } catch {
+            await navigateTo({ path: '/identity-providers' });
+            throw createError({});
+        }
 
         const items = computed(() => [
             {

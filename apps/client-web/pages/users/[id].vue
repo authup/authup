@@ -32,15 +32,6 @@ export default defineComponent({
 
         const entity = ref<User>(null!);
 
-        try {
-            entity.value = await injectHTTPClient()
-                .user
-                .getOne(route.params.id as string, { fields: ['+email'] });
-        } catch {
-            await navigateTo({ path: '/users' });
-            throw createError({});
-        }
-
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
@@ -59,6 +50,15 @@ export default defineComponent({
         );
 
         const translate = useTranslator();
+
+        try {
+            entity.value = await injectHTTPClient()
+                .user
+                .getOne(route.params.id as string, { fields: ['+email'] });
+        } catch {
+            await navigateTo({ path: '/users' });
+            throw createError({});
+        }
 
         const items = computed(() => [
             {

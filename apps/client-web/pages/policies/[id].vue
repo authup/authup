@@ -32,15 +32,6 @@ export default defineComponent({
 
         const entity = ref<Policy>(null!);
 
-        try {
-            entity.value = await injectHTTPClient()
-                .policy
-                .getOne(route.params.id as string);
-        } catch {
-            await navigateTo({ path: '/policies' });
-            throw createError({});
-        }
-
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
@@ -57,6 +48,15 @@ export default defineComponent({
         );
 
         const translate = useTranslator();
+
+        try {
+            entity.value = await injectHTTPClient()
+                .policy
+                .getOne(route.params.id as string);
+        } catch {
+            await navigateTo({ path: '/policies' });
+            throw createError({});
+        }
 
         const items = computed(() => [
             {

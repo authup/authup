@@ -32,15 +32,6 @@ export default defineComponent({
 
         const entity = ref<Realm>(null!);
 
-        try {
-            entity.value = await injectHTTPClient()
-                .realm
-                .getOne(route.params.id as string);
-        } catch {
-            await navigateTo({ path: '/realms' });
-            throw createError({});
-        }
-
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
@@ -57,6 +48,15 @@ export default defineComponent({
         );
 
         const translate = useTranslator();
+
+        try {
+            entity.value = await injectHTTPClient()
+                .realm
+                .getOne(route.params.id as string);
+        } catch {
+            await navigateTo({ path: '/realms' });
+            throw createError({});
+        }
 
         const items = computed(() => [
             {

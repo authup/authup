@@ -35,15 +35,6 @@ export default defineComponent({
 
         const entity = ref<Role>(null!);
 
-        try {
-            entity.value = await injectHTTPClient()
-                .role
-                .getOne(route.params.id as string);
-        } catch {
-            await navigateTo({ path: '/roles' });
-            throw createError({});
-        }
-
         const translationsDefault = useTranslationsForNamespace(
             TranslatorTranslationNamespace.DEFAULT,
             [
@@ -63,6 +54,15 @@ export default defineComponent({
         );
 
         const translate = useTranslator();
+
+        try {
+            entity.value = await injectHTTPClient()
+                .role
+                .getOne(route.params.id as string);
+        } catch {
+            await navigateTo({ path: '/roles' });
+            throw createError({});
+        }
 
         const items = computed(() => [
             {
