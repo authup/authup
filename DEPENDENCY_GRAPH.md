@@ -12,6 +12,7 @@ graph TD
     subgraph Layer 1
         specs
         core-realtime-kit
+        i18n
     end
 
     subgraph Layer 2
@@ -49,6 +50,7 @@ graph TD
     specs --> errors
     specs --> kit
     core-realtime-kit --> kit
+    i18n --> errors
 
     %% Layer 2
     access --> errors
@@ -93,6 +95,7 @@ graph TD
     client-web-kit --> core-kit
     client-web-kit --> core-realtime-kit
     client-web-kit --> errors
+    client-web-kit --> i18n
     client-web-kit --> kit
     client-web-kit --> specs
     client-web-nuxt --> access

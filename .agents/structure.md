@@ -24,6 +24,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | [core-http-kit](../packages/core-http-kit)      | Library     | A package providing a http client with different sub api clients for resources and workflows.             |
 | [core-realtime-kit](../packages/core-realtime-kit)| Library   | A package for the core socket service.                                                                    |
 | [errors](../packages/errors)                    | Library     | `AuthupError` (extends `BaseError` from `@ebec/core`), error-code constants, built-in subclasses (`BadRequestError`, `EntityNotFoundError`, ...), code→HTTP-status mapping, and `Symbol.for(...)`-keyed duck guards. |
+| [i18n](../packages/i18n)                        | Library     | Framework-agnostic translation catalogs + locale registry. `CATALOGS` is an ilingo `CatalogNode` (built via ilingo's `defineCatalog`/`defineLocale`/`defineNamespace`/`defineTranslations` helpers, locale → namespace → translations) consumed directly by `MemoryStore({ data: CATALOGS })`. Also exports namespace/key enums (`TranslatorTranslation*`), `LOCALES`/`LocaleCode`/`DEFAULT_LOCALE`/`isLocale`, the `NamespaceTranslations<K>` mapped type for compile-time key completeness, and the `authupError` namespace mapping `@authup/errors` `ErrorCode`s to localized messages (B1: validup-issue-shaped, `IssueDataByCode`-augmented). Pure data, zero Vue; consumed by `client-web-kit`'s ilingo install. |
 | [kit](../packages/kit)                          | Library     | A package containing general (context independent) utilities.                                             |
 | [specs](../packages/specs)                      | Library     | A package containing constants, interfaces, utils, ... for different specifications.                      |
 | [server-adapter-kit](../packages/server-adapter-kit)| Library   | Core token verification logic, caching, and shared types for server adapters.                             |
@@ -45,6 +46,7 @@ Foundation (no internal @authup deps):
 Layer 1:
   specs             → kit, errors
   core-realtime-kit → kit
+  i18n              → errors (+ ilingo runtime dep; validup & @authup/errors are peer + dev only)
 
 Layer 2:
   access            → kit, errors
@@ -62,7 +64,7 @@ Layer 4:
   server-adapter-web       → errors, server-adapter-kit
 
 Application libraries:
-  client-web-kit    → access, kit, core-kit, core-http-kit, core-realtime-kit, errors, specs
+  client-web-kit    → access, kit, core-kit, core-http-kit, core-realtime-kit, errors, i18n, specs
   client-web-nuxt   → access, kit, client-web-kit
 
 Apps:
