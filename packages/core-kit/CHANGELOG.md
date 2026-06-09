@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.45](https://github.com/authup/authup/compare/v1.0.0-beta.44...v1.0.0-beta.45) (2026-06-09)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([86e35f4](https://github.com/authup/authup/commit/86e35f476e4c213b434909098399f73fd59f2b77))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+    * @authup/errors bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+    * @authup/specs bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+
 ## [1.0.0-beta.44](https://github.com/authup/authup/compare/v1.0.0-beta.42...v1.0.0-beta.44) (2026-06-07)
 
 
