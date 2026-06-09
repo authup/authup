@@ -7,7 +7,6 @@
 
 import { buildSubmitButtonDefaults, injectTranslatorLocale } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
-import { watch } from 'vue';
 
 import vuecs from '@vuecs/core';
 import clientWebKitTheme from '@authup/client-web-kit-theme';
@@ -18,7 +17,7 @@ import faBrands from '@iconify-json/fa6-brands/icons.json';
 import faSolid from '@iconify-json/fa6-solid/icons.json';
 
 import installCountdown from '@vuecs/countdown';
-import installTimeago, { injectLocale as injectTimeagoLocale } from '@vuecs/timeago';
+import installTimeago from '@vuecs/timeago';
 import installButton from '@vuecs/button';
 import installElements from '@vuecs/elements';
 import installForms from '@vuecs/forms';
@@ -49,6 +48,13 @@ export default defineNuxtPlugin({
     // is still in time for the first page render.
     dependsOn: ['authup'],
     setup(ctx) {
+        // authup's ilingo translator (installed by the `authup` plugin this
+        // one `dependsOn`) is the single source of truth for the active
+        // locale. Bridge it into vuecs's `Config['locale']` as a reactive ref;
+        // @vuecs/timeago 2.1+ reads the active locale via `useLocale()` — its
+        // per-package `injectLocale()` ref was removed.
+        const locale = injectTranslatorLocale();
+
         ctx.vueApp.use(vuecs, {
             // Register both themes side-by-side. The kit theme owns
             // overrides the kit's own components need (e.g. formGroup
@@ -57,6 +63,7 @@ export default defineNuxtPlugin({
             // matters: kit first, app overrides win on conflicts.
             themes: [clientWebKitTheme(), clientWebTheme()],
             icons: [fontAwesome()],
+            config: { locale },
             defaults: {
                 // Wire authup's translator + icon choices into vuecs's
                 // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`
@@ -89,12 +96,5 @@ export default defineNuxtPlugin({
 
         ctx.vueApp.use(installCountdown);
         ctx.vueApp.use(installTimeago, { locales: { de } });
-
-        const locale = injectTranslatorLocale();
-        const timeagoLocale = injectTimeagoLocale();
-        timeagoLocale.value = locale.value;
-        watch(locale, (val) => {
-            timeagoLocale.value = val;
-        });
     },
 });
