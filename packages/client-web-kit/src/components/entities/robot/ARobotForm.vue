@@ -5,10 +5,9 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import { ValidatorGroup, createNanoID, generateName } from '@authup/kit';
+import { ValidatorGroup, generateName, generateSecret } from '@authup/kit';
 import { useValidup } from '@validup/vue';
 import {
-    TranslatorTranslationActionKey,
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
     assignFormProperties,
@@ -18,8 +17,10 @@ import type { PropType } from 'vue';
 import {
     computed,
     defineComponent,
+    onMounted,
     reactive,
     ref,
+    useId,
     watch,
 } from 'vue';
 import type { Robot } from '@authup/core-kit';
@@ -29,6 +30,7 @@ import { useIsEditing, useUpdatedAt } from '../../../composables';
 import {
     AFormSubmit,
     ANameInput,
+    ASecretInput,
     AToggleButton,
     defineEntityManager,
     defineEntityVEmitOptions,
@@ -41,6 +43,7 @@ export default defineComponent({
         ARealms,
         AFormSubmit,
         ANameInput,
+        ASecretInput,
         AToggleButton,
         VCFormGroup,
         VCFormInput,
@@ -55,6 +58,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<Robot>(),
     setup(props, ctx) {
         const busy = ref(false);
+        const nameSeed = useId();
         const form = reactive({
             name: '',
             display_name: '',
@@ -86,10 +90,6 @@ export default defineComponent({
                 form.secret.startsWith('$'),
         );
 
-        const generateSecret = () => {
-            form.secret = createNanoID(64);
-        };
-
         function initForm() {
             assignFormProperties(form, manager.data.value);
 
@@ -99,13 +99,18 @@ export default defineComponent({
             if (props.realmId) form.realm_id = props.realmId;
 
             if (form.name.length === 0) {
-                form.name = generateName();
-            }
-
-            if (form.secret.length === 0) {
-                generateSecret();
+                form.name = generateName(nameSeed);
             }
         }
+
+        // Secrets must stay unpredictable, so they can't be seeded from a
+        // hydration-stable value the way names are. Generate the initial secret
+        // client-side only to keep full entropy without an SSR hydration mismatch.
+        onMounted(() => {
+            if (form.secret.length === 0) {
+                form.secret = generateSecret();
+            }
+        });
 
         watch(updatedAt, (val, oldVal) => {
             if (val && val !== oldVal) {
@@ -135,12 +140,8 @@ export default defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.ACTION, 
-                    key: TranslatorTranslationActionKey.GENERATE, 
-                },
-                {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.HASHED, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.HASHED,
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
@@ -171,7 +172,6 @@ export default defineComponent({
             isSecretHashed,
             data: manager.data,
             translationsDefault,
-            generateSecret,
             submit,
         };
     },
@@ -242,22 +242,12 @@ export default defineComponent({
                                 />
                             </span>
                         </template>
-                        <VCFormInput
+                        <ASecretInput
                             :model-value="v.fields.secret.$model.value ?? ''"
                             @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
                         />
                     </VCFormGroup>
                 </IFieldValidation>
-
-                <div>
-                    <button
-                        type="button"
-                        class="btn btn-dark btn-xs"
-                        @click.prevent="generateSecret"
-                    >
-                        <VCIcon name="fa6-solid:wrench" /> {{ translationsDefault.generate }}
-                    </button>
-                </div>
 
                 <AFormSubmit
                     :is-busy="busy"

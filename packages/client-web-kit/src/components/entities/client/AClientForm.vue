@@ -10,12 +10,13 @@ import {
     type PropType,
     computed,
     defineComponent,
+    onMounted,
     reactive,
+    useId,
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
 import {
-    TranslatorTranslationActionKey,
     TranslatorTranslationClientKey,
     TranslatorTranslationEntityKey,
     TranslatorTranslationFieldKey,
@@ -29,8 +30,8 @@ import {
 import { type Client, ClientValidator, EntityType } from '@authup/core-kit';
 import {
     ValidatorGroup,
-    createNanoID,
     generateName,
+    generateSecret,
     isBCryptHash,
 } from '@authup/kit';
 import { ARealmPicker } from '../realm';
@@ -38,6 +39,7 @@ import {
     AFormInputList,
     AFormSubmit,
     ANameInput,
+    ASecretInput,
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
@@ -48,6 +50,7 @@ export default defineComponent({
     components: {
         AFormSubmit,
         ANameInput,
+        ASecretInput,
         ARealmPicker,
         AFormInputList,
 
@@ -69,6 +72,7 @@ export default defineComponent({
     },
     emits: defineEntityVEmitOptions<Client>(),
     setup(props, ctx) {
+        const nameSeed = useId();
         const form = reactive({
             active: true,
             name: '',
@@ -110,7 +114,6 @@ export default defineComponent({
             manager.data.value.realm_id :
             storeRefs.realmId.value));
 
-        const generateSecret = () => createNanoID('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_!.', 32);
         const isSecretHashed = computed(
             () => {
                 if (!manager.data.value || manager.data.value.secret !== form.secret) {
@@ -129,15 +132,20 @@ export default defineComponent({
             assignFormProperties(form, manager.data.value);
 
             if (form.name.length === 0) {
-                form.name = generateName();
+                form.name = generateName(nameSeed);
             }
 
             form.realm_id = realmId.value ?? '';
+        }
 
-            if (form.secret.length === 0) {
+        // Secrets must stay unpredictable, so they can't be seeded from a
+        // hydration-stable value the way names are. Generate the initial secret
+        // client-side only to keep full entropy without an SSR hydration mismatch.
+        onMounted(() => {
+            if (form.is_confidential && form.secret.length === 0) {
                 form.secret = generateSecret();
             }
-        }
+        });
 
         const isConfidential = computed(() => form.is_confidential);
         watch(isConfidential, (val, oldValue) => {
@@ -187,12 +195,8 @@ export default defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.ACTION, 
-                    key: TranslatorTranslationActionKey.GENERATE, 
-                },
-                {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.NAME,
                 },
                 {
                     namespace: TranslatorTranslationNamespace.FIELD, 
@@ -232,7 +236,6 @@ export default defineComponent({
             isBusy: manager.busy.value,
             isEditing,
             isSecretHashed,
-            generateSecret,
             redirectUris,
             submit,
         };
@@ -299,21 +302,11 @@ export default defineComponent({
                             </span>
                         </template>
                     </template>
-                    <VCFormInput
+                    <ASecretInput
                         :model-value="v.fields.secret.$model.value ?? ''"
                         :disabled="!v.fields.is_confidential.$model.value"
                         @update:model-value="(next: string) => { v.fields.secret.$model.value = next; }"
-                    >
-                        <template #groupAppend>
-                            <button
-                                class="btn"
-                                type="button"
-                                @click.prevent="() => v.fields.secret.$model.value = generateSecret()"
-                            >
-                                <VCIcon name="fa6-solid:arrows-rotate" />
-                            </button>
-                        </template>
-                    </VCFormInput>
+                    />
                 </VCFormGroup>
             </IFieldValidation>
             <div class="row">

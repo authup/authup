@@ -5,6 +5,7 @@ import {
     defineComponent,
     reactive,
     toRef,
+    useId,
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
@@ -47,6 +48,7 @@ export default defineComponent({
     emits: ['updated'],
     setup(props, setup) {
         const entity = toRef(props, 'entity');
+        const nameSeed = useId();
         const form = reactive({
             name: '',
             invert: false,
@@ -101,7 +103,7 @@ export default defineComponent({
         assign(props.entity);
 
         if (form.name.length === 0) {
-            form.name = generateName();
+            form.name = generateName(nameSeed);
         }
 
         // `type` is the policy discriminator owned by the parent

@@ -15,4 +15,5 @@ export * from './LanguageSwitcherDropdown';
 
 export { AFormSubmit } from './AFormSubmit';
 export { default as ANameInput } from './ANameInput.vue';
+export { default as ASecretInput } from './ASecretInput.vue';
 export { default as AToggleButton } from './AToggleButton.vue';

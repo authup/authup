@@ -12,6 +12,7 @@ export * from './array-buffer';
 export * from './base64';
 export * from './bcrypt.ts';
 export * from './generate-name';
+export * from './generate-secret';
 export * from './has-own-property';
 export * from './is-simple-match';
 export * from './nanoid';
