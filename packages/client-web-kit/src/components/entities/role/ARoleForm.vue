@@ -23,6 +23,7 @@ import {
     defineComponent,
     reactive,
     ref,
+    useId,
     watch,
 } from 'vue';
 import type { Role } from '@authup/core-kit';
@@ -57,6 +58,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<Role>(),
     setup(props, ctx) {
         const busy = ref(false);
+        const nameSeed = useId();
         const form = reactive({
             name: '',
             display_name: '',
@@ -102,7 +104,7 @@ export default defineComponent({
             assignFormProperties(form, manager.data.value);
 
             if (form.name.length === 0) {
-                form.name = generateName();
+                form.name = generateName(nameSeed);
             }
         }
 

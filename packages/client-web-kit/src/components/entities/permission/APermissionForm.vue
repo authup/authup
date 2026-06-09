@@ -24,6 +24,7 @@ import {
     defineComponent,
     reactive,
     ref,
+    useId,
     watch,
 } from 'vue';
 import type { FormOption } from '@vuecs/forms';
@@ -72,6 +73,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<Permission>(),
     setup(props, ctx) {
         const busy = ref(false);
+        const nameSeed = useId();
 
         const form = reactive({
             name: '',
@@ -121,7 +123,7 @@ export default defineComponent({
             assignFormProperties(form, manager.data.value);
 
             if (form.name.length === 0) {
-                form.name = generateName();
+                form.name = generateName(nameSeed);
             }
 
             if (realmId.value) {

@@ -27,6 +27,7 @@ import {
     defineComponent,
     reactive,
     ref,
+    useId,
     watch,
 } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
@@ -70,6 +71,7 @@ export default defineComponent({
     emits: defineEntityVEmitOptions<User>(),
     setup(props, ctx) {
         const busy = ref(false);
+        const nameSeed = useId();
         const form = reactive({
             active: true,
             name: '',
@@ -109,7 +111,7 @@ export default defineComponent({
             assignFormProperties(form, manager.data.value);
 
             if (form.name.length === 0) {
-                form.name = generateName();
+                form.name = generateName(nameSeed);
 
                 if (!form.email || isUserFakeEmail(form.email)) {
                     form.email = buildUserFakeEmail(form.name);

@@ -25,8 +25,28 @@ const NOUNS = [
     'fern moss lichen clover',
 ].join(' ').split(' ');
 
-function pick(list: readonly string[]): string {
-    return list[Math.floor(Math.random() * list.length)] ?? '';
+function pick(list: readonly string[], rand: () => number): string {
+    return list[Math.floor(rand() * list.length)] ?? '';
+}
+
+function hashSeed(seed: string): number {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < seed.length; i++) {
+        h ^= seed.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+    }
+    return h >>> 0;
+}
+
+function mulberry32(seed: number): () => number {
+    let state = seed;
+    return () => {
+        state |= 0;
+        state = (state + 0x6d2b79f5) | 0;
+        let t = Math.imul(state ^ (state >>> 15), 1 | state);
+        t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+        return ((t ^ (t >>> 14)) >>> 0) / 0x100000000;
+    };
 }
 
 /**
@@ -35,11 +55,19 @@ function pick(list: readonly string[]): string {
  * The trailing random hex suffix keeps generated names readable while making
  * collisions practically irrelevant. The result always satisfies the slug
  * charset (`[a-z0-9-]`) and stays within 128 characters.
+ *
+ * Passing a `seed` makes the result deterministic for that seed — feed a
+ * hydration-stable value (e.g. Vue's `useId()`) to produce the same name on
+ * the SSR and client render passes and avoid a hydration mismatch.
  */
-export function generateName(): string {
-    const suffix = Math.floor(Math.random() * 0x1000000)
+export function generateName(seed?: string): string {
+    const rand = typeof seed === 'undefined' ?
+        Math.random :
+        mulberry32(hashSeed(seed));
+
+    const suffix = Math.floor(rand() * 0x1000000)
         .toString(16)
         .padStart(6, '0');
 
-    return slugify(`${pick(ADJECTIVES)}-${pick(NOUNS)}-${suffix}`).slice(0, 128);
+    return slugify(`${pick(ADJECTIVES, rand)}-${pick(NOUNS, rand)}-${suffix}`).slice(0, 128);
 }

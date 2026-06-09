@@ -20,6 +20,7 @@ import {
     computed,
     defineComponent,
     reactive,
+    useId,
 } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
@@ -38,6 +39,7 @@ export default defineComponent({
     props: { entity: { type: Object as PropType<Partial<IdentityProvider>> } },
     emits: ['updated'],
     setup(props, setup) {
+        const nameSeed = useId();
         const form = reactive({
             name: '',
             display_name: '',
@@ -71,7 +73,7 @@ export default defineComponent({
             assignFormProperties(form, data);
 
             if (isNameEmpty.value) {
-                form.name = generateName();
+                form.name = generateName(nameSeed);
             }
         }
 
