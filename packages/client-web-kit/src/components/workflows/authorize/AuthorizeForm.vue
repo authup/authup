@@ -9,15 +9,13 @@
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
-import {
-    TranslatorTranslationActionKey,
-    TranslatorTranslationClientKey,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationNamespace,
-    injectHTTPClient,
-    useTranslations,
-    useTranslationsForNamespace,
-} from '../../../core';
+import { 
+    TranslatorTranslationActionKey, 
+    TranslatorTranslationClientKey, 
+    TranslatorTranslationCommonKey, 
+    TranslatorTranslationNamespace, 
+} from '@authup/i18n';
+import { injectHTTPClient, useTranslations, useTranslationsForNamespace } from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({

@@ -8,14 +8,12 @@
 import { EntityType, ScopeValidator } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
-import {
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    injectStore,
-    storeToRefs,
-    useTranslations,
+import { TranslatorTranslationEntityKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { 
+    assignFormProperties, 
+    injectStore, 
+    storeToRefs, 
+    useTranslations, 
 } from '../../../core';
 import type { PropType } from 'vue';
 import {

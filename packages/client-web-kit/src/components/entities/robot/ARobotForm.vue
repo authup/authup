@@ -7,12 +7,8 @@
 <script lang="ts">
 import { ValidatorGroup, generateName, generateSecret } from '@authup/kit';
 import { useValidup } from '@validup/vue';
-import {
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    useTranslations,
-} from '../../../core';
+import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../core';
 import type { PropType } from 'vue';
 import {
     computed,

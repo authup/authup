@@ -14,13 +14,8 @@ import {
     h, 
     ref,
 } from 'vue';
-import {
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationNamespace,
-    injectHTTPClient,
-    injectStore,
-    useTranslation,
-} from '../../../core';
+import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { injectHTTPClient, injectStore, useTranslation } from '../../../core';
 import Login from '../Login.vue';
 import AuthorizeForm from './AuthorizeForm.vue';
 import AuthorizeText from './AuthorizeText.vue';

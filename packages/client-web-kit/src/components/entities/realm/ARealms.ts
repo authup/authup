@@ -10,12 +10,8 @@ import type { SlotsType } from 'vue';
 import { defineComponent } from 'vue';
 import type { Realm } from '@authup/core-kit';
 import type { EntityCollectionVSlots } from '../../utility';
-import {
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationNamespace,
-    TranslatorTranslationVuecsKey,
-    useTranslation,
-} from '../../../core';
+import { TranslatorTranslationEntityKey, TranslatorTranslationNamespace, TranslatorTranslationVuecsKey } from '@authup/i18n';
+import { useTranslation } from '../../../core';
 import {
     defineEntityCollectionManager,
     defineEntityCollectionVEmitOptions,

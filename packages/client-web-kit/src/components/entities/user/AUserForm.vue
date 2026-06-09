@@ -13,13 +13,8 @@ import {
     isUserFakeEmail, 
 } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
-import {
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    useTranslations,
-} from '../../../core';
+import { TranslatorTranslationCommonKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../core';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import {

@@ -7,11 +7,8 @@
 
 import type { ComponentDefaultValues } from '@vuecs/core';
 import type { SubmitButtonDefaults } from '@vuecs/forms';
-import {
-    TranslatorTranslationActionKey,
-    TranslatorTranslationNamespace,
-    useTranslation,
-} from '../translator';
+import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslation } from '../translator';
 
 /**
  * Build the `submitButton` defaults for @vuecs/forms's

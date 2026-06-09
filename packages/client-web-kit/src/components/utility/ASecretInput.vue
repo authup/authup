@@ -9,11 +9,8 @@ import { generateSecret } from '@authup/kit';
 import type { PropType } from 'vue';
 import { computed, defineComponent } from 'vue';
 import { VCFormInput } from '@vuecs/forms';
-import {
-    TranslatorTranslationActionKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-} from '../../core';
+import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslations } from '../../core';
 
 /**
  * Secret input with an attached "regenerate" button rendered inside the

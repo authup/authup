@@ -7,11 +7,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import {
-    TranslatorTranslationClientKey,
-    TranslatorTranslationNamespace,
-    useTranslation,
-} from '../../../core';
+import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslation } from '../../../core';
 
 export default defineComponent({
     props: {
