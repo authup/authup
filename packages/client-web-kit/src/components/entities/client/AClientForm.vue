@@ -16,16 +16,18 @@ import {
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
-import {
-    TranslatorTranslationClientKey,
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    injectStore,
-    storeToRefs,
-    useTranslations,
-    useTranslationsForNamespace,
+import { 
+    TranslatorTranslationClientKey, 
+    TranslatorTranslationEntityKey, 
+    TranslatorTranslationFieldKey, 
+    TranslatorTranslationNamespace, 
+} from '@authup/i18n';
+import { 
+    assignFormProperties, 
+    injectStore, 
+    storeToRefs, 
+    useTranslations, 
+    useTranslationsForNamespace, 
 } from '../../../core';
 import { type Client, ClientValidator, EntityType } from '@authup/core-kit';
 import {

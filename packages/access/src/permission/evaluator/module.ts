@@ -8,7 +8,7 @@
 import { ErrorCode } from '@authup/errors';
 import type { Issue } from 'validup';
 import { defineIssueItem } from 'validup';
-import { DecisionStrategy } from '../../constants.ts';
+import { DecisionStrategy } from '@authup/kit';
 import type { CompositePolicy, IPolicyEngine } from '../../policy';
 import {
     BuiltInPolicyType,

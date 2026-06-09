@@ -1,11 +1,7 @@
 <script lang="ts">
 
-import {
-    ARoleForm,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { ARoleForm, useTranslations } from '@authup/client-web-kit';
 import type { Role } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';

@@ -1,16 +1,14 @@
 <script lang="ts">
 import type { User } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
-import {
-    TranslatorTranslationActionKey,
-    TranslatorTranslationAppKey,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-    useTranslationsForNamespace,
-    useTranslator,
-} from '@authup/client-web-kit';
+import { 
+    TranslatorTranslationActionKey, 
+    TranslatorTranslationAppKey, 
+    TranslatorTranslationCommonKey, 
+    TranslatorTranslationEntityKey, 
+    TranslatorTranslationNamespace, 
+} from '@authup/i18n';
+import { useTranslations, useTranslationsForNamespace, useTranslator } from '@authup/client-web-kit';
 import { defineNuxtComponent } from '#app';
 import { computed, definePageMeta, useToast } from '#imports';
 import { LayoutKey } from '../../config/layout';

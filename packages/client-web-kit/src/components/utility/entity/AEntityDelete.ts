@@ -22,13 +22,8 @@ import {
 } from 'vue';
 import type { EntityType } from '@authup/core-kit';
 import type { EntityAPISlim } from '@authup/core-http-kit';
-import {
-    TranslatorTranslationActionKey,
-    TranslatorTranslationNamespace,
-    injectHTTPClient,
-    useTranslation, 
-    wrapFnWithBusyState,
-} from '../../../core';
+import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { injectHTTPClient, useTranslation, wrapFnWithBusyState } from '../../../core';
 
 enum ElementType {
     BUTTON = 'button',

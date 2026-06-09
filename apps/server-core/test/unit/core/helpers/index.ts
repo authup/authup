@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export * from '@authup/server-test-kit';
 export * from './fake-mail-client.ts';
 export * from './fake-identity-permission-provider.ts';
 export * from './fake-identity-resolver.ts';

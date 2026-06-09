@@ -9,12 +9,8 @@ import type { Client, Scope } from '@authup/core-kit';
 import { deserializeOAuth2Scope } from '@authup/specs';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import {
-    TranslatorTranslationClientKey,
-    TranslatorTranslationNamespace,
-    injectHTTPClient,
-    useTranslationsForNamespace,
-} from '../../../core';
+import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { injectHTTPClient, useTranslationsForNamespace } from '../../../core';
 import AuthorizeScope from './AuthorizeScope.vue';
 
 export default defineComponent({

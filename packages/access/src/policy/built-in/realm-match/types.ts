@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { DecisionStrategy } from '../../../constants';
+import type { DecisionStrategy } from '@authup/kit';
 import type { BasePolicy } from '../../types';
 
 export interface RealmMatchPolicy extends BasePolicy {

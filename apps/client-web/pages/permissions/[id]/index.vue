@@ -1,11 +1,7 @@
 <script lang="ts">
 
-import {
-    APermissionForm,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { APermissionForm, useTranslations } from '@authup/client-web-kit';
 import type { Permission } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';

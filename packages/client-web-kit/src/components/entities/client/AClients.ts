@@ -15,12 +15,8 @@ import {
     defineEntityCollectionVEmitOptions,
     defineEntityCollectionVProps,
 } from '../../utility';
-import {
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationNamespace,
-    TranslatorTranslationVuecsKey,
-    useTranslation,
-} from '../../../core';
+import { TranslatorTranslationEntityKey, TranslatorTranslationNamespace, TranslatorTranslationVuecsKey } from '@authup/i18n';
+import { useTranslation } from '../../../core';
 
 export const AClients = defineComponent({
     props: defineEntityCollectionVProps<Client>(),

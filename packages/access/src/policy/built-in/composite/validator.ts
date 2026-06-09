@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { DecisionStrategy } from '../../../constants';
+import { DecisionStrategy } from '@authup/kit';
 import type { CompositePolicy } from './types';
 
 export class CompositePolicyValidator extends Container<CompositePolicy> {

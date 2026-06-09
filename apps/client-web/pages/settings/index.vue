@@ -1,9 +1,6 @@
 <script lang="ts">
-import {
-    TranslatorTranslationAppKey,
-    TranslatorTranslationNamespace,
-    useTranslationsForNamespace,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslationsForNamespace } from '@authup/client-web-kit';
 import { computed, defineComponent } from 'vue';
 import { definePageMeta } from '#imports';
 import AccountSVG from '../../components/svg/AccountSVG';

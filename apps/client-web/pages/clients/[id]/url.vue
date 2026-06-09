@@ -1,12 +1,6 @@
 <script lang="ts">
-import {
-    AClientScopes,
-    TranslatorTranslationAppKey,
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-    useTranslationsForNamespace,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationAppKey, TranslatorTranslationEntityKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { AClientScopes, useTranslations, useTranslationsForNamespace } from '@authup/client-web-kit';
 import type { Client, ClientScope } from '@authup/core-kit';
 import { VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import type { BuildInput } from 'rapiq';

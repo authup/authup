@@ -7,8 +7,6 @@
 
 import { defineTheme } from '@vuecs/core';
 
-export { default as clientWebKitTheme, merge } from '@authup/client-web-kit-theme';
-
 /**
  * App-level theme. Layers authup app-specific concerns (Bootstrap-compat
  * class shims, heading scale, brand tokens) on top of the kit theme.

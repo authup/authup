@@ -11,16 +11,18 @@ import {
 import type { IdentityProvider, OAuth2AuthorizationCodeRequest } from '@authup/core-kit';
 import { IdentityProviderProtocol } from '@authup/core-kit';
 import { useValidup } from '@validup/vue';
-import {
-    TranslatorTranslationActionKey,
-    TranslatorTranslationClientKey,
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    injectHTTPClient,
-    injectStore,
-    useTranslations,
-    useTranslator,
+import { 
+    TranslatorTranslationActionKey, 
+    TranslatorTranslationClientKey, 
+    TranslatorTranslationEntityKey, 
+    TranslatorTranslationFieldKey, 
+    TranslatorTranslationNamespace, 
+} from '@authup/i18n';
+import { 
+    injectHTTPClient, 
+    injectStore, 
+    useTranslations, 
+    useTranslator, 
 } from '../../core';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';

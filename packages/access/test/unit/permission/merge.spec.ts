@@ -7,7 +7,8 @@
 
 import { describe, expect, it } from 'vitest';
 import type { PermissionPolicyBinding } from '../../../src';
-import { BuiltInPolicyType, DecisionStrategy, mergePermissionPolicyBindings } from '../../../src';
+import { DecisionStrategy } from '@authup/kit';
+import { BuiltInPolicyType, mergePermissionPolicyBindings } from '../../../src';
 
 describe('src/permission/helpers/merge', () => {
     it('should return single item unchanged', () => {

@@ -7,12 +7,8 @@ import {
 } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import {
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    useTranslations,
-} from '../../../../core';
+import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormGroup, VCFormInput, VCFormSelect } from '@vuecs/forms';

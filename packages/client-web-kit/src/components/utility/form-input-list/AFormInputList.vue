@@ -13,11 +13,8 @@ import {
     ref,
 } from 'vue';
 import AFormInputListItem from './AFormInputListItem.vue';
-import {
-    TranslatorTranslationActionKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-} from '../../../core';
+import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslations } from '../../../core';
 
 export default defineComponent({
     components: { AFormInputListItem },

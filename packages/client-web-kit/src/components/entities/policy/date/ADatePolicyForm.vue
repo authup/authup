@@ -2,12 +2,8 @@
 import { type PropType, defineComponent, reactive } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import {
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    useTranslations,
-} from '../../../../core';
+import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import type { DatePolicy } from '@authup/access';

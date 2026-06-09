@@ -8,12 +8,8 @@
 import type { IdentityProvider } from '@authup/core-kit';
 import { IdentityProviderValidator } from '@authup/core-kit';
 import { ValidatorGroup, generateName } from '@authup/kit';
-import {
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    assignFormProperties,
-    useTranslations,
-} from '../../../core';
+import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../core';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import {

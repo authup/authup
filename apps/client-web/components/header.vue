@@ -5,13 +5,8 @@
   - view the LICENSE file that was distributed with this source code.
   -->
 <script lang="ts">
-import {
-    LanguageSwitcherDropdown,
-    TranslatorTranslationAppKey,
-    TranslatorTranslationNamespace,
-    injectStore,
-    useTranslationsForNamespace,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { LanguageSwitcherDropdown, injectStore, useTranslationsForNamespace } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import {
     computed,

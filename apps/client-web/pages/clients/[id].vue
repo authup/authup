@@ -1,14 +1,16 @@
 <script lang="ts">
-import {
-    TranslatorTranslationAppKey,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    injectHTTPClient,
-    useTranslations,
-    useTranslationsForNamespace,
-    useTranslator,
+import { 
+    TranslatorTranslationAppKey, 
+    TranslatorTranslationCommonKey, 
+    TranslatorTranslationEntityKey, 
+    TranslatorTranslationFieldKey, 
+    TranslatorTranslationNamespace, 
+} from '@authup/i18n';
+import { 
+    injectHTTPClient, 
+    useTranslations, 
+    useTranslationsForNamespace, 
+    useTranslator, 
 } from '@authup/client-web-kit';
 import type { Client } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';

@@ -8,7 +8,7 @@
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
-import { DecisionStrategy } from '../../../constants';
+import { DecisionStrategy } from '@authup/kit';
 import type { RealmMatchPolicy } from './types';
 
 export class RealmMatchPolicyValidator extends Container<RealmMatchPolicy> {

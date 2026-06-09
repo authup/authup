@@ -1,13 +1,7 @@
 <script lang="ts">
 
-import {
-    AUserForm,
-    AUserPasswordForm,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationCommonKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { AUserForm, AUserPasswordForm, useTranslations } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';
