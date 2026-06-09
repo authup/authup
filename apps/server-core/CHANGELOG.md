@@ -1,5 +1,31 @@
 # Change Log
 
+## [1.0.0-beta.45](https://github.com/authup/authup/compare/v1.0.0-beta.44...v1.0.0-beta.45) (2026-06-09)
+
+
+### Features
+
+* **client-web:** brand theme overhaul — logo, surface tokens, dark-mode fixes ([#3096](https://github.com/authup/authup/issues/3096)) ([fed755b](https://github.com/authup/authup/commit/fed755b46bc3c0dc8b6cc0e73e4ccc798b2f8ca3))
+* **kit:** add generateName helper and regenerate buttons for entity name forms ([#3092](https://github.com/authup/authup/issues/3092)) ([833a4a1](https://github.com/authup/authup/commit/833a4a12f0859da9e4be51d63433d8161f65935e))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/core-http-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/core-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/errors bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/kit bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+    * @authup/server-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/specs bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+    * @authup/client-web-theme bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+    * @authup/server-test-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+
 ## [1.0.0-beta.44](https://github.com/authup/authup/compare/v1.0.0-beta.42...v1.0.0-beta.44) (2026-06-07)
 
 

@@ -1,6 +1,6 @@
 {
     "name": "@authup/client-web",
-    "version": "1.0.0-beta.44",
+    "version": "1.0.0-beta.45",
     "license": "Apache-2.0",
     "description": "This is a standalone web application.",
     "main": ".output/server/index.mjs",
@@ -28,13 +28,13 @@
         "authup-ui": ".output/server/index.mjs"
     },
     "devDependencies": {
-        "@authup/client-web-kit": "^1.0.0-beta.44",
-        "@authup/client-web-kit-theme": "^1.0.0-beta.44",
-        "@authup/client-web-nuxt": "^1.0.0-beta.44",
-        "@authup/client-web-theme": "^1.0.0-beta.44",
-        "@authup/core-http-kit": "^1.0.0-beta.44",
-        "@authup/core-kit": "^1.0.0-beta.44",
-        "@authup/kit": "^1.0.0-beta.44",
+        "@authup/client-web-kit": "^1.0.0-beta.45",
+        "@authup/client-web-kit-theme": "^1.0.0-beta.45",
+        "@authup/client-web-nuxt": "^1.0.1-beta.44",
+        "@authup/client-web-theme": "^1.0.0-beta.45",
+        "@authup/core-http-kit": "^1.0.1-beta.44",
+        "@authup/core-kit": "^1.0.1-beta.44",
+        "@authup/kit": "^1.0.0-beta.45",
         "@iconify-json/fa6-brands": "^1.2.0",
         "@iconify-json/fa6-solid": "^1.2.0",
         "@iconify/vue": "^5.0.0",

@@ -1,5 +1,40 @@
 # Change Log
 
+## [1.0.0-beta.45](https://github.com/authup/authup/compare/v1.0.0-beta.44...v1.0.0-beta.45) (2026-06-09)
+
+
+### Features
+
+* **client-web:** brand theme overhaul — logo, surface tokens, dark-mode fixes ([#3096](https://github.com/authup/authup/issues/3096)) ([fed755b](https://github.com/authup/authup/commit/fed755b46bc3c0dc8b6cc0e73e4ccc798b2f8ca3))
+* **i18n:** apply translations across client-web & client-web-kit UI ([#3095](https://github.com/authup/authup/issues/3095)) ([33dbe72](https://github.com/authup/authup/commit/33dbe72cf71ebd674d297dc378b5509b441b7de1))
+* **kit:** add generateName helper and regenerate buttons for entity name forms ([#3092](https://github.com/authup/authup/issues/3092)) ([833a4a1](https://github.com/authup/authup/commit/833a4a12f0859da9e4be51d63433d8161f65935e))
+
+
+### Bug Fixes
+
+* **client-web-kit:** prevent SSR hydration mismatch on generated name/secret defaults ([#3099](https://github.com/authup/authup/issues/3099)) ([5c0fbb3](https://github.com/authup/authup/commit/5c0fbb36f1868f34f94a5734291c1f7d1036c198))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/core-http-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/core-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/errors bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/kit bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+    * @authup/specs bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/core-http-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/core-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/errors bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/kit bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+    * @authup/specs bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+
 ## [1.0.0-beta.44](https://github.com/authup/authup/compare/v1.0.0-beta.42...v1.0.0-beta.44) (2026-06-07)
 
 

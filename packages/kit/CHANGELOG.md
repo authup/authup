@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0-beta.45](https://github.com/authup/authup/compare/v1.0.0-beta.44...v1.0.0-beta.45) (2026-06-09)
+
+
+### Features
+
+* **kit:** add generateName helper and regenerate buttons for entity name forms ([#3092](https://github.com/authup/authup/issues/3092)) ([833a4a1](https://github.com/authup/authup/commit/833a4a12f0859da9e4be51d63433d8161f65935e))
+
+
+### Bug Fixes
+
+* **client-web-kit:** prevent SSR hydration mismatch on generated name/secret defaults ([#3099](https://github.com/authup/authup/issues/3099)) ([5c0fbb3](https://github.com/authup/authup/commit/5c0fbb36f1868f34f94a5734291c1f7d1036c198))
+
 ## [1.0.0-beta.44](https://github.com/authup/authup/compare/v1.0.0-beta.42...v1.0.0-beta.44) (2026-06-07)
 
 

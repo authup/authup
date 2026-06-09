@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.1-beta.44](https://github.com/authup/authup/compare/v1.0.0-beta.44...v1.0.1-beta.44) (2026-06-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/errors bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/kit bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+  * peerDependencies
+    * @authup/errors bumped from ^1.0.0-beta.44 to ^1.0.1-beta.44
+    * @authup/kit bumped from ^1.0.0-beta.44 to ^1.0.0-beta.45
+
 ## [1.0.0-beta.44](https://github.com/authup/authup/compare/v1.0.0-beta.42...v1.0.0-beta.44) (2026-06-07)
 
 
