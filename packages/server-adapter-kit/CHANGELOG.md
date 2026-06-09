@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([99f858b](https://github.com/authup/authup/commit/99f858b94e75e3c21c8293333aba53e8adbfbcdc))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/errors bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/specs bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/core-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/core-http-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/server-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+
 ## [1.0.0-beta.45](https://github.com/authup/authup/compare/v1.0.0-beta.44...v1.0.0-beta.45) (2026-06-09)
 
 

@@ -1,5 +1,39 @@
 # Change Log
 
+## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* `@authup/client-web-kit` no longer re-exports `@authup/i18n`, `@authup/access` no longer re-exports `DecisionStrategy`, and `@authup/client-web-theme` no longer re-exports `clientWebKitTheme` / `merge`. Import these from their source packages directly.
+
+### Bug Fixes
+
+* stop re-exporting external packages through internal barrels (fixes @authup/i18n runtime crash) ([#3101](https://github.com/authup/authup/issues/3101)) ([5dd751a](https://github.com/authup/authup/commit/5dd751ad980ac730d0805f7fd7057450ea079418))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/core-http-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/core-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/errors bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/i18n bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/specs bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/core-http-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/core-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/errors bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/i18n bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/kit bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+    * @authup/specs bumped from ^1.0.0-beta.45 to ^1.0.0-beta.46
+
 ## [1.0.0-beta.45](https://github.com/authup/authup/compare/v1.0.0-beta.44...v1.0.0-beta.45) (2026-06-09)
 
 
