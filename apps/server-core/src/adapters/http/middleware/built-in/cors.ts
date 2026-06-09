@@ -11,6 +11,9 @@ import type { App } from 'routup';
 
 export function registerCorsMiddleware(router: App, input?: CorsOptions) {
     router.use(cors({
+        // @routup/cors reflects the matched origin when given an array (and
+        // still honours credentials: true). Callers pass the trusted
+        // appOrigins allowlist; falls back to reflect-all only if unset.
         origin: true,
         credentials: true,
         // `credentials: true` is incompatible with the `*` wildcard for

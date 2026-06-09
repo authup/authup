@@ -6,7 +6,12 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { IdentityType, PermissionName } from '@authup/core-kit';
+import {
+    CLIENT_SYSTEM_NAME,
+    CLIENT_WEB_NAME,
+    IdentityType,
+    PermissionName,
+} from '@authup/core-kit';
 import type { Client, Realm } from '@authup/core-kit';
 import { BuiltInPolicyType, PermissionError } from '@authup/access';
 import {
@@ -494,6 +499,43 @@ describe('core/entities/client/service', () => {
         it('should throw when actor lacks permission', async () => {
             const entity = repository.seed(createFakeClient());
             await expect(service.delete(entity.id, createDenyAllActor())).rejects.toMatchObject({ code: ErrorCode.PERMISSION_DENIED });
+        });
+    });
+
+    describe('guardrails', () => {
+        it('should reject creating a client with the reserved name "web"', async () => {
+            await expect(
+                service.create(
+                    createFakeClient({ name: CLIENT_WEB_NAME }),
+                    createAllowAllActor(),
+                ),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should reject creating a client with the reserved name "system"', async () => {
+            await expect(
+                service.create(
+                    createFakeClient({ name: CLIENT_SYSTEM_NAME }),
+                    createAllowAllActor(),
+                ),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should reject renaming an existing client onto a reserved name', async () => {
+            const entity = repository.seed(createFakeClient({ name: 'renamable' }));
+
+            await expect(
+                service.update(entity.id, { name: CLIENT_WEB_NAME }, createAllowAllActor()),
+            ).rejects.toMatchObject({ code: ErrorCode.BAD_REQUEST });
+        });
+
+        it('should strip built_in on create so API callers cannot self-assign it', async () => {
+            const result = await service.create(
+                createFakeClient({ built_in: true } as any),
+                createAllowAllActor(),
+            );
+
+            expect(result.built_in).toBeFalsy();
         });
     });
 });

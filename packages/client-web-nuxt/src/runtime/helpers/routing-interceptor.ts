@@ -6,9 +6,11 @@
  */
 
 import {
-    type Store, 
-    type StoreToRefs, 
-    injectStore, 
+    type Store,
+    type StoreToRefs,
+    clearAuthorizationRequest,
+    injectStore,
+    loadAuthorizationRequest,
     storeToRefs,
 } from '@authup/client-web-kit';
 import { hasOwnProperty, omitRecord } from '@authup/kit';
@@ -43,15 +45,34 @@ export class RoutingInterceptor {
     ) : Promise<RouteLocationAsPathGeneric | undefined> {
         const code = typeof to.query.code === 'string' ? to.query.code : undefined;
         if (code) {
+            const request = loadAuthorizationRequest();
+
             try {
-                await this.store.exchangeAuthorizationCode(code);
+                if (request) {
+                    const state = typeof to.query.state === 'string' ? to.query.state : undefined;
+                    if (request.state !== state) {
+                        throw new Error('The authorization request state does not match.');
+                    }
+
+                    await this.store.exchangeAuthorizationCode(code, {
+                        code_verifier: request.code_verifier,
+                        redirect_uri: request.redirect_uri,
+                        client_id: request.client_id,
+                        realm_id: request.realm_id,
+                    });
+                } else {
+                    await this.store.exchangeAuthorizationCode(code);
+                }
+
+                clearAuthorizationRequest();
 
                 return {
-                    path: to.path,
-                    query: omitRecord(to.query, ['code']),
+                    path: request?.target || to.path,
+                    query: omitRecord(to.query, ['code', 'state']),
                     hash: to.hash,
                 };
             } catch {
+                clearAuthorizationRequest();
                 // code exchange failed — continue without authentication
             }
         }

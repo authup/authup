@@ -16,10 +16,12 @@ import {
 import type { Realm } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
 import { AbstractEntityService } from '@authup/server-kit';
+import type { IWebClientProvisioner } from '../client/types.ts';
 import type { IRealmRepository, IRealmService } from './types.ts';
 
 export type RealmServiceContext = {
     repository: IRealmRepository;
+    webClientProvisioner?: IWebClientProvisioner;
 };
 
 export class RealmService extends AbstractEntityService implements IRealmService {
@@ -27,9 +29,12 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
     protected validator: RealmValidator;
 
+    protected webClientProvisioner?: IWebClientProvisioner;
+
     constructor(ctx: RealmServiceContext) {
         super();
         this.repository = ctx.repository;
+        this.webClientProvisioner = ctx.webClientProvisioner;
         this.validator = new RealmValidator();
     }
 
@@ -139,9 +144,16 @@ export class RealmService extends AbstractEntityService implements IRealmService
         entity = this.repository.create(validated);
         await this.repository.save(entity);
 
+        // Provision the realm's public `web` client via the system-level
+        // provisioner (NOT clientService.create) — it must not be gated on
+        // the actor's CLIENT_CREATE, since a realm creator may lack it.
+        if (this.webClientProvisioner) {
+            await this.webClientProvisioner.ensureForRealm(entity);
+        }
+
         return {
             entity,
-            created: true, 
+            created: true,
         };
     }
 

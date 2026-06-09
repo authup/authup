@@ -77,6 +77,21 @@ export type Config = {
      */
     publicUrl: string,
 
+    /**
+     * Additional origins (besides publicUrl) that are trusted as
+     * redirect targets for the per-realm public `web` client and as
+     * allowed CORS origins. Bare origins (scheme://host[:port]); each is
+     * stored as `<origin>/**` in the web client's redirect_uri set.
+     *
+     * SECURITY: the `web` client is built_in (auto-consent + `global`
+     * scope), so any origin listed here can obtain a full-permission user
+     * token once a user logs in. Adding a domain grants it full login
+     * capability for every realm.
+     *
+     * default: []
+     */
+    additionalDomains: string[],
+
     // ----------------------------------------------------
 
     /**

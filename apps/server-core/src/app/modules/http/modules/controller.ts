@@ -142,11 +142,12 @@ import {
     UserPermissionService,
     UserRoleService,
     UserService,
+    WebClientProvisioner,
 } from '../../../../core/index.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
-import { ConfigInjectionKey } from '../../config/index.ts';
+import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
 import { MailInjectionKey } from '../../mail/index.ts';
 
 export class HTTPControllerModule {
@@ -670,10 +671,19 @@ export class HTTPControllerModule {
     createRealmController(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
         const dataSource = container.resolve(DatabaseInjectionKey.DataSource);
-        const repository = new RealmRepositoryAdapter(
-            container.resolve<Repository<Realm>>(RealmEntity),
-        );
-        const service = new RealmService({ repository });
+        const realmRepository = container.resolve<Repository<Realm>>(RealmEntity);
+        const repository = new RealmRepositoryAdapter(realmRepository);
+
+        const clientRepository = new ClientRepositoryAdapter({
+            repository: container.resolve<Repository<Client>>(ClientEntity),
+            realmRepository,
+        });
+        const webClientProvisioner = new WebClientProvisioner({
+            clientRepository,
+            appOrigins: getAppOrigins(config),
+        });
+
+        const service = new RealmService({ repository, webClientProvisioner });
         const keyRepository = dataSource.getRepository(KeyEntity);
 
         return new RealmController({

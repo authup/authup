@@ -407,6 +407,44 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
 `RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → robots → scopes.
 
+### Per-Realm Public `web` Client
+
+Every realm auto-provisions a public OAuth2 client named **`web`** (constant
+`CLIENT_WEB_NAME` in `@authup/core-kit`) used by authup's own client-web and any
+downstream UI embedding `client-web-kit`. It powers the realm-selection login
+flow (auth-code + PKCE), so there is no per-realm FK, no migration, and no new
+endpoint — the `/authorize` verifier already resolves clients via
+`findOneByIdOrName('web', realm_id)`.
+
+- **Attributes** (`buildWebClientAttributes`, `core/entities/client/web-client.ts`):
+  `is_confidential: false`, `built_in: true`, `active: true`,
+  `grant_types: 'authorization_code refresh_token'` (metadata only),
+  `scope: 'global openid'`, `redirect_uri` = one `<origin>/**` wildcard per
+  trusted app origin (matched by `isSimpleMatch`).
+- **App origins** come from `getAppOrigins(config)` = `[publicUrl, ...additionalDomains]`
+  reduced to bare origins. `ADDITIONAL_DOMAINS` (env, comma-separated) is
+  **security-sensitive**: the `web` client is `built_in` (auto-consent) + `global`
+  scope, so any allowlisted origin can obtain a full-permission user token. The
+  same origin list also drives the CORS `origin` allowlist
+  (`mountCors` in `app/modules/http/modules/middleware.ts`). In non-production,
+  `http://localhost:3000` is dev-seeded so client-web works on first run.
+- **Provisioning (`WebClientProvisioner.ensureForRealm`)** is the single upsert
+  mechanism, run two ways and sharing the same factory so they can't drift:
+  1. **Startup** — `ProvisionerModule` lists every realm (incl. pre-existing)
+     after the graph sync and upserts each realm's `web` client (MERGE — refreshes
+     `redirect_uri` when config changes).
+  2. **Runtime** — `RealmService.save()` calls `ensureForRealm` when it *creates*
+     a new realm, via the injected `webClientProvisioner` (system-level, ungated —
+     a realm creator may lack `CLIENT_CREATE`). Not called on update.
+  Idempotent; guarded on `built_in` — a non-built-in client named `web` is never
+  overwritten (skip + warn).
+- **Guardrails:** `web` and `system` are reserved client names — `ClientService.save()`
+  rejects API attempts to create/rename a client onto them (`CLIENT_RESERVED_NAMES`).
+  The client validator strips `built_in` on create/update, so no API caller can
+  self-assign it — only provisioned clients are `built_in`. The SSR `AuthorizeForm`
+  auto-submits consent for `built_in` clients (skips the Allow/Deny step); user-
+  created clients are never `built_in` and still show consent.
+
 ### File Structure
 
 ```text

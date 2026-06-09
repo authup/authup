@@ -8,7 +8,7 @@
 /* global window */
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
+import { computed, defineComponent, onMounted } from 'vue';
 import { 
     TranslatorTranslationActionKey, 
     TranslatorTranslationClientKey, 
@@ -101,9 +101,23 @@ export default defineComponent({
             }
         };
 
+        // Auto-consent for built-in clients (e.g. the per-realm `web` client).
+        // `built_in` is a provisioning-only trust boundary — the client
+        // validator strips it on create/update, so no API caller can self-
+        // assign it. Skipping the scope-consent step is therefore safe; user/
+        // admin-created clients are never built_in and still show consent.
+        const autoConsent = computed<boolean>(() => !!props.client.built_in);
+
+        onMounted(() => {
+            if (autoConsent.value) {
+                authorize();
+            }
+        });
+
         return {
             authorize,
             abort,
+            autoConsent,
             translationsDefault,
             translationsClient,
         };
@@ -111,7 +125,16 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex-col flex gap-2">
+    <div
+        v-if="autoConsent"
+        class="text-center"
+    >
+        <VCIcon name="fa6-solid:spinner" />
+    </div>
+    <div
+        v-else
+        class="flex-col flex gap-2"
+    >
         <div class="text-center">
             <h5 class="text-fg-muted mb-1">
                 {{ translationsDefault.application }}

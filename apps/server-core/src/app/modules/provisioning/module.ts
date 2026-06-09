@@ -77,7 +77,8 @@ import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import fs from 'node:fs';
 import path from 'node:path';
-import { ConfigInjectionKey } from '../config/index.ts';
+import { ConfigInjectionKey, getAppOrigins } from '../config/index.ts';
+import { WebClientProvisioner } from '../../../core/entities/client/index.ts';
 import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
 export class ProvisionerModule implements IModule {
@@ -231,6 +232,21 @@ export class ProvisionerModule implements IModule {
         });
 
         await rootSynchronizer.synchronize(data);
+
+        // ---------------------------------------------------------------
+        // Per-realm public `web` client. Single provisioning mechanism:
+        // list every realm (incl. pre-existing) and upsert its web client.
+        // Idempotent; guarded on built_in inside the provisioner.
+        // ---------------------------------------------------------------
+        const webClientProvisioner = new WebClientProvisioner({
+            clientRepository,
+            appOrigins: getAppOrigins(config),
+        });
+
+        const realms = await realmRepository.find();
+        for (const realm of realms) {
+            await webClientProvisioner.ensureForRealm(realm);
+        }
 
         if (config.permissionsDefaultPolicyAssignment) {
             await this.assignDefaultPolicy(dataSource, policyRepository);
