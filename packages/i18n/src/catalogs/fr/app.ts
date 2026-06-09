@@ -23,6 +23,9 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.API_DOCS]: 'Documentation API',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Fait avec',
 
+    [TranslatorTranslationAppKey.LOGIN_TITLE]: 'Bon retour',
+    [TranslatorTranslationAppKey.LOGIN_SUBTITLE]: 'Sélectionnez un realm pour continuer',
+
     [TranslatorTranslationAppKey.URL_GENERATOR]: 'Générateur d\'URL',
     [TranslatorTranslationAppKey.URL_GENERATOR_HINT]: 'Générez une URL d\'autorisation en choisissant les portées dont elle a besoin pour fonctionner.',
     [TranslatorTranslationAppKey.REDIRECT_URL]: 'URL de redirection',

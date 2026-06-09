@@ -23,6 +23,9 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.API_DOCS]: 'API-Dokumentation',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Erstellt mit',
 
+    [TranslatorTranslationAppKey.LOGIN_TITLE]: 'Willkommen zurück',
+    [TranslatorTranslationAppKey.LOGIN_SUBTITLE]: 'Wähle einen Realm aus, um fortzufahren',
+
     [TranslatorTranslationAppKey.URL_GENERATOR]: 'URL-Generator',
     [TranslatorTranslationAppKey.URL_GENERATOR_HINT]: 'Erzeuge eine Autorisierungs-URL, indem du die benötigten Bereiche auswählst.',
     [TranslatorTranslationAppKey.REDIRECT_URL]: 'Weiterleitungs-URL',

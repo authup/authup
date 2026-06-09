@@ -17,4 +17,6 @@ export const TranslatorTranslationCommonGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationCommonKey.LOCKED]: 'Gesperrt',
     [TranslatorTranslationCommonKey.NOT_LOCKED]: 'Nicht gesperrt',
     [TranslatorTranslationCommonKey.APPLICATION]: 'Anwendung',
+    [TranslatorTranslationCommonKey.SEARCH]: 'Suchen',
+    [TranslatorTranslationCommonKey.NO_RESULTS]: 'Keine Ergebnisse gefunden.',
 };

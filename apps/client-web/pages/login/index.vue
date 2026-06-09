@@ -8,7 +8,12 @@ import {
     createPKCE,
     createState,
     saveAuthorizationRequest,
+    useTranslations,
 } from '@authup/client-web-kit';
+import {
+    TranslatorTranslationAppKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import {
     definePageMeta,
     useToast,
@@ -32,6 +37,17 @@ export default defineNuxtComponent({
         const toast = useToast();
         const runtimeConfig = useRuntimeConfig();
         const route = useRoute();
+
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.LOGIN_TITLE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.APP,
+                key: TranslatorTranslationAppKey.LOGIN_SUBTITLE,
+            },
+        ]);
 
         const handleSelect = async (realm: Realm) => {
             try {
@@ -71,16 +87,106 @@ export default defineNuxtComponent({
             }
         };
 
-        return { handleSelect };
+        return {
+            handleSelect,
+            translations,
+        };
     },
 });
 </script>
 <template>
-    <div class="container">
-        <div class="text-center">
-            <LoginSVG :height="320" />
-        </div>
+    <div class="login-entry">
+        <div
+            class="login-aurora"
+            aria-hidden="true"
+        />
 
-        <ARealmGrid @select="handleSelect" />
+        <div class="login-content container">
+            <div class="text-center login-hero">
+                <LoginSVG :height="220" />
+                <h1 class="login-title">
+                    {{ translations.loginTitle }}
+                </h1>
+                <p class="login-subtitle">
+                    {{ translations.loginSubtitle }}
+                </p>
+            </div>
+
+            <ARealmGrid @select="handleSelect" />
+        </div>
     </div>
 </template>
+<style scoped>
+.login-entry {
+    position: relative;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.login-aurora {
+    position: absolute;
+    inset: -20%;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(
+            38% 48% at 22% 22%,
+            color-mix(in oklab, var(--authup-periwinkle, #6d7fcc) 50%, transparent),
+            transparent 70%
+        ),
+        radial-gradient(
+            42% 52% at 80% 28%,
+            color-mix(in oklab, var(--authup-rose, #cc8181) 38%, transparent),
+            transparent 70%
+        ),
+        radial-gradient(
+            52% 60% at 50% 92%,
+            color-mix(in oklab, var(--authup-periwinkle, #6d7fcc) 32%, transparent),
+            transparent 70%
+        );
+    filter: blur(70px);
+    opacity: 0.65;
+    animation: login-aurora-drift 18s ease-in-out infinite alternate;
+}
+
+.login-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 720px;
+}
+
+.login-hero {
+    margin-bottom: 2rem;
+}
+
+.login-title {
+    margin-top: 0.5rem;
+    font-weight: 700;
+    font-size: 2rem;
+}
+
+.login-subtitle {
+    margin-top: 0.25rem;
+    color: var(--vc-color-fg-muted);
+}
+
+@keyframes login-aurora-drift {
+    0% {
+        transform: translate3d(-2%, -1%, 0) scale(1);
+    }
+
+    100% {
+        transform: translate3d(2%, 1%, 0) scale(1.08);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-aurora {
+        animation: none;
+    }
+}
+</style>

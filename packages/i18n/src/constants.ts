@@ -76,6 +76,9 @@ export enum TranslatorTranslationAppKey {
     API_DOCS = 'apiDocs',
     MADE_WITH = 'madeWith',
 
+    LOGIN_TITLE = 'loginTitle',
+    LOGIN_SUBTITLE = 'loginSubtitle',
+
     URL_GENERATOR = 'urlGenerator',
     URL_GENERATOR_HINT = 'urlGeneratorHint',
     REDIRECT_URL = 'redirectUrl',
@@ -168,4 +171,6 @@ export enum TranslatorTranslationCommonKey {
     LOCKED = 'locked',
     NOT_LOCKED = 'notLocked',
     APPLICATION = 'application',
+    SEARCH = 'search',
+    NO_RESULTS = 'noResults',
 }

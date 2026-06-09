@@ -6,17 +6,58 @@
   -->
 <script lang="ts">
 import type { Realm } from '@authup/core-kit';
-import { defineComponent, onMounted, ref } from 'vue';
-import { injectHTTPClient } from '../../../core';
+import {
+    computed,
+    defineComponent,
+    onMounted,
+    ref,
+} from 'vue';
+import {
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { injectHTTPClient, useTranslations } from '../../../core';
 
 export default defineComponent({
+    props: {
+        // When exactly one realm is available, emit `select` for it
+        // immediately instead of rendering a single-tile chooser. Lets the
+        // common single-realm deployment skip the picker entirely.
+        autoSelectSingle: {
+            type: Boolean,
+            default: true,
+        },
+        // Reveal the filter input only once the realm count crosses this
+        // threshold — small deployments stay clutter-free.
+        searchThreshold: {
+            type: Number,
+            default: 8,
+        },
+    },
     emits: ['select'],
-    setup(_, { emit }) {
+    setup(props, { emit }) {
         const client = injectHTTPClient();
+
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.SEARCH,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.NO_RESULTS,
+            },
+        ]);
 
         const items = ref<Realm[]>([]);
         const busy = ref(false);
         const error = ref<string | null>(null);
+        const search = ref('');
+
+        // Kept true from the single-realm auto-select until the browser
+        // navigates away, so the skeleton stays up instead of flashing the
+        // lone tile for a frame.
+        const redirecting = ref(false);
 
         const load = async () => {
             if (busy.value) {
@@ -33,6 +74,11 @@ export default defineComponent({
                 });
 
                 items.value = response.data;
+
+                if (props.autoSelectSingle && items.value.length === 1) {
+                    redirecting.value = true;
+                    emit('select', items.value[0]);
+                }
             } catch (e) {
                 error.value = e instanceof Error ? e.message : 'The realms could not be loaded.';
             } finally {
@@ -42,6 +88,48 @@ export default defineComponent({
 
         onMounted(() => load());
 
+        const showSearch = computed(() => items.value.length > props.searchThreshold);
+
+        const filtered = computed(() => {
+            const term = search.value.trim().toLowerCase();
+            if (!term) {
+                return items.value;
+            }
+
+            return items.value.filter((realm) => {
+                const haystack = `${realm.display_name || ''} ${realm.name || ''}`.toLowerCase();
+                return haystack.includes(term);
+            });
+        });
+
+        const labelFor = (realm: Realm) => realm.display_name || realm.name;
+
+        const initialsFor = (realm: Realm) => {
+            const label = labelFor(realm).trim();
+            if (!label) {
+                return '?';
+            }
+
+            const parts = label.split(/[\s\-_.]+/).filter(Boolean);
+            const [first, second] = parts;
+            if (first && second) {
+                return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
+            }
+
+            return label.slice(0, 2).toUpperCase();
+        };
+
+        const colorFor = (realm: Realm) => {
+            const key = realm.name || realm.id || '';
+            let hash = 0;
+            for (let i = 0; i < key.length; i++) {
+                hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+            }
+
+            const hue = hash % 360;
+            return `linear-gradient(135deg, hsl(${hue} 65% 55%), hsl(${(hue + 35) % 360} 62% 45%))`;
+        };
+
         const handleSelect = (realm: Realm) => {
             emit('select', realm);
         };
@@ -50,76 +138,286 @@ export default defineComponent({
             items,
             busy,
             error,
+            search,
+            redirecting,
+            showSearch,
+            filtered,
+            translations,
+            initialsFor,
+            colorFor,
+            labelFor,
             handleSelect,
         };
     },
 });
 </script>
 <template>
-    <div>
+    <div class="realm-select">
         <div
             v-if="error"
-            class="alert alert-warning"
+            class="alert alert-danger realm-select-alert"
         >
             {{ error }}
         </div>
 
         <div
-            v-if="busy"
-            class="text-center"
+            v-if="busy || redirecting"
+            class="realm-grid"
+            aria-hidden="true"
         >
-            <span class="fa-solid fa-spinner fa-spin" />
+            <div
+                v-for="n in 6"
+                :key="n"
+                class="realm-grid-item realm-grid-item--skeleton"
+            />
         </div>
 
-        <div
-            v-else
-            class="realm-grid"
-        >
-            <button
-                v-for="realm in items"
-                :key="realm.id"
-                type="button"
-                class="realm-grid-item"
-                @click.prevent="handleSelect(realm)"
+        <template v-else>
+            <div
+                v-if="showSearch"
+                class="realm-search"
             >
-                <span class="fa-solid fa-database" />
-                <span class="realm-grid-item-name">
-                    {{ realm.display_name || realm.name }}
-                </span>
-            </button>
-        </div>
+                <VCIcon
+                    name="fa6-solid:magnifying-glass"
+                    class="realm-search-icon"
+                />
+                <input
+                    v-model="search"
+                    type="text"
+                    class="realm-search-input"
+                    :placeholder="translations.search"
+                >
+            </div>
+
+            <div
+                v-if="filtered.length === 0"
+                class="realm-empty"
+            >
+                <VCIcon
+                    name="fa6-solid:folder-open"
+                    class="realm-empty-icon"
+                />
+                <span>{{ translations.noResults }}</span>
+            </div>
+
+            <div
+                v-else
+                class="realm-grid"
+            >
+                <button
+                    v-for="realm in filtered"
+                    :key="realm.id"
+                    type="button"
+                    class="realm-grid-item"
+                    @click.prevent="handleSelect(realm)"
+                >
+                    <span
+                        class="realm-grid-item-avatar"
+                        :style="{ backgroundImage: colorFor(realm) }"
+                    >
+                        {{ initialsFor(realm) }}
+                    </span>
+                    <span class="realm-grid-item-name">
+                        {{ labelFor(realm) }}
+                    </span>
+                    <span class="realm-grid-item-arrow">
+                        <VCIcon name="fa6-solid:arrow-right" />
+                    </span>
+                </button>
+            </div>
+        </template>
     </div>
 </template>
 <style scoped>
+.realm-select-alert {
+    margin-bottom: 1rem;
+}
+
+.realm-search {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.realm-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    color: var(--vc-color-fg-muted);
+    pointer-events: none;
+}
+
+.realm-search-input {
+    width: 100%;
+    padding: 0.65rem 1rem 0.65rem 2.4rem;
+    border: 1px solid var(--vc-color-border);
+    border-radius: 0.65rem;
+    background: var(--vc-color-bg-elevated);
+    color: var(--vc-color-fg);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.realm-search-input:focus {
+    border-color: var(--authup-periwinkle, var(--vc-color-primary-500));
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--authup-periwinkle, var(--vc-color-primary-500)) 25%, transparent);
+}
+
 .realm-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 1rem;
 }
 
 .realm-grid-item {
+    position: relative;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 1.5rem 1rem;
+    gap: 0.75rem;
+    padding: 1rem;
     border: 1px solid var(--vc-color-border);
-    border-radius: 0.5rem;
+    border-radius: 0.85rem;
     background: var(--vc-color-bg-elevated);
     color: var(--vc-color-fg);
     cursor: pointer;
-    transition: border-color 0.15s ease, transform 0.15s ease;
+    overflow: hidden;
+    text-align: left;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+/* Animated gradient border, revealed on hover via the mask-composite
+   ring trick (paints only the 1px padding band, leaving the fill clear). */
+.realm-grid-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        120deg,
+        var(--authup-periwinkle, #6d7fcc),
+        var(--authup-rose, #cc8181),
+        var(--authup-periwinkle, #6d7fcc)
+    );
+    background-size: 200% 200%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
 }
 
 .realm-grid-item:hover {
-    border-color: var(--vc-color-primary-500);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    border-color: transparent;
+    box-shadow: 0 10px 30px -12px color-mix(in oklab, var(--authup-periwinkle, #6d7fcc) 70%, transparent);
+}
+
+.realm-grid-item:hover::before {
+    opacity: 1;
+    animation: realm-border-pan 3s linear infinite;
+}
+
+.realm-grid-item:focus-visible {
+    outline: none;
+    border-color: transparent;
+}
+
+.realm-grid-item:focus-visible::before {
+    opacity: 1;
+}
+
+.realm-grid-item-avatar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.7rem;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 2px rgb(0 0 0 / 25%);
 }
 
 .realm-grid-item-name {
+    flex: 1 1 auto;
     font-weight: 600;
-    text-align: center;
     word-break: break-word;
+}
+
+.realm-grid-item-arrow {
+    flex: 0 0 auto;
+    color: var(--authup-periwinkle, var(--vc-color-primary-500));
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.realm-grid-item:hover .realm-grid-item-arrow,
+.realm-grid-item:focus-visible .realm-grid-item-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.realm-grid-item--skeleton {
+    cursor: default;
+    pointer-events: none;
+    min-height: 76px;
+    border-color: var(--vc-color-border);
+    background: linear-gradient(
+        90deg,
+        var(--vc-color-bg-muted) 25%,
+        var(--vc-color-bg-elevated) 37%,
+        var(--vc-color-bg-muted) 63%
+    );
+    background-size: 400% 100%;
+    animation: realm-skeleton 1.4s ease infinite;
+}
+
+.realm-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 2.5rem 1rem;
+    color: var(--vc-color-fg-muted);
+    text-align: center;
+}
+
+.realm-empty-icon {
+    font-size: 1.75rem;
+    opacity: 0.6;
+}
+
+@keyframes realm-border-pan {
+    to {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes realm-skeleton {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0 50%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .realm-grid-item,
+    .realm-grid-item::before,
+    .realm-grid-item-arrow,
+    .realm-grid-item--skeleton {
+        transition: none;
+        animation: none;
+    }
 }
 </style>
