@@ -8,17 +8,15 @@
     "./package.json": "./package.json",
     ".": {
       "types": "./dist/index.d.ts",
-      "style": "./src/index.css",
+      "style": "./dist/style.css",
       "import": "./dist/index.mjs"
     },
-    "./index.css": "./src/index.css",
-    "./src/index.css": "./src/index.css"
+    "./style.css": "./dist/style.css"
   },
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "src/index.css"
+    "dist"
   ],
   "scripts": {
     "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",

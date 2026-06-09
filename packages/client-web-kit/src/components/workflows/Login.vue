@@ -311,8 +311,3 @@ export default defineComponent({
         </form>
     </div>
 </template>
-<style scoped>
-.identity-provider-box {
-    min-width: 150px;
-}
-</style>

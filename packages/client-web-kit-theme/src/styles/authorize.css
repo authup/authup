@@ -1,0 +1,27 @@
+/*
+ * Copyright (c) 2025-2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+/*
+ * Consent card for @authup/client-web-kit's <Authorize> workflow
+ * (applied via h('div', { class: 'authorize' })). Colors come from the
+ * --authup-authorize-* tokens (see ./tokens.css); the background now
+ * defaults to a theme surface token instead of a fixed light grey, so
+ * the card renders correctly in dark mode.
+ */
+.authorize {
+    padding: var(--authup-authorize-padding);
+    background: var(--authup-authorize-background);
+    min-width: var(--authup-authorize-min-width);
+    max-width: 100%;
+    min-height: var(--authup-authorize-min-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    border-radius: var(--authup-authorize-border-radius);
+    box-shadow: var(--authup-authorize-box-shadow);
+}

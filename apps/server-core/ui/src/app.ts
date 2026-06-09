@@ -24,7 +24,6 @@ import faBrands from '@iconify-json/fa6-brands/icons.json';
 import faSolid from '@iconify-json/fa6-solid/icons.json';
 
 import './tailwind.css';
-import '@authup/client-web-kit/../dist/style.css';
 
 import type { Router } from 'vue-router';
 import Authorize from './pages/authorize.vue';

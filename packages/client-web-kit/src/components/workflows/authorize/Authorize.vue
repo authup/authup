@@ -120,18 +120,3 @@ export default defineComponent({
     },
 });
 </script>
-<style>
-.authorize {
-    padding: 1rem;
-    background: #E8E8E8;
-    min-width: 480px;
-    max-width: 100%;
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    position: relative;
-    border-radius: 5px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24);
-}
-</style>

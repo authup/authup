@@ -49,7 +49,7 @@ export default defineComponent({
                         <template #default="props">
                             <div
                                 :class="{'active': item === protocol && !preset}"
-                                class="flex flex-col gap-1 text-center identity-provider-picker-item"
+                                class="flex flex-col gap-1 text-center a-picker-item"
                                 @click.prevent="pickProtocol(item)"
                             >
                                 <div>
@@ -79,7 +79,7 @@ export default defineComponent({
                         <template #default="props">
                             <div
                                 :class="{'active': item === preset}"
-                                class="flex flex-col gap-1 text-center identity-provider-picker-item"
+                                class="flex flex-col gap-1 text-center a-picker-item"
                                 @click.prevent="pickPreset(item)"
                             >
                                 <div>
@@ -99,20 +99,3 @@ export default defineComponent({
         </div>
     </div>
 </template>
-<style scoped>
-.identity-provider-picker-item {
-    cursor: pointer;
-    border-radius: 4px;
-    min-width: 120px;
-    color: #5b646c;
-    background-color: #ececec;
-    padding: 0.5rem;
-}
-
-.identity-provider-picker-item.active,
-.identity-provider-picker-item:hover,
-.identity-provider-picker-item:active {
-    background-color: #6d7fcc;
-    color: #fff;
-}
-</style>

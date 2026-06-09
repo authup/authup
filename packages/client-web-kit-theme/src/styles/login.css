@@ -1,0 +1,15 @@
+/*
+ * Copyright (c) 2022-2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+/*
+ * Identity-provider tile in @authup/client-web-kit's <Login> workflow.
+ * Width comes from the --authup-login-provider-min-width token
+ * (see ./tokens.css).
+ */
+.identity-provider-box {
+    min-width: var(--authup-login-provider-min-width);
+}

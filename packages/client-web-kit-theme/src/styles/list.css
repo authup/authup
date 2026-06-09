@@ -5,6 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+/*
+ * List + pagination styling for @authup/client-web-kit's entity
+ * collection views. Colors come from the --authup-list-* /
+ * --authup-pagination-* tokens (see ./tokens.css) so consumers can
+ * reskin without restating these rules.
+ */
+
 .list {
     display: flex;
     flex-direction: column;
@@ -21,8 +28,8 @@
 }
 
 .list .list-item {
-    background-color: var(--vc-color-bg-muted);
-    border: 1px solid var(--vc-color-border);
+    background-color: var(--authup-list-item-background);
+    border: 1px solid var(--authup-list-item-border-color);
 
     box-shadow: 0 4px 25px 0 rgba(0, 0, 0, .1);
     transition: all .3s ease-in-out;
@@ -35,7 +42,7 @@
 }
 
 .list .list-item.active {
-    background-color: var(--vc-color-bg-elevated);
+    background-color: var(--authup-list-item-active-background);
 }
 
 .list .list-icon,
@@ -46,20 +53,20 @@
 
 .list-no-more {
     margin-top: 0.5rem;
-    color: var(--vc-color-warning-700);
-    background-color: var(--vc-color-warning-50);
+    color: var(--authup-list-no-more-color);
+    background-color: var(--authup-list-no-more-background);
     padding: 0.4rem 0.7rem;
     position: relative;
     margin-bottom: 1rem;
-    border: 1px solid var(--vc-color-warning-200);
+    border: 1px solid var(--authup-list-no-more-border-color);
     border-radius: 0.25rem;
 }
 
 
 .pagination > li > .page-link {
-    color: var(--vc-color-fg);
-    background-color: var(--vc-color-bg-muted);
-    border: 1px solid var(--vc-color-bg-muted);
+    color: var(--authup-pagination-color);
+    background-color: var(--authup-pagination-background);
+    border: 1px solid var(--authup-pagination-background);
     cursor: pointer;
     padding: 5px 8px;
     font-size: 0.75rem;
@@ -71,7 +78,7 @@
 .pagination > li > .page-link:focus,
 .pagination > li > .page-link:hover,
 .pagination > li > .page-link.active {
-    background-color: var(--vc-color-primary-600);
-    color: var(--vc-color-on-primary);
-    border: 1px solid var(--vc-color-primary-600);
+    background-color: var(--authup-pagination-active-background);
+    color: var(--authup-pagination-active-color);
+    border: 1px solid var(--authup-pagination-active-background);
 }

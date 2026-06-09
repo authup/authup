@@ -34,12 +34,37 @@
  *     layer), where they beat ANY layered consumer override.
  *   - `theme` first so it stays where Tailwind expects it (the
  *     palette catalog tokens vuecs/design references via `var(...)`).
+ *   - `authup` after `vuecs`, before `base`: the kit-component design
+ *     tokens (`./styles/tokens.css`, `--authup-*`) live here. Same
+ *     reasoning as vuecs — placing them before `base` lets consumer
+ *     apps override any `--authup-*` token from their own
+ *     `@layer base { :root { ... } }` (or an unlayered `:root`) and win.
  */
-@layer theme, vuecs, base, components, utilities;
+@layer theme, vuecs, authup, base, components, utilities;
 
 @import "tailwindcss";
 @import "@vuecs/design";
 @import "@vuecs/theme-tailwind";
+
+/* ------------------------------------------------------------------
+   Kit-component styles
+   Authup-owned styles for the components that live in
+   `@authup/client-web-kit`, behind overridable `--authup-*` tokens.
+
+   `tokens.css` first: it declares the overridable `--authup-*` design
+   tokens (in `@layer authup`) that every partial below consumes.
+
+   These sit in leading `@import` position — BEFORE the @custom-variant /
+   @source directives below — on purpose: the tsdown CSS entry
+   (`src/style.css` -> `dist/style.css`) only inlines relative imports
+   that appear before any non-import rule. Keep them relative and plain
+   (no Tailwind directives) so they inline cleanly.
+   ------------------------------------------------------------------ */
+@import "./styles/tokens.css";
+@import "./styles/list.css";
+@import "./styles/picker.css";
+@import "./styles/authorize.css";
+@import "./styles/login.css";
 
 /*
  * Make Tailwind's `dark:` variant key off the `.dark` class on
@@ -80,8 +105,14 @@
  * Consumer apps add their own `@source` directives for their template
  * trees + any locally-nested vuecs deps in a per-app CSS entry
  * (e.g. `apps/client-web/assets/css/tailwind.css`).
+ *
+ * `../src` (not `.`): this resolves to the package's `src/` from BOTH
+ * the dev entry (`src/index.css` -> `src/../src` = `src`) AND the
+ * bundled build entry (`dist/style.css` -> `dist/../src` = `src`), so
+ * no build-time path rewrite is needed. (In a published, `dist`-only
+ * package `src/` is absent — Tailwind silently skips missing paths.)
  */
-@source ".";
+@source "../src";
 /*
  * Both @source entries below resolve via npm-workspace symlinks in
  * dev AND via real node_modules paths in published consumers.
@@ -98,12 +129,3 @@
 @source "../../../node_modules/@authup/client-web-kit/dist";
 @source "../../../node_modules/@authup/client-web-kit/src";
 @source "../../../node_modules/@vuecs";
-
-/* ------------------------------------------------------------------
-   Kit-component styles
-   Authup-owned styles for the components that live in
-   `@authup/client-web-kit`. Imported here so the kit theme stays
-   self-contained — host apps don't need separate per-stylesheet
-   entries.
-   ------------------------------------------------------------------ */
-@import "./styles/list.css";
