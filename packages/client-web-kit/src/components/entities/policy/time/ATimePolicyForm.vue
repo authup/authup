@@ -28,8 +28,8 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        VCFormInput, 
-        VCFormGroup, 
+        VCFormInput,
+        VCFormGroup,
         VCFormSelect,
 
         IFieldValidation,
@@ -188,8 +188,8 @@ export default defineComponent({
                         <VCFormSelect
                             v-model="v.fields.interval.$model.value"
                             :options="intervalOptions"
-                            :option-default="true"
-                            @change="handleIntervalUpdated"
+                            placeholder="-- None --"
+                            @update:model-value="handleIntervalUpdated"
                         />
                     </VCFormGroup>
                 </IFieldValidation>

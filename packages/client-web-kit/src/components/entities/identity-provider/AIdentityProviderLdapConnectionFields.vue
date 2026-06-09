@@ -15,7 +15,7 @@ import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
-export const AIdentityProviderLdapConnectionFields = defineComponent({
+export default defineComponent({
     components: {
         VCFormGroup, 
         VCFormInput, 
@@ -24,7 +24,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
         IFieldValidation,
     },
     props: {
-        entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
+        entity: { type: Object as PropType<Partial<IdentityProvider>> },
         discovery: {
             type: Boolean,
             default: false,
@@ -43,7 +43,7 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
 
         function init() {
             if (!props.entity) return;
-            assignFormProperties(form, props.entity);
+            assignFormProperties(form, props.entity as Partial<LdapIdentityProvider>);
         }
 
         const updated = useUpdatedAt(props.entity as IdentityProvider);
@@ -67,7 +67,6 @@ export const AIdentityProviderLdapConnectionFields = defineComponent({
     },
 });
 
-export default AIdentityProviderLdapConnectionFields;
 </script>
 
 <template>

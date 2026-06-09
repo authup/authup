@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" aria-label="Authup logo">
+  <rect x="8" y="8" width="84" height="84" rx="16" fill="#34353a"></rect>
+  <circle cx="50" cy="42" r="12" fill="#ffffff"></circle>
+  <path d="M 41 44 L 59 44 L 55 68 L 45 68 Z" fill="#ffffff"></path>
+</svg>

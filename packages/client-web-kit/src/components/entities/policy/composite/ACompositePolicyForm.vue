@@ -154,9 +154,8 @@ export default defineComponent({
                 <VCFormSelect
                     v-model="v.fields.decision_strategy.$model.value"
                     :options="decisionStrategyOptions"
-                    :option-default="true"
-                    :option-default-value="'-- None (default: unanimous) --'"
-                    @change="handleDecisionStrategyUpdated"
+                    placeholder="-- None (default: unanimous) --"
+                    @update:model-value="handleDecisionStrategyUpdated"
                 />
                 <div class="alert alert-sm alert-info mt-1 mb-0">
                     {{ decisionStrategyHint }}

@@ -31,13 +31,13 @@ import {
     defineEntityManager,
     defineEntityVEmitOptions,
 } from '../../utility';
-import { AIdentityProviderBasicFields } from './AIdentityProviderBasicFields.vue';
-import { AIdentityProviderOAuth2ClientFields } from './AIdentityProviderOAuth2ClientFields.vue';
+import AIdentityProviderBasicFields from './AIdentityProviderBasicFields.vue';
+import AIdentityProviderOAuth2ClientFields from './AIdentityProviderOAuth2ClientFields.vue';
 import AIdentityProviderOAuth2EndpointFields from './AIdentityProviderOAuth2EndpointFields.vue';
 import { AIdentityProviderPreset } from './AIdentityProviderPreset';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
-export const AIdentityProviderOAuth2Form = defineComponent({
+export default defineComponent({
     components: {
         AFormSubmit,
         AIdentityProviderBasicFields,
@@ -172,7 +172,6 @@ export const AIdentityProviderOAuth2Form = defineComponent({
     },
 });
 
-export default AIdentityProviderOAuth2Form;
 </script>
 
 <template>

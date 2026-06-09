@@ -22,7 +22,7 @@ body {
     font-size: 13px;
     color: var(--vc-color-fg);
     font-weight: 300;
-    background: var(--vc-color-bg-muted) none repeat scroll 0% 0%;
+    background: var(--authup-surface-app) none repeat scroll 0% 0%;
 }
 
 b, strong {
@@ -89,7 +89,7 @@ h5.title:before {
     content: "";
     width: 4px;
     padding-right: 4px;
-    background: var(--authup-brand-gold);
+    background: var(--authup-periwinkle);
     margin-right: 4px;
 }
 
@@ -103,7 +103,7 @@ h5.title:before {
 
 .title .sub-title {
     font-size: .65em;
-    color: var(--vc-color-fg-muted);
+    color: var(--authup-rose);
 }
 
 .form-horizontal .form-group {

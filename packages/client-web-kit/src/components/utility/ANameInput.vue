@@ -26,7 +26,7 @@ import {
  * When `disabled` is set (built-in / name-locked / master entities) the append
  * button is omitted and a plain disabled input is rendered.
  */
-export const ANameInput = defineComponent({
+export default defineComponent({
     name: 'ANameInput',
     components: { VCFormInput },
     props: {
@@ -70,7 +70,6 @@ export const ANameInput = defineComponent({
     },
 });
 
-export default ANameInput;
 </script>
 
 <template>

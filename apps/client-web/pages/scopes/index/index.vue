@@ -103,7 +103,6 @@ export default defineComponent({
                 :data="props.data"
                 :columns="columns"
                 :busy="props.busy"
-                bordered
             >
                 <template #cell-built_in="{ row }: { row: any }">
                     <VCIcon

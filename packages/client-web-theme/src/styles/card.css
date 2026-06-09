@@ -51,7 +51,7 @@
 
 .event-card.active {
     color: var(--vc-color-fg-muted);
-    background-color: var(--vc-color-bg-elevated);
+    background-color: var(--authup-surface-active);
 }
 
 .event-card-header,
@@ -70,5 +70,5 @@
 }
 
 .event-card .foot-print {
-    color: var(--vc-color-fg-muted);
+    color: var(--authup-rose);
 }

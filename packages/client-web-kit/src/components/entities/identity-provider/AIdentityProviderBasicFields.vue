@@ -26,7 +26,7 @@ import { onChange, useIsEditing, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
 import { ANameInput } from '../../utility';
 
-export const AIdentityProviderBasicFields = defineComponent({
+export default defineComponent({
     components: {
         ANameInput,
         VCFormGroup,
@@ -116,7 +116,6 @@ export const AIdentityProviderBasicFields = defineComponent({
     },
 });
 
-export default AIdentityProviderBasicFields;
 </script>
 
 <template>

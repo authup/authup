@@ -56,7 +56,7 @@ function decisionStrategyHint(value: string): string {
     }
 }
 
-export const APermissionForm = defineComponent({
+export default defineComponent({
     components: {
         ANameInput,
         ARealmPicker,
@@ -159,25 +159,25 @@ export const APermissionForm = defineComponent({
         const translationsDefault = useTranslations(
             [
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DISPLAY_NAME, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DISPLAY_NAME,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DESCRIPTION,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.FIELD, 
-                    key: TranslatorTranslationFieldKey.DECISION_STRATEGY, 
+                    namespace: TranslatorTranslationNamespace.FIELD,
+                    key: TranslatorTranslationFieldKey.DECISION_STRATEGY,
                 },
                 {
-                    namespace: TranslatorTranslationNamespace.ENTITY, 
-                    key: TranslatorTranslationEntityKey.REALM, 
-                    count: 1, 
+                    namespace: TranslatorTranslationNamespace.ENTITY,
+                    key: TranslatorTranslationEntityKey.REALM,
+                    count: 1,
                 },
             ],
         );
@@ -198,7 +198,6 @@ export const APermissionForm = defineComponent({
     },
 });
 
-export default APermissionForm;
 </script>
 
 <template>
@@ -260,8 +259,7 @@ export default APermissionForm;
                 <VCFormSelect
                     v-model="v.fields.decision_strategy.$model.value"
                     :options="decisionStrategyOptions"
-                    :option-default="true"
-                    option-default-value="-- None (default: unanimous) --"
+                    placeholder="-- None (default: unanimous) --"
                 />
                 <div class="alert alert-sm alert-info mt-1 mb-0">
                     {{ decisionStrategyHint }}

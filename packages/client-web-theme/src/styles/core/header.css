@@ -60,8 +60,19 @@
     font-weight: 600;
 }
 
+/* More specific than `.page-header .header-title > div` so `display`
+ * wins over the inline-block default; flex + gap keeps the logo icon
+ * and wordmark on one centered row (Tailwind preflight makes <img>
+ * display:block, which would otherwise stack them). */
+.page-header .header-title .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
 .page-header .logo span:not(.info-text) {
-    color: var(--authup-brand-gold);
+    color: var(--authup-periwinkle);
 }
 
 .page-header .logo .info-text {

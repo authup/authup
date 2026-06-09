@@ -19,7 +19,7 @@ import { computed, defineComponent } from 'vue';
  * `utility/toggle-button/module.ts` and the inline copies in
  * ARobotForm.vue / AUserForm.vue.
  */
-export const AToggleButton = defineComponent({
+export default defineComponent({
     name: 'AToggleButton',
     props: {
         value: { type: Boolean, default: false },
@@ -41,7 +41,6 @@ export const AToggleButton = defineComponent({
     },
 });
 
-export default AToggleButton;
 </script>
 
 <template>

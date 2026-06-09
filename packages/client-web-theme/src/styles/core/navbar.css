@@ -38,7 +38,7 @@
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item:active,
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item:focus,
 .page-navbar .navbar-content .dropdown-menu > .dropdown-item.active {
-    color: var(--authup-brand-coral);
+    color: var(--authup-salmon);
     background: var(--authup-chrome-bg-elevated);
     text-decoration: none;
 }

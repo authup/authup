@@ -15,13 +15,13 @@ import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
-export const AIdentityProviderOAuth2ClientFields = defineComponent({
+export default defineComponent({
     components: {
         VCFormGroup, 
         VCFormInput, 
         IFieldValidation, 
     },
-    props: { entity: { type: Object as PropType<Partial<OAuth2IdentityProvider>> } },
+    props: { entity: { type: Object as PropType<Partial<IdentityProvider>> } },
     emits: ['updated'],
     setup(props) {
         const form = reactive({ client_id: '', client_secret: '' });
@@ -31,7 +31,7 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
         const v = useValidup(new Container<typeof form>(), form, { name: 'client' });
 
         function assign() {
-            assignFormProperties(form, props.entity);
+            assignFormProperties(form, props.entity as Partial<OAuth2IdentityProvider>);
         }
 
         const updatedAt = useUpdatedAt(props.entity as IdentityProvider);
@@ -42,7 +42,6 @@ export const AIdentityProviderOAuth2ClientFields = defineComponent({
     },
 });
 
-export default AIdentityProviderOAuth2ClientFields;
 </script>
 
 <template>

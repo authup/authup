@@ -15,14 +15,14 @@ import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { onChange, useUpdatedAt } from '../../../composables';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
-export const AIdentityProviderLdapGroupFields = defineComponent({
+export default defineComponent({
     components: {
         VCFormGroup, 
         VCFormInput, 
         IFieldValidation, 
     },
     props: {
-        entity: { type: Object as PropType<Partial<LdapIdentityProvider>> },
+        entity: { type: Object as PropType<Partial<IdentityProvider>> },
         discovery: { type: Boolean, default: false },
     },
     emits: ['updated'],
@@ -40,7 +40,7 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
 
         function init() {
             if (!props.entity) return;
-            assignFormProperties(form, props.entity);
+            assignFormProperties(form, props.entity as Partial<LdapIdentityProvider>);
         }
 
         const updated = useUpdatedAt(props.entity as IdentityProvider);
@@ -51,7 +51,6 @@ export const AIdentityProviderLdapGroupFields = defineComponent({
     },
 });
 
-export default AIdentityProviderLdapGroupFields;
 </script>
 
 <template>

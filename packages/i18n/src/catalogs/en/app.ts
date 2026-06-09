@@ -21,6 +21,7 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.MANAGEMENT]: 'Management',
     [TranslatorTranslationAppKey.DETAILS]: 'Details',
     [TranslatorTranslationAppKey.API_DOCS]: 'API Docs',
+    [TranslatorTranslationAppKey.MADE_WITH]: 'Made with',
 
     [TranslatorTranslationAppKey.URL_GENERATOR]: 'URL Generator',
     [TranslatorTranslationAppKey.URL_GENERATOR_HINT]: 'Generate an authorize url by picking the scopes it needs to function.',

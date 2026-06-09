@@ -21,6 +21,7 @@ export const TranslatorTranslationAppSpanish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.MANAGEMENT]: 'Gestión',
     [TranslatorTranslationAppKey.DETAILS]: 'Detalles',
     [TranslatorTranslationAppKey.API_DOCS]: 'Documentación de la API',
+    [TranslatorTranslationAppKey.MADE_WITH]: 'Hecho con',
 
     [TranslatorTranslationAppKey.URL_GENERATOR]: 'Generador de URL',
     [TranslatorTranslationAppKey.URL_GENERATOR_HINT]: 'Genere una URL de autorización eligiendo los ámbitos que necesita para funcionar.',

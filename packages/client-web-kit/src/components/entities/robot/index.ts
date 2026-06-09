@@ -6,5 +6,5 @@
  */
 
 export { ARobot } from './ARobot';
-export { ARobotForm } from './ARobotForm.vue';
+export { default as ARobotForm } from './ARobotForm.vue';
 export { ARobots } from './ARobots';
