@@ -15,7 +15,7 @@ import {
 } from '@authup/core-kit';
 import type { Realm } from '@authup/core-kit';
 import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
-import { AbstractEntityService } from '@authup/server-kit';
+import { AbstractEntityService, isLoggerUsable, useLogger } from '@authup/server-kit';
 import type { IWebClientProvisioner } from '../client/types.ts';
 import type { IRealmRepository, IRealmService } from './types.ts';
 
@@ -147,8 +147,19 @@ export class RealmService extends AbstractEntityService implements IRealmService
         // Provision the realm's public `web` client via the system-level
         // provisioner (NOT clientService.create) — it must not be gated on
         // the actor's CLIENT_CREATE, since a realm creator may lack it.
+        // Realm creation must stay atomic from the caller's perspective: the
+        // realm is already persisted, so a provisioning failure is logged and
+        // swallowed (startup provisioning reconciles every realm's web client).
         if (this.webClientProvisioner) {
-            await this.webClientProvisioner.ensureForRealm(entity);
+            try {
+                await this.webClientProvisioner.ensureForRealm(entity);
+            } catch (e) {
+                if (isLoggerUsable()) {
+                    useLogger().warn(
+                        `Failed to provision web client for realm ${entity.id}: ${e instanceof Error ? e.message : String(e)}`,
+                    );
+                }
+            }
         }
 
         return {

@@ -38,10 +38,11 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
 
     const env = read('NODE_ENV', EnvironmentName.DEVELOPMENT);
 
-    // In development client-web runs on :3000 while the API (publicUrl)
-    // runs on :3001. Seed :3000 into the trusted origins so the redirect
-    // allowlist (<origin>/**) and CORS accept logins from the dev UI out
-    // of the box; otherwise the realm-selection login is dead on first run.
+    // In non-production (development & test) client-web runs on :3000 while
+    // the API (publicUrl) runs on :3001. Seed :3000 into the trusted origins
+    // so the redirect allowlist (<origin>/**) and CORS accept logins from the
+    // dev UI out of the box; otherwise the realm-selection login is dead on
+    // first run.
     const additionalDomains = parsed.additionalDomains ?? [];
     if (env !== EnvironmentName.PRODUCTION) {
         const devOrigin = 'http://localhost:3000';

@@ -66,14 +66,35 @@ export class RoutingInterceptor {
 
                 clearAuthorizationRequest();
 
+                // `target` is a full path (it originates from `to.fullPath`)
+                // and may carry its own query/hash. Parse it so vue-router
+                // doesn't URL-encode the `?`/`#` into the pathname. Only the
+                // path/query/hash are used — any host is discarded, so an
+                // absolute URL can't turn this into an open redirect.
+                if (request?.target) {
+                    const url = new URL(request.target, 'http://localhost');
+                    return {
+                        path: url.pathname,
+                        query: Object.fromEntries(url.searchParams.entries()),
+                        hash: url.hash,
+                    };
+                }
+
                 return {
-                    path: request?.target || to.path,
+                    path: to.path,
                     query: omitRecord(to.query, ['code', 'state']),
                     hash: to.hash,
                 };
             } catch {
                 clearAuthorizationRequest();
-                // code exchange failed — continue without authentication
+
+                // Code exchange failed — strip `code`/`state` from the URL so a
+                // reload can't re-attempt the (already consumed) code and loop.
+                return {
+                    path: to.path,
+                    query: omitRecord(to.query, ['code', 'state']),
+                    hash: to.hash,
+                };
             }
         }
 

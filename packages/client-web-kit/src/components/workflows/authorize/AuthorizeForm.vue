@@ -8,7 +8,12 @@
 /* global window */
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
-import { computed, defineComponent, onMounted } from 'vue';
+import { 
+    computed, 
+    defineComponent, 
+    onMounted, 
+    ref, 
+} from 'vue';
 import { 
     TranslatorTranslationActionKey, 
     TranslatorTranslationClientKey, 
@@ -78,7 +83,13 @@ export default defineComponent({
             }
         };
 
+        // Tracks an auto-consent failure so the template can fall back from the
+        // bare spinner to the full consent UI (giving the user a retry path).
+        const autoConsentFailed = ref<boolean>(false);
+
         const authorize = async () => {
+            autoConsentFailed.value = false;
+
             try {
                 const response = await httpClient
                     .authorize
@@ -96,8 +107,7 @@ export default defineComponent({
                     window.location.href = url;
                 }
             } catch {
-                // todo: show toast :)
-
+                autoConsentFailed.value = true;
             }
         };
 
@@ -107,6 +117,11 @@ export default defineComponent({
         // assign it. Skipping the scope-consent step is therefore safe; user/
         // admin-created clients are never built_in and still show consent.
         const autoConsent = computed<boolean>(() => !!props.client.built_in);
+
+        // Show the spinner only while an auto-consent submit is in flight. If it
+        // fails, drop to the manual consent UI so the user can retry instead of
+        // staring at a frozen spinner.
+        const showSpinner = computed<boolean>(() => autoConsent.value && !autoConsentFailed.value);
 
         onMounted(() => {
             if (autoConsent.value) {
@@ -118,6 +133,7 @@ export default defineComponent({
             authorize,
             abort,
             autoConsent,
+            showSpinner,
             translationsDefault,
             translationsClient,
         };
@@ -126,7 +142,7 @@ export default defineComponent({
 </script>
 <template>
     <div
-        v-if="autoConsent"
+        v-if="showSpinner"
         class="text-center"
     >
         <VCIcon name="fa6-solid:spinner" />
