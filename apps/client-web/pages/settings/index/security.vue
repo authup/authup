@@ -1,13 +1,11 @@
 <script lang="ts">
 import { storeToRefs } from 'pinia';
-import {
-    AUserPasswordForm,
-    TranslatorTranslationAppKey,
-    TranslatorTranslationFieldKey,
-    TranslatorTranslationNamespace,
-    injectStore,
-    useTranslations,
-    useTranslator,
+import { TranslatorTranslationAppKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { 
+    AUserPasswordForm, 
+    injectStore, 
+    useTranslations, 
+    useTranslator, 
 } from '@authup/client-web-kit';
 import { definePageMeta, useToast } from '#imports';
 import { defineComponent } from 'vue';

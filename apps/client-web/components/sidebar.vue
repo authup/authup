@@ -6,14 +6,13 @@
   -->
 <script lang="ts">
 
-import {
-    TranslatorTranslationAppKey,
-    TranslatorTranslationNamespace,
-    injectHTTPClient,
-    injectStore,
-    injectTranslatorLocale,
-    useTranslationsForNamespace,
-    useTranslator,
+import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { 
+    injectHTTPClient, 
+    injectStore, 
+    injectTranslatorLocale, 
+    useTranslationsForNamespace, 
+    useTranslator, 
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { computed, defineNuxtComponent } from '#imports';

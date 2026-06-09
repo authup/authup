@@ -6,11 +6,8 @@
   -->
 <script lang="ts">
 
-import {
-    TranslatorTranslationAppKey,
-    TranslatorTranslationNamespace,
-    useTranslationsForNamespace,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslationsForNamespace } from '@authup/client-web-kit';
 import { defineComponent } from 'vue';
 import { VCToaster } from '@vuecs/overlays';
 

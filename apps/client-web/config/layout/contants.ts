@@ -7,12 +7,12 @@
 
 import type { NavigationItem } from '@vuecs/navigation';
 import { PermissionName } from '@authup/core-kit';
-import {
-    TranslatorTranslationActionKey,
-    TranslatorTranslationAppKey,
-    TranslatorTranslationEntityKey,
-    TranslatorTranslationNamespace,
-} from '@authup/client-web-kit';
+import { 
+    TranslatorTranslationActionKey, 
+    TranslatorTranslationAppKey, 
+    TranslatorTranslationEntityKey, 
+    TranslatorTranslationNamespace, 
+} from '@authup/i18n';
 import type { NavigationItemMeta } from './types';
 
 export enum LayoutKey {

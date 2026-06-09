@@ -1,10 +1,6 @@
 <script lang="ts">
-import {
-    ARealmForm,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { ARealmForm, useTranslations } from '@authup/client-web-kit';
 import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import type { PropType } from 'vue';

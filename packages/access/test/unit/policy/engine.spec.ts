@@ -12,9 +12,9 @@ import {
     it,
 } from 'vitest';
 import type { BasePolicy } from '../../../src';
+import { DecisionStrategy } from '@authup/kit';
 import {
     BuiltInPolicyType,
-    DecisionStrategy,
     PolicyData,
     PolicyEngine,
     defineAttributesPolicy,

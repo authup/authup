@@ -5,7 +5,8 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
-import { BuiltInPolicyType, DecisionStrategy, SystemPolicyName } from '@authup/access';
+import { BuiltInPolicyType, SystemPolicyName } from '@authup/access';
+import { DecisionStrategy } from '@authup/kit';
 import type {
     Client, 
     Permission, 

@@ -6,7 +6,7 @@
  */
 
 import { defineIssueGroup } from 'validup';
-import { DecisionStrategy } from '../../../constants';
+import { DecisionStrategy } from '@authup/kit';
 import { PolicyEngine } from '../../engine';
 import type { IPolicyEvaluator, PolicyEvaluationContext, PolicyEvaluationResult } from '../../evaluation';
 import { maybeInvertPolicyOutcome } from '../../helpers';

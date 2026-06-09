@@ -1,11 +1,7 @@
 <script lang="ts">
 
-import {
-    ARobotForm,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { ARobotForm, useTranslations } from '@authup/client-web-kit';
 import type { Robot } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';

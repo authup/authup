@@ -1,11 +1,7 @@
 <script lang="ts">
 
-import {
-    AScopeForm,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationNamespace,
-    useTranslations,
-} from '@authup/client-web-kit';
+import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { AScopeForm, useTranslations } from '@authup/client-web-kit';
 import type { Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineNuxtComponent, definePageMeta } from '#imports';

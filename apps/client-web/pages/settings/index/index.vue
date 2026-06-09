@@ -1,13 +1,11 @@
 <script lang="ts">
 
-import {
-    AUserForm,
-    TranslatorTranslationAppKey,
-    TranslatorTranslationCommonKey,
-    TranslatorTranslationNamespace,
-    injectStore,
-    useTranslations,
-    useTranslator,
+import { TranslatorTranslationAppKey, TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { 
+    AUserForm, 
+    injectStore, 
+    useTranslations, 
+    useTranslator, 
 } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
