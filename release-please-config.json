@@ -18,6 +18,7 @@
         "packages/core-kit": {"component": "core-kit"},
         "packages/core-realtime-kit": {"component": "core-realtime-kit"},
         "packages/errors": {"component": "errors"},
+        "packages/i18n": {"component": "i18n"},
         "packages/kit": {"component": "kit"},
         "packages/server-adapter-kit": {"component": "server-adapter-kit"},
         "packages/server-adapter-node": {"component": "server-adapter-node"},

@@ -12,6 +12,7 @@
     "packages/core-kit": "1.0.0-beta.44",
     "packages/core-realtime-kit": "1.0.0-beta.44",
     "packages/errors": "1.0.0-beta.44",
+    "packages/i18n": "1.0.0-beta.44",
     "packages/kit": "1.0.0-beta.44",
     "packages/server-adapter-kit": "1.0.0-beta.44",
     "packages/server-adapter-node": "1.0.0-beta.44",
