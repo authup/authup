@@ -28,7 +28,7 @@ function escapeHtml(input: string): string {
 function renderHtmlShell(intro: string, code: string, action?: { label: string, url: string }): string {
     const button = action ?
         `<p style="margin:24px 0;">
-            <a href="${action.url}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#6d7fcc;color:#ffffff;text-decoration:none;font-weight:600;">${escapeHtml(action.label)}</a>
+            <a href="${escapeHtml(action.url)}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#6d7fcc;color:#ffffff;text-decoration:none;font-weight:600;">${escapeHtml(action.label)}</a>
         </p>` :
         '';
 

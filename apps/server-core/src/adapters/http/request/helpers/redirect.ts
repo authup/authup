@@ -22,6 +22,8 @@ export function sanitizeRelativeRedirect(input: unknown): string | undefined {
         return undefined;
     }
 
+    // Raw input: reject control chars AND whitespace (space/tab/newline) — a
+    // raw space can shift where the URL authority begins.
     // eslint-disable-next-line no-control-regex
     if (/[\u0000-\u0020\u007f]/.test(input)) {
         return undefined;
@@ -31,6 +33,14 @@ export function sanitizeRelativeRedirect(input: unknown): string | undefined {
     try {
         decoded = decodeURIComponent(input);
     } catch {
+        return undefined;
+    }
+
+    // Decoded form: reject C0 controls + DEL (CR/LF/NUL — the header-injection
+    // vectors a `%0a`/`%0d` would smuggle past the raw check) but NOT space
+    // (0x20), so a legitimate `%20` in the path still passes.
+    // eslint-disable-next-line no-control-regex
+    if (/[\u0000-\u001f\u007f]/.test(decoded)) {
         return undefined;
     }
 

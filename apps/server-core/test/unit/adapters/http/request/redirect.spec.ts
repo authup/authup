@@ -43,6 +43,8 @@ describe('sanitizeRelativeRedirect', () => {
         ['leading tab', '\t/users'],
         ['leading space', ' /users'],
         ['embedded newline', '/a\nb'],
+        ['encoded newline (CRLF/header injection)', '/a%0ab'],
+        ['encoded carriage return', '/a%0db'],
         ['DEL control char', '/a\u007fb'],
     ])('should reject %s', (_label, input) => {
         expect(sanitizeRelativeRedirect(input)).toBeUndefined();

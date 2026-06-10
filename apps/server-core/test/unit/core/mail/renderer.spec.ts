@@ -64,4 +64,15 @@ describe('MailTemplateRenderer', () => {
         expect(mail.html).not.toContain('<script>alert(1)</script>');
         expect(mail.html).toContain('&lt;script&gt;');
     });
+
+    it('should escape the url so it cannot break out of the href attribute', () => {
+        const mail = renderer.render({
+            template: MailTemplateName.REGISTRATION_ACTIVATION,
+            params: { code: 'x', url: '" onclick="alert(1)' },
+        });
+
+        // The raw breakout sequence must not appear; the quote is escaped.
+        expect(mail.html).not.toContain('" onclick="alert(1)');
+        expect(mail.html).toContain('&quot; onclick=&quot;alert(1)');
+    });
 });
