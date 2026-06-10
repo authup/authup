@@ -14,6 +14,7 @@ import {
     TranslatorTranslationAppKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
+import { ref } from 'vue';
 import {
     definePageMeta,
     useToast,
@@ -40,6 +41,8 @@ export default defineNuxtComponent({
         const toast = useToast();
         const runtimeConfig = useRuntimeConfig();
         const route = useRoute();
+
+        const realmGrid = ref<{ reset: () => void } | null>(null);
 
         const translations = useTranslations([
             {
@@ -100,6 +103,9 @@ export default defineNuxtComponent({
                     codeChallengeMethod: pkce.code_challenge_method,
                 });
             } catch (e) {
+                // Drop the grid's auto-select skeleton so the user isn't
+                // stranded when the redirect glue fails.
+                realmGrid.value?.reset();
                 toast.show({
                     variant: 'warning',
                     body: e instanceof Error ? e.message : 'The login could not be initiated.',
@@ -110,6 +116,7 @@ export default defineNuxtComponent({
         return {
             handleSelect,
             translations,
+            realmGrid,
         };
     },
 });
@@ -132,7 +139,10 @@ export default defineNuxtComponent({
                 </p>
             </div>
 
-            <ARealmGrid @select="handleSelect" />
+            <ARealmGrid
+                ref="realmGrid"
+                @select="handleSelect"
+            />
         </div>
     </div>
 </template>

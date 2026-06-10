@@ -5,29 +5,30 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { base64URLEncode } from '@authup/kit';
+
 export type PKCE = {
     code_verifier: string,
     code_challenge: string,
     code_challenge_method: 'S256'
 };
 
-function base64UrlEncode(bytes: Uint8Array): string {
+function strFromBytes(bytes: Uint8Array) : string {
     let str = '';
     for (const byte of bytes) {
         str += String.fromCharCode(byte);
     }
 
-    return btoa(str)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
+    return str;
 }
 
 function randomString(length = 64): string {
     const bytes = new Uint8Array(length);
     crypto.getRandomValues(bytes);
 
-    return base64UrlEncode(bytes);
+    return base64URLEncode(
+        strFromBytes(bytes),
+    );
 }
 
 export function createState(): string {
@@ -44,7 +45,11 @@ export async function createPKCE(): Promise<PKCE> {
 
     return {
         code_verifier: codeVerifier,
-        code_challenge: base64UrlEncode(new Uint8Array(digest)),
+        code_challenge: base64URLEncode(
+            strFromBytes(
+                new Uint8Array(digest),
+            ),
+        ),
         code_challenge_method: 'S256',
     };
 }

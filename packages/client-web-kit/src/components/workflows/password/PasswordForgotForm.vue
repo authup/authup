@@ -24,9 +24,9 @@ import { z } from 'zod';
 import { VCButton } from '@vuecs/button';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import type { LinkProperties } from '@vuecs/link';
-import { VCLink } from '@vuecs/link';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { injectHTTPClient, useTranslations } from '../../../core';
+import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core';
+import { AAuthBackLink } from '../../utility';
 
 class PasswordForgotValidator extends Container<{ identifier: string }> {
     protected override initialize() {
@@ -37,10 +37,10 @@ class PasswordForgotValidator extends Container<{ identifier: string }> {
 
 export default defineComponent({
     components: {
+        AAuthBackLink,
         VCButton,
         VCFormGroup,
         VCFormInput,
-        VCLink,
         IFieldValidation,
     },
     props: {
@@ -82,12 +82,7 @@ export default defineComponent({
         const error = ref<string | null>(null);
         const sent = ref(false);
 
-        const submit = async () => {
-            if (busy.value) {
-                return;
-            }
-
-            busy.value = true;
+        const submit = wrapFnWithBusyState(busy, async () => {
             error.value = null;
 
             try {
@@ -102,10 +97,8 @@ export default defineComponent({
             } catch (e) {
                 error.value = e instanceof Error ? e.message : null;
                 emit('failed', e);
-            } finally {
-                busy.value = false;
             }
-        };
+        });
 
         const submitButton = useSubmitButton({
             loading: busy,
@@ -169,30 +162,6 @@ export default defineComponent({
             />
         </form>
 
-        <div
-            v-if="backLink"
-            class="text-center mt-3"
-        >
-            <VCLink
-                v-bind="backLink"
-                class="auth-form-back"
-            >
-                <VCIcon name="fa6-solid:chevron-left" />
-                {{ translations.backToLogin }}
-            </VCLink>
-        </div>
+        <AAuthBackLink :link="backLink" />
     </div>
 </template>
-<style scoped>
-.auth-form-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.85em;
-    color: var(--vc-color-fg-muted);
-}
-
-.auth-form-back:hover {
-    color: var(--vc-color-fg);
-}
-</style>

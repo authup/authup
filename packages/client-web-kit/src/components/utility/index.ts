@@ -15,6 +15,8 @@ export * from './ALanguageSwitcherDropdown';
 
 export { AFormSubmit } from './AFormSubmit';
 export { default as AAuthShell } from './AAuthShell.vue';
+export { default as AAuthBackLink } from './AAuthBackLink.vue';
+export { default as AAuthGadgets } from './AAuthGadgets.vue';
 export { default as AColorModeSwitcher } from './AColorModeSwitcher.vue';
 export { default as ANameInput } from './ANameInput.vue';
 export { default as ASecretInput } from './ASecretInput.vue';

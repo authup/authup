@@ -116,6 +116,14 @@ export default defineComponent({
             emit('select', realm);
         };
 
+        // Recovery hatch for the auto-select path: if the parent's redirect
+        // glue fails (e.g. PKCE crypto unavailable on an insecure origin) it
+        // can call this to drop the skeleton and re-show the tiles instead of
+        // stranding the user. Exposed via template ref.
+        const reset = () => {
+            redirecting.value = false;
+        };
+
         return {
             items,
             busy,
@@ -128,6 +136,7 @@ export default defineComponent({
             labelFor,
             slugFor,
             handleSelect,
+            reset,
         };
     },
 });

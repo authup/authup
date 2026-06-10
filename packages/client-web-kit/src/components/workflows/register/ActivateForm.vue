@@ -10,6 +10,7 @@ import {
     defineComponent,
     reactive,
     ref,
+    watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
 import {
@@ -24,7 +25,7 @@ import { z } from 'zod';
 import { VCButton } from '@vuecs/button';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
 import { IFieldValidation } from '@ilingo/validup-vue';
-import { injectHTTPClient, useTranslations } from '../../../core';
+import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core';
 
 class ActivateValidator extends Container<{ token: string }> {
     protected override initialize() {
@@ -52,6 +53,11 @@ export default defineComponent({
 
         const form = reactive({ token: props.token });
 
+        // Keep the field in sync if the component is reused with a new token.
+        watch(() => props.token, (value) => {
+            form.token = value;
+        });
+
         const v = useValidup(new ActivateValidator(), form);
 
         const translations = useTranslations([
@@ -77,12 +83,7 @@ export default defineComponent({
         const error = ref<string | null>(null);
         const finished = ref(false);
 
-        const submit = async () => {
-            if (busy.value) {
-                return;
-            }
-
-            busy.value = true;
+        const submit = wrapFnWithBusyState(busy, async () => {
             error.value = null;
 
             try {
@@ -93,10 +94,8 @@ export default defineComponent({
             } catch (e) {
                 error.value = e instanceof Error ? e.message : null;
                 emit('failed', e);
-            } finally {
-                busy.value = false;
             }
-        };
+        });
 
         const submitButton = useSubmitButton({
             loading: busy,
