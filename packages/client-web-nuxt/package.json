@@ -42,7 +42,7 @@
         "@pinia/nuxt": "^0.11.3",
         "fix-dts-default-cjs-exports": "^1.0.1",
         "mkdist": "^2.3.0",
-        "nuxt": "^4.4.5",
+        "nuxt": "^4.4.8",
         "pinia": "^3.0.0",
         "rollup-plugin-dts": "^6.3.0",
         "strip-literal": "^3.1.0",
