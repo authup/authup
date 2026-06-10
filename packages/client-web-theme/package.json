@@ -18,7 +18,8 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "src/index.css"
+    "src/index.css",
+    "src/styles"
   ],
   "scripts": {
     "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
