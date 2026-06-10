@@ -51,6 +51,11 @@ export default defineComponent({
 
         const items = ref<Realm[]>([]);
         const busy = ref(false);
+        // False until the first load settles. The SSR pass and the first
+        // hydration frame run before onMounted's load(), so without this
+        // gate the grid would paint the "no results" empty state (with its
+        // still-unresolved translation fallback) instead of the skeleton.
+        const loaded = ref(false);
         const error = ref<string | null>(null);
         const search = ref('');
 
@@ -83,6 +88,7 @@ export default defineComponent({
                 error.value = e instanceof Error ? e.message : 'The realms could not be loaded.';
             } finally {
                 busy.value = false;
+                loaded.value = true;
             }
         };
 
@@ -127,6 +133,7 @@ export default defineComponent({
         return {
             items,
             busy,
+            loaded,
             error,
             search,
             redirecting,
@@ -151,7 +158,7 @@ export default defineComponent({
         </div>
 
         <div
-            v-if="busy || redirecting"
+            v-if="!loaded || busy || redirecting"
             class="realm-grid"
             aria-hidden="true"
         >
