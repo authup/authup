@@ -17,4 +17,8 @@ export const TranslatorTranslationCommonSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationCommonKey.LOCKED]: 'Bloqueado',
     [TranslatorTranslationCommonKey.NOT_LOCKED]: 'No bloqueado',
     [TranslatorTranslationCommonKey.APPLICATION]: 'Aplicación',
+    [TranslatorTranslationCommonKey.SEARCH]: 'Buscar',
+    [TranslatorTranslationCommonKey.NO_RESULTS]: 'No se encontraron resultados.',
+    [TranslatorTranslationCommonKey.SWITCH_TO_LIGHT_MODE]: 'Cambiar a modo claro',
+    [TranslatorTranslationCommonKey.SWITCH_TO_DARK_MODE]: 'Cambiar a modo oscuro',
 };

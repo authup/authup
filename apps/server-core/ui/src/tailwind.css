@@ -6,6 +6,19 @@
  * so the JIT picks up class-name tokens it can't reach via the theme.
  */
 
+/*
+ * Self-hosted webfonts (no runtime Google Fonts call — the embedded UI
+ * must work in headless/offline deployments). The theme's root.css sets
+ * `body { font-family: Nunito }` and `h1-h6 { font-family: Asap }`;
+ * client-web loads the same families via nuxt-google-fonts.
+ */
+@import "@fontsource/nunito/300.css";
+@import "@fontsource/nunito/400.css";
+@import "@fontsource/nunito/600.css";
+@import "@fontsource/nunito/700.css";
+@import "@fontsource/asap/400.css";
+@import "@fontsource/asap/700.css";
+
 @import "@authup/client-web-theme";
 
 /* Scan this SSR app's templates. */

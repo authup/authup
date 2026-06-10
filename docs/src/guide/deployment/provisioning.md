@@ -7,6 +7,49 @@ On every server startup, the provisioning system synchronizes the declared state
 Built-in defaults (admin user, admin role, system permissions) are always applied first.
 Your custom provisioning files are merged on top.
 
+## Per-Realm Public `web` Client
+
+Every realm automatically gets a built-in, public OAuth2 client named `web`.
+This is the client the web UI (`client-web`) uses to log users in via the
+authorization-code flow with PKCE — selecting a realm on the login screen
+redirects the browser to `/authorize?client_id=web&realm_id=<id>`.
+
+The client is provisioned for every existing realm on startup and for any
+realm created at runtime. Provisioning is idempotent: re-runs refresh the
+client's `redirect_uri` allowlist but never duplicate it.
+
+Its attributes are fixed:
+
+| Attribute         | Value                                                              |
+|-------------------|--------------------------------------------------------------------|
+| `name`            | `web`                                                              |
+| `is_confidential` | `false` (public — no secret, PKCE required)                       |
+| `built_in`        | `true`                                                            |
+| `grant_types`     | `authorization_code refresh_token`                                |
+| `scope`           | `global openid`                                                  |
+| `redirect_uri`    | `<origin>/**` for every trusted app origin (see below)            |
+
+Because the `web` client is built-in and `built_in` is stripped from any
+client you create yourself, the name `web` (and `system`) is reserved —
+attempting to create or rename a client to it returns a `400 Bad Request`.
+
+### Trusted app origins
+
+The `redirect_uri` allowlist is derived from the set of trusted app origins:
+the origin of `publicUrl` plus every entry in `additionalDomains`
+(`ADDITIONAL_DOMAINS`). Each origin contributes one `<origin>/**` redirect
+pattern and is added to the CORS allowlist.
+
+::: danger Security
+The `web` client is built-in with the `global` scope, so **any** allowlisted
+origin can complete a login and obtain a full-permission token. Only add
+origins you fully control to `additionalDomains`. In non-production, the
+client-web dev origin (`http://localhost:3000`) is seeded automatically so
+the realm-selection login works out of the box; in production nothing is
+seeded — set `additionalDomains` explicitly for any UI origin other than
+`publicUrl`.
+:::
+
 ## File-Based Provisioning
 
 Place one or more provisioning files in the `provisioning/` subdirectory of the writable directory.

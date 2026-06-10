@@ -1,0 +1,181 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+/*
+ * Realm chooser (<ARealmGrid> in @authup/client-web-kit) — the tile
+ * grid on the login entry page, with search input, skeleton loading
+ * state and empty state. Colors come from the --authup-auth-* /
+ * --authup-realm-* tokens (see ./tokens.css).
+ */
+
+.realm-select-alert {
+    margin-bottom: 1rem;
+}
+
+.realm-search {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+
+.realm-search-icon {
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    color: var(--authup-auth-surface-color-muted);
+    pointer-events: none;
+}
+
+.realm-search-input {
+    width: 100%;
+    padding: 0.65rem 1rem 0.65rem 2.4rem;
+    border: 1px solid var(--authup-auth-surface-border-color);
+    border-radius: 0.65rem;
+    background: var(--authup-auth-surface-background);
+    color: var(--authup-auth-surface-color);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.realm-search-input:focus {
+    border-color: var(--authup-auth-accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--authup-auth-accent) 25%, transparent);
+}
+
+.realm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--authup-realm-grid-item-min-width), 1fr));
+    gap: 1rem;
+}
+
+.realm-grid-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: var(--authup-realm-grid-item-min-height);
+    padding: 1.25rem 1rem;
+    border: 1px solid var(--authup-auth-surface-border-color);
+    border-radius: var(--authup-realm-grid-item-border-radius);
+    background: var(--authup-auth-surface-background);
+    color: var(--authup-auth-surface-color);
+    cursor: pointer;
+    overflow: hidden;
+    text-align: center;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+/* Animated gradient border, revealed on hover via the mask-composite
+   ring trick (paints only the 1px padding band, leaving the fill clear). */
+.realm-grid-item::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        120deg,
+        var(--authup-auth-accent),
+        var(--authup-auth-accent-alt),
+        var(--authup-auth-accent)
+    );
+    background-size: 200% 200%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.realm-grid-item:hover {
+    transform: translateY(-3px);
+    border-color: transparent;
+    box-shadow: 0 10px 30px -12px color-mix(in oklab, var(--authup-auth-accent) 70%, transparent);
+}
+
+.realm-grid-item:hover::before {
+    opacity: 1;
+    animation: realm-border-pan 3s linear infinite;
+}
+
+.realm-grid-item:focus-visible {
+    outline: none;
+    border-color: transparent;
+}
+
+.realm-grid-item:focus-visible::before {
+    opacity: 1;
+}
+
+.realm-grid-item-name {
+    font-weight: 600;
+    word-break: break-word;
+}
+
+.realm-grid-item-slug {
+    color: var(--authup-auth-surface-color-muted);
+    font-size: 0.8em;
+    word-break: break-word;
+}
+
+.realm-grid-item--skeleton {
+    cursor: default;
+    pointer-events: none;
+    border-color: var(--authup-auth-surface-border-color);
+    background: linear-gradient(
+        90deg,
+        var(--authup-auth-surface-background-muted) 25%,
+        var(--authup-auth-surface-background) 37%,
+        var(--authup-auth-surface-background-muted) 63%
+    );
+    background-size: 400% 100%;
+    animation: realm-skeleton 1.4s ease infinite;
+}
+
+.realm-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 2.5rem 1rem;
+    color: var(--authup-auth-surface-color-muted);
+    text-align: center;
+}
+
+.realm-empty-icon {
+    font-size: 1.75rem;
+    opacity: 0.6;
+}
+
+@keyframes realm-border-pan {
+    to {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes realm-skeleton {
+    0% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0 50%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .realm-grid-item,
+    .realm-grid-item::before,
+    .realm-grid-item--skeleton {
+        transition: none;
+        animation: none;
+    }
+}

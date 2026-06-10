@@ -347,8 +347,19 @@ export function createStore(context: StoreCreateContext) {
         context.dispatcher.emit(StoreDispatcherEventName.LOGGED_IN);
     };
 
-    const exchangeAuthorizationCode = async (code: string) => {
-        const response = await client.token.createWithAuthorizationCode({ code });
+    const exchangeAuthorizationCode = async (
+        code: string,
+        params: {
+            code_verifier?: string,
+            redirect_uri?: string,
+            client_id?: string,
+            realm_id?: string
+        } = {},
+    ) => {
+        const response = await client.token.createWithAuthorizationCode({
+            code,
+            ...params,
+        });
 
         await cleanup();
 

@@ -6,9 +6,11 @@
  */
 
 import {
-    type Store, 
-    type StoreToRefs, 
-    injectStore, 
+    type Store,
+    type StoreToRefs,
+    clearAuthorizationRequest,
+    injectStore,
+    loadAuthorizationRequest,
     storeToRefs,
 } from '@authup/client-web-kit';
 import { hasOwnProperty, omitRecord } from '@authup/kit';
@@ -43,16 +45,67 @@ export class RoutingInterceptor {
     ) : Promise<RouteLocationAsPathGeneric | undefined> {
         const code = typeof to.query.code === 'string' ? to.query.code : undefined;
         if (code) {
+            // The authorization-code exchange needs the PKCE `code_verifier`
+            // persisted in sessionStorage, which exists only client-side.
+            // Running it during SSR would exchange without a verifier —
+            // rejected for public PKCE clients (the per-realm `web` client)
+            // and burning the single-use code before the client can retry.
+            // Defer entirely to the client pass; the callback route is
+            // client-only (routeRules) so SSR never reaches here in practice.
+            if (import.meta.server) {
+                return undefined;
+            }
+
+            const request = loadAuthorizationRequest();
+
             try {
-                await this.store.exchangeAuthorizationCode(code);
+                if (request) {
+                    const state = typeof to.query.state === 'string' ? to.query.state : undefined;
+                    if (request.state !== state) {
+                        throw new Error('The authorization request state does not match.');
+                    }
+
+                    await this.store.exchangeAuthorizationCode(code, {
+                        code_verifier: request.code_verifier,
+                        redirect_uri: request.redirect_uri,
+                        client_id: request.client_id,
+                        realm_id: request.realm_id,
+                    });
+                } else {
+                    await this.store.exchangeAuthorizationCode(code);
+                }
+
+                clearAuthorizationRequest();
+
+                // `target` is a full path (it originates from `to.fullPath`)
+                // and may carry its own query/hash. Parse it so vue-router
+                // doesn't URL-encode the `?`/`#` into the pathname. Only the
+                // path/query/hash are used — any host is discarded, so an
+                // absolute URL can't turn this into an open redirect.
+                if (request?.target) {
+                    const url = new URL(request.target, 'http://localhost');
+                    return {
+                        path: url.pathname,
+                        query: Object.fromEntries(url.searchParams.entries()),
+                        hash: url.hash,
+                    };
+                }
 
                 return {
                     path: to.path,
-                    query: omitRecord(to.query, ['code']),
+                    query: omitRecord(to.query, ['code', 'state']),
                     hash: to.hash,
                 };
             } catch {
-                // code exchange failed — continue without authentication
+                clearAuthorizationRequest();
+
+                // Code exchange failed — strip `code`/`state` from the URL so a
+                // reload can't re-attempt the (already consumed) code and loop.
+                return {
+                    path: to.path,
+                    query: omitRecord(to.query, ['code', 'state']),
+                    hash: to.hash,
+                };
             }
         }
 

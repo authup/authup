@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { buildSubmitButtonDefaults, injectTranslatorLocale } from '@authup/client-web-kit';
+import { buildSubmitButtonDefaults } from '@authup/client-web-kit';
 import { de } from 'date-fns/locale/de';
 
 import vuecs from '@vuecs/core';
@@ -48,13 +48,12 @@ export default defineNuxtPlugin({
     // is still in time for the first page render.
     dependsOn: ['authup'],
     setup(ctx) {
-        // authup's ilingo translator (installed by the `authup` plugin this
-        // one `dependsOn`) is the single source of truth for the active
-        // locale. Bridge it into vuecs's `Config['locale']` as a reactive ref;
-        // @vuecs/timeago 2.1+ reads the active locale via `useLocale()` — its
-        // per-package `injectLocale()` ref was removed.
-        const locale = injectTranslatorLocale();
-
+        // Locale is owned by vuecs (the @vuecs/nuxt locale plugin — enabled by
+        // default — manages the `vc-locale` cookie + `Config['locale']`, the
+        // same way color-mode owns `vc-color-mode`). The language switcher
+        // writes vuecs (`useLocaleControl`); ilingo follows one-way via
+        // `syncTranslatorLocaleFromManager` in the post plugin. So no
+        // `config.locale` feed here.
         ctx.vueApp.use(vuecs, {
             // Register both themes side-by-side. The kit theme owns
             // overrides the kit's own components need (e.g. formGroup
@@ -63,7 +62,6 @@ export default defineNuxtPlugin({
             // matters: kit first, app overrides win on conflicts.
             themes: [clientWebKitTheme(), clientWebTheme()],
             icons: [fontAwesome()],
-            config: { locale },
             defaults: {
                 // Wire authup's translator + icon choices into vuecs's
                 // DefaultsManager so `useSubmitButton()` / `buildFormSubmit()`

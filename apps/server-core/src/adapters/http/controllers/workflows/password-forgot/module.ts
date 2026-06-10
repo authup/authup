@@ -5,26 +5,47 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { PasswordForgotPayload, PasswordForgotResponse } from '@authup/core-http-kit';
+import type { PasswordForgotPayload, PasswordForgotResponse, StatusResponseFeatures } from '@authup/core-http-kit';
 import {
     DBody,
     DContext,
     DController,
+    DGet,
     DPost,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
 import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
+import { serveWorkflowPage } from '../../../ui/index.ts';
+
+export type PasswordForgotControllerOptions = {
+    baseURL: string,
+    features: StatusResponseFeatures,
+};
 
 export type PasswordForgotControllerContext = {
+    options: PasswordForgotControllerOptions,
     service: IPasswordRecoveryService,
 };
 
 @DController('/password-forgot')
 export class PasswordForgotController {
+    protected options: PasswordForgotControllerOptions;
+
     protected service: IPasswordRecoveryService;
 
     constructor(ctx: PasswordForgotControllerContext) {
+        this.options = ctx.options;
         this.service = ctx.service;
+    }
+
+    @DGet('', [])
+    async serve(@DContext() event: IAppEvent): Promise<string> {
+        return serveWorkflowPage(event, {
+            url: '/password-forgot',
+            baseURL: this.options.baseURL,
+            features: this.options.features,
+            realmAware: true,
+        });
     }
 
     @DPost('', [])

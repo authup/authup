@@ -63,7 +63,8 @@
 @import "./styles/tokens.css";
 @import "./styles/list.css";
 @import "./styles/picker.css";
-@import "./styles/authorize.css";
+@import "./styles/auth.css";
+@import "./styles/realm.css";
 @import "./styles/login.css";
 
 /*

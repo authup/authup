@@ -42,3 +42,17 @@ export const LOCALE_CODES: readonly LocaleCode[] = LOCALES.map((locale) => local
 export function isLocale(input: unknown): input is LocaleCode {
     return typeof input === 'string' && (LOCALE_CODES as readonly string[]).includes(input);
 }
+
+/**
+ * Narrow a BCP-47 tag (e.g. `de-DE`, resolved from a `vc-locale` cookie or
+ * the browser language) onto a supported catalog locale, or `undefined`
+ * when the language is not authored. Mirrors ilingo's `de-AT → de` narrowing.
+ */
+export function matchLocale(input?: string | null): LocaleCode | undefined {
+    if (!input) {
+        return undefined;
+    }
+
+    const [short] = input.toLowerCase().split('-');
+    return isLocale(short) ? short : undefined;
+}

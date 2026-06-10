@@ -51,6 +51,13 @@ export class IdentityRoleProvider implements IIdentityRoleProvider {
             return entities;
         }
 
-        return entities.filter((entity) => entity.client_id === identity.clientId);
+        // Keep client-agnostic (global / realm) roles — client_id null — in
+        // addition to roles scoped to the authenticating client. Dropping the
+        // null case stripped every global/realm role from a token issued via
+        // a real client (e.g. the per-realm `web` client used by the
+        // realm-selection login), leaving permissions/roles empty.
+        return entities.filter(
+            (entity) => !entity.client_id || entity.client_id === identity.clientId,
+        );
     }
 }

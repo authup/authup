@@ -38,6 +38,20 @@ export default {
      */
     publicUrl: 'http://localhost:3001',
 
+    /**
+     * Additional trusted origins (bare origins, e.g. https://app.example.com).
+     * Each origin is added to the CORS allowlist and to the redirect-URI
+     * allowlist of the per-realm public `web` client (as `<origin>/**`).
+     * The origin of `publicUrl` is always trusted implicitly.
+     *
+     * Security: the `web` client is built-in with global scope, so any
+     * allowlisted origin can complete a login and obtain a full-permission
+     * token — only add origins you control. In non-production, the
+     * client-web dev origin (http://localhost:3000) is seeded automatically.
+     * default: []
+     */
+    additionalDomains: ['https://app.example.com'],
+
     // ----------------------------------------------------
 
     /**
@@ -128,6 +142,7 @@ export default {
 ```dotenv [authup.server.core.conf]
 port=3001
 publicUrl=http://localhost:3001
+additionalDomains=https://app.example.com
 registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
@@ -143,6 +158,7 @@ permissionsDefaultPolicyAssignment=true
 ```dotenv [.env]
 PORT=3001
 PUBLIC_URL=http://localhost:3001
+ADDITIONAL_DOMAINS=https://app.example.com
 REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false

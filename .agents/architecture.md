@@ -281,17 +281,79 @@ Workflow services receive options via their context type:
 export type RegistrationServiceOptions = {
     registrationEnabled?: boolean,
     emailVerificationEnabled?: boolean,
+    publicUrl?: string,
 };
 
 export type PasswordRecoveryServiceOptions = {
     passwordRecoveryEnabled?: boolean,
     emailVerificationEnabled?: boolean,
+    publicUrl?: string,
 };
 ```
 
 Feature gates check these options before proceeding (e.g. `if (!this.options.registrationEnabled) throw ...`). Options are wired from app config in `app/modules/http/modules/controller.ts`.
 
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw — don't leave orphaned records.
+
+**Mail templates:** workflow services do **not** build mail HTML inline —
+they depend on the `IMailTemplateRenderer` port (`core/mail/`) and pass
+`{ template: MailTemplateName.X, params: { code, url? }, locale? }`. The
+default `MailTemplateRenderer` resolves localized copy from
+`core/mail/templates.ts` (en/de/fr/es, BCP-47-narrowed, falling back to the
+default locale), html-escapes interpolated values, and wraps the body in a
+small branded inline-styled shell (subject + html + **text** for multipart).
+Mail copy lives in `core/mail` (not `@authup/i18n`) — it's a server-rendered
+concern with no frontend coupling. Pure + injectable, so mail content is
+assertable via `FakeMailClient` (see `test/unit/core/mail/renderer.spec.ts`).
+
+**Mail deep links:** when `publicUrl` is set, the renderer receives a `url`
+param — `<publicUrl>/activate?token=<hash>` for activation and
+`<publicUrl>/password-reset?token=<hash>&realm_id=<id>` for reset (the
+`realm_id` is required so a non-master user's reset link resolves the right
+realm) — rendered as the call-to-action link. Both land on backend-served SSR
+pages (see *Auth Workflow UI* below) that prefill the code from the query.
+The raw code stays in the mail body for copy/paste; no identifier/PII is put
+into the URL (the reset form asks for email/name).
+
+#### Auth Workflow UI (backend-served SSR pages) + Status Endpoint
+
+Authup can run headless (server-core without client-web), so every auth
+workflow page is served by the embedded SSR app (`apps/server-core/ui`),
+not by client-web:
+
+- **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
+  `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
+  path remains the JSON API. The render plumbing is shared:
+  `renderUIPage(event, { url, payload })` in `adapters/http/ui/render.ts`
+  (JIT vs dist, template, manifest, preload links, content-type).
+- **Feature flags** ride the hydration payload (`data.features`,
+  `StatusResponseFeatures` shape) — pages render the form when the
+  workflow is enabled, otherwise a localized "disabled" notice (no 404:
+  stale email links should not dead-end). The same flags are exposed
+  publicly on the root status endpoint `GET /`
+  (`StatusController` → `{ version, date, features: { registration,
+  passwordRecovery, emailVerification } }`, typed `StatusResponse` in
+  `@authup/core-http-kit`, consumed via `client.status.get()`).
+- **Flow continuity**: workflow links carry a same-origin `redirect` query
+  param (the original `/authorize` path + query) so "back to login"
+  restores the authorize request. `sanitizeRelativeRedirect()` in
+  `adapters/http/ui/render.ts` rejects absolute / protocol-relative URLs
+  (open-redirect guard).
+- **Kit form components** (`@authup/client-web-kit`,
+  `src/components/workflows/`): `ALoginForm` (renamed from `ALogin`,
+  deprecated alias kept; optional `registerLink` / `passwordForgotLink`
+  `LinkProperties` props rendered via `<VCLink>` — presence shows the
+  link), `ARegisterForm` (embeds `AActivateForm` when the register
+  response is inactive), `AActivateForm`, `APasswordForgotForm`,
+  `APasswordResetForm`. All pure: `injectHTTPClient()` +
+  `done`/`failed` emits, inline permissive validup/zod validators (server
+  is authoritative). `AAuthShell` (utility) provides the shared aurora
+  backdrop + theme-token card + compact logo mark used by all SSR auth
+  pages (it replaced the legacy hardcoded `#E8E8E8` card in
+  `AAuthorize`). The auth-chrome CSS (shell, gadgets, back-link, realm
+  grid) lives in `@authup/client-web-kit-theme`
+  (`src/styles/{auth,realm}.css`, behind `--authup-auth-*` /
+  `--authup-realm-*` tokens) — kit components ship no `<style>` blocks.
 
 ### Thin Controller Pattern (HTTP Adapter)
 
@@ -407,6 +469,44 @@ The provisioning system declaratively synchronizes entities (permissions, roles,
 `GraphProvisioningSynchronizer` processes in order: policies → permissions → roles → scopes → realms.
 `RealmProvisioningSynchronizer` processes per realm: clients → permissions → roles → users → robots → scopes.
 
+### Per-Realm Public `web` Client
+
+Every realm auto-provisions a public OAuth2 client named **`web`** (constant
+`CLIENT_WEB_NAME` in `@authup/core-kit`) used by authup's own client-web and any
+downstream UI embedding `client-web-kit`. It powers the realm-selection login
+flow (auth-code + PKCE), so there is no per-realm FK, no migration, and no new
+endpoint — the `/authorize` verifier already resolves clients via
+`findOneByIdOrName('web', realm_id)`.
+
+- **Attributes** (`buildWebClientAttributes`, `core/entities/client/web-client.ts`):
+  `is_confidential: false`, `built_in: true`, `active: true`,
+  `grant_types: 'authorization_code refresh_token'` (metadata only),
+  `scope: 'global openid'`, `redirect_uri` = one `<origin>/**` wildcard per
+  trusted app origin (matched by `isSimpleMatch`).
+- **App origins** come from `getAppOrigins(config)` = `[publicUrl, ...additionalDomains]`
+  reduced to bare origins. `ADDITIONAL_DOMAINS` (env, comma-separated) is
+  **security-sensitive**: the `web` client is `built_in` (auto-consent) + `global`
+  scope, so any allowlisted origin can obtain a full-permission user token. The
+  same origin list also drives the CORS `origin` allowlist
+  (`mountCors` in `app/modules/http/modules/middleware.ts`). In non-production,
+  `http://localhost:3000` is dev-seeded so client-web works on first run.
+- **Provisioning (`WebClientProvisioner.ensureForRealm`)** is the single upsert
+  mechanism, run two ways and sharing the same factory so they can't drift:
+  1. **Startup** — `ProvisionerModule` lists every realm (incl. pre-existing)
+     after the graph sync and upserts each realm's `web` client (MERGE — refreshes
+     `redirect_uri` when config changes).
+  2. **Runtime** — `RealmService.save()` calls `ensureForRealm` when it *creates*
+     a new realm, via the injected `webClientProvisioner` (system-level, ungated —
+     a realm creator may lack `CLIENT_CREATE`). Not called on update.
+  Idempotent; guarded on `built_in` — a non-built-in client named `web` is never
+  overwritten (skip + warn).
+- **Guardrails:** `web` and `system` are reserved client names — `ClientService.save()`
+  rejects API attempts to create/rename a client onto them (`CLIENT_RESERVED_NAMES`).
+  The client validator strips `built_in` on create/update, so no API caller can
+  self-assign it — only provisioned clients are `built_in`. The SSR `AuthorizeForm`
+  auto-submits consent for `built_in` clients (skips the Allow/Deny step); user-
+  created clients are never `built_in` and still show consent.
+
 ### File Structure
 
 ```text
@@ -439,10 +539,14 @@ adapters/http/controllers/entities/
   {entity}/index.ts                 — exports module.ts only
 
 adapters/http/controllers/workflows/
-  register/module.ts                — Thin RegisterController → IRegistrationService
-  activate/module.ts                — Thin ActivateController → IRegistrationService
-  password-forgot/module.ts         — Thin PasswordForgotController → IPasswordRecoveryService
-  password-reset/module.ts          — Thin PasswordResetController → IPasswordRecoveryService
+  register/module.ts                — RegisterController → IRegistrationService (POST API + GET serves SSR page)
+  activate/module.ts                — ActivateController → IRegistrationService (POST API + GET serves SSR page)
+  password-forgot/module.ts         — PasswordForgotController → IPasswordRecoveryService (POST API + GET serves SSR page)
+  password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST API + GET serves SSR page)
+  status/module.ts                  — StatusController (GET / → version + feature flags)
+
+adapters/http/ui/
+  render.ts                         — renderUIPage(event, {url, payload}) shared SSR plumbing + sanitizeRelativeRedirect()
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function

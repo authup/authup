@@ -7,4 +7,5 @@
 
 export * from './constants.ts';
 export * from './module.ts';
+export * from './origins.ts';
 export * from './types.ts';

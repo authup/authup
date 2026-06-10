@@ -28,4 +28,6 @@ export const TranslatorTranslationFieldGerman : NamespaceTranslations<`${Transla
     [TranslatorTranslationFieldKey.DAY_OF_MONTH]: 'Tag des Monats',
     [TranslatorTranslationFieldKey.DAY_OF_YEAR]: 'Tag des Jahres',
     [TranslatorTranslationFieldKey.VALUE_IS_REGEX]: 'Ist der Wert ein Regex-Muster?',
+
+    [TranslatorTranslationFieldKey.CODE]: 'Code',
 };

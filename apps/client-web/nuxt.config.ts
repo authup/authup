@@ -19,6 +19,13 @@ export default defineNuxtConfig({
 
     devtools: { componentInspector: false },
 
+    // The OAuth2 callback exchanges a single-use authorization code using a
+    // PKCE verifier kept in sessionStorage — a client-only resource. Render
+    // the route client-side only so the route middleware never runs during
+    // SSR (where it would exchange without the verifier and consume the
+    // code). See packages/client-web-nuxt RoutingInterceptor.
+    routeRules: { '/login/callback': { ssr: false } },
+
     experimental: {
         // todo: enable after v3.12.4
         scanPageMeta: false,

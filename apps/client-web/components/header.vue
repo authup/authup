@@ -6,7 +6,12 @@
   -->
 <script lang="ts">
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { LanguageSwitcherDropdown, injectStore, useTranslationsForNamespace } from '@authup/client-web-kit';
+import {
+    AColorModeSwitcher,
+    ALanguageSwitcherDropdown,
+    injectStore,
+    useTranslationsForNamespace,
+} from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import {
     computed,
@@ -18,7 +23,11 @@ import { LayoutTopNavigation } from '../config/layout';
 import LogoSVG from './svg/LogoSVG';
 
 export default defineNuxtComponent({
-    components: { LanguageSwitcherDropdown, LogoSVG },
+    components: {
+        AColorModeSwitcher, 
+        ALanguageSwitcherDropdown, 
+        LogoSVG, 
+    },
     setup() {
         const store = injectStore();
         const {
@@ -31,8 +40,6 @@ export default defineNuxtComponent({
             [
                 { key: TranslatorTranslationAppKey.GENERAL },
                 { key: TranslatorTranslationAppKey.TOGGLE_NAVIGATION },
-                { key: TranslatorTranslationAppKey.SWITCH_TO_LIGHT_MODE },
-                { key: TranslatorTranslationAppKey.SWITCH_TO_DARK_MODE },
             ],
         );
 
@@ -53,12 +60,9 @@ export default defineNuxtComponent({
         // `useColorMode()` is auto-imported by @vuecs/nuxt. The
         // composable returns a { mode, isDark } pair backed by the
         // `vc-color-mode` cookie + `.dark` / `.light` class on <html>;
-        // toggling `isDark` flips both server-side (SSR-safe via cookie)
-        // and client-side (immediate class swap).
+        // writing `isDark` (via the switcher's v-model) flips both
+        // server-side (SSR-safe via cookie) and client-side.
         const { isDark } = useColorMode();
-        const toggleColorMode = () => {
-            isDark.value = !isDark.value;
-        };
 
         return {
             loggedIn,
@@ -67,7 +71,6 @@ export default defineNuxtComponent({
             toggleNav,
             displayNav,
             isDark,
-            toggleColorMode,
             translationsApp,
         };
     },
@@ -113,18 +116,13 @@ export default defineNuxtComponent({
 
                     <ul class="navbar-nav vc-nav-items navbar-gadgets">
                         <li class="vc-nav-item">
-                            <button
-                                type="button"
+                            <AColorModeSwitcher
+                                v-model:dark="isDark"
                                 class="vc-nav-link"
-                                :aria-label="isDark ? translationsApp.switchToLightMode : translationsApp.switchToDarkMode"
-                                :aria-pressed="isDark ? 'true' : 'false'"
-                                @click.prevent="toggleColorMode"
-                            >
-                                <VCIcon :name="isDark ? 'fa6-solid:sun' : 'fa6-solid:moon'" />
-                            </button>
+                            />
                         </li>
                         <li class="vc-nav-item">
-                            <LanguageSwitcherDropdown link-class-extra="vc-nav-link" />
+                            <ALanguageSwitcherDropdown link-class-extra="vc-nav-link" />
                         </li>
                         <template v-if="loggedIn && user">
                             <li class="vc-nav-item">

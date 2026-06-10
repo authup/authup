@@ -10,7 +10,7 @@
  *
  * Override seam for the authup-owned styles of the components that live
  * in `@authup/client-web-kit`. The component partials (list / picker /
- * authorize / login) read ONLY these `--authup-*` vars — never raw
+ * auth / realm / login) read ONLY these `--authup-*` vars — never raw
  * colors — so a consumer app reskins a component by overriding the var,
  * not by re-stating the rule.
  *
@@ -53,15 +53,36 @@
         --authup-picker-item-padding:           0.5rem;
         --authup-picker-item-border-radius:     4px;
 
-        /* authorize (.authorize — consent card) ----------------------- */
-        --authup-authorize-background:          var(--vc-color-bg-muted);
-        --authup-authorize-padding:             1rem;
-        --authup-authorize-min-width:           480px;
-        --authup-authorize-min-height:          300px;
-        --authup-authorize-border-radius:       5px;
-        --authup-authorize-box-shadow:          0 8px 16px rgba(0, 0, 0, 0.24);
+        /*
+         * auth chrome (.auth-shell / .auth-gadget / .auth-back-link and
+         * the realm chooser) — the shared logged-out surfaces rendered
+         * by client-web's auth layout and the embedded SSR auth pages.
+         *
+         * The accents prefer the app-theme brand vars
+         * (`--authup-periwinkle` / `--authup-rose`, declared by
+         * `@authup/client-web-theme`); when this kit theme is consumed
+         * standalone the fallback keeps the accent on the consumer's
+         * own primary palette (resp. a neutral rose literal).
+         */
+        --authup-auth-accent:                   var(--authup-periwinkle, var(--vc-color-primary-500));
+        --authup-auth-accent-alt:               var(--authup-rose, #cc8181);
+        --authup-auth-surface-background:       var(--vc-color-bg-elevated);
+        --authup-auth-surface-background-muted: var(--vc-color-bg-muted);
+        --authup-auth-surface-border-color:     var(--vc-color-border);
+        --authup-auth-surface-color:            var(--vc-color-fg);
+        --authup-auth-surface-color-muted:      var(--vc-color-fg-muted);
+        --authup-auth-card-max-width:           460px;
+        --authup-auth-card-padding:             1.75rem;
+        --authup-auth-card-border-radius:       1rem;
+        --authup-auth-card-box-shadow:          0 18px 45px -18px rgb(0 0 0 / 35%);
+        --authup-auth-aurora-opacity:           0.5;
+
+        /* realm chooser (.realm-grid / .realm-grid-item) --------------- */
+        --authup-realm-grid-item-min-width:     150px;
+        --authup-realm-grid-item-min-height:    6.25rem;
+        --authup-realm-grid-item-border-radius: 0.85rem;
 
         /* login (.identity-provider-box) ------------------------------ */
-        --authup-login-provider-min-width:      150px;
+        --authup-login-provider-min-width:      120px;
     }
 }

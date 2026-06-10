@@ -22,4 +22,16 @@ export const TranslatorTranslationClientGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.GOVERNED_BY]: 'Diese Anwendung unterliegt den Datenschutz- und Nutzungsbedingungen der Anwendung {{client}}.',
     [TranslatorTranslationClientKey.ACTIVE_SINCE]: 'Aktiv seit',
     [TranslatorTranslationClientKey.VIEW_POLICY_DETAILS]: 'Richtliniendetails anzeigen',
+
+    [TranslatorTranslationClientKey.CREATE_ACCOUNT]: 'Konto erstellen',
+    [TranslatorTranslationClientKey.FORGOT_PASSWORD]: 'Passwort vergessen?',
+    [TranslatorTranslationClientKey.RESET_PASSWORD]: 'Passwort zurücksetzen',
+    [TranslatorTranslationClientKey.ACTIVATE_ACCOUNT]: 'Konto aktivieren',
+    [TranslatorTranslationClientKey.BACK_TO_LOGIN]: 'Zurück zur Anmeldung',
+    [TranslatorTranslationClientKey.EMAIL_OR_NAME]: 'E-Mail oder Name',
+    [TranslatorTranslationClientKey.CHECK_EMAIL_ACTIVATE]: 'Prüfe deine E-Mails für den Aktivierungscode.',
+    [TranslatorTranslationClientKey.CHECK_EMAIL_RESET]: 'Prüfe deine E-Mails für den Code zum Zurücksetzen.',
+    [TranslatorTranslationClientKey.ACCOUNT_ACTIVATED]: 'Das Konto wurde erfolgreich aktiviert.',
+    [TranslatorTranslationClientKey.PASSWORD_RESET_DONE]: 'Das Passwort wurde erfolgreich zurückgesetzt.',
+    [TranslatorTranslationClientKey.WORKFLOW_DISABLED]: 'Diese Funktion ist nicht aktiviert.',
 };

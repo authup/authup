@@ -6,10 +6,20 @@
  */
 
 /*
- * Identity-provider tile in @authup/client-web-kit's <Login> workflow.
- * Width comes from the --authup-login-provider-min-width token
- * (see ./tokens.css).
+ * Identity-provider tiles in @authup/client-web-kit's <ALoginForm>
+ * workflow. Constrained by the auth-shell card
+ * (--authup-auth-card-max-width): boxes wrap into rows and never grow
+ * past the card's inner width, so a long provider list or name can't
+ * spill over the card corner. Width comes from the
+ * --authup-login-provider-min-width token (see ./tokens.css).
  */
+.identity-provider-item {
+    min-width: 0;
+    max-width: 100%;
+}
+
 .identity-provider-box {
     min-width: var(--authup-login-provider-min-width);
+    max-width: 100%;
+    word-break: break-word;
 }

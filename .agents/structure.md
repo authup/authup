@@ -8,7 +8,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | Name                                      | Type        | Description                                                                                           |
 |-------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](../apps/authup)                  | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
-| [client-web](../apps/client-web)          | Application | A Nuxt-based web application interface for end users.                                                 |
+| [client-web](../apps/client-web)          | Application | A Nuxt-based web application interface for end users. Auth entry pages (`/login`, `/login/callback`) opt into a dedicated chrome-less `layouts/auth.vue` (no header/sidebar/footer; own `VCToastProvider` + toaster, color-mode + language gadgets top-right) so the full-bleed login backdrop reaches the viewport edges. |
 | [server-core](../apps/server-core)        | Service     | A service that forms the backbone of the server-side ecosystem. Embeds a Vite-built Vue 3 consent UI for the OAuth2 `/authorize` endpoint under `ui/`, emitted to `dist/ui/` at build time. |
 
 ## Packages & Libraries
@@ -17,7 +17,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 |-------------------------------------------------|-------------|-----------------------------------------------------------------------------------------------------------|
 | [access](../packages/access)                    | Library     | A package for evaluating permissions and policies.                                                        |
 | [client-web-kit](../packages/client-web-kit)    | Library     | A package containing reusable components, composition aids and utilities for the web application.         |
-| [client-web-kit-theme](../packages/client-web-kit-theme)| Library | Kit-level vuecs theme — composes `@vuecs/theme-tailwind` with the element overrides `@authup/client-web-kit`'s components need. **Also owns all of `@authup/client-web-kit`'s component CSS** (the kit itself ships zero `<style>` blocks): `src/styles/{tokens,list,picker,authorize,login}.css`. `tokens.css` declares overridable `--authup-<component>-*` design tokens in `@layer authup` (vuecs-style — placed before `base` in the layer order so a consumer's `@layer base { :root }` or unlayered `:root` override wins); the partials consume those tokens, which default to `--vc-color-*` semantic aliases (so dark mode tracks for free). Two tsdown entries: `src/index.ts` → `dist/index.mjs` (theme factory) and `src/style.css` → `dist/style.css` (bundled theme — rolldown inlines the `./styles/*` partials + `tailwindcss`/`@vuecs/*` CSS; `@tailwind utilities;` survives so the consumer app's Tailwind still runs the JIT). Ships `dist` only; `exports.style` → `./dist/style.css`. In workspace dev the apps consume `src/index.css` directly via their Vite/Nuxt alias to this package's `src`. |
+| [client-web-kit-theme](../packages/client-web-kit-theme)| Library | Kit-level vuecs theme — composes `@vuecs/theme-tailwind` with the element overrides `@authup/client-web-kit`'s components need. **Also owns all of `@authup/client-web-kit`'s component CSS** (the kit itself ships zero `<style>` blocks): `src/styles/{tokens,list,picker,auth,realm,login}.css` (`auth.css` = the logged-out chrome — `AAuthShell` aurora/card, `AAuthGadgets`, `AAuthBackLink`; `realm.css` = the `ARealmGrid` realm chooser). `tokens.css` declares overridable `--authup-<component>-*` design tokens in `@layer authup` (vuecs-style — placed before `base` in the layer order so a consumer's `@layer base { :root }` or unlayered `:root` override wins); the partials consume those tokens, which default to `--vc-color-*` semantic aliases (so dark mode tracks for free). Two tsdown entries: `src/index.ts` → `dist/index.mjs` (theme factory) and `src/style.css` → `dist/style.css` (bundled theme — rolldown inlines the `./styles/*` partials + `tailwindcss`/`@vuecs/*` CSS; `@tailwind utilities;` survives so the consumer app's Tailwind still runs the JIT). Ships `dist` only; `exports.style` → `./dist/style.css`. In workspace dev the apps consume `src/index.css` directly via their Vite/Nuxt alias to this package's `src`. |
 | [client-web-nuxt](../packages/client-web-nuxt)  | Library     | A package for the integration in a nuxt web application.                                                  |
 | [client-web-theme](../packages/client-web-theme)| Library     | Authup app theme for vuecs components, built on `@vuecs/theme-tailwind` (extends `@authup/client-web-kit-theme`). Ships a single CSS entry (`@authup/client-web-theme/index.css`) consumed by the apps. |
 | [core-kit](../packages/core-kit)                | Library     | A package providing functions, interfaces and utilities for the core service.                             |
@@ -132,14 +132,36 @@ consumer app's plugin file (`apps/client-web/plugins/vuecs.ts` and
 The client-web Nuxt plugin declares `dependsOn: ['authup:kit']` so it
 runs AFTER `@authup/client-web-nuxt`'s kit plugin. The kit plugin's
 `install()` calls `installTranslator()` which provides the ilingo
-locale via `app.provide(LocaleSymbol, ...)`; the vuecs plugin's
-`injectTranslatorLocale()` (used to sync the timeago locale) reads
-that symbol back. Using `enforce: 'pre'` here would invert the order
-and make `injectLocale()` throw — that throw aborts the plugin chain
-before `@pinia/nuxt`'s setup runs, and the pinia plugin's
-already-registered `app:rendered` hook then reads `nuxtApp.$pinia` as
-undefined and fails SSR with a misleading "Cannot read properties of
-undefined (reading 'state')". The kit's `install()` only registers
-`app.component(...)`s (it does not render them), so installing the
-vuecs theme manager afterwards is still in time for the first page
-render.
+locale via `app.provide(LocaleSymbol, ...)`. Using `enforce: 'pre'` here
+would invert the order and make `injectLocale()` throw — that throw
+aborts the plugin chain before `@pinia/nuxt`'s setup runs, and the pinia
+plugin's already-registered `app:rendered` hook then reads
+`nuxtApp.$pinia` as undefined and fails SSR with a misleading "Cannot
+read properties of undefined (reading 'state')". The kit's `install()`
+only registers `app.component(...)`s (it does not render them), so
+installing the vuecs theme manager afterwards is still in time for the
+first page render.
+
+### Locale ownership (vuecs owns it, ilingo follows)
+
+`@vuecs/locale` is the **source of truth** for the active UI locale —
+cookie-backed (`vc-locale`), `auto`/browser-resolved, `<html lang>`
+synced, and it drives `Config['locale']` (so `@vuecs/timeago` etc.
+follow). This mirrors color-mode (`@vuecs/design`'s `bindColorMode` +
+the `vc-color-mode` cookie). client-web gets it from `@vuecs/nuxt`'s
+locale plugin (enabled by default; `name: 'vuecs-locale'`,
+`enforce: 'post'`); `apps/server-core/ui` calls `installLocale` with a
+`vc-locale`-cookie-backed source.
+
+- The **language switcher** (`ALanguageSwitcherDropdown`) writes vuecs
+  via `useLocaleControl()` (`packages/client-web-kit/src/core/translator/locale.ts`),
+  which prefers `@vuecs/locale`'s `useLocaleManager` and **falls back to
+  the ilingo locale ref** when vuecs-locale isn't installed (so the kit
+  component still works for downstream consumers without it).
+- **ilingo follows vuecs one-way** via `syncTranslatorLocaleFromManager(app)`:
+  client-web runs it in a post plugin (`plugins/vuecs-locale.ts`,
+  `dependsOn: ['vuecs-locale']`); server-core/ui calls it after
+  `installLocale`. There is no reverse bridge — the switcher writing
+  vuecs already persists + resolves. Do **not** re-add a
+  `config: { locale: injectTranslatorLocale() }` feed in the consumer
+  `app.use(vuecs, ...)`: the locale plugin owns `Config['locale']`.

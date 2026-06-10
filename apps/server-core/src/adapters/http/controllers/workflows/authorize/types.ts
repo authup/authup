@@ -5,6 +5,7 @@
  *  view the LICENSE file that was distributed with this source code.
  */
 
+import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type {
     IIdentityResolver,
     IOAuth2AuthorizationCodeIssuer,
@@ -15,6 +16,7 @@ import type {
 
 export type AuthorizeControllerOptions = {
     baseURL: string;
+    features: StatusResponseFeatures;
 };
 
 export type AuthorizeControllerContext = {
