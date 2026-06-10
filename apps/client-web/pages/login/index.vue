@@ -59,9 +59,26 @@ export default defineNuxtComponent({
 
                 const redirectUri = `${window.location.origin}/login/callback`;
 
-                const target = typeof route.query.redirect === 'string' ?
-                    route.query.redirect :
-                    undefined;
+                // Preserve the post-login destination AND any sibling query
+                // params on the login URL (e.g. /login?redirect=/users&invite=x
+                // → /users?invite=x), matching the pre-realm-picker behaviour.
+                const { redirect, ...rest } = route.query;
+                let target: string | undefined;
+                if (typeof redirect === 'string') {
+                    const url = new URL(redirect, window.location.origin);
+                    for (const [key, value] of Object.entries(rest)) {
+                        if (Array.isArray(value)) {
+                            for (const entry of value) {
+                                if (entry != null) {
+                                    url.searchParams.append(key, entry);
+                                }
+                            }
+                        } else if (value != null) {
+                            url.searchParams.set(key, value);
+                        }
+                    }
+                    target = `${url.pathname}${url.search}${url.hash}`;
+                }
 
                 saveAuthorizationRequest({
                     state,

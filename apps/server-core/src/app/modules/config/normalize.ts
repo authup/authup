@@ -43,7 +43,10 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
     // so the redirect allowlist (<origin>/**) and CORS accept logins from the
     // dev UI out of the box; otherwise the realm-selection login is dead on
     // first run.
-    const additionalDomains = parsed.additionalDomains ?? [];
+    // Copy — never mutate the caller-supplied parsed array in place, or a
+    // repeated normalizeConfig() on the same input accumulates the dev origin
+    // into a security-sensitive allowlist.
+    const additionalDomains = [...(parsed.additionalDomains ?? [])];
     if (env !== EnvironmentName.PRODUCTION) {
         const devOrigin = 'http://localhost:3000';
         if (!additionalDomains.includes(devOrigin)) {

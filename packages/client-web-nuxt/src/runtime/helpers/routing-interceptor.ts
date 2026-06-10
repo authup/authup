@@ -45,6 +45,17 @@ export class RoutingInterceptor {
     ) : Promise<RouteLocationAsPathGeneric | undefined> {
         const code = typeof to.query.code === 'string' ? to.query.code : undefined;
         if (code) {
+            // The authorization-code exchange needs the PKCE `code_verifier`
+            // persisted in sessionStorage, which exists only client-side.
+            // Running it during SSR would exchange without a verifier —
+            // rejected for public PKCE clients (the per-realm `web` client)
+            // and burning the single-use code before the client can retry.
+            // Defer entirely to the client pass; the callback route is
+            // client-only (routeRules) so SSR never reaches here in practice.
+            if (import.meta.server) {
+                return undefined;
+            }
+
             const request = loadAuthorizationRequest();
 
             try {

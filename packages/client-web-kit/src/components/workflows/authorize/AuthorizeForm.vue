@@ -91,14 +91,16 @@ export default defineComponent({
             autoConsentFailed.value = false;
 
             try {
+                // Forward the whole code request so the POST /authorize
+                // re-verification sees every parameter the GET did — notably
+                // code_challenge / code_challenge_method (a public client is
+                // rejected without them), plus nonce / realm_id. Only
+                // client_id is overridden with the resolved client id.
                 const response = await httpClient
                     .authorize
                     .confirm({
-                        response_type: props.codeRequest.response_type,
+                        ...props.codeRequest,
                         client_id: props.client.id,
-                        redirect_uri: props.codeRequest.redirect_uri,
-                        ...(props.codeRequest.state ? { state: props.codeRequest.state } : {}),
-                        ...(props.codeRequest.scope ? { scope: props.codeRequest.scope } : {}),
                     });
 
                 const { url } = response;

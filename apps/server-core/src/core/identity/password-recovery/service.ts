@@ -73,8 +73,14 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         await this.repository.save(merged);
 
         try {
+            // realm_id MUST ride the link: resetPassword resolves the realm
+            // from the request and filters the lookup by it, so a realm-less
+            // link resolves to the master realm and never matches a
+            // non-master user.
             const resetUrl = this.options.publicUrl ?
-                `${this.options.publicUrl.replace(/\/+$/, '')}/password-reset?token=${merged.reset_hash}` :
+                `${this.options.publicUrl.replace(/\/+$/, '')}/password-reset` +
+                `?token=${encodeURIComponent(merged.reset_hash!)}` +
+                `&realm_id=${encodeURIComponent(entity.realm_id)}` :
                 undefined;
 
             await this.mailClient.send({
