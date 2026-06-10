@@ -6,13 +6,13 @@
  */
 
 import { LOCALES } from '@authup/i18n';
-import { injectLocale } from '@ilingo/vue';
 import {
     computed,
     defineComponent,
     h,
     ref,
 } from 'vue';
+import { useLocaleControl } from '../../core';
 
 const ALanguageSwitcherDropdown = defineComponent({
     props: {
@@ -28,23 +28,20 @@ const ALanguageSwitcherDropdown = defineComponent({
     setup(props) {
         const opened = ref(false);
 
-        const locale = injectLocale();
+        // vuecs owns the locale (cookie-backed) when installed; the control
+        // falls back to ilingo otherwise. Writing here persists via vuecs.
+        const { code, set } = useLocaleControl();
 
         const elements = computed(() => LOCALES.map((descriptor) => ({
             value: descriptor.code,
             label: descriptor.nativeName,
-            active: locale.value === descriptor.code,
+            active: code.value === descriptor.code,
         })));
 
-        const activeCode = computed(() => {
-            const match = LOCALES.find(
-                (descriptor) => descriptor.code === locale.value,
-            );
-            return match ? match.code : locale.value;
-        });
+        const activeCode = computed(() => code.value);
 
         const setLocale = (input: string) => {
-            locale.value = input;
+            set(input);
             opened.value = false;
         };
 

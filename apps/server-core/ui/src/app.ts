@@ -6,16 +6,16 @@
  */
 
 import {
-    buildSubmitButtonDefaults, 
-    injectStore, 
-    injectTranslatorLocale, 
+    buildSubmitButtonDefaults,
+    injectStore,
     install,
+    syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
-import { isLocale, matchLocale } from '@authup/i18n';
+import { matchLocale } from '@authup/i18n';
 import { omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
-import { createSSRApp, ref, watch } from 'vue';
+import { createSSRApp, ref } from 'vue';
 import { createMemoryHistory, createRouter, createWebHistory } from 'vue-router';
 
 import vuecs from '@vuecs/core';
@@ -142,26 +142,10 @@ export function createApp(payload: HydrationPayload) : {
         translatorLocale: matchLocale(localeHandles.resolved.value),
     });
 
-    // Two-way bridge between the persisted vuecs locale and ilingo (the
-    // translator the language switcher writes): resolved → ilingo keeps
-    // catalogs in sync with `auto`/external changes; ilingo → source
-    // persists a switcher pick into the cookie. Values converge, so the
-    // pair cannot loop. Client-only: during a synchronous renderToString the
-    // locale is fixed, so the watchers would only ever fire after hydration.
-    if (isClient) {
-        const translatorLocale = app.runWithContext(() => injectTranslatorLocale());
-        watch(localeHandles.resolved, (value) => {
-            const mapped = matchLocale(value);
-            if (mapped && mapped !== translatorLocale.value) {
-                translatorLocale.value = mapped;
-            }
-        });
-        watch(translatorLocale, (value) => {
-            if (isLocale(value) && matchLocale(localeSource.value) !== value) {
-                localeSource.value = value;
-            }
-        });
-    }
+    // One-way: ilingo (authup catalogs) follows vuecs's resolved locale — the
+    // source of truth. The language switcher writes vuecs (`useLocaleControl`),
+    // which updates the cookie-backed source above, so no reverse bridge.
+    syncTranslatorLocaleFromManager(app);
 
     // `buildSubmitButtonDefaults()` calls `useTranslation` → `injectIlingo`,
     // which reads the ilingo instance via `inject()`. Outside a component

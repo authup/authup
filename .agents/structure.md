@@ -132,14 +132,36 @@ consumer app's plugin file (`apps/client-web/plugins/vuecs.ts` and
 The client-web Nuxt plugin declares `dependsOn: ['authup:kit']` so it
 runs AFTER `@authup/client-web-nuxt`'s kit plugin. The kit plugin's
 `install()` calls `installTranslator()` which provides the ilingo
-locale via `app.provide(LocaleSymbol, ...)`; the vuecs plugin's
-`injectTranslatorLocale()` (used to sync the timeago locale) reads
-that symbol back. Using `enforce: 'pre'` here would invert the order
-and make `injectLocale()` throw — that throw aborts the plugin chain
-before `@pinia/nuxt`'s setup runs, and the pinia plugin's
-already-registered `app:rendered` hook then reads `nuxtApp.$pinia` as
-undefined and fails SSR with a misleading "Cannot read properties of
-undefined (reading 'state')". The kit's `install()` only registers
-`app.component(...)`s (it does not render them), so installing the
-vuecs theme manager afterwards is still in time for the first page
-render.
+locale via `app.provide(LocaleSymbol, ...)`. Using `enforce: 'pre'` here
+would invert the order and make `injectLocale()` throw — that throw
+aborts the plugin chain before `@pinia/nuxt`'s setup runs, and the pinia
+plugin's already-registered `app:rendered` hook then reads
+`nuxtApp.$pinia` as undefined and fails SSR with a misleading "Cannot
+read properties of undefined (reading 'state')". The kit's `install()`
+only registers `app.component(...)`s (it does not render them), so
+installing the vuecs theme manager afterwards is still in time for the
+first page render.
+
+### Locale ownership (vuecs owns it, ilingo follows)
+
+`@vuecs/locale` is the **source of truth** for the active UI locale —
+cookie-backed (`vc-locale`), `auto`/browser-resolved, `<html lang>`
+synced, and it drives `Config['locale']` (so `@vuecs/timeago` etc.
+follow). This mirrors color-mode (`@vuecs/design`'s `bindColorMode` +
+the `vc-color-mode` cookie). client-web gets it from `@vuecs/nuxt`'s
+locale plugin (enabled by default; `name: 'vuecs-locale'`,
+`enforce: 'post'`); `apps/server-core/ui` calls `installLocale` with a
+`vc-locale`-cookie-backed source.
+
+- The **language switcher** (`ALanguageSwitcherDropdown`) writes vuecs
+  via `useLocaleControl()` (`packages/client-web-kit/src/core/translator/locale.ts`),
+  which prefers `@vuecs/locale`'s `useLocaleManager` and **falls back to
+  the ilingo locale ref** when vuecs-locale isn't installed (so the kit
+  component still works for downstream consumers without it).
+- **ilingo follows vuecs one-way** via `syncTranslatorLocaleFromManager(app)`:
+  client-web runs it in a post plugin (`plugins/vuecs-locale.ts`,
+  `dependsOn: ['vuecs-locale']`); server-core/ui calls it after
+  `installLocale`. There is no reverse bridge — the switcher writing
+  vuecs already persists + resolves. Do **not** re-add a
+  `config: { locale: injectTranslatorLocale() }` feed in the consumer
+  `app.use(vuecs, ...)`: the locale plugin owns `Config['locale']`.
