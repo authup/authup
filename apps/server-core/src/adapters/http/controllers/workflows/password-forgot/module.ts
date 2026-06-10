@@ -14,9 +14,8 @@ import {
     DPost,
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
-import { useRequestQuery } from '@routup/basic/query';
 import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
-import { renderUIPage, sanitizeRelativeRedirect } from '../../../ui/index.ts';
+import { serveWorkflowPage } from '../../../ui/index.ts';
 
 export type PasswordForgotControllerOptions = {
     baseURL: string,
@@ -41,18 +40,11 @@ export class PasswordForgotController {
 
     @DGet('', [])
     async serve(@DContext() event: IAppEvent): Promise<string> {
-        const query = useRequestQuery(event);
-
-        return renderUIPage(event, {
+        return serveWorkflowPage(event, {
             url: '/password-forgot',
-            payload: {
-                config: { baseURL: this.options.baseURL },
-                data: {
-                    features: this.options.features,
-                    realmId: typeof query.realm_id === 'string' ? query.realm_id : undefined,
-                    redirect: sanitizeRelativeRedirect(query.redirect),
-                },
-            },
+            baseURL: this.options.baseURL,
+            features: this.options.features,
+            realmAware: true,
         });
     }
 

@@ -8,12 +8,16 @@
 import type { Ref } from 'vue';
 import { ref, watch } from 'vue';
 
+function escapeRegExp(input: string): string {
+    return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function readCookie(name: string) : string | undefined {
     if (typeof document === 'undefined') {
         return undefined;
     }
 
-    const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
+    const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${escapeRegExp(name)}=([^;]+)`));
     return match ? decodeURIComponent(match[1]) : undefined;
 }
 

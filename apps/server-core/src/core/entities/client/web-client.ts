@@ -74,7 +74,16 @@ export class WebClientProvisioner implements IWebClientProvisioner {
                 return;
             }
 
-            // MERGE: refresh attributes (e.g. redirect_uri) when config changes.
+            // MERGE: refresh attributes (e.g. redirect_uri) when config
+            // changes. Dirty-check first — the attributes are deterministic
+            // from config, so a steady-state boot would otherwise issue one
+            // redundant UPDATE (bumping updated_at) per realm.
+            const isDirty = (Object.keys(attributes) as (keyof Client)[])
+                .some((key) => existing[key] !== attributes[key]);
+            if (!isDirty) {
+                return;
+            }
+
             const merged = this.clientRepository.merge(existing, attributes);
             await this.clientRepository.save(merged);
             return;

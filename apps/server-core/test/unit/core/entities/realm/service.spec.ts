@@ -140,6 +140,28 @@ describe('core/entities/realm/service', () => {
 
             expect(webClientProvisioner.calls).toEqual([]);
         });
+
+        it('should still persist the realm when web-client provisioning fails', async () => {
+            // Realm creation must stay atomic from the caller's perspective:
+            // a provisioner failure is logged + swallowed, not propagated.
+            service = new RealmService({
+                repository,
+                webClientProvisioner: {
+                    async ensureForRealm() {
+                        throw new Error('provisioning boom');
+                    },
+                },
+            });
+
+            const result = await service.create(
+                { name: 'realm-provision-fails' },
+                createAllowAllActor(),
+            );
+
+            expect(result.id).toBeDefined();
+            const found = await repository.findOneById(result.id);
+            expect(found).not.toBeNull();
+        });
     });
 
     describe('update', () => {

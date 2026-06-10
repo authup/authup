@@ -368,13 +368,7 @@ export class HTTPControllerModule {
     createStatusController(container: IContainer) {
         const config = container.resolve(ConfigInjectionKey);
 
-        return new StatusController({
-            options: {
-                registrationEnabled: config.registrationEnabled,
-                passwordRecoveryEnabled: config.passwordRecoveryEnabled,
-                emailVerificationEnabled: config.emailVerificationEnabled,
-            },
-        });
+        return new StatusController({ options: { features: this.buildUIFeatures(config) } });
     }
 
     buildUIFeatures(config: Config) : StatusResponseFeatures {

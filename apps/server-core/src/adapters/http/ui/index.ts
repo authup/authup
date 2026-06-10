@@ -6,4 +6,5 @@
  */
 
 export * from './render.ts';
+export * from './serve.ts';
 export * from './types.ts';

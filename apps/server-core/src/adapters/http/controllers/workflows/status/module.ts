@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { StatusResponse } from '@authup/core-http-kit';
+import type { StatusResponse, StatusResponseFeatures } from '@authup/core-http-kit';
 import {
     DController,
     DGet,
@@ -15,9 +15,7 @@ import path from 'node:path';
 import { PACKAGE_PATH } from '../../../../../path.ts';
 
 export type StatusControllerOptions = {
-    registrationEnabled: boolean,
-    passwordRecoveryEnabled: boolean,
-    emailVerificationEnabled: boolean,
+    features: StatusResponseFeatures,
 };
 
 export type StatusControllerContext = {
@@ -28,23 +26,29 @@ export type StatusControllerContext = {
 export class StatusController {
     protected options: StatusControllerOptions;
 
+    // The version is constant for the process lifetime — read package.json
+    // once and memoize instead of on every GET /.
+    protected versionPromise: Promise<string> | undefined;
+
     constructor(ctx: StatusControllerContext) {
         this.options = ctx.options;
     }
 
+    protected resolveVersion(): Promise<string> {
+        if (!this.versionPromise) {
+            this.versionPromise = load(path.join(PACKAGE_PATH, 'package.json'))
+                .then((pkgJson) => pkgJson.version);
+        }
+
+        return this.versionPromise;
+    }
+
     @DGet('/', [])
     async status(): Promise<StatusResponse> {
-        const pkgJson = await load(path.join(PACKAGE_PATH, 'package.json'));
-        const isoDate = new Date().toISOString();
-
         return {
-            version: pkgJson.version,
-            date: isoDate,
-            features: {
-                registration: this.options.registrationEnabled,
-                passwordRecovery: this.options.passwordRecoveryEnabled,
-                emailVerification: this.options.emailVerificationEnabled,
-            },
+            version: await this.resolveVersion(),
+            date: new Date().toISOString(),
+            features: this.options.features,
         };
     }
 }

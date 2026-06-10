@@ -11,7 +11,7 @@ import {
     injectTranslatorLocale, 
     install,
 } from '@authup/client-web-kit';
-import { isLocale } from '@authup/i18n';
+import { isLocale, matchLocale } from '@authup/i18n';
 import { omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
@@ -46,17 +46,6 @@ import type { HydrationPayload } from './types';
 
 addCollection(faSolid);
 addCollection(faBrands);
-
-// Map a BCP-47 tag (e.g. `de-DE` resolved from `vc-locale` / the browser
-// language) onto an authup catalog locale, or undefined when unauthored.
-function toAuthupLocale(input?: string) : string | undefined {
-    if (!input) {
-        return undefined;
-    }
-
-    const [short] = input.toLowerCase().split('-');
-    return isLocale(short) ? short : undefined;
-}
 
 export function createApp(payload: HydrationPayload) : {
     app: App,
@@ -150,26 +139,29 @@ export function createApp(payload: HydrationPayload) : {
     install(app, {
         baseURL: payload?.config?.baseURL,
         pinia,
-        translatorLocale: toAuthupLocale(localeHandles.resolved.value),
+        translatorLocale: matchLocale(localeHandles.resolved.value),
     });
 
     // Two-way bridge between the persisted vuecs locale and ilingo (the
     // translator the language switcher writes): resolved → ilingo keeps
     // catalogs in sync with `auto`/external changes; ilingo → source
     // persists a switcher pick into the cookie. Values converge, so the
-    // pair cannot loop.
-    const translatorLocale = app.runWithContext(() => injectTranslatorLocale());
-    watch(localeHandles.resolved, (value) => {
-        const mapped = toAuthupLocale(value);
-        if (mapped && mapped !== translatorLocale.value) {
-            translatorLocale.value = mapped;
-        }
-    });
-    watch(translatorLocale, (value) => {
-        if (isLocale(value) && toAuthupLocale(localeSource.value) !== value) {
-            localeSource.value = value;
-        }
-    });
+    // pair cannot loop. Client-only: during a synchronous renderToString the
+    // locale is fixed, so the watchers would only ever fire after hydration.
+    if (isClient) {
+        const translatorLocale = app.runWithContext(() => injectTranslatorLocale());
+        watch(localeHandles.resolved, (value) => {
+            const mapped = matchLocale(value);
+            if (mapped && mapped !== translatorLocale.value) {
+                translatorLocale.value = mapped;
+            }
+        });
+        watch(translatorLocale, (value) => {
+            if (isLocale(value) && matchLocale(localeSource.value) !== value) {
+                localeSource.value = value;
+            }
+        });
+    }
 
     // `buildSubmitButtonDefaults()` calls `useTranslation` → `injectIlingo`,
     // which reads the ilingo instance via `inject()`. Outside a component

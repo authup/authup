@@ -19,6 +19,14 @@ import type { UIRenderContext } from './types.ts';
 const COLOR_MODE_COOKIE = 'vc-color-mode';
 const LOCALE_COOKIE = 'vc-locale';
 
+// Process-lifetime caches for the immutable production SSR assets. The dist
+// template, manifest and server bundle don't change after boot, so read them
+// once instead of per request (the auth/login routes are hot paths). The JIT
+// (dev) path deliberately re-reads so HMR keeps working.
+let cachedHtml: string | undefined;
+let cachedManifest: Record<string, any> | undefined;
+let cachedRender: CallableFunction | undefined;
+
 export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Promise<string> {
     const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
 
@@ -46,17 +54,17 @@ export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Prom
         manifest = {};
         render = (await vite.ssrLoadModule('/src/server.ts')).render;
     } else {
-        html = await fs.promises.readFile(
+        html = (cachedHtml ??= await fs.promises.readFile(
             path.join(UI_DIST_PATH, 'client', 'index.html'),
             'utf-8',
-        );
-
-        manifest = JSON.parse(await fs.promises.readFile(
+        ));
+        manifest = (cachedManifest ??= JSON.parse(await fs.promises.readFile(
             path.join(UI_DIST_PATH, 'client', '.vite', 'ssr-manifest.json'),
             'utf-8',
-        ));
-
-        render = (await load(path.join(UI_DIST_PATH, 'server', 'server.js'))).render;
+        )));
+        render = (cachedRender ??= (await load(
+            path.join(UI_DIST_PATH, 'server', 'server.js'),
+        )).render);
     }
 
     const [appHtml, preloadLinks] = await render({
@@ -76,24 +84,12 @@ export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Prom
     if (colorMode === 'dark' || colorMode === 'light') {
         htmlAttrs += ` class="${colorMode}"`;
     }
-    body = body.replace('<html lang="en">', `<html ${htmlAttrs}>`);
+    // Match the opening <html> tag by pattern rather than an exact literal,
+    // so a reformatted tag / dev-mode transformIndexHtml rewrite still gets
+    // the lang + color-mode attributes (no silent FOUC).
+    body = body.replace(/<html\b[^>]*>/i, `<html ${htmlAttrs}>`);
 
     event.response.headers.set('content-type', 'text/html; charset=utf-8');
     return body;
 }
 
-/**
- * Open-redirect guard for the `redirect` query parameter carried by the
- * auth workflow pages: only same-origin relative paths pass through.
- */
-export function sanitizeRelativeRedirect(input: unknown): string | undefined {
-    if (typeof input !== 'string' || input.length === 0) {
-        return undefined;
-    }
-
-    if (!input.startsWith('/') || input.startsWith('//') || input.startsWith('/\\')) {
-        return undefined;
-    }
-
-    return input;
-}

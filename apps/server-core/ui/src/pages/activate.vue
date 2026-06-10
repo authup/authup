@@ -40,8 +40,12 @@ export default defineComponent({
 </script>
 <template>
     <AAuthShell>
+        <!--
+            Activation tokens are only issued when email verification is on,
+            so gate on that capability — otherwise the form is a dead end.
+        -->
         <AActivateForm
-            v-if="data.features && data.features.registration"
+            v-if="data.features && data.features.emailVerification"
             :token="data.token"
         />
         <div
