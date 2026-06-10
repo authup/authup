@@ -8,7 +8,7 @@ It follows hexagonal architecture principles, separating core business logic, ad
 | Name                                      | Type        | Description                                                                                           |
 |-------------------------------------------|-------------|-------------------------------------------------------------------------------------------------------|
 | [authup](../apps/authup)                  | CLI         | A command line interface for interacting with various applications and services within the ecosystem. |
-| [client-web](../apps/client-web)          | Application | A Nuxt-based web application interface for end users.                                                 |
+| [client-web](../apps/client-web)          | Application | A Nuxt-based web application interface for end users. Auth entry pages (`/login`, `/login/callback`) opt into a dedicated chrome-less `layouts/auth.vue` (no header/sidebar/footer; own `VCToastProvider` + toaster, color-mode + language gadgets top-right) so the full-bleed login backdrop reaches the viewport edges. |
 | [server-core](../apps/server-core)        | Service     | A service that forms the backbone of the server-side ecosystem. Embeds a Vite-built Vue 3 consent UI for the OAuth2 `/authorize` endpoint under `ui/`, emitted to `dist/ui/` at build time. |
 
 ## Packages & Libraries

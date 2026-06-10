@@ -22,4 +22,16 @@ export const TranslatorTranslationClientEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationClientKey.GOVERNED_BY]: 'This application is governed by the {{client}} application\'s Privacy Policy and Terms of Service.',
     [TranslatorTranslationClientKey.ACTIVE_SINCE]: 'Active since',
     [TranslatorTranslationClientKey.VIEW_POLICY_DETAILS]: 'View policy details',
+
+    [TranslatorTranslationClientKey.CREATE_ACCOUNT]: 'Create account',
+    [TranslatorTranslationClientKey.FORGOT_PASSWORD]: 'Forgot password?',
+    [TranslatorTranslationClientKey.RESET_PASSWORD]: 'Reset password',
+    [TranslatorTranslationClientKey.ACTIVATE_ACCOUNT]: 'Activate account',
+    [TranslatorTranslationClientKey.BACK_TO_LOGIN]: 'Back to login',
+    [TranslatorTranslationClientKey.EMAIL_OR_NAME]: 'Email or name',
+    [TranslatorTranslationClientKey.CHECK_EMAIL_ACTIVATE]: 'Check your email for the activation code.',
+    [TranslatorTranslationClientKey.CHECK_EMAIL_RESET]: 'Check your email for the reset code.',
+    [TranslatorTranslationClientKey.ACCOUNT_ACTIVATED]: 'The account was successfully activated.',
+    [TranslatorTranslationClientKey.PASSWORD_RESET_DONE]: 'The password was successfully reset.',
+    [TranslatorTranslationClientKey.WORKFLOW_DISABLED]: 'This feature is not enabled.',
 };

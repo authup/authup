@@ -19,4 +19,6 @@ export const TranslatorTranslationCommonFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationCommonKey.APPLICATION]: 'Application',
     [TranslatorTranslationCommonKey.SEARCH]: 'Rechercher',
     [TranslatorTranslationCommonKey.NO_RESULTS]: 'Aucun résultat trouvé.',
+    [TranslatorTranslationCommonKey.SWITCH_TO_LIGHT_MODE]: 'Passer en mode clair',
+    [TranslatorTranslationCommonKey.SWITCH_TO_DARK_MODE]: 'Passer en mode sombre',
 };

@@ -23,16 +23,19 @@ import {
     useRoute,
     useRuntimeConfig,
 } from '#app';
-import LoginSVG from '../../components/svg/LoginSVG';
+import LoginHeroSVG from '../../components/svg/LoginHeroSVG.vue';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
     components: {
         ARealmGrid,
-        LoginSVG,
+        LoginHeroSVG,
     },
     setup() {
-        definePageMeta({ [LayoutKey.REQUIRED_LOGGED_OUT]: true });
+        definePageMeta({
+            [LayoutKey.REQUIRED_LOGGED_OUT]: true,
+            layout: 'auth',
+        });
 
         const toast = useToast();
         const runtimeConfig = useRuntimeConfig();
@@ -103,7 +106,7 @@ export default defineNuxtComponent({
 
         <div class="login-content container">
             <div class="text-center login-hero">
-                <LoginSVG :height="220" />
+                <LoginHeroSVG :height="150" />
                 <h1 class="login-title">
                     {{ translations.loginTitle }}
                 </h1>
@@ -119,11 +122,12 @@ export default defineNuxtComponent({
 <style scoped>
 .login-entry {
     position: relative;
-    min-height: 70vh;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    padding: 4rem 1rem;
 }
 
 .login-aurora {

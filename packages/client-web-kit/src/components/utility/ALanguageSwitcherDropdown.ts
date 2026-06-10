@@ -14,14 +14,18 @@ import {
     ref,
 } from 'vue';
 
-const LanguageSwitcherDropdown = defineComponent({
+const ALanguageSwitcherDropdown = defineComponent({
     props: {
         linkClassExtra: {
             type: String,
             default: undefined,
         },
     },
-    async setup(props) {
+    // Deliberately NOT `async`: an async setup() turns the component into
+    // a Suspense-dependent subtree. Nuxt (client-web) provides a root
+    // Suspense, but the embedded server-core SSR app does not — there the
+    // component would server-render yet never hydrate (dropdown dead).
+    setup(props) {
         const opened = ref(false);
 
         const locale = injectLocale();
@@ -79,4 +83,9 @@ const LanguageSwitcherDropdown = defineComponent({
     },
 });
 
-export { LanguageSwitcherDropdown };
+export { ALanguageSwitcherDropdown };
+
+/**
+ * @deprecated Import `ALanguageSwitcherDropdown` instead.
+ */
+export const LanguageSwitcherDropdown = ALanguageSwitcherDropdown;

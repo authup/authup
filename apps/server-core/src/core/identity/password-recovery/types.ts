@@ -11,6 +11,7 @@ import type { IRealmRepository, IUserRepository } from '../../entities/index.ts'
 export type PasswordRecoveryServiceOptions = {
     passwordRecoveryEnabled?: boolean,
     emailVerificationEnabled?: boolean,
+    publicUrl?: string,
 };
 
 export type PasswordRecoveryServiceContext = {

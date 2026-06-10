@@ -23,7 +23,7 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.API_DOCS]: 'API-Dokumentation',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Erstellt mit',
 
-    [TranslatorTranslationAppKey.LOGIN_TITLE]: 'Willkommen zurück',
+    [TranslatorTranslationAppKey.LOGIN_TITLE]: 'Anmelden',
     [TranslatorTranslationAppKey.LOGIN_SUBTITLE]: 'Wähle einen Realm aus, um fortzufahren',
 
     [TranslatorTranslationAppKey.URL_GENERATOR]: 'URL-Generator',
@@ -32,8 +32,6 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.GENERATED_URL]: 'Generierte URL',
 
     [TranslatorTranslationAppKey.TOGGLE_NAVIGATION]: 'Navigation umschalten',
-    [TranslatorTranslationAppKey.SWITCH_TO_LIGHT_MODE]: 'Zum hellen Modus wechseln',
-    [TranslatorTranslationAppKey.SWITCH_TO_DARK_MODE]: 'Zum dunklen Modus wechseln',
 
     [TranslatorTranslationAppKey.SESSION_RENEW]: 'Die Sitzung wird erneuert in',
     [TranslatorTranslationAppKey.MINUTES]: 'Minute(n)',

@@ -23,7 +23,7 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.API_DOCS]: 'Documentation API',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Fait avec',
 
-    [TranslatorTranslationAppKey.LOGIN_TITLE]: 'Bon retour',
+    [TranslatorTranslationAppKey.LOGIN_TITLE]: 'Connexion',
     [TranslatorTranslationAppKey.LOGIN_SUBTITLE]: 'Sélectionnez un realm pour continuer',
 
     [TranslatorTranslationAppKey.URL_GENERATOR]: 'Générateur d\'URL',
@@ -32,8 +32,6 @@ export const TranslatorTranslationAppFrench : NamespaceTranslations<`${Translato
     [TranslatorTranslationAppKey.GENERATED_URL]: 'URL générée',
 
     [TranslatorTranslationAppKey.TOGGLE_NAVIGATION]: 'Basculer la navigation',
-    [TranslatorTranslationAppKey.SWITCH_TO_LIGHT_MODE]: 'Passer en mode clair',
-    [TranslatorTranslationAppKey.SWITCH_TO_DARK_MODE]: 'Passer en mode sombre',
 
     [TranslatorTranslationAppKey.SESSION_RENEW]: 'La session sera renouvelée dans',
     [TranslatorTranslationAppKey.MINUTES]: 'minute(s)',

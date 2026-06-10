@@ -73,12 +73,17 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         await this.repository.save(merged);
 
         try {
+            const resetUrl = this.options.publicUrl ?
+                `${this.options.publicUrl.replace(/\/+$/, '')}/password-reset?token=${merged.reset_hash}` :
+                undefined;
+
             await this.mailClient.send({
                 to: entity.email,
                 subject: 'Forgot Password - Reset code',
                 html: `
                 <p>Please use the code below to reset your account password.</p>
                 <p>${merged.reset_hash}</p>
+                ${resetUrl ? `<p><a href="${resetUrl}">Reset password</a></p>` : ''}
                 `,
             });
         } catch {

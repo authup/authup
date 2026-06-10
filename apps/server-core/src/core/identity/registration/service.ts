@@ -68,12 +68,17 @@ export class RegistrationService implements IRegistrationService {
 
         if (this.options.emailVerificationEnabled) {
             try {
+                const activateUrl = this.options.publicUrl ?
+                    `${this.options.publicUrl.replace(/\/+$/, '')}/activate?token=${entity.activate_hash}` :
+                    undefined;
+
                 await this.mailClient.send({
                     to: entity.email,
                     subject: 'Registration - Activation code',
                     html: `
                     <p>Please use the code below to activate your account and start using the site.</p>
                     <p>${entity.activate_hash}</p>
+                    ${activateUrl ? `<p><a href="${activateUrl}">Activate account</a></p>` : ''}
                     `,
                 });
             } catch {

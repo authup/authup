@@ -281,17 +281,63 @@ Workflow services receive options via their context type:
 export type RegistrationServiceOptions = {
     registrationEnabled?: boolean,
     emailVerificationEnabled?: boolean,
+    publicUrl?: string,
 };
 
 export type PasswordRecoveryServiceOptions = {
     passwordRecoveryEnabled?: boolean,
     emailVerificationEnabled?: boolean,
+    publicUrl?: string,
 };
 ```
 
 Feature gates check these options before proceeding (e.g. `if (!this.options.registrationEnabled) throw ...`). Options are wired from app config in `app/modules/http/modules/controller.ts`.
 
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw — don't leave orphaned records.
+
+**Mail deep links:** when `publicUrl` is set, the activation mail appends a
+link to `<publicUrl>/activate?token=<hash>` and the reset mail to
+`<publicUrl>/password-reset?token=<hash>` — both land on backend-served SSR
+pages (see *Auth Workflow UI* below) that prefill the code from the query.
+The raw code stays in the mail body for copy/paste; no identifier/PII is put
+into the URL (the reset form asks for email/name).
+
+#### Auth Workflow UI (backend-served SSR pages) + Status Endpoint
+
+Authup can run headless (server-core without client-web), so every auth
+workflow page is served by the embedded SSR app (`apps/server-core/ui`),
+not by client-web:
+
+- **Routes**: `/authorize`, `/register`, `/activate`, `/password-forgot`,
+  `/password-reset` — each `GET` serves SSR HTML while `POST` on the same
+  path remains the JSON API. The render plumbing is shared:
+  `renderUIPage(event, { url, payload })` in `adapters/http/ui/render.ts`
+  (JIT vs dist, template, manifest, preload links, content-type).
+- **Feature flags** ride the hydration payload (`data.features`,
+  `StatusResponseFeatures` shape) — pages render the form when the
+  workflow is enabled, otherwise a localized "disabled" notice (no 404:
+  stale email links should not dead-end). The same flags are exposed
+  publicly on the root status endpoint `GET /`
+  (`StatusController` → `{ version, date, features: { registration,
+  passwordRecovery, emailVerification } }`, typed `StatusResponse` in
+  `@authup/core-http-kit`, consumed via `client.status.get()`).
+- **Flow continuity**: workflow links carry a same-origin `redirect` query
+  param (the original `/authorize` path + query) so "back to login"
+  restores the authorize request. `sanitizeRelativeRedirect()` in
+  `adapters/http/ui/render.ts` rejects absolute / protocol-relative URLs
+  (open-redirect guard).
+- **Kit form components** (`@authup/client-web-kit`,
+  `src/components/workflows/`): `ALoginForm` (renamed from `ALogin`,
+  deprecated alias kept; optional `registerLink` / `passwordForgotLink`
+  `LinkProperties` props rendered via `<VCLink>` — presence shows the
+  link), `ARegisterForm` (embeds `AActivateForm` when the register
+  response is inactive), `AActivateForm`, `APasswordForgotForm`,
+  `APasswordResetForm`. All pure: `injectHTTPClient()` +
+  `done`/`failed` emits, inline permissive validup/zod validators (server
+  is authoritative). `AAuthShell` (utility) provides the shared aurora
+  backdrop + theme-token card + compact logo mark used by all SSR auth
+  pages (it replaced the legacy hardcoded `#E8E8E8` card in
+  `AAuthorize`).
 
 ### Thin Controller Pattern (HTTP Adapter)
 
@@ -477,10 +523,14 @@ adapters/http/controllers/entities/
   {entity}/index.ts                 — exports module.ts only
 
 adapters/http/controllers/workflows/
-  register/module.ts                — Thin RegisterController → IRegistrationService
-  activate/module.ts                — Thin ActivateController → IRegistrationService
-  password-forgot/module.ts         — Thin PasswordForgotController → IPasswordRecoveryService
-  password-reset/module.ts          — Thin PasswordResetController → IPasswordRecoveryService
+  register/module.ts                — RegisterController → IRegistrationService (POST API + GET serves SSR page)
+  activate/module.ts                — ActivateController → IRegistrationService (POST API + GET serves SSR page)
+  password-forgot/module.ts         — PasswordForgotController → IPasswordRecoveryService (POST API + GET serves SSR page)
+  password-reset/module.ts          — PasswordResetController → IPasswordRecoveryService (POST API + GET serves SSR page)
+  status/module.ts                  — StatusController (GET / → version + feature flags)
+
+adapters/http/ui/
+  render.ts                         — renderUIPage(event, {url, payload}) shared SSR plumbing + sanitizeRelativeRedirect()
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function

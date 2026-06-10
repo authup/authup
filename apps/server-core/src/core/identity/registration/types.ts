@@ -11,6 +11,7 @@ import type { IRealmRepository, IUserRepository } from '../../entities/index.ts'
 export type RegistrationServiceOptions = {
     registrationEnabled?: boolean,
     emailVerificationEnabled?: boolean,
+    publicUrl?: string,
 };
 
 export type RegistrationServiceContext = {

@@ -18,20 +18,22 @@ import {
     TranslatorTranslationFieldKey, 
     TranslatorTranslationNamespace, 
 } from '@authup/i18n';
-import { 
-    injectHTTPClient, 
-    injectStore, 
-    useTranslations, 
-    useTranslator, 
-} from '../../core';
+import {
+    injectHTTPClient,
+    injectStore,
+    useTranslations,
+    useTranslator,
+} from '../../../core';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
 import { z } from 'zod';
 import type { BuildInput } from 'rapiq';
 import { VCButton } from '@vuecs/button';
 import { VCFormGroup, VCFormInput, useSubmitButton } from '@vuecs/forms';
-import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../entities';
-import { APagination, ATitle } from '../utility';
+import type { LinkProperties } from '@vuecs/link';
+import { VCLink } from '@vuecs/link';
+import { AIdentityProviderIcon, AIdentityProviders, ARealmPicker } from '../../entities';
+import { APagination, ATitle } from '../../utility';
 import { IFieldValidation } from '@ilingo/validup-vue';
 
 // Inline by design — login deliberately uses a permissive credentials
@@ -65,10 +67,19 @@ export default defineComponent({
         VCButton,
         VCFormGroup,
         VCFormInput,
+        VCLink,
 
         IFieldValidation,
     },
-    props: { codeRequest: { type: Object as PropType<OAuth2AuthorizationCodeRequest> } },
+    props: {
+        codeRequest: { type: Object as PropType<OAuth2AuthorizationCodeRequest> },
+        // Presence of a link prop shows the corresponding link beneath the
+        // form. VCLink resolves RouterLink/NuxtLink when a router is present
+        // and `to` is used, otherwise renders a plain anchor — the consumer
+        // controls navigation policy through the props themselves.
+        registerLink: { type: Object as PropType<LinkProperties> },
+        passwordForgotLink: { type: Object as PropType<LinkProperties> },
+    },
     emits: ['done', 'failed'],
     setup(props, { emit }) {
         const apiClient = injectHTTPClient();
@@ -96,9 +107,17 @@ export default defineComponent({
                 key: TranslatorTranslationFieldKey.PASSWORD, 
             },
             {
-                namespace: TranslatorTranslationNamespace.ENTITY, 
-                key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER, 
-                count: 2, 
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.IDENTITY_PROVIDER,
+                count: 2,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.CREATE_ACCOUNT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.FORGOT_PASSWORD,
             },
         ]);
 
@@ -257,6 +276,25 @@ export default defineComponent({
                 class="w-full"
             />
 
+            <div
+                v-if="registerLink || passwordForgotLink"
+                class="flex flex-row justify-between mt-2 text-sm"
+            >
+                <VCLink
+                    v-if="registerLink"
+                    v-bind="registerLink"
+                >
+                    {{ translationsDefault.createAccount }}
+                </VCLink>
+                <VCLink
+                    v-if="passwordForgotLink"
+                    v-bind="passwordForgotLink"
+                    class="ms-auto"
+                >
+                    {{ translationsDefault.forgotPassword }}
+                </VCLink>
+            </div>
+
             <hr>
 
             <template v-if="!codeRequest || !codeRequest.realm_id">
@@ -283,14 +321,15 @@ export default defineComponent({
                     />
                 </template>
                 <template #body="props">
-                    <div class="flex flex-row">
+                    <div class="flex flex-row flex-wrap gap-1">
                         <div
                             v-for="(item, key) in props.data"
                             :key="key"
+                            class="identity-provider-item"
                         >
                             <a
                                 :href="buildIdentityProviderURL(item.id)"
-                                class="btn btn-dark btn-xs p-2 me-1 identity-provider-box bg-fg"
+                                class="btn btn-dark btn-xs p-2 identity-provider-box bg-fg"
                             >
                                 <div class="flex flex-col">
                                     <div class="text-center mb-1">
@@ -312,7 +351,17 @@ export default defineComponent({
     </div>
 </template>
 <style scoped>
+/* Constrained by the auth-shell card (max-width 460px): boxes wrap into
+   rows and never grow past the card's inner width, so a long provider
+   list or name can't spill over the card corner. */
+.identity-provider-item {
+    min-width: 0;
+    max-width: 100%;
+}
+
 .identity-provider-box {
-    min-width: 150px;
+    min-width: 120px;
+    max-width: 100%;
+    word-break: break-word;
 }
 </style>

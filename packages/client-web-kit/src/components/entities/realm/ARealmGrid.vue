@@ -104,31 +104,13 @@ export default defineComponent({
 
         const labelFor = (realm: Realm) => realm.display_name || realm.name;
 
-        const initialsFor = (realm: Realm) => {
-            const label = labelFor(realm).trim();
-            if (!label) {
-                return '?';
-            }
-
-            const parts = label.split(/[\s\-_.]+/).filter(Boolean);
-            const [first, second] = parts;
-            if (first && second) {
-                return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase();
-            }
-
-            return label.slice(0, 2).toUpperCase();
-        };
-
-        const colorFor = (realm: Realm) => {
-            const key = realm.name || realm.id || '';
-            let hash = 0;
-            for (let i = 0; i < key.length; i++) {
-                hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-            }
-
-            const hue = hash % 360;
-            return `linear-gradient(135deg, hsl(${hue} 65% 55%), hsl(${(hue + 35) % 360} 62% 45%))`;
-        };
+        // Show the technical name beneath the label only when a display
+        // name shadows it — otherwise the tile would repeat itself.
+        const slugFor = (realm: Realm) => (
+            realm.display_name && realm.display_name !== realm.name ?
+                realm.name :
+                null
+        );
 
         const handleSelect = (realm: Realm) => {
             emit('select', realm);
@@ -143,9 +125,8 @@ export default defineComponent({
             showSearch,
             filtered,
             translations,
-            initialsFor,
-            colorFor,
             labelFor,
+            slugFor,
             handleSelect,
         };
     },
@@ -211,17 +192,14 @@ export default defineComponent({
                     class="realm-grid-item"
                     @click.prevent="handleSelect(realm)"
                 >
-                    <span
-                        class="realm-grid-item-avatar"
-                        :style="{ backgroundImage: colorFor(realm) }"
-                    >
-                        {{ initialsFor(realm) }}
-                    </span>
                     <span class="realm-grid-item-name">
                         {{ labelFor(realm) }}
                     </span>
-                    <span class="realm-grid-item-arrow">
-                        <VCIcon name="fa6-solid:arrow-right" />
+                    <span
+                        v-if="slugFor(realm)"
+                        class="realm-grid-item-slug"
+                    >
+                        {{ slugFor(realm) }}
                     </span>
                 </button>
             </div>
@@ -265,24 +243,26 @@ export default defineComponent({
 
 .realm-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 1rem;
 }
 
 .realm-grid-item {
     position: relative;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 6.25rem;
+    padding: 1.25rem 1rem;
     border: 1px solid var(--vc-color-border);
     border-radius: 0.85rem;
     background: var(--vc-color-bg-elevated);
     color: var(--vc-color-fg);
     cursor: pointer;
     overflow: hidden;
-    text-align: left;
+    text-align: center;
     transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
@@ -330,45 +310,20 @@ export default defineComponent({
     opacity: 1;
 }
 
-.realm-grid-item-avatar {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: 0.7rem;
-    color: #fff;
-    font-weight: 700;
-    font-size: 0.95rem;
-    letter-spacing: 0.02em;
-    text-shadow: 0 1px 2px rgb(0 0 0 / 25%);
-}
-
 .realm-grid-item-name {
-    flex: 1 1 auto;
     font-weight: 600;
     word-break: break-word;
 }
 
-.realm-grid-item-arrow {
-    flex: 0 0 auto;
-    color: var(--authup-periwinkle, var(--vc-color-primary-500));
-    opacity: 0;
-    transform: translateX(-6px);
-    transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.realm-grid-item:hover .realm-grid-item-arrow,
-.realm-grid-item:focus-visible .realm-grid-item-arrow {
-    opacity: 1;
-    transform: translateX(0);
+.realm-grid-item-slug {
+    color: var(--vc-color-fg-muted);
+    font-size: 0.8em;
+    word-break: break-word;
 }
 
 .realm-grid-item--skeleton {
     cursor: default;
     pointer-events: none;
-    min-height: 76px;
     border-color: var(--vc-color-border);
     background: linear-gradient(
         90deg,
@@ -414,7 +369,6 @@ export default defineComponent({
 @media (prefers-reduced-motion: reduce) {
     .realm-grid-item,
     .realm-grid-item::before,
-    .realm-grid-item-arrow,
     .realm-grid-item--skeleton {
         transition: none;
         animation: none;

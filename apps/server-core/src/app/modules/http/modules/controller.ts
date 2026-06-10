@@ -147,6 +147,8 @@ import {
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
+import type { StatusResponseFeatures } from '@authup/core-http-kit';
+import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
 import { MailInjectionKey } from '../../mail/index.ts';
 
@@ -184,7 +186,7 @@ export class HTTPControllerModule {
                 this.createPasswordResetController(container),
                 this.createRegisterController(container),
 
-                StatusController,
+                this.createStatusController(container),
 
                 clientController,
                 clientPermissionController,
@@ -224,7 +226,10 @@ export class HTTPControllerModule {
         const identityResolver = container.resolve(IdentityInjectionKey.Resolver);
 
         return new AuthorizeController({
-            options: { baseURL: config.publicUrl },
+            options: {
+                baseURL: config.publicUrl,
+                features: this.buildUIFeatures(config),
+            },
 
             accessTokenIssuer,
             openIdTokenIssuer,
@@ -291,15 +296,39 @@ export class HTTPControllerModule {
     }
 
     createActivateController(container: IContainer) {
-        return new ActivateController({ service: this.createRegistrationService(container) });
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new ActivateController({
+            options: {
+                baseURL: config.publicUrl,
+                features: this.buildUIFeatures(config),
+            },
+            service: this.createRegistrationService(container),
+        });
     }
 
     createPasswordForgotController(container: IContainer) {
-        return new PasswordForgotController({ service: this.createPasswordRecoveryService(container) });
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new PasswordForgotController({
+            options: {
+                baseURL: config.publicUrl,
+                features: this.buildUIFeatures(config),
+            },
+            service: this.createPasswordRecoveryService(container),
+        });
     }
 
     createPasswordResetController(container: IContainer) {
-        return new PasswordResetController({ service: this.createPasswordRecoveryService(container) });
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new PasswordResetController({
+            options: {
+                baseURL: config.publicUrl,
+                features: this.buildUIFeatures(config),
+            },
+            service: this.createPasswordRecoveryService(container),
+        });
     }
 
     createPasswordRecoveryService(container: IContainer) {
@@ -319,12 +348,41 @@ export class HTTPControllerModule {
             options: {
                 passwordRecoveryEnabled: config.passwordRecoveryEnabled,
                 emailVerificationEnabled: config.emailVerificationEnabled,
+                publicUrl: config.publicUrl,
             },
         });
     }
 
     createRegisterController(container: IContainer) {
-        return new RegisterController({ service: this.createRegistrationService(container) });
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new RegisterController({
+            options: {
+                baseURL: config.publicUrl,
+                features: this.buildUIFeatures(config),
+            },
+            service: this.createRegistrationService(container),
+        });
+    }
+
+    createStatusController(container: IContainer) {
+        const config = container.resolve(ConfigInjectionKey);
+
+        return new StatusController({
+            options: {
+                registrationEnabled: config.registrationEnabled,
+                passwordRecoveryEnabled: config.passwordRecoveryEnabled,
+                emailVerificationEnabled: config.emailVerificationEnabled,
+            },
+        });
+    }
+
+    buildUIFeatures(config: Config) : StatusResponseFeatures {
+        return {
+            registration: config.registrationEnabled,
+            passwordRecovery: config.passwordRecoveryEnabled,
+            emailVerification: config.emailVerificationEnabled,
+        };
     }
 
     createRegistrationService(container: IContainer) {
@@ -344,6 +402,7 @@ export class HTTPControllerModule {
             options: {
                 registrationEnabled: config.registrationEnabled,
                 emailVerificationEnabled: config.emailVerificationEnabled,
+                publicUrl: config.publicUrl,
             },
         });
     }

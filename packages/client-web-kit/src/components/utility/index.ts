@@ -11,9 +11,11 @@ export * from './entity';
 export * from './title';
 export * from './search';
 export * from './toggle-button';
-export * from './LanguageSwitcherDropdown';
+export * from './ALanguageSwitcherDropdown';
 
 export { AFormSubmit } from './AFormSubmit';
+export { default as AAuthShell } from './AAuthShell.vue';
+export { default as AColorModeSwitcher } from './AColorModeSwitcher.vue';
 export { default as ANameInput } from './ANameInput.vue';
 export { default as ASecretInput } from './ASecretInput.vue';
 export { default as AToggleButton } from './AToggleButton.vue';

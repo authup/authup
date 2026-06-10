@@ -17,4 +17,9 @@ export const TranslatorTranslationActionGerman : NamespaceTranslations<`${Transl
     [TranslatorTranslationActionKey.AUTHORIZE]: 'Autorisieren',
     [TranslatorTranslationActionKey.ABORT]: 'Abbrechen',
     [TranslatorTranslationActionKey.LOGIN]: 'Anmelden',
+
+    [TranslatorTranslationActionKey.REGISTER]: 'Registrieren',
+    [TranslatorTranslationActionKey.ACTIVATE]: 'Aktivieren',
+    [TranslatorTranslationActionKey.RESET]: 'Zurücksetzen',
+    [TranslatorTranslationActionKey.SEND]: 'Senden',
 };
