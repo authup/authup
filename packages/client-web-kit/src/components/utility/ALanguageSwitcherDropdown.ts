@@ -6,41 +6,42 @@
  */
 
 import { LOCALES } from '@authup/i18n';
-import { injectLocale } from '@ilingo/vue';
 import {
     computed,
     defineComponent,
     h,
     ref,
 } from 'vue';
+import { useLocaleControl } from '../../core';
 
-const LanguageSwitcherDropdown = defineComponent({
+const ALanguageSwitcherDropdown = defineComponent({
     props: {
         linkClassExtra: {
             type: String,
             default: undefined,
         },
     },
-    async setup(props) {
+    // Deliberately NOT `async`: an async setup() turns the component into
+    // a Suspense-dependent subtree. Nuxt (client-web) provides a root
+    // Suspense, but the embedded server-core SSR app does not — there the
+    // component would server-render yet never hydrate (dropdown dead).
+    setup(props) {
         const opened = ref(false);
 
-        const locale = injectLocale();
+        // vuecs owns the locale (cookie-backed) when installed; the control
+        // falls back to ilingo otherwise. Writing here persists via vuecs.
+        const { code, set } = useLocaleControl();
 
         const elements = computed(() => LOCALES.map((descriptor) => ({
             value: descriptor.code,
             label: descriptor.nativeName,
-            active: locale.value === descriptor.code,
+            active: code.value === descriptor.code,
         })));
 
-        const activeCode = computed(() => {
-            const match = LOCALES.find(
-                (descriptor) => descriptor.code === locale.value,
-            );
-            return match ? match.code : locale.value;
-        });
+        const activeCode = computed(() => code.value);
 
         const setLocale = (input: string) => {
-            locale.value = input;
+            set(input);
             opened.value = false;
         };
 
@@ -79,4 +80,9 @@ const LanguageSwitcherDropdown = defineComponent({
     },
 });
 
-export { LanguageSwitcherDropdown };
+export { ALanguageSwitcherDropdown };
+
+/**
+ * @deprecated Import `ALanguageSwitcherDropdown` instead.
+ */
+export const LanguageSwitcherDropdown = ALanguageSwitcherDropdown;

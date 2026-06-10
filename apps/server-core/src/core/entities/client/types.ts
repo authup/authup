@@ -5,9 +5,18 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client, Role } from '@authup/core-kit';
+import type { Client, Realm, Role } from '@authup/core-kit';
 import type { PermissionPolicyBinding } from '@authup/access';
 import type { ActorContext, EntityRepositoryFindManyResult, IEntityRepository  } from '@authup/server-kit';
+
+/**
+ * Ensures a realm has its system-provisioned public `web` client.
+ * Used by startup provisioning (every realm) and the runtime realm-create
+ * hook (a single realm). System-level — never gated on an actor.
+ */
+export interface IWebClientProvisioner {
+    ensureForRealm(realm: Realm | { id: string }): Promise<void>;
+}
 
 export interface IClientRepository extends IEntityRepository<Client> {
     checkUniqueness(data: Partial<Client>, existing?: Client): Promise<void>;

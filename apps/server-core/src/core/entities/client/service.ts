@@ -7,8 +7,9 @@
 
 import { BuiltInPolicyType, PolicyData } from '@authup/access';
 import { ValidatorGroup, isUUID } from '@authup/kit';
-import { EntityNotFoundError } from '@authup/errors';
+import { BadRequestError, EntityNotFoundError } from '@authup/errors';
 import {
+    CLIENT_RESERVED_NAMES,
     ClientValidator,
     PermissionName,
 } from '@authup/core-kit';
@@ -215,6 +216,21 @@ export class ClientService extends AbstractEntityService implements IClientServi
         }
 
         const validated = await this.validator.run(data, { group });
+
+        // Reserve the system-provisioned client names (`system`, `web`) so an
+        // API caller can't create or rename a client onto them — that would
+        // collide on unique(name, realm_id) or shadow the built_in client.
+        // Provisioning and runtime hooks bypass this service, so they remain
+        // free to manage the reserved clients. built_in clients are exempt
+        // (they ARE the provisioned ones) but API callers can never produce a
+        // built_in client since the validator strips the flag.
+        if (
+            typeof validated.name === 'string' &&
+            CLIENT_RESERVED_NAMES.includes(validated.name) &&
+            !(entity && entity.built_in && entity.name === validated.name)
+        ) {
+            throw new BadRequestError(`The client name '${validated.name}' is reserved.`);
+        }
 
         await this.repository.validateJoinColumns(validated);
         await this.repository.checkUniqueness(validated, entity || undefined);

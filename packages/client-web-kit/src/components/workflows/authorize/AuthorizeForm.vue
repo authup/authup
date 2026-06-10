@@ -8,7 +8,12 @@
 /* global window */
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { PropType } from 'vue';
-import { defineComponent } from 'vue';
+import { 
+    computed, 
+    defineComponent, 
+    onMounted, 
+    ref, 
+} from 'vue';
 import { 
     TranslatorTranslationActionKey, 
     TranslatorTranslationClientKey, 
@@ -78,16 +83,24 @@ export default defineComponent({
             }
         };
 
+        // Tracks an auto-consent failure so the template can fall back from the
+        // bare spinner to the full consent UI (giving the user a retry path).
+        const autoConsentFailed = ref<boolean>(false);
+
         const authorize = async () => {
+            autoConsentFailed.value = false;
+
             try {
+                // Forward the whole code request so the POST /authorize
+                // re-verification sees every parameter the GET did — notably
+                // code_challenge / code_challenge_method (a public client is
+                // rejected without them), plus nonce / realm_id. Only
+                // client_id is overridden with the resolved client id.
                 const response = await httpClient
                     .authorize
                     .confirm({
-                        response_type: props.codeRequest.response_type,
+                        ...props.codeRequest,
                         client_id: props.client.id,
-                        redirect_uri: props.codeRequest.redirect_uri,
-                        ...(props.codeRequest.state ? { state: props.codeRequest.state } : {}),
-                        ...(props.codeRequest.scope ? { scope: props.codeRequest.scope } : {}),
                     });
 
                 const { url } = response;
@@ -96,14 +109,33 @@ export default defineComponent({
                     window.location.href = url;
                 }
             } catch {
-                // todo: show toast :)
-
+                autoConsentFailed.value = true;
             }
         };
+
+        // Auto-consent for built-in clients (e.g. the per-realm `web` client).
+        // `built_in` is a provisioning-only trust boundary — the client
+        // validator strips it on create/update, so no API caller can self-
+        // assign it. Skipping the scope-consent step is therefore safe; user/
+        // admin-created clients are never built_in and still show consent.
+        const autoConsent = computed<boolean>(() => !!props.client.built_in);
+
+        // Show the spinner only while an auto-consent submit is in flight. If it
+        // fails, drop to the manual consent UI so the user can retry instead of
+        // staring at a frozen spinner.
+        const showSpinner = computed<boolean>(() => autoConsent.value && !autoConsentFailed.value);
+
+        onMounted(() => {
+            if (autoConsent.value) {
+                authorize();
+            }
+        });
 
         return {
             authorize,
             abort,
+            autoConsent,
+            showSpinner,
             translationsDefault,
             translationsClient,
         };
@@ -111,7 +143,16 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="flex-col flex gap-2">
+    <div
+        v-if="showSpinner"
+        class="text-center"
+    >
+        <VCIcon name="fa6-solid:spinner" />
+    </div>
+    <div
+        v-else
+        class="flex-col flex gap-2"
+    >
         <div class="text-center">
             <h5 class="text-fg-muted mb-1">
                 {{ translationsDefault.application }}

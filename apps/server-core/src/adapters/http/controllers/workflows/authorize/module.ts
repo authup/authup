@@ -11,18 +11,13 @@ import {
     DGet,
     DPost,
 } from '@routup/decorators';
-import { load } from 'locter';
-import fs from 'node:fs';
-import path from 'node:path';
 import { URL } from 'node:url';
 
 import type { IAppEvent } from 'routup';
-import type { ViteDevServer } from 'vite';
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
-import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
-import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../../../path.ts';
-import { ForceUserLoggedInMiddleware, VITE_SERVER_STORE_KEY } from '../../../middleware/index.ts';
+import { ForceUserLoggedInMiddleware } from '../../../middleware/index.ts';
 import { HTTPOAuth2Authorizer } from '../../../adapters/index.ts';
+import { renderUIPage } from '../../../ui/index.ts';
 import { readFromLocations } from '../../../request/index.ts';
 import type { IOAuth2AuthorizationCodeRequestVerifier } from '../../../../../core/index.ts';
 import { OAuth2AuthorizationCodeRequestValidator } from '../../../../../core/index.ts';
@@ -112,57 +107,24 @@ export class AuthorizeController {
             };
         }
 
-        const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
+        // Path + query of the original request — the SSR page uses it as
+        // the same-origin `redirect` parameter on register / password links
+        // so those pages can lead back into this authorize request.
+        const requestURL = new URL(event.request.url);
 
-        const payload = {
-            config: { baseURL: this.options.baseURL },
-            data: {
-                codeRequest,
-                error,
-                client,
-                scopes,
-            },
-        };
-
-        let html : string;
-        let manifest : Record<string, any>;
-        let render : CallableFunction;
-
-        if (isJIT) {
-            const vite = event.store[VITE_SERVER_STORE_KEY] as ViteDevServer;
-
-            html = await fs.promises.readFile(
-                path.join(UI_SOURCE_PATH, 'index.html'),
-                'utf-8',
-            );
-            html = await vite.transformIndexHtml('/', html);
-            manifest = {};
-            render = (await vite.ssrLoadModule('/src/server.ts')).render;
-        } else {
-            html = await fs.promises.readFile(
-                path.join(UI_DIST_PATH, 'client', 'index.html'),
-                'utf-8',
-            );
-
-            manifest = JSON.parse(await fs.promises.readFile(
-                path.join(UI_DIST_PATH, 'client', '.vite', 'ssr-manifest.json'),
-                'utf-8',
-            ));
-
-            render = (await load(path.join(UI_DIST_PATH, 'server', 'server.js'))).render;
-        }
-
-        const [appHtml, preloadLinks] = await render({
+        return renderUIPage(event, {
             url: '/authorize',
-            manifest,
-            payload,
+            payload: {
+                config: { baseURL: this.options.baseURL },
+                data: {
+                    codeRequest,
+                    error,
+                    client,
+                    scopes,
+                    features: this.options.features,
+                    requestPath: `${requestURL.pathname}${requestURL.search}`,
+                },
+            },
         });
-
-        const body = html
-            .replace('<!--preload-links-->', preloadLinks)
-            .replace('<!--app-html-->', appHtml);
-
-        event.response.headers.set('content-type', 'text/html; charset=utf-8');
-        return body;
     }
 }

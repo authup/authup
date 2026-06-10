@@ -24,7 +24,7 @@ import {
 } from '../../../../adapters/http/index.ts';
 import { DIST_PATH } from '../../../../path.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
-import { ConfigInjectionKey } from '../../config/index.ts';
+import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
 import { RealmEntity } from '../../../../adapters/database/domains/index.ts';
@@ -64,7 +64,16 @@ export class HTTPMiddlewareModule {
             return;
         }
 
-        registerCorsMiddleware(router, this.transformBoolToEmptyObject(config.middlewareCors));
+        const options = this.transformBoolToEmptyObject(config.middlewareCors) ?? {};
+
+        // Restrict CORS to the trusted application origins (publicUrl +
+        // additionalDomains) unless the operator explicitly configured an
+        // origin via the middlewareCors options object.
+        if (typeof options.origin === 'undefined') {
+            options.origin = getAppOrigins(config);
+        }
+
+        registerCorsMiddleware(router, options);
     }
 
     async mountLogger(router: App, container: IContainer): Promise<void> {

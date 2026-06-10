@@ -23,14 +23,15 @@ export const TranslatorTranslationAppEnglish : NamespaceTranslations<`${Translat
     [TranslatorTranslationAppKey.API_DOCS]: 'API Docs',
     [TranslatorTranslationAppKey.MADE_WITH]: 'Made with',
 
+    [TranslatorTranslationAppKey.LOGIN_TITLE]: 'Sign in',
+    [TranslatorTranslationAppKey.LOGIN_SUBTITLE]: 'Select a realm to continue',
+
     [TranslatorTranslationAppKey.URL_GENERATOR]: 'URL Generator',
     [TranslatorTranslationAppKey.URL_GENERATOR_HINT]: 'Generate an authorize url by picking the scopes it needs to function.',
     [TranslatorTranslationAppKey.REDIRECT_URL]: 'Redirect URL',
     [TranslatorTranslationAppKey.GENERATED_URL]: 'Generated URL',
 
     [TranslatorTranslationAppKey.TOGGLE_NAVIGATION]: 'Toggle navigation',
-    [TranslatorTranslationAppKey.SWITCH_TO_LIGHT_MODE]: 'Switch to light mode',
-    [TranslatorTranslationAppKey.SWITCH_TO_DARK_MODE]: 'Switch to dark mode',
 
     [TranslatorTranslationAppKey.SESSION_RENEW]: 'The session will be renewed in',
     [TranslatorTranslationAppKey.MINUTES]: 'minute(s)',

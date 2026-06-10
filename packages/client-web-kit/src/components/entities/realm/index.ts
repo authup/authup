@@ -7,5 +7,6 @@
 
 export { ARealm } from './ARealm';
 export { default as ARealmForm } from './ARealmForm.vue';
+export { default as ARealmGrid } from './ARealmGrid.vue';
 export { ARealmPicker } from './ARealmPicker';
 export { ARealms } from './ARealms';

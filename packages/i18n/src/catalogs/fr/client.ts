@@ -22,4 +22,16 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.GOVERNED_BY]: 'Cette application est régie par la politique de confidentialité et les conditions d\'utilisation de l\'application {{client}}.',
     [TranslatorTranslationClientKey.ACTIVE_SINCE]: 'Actif depuis',
     [TranslatorTranslationClientKey.VIEW_POLICY_DETAILS]: 'Voir les détails de la politique',
+
+    [TranslatorTranslationClientKey.CREATE_ACCOUNT]: 'Créer un compte',
+    [TranslatorTranslationClientKey.FORGOT_PASSWORD]: 'Mot de passe oublié ?',
+    [TranslatorTranslationClientKey.RESET_PASSWORD]: 'Réinitialiser le mot de passe',
+    [TranslatorTranslationClientKey.ACTIVATE_ACCOUNT]: 'Activer le compte',
+    [TranslatorTranslationClientKey.BACK_TO_LOGIN]: 'Retour à la connexion',
+    [TranslatorTranslationClientKey.EMAIL_OR_NAME]: 'E-mail ou nom',
+    [TranslatorTranslationClientKey.CHECK_EMAIL_ACTIVATE]: 'Consultez vos e-mails pour obtenir le code d\'activation.',
+    [TranslatorTranslationClientKey.CHECK_EMAIL_RESET]: 'Consultez vos e-mails pour obtenir le code de réinitialisation.',
+    [TranslatorTranslationClientKey.ACCOUNT_ACTIVATED]: 'Le compte a été activé avec succès.',
+    [TranslatorTranslationClientKey.PASSWORD_RESET_DONE]: 'Le mot de passe a été réinitialisé avec succès.',
+    [TranslatorTranslationClientKey.WORKFLOW_DISABLED]: 'Cette fonctionnalité n\'est pas activée.',
 };

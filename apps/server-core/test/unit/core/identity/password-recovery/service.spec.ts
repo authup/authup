@@ -14,6 +14,7 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { PasswordRecoveryService } from '../../../../../src/core/identity/password-recovery/service.ts';
+import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
 import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
 import { FakeUserRepository } from '../../entities/user/fake-repository.ts';
 import { FakeMailClient } from '../../helpers/fake-mail-client.ts';
@@ -23,11 +24,13 @@ describe('core/identity/password-recovery/service', () => {
     let repository: FakeUserRepository;
     let realmRepository: FakeRealmRepository;
     let mailClient: FakeMailClient;
+    let mailTemplateRenderer: MailTemplateRenderer;
 
     beforeEach(() => {
         repository = new FakeUserRepository();
         realmRepository = new FakeRealmRepository();
         mailClient = new FakeMailClient();
+        mailTemplateRenderer = new MailTemplateRenderer();
     });
 
     describe('forgotPassword', () => {
@@ -35,6 +38,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: false },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -51,6 +55,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: false, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -67,6 +72,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -91,6 +97,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -124,6 +131,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -147,6 +155,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -178,6 +187,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -195,6 +205,7 @@ describe('core/identity/password-recovery/service', () => {
             const service = new PasswordRecoveryService({
                 options: { passwordRecoveryEnabled: false },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -224,6 +235,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -253,6 +265,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -282,6 +295,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -316,6 +330,7 @@ describe('core/identity/password-recovery/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });

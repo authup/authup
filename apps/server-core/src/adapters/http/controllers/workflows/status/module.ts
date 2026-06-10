@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2022-2024.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { StatusResponse, StatusResponseFeatures } from '@authup/core-http-kit';
 import {
     DController,
     DGet,
@@ -13,21 +14,41 @@ import { load } from 'locter';
 import path from 'node:path';
 import { PACKAGE_PATH } from '../../../../../path.ts';
 
-export type EndpointInfo = {
-    version: string,
-    date: string
+export type StatusControllerOptions = {
+    features: StatusResponseFeatures,
+};
+
+export type StatusControllerContext = {
+    options: StatusControllerOptions,
 };
 
 @DController('')
 export class StatusController {
-    @DGet('/', [])
-    async status(): Promise<EndpointInfo> {
-        const pkgJson = await load(path.join(PACKAGE_PATH, 'package.json'));
-        const isoDate = new Date().toISOString();
+    protected options: StatusControllerOptions;
 
+    // The version is constant for the process lifetime — read package.json
+    // once and memoize instead of on every GET /.
+    protected versionPromise: Promise<string> | undefined;
+
+    constructor(ctx: StatusControllerContext) {
+        this.options = ctx.options;
+    }
+
+    protected resolveVersion(): Promise<string> {
+        if (!this.versionPromise) {
+            this.versionPromise = load(path.join(PACKAGE_PATH, 'package.json'))
+                .then((pkgJson) => pkgJson.version);
+        }
+
+        return this.versionPromise;
+    }
+
+    @DGet('/', [])
+    async status(): Promise<StatusResponse> {
         return {
-            version: pkgJson.version,
-            date: isoDate,
+            version: await this.resolveVersion(),
+            date: new Date().toISOString(),
+            features: this.options.features,
         };
     }
 }

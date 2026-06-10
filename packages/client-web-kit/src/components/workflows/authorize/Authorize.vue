@@ -9,36 +9,30 @@ import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core
 import { storeToRefs } from 'pinia';
 import type { PropType, VNodeChild } from 'vue';
 import {
-    Suspense, 
-    defineComponent, 
-    h, 
+    Suspense,
+    defineComponent,
+    h,
     ref,
 } from 'vue';
 import { TranslatorTranslationCommonKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import type { LinkProperties } from '@vuecs/link';
 import { injectHTTPClient, injectStore, useTranslation } from '../../../core';
-import Login from '../Login.vue';
+import AAuthShell from '../../utility/AAuthShell.vue';
+import LoginForm from '../login/LoginForm.vue';
 import AuthorizeForm from './AuthorizeForm.vue';
 import AuthorizeText from './AuthorizeText.vue';
 
 const wrapChild = (child: VNodeChild) => h(
-    'div',
-    { class: 'flex items-center justify-center h-full' },
-    [
-        h(
-            'div',
-            { class: 'authorize' },
-            [
-                child,
-            ],
-        ),
-    ],
+    AAuthShell,
+    null,
+    { default: () => child },
 );
 
 export default defineComponent({
     components: {
         AuthorizeText,
         AuthorizeForm,
-        Login,
+        LoginForm,
     },
     props: {
         codeRequest: { type: Object as PropType<OAuth2AuthorizationCodeRequest> },
@@ -46,6 +40,8 @@ export default defineComponent({
         clientId: { type: String },
         scopes: { type: Array as PropType<Scope[]> },
         error: { type: Object as PropType<Error> },
+        registerLink: { type: Object as PropType<LinkProperties> },
+        passwordForgotLink: { type: Object as PropType<LinkProperties> },
     },
     emits: ['redirect'],
     setup(props) {
@@ -99,7 +95,11 @@ export default defineComponent({
 
             if (!loggedIn.value) {
                 return wrapChild(h(Suspense, {}, {
-                    default: () => h(Login, { codeRequest: props.codeRequest }),
+                    default: () => h(LoginForm, {
+                        codeRequest: props.codeRequest,
+                        registerLink: props.registerLink,
+                        passwordForgotLink: props.passwordForgotLink,
+                    }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
                 }));
             }
@@ -120,18 +120,3 @@ export default defineComponent({
     },
 });
 </script>
-<style>
-.authorize {
-    padding: 1rem;
-    background: #E8E8E8;
-    min-width: 480px;
-    max-width: 100%;
-    min-height: 300px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    position: relative;
-    border-radius: 5px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.24);
-}
-</style>

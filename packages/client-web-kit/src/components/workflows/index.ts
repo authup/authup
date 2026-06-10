@@ -1,9 +1,11 @@
 /*
- * Copyright (c) 2025.
+ * Copyright (c) 2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 export * from './authorize';
-export { default as ALogin } from './Login.vue';
+export * from './login';
+export * from './password';
+export * from './register';

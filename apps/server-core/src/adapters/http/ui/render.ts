@@ -1,0 +1,95 @@
+/*
+ * Copyright (c) 2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+import { useRequestCookie } from '@routup/basic/cookie';
+import { load } from 'locter';
+import fs from 'node:fs';
+import path from 'node:path';
+import type { IAppEvent } from 'routup';
+import type { ViteDevServer } from 'vite';
+import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
+import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../path.ts';
+import { VITE_SERVER_STORE_KEY } from '../middleware/index.ts';
+import type { UIRenderContext } from './types.ts';
+
+const COLOR_MODE_COOKIE = 'vc-color-mode';
+const LOCALE_COOKIE = 'vc-locale';
+
+// Process-lifetime caches for the immutable production SSR assets. The dist
+// template, manifest and server bundle don't change after boot, so read them
+// once instead of per request (the auth/login routes are hot paths). The JIT
+// (dev) path deliberately re-reads so HMR keeps working.
+let cachedHtml: string | undefined;
+let cachedManifest: Record<string, any> | undefined;
+let cachedRender: CallableFunction | undefined;
+
+export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Promise<string> {
+    const isJIT = isCodeTransformation(CodeTransformation.JUST_IN_TIME);
+
+    // Mirror @vuecs/nuxt's SSR plugins: resolve the cookies server-side so
+    // the HTML shell already carries the `.dark`/`.light` class and lang
+    // attribute (no flash) and the client app hydrates from the same values.
+    const colorMode = useRequestCookie(event, COLOR_MODE_COOKIE);
+    ctx.payload.config.colorMode = colorMode;
+
+    const locale = useRequestCookie(event, LOCALE_COOKIE);
+    ctx.payload.config.locale = locale;
+
+    let html : string;
+    let manifest : Record<string, any>;
+    let render : CallableFunction;
+
+    if (isJIT) {
+        const vite = event.store[VITE_SERVER_STORE_KEY] as ViteDevServer;
+
+        html = await fs.promises.readFile(
+            path.join(UI_SOURCE_PATH, 'index.html'),
+            'utf-8',
+        );
+        html = await vite.transformIndexHtml('/', html);
+        manifest = {};
+        render = (await vite.ssrLoadModule('/src/server.ts')).render;
+    } else {
+        html = (cachedHtml ??= await fs.promises.readFile(
+            path.join(UI_DIST_PATH, 'client', 'index.html'),
+            'utf-8',
+        ));
+        manifest = (cachedManifest ??= JSON.parse(await fs.promises.readFile(
+            path.join(UI_DIST_PATH, 'client', '.vite', 'ssr-manifest.json'),
+            'utf-8',
+        )));
+        render = (cachedRender ??= (await load(
+            path.join(UI_DIST_PATH, 'server', 'server.js'),
+        )).render);
+    }
+
+    const [appHtml, preloadLinks] = await render({
+        url: ctx.url,
+        manifest,
+        payload: ctx.payload,
+    });
+
+    let body = html
+        .replace('<!--preload-links-->', preloadLinks)
+        .replace('<!--app-html-->', appHtml);
+
+    let htmlAttrs = 'lang="en"';
+    if (locale && /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]+)*$/.test(locale)) {
+        htmlAttrs = `lang="${locale}"`;
+    }
+    if (colorMode === 'dark' || colorMode === 'light') {
+        htmlAttrs += ` class="${colorMode}"`;
+    }
+    // Match the opening <html> tag by pattern rather than an exact literal,
+    // so a reformatted tag / dev-mode transformIndexHtml rewrite still gets
+    // the lang + color-mode attributes (no silent FOUC).
+    body = body.replace(/<html\b[^>]*>/i, `<html ${htmlAttrs}>`);
+
+    event.response.headers.set('content-type', 'text/html; charset=utf-8');
+    return body;
+}
+

@@ -51,6 +51,18 @@ export enum TranslatorTranslationClientKey {
     GOVERNED_BY = 'governedBy',
     ACTIVE_SINCE = 'activeSince',
     VIEW_POLICY_DETAILS = 'viewPolicyDetails',
+
+    CREATE_ACCOUNT = 'createAccount',
+    FORGOT_PASSWORD = 'forgotPassword',
+    RESET_PASSWORD = 'resetPassword',
+    ACTIVATE_ACCOUNT = 'activateAccount',
+    BACK_TO_LOGIN = 'backToLogin',
+    EMAIL_OR_NAME = 'emailOrName',
+    CHECK_EMAIL_ACTIVATE = 'checkEmailActivate',
+    CHECK_EMAIL_RESET = 'checkEmailReset',
+    ACCOUNT_ACTIVATED = 'accountActivated',
+    PASSWORD_RESET_DONE = 'passwordResetDone',
+    WORKFLOW_DISABLED = 'workflowDisabled',
 }
 
 /**
@@ -76,14 +88,15 @@ export enum TranslatorTranslationAppKey {
     API_DOCS = 'apiDocs',
     MADE_WITH = 'madeWith',
 
+    LOGIN_TITLE = 'loginTitle',
+    LOGIN_SUBTITLE = 'loginSubtitle',
+
     URL_GENERATOR = 'urlGenerator',
     URL_GENERATOR_HINT = 'urlGeneratorHint',
     REDIRECT_URL = 'redirectUrl',
     GENERATED_URL = 'generatedUrl',
 
     TOGGLE_NAVIGATION = 'toggleNavigation',
-    SWITCH_TO_LIGHT_MODE = 'switchToLightMode',
-    SWITCH_TO_DARK_MODE = 'switchToDarkMode',
 
     SESSION_RENEW = 'sessionRenew',
     MINUTES = 'minutes',
@@ -137,6 +150,7 @@ export enum TranslatorTranslationFieldKey {
     DAY_OF_MONTH = 'dayOfMonth',
     DAY_OF_YEAR = 'dayOfYear',
     VALUE_IS_REGEX = 'valueIsRegex',
+    CODE = 'code',
 }
 
 /**
@@ -152,6 +166,10 @@ export enum TranslatorTranslationActionKey {
     AUTHORIZE = 'authorize',
     ABORT = 'abort',
     LOGIN = 'login',
+    REGISTER = 'register',
+    ACTIVATE = 'activate',
+    RESET = 'reset',
+    SEND = 'send',
 }
 
 /**
@@ -168,4 +186,8 @@ export enum TranslatorTranslationCommonKey {
     LOCKED = 'locked',
     NOT_LOCKED = 'notLocked',
     APPLICATION = 'application',
+    SEARCH = 'search',
+    NO_RESULTS = 'noResults',
+    SWITCH_TO_LIGHT_MODE = 'switchToLightMode',
+    SWITCH_TO_DARK_MODE = 'switchToDarkMode',
 }
