@@ -295,9 +295,22 @@ Feature gates check these options before proceeding (e.g. `if (!this.options.reg
 
 **Mail rollback pattern:** When a service persists an entity and then sends an email (e.g. registration activation), wrap the mail call in try/catch. On failure, remove the entity and throw — don't leave orphaned records.
 
-**Mail deep links:** when `publicUrl` is set, the activation mail appends a
-link to `<publicUrl>/activate?token=<hash>` and the reset mail to
-`<publicUrl>/password-reset?token=<hash>` — both land on backend-served SSR
+**Mail templates:** workflow services do **not** build mail HTML inline —
+they depend on the `IMailTemplateRenderer` port (`core/mail/`) and pass
+`{ template: MailTemplateName.X, params: { code, url? }, locale? }`. The
+default `MailTemplateRenderer` resolves localized copy from
+`core/mail/templates.ts` (en/de/fr/es, BCP-47-narrowed, falling back to the
+default locale), html-escapes interpolated values, and wraps the body in a
+small branded inline-styled shell (subject + html + **text** for multipart).
+Mail copy lives in `core/mail` (not `@authup/i18n`) — it's a server-rendered
+concern with no frontend coupling. Pure + injectable, so mail content is
+assertable via `FakeMailClient` (see `test/unit/core/mail/renderer.spec.ts`).
+
+**Mail deep links:** when `publicUrl` is set, the renderer receives a `url`
+param — `<publicUrl>/activate?token=<hash>` for activation and
+`<publicUrl>/password-reset?token=<hash>&realm_id=<id>` for reset (the
+`realm_id` is required so a non-master user's reset link resolves the right
+realm) — rendered as the call-to-action link. Both land on backend-served SSR
 pages (see *Auth Workflow UI* below) that prefill the code from the query.
 The raw code stays in the mail body for copy/paste; no identifier/PII is put
 into the URL (the reset form asks for email/name).

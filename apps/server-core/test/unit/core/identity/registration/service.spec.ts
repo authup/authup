@@ -14,6 +14,7 @@ import {
 } from 'vitest';
 import { ErrorCode } from '@authup/errors';
 import { RegistrationService } from '../../../../../src/core/identity/registration/service.ts';
+import { MailTemplateRenderer } from '../../../../../src/core/mail/index.ts';
 import { FakeRealmRepository } from '../../entities/realm/fake-repository.ts';
 import { FakeUserRepository } from '../../entities/user/fake-repository.ts';
 import { FakeMailClient } from '../../helpers/fake-mail-client.ts';
@@ -31,11 +32,13 @@ describe('core/identity/registration/service', () => {
     let repository: FakeUserRepository;
     let realmRepository: FakeRealmRepository;
     let mailClient: FakeMailClient;
+    let mailTemplateRenderer: MailTemplateRenderer;
 
     beforeEach(() => {
         repository = new FakeUserRepository();
         realmRepository = new FakeRealmRepository();
         mailClient = new FakeMailClient();
+        mailTemplateRenderer = new MailTemplateRenderer();
     });
 
     describe('register', () => {
@@ -43,6 +46,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: false },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -59,6 +63,7 @@ describe('core/identity/registration/service', () => {
                     emailVerificationEnabled: false, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -76,6 +81,7 @@ describe('core/identity/registration/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -92,13 +98,14 @@ describe('core/identity/registration/service', () => {
 
             expect(mailClient.sent).toHaveLength(1);
             expect(mailClient.sent[0]).toMatchObject({ to: data.email });
-            expect(mailClient.sent[0].subject).toContain('Activation');
+            expect(mailClient.sent[0].subject).toContain('Activate');
         });
 
         it('should hash the password before saving', async () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: true },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -116,6 +123,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: true },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -136,6 +144,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: true },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -152,6 +161,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: true },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -172,6 +182,7 @@ describe('core/identity/registration/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -188,6 +199,7 @@ describe('core/identity/registration/service', () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: true },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -217,6 +229,7 @@ describe('core/identity/registration/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });
@@ -235,6 +248,7 @@ describe('core/identity/registration/service', () => {
                     emailVerificationEnabled: true, 
                 },
                 mailClient,
+                mailTemplateRenderer,
                 repository,
                 realmRepository,
             });

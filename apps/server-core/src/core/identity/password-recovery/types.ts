@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { IMailClient } from '../../mail/types.ts';
+import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
 
 export type PasswordRecoveryServiceOptions = {
@@ -17,6 +17,7 @@ export type PasswordRecoveryServiceOptions = {
 export type PasswordRecoveryServiceContext = {
     options: PasswordRecoveryServiceOptions,
     mailClient: IMailClient,
+    mailTemplateRenderer: IMailTemplateRenderer,
     repository: IUserRepository,
     realmRepository: IRealmRepository,
 };

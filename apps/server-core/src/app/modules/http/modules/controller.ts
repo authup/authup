@@ -120,6 +120,7 @@ import {
     ClientService,
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
+    MailTemplateRenderer,
     OAuth2ClientAuthenticator,
     PasswordRecoveryService,
     PermissionCheckerService,
@@ -343,6 +344,7 @@ export class HTTPControllerModule {
 
         return new PasswordRecoveryService({
             mailClient,
+            mailTemplateRenderer: new MailTemplateRenderer(),
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             options: {
@@ -391,6 +393,7 @@ export class HTTPControllerModule {
 
         return new RegistrationService({
             mailClient,
+            mailTemplateRenderer: new MailTemplateRenderer(),
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             options: {

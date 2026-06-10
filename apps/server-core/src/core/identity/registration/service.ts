@@ -18,13 +18,16 @@ import type {
     RegistrationServiceContext,
     RegistrationServiceOptions,
 } from './types.ts';
-import type { IMailClient } from '../../mail/types.ts';
+import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
+import { MailTemplateName } from '../../mail/types.ts';
 import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
 
 export class RegistrationService implements IRegistrationService {
     protected options: RegistrationServiceOptions;
 
     protected mailClient: IMailClient;
+
+    protected mailTemplateRenderer: IMailTemplateRenderer;
 
     protected repository: IUserRepository;
 
@@ -33,6 +36,7 @@ export class RegistrationService implements IRegistrationService {
     constructor(ctx: RegistrationServiceContext) {
         this.options = ctx.options;
         this.mailClient = ctx.mailClient;
+        this.mailTemplateRenderer = ctx.mailTemplateRenderer;
         this.repository = ctx.repository;
         this.realmRepository = ctx.realmRepository;
     }
@@ -72,14 +76,14 @@ export class RegistrationService implements IRegistrationService {
                     `${this.options.publicUrl.replace(/\/+$/, '')}/activate?token=${entity.activate_hash}` :
                     undefined;
 
+                const mail = this.mailTemplateRenderer.render({
+                    template: MailTemplateName.REGISTRATION_ACTIVATION,
+                    params: { code: entity.activate_hash!, url: activateUrl },
+                });
+
                 await this.mailClient.send({
                     to: entity.email,
-                    subject: 'Registration - Activation code',
-                    html: `
-                    <p>Please use the code below to activate your account and start using the site.</p>
-                    <p>${entity.activate_hash}</p>
-                    ${activateUrl ? `<p><a href="${activateUrl}">Activate account</a></p>` : ''}
-                    `,
+                    ...mail,
                 });
             } catch {
                 await this.repository.remove(entity);
