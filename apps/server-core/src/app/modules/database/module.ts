@@ -52,6 +52,8 @@ export class DatabaseModule implements IModule {
 
     protected eventRedisClient? : RedisClient;
 
+    protected eventPublisher? : DomainEventPublisher;
+
     constructor(options: DatabaseModuleOptions = {}) {
         this.name = ModuleName.DATABASE;
         this.dependencies = [ModuleName.CONFIG, ModuleName.LOGGER];
@@ -102,6 +104,11 @@ export class DatabaseModule implements IModule {
         }
 
         container.unregister(DatabaseInjectionKey.DomainEventPublisher);
+
+        if (this.eventPublisher) {
+            await this.eventPublisher.dispose();
+            this.eventPublisher = undefined;
+        }
 
         if (this.eventRedisClient) {
             this.eventRedisClient.disconnect();
@@ -196,6 +203,7 @@ export class DatabaseModule implements IModule {
         const logger = container.resolve(LoggerInjectionKey);
 
         const publisher = new DomainEventPublisher({ logger });
+        this.eventPublisher = publisher;
         if (config.redis) {
             const client = createRedisClient(config.redis);
             if (client !== config.redis) {
