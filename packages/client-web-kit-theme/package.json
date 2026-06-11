@@ -8,19 +8,20 @@
     "./package.json": "./package.json",
     ".": {
       "types": "./dist/index.d.ts",
-      "style": "./dist/style.css",
+      "style": "./assets/css/index.css",
       "import": "./dist/index.mjs"
     },
-    "./style.css": "./dist/style.css"
+    "./index.css": "./assets/css/index.css"
   },
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
+    "assets",
     "dist"
   ],
   "scripts": {
     "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
-    "build:js": "tsdown && node ./scripts/postbuild.mjs",
+    "build:js": "tsdown",
     "build": "rimraf ./dist && npm run build:js && npm run build:types"
   },
   "engines": {

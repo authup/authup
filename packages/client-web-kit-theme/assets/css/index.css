@@ -53,12 +53,6 @@
 
    `tokens.css` first: it declares the overridable `--authup-*` design
    tokens (in `@layer authup`) that every partial below consumes.
-
-   These sit in leading `@import` position — BEFORE the @custom-variant /
-   @source directives below — on purpose: the tsdown CSS entry
-   (`src/style.css` -> `dist/style.css`) only inlines relative imports
-   that appear before any non-import rule. Keep them relative and plain
-   (no Tailwind directives) so they inline cleanly.
    ------------------------------------------------------------------ */
 @import "./styles/tokens.css";
 @import "./styles/picker.css";
@@ -110,24 +104,27 @@
  * lives in BOTH consumption contexts (Tailwind v4 resolves `@source`
  * relative to the declaring file and silently skips missing paths):
  *
- *   workspace dev:  packages/client-web-kit-theme/src/index.css
- *   published:      node_modules/@authup/client-web-kit-theme/dist/style.css
+ *   workspace dev:  packages/client-web-kit-theme/assets/css/index.css
+ *   published:      node_modules/@authup/client-web-kit-theme/assets/css/index.css
  *
- * `../src` covers the workspace src tree (theme-factory `extend()`
- * class strings in index.ts); `./index.mjs` covers the same strings
- * in the published bundle next to dist/style.css.
+ * Both sit at the same depth inside the package, so most paths below
+ * resolve identically in both layouts.
+ *
+ * `../../src` covers the theme-factory `extend()` class strings in
+ * index.ts (workspace; src is not published); `../../dist` covers the
+ * same strings in the published dist/index.mjs.
  */
-@source "../src";
-@source "./index.mjs";
+@source "../../src";
+@source "../../dist";
 /*
  * @authup/client-web-kit — the kit ships class strings on its SFCs
- * that any consumer renders. `../../client-web-kit` is deliberately
- * layout-agnostic: from `packages/client-web-kit-theme/*` it hits the
- * sibling workspace package, from `node_modules/@authup/client-web-kit-theme/*`
- * it hits the sibling installed package. (The former
- * `../../../node_modules/@authup/...` hop only resolved inside this
- * monorepo — published consumers silently lost JIT coverage for every
- * kit class string.)
+ * that any consumer renders. `../../../client-web-kit` is deliberately
+ * layout-agnostic: from `packages/client-web-kit-theme/assets/css` it
+ * hits the sibling workspace package, from
+ * `node_modules/@authup/client-web-kit-theme/assets/css` it hits the
+ * sibling installed package. (A `node_modules/@authup/...` hop would
+ * only resolve inside this monorepo — published consumers would
+ * silently lose JIT coverage for every kit class string.)
  *
  * The kit ships `dist/` only (`files: ["dist"]`), so the dist path is
  * the post-publish source of truth. In workspace dev we also scan
@@ -140,17 +137,18 @@
  * this package in its virtual store — that's why package.json declares
  * `@authup/client-web-kit` as an optional peerDependency.
  */
-@source "../../client-web-kit/dist";
-@source "../../client-web-kit/src";
+@source "../../../client-web-kit/dist";
+@source "../../../client-web-kit/src";
 /*
  * `@vuecs/*` — element class maps applied at runtime via the theme
  * manager (e.g. `formInput.classes.root = "block w-full rounded-md ..."`).
  * Without these scopes, every `<VCFormInput>` / `<VCButton>` /
  * `<VCTable>` renders with `vc-*` defaults and no Tailwind styling.
- * Two spellings, one per layout: `../../../node_modules/@vuecs` from
- * `packages/client-web-kit-theme/*` (repo-root hoisting),
- * `../../../@vuecs` from `node_modules/@authup/client-web-kit-theme/*`
- * (flat consumer node_modules).
+ * Two spellings, one per layout: `../../../../node_modules/@vuecs`
+ * from `packages/client-web-kit-theme/assets/css` (repo-root
+ * hoisting), `../../../../@vuecs` from
+ * `node_modules/@authup/client-web-kit-theme/assets/css` (flat
+ * consumer node_modules).
  */
-@source "../../../node_modules/@vuecs";
-@source "../../../@vuecs";
+@source "../../../../node_modules/@vuecs";
+@source "../../../../@vuecs";

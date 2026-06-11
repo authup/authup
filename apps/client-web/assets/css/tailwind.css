@@ -6,7 +6,14 @@
  * the JIT picks up class-name tokens it can't reach via the theme alone.
  */
 
-@import "@authup/client-web-theme";
+/*
+ * Relative workspace import (a published consumer would write
+ * `@import "@authup/client-web-theme";` and resolve via the `style`
+ * exports condition): this app aliases `@authup/*` package ids to
+ * their `src/` dirs for unbuilt TS consumption, which would hijack
+ * the bare CSS specifier.
+ */
+@import "../../../../packages/client-web-theme/assets/css/index.css";
 
 /*
  * Scan this app's templates. Tailwind v4 auto-scans the CSS file's

@@ -1,17 +1,16 @@
 import { defineConfig } from 'tsdown';
 
 export default defineConfig({
-    // Two entries: the JS theme factory (-> dist/index.mjs) and the CSS
-    // theme (-> dist/style.css).
-    //
-    // The CSS entry (src/style.css -> src/index.css) is bundled by
-    // rolldown's CSS pipeline: it inlines every resolvable @import —
-    // our relative `./styles/*` partials AND the `tailwindcss` /
-    // `@vuecs/design` / `@vuecs/theme-tailwind` CSS — into one file.
-    // Crucially the `@tailwind utilities;` directive survives inlining,
-    // so the CONSUMER app's Tailwind still runs the JIT over the bundle
-    // (verified by compiling dist/style.css through @tailwindcss/cli).
-    entry: ['src/index.ts', 'src/style.css'],
+    // JS theme factory only (-> dist/index.mjs). The theme CSS is NOT
+    // bundled: it ships raw under assets/css/ (see `files` +
+    // `exports.style` in package.json) and is processed by the
+    // consumer's Tailwind, which resolves the `tailwindcss` /
+    // `@vuecs/*` imports and runs the JIT. Bundling the CSS here would
+    // also drop the bare `@layer theme, vuecs, …;` order statement —
+    // rolldown's CSS pipeline strips statement rules, leaving the
+    // cascade order to the accidental first-appearance order of the
+    // inlined blocks.
+    entry: ['src/index.ts'],
     format: 'esm',
     sourcemap: true,
 });
