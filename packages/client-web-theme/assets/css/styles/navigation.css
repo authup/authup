@@ -204,12 +204,13 @@ button.vc-nav-link {
 /*
  * Line color uses `--authup-chrome-fg-muted` (with opacity) rather
  * than `--authup-chrome-bg-elevated`: in light mode, chrome-bg
- * (neutral-100) and chrome-bg-elevated (neutral-50) are only ~1.5%
- * lightness apart, below the perceptual threshold against a near-
- * white surface — the lines disappear. The fg-muted token is a
- * mid-tone in both modes (neutral-500 in light, ~neutral-300 in
- * dark) and ALWAYS contrasts against chrome-bg, so the same opacity
- * gives a consistent subtle weight regardless of mode.
+ * (surface-card #ffffff) and chrome-bg-elevated (surface-raised
+ * #ececec) are only a few % lightness apart, below the perceptual
+ * threshold against a near-white surface — the lines disappear. The
+ * fg-muted token is a mid-tone in both modes (on-surface-muted in
+ * light, slate-400 in dark) and ALWAYS contrasts against chrome-bg,
+ * so the same opacity gives a consistent subtle weight regardless
+ * of mode.
  */
 .vc-nav-items .vc-nav-separator:before,
 .vc-nav-items .vc-nav-separator:after {
@@ -222,8 +223,8 @@ button.vc-nav-link {
 
 /*
  * Same contrast trap as `.vc-nav-separator` had:
- * `--authup-chrome-bg-elevated` is only ~1.5% L apart from chrome-bg
- * in light mode (neutral-50 vs neutral-100), so the border-left
+ * `--authup-chrome-bg-elevated` is only a few % L apart from chrome-bg
+ * in light mode (#ececec vs #ffffff), so the border-left
  * disappears against the light chrome surface. Mix
  * `--authup-chrome-fg-muted` to 30% alpha — the mid-tone token has
  * consistent visibility on chrome-bg in both modes, and `color-mix`
