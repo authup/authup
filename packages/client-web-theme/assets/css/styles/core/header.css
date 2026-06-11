@@ -12,10 +12,12 @@
     top:0;
     display: flex;
     align-items: center;
-    box-shadow: 0px -6px 0px rgba(0, 0, 0, 0.3) inset;
+    box-shadow: var(--authup-chrome-edge-shadow-bottom);
     background-color: var(--authup-chrome-bg);
     padding-bottom: 6px;
-    z-index: 1;
+    /* Above the sidebar (z-index: 1) so the chrome edges layer correctly
+       where header and sidebar meet. */
+    z-index: 2;
 }
 
 .page-header .header-title {
@@ -41,7 +43,6 @@
     border-radius: .25rem;
     margin: 0 10px;
     padding: 10px;
-    box-shadow: 0 4px 25px 0 rgba(0, 0, 0, .4);
 }
 
 .page-header .toggle-box .toggle-trigger .icon-bar {

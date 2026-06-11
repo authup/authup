@@ -48,12 +48,18 @@
      *      `<VC*>` component AND authup's own content CSS resolve to them
      *      from one source of truth.
      *
-     *   2. CHROME slate ramp (`--authup-slate-*`) is CONSTANT across modes —
-     *      the brand signature. Header / sidebar / footer / navbar-dropdown
-     *      stay dark slate in BOTH light and dark mode; only their text is
-     *      light. The `--authup-chrome-*` tokens the chrome stylesheets read
-     *      are aliased onto the slate ramp (names kept so header/sidebar/
-     *      footer/navbar CSS needs no edits).
+     *   2. CHROME (`--authup-chrome-*` — header / sidebar / footer /
+     *      navbar-dropdown) FLIPS with the mode. Light-mode defaults alias
+     *      the vuecs semantic tokens (`--vc-color-bg-elevated` / `-fg` /
+     *      `-border`, themselves bridged onto the surface group) so the
+     *      chrome reads as a light raised surface distinct from the
+     *      page-content bg; the `.dark` block below pins the chrome onto
+     *      the slate ramp (`--authup-slate-*`) so dark mode keeps authup's
+     *      recognizable dark-slate chrome. The chrome edge against the
+     *      content is a token too (`--authup-chrome-edge-shadow-*`): a
+     *      soft drop shadow in light mode (the dark inset band would be a
+     *      muddy grey stripe on a light surface), the historical recessed
+     *      band in dark mode.
      *
      *   3. Brand ACCENTS (periwinkle / rose / salmon / green) carry the
      *      authup identity, hard-coded and constant across modes. Periwinkle
@@ -79,7 +85,8 @@
         --authup-auth-accent-alt:           var(--authup-rose);
         --authup-auth-logo-background:      var(--authup-slate-800);
 
-        /* Chrome slate ramp — constant across themes (brand signature) */
+        /* Slate ramp — the dark chrome palette (applied under `.dark`);
+           slate-800 also anchors mode-stable accents like the auth logo */
         --authup-slate-900:                 #30373e;  /* body text, pagination active */
         --authup-slate-800:                 #34353a;  /* header / sidebar / footer chrome */
         --authup-slate-700:                 #40434e;  /* navbar dropdown menu */
@@ -87,12 +94,23 @@
         --authup-slate-400:                 #aeb2b7;  /* chrome muted text */
         --authup-slate-300:                 #949da5;  /* link default */
 
-        /* Chrome semantic aliases — what header/sidebar/footer/navbar read */
-        --authup-chrome-bg:                 var(--authup-slate-800);
-        --authup-chrome-bg-elevated:        var(--authup-slate-700);
-        --authup-chrome-fg:                 #e8e6e2;
-        --authup-chrome-fg-muted:           var(--authup-slate-400);
-        --authup-chrome-border:             var(--authup-slate-700);
+        /* Chrome semantic aliases — what header/sidebar/footer/navbar read.
+           Light-mode defaults: alias the vuecs semantic tokens so the chrome
+           is a light raised surface over the page content; the `.dark` block
+           below re-pins them onto the slate ramp. */
+        --authup-chrome-bg:                 var(--vc-color-bg-elevated);
+        --authup-chrome-bg-elevated:        var(--vc-color-bg-muted);
+        --authup-chrome-fg:                 var(--vc-color-fg);
+        --authup-chrome-fg-muted:           var(--vc-color-fg-muted);
+        --authup-chrome-border:             var(--vc-color-border);
+
+        /* Chrome edge where it meets the content — `-bottom` for top chrome
+           (header / sidebar-header), `-top` for bottom chrome (footer),
+           `-right` for the sidebar's content edge. Light mode: a soft drop
+           shadow so the chrome reads as raised above the content. */
+        --authup-chrome-edge-shadow-bottom: 0 2px 8px 0 rgba(0, 0, 0, 0.06);
+        --authup-chrome-edge-shadow-top:    0 -2px 8px 0 rgba(0, 0, 0, 0.06);
+        --authup-chrome-edge-shadow-right:  2px 0 8px 0 rgba(0, 0, 0, 0.06);
 
         /* Themeable surfaces — light */
         --authup-surface-app:               #d5d8da;
@@ -146,15 +164,23 @@
     }
 
     /*
-     * Dark mode — flip ONLY the themeable surfaces. The chrome slate ramp
-     * and brand accents are constant (defined in `:root`), and the
-     * `--vc-color-*` bridge + primary palette resolve per-element, so they
-     * pick up these dark surface values automatically with no further
-     * overrides.
+     * Dark mode — two moves:
      *
-     * Surfaces stay genuinely dark so the light dark-mode `--vc-color-fg`
-     * (`--authup-on-surface` = #e8e6e2) keeps high contrast — the ramp
-     * climbs app < content < card < raised < active.
+     *   a) Flip the themeable surfaces. The `--vc-color-*` bridge +
+     *      primary palette resolve per-element, so they pick up these
+     *      dark surface values automatically with no further overrides.
+     *      Surfaces stay genuinely dark so the light dark-mode
+     *      `--vc-color-fg` (`--authup-on-surface` = #e8e6e2) keeps high
+     *      contrast — the ramp climbs app < content < card < raised <
+     *      active.
+     *
+     *   b) Pin the chrome onto the slate ramp — authup's recognizable
+     *      dark-slate header/sidebar/footer. Without this pin the chrome
+     *      would alias the flipped surface tokens and blend into the
+     *      page-content bg. The edge shadows switch from the light-mode
+     *      drop shadow to the historical recessed inset band; the
+     *      sidebar's right edge goes shadow-free — the chrome/content
+     *      tonal step carries the separation in dark mode.
      *
      * Works from inside `@layer base` because `@vuecs/design` 1.0.1+ wraps
      * its `.dark` token defaults in `@layer vuecs`, positioned earlier than
@@ -162,6 +188,15 @@
      * `@layer theme, vuecs, base, components, utilities;` declaration.
      */
     .dark {
+        --authup-chrome-bg:                 var(--authup-slate-800);
+        --authup-chrome-bg-elevated:        var(--authup-slate-700);
+        --authup-chrome-fg:                 #e8e6e2;
+        --authup-chrome-fg-muted:           var(--authup-slate-400);
+        --authup-chrome-border:             var(--authup-slate-700);
+        --authup-chrome-edge-shadow-bottom: 0 -6px 0 0 rgba(0, 0, 0, 0.3) inset;
+        --authup-chrome-edge-shadow-top:    0 6px 0 0 rgba(0, 0, 0, 0.3) inset;
+        --authup-chrome-edge-shadow-right:  none;
+
         --authup-surface-app:               #16171a;
         --authup-surface-content:           #1f2024;
         --authup-surface-card:              #26272c;

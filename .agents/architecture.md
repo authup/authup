@@ -1032,13 +1032,22 @@ new `@authup/client-web-theme` package.
     genuinely dark in dark mode so the light `--vc-color-fg` keeps
     contrast — the predecessor `var(--vc-color-neutral-400/500)` was a
     light-mid grey (light-on-light, ~1.7:1, unreadable).
-  - **Chrome slate ramp** (`--authup-slate-900…300`) — **constant across
-    both modes** (the brand signature). Header / sidebar / footer /
-    navbar-dropdown stay dark slate even in light mode; only their text is
-    light. The `--authup-chrome-*` tokens the chrome stylesheets read are
-    aliased onto the slate ramp (`chrome-bg ← slate-800`,
-    `chrome-bg-elevated ← slate-700`, `chrome-fg = #e8e6e2`,
-    `chrome-fg-muted ← slate-400`), so the chrome CSS files need no edits.
+  - **Chrome tokens** (`--authup-chrome-*` — what header / sidebar /
+    footer / navbar-dropdown CSS reads) — **flip with the mode** (mirrors
+    hub's chrome model, PrivateAIM/hub#1668). Light-mode `:root` defaults
+    alias the vuecs semantic tokens (`chrome-bg ← --vc-color-bg-elevated`,
+    `chrome-bg-elevated ← -bg-muted`, `chrome-fg ← -fg`,
+    `chrome-fg-muted ← -fg-muted`, `chrome-border ← -border`) so the
+    chrome is a light raised surface; `.dark` pins them onto the **slate
+    ramp** (`--authup-slate-900…300`, the dark chrome palette:
+    `chrome-bg ← slate-800`, `chrome-bg-elevated ← slate-700`,
+    `chrome-fg = #e8e6e2`, `chrome-fg-muted ← slate-400`) so dark mode
+    keeps authup's recognizable dark-slate chrome. The chrome/content
+    edges are tokens too — `--authup-chrome-edge-shadow-{bottom,top,right}`:
+    soft drop shadows in light mode, the historical recessed inset band
+    (and a shadow-free sidebar right edge) in dark mode. The header sits
+    at `z-index: 2`, the sidebar at `position: relative; z-index: 1`, so
+    the light-mode shadows paint over the page content.
   - **Brand accents** — `--authup-periwinkle #6d7fcc` (primary accent —
     active pill / nav-link background; also drives the
     `--vc-color-primary-*` scale via color-mix, rebound to
