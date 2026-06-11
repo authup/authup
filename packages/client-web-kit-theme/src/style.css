@@ -19,5 +19,12 @@
  * In workspace dev the apps consume `src/index.css` directly (via their
  * Vite/Nuxt alias to this package's `src`), so this entry is only the
  * publish-time bundling seam.
+ *
+ * NOTE: rolldown's CSS pipeline drops bare `@layer a, b, …;` statement
+ * rules while bundling (the one in index.css AND any placed here), so
+ * `../scripts/postbuild.mjs` re-prepends the explicit layer order to
+ * dist/style.css after the build. Without it the published bundle's
+ * cascade order would rest on the accidental first-appearance order of
+ * the inlined blocks.
  */
 @import "./index.css";

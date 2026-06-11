@@ -149,71 +149,71 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="realm-select">
+    <div class="a-realm-select">
         <div
             v-if="error"
-            class="alert alert-danger realm-select-alert"
+            class="alert alert-danger a-realm-select-alert"
         >
             {{ error }}
         </div>
 
         <div
             v-if="!loaded || busy || redirecting"
-            class="realm-grid"
+            class="a-realm-grid"
             aria-hidden="true"
         >
             <div
                 v-for="n in 6"
                 :key="n"
-                class="realm-grid-item realm-grid-item--skeleton"
+                class="a-realm-grid-item a-realm-grid-item--skeleton"
             />
         </div>
 
         <template v-else>
             <div
                 v-if="showSearch"
-                class="realm-search"
+                class="a-realm-search"
             >
                 <VCIcon
                     name="fa6-solid:magnifying-glass"
-                    class="realm-search-icon"
+                    class="a-realm-search-icon"
                 />
                 <input
                     v-model="search"
                     type="text"
-                    class="realm-search-input"
+                    class="a-realm-search-input"
                     :placeholder="translations.search"
                 >
             </div>
 
             <div
                 v-if="filtered.length === 0"
-                class="realm-empty"
+                class="a-realm-empty"
             >
                 <VCIcon
                     name="fa6-solid:folder-open"
-                    class="realm-empty-icon"
+                    class="a-realm-empty-icon"
                 />
                 <span>{{ translations.noResults }}</span>
             </div>
 
             <div
                 v-else
-                class="realm-grid"
+                class="a-realm-grid"
             >
                 <button
                     v-for="realm in filtered"
                     :key="realm.id"
                     type="button"
-                    class="realm-grid-item"
+                    class="a-realm-grid-item"
                     @click.prevent="handleSelect(realm)"
                 >
-                    <span class="realm-grid-item-name">
+                    <span class="a-realm-grid-item-name">
                         {{ labelFor(realm) }}
                     </span>
                     <span
                         v-if="slugFor(realm)"
-                        class="realm-grid-item-slug"
+                        class="a-realm-grid-item-slug"
                     >
                         {{ slugFor(realm) }}
                     </span>

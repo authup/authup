@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
-    "build:js": "tsdown",
+    "build:js": "tsdown && node ./scripts/postbuild.mjs",
     "build": "rimraf ./dist && npm run build:js && npm run build:types"
   },
   "engines": {
@@ -53,10 +53,16 @@
     "@vuecs/theme-tailwind": "^4.0.0"
   },
   "peerDependencies": {
+    "@authup/client-web-kit": "^1.0.0-beta.46",
     "@vuecs/core": "^3.x",
     "@vuecs/design": "^1.x",
     "@vuecs/theme-tailwind": "^4.x",
     "tailwindcss": "^4.x"
+  },
+  "peerDependenciesMeta": {
+    "@authup/client-web-kit": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

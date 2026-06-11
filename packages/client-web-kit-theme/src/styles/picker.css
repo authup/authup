@@ -10,19 +10,25 @@
  * @authup/client-web-kit (APolicyTypePicker, AIdentityProviderPicker).
  * Colors come from the --authup-picker-item-* tokens (see ./tokens.css);
  * defaults track the vuecs semantic tokens (incl. dark mode).
+ *
+ * Rules live in `@layer components` (before `utilities` in the layer
+ * order, see ../index.css) so a consumer can override any single
+ * property with a plain Tailwind utility on the element.
  */
-.a-picker-item {
-    cursor: pointer;
-    min-width: var(--authup-picker-item-min-width);
-    padding: var(--authup-picker-item-padding);
-    border-radius: var(--authup-picker-item-border-radius);
-    color: var(--authup-picker-item-color);
-    background-color: var(--authup-picker-item-background);
-}
+@layer components {
+    .a-picker-item {
+        cursor: pointer;
+        min-width: var(--authup-picker-item-min-width);
+        padding: var(--authup-picker-item-padding);
+        border-radius: var(--authup-picker-item-border-radius);
+        color: var(--authup-picker-item-color);
+        background-color: var(--authup-picker-item-background);
+    }
 
-.a-picker-item.active,
-.a-picker-item:hover,
-.a-picker-item:active {
-    color: var(--authup-picker-item-active-color);
-    background-color: var(--authup-picker-item-active-background);
+    .a-picker-item.active,
+    .a-picker-item:hover,
+    .a-picker-item:active {
+        color: var(--authup-picker-item-active-color);
+        background-color: var(--authup-picker-item-active-background);
+    }
 }

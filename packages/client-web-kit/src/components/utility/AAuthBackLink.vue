@@ -37,7 +37,7 @@ export default defineComponent({
     >
         <VCLink
             v-bind="link"
-            class="auth-back-link"
+            class="a-auth-back-link"
         >
             <VCIcon name="fa6-solid:chevron-left" />
             {{ translations.backToLogin }}

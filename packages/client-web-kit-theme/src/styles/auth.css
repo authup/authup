@@ -16,106 +16,109 @@
  *                       language).
  *   - <AAuthBackLink> — "‹ Back to login" affordance under the forms.
  *
- * Colors come from the --authup-auth-* tokens (see ./tokens.css); the
- * accents prefer the app-theme brand vars and fall back to the
- * consumer's primary palette.
+ * Colors come from the --authup-auth-* tokens (see ./tokens.css).
+ *
+ * Rules live in `@layer components` (before `utilities` in the layer
+ * order, see ../index.css) so a consumer can override any single
+ * property with a plain Tailwind utility on the element.
  */
+@layer components {
+    .a-auth-shell {
+        position: relative;
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 2rem 1rem;
+    }
 
-.auth-shell {
-    position: relative;
-    min-height: 100vh;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    padding: 2rem 1rem;
-}
+    .a-auth-shell-aurora {
+        position: absolute;
+        inset: -20%;
+        z-index: 0;
+        pointer-events: none;
+        background:
+            radial-gradient(
+                38% 48% at 22% 22%,
+                color-mix(in oklab, var(--authup-auth-accent) 50%, transparent),
+                transparent 70%
+            ),
+            radial-gradient(
+                42% 52% at 80% 28%,
+                color-mix(in oklab, var(--authup-auth-accent-alt) 38%, transparent),
+                transparent 70%
+            ),
+            radial-gradient(
+                52% 60% at 50% 92%,
+                color-mix(in oklab, var(--authup-auth-accent) 32%, transparent),
+                transparent 70%
+            );
+        filter: blur(70px);
+        opacity: var(--authup-auth-aurora-opacity);
+    }
 
-.auth-shell-aurora {
-    position: absolute;
-    inset: -20%;
-    z-index: 0;
-    pointer-events: none;
-    background:
-        radial-gradient(
-            38% 48% at 22% 22%,
-            color-mix(in oklab, var(--authup-auth-accent) 50%, transparent),
-            transparent 70%
-        ),
-        radial-gradient(
-            42% 52% at 80% 28%,
-            color-mix(in oklab, var(--authup-auth-accent-alt) 38%, transparent),
-            transparent 70%
-        ),
-        radial-gradient(
-            52% 60% at 50% 92%,
-            color-mix(in oklab, var(--authup-auth-accent) 32%, transparent),
-            transparent 70%
-        );
-    filter: blur(70px);
-    opacity: var(--authup-auth-aurora-opacity);
-}
+    .a-auth-shell-card {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: var(--authup-auth-card-max-width);
+        padding: var(--authup-auth-card-padding);
+        border: 1px solid var(--authup-auth-surface-border-color);
+        border-radius: var(--authup-auth-card-border-radius);
+        background: var(--authup-auth-surface-background);
+        color: var(--authup-auth-surface-color);
+        box-shadow: var(--authup-auth-card-box-shadow);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
 
-.auth-shell-card {
-    position: relative;
-    z-index: 1;
-    width: 100%;
-    max-width: var(--authup-auth-card-max-width);
-    padding: var(--authup-auth-card-padding);
-    border: 1px solid var(--authup-auth-surface-border-color);
-    border-radius: var(--authup-auth-card-border-radius);
-    background: var(--authup-auth-surface-background);
-    color: var(--authup-auth-surface-color);
-    box-shadow: var(--authup-auth-card-box-shadow);
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
+    .a-auth-shell-logo {
+        display: flex;
+        justify-content: center;
+    }
 
-.auth-shell-logo {
-    display: flex;
-    justify-content: center;
-}
+    .a-auth-gadgets {
+        position: fixed;
+        top: 1rem;
+        right: 1.25rem;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-.auth-gadgets {
-    position: fixed;
-    top: 1rem;
-    right: 1.25rem;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+    .a-auth-gadget {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2.25rem;
+        height: 2.25rem;
+        padding: 0 0.6rem;
+        border: 1px solid var(--authup-auth-surface-border-color);
+        border-radius: 0.6rem;
+        background: var(--authup-auth-surface-background);
+        color: var(--authup-auth-surface-color-muted);
+        cursor: pointer;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
 
-.auth-gadget {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2.25rem;
-    height: 2.25rem;
-    padding: 0 0.6rem;
-    border: 1px solid var(--authup-auth-surface-border-color);
-    border-radius: 0.6rem;
-    background: var(--authup-auth-surface-background);
-    color: var(--authup-auth-surface-color-muted);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease;
-}
+    .a-auth-gadget:hover {
+        color: var(--authup-auth-surface-color);
+        border-color: var(--authup-auth-accent);
+    }
 
-.auth-gadget:hover {
-    color: var(--authup-auth-surface-color);
-    border-color: var(--authup-auth-accent);
-}
+    .a-auth-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.85em;
+        color: var(--authup-auth-surface-color-muted);
+    }
 
-.auth-back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.85em;
-    color: var(--authup-auth-surface-color-muted);
-}
-
-.auth-back-link:hover {
-    color: var(--authup-auth-surface-color);
+    .a-auth-back-link:hover {
+        color: var(--authup-auth-surface-color);
+    }
 }

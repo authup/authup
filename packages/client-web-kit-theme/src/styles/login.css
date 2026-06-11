@@ -12,14 +12,20 @@
  * past the card's inner width, so a long provider list or name can't
  * spill over the card corner. Width comes from the
  * --authup-login-provider-min-width token (see ./tokens.css).
+ *
+ * Rules live in `@layer components` (before `utilities` in the layer
+ * order, see ../index.css) so a consumer can override any single
+ * property with a plain Tailwind utility on the element.
  */
-.identity-provider-item {
-    min-width: 0;
-    max-width: 100%;
-}
+@layer components {
+    .a-login-provider-item {
+        min-width: 0;
+        max-width: 100%;
+    }
 
-.identity-provider-box {
-    min-width: var(--authup-login-provider-min-width);
-    max-width: 100%;
-    word-break: break-word;
+    .a-login-provider-box {
+        min-width: var(--authup-login-provider-min-width);
+        max-width: 100%;
+        word-break: break-word;
+    }
 }

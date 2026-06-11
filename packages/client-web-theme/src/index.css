@@ -58,6 +58,19 @@
         --authup-salmon:                    #ff5b5b;  /* dropdown hover text */
         --authup-green:                     #4f9d6b;  /* brand green — the 💚 in the footer credit */
 
+        /*
+         * Rebind the kit theme's auth-chrome tokens (declared in
+         * `@layer authup` by @authup/client-web-kit-theme with neutral
+         * `--vc-*`/literal defaults) onto the brand vars. This is the
+         * designed override seam: `base` comes after `authup` in the
+         * layer order, so these win. The kit theme itself never
+         * references brand vars — a third-party consumer gets their own
+         * primary palette unless they rebind like this.
+         */
+        --authup-auth-accent:               var(--authup-periwinkle);
+        --authup-auth-accent-alt:           var(--authup-rose);
+        --authup-auth-logo-background:      var(--authup-slate-800);
+
         /* Chrome slate ramp — constant across themes (brand signature) */
         --authup-slate-900:                 #30373e;  /* body text, pagination active */
         --authup-slate-800:                 #34353a;  /* header / sidebar / footer chrome */

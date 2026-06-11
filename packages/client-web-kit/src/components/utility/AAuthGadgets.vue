@@ -25,12 +25,12 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="auth-gadgets">
+    <div class="a-auth-gadgets">
         <AColorModeSwitcher
             :dark="dark"
-            class="auth-gadget"
+            class="a-auth-gadget"
             @update:dark="$emit('update:dark', $event)"
         />
-        <ALanguageSwitcherDropdown link-class-extra="auth-gadget" />
+        <ALanguageSwitcherDropdown link-class-extra="a-auth-gadget" />
     </div>
 </template>

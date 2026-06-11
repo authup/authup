@@ -61,7 +61,6 @@
    (no Tailwind directives) so they inline cleanly.
    ------------------------------------------------------------------ */
 @import "./styles/tokens.css";
-@import "./styles/list.css";
 @import "./styles/picker.css";
 @import "./styles/auth.css";
 @import "./styles/realm.css";
@@ -136,6 +135,10 @@
  * `npm run build -w packages/client-web-kit` — without the src
  * fallback a fresh checkout / un-built kit edit would silently lose
  * JIT coverage.
+ *
+ * pnpm: the sibling hop only resolves if pnpm places the kit next to
+ * this package in its virtual store — that's why package.json declares
+ * `@authup/client-web-kit` as an optional peerDependency.
  */
 @source "../../client-web-kit/dist";
 @source "../../client-web-kit/src";

@@ -20,15 +20,15 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="auth-shell">
+    <div class="a-auth-shell">
         <div
-            class="auth-shell-aurora"
+            class="a-auth-shell-aurora"
             aria-hidden="true"
         />
-        <div class="auth-shell-card">
+        <div class="a-auth-shell-card">
             <div
                 v-if="logo"
-                class="auth-shell-logo"
+                class="a-auth-shell-logo"
             >
                 <svg
                     viewBox="0 0 100 100"
@@ -42,7 +42,7 @@ export default defineComponent({
                         width="84"
                         height="84"
                         rx="16"
-                        fill="var(--authup-slate-800, #34353a)"
+                        fill="var(--authup-auth-logo-background, #34353a)"
                     />
                     <circle
                         cx="50"
