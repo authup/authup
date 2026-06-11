@@ -1,92 +1,33 @@
 /*
- * Copyright (c) 2022-2025.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type { IdentityProviderAttribute } from '@authup/core-kit';
-import {
-    EntityDefaultEventName, 
-    EntityType,
-    buildEntityChannelName,
-} from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type {
-    EntitySubscriberInterface, 
-    InsertEvent,
-    RemoveEvent,
-    UpdateEvent,
-} from 'typeorm';
 import { EventSubscriber } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { IdentityProviderAttributeEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
 
-async function publishEvent(
-    event: `${EntityDefaultEventName}`,
-    data: IdentityProviderAttribute,
-) {
-    await publishDomainEvent({
-        content: {
-            type: EntityType.IDENTITY_PROVIDER_ATTRIBUTE,
-            event,
-            data,
-        },
-        destinations: [
-            { channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ATTRIBUTE, id) },
-
-            // todo: realm attribute
-        ],
-    });
-}
-
 @EventSubscriber()
-export class IdentityProviderAttributeSubscriber implements EntitySubscriberInterface<IdentityProviderAttribute> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    listenTo(): Function | string {
-        return IdentityProviderAttributeEntity;
-    }
-
-    async afterInsert(event: InsertEvent<IdentityProviderAttribute>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-    }
-
-    async afterUpdate(event: UpdateEvent<IdentityProviderAttribute>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.IDENTITY_PROVIDER_ATTRIBUTE,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProviderAttribute);
-    }
-
-    async afterRemove(event: RemoveEvent<IdentityProviderAttribute>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.IDENTITY_PROVIDER_ATTRIBUTE,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
+export class IdentityProviderAttributeSubscriber extends EntitySubscriber<IdentityProviderAttribute> {
+    constructor() {
+        super({
+            type: EntityType.IDENTITY_PROVIDER_ATTRIBUTE,
+            target: IdentityProviderAttributeEntity,
+            destinations: buildEntityDestinations(EntityType.IDENTITY_PROVIDER_ATTRIBUTE),
+            cache: {
+                keys: (data) => [
+                    buildRedisKeyPath({
+                        prefix: CachePrefix.IDENTITY_PROVIDER_ATTRIBUTE,
+                        key: data.id,
+                    }),
+                ],
+            },
+        });
     }
 }

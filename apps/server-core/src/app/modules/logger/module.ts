@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import { createLogger, createNoopLogger, setLoggerFactory } from '@authup/server-kit';
+import { createLogger, createNoopLogger } from '@authup/server-kit';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
@@ -36,12 +36,6 @@ export class LoggerModule implements IModule {
                 directory: result.data.writableDirectoryPath,
             }),
         });
-
-        // todo: remove this
-        setLoggerFactory(() => createLogger({
-            env: result.data.env,
-            directory: result.data.writableDirectoryPath,
-        }));
     }
 
     // ----------------------------------------------------

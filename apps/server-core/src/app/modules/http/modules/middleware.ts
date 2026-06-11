@@ -25,6 +25,7 @@ import {
 import { DIST_PATH } from '../../../../path.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
+import { LoggerInjectionKey } from '../../logger/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
 import { RealmEntity } from '../../../../adapters/database/domains/index.ts';
@@ -51,9 +52,9 @@ export class HTTPMiddlewareModule {
         await this.mountRealmResolver(router, container);
     }
 
-     
-    async mountAfter(router: App, _container: IContainer): Promise<void> {
-        registerErrorMiddleware(router);
+
+    async mountAfter(router: App, container: IContainer): Promise<void> {
+        registerErrorMiddleware(router, { logger: container.resolve(LoggerInjectionKey) });
     }
 
     // ----------------------------------------------------
@@ -78,7 +79,10 @@ export class HTTPMiddlewareModule {
 
     async mountLogger(router: App, container: IContainer): Promise<void> {
         const config = container.resolve(ConfigInjectionKey);
-        const middleware = createLoggerMiddleware({ env: config.env });
+        const middleware = createLoggerMiddleware({
+            env: config.env,
+            logger: container.resolve(LoggerInjectionKey),
+        });
 
         router.use(middleware);
     }

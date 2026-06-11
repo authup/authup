@@ -1,109 +1,34 @@
 /*
- * Copyright (c) 2022-2025.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type { RoleAttribute } from '@authup/core-kit';
-import {
-    EntityDefaultEventName, 
-    EntityType, 
-    buildEntityChannelName, 
-    buildEntityNamespaceName,
-} from '@authup/core-kit';
-import type { DomainEventDestinations } from '@authup/server-kit';
+import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type {
-    EntitySubscriberInterface, 
-    InsertEvent,
-    RemoveEvent,
-    UpdateEvent,
-} from 'typeorm';
 import { EventSubscriber } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { RoleAttributeEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
 
-async function publishEvent(
-    event: `${EntityDefaultEventName}`,
-    data: RoleAttribute,
-) {
-    const destinations : DomainEventDestinations = [
-        { channel: (id) => buildEntityChannelName(EntityType.ROLE_ATTRIBUTE, id) },
-    ];
-    if (data.realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.ROLE_ATTRIBUTE, id),
-            namespace: buildEntityNamespaceName(data.realm_id),
-        });
-    }
-
-    await publishDomainEvent({
-        content: {
-            type: EntityType.ROLE_ATTRIBUTE,
-            event,
-            data,
-        },
-        destinations,
-    });
-}
-
 @EventSubscriber()
-export class RoleAttributeSubscriber implements EntitySubscriberInterface<RoleAttribute> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    listenTo(): Function | string {
-        return RoleAttributeEntity;
-    }
-
-    async afterInsert(event: InsertEvent<RoleAttribute>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                    key: event.entity.role_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-    }
-
-    async afterUpdate(event: UpdateEvent<RoleAttribute>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                    key: event.entity.role_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as RoleAttribute);
-    }
-
-    async afterRemove(event: RemoveEvent<RoleAttribute>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
-                    key: event.entity.role_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
+export class RoleAttributeSubscriber extends EntitySubscriber<RoleAttribute> {
+    constructor() {
+        super({
+            type: EntityType.ROLE_ATTRIBUTE,
+            target: RoleAttributeEntity,
+            destinations: buildEntityDestinations(EntityType.ROLE_ATTRIBUTE, (data) => [data.realm_id]),
+            cache: {
+                onInsert: true,
+                keys: (data) => [
+                    buildRedisKeyPath({
+                        prefix: CachePrefix.ROLE_OWNED_PERMISSIONS,
+                        key: data.role_id,
+                    }),
+                ],
+            },
+        });
     }
 }

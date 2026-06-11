@@ -1,115 +1,37 @@
 /*
- * Copyright (c) 2022-2025.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type { UserRole } from '@authup/core-kit';
-import {
-    EntityDefaultEventName, 
-    EntityType,
-    buildEntityChannelName,
-    buildEntityNamespaceName,
-} from '@authup/core-kit';
-import type { DomainEventDestination } from '@authup/server-kit';
+import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type {
-    EntitySubscriberInterface, 
-    InsertEvent,
-    RemoveEvent,
-    UpdateEvent,
-} from 'typeorm';
 import { EventSubscriber } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { UserRoleEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
 
-async function publishEvent(
-    event: `${EntityDefaultEventName}`,
-    data: UserRole,
-) {
-    const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id) },
-    ];
-    if (data.user_realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id),
-            namespace: buildEntityNamespaceName(data.user_realm_id),
-        });
-    }
-    if (data.role_realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.USER_ROLE, id),
-            namespace: buildEntityNamespaceName(data.role_realm_id),
-        });
-    }
-
-    await publishDomainEvent({
-        content: {
-            type: EntityType.USER_ROLE,
-            event,
-            data,
-        },
-        destinations,
-    });
-}
-
 @EventSubscriber()
-export class UserRoleSubscriber implements EntitySubscriberInterface<UserRole> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    listenTo(): Function | string {
-        return UserRoleEntity;
-    }
-
-    async afterInsert(event: InsertEvent<UserRole>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ROLES,
-                    key: event.entity.user_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-    }
-
-    async afterUpdate(event: UpdateEvent<UserRole>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ROLES,
-                    key: event.entity.user_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserRole);
-    }
-
-    async afterRemove(event: RemoveEvent<UserRole>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_ROLES,
-                    key: event.entity.user_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
+export class UserRoleSubscriber extends EntitySubscriber<UserRole> {
+    constructor() {
+        super({
+            type: EntityType.USER_ROLE,
+            target: UserRoleEntity,
+            destinations: buildEntityDestinations(EntityType.USER_ROLE, (data) => [
+                data.user_realm_id,
+                data.role_realm_id,
+            ]),
+            cache: {
+                onInsert: true,
+                keys: (data) => [
+                    buildRedisKeyPath({
+                        prefix: CachePrefix.USER_OWNED_ROLES,
+                        key: data.user_id,
+                    }),
+                ],
+            },
+        });
     }
 }

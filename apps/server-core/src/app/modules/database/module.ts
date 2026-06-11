@@ -6,30 +6,27 @@
  */
 
 import {
-    DomainEventPublisher, 
-    DomainEventRedisPublisher,
-    DomainEventSocketPublisher, 
+    DomainEventPublisher,
+    DomainEventRedisHandler,
+    DomainEventSocketHandler,
     createRedisClient,
 } from '@authup/server-kit';
+import type { RedisClient } from '@authup/server-kit';
 import { AuthupError } from '@authup/errors';
 import type { DataSourceOptions } from 'typeorm';
 import { DataSource, InstanceChecker } from 'typeorm';
 import {
     checkDatabase,
     createDatabase,
-    setDataSource,
     synchronizeDatabaseSchema,
-    unsetDataSource,
 } from 'typeorm-extension';
 import {
     DataSourceOptionsBuilder,
     DatabaseQueryResultCache,
+    EntitySubscriber,
     isDatabaseTypeSupported,
     isDatabaseTypeSupportedForEnvironment,
-    setDataSourceSync,
-    unsetDataSourceSync,
 } from '../../../adapters/database/index.ts';
-import { setDomainEventPublisher } from '../../../adapters/database/event-publisher/index.ts';
 import { CacheInjectionKey } from '../cache/index.ts';
 import type { IModule } from 'orkos';
 import { ModuleName } from '../constants.ts';
@@ -52,6 +49,8 @@ export class DatabaseModule implements IModule {
     protected optionsBuilder : DataSourceOptionsBuilder;
 
     protected options: DatabaseModuleOptions;
+
+    protected eventRedisClient? : RedisClient;
 
     constructor(options: DatabaseModuleOptions = {}) {
         this.name = ModuleName.DATABASE;
@@ -82,10 +81,6 @@ export class DatabaseModule implements IModule {
         await dataSource.initialize();
         logger.debug('Established database connection.');
 
-        // todo: maybe remove this
-        setDataSource(dataSource);
-        setDataSourceSync(dataSource);
-
         if (this.options.migrate) {
             await this.options.migrate(container, dataSource);
         } else {
@@ -95,7 +90,7 @@ export class DatabaseModule implements IModule {
         container.register(DatabaseInjectionKey.DataSource, { useValue: dataSource });
 
         this.registerRepositories(container, dataSource);
-        this.registerEventPublisher(container);
+        this.registerEventPublisher(container, dataSource);
     }
 
     async teardown(container: IContainer): Promise<void> {
@@ -106,8 +101,12 @@ export class DatabaseModule implements IModule {
             container.unregister(DatabaseInjectionKey.DataSource);
         }
 
-        unsetDataSource();
-        unsetDataSourceSync();
+        container.unregister(DatabaseInjectionKey.DomainEventPublisher);
+
+        if (this.eventRedisClient) {
+            this.eventRedisClient.disconnect();
+            this.eventRedisClient = undefined;
+        }
     }
 
     // ----------------------------------------------------
@@ -192,18 +191,28 @@ export class DatabaseModule implements IModule {
         }
     }
 
-    // todo: move, wrong place
-    protected registerEventPublisher(container: IContainer) {
+    protected registerEventPublisher(container: IContainer, dataSource: DataSource) {
         const config = container.resolve(ConfigInjectionKey);
+        const logger = container.resolve(LoggerInjectionKey);
 
-        const publisher = new DomainEventPublisher();
+        const publisher = new DomainEventPublisher({ logger });
         if (config.redis) {
             const client = createRedisClient(config.redis);
+            if (client !== config.redis) {
+                this.eventRedisClient = client;
+            }
 
-            publisher.mount(new DomainEventRedisPublisher(client));
-            publisher.mount(new DomainEventSocketPublisher(client));
+            publisher.register(new DomainEventRedisHandler(client));
+            publisher.register(new DomainEventSocketHandler(client));
         }
 
-        setDomainEventPublisher(publisher);
+        container.register(DatabaseInjectionKey.DomainEventPublisher, { useValue: publisher });
+
+        for (let i = 0; i < dataSource.subscribers.length; i++) {
+            const subscriber = dataSource.subscribers[i];
+            if (subscriber instanceof EntitySubscriber) {
+                subscriber.setPublisher(publisher);
+            }
+        }
     }
 }

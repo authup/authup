@@ -1,114 +1,37 @@
 /*
- * Copyright (c) 2022-2025.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type { UserPermission } from '@authup/core-kit';
-import {
-    EntityDefaultEventName, 
-    EntityType,
-    buildEntityChannelName,
-    buildEntityNamespaceName,
-} from '@authup/core-kit';
-import type { DomainEventDestination } from '@authup/server-kit';
+import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type {
-    EntitySubscriberInterface, 
-    InsertEvent,
-    RemoveEvent,
-    UpdateEvent,
-} from 'typeorm';
 import { EventSubscriber } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { UserPermissionEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
 
-async function publishEvent(
-    event: `${EntityDefaultEventName}`,
-    data: UserPermission,
-) {
-    const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id) },
-    ];
-    if (data.user_realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id),
-            namespace: buildEntityNamespaceName(data.user_realm_id),
-        });
-    }
-
-    if (data.permission_realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.USER_PERMISSION, id),
-            namespace: buildEntityNamespaceName(data.permission_realm_id),
-        });
-    }
-
-    await publishDomainEvent({
-        content: {
-            type: EntityType.USER_PERMISSION,
-            event,
-            data,
-        },
-        destinations,
-    });
-}
-
 @EventSubscriber()
-export class UserPermissionSubscriber implements EntitySubscriberInterface<UserPermission> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    listenTo(): Function | string {
-        return UserPermissionEntity;
-    }
-
-    async afterInsert(event: InsertEvent<UserPermission>): Promise<any> {
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    key: event.entity.user_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-
-        return Promise.resolve(undefined);
-    }
-
-    async afterUpdate(event: UpdateEvent<UserPermission>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    key: event.entity.user_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as UserPermission);
-    }
-
-    async afterRemove(event: RemoveEvent<UserPermission>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER_OWNED_PERMISSIONS,
-                    key: event.entity.user_id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
+export class UserPermissionSubscriber extends EntitySubscriber<UserPermission> {
+    constructor() {
+        super({
+            type: EntityType.USER_PERMISSION,
+            target: UserPermissionEntity,
+            destinations: buildEntityDestinations(EntityType.USER_PERMISSION, (data) => [
+                data.user_realm_id,
+                data.permission_realm_id,
+            ]),
+            cache: {
+                onInsert: true,
+                keys: (data) => [
+                    buildRedisKeyPath({
+                        prefix: CachePrefix.USER_OWNED_PERMISSIONS,
+                        key: data.user_id,
+                    }),
+                ],
+            },
+        });
     }
 }

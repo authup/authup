@@ -150,6 +150,7 @@ import { IdentityInjectionKey } from '../../identity/index.ts';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
+import { LoggerInjectionKey } from '../../logger/index.ts';
 import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/index.ts';
 
 export class HTTPControllerModule {
@@ -735,12 +736,18 @@ export class HTTPControllerModule {
             repository: container.resolve<Repository<Client>>(ClientEntity),
             realmRepository,
         });
+        const logger = container.resolve(LoggerInjectionKey);
         const webClientProvisioner = new WebClientProvisioner({
             clientRepository,
             appOrigins: getAppOrigins(config),
+            logger,
         });
 
-        const service = new RealmService({ repository, webClientProvisioner });
+        const service = new RealmService({
+            repository, 
+            webClientProvisioner, 
+            logger, 
+        });
         const keyRepository = dataSource.getRepository(KeyEntity);
 
         return new RealmController({

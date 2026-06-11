@@ -82,16 +82,16 @@ describe('core/identity/provider/account', () => {
             provider,
         };
 
-        const attributeMapperRepository = new IdentityProviderAttributeMappingRepository();
+        const attributeMapperRepository = new IdentityProviderAttributeMappingRepository(suite.dataSource);
         const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperRepository);
 
-        const roleMapperFinder = new IdentityProviderRoleMappingRepository();
+        const roleMapperFinder = new IdentityProviderRoleMappingRepository(suite.dataSource);
         const roleMapper = new IdentityProviderRoleMapper(roleMapperFinder);
 
-        const permissionMapperRepository = new IdentityProviderPermissionMappingRepository();
+        const permissionMapperRepository = new IdentityProviderPermissionMappingRepository(suite.dataSource);
         const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
 
-        const providerAccountRepository = new IdentityProviderAccountRepository();
+        const providerAccountRepository = new IdentityProviderAccountRepository(suite.dataSource);
 
         const userRepository = new UserIdentityRepository({
             repository: new UserRepository(suite.dataSource),

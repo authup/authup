@@ -7,11 +7,15 @@
 
 import type { App } from 'routup';
 import { defineErrorHandler } from 'routup';
-import { useLogger } from '@authup/server-kit';
+import type { Logger } from '@authup/server-kit';
 import { httpStatusFromCode, serializeError } from '@authup/errors';
 import { sanitizeError } from '../../../../utils/index.ts';
 
-export function registerErrorMiddleware(router: App) {
+type ErrorMiddlewareOptions = {
+    logger?: Logger
+};
+
+export function registerErrorMiddleware(router: App, options: ErrorMiddlewareOptions = {}) {
     router.use(defineErrorHandler((error, event) => {
         const next = sanitizeError(error.cause ?? error);
         const status = httpStatusFromCode(next.code);
@@ -19,7 +23,9 @@ export function registerErrorMiddleware(router: App) {
         const payload = serializeError(next);
 
         if (status >= 500) {
-            useLogger().error(next);
+            if (options.logger) {
+                options.logger.error(next);
+            }
             payload.message = 'An internal server error occurred.';
         }
 

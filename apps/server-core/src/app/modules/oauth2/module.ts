@@ -35,6 +35,7 @@ import { OAuth2InjectionToken } from './constants.ts';
 import { IdentityInjectionKey } from '../identity/index.ts';
 import { ClientEntity, ClientScopeEntity } from '../../../adapters/database/domains/index.ts';
 import { ConfigInjectionKey } from '../config/index.ts';
+import { DatabaseInjectionKey } from '../database/index.ts';
 
 export class OAuth2Module implements IModule {
     readonly name: string;
@@ -86,7 +87,7 @@ export class OAuth2Module implements IModule {
 
         container.register(OAuth2InjectionToken.KeyRepository, {
             // todo: cache use here
-            useFactory: () => new OAuth2KeyRepository(),
+            useFactory: (c) => new OAuth2KeyRepository(c.resolve(DatabaseInjectionKey.DataSource)),
         });
 
         container.register(OAuth2InjectionToken.TokenSigner, {

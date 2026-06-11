@@ -78,6 +78,7 @@ import { ModuleName } from '../constants.ts';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ConfigInjectionKey, getAppOrigins } from '../config/index.ts';
+import { LoggerInjectionKey } from '../logger/index.ts';
 import { WebClientProvisioner } from '../../../core/entities/client/index.ts';
 import { CompositeProvisioningSource, FileProvisioningSource } from './sources/index.ts';
 
@@ -241,6 +242,7 @@ export class ProvisionerModule implements IModule {
         const webClientProvisioner = new WebClientProvisioner({
             clientRepository,
             appOrigins: getAppOrigins(config),
+            logger: container.resolve(LoggerInjectionKey),
         });
 
         const realms = await realmRepository.find();

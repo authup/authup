@@ -5,31 +5,65 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { buildEventFullName } from '@authup/core-realtime-kit';
 import type { EventPayload } from '@authup/core-realtime-kit';
-import type { DomainEventPublishContext, IDomainEventPublisher } from './type';
+import type { Logger } from '../logger';
+import type {
+    DomainEventPublishContext,
+    IDomainEventHandler,
+    IDomainEventPublisher,
+} from './types';
+
+export type DomainEventPublisherContext = {
+    logger?: Logger
+};
 
 export class DomainEventPublisher implements IDomainEventPublisher {
-    protected publishers : Set<IDomainEventPublisher>;
+    protected handlers : Set<IDomainEventHandler>;
 
-    constructor() {
-        this.publishers = new Set<IDomainEventPublisher>();
+    protected logger? : Logger;
+
+    constructor(ctx: DomainEventPublisherContext = {}) {
+        this.handlers = new Set<IDomainEventHandler>();
+        this.logger = ctx.logger;
     }
 
-    mount(publisher: IDomainEventPublisher): void {
-        this.publishers.add(publisher);
+    register(handler: IDomainEventHandler): void {
+        this.handlers.add(handler);
+    }
+
+    async safePublish<T extends EventPayload>(
+        ctx: DomainEventPublishContext<T>,
+    ) : Promise<void> {
+        try {
+            await this.publish(ctx);
+        } catch (e) {
+            if (this.logger) {
+                this.logger.error(`Publishing event ${buildEventFullName(ctx.content.type, ctx.content.event)} failed.`);
+                this.logger.error(e);
+            }
+        }
     }
 
     async publish<T extends EventPayload>(
         ctx: DomainEventPublishContext<T>,
     ) : Promise<void> {
-        const publishers = this.publishers.values();
+        if (this.handlers.size === 0) {
+            return;
+        }
+
+        if (this.logger) {
+            this.logger.debug(`Publishing event ${buildEventFullName(ctx.content.type, ctx.content.event)}...`);
+        }
+
+        const handlers = this.handlers.values();
         while (true) {
-            const it = publishers.next();
+            const it = handlers.next();
             if (it.done) {
                 return;
             }
 
-            await it.value.publish(ctx);
+            await it.value.handle(ctx);
         }
     }
 }

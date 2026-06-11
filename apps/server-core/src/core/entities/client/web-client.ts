@@ -7,12 +7,13 @@
 
 import { CLIENT_WEB_NAME, ScopeName  } from '@authup/core-kit';
 import type { Client, Realm } from '@authup/core-kit';
-import { isLoggerUsable, useLogger } from '@authup/server-kit';
+import type { Logger } from '@authup/server-kit';
 import type { IClientRepository, IWebClientProvisioner } from './types.ts';
 
 export type WebClientProvisionerContext = {
     clientRepository: IClientRepository;
     appOrigins: string[];
+    logger?: Logger;
 };
 
 /**
@@ -49,9 +50,12 @@ export class WebClientProvisioner implements IWebClientProvisioner {
 
     protected appOrigins: string[];
 
+    protected logger?: Logger;
+
     constructor(ctx: WebClientProvisionerContext) {
         this.clientRepository = ctx.clientRepository;
         this.appOrigins = ctx.appOrigins;
+        this.logger = ctx.logger;
     }
 
     async ensureForRealm(realm: Realm | { id: string }): Promise<void> {
@@ -66,8 +70,8 @@ export class WebClientProvisioner implements IWebClientProvisioner {
             // Never overwrite a non-built_in client that happens to be named
             // `web` — that would be a user-owned client. Skip and warn.
             if (!existing.built_in) {
-                if (isLoggerUsable()) {
-                    useLogger().warn(
+                if (this.logger) {
+                    this.logger.warn(
                         `Skipping web client provisioning for realm ${realm.id}: a non-built-in client named '${CLIENT_WEB_NAME}' already exists.`,
                     );
                 }

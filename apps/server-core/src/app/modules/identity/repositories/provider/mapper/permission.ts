@@ -6,14 +6,19 @@
  */
 
 import type { IdentityProviderPermissionMapping } from '@authup/core-kit';
-import { useDataSource } from 'typeorm-extension';
+import type { DataSource } from 'typeorm';
 import type { IIdentityProviderPermissionMappingRepository } from '../../../../../../core/index.ts';
 import { IdentityProviderPermissionMappingEntity } from '../../../../../../adapters/database/domains/index.ts';
 
 export class IdentityProviderPermissionMappingRepository implements IIdentityProviderPermissionMappingRepository {
+    protected dataSource : DataSource;
+
+    constructor(dataSource: DataSource) {
+        this.dataSource = dataSource;
+    }
+
     async findByProviderId(providerId: string): Promise<IdentityProviderPermissionMapping[]> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(IdentityProviderPermissionMappingEntity);
+        const repository = this.dataSource.getRepository(IdentityProviderPermissionMappingEntity);
 
         return repository.findBy({ provider_id: providerId });
     }

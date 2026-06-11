@@ -14,14 +14,15 @@ import {
     RealmValidator,
 } from '@authup/core-kit';
 import type { Realm } from '@authup/core-kit';
-import type { ActorContext, EntityRepositoryFindManyResult  } from '@authup/server-kit';
-import { AbstractEntityService, isLoggerUsable, useLogger } from '@authup/server-kit';
+import type { ActorContext, EntityRepositoryFindManyResult, Logger  } from '@authup/server-kit';
+import { AbstractEntityService } from '@authup/server-kit';
 import type { IWebClientProvisioner } from '../client/types.ts';
 import type { IRealmRepository, IRealmService } from './types.ts';
 
 export type RealmServiceContext = {
     repository: IRealmRepository;
     webClientProvisioner?: IWebClientProvisioner;
+    logger?: Logger;
 };
 
 export class RealmService extends AbstractEntityService implements IRealmService {
@@ -31,10 +32,13 @@ export class RealmService extends AbstractEntityService implements IRealmService
 
     protected webClientProvisioner?: IWebClientProvisioner;
 
+    protected logger?: Logger;
+
     constructor(ctx: RealmServiceContext) {
         super();
         this.repository = ctx.repository;
         this.webClientProvisioner = ctx.webClientProvisioner;
+        this.logger = ctx.logger;
         this.validator = new RealmValidator();
     }
 
@@ -154,8 +158,8 @@ export class RealmService extends AbstractEntityService implements IRealmService
             try {
                 await this.webClientProvisioner.ensureForRealm(entity);
             } catch (e) {
-                if (isLoggerUsable()) {
-                    useLogger().warn(
+                if (this.logger) {
+                    this.logger.warn(
                         `Failed to provision web client for realm ${entity.id}: ${e instanceof Error ? e.message : String(e)}`,
                     );
                 }

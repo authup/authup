@@ -8,11 +8,12 @@
 import { logger } from '@routup/logger';
 import type { Handler } from 'routup';
 import { getRequestIP } from 'routup';
-import { useLogger } from '@authup/server-kit';
+import type { Logger } from '@authup/server-kit';
 import { EnvironmentName } from '@authup/kit';
 
 type LoggerMiddlewareOptions = {
-    env: string
+    env: string,
+    logger: Logger
 };
 
 export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handler {
@@ -28,7 +29,7 @@ export function createLoggerMiddleware(options: LoggerMiddlewareOptions) : Handl
         ].join(' '),
         write(line) {
             if (options.env !== EnvironmentName.TEST) {
-                useLogger().http(line);
+                options.logger.http(line);
             }
         },
         skip(event, response): boolean {

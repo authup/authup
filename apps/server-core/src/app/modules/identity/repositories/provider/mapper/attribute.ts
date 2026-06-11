@@ -6,14 +6,19 @@
  */
 
 import type { IdentityProviderAttributeMapping } from '@authup/core-kit';
-import { useDataSource } from 'typeorm-extension';
+import type { DataSource } from 'typeorm';
 import type { IIdentityProviderAttributeMappingRepository } from '../../../../../../core/index.ts';
 import { IdentityProviderAttributeMappingEntity } from '../../../../../../adapters/database/domains/index.ts';
 
 export class IdentityProviderAttributeMappingRepository implements IIdentityProviderAttributeMappingRepository {
+    protected dataSource : DataSource;
+
+    constructor(dataSource: DataSource) {
+        this.dataSource = dataSource;
+    }
+
     async findByProviderId(providerId: string): Promise<IdentityProviderAttributeMapping[]> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(IdentityProviderAttributeMappingEntity);
+        const repository = this.dataSource.getRepository(IdentityProviderAttributeMappingEntity);
 
         return repository.findBy({ provider_id: providerId });
     }

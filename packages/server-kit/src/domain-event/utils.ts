@@ -7,7 +7,7 @@
 
 import type { ObjectLiteral } from '@authup/kit';
 import { isObject } from '@authup/kit';
-import type { DomainEventChannelName } from './type';
+import type { DomainEventChannelName } from './types';
 
 export function transformDomainEventData<T extends ObjectLiteral>(input: T) : T {
     const keys = Object.keys(input);

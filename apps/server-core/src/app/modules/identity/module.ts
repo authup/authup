@@ -130,16 +130,16 @@ export class IdentityModule implements IModule {
 
         // ---------------------------------------------
 
-        const attributeMapperRepository = new IdentityProviderAttributeMappingRepository();
+        const attributeMapperRepository = new IdentityProviderAttributeMappingRepository(dataSource);
         const attributeMapper = new IdentityProviderAttributeMapper(attributeMapperRepository);
 
-        const roleMapperFinder = new IdentityProviderRoleMappingRepository();
+        const roleMapperFinder = new IdentityProviderRoleMappingRepository(dataSource);
         const roleMapper = new IdentityProviderRoleMapper(roleMapperFinder);
 
-        const permissionMapperRepository = new IdentityProviderPermissionMappingRepository();
+        const permissionMapperRepository = new IdentityProviderPermissionMappingRepository(dataSource);
         const permissionMapper = new IdentityProviderPermissionMapper(permissionMapperRepository);
 
-        const providerAccountRepository = new IdentityProviderAccountRepository();
+        const providerAccountRepository = new IdentityProviderAccountRepository(dataSource);
 
         container.register(IdentityInjectionKey.ProviderAccountManager, {
             useFactory: () => new IdentityProviderAccountManager({

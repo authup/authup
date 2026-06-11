@@ -1,90 +1,33 @@
 /*
- * Copyright (c) 2022-2025.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type { Policy } from '@authup/core-kit';
-import {
-    EntityDefaultEventName,
-    EntityType,
-    buildEntityChannelName,
-} from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type {
-    EntitySubscriberInterface, 
-    InsertEvent,
-    RemoveEvent,
-    UpdateEvent,
-} from 'typeorm';
 import { EventSubscriber } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { PolicyEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
 
-async function publishEvent(
-    event: `${EntityDefaultEventName}`,
-    data: Policy,
-) {
-    await publishDomainEvent({
-        content: {
-            type: EntityType.POLICY,
-            event,
-            data,
-        },
-        destinations: [
-            { channel: (id) => buildEntityChannelName(EntityType.POLICY, id) },
-        ],
-    });
-}
-
 @EventSubscriber()
-export class PolicySubscriber implements EntitySubscriberInterface<Policy> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    listenTo(): Function | string {
-        return PolicyEntity;
-    }
-
-    async afterInsert(event: InsertEvent<Policy>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-    }
-
-    async afterUpdate(event: UpdateEvent<Policy>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.REALM,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as Policy);
-    }
-
-    async afterRemove(event: RemoveEvent<Policy>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.POLICY,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
+export class PolicySubscriber extends EntitySubscriber<Policy> {
+    constructor() {
+        super({
+            type: EntityType.POLICY,
+            target: PolicyEntity,
+            destinations: buildEntityDestinations(EntityType.POLICY),
+            cache: {
+                keys: (data) => [
+                    buildRedisKeyPath({
+                        prefix: CachePrefix.POLICY,
+                        key: data.id,
+                    }),
+                ],
+            },
+        });
     }
 }
