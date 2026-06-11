@@ -31,6 +31,8 @@ export enum TranslatorTranslationNamespace {
     ERROR = 'authupError',
 
     APP = 'authupApp',
+
+    MAIL = 'authupMail',
 }
 
 export enum TranslatorTranslationVuecsKey {
@@ -106,6 +108,28 @@ export enum TranslatorTranslationAppKey {
     ENTITY_UPDATED = 'entityUpdated',
     ENTITY_DELETED = 'entityDeleted',
     ACCOUNT_UPDATED = 'accountUpdated',
+}
+
+/**
+ * Transactional mail copy (subject lines, body paragraphs, call-to-action
+ * labels, hints) for the identity workflows — registration activation and
+ * password reset. Registered under the `authupMail` namespace; consumed
+ * server-side by `apps/server-core`'s mail template renderer. Values may
+ * carry ilingo `{{var}}` placeholders (e.g. `{{minutes}}`).
+ */
+export enum TranslatorTranslationMailKey {
+    CODE = 'code',
+
+    REGISTRATION_ACTIVATION_SUBJECT = 'registrationActivationSubject',
+    REGISTRATION_ACTIVATION_INTRO = 'registrationActivationIntro',
+    REGISTRATION_ACTIVATION_ACTION = 'registrationActivationAction',
+    REGISTRATION_ACTIVATION_HINT = 'registrationActivationHint',
+
+    PASSWORD_RESET_SUBJECT = 'passwordResetSubject',
+    PASSWORD_RESET_INTRO = 'passwordResetIntro',
+    PASSWORD_RESET_ACTION = 'passwordResetAction',
+    PASSWORD_RESET_EXPIRY = 'passwordResetExpiry',
+    PASSWORD_RESET_HINT = 'passwordResetHint',
 }
 
 /**

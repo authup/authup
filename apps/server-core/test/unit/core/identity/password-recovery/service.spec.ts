@@ -140,6 +140,33 @@ describe('core/identity/password-recovery/service', () => {
             expect(result.reset_expires).toBeDefined();
         });
 
+        it('should localize the reset mail and mention the expiry window', async () => {
+            const email = faker.internet.email().toLowerCase();
+            const masterRealm = realmRepository.getMasterRealm();
+            repository.seed([createFakeUser({
+                name: 'locale-user',
+                email,
+                realm_id: masterRealm.id,
+            })]);
+
+            const service = new PasswordRecoveryService({
+                options: {
+                    passwordRecoveryEnabled: true,
+                    emailVerificationEnabled: true,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            await service.forgotPassword({ email }, { locale: 'fr' });
+
+            expect(mailClient.sent).toHaveLength(1);
+            expect(mailClient.sent[0].subject).toEqual('Réinitialisez votre mot de passe');
+            expect(mailClient.sent[0].text).toContain('30 minutes');
+        });
+
         it('should set reset_expires to ~30 minutes from now', async () => {
             const email = faker.internet.email().toLowerCase();
             const masterRealm = realmRepository.getMasterRealm();

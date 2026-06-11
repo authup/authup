@@ -7,6 +7,7 @@
 
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IdentityWorkflowContext } from '../types.ts';
 
 export type PasswordRecoveryServiceOptions = {
     passwordRecoveryEnabled?: boolean,
@@ -31,6 +32,6 @@ export type PasswordResetResult = {
 };
 
 export interface IPasswordRecoveryService {
-    forgotPassword(data: Record<string, any>): Promise<PasswordForgotResult>;
+    forgotPassword(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<PasswordForgotResult>;
     resetPassword(data: Record<string, any>): Promise<PasswordResetResult>;
 }

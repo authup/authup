@@ -20,6 +20,7 @@ import type {
     TranslatorTranslationCommonKey,
     TranslatorTranslationEntityKey,
     TranslatorTranslationFieldKey,
+    TranslatorTranslationMailKey,
     TranslatorTranslationVuecsKey,
 } from '../constants';
 import {
@@ -34,6 +35,7 @@ import {
     TranslatorTranslationEntityEnglish,
     TranslatorTranslationErrorEnglish,
     TranslatorTranslationFieldEnglish,
+    TranslatorTranslationMailEnglish,
     TranslatorTranslationVuecsEnglish,
 } from './en';
 import {
@@ -44,6 +46,7 @@ import {
     TranslatorTranslationEntityGerman,
     TranslatorTranslationErrorGerman,
     TranslatorTranslationFieldGerman,
+    TranslatorTranslationMailGerman,
     TranslatorTranslationVuecsGerman,
 } from './de';
 import {
@@ -54,6 +57,7 @@ import {
     TranslatorTranslationEntityFrench,
     TranslatorTranslationErrorFrench,
     TranslatorTranslationFieldFrench,
+    TranslatorTranslationMailFrench,
     TranslatorTranslationVuecsFrench,
 } from './fr';
 import {
@@ -64,6 +68,7 @@ import {
     TranslatorTranslationEntitySpanish,
     TranslatorTranslationErrorSpanish,
     TranslatorTranslationFieldSpanish,
+    TranslatorTranslationMailSpanish,
     TranslatorTranslationVuecsSpanish,
 } from './es';
 
@@ -87,6 +92,7 @@ type LocaleNamespaces = {
     app: NamespaceTranslations<`${TranslatorTranslationAppKey}`>,
     vuecs: NamespaceTranslations<`${TranslatorTranslationVuecsKey}`>,
     error: NamespaceTranslations<`${ErrorCode}`>,
+    mail: NamespaceTranslations<`${TranslatorTranslationMailKey}`>,
 };
 
 /**
@@ -104,6 +110,7 @@ function defineAuthupLocale(code: string, namespaces: LocaleNamespaces) {
         defineNamespace(TranslatorTranslationNamespace.APP, [defineTranslations(namespaces.app)]),
         defineNamespace(TranslatorTranslationNamespace.VUECS, [defineTranslations(namespaces.vuecs)]),
         defineNamespace(TranslatorTranslationNamespace.ERROR, [defineTranslations(namespaces.error)]),
+        defineNamespace(TranslatorTranslationNamespace.MAIL, [defineTranslations(namespaces.mail)]),
     ];
 
     return defineLocale(code, children);
@@ -133,6 +140,7 @@ export const CATALOGS = defineCatalog([
         app: TranslatorTranslationAppEnglish,
         vuecs: TranslatorTranslationVuecsEnglish,
         error: TranslatorTranslationErrorEnglish,
+        mail: TranslatorTranslationMailEnglish,
     }),
     defineAuthupLocale('de', {
         entity: TranslatorTranslationEntityGerman,
@@ -143,6 +151,7 @@ export const CATALOGS = defineCatalog([
         app: TranslatorTranslationAppGerman,
         vuecs: TranslatorTranslationVuecsGerman,
         error: TranslatorTranslationErrorGerman,
+        mail: TranslatorTranslationMailGerman,
     }),
     defineAuthupLocale('fr', {
         entity: TranslatorTranslationEntityFrench,
@@ -153,6 +162,7 @@ export const CATALOGS = defineCatalog([
         app: TranslatorTranslationAppFrench,
         vuecs: TranslatorTranslationVuecsFrench,
         error: TranslatorTranslationErrorFrench,
+        mail: TranslatorTranslationMailFrench,
     }),
     defineAuthupLocale('es', {
         entity: TranslatorTranslationEntitySpanish,
@@ -163,5 +173,6 @@ export const CATALOGS = defineCatalog([
         app: TranslatorTranslationAppSpanish,
         vuecs: TranslatorTranslationVuecsSpanish,
         error: TranslatorTranslationErrorSpanish,
+        mail: TranslatorTranslationMailSpanish,
     }),
 ]);

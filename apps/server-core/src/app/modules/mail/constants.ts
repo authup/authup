@@ -6,6 +6,8 @@
  */
 
 import { TypedToken } from 'eldin';
-import type { IMailClient } from '../../../core/index.ts';
+import type { IMailClient, IMailTemplateRenderer } from '../../../core/index.ts';
 
 export const MailInjectionKey = new TypedToken<IMailClient>('Mail');
+
+export const MailTemplateRendererInjectionKey = new TypedToken<IMailTemplateRenderer>('MailTemplateRenderer');

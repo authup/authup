@@ -8,6 +8,7 @@
 export * from './actor.ts';
 export * from './body-realm-id.ts';
 export * from './identity.ts';
+export * from './locale.ts';
 export * from './locations.ts';
 export * from './param-id.ts';
 export * from './realm-id.ts';

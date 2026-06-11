@@ -22,8 +22,10 @@ import type {
     PasswordResetResult,
 } from './types.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
-import { MailTemplateName } from '../../mail/types.ts';
+import { MailTemplateName } from '../../mail/index.ts';
 import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IdentityWorkflowContext } from '../types.ts';
+import { PASSWORD_RESET_EXPIRES_IN_MINUTES } from './constants.ts';
 
 export class PasswordRecoveryService implements IPasswordRecoveryService {
     protected options: PasswordRecoveryServiceOptions;
@@ -44,7 +46,7 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         this.mailTemplateRenderer = ctx.mailTemplateRenderer;
     }
 
-    async forgotPassword(data: Record<string, any>): Promise<PasswordForgotResult> {
+    async forgotPassword(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<PasswordForgotResult> {
         if (!this.options.passwordRecoveryEnabled) {
             throw new PasswordRecoveryDisabledError();
         }
@@ -70,7 +72,9 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
         }
 
         const merged = this.repository.merge(entity, {
-            reset_expires: new Date(Date.now() + (1000 * 60 * 30)).toISOString(),
+            reset_expires: new Date(
+                Date.now() + (1000 * 60 * PASSWORD_RESET_EXPIRES_IN_MINUTES),
+            ).toISOString(),
             reset_hash: randomBytes(32).toString('hex'),
         });
 
@@ -87,9 +91,14 @@ export class PasswordRecoveryService implements IPasswordRecoveryService {
                 `&realm_id=${encodeURIComponent(entity.realm_id)}` :
                 undefined;
 
-            const mail = this.mailTemplateRenderer.render({
+            const mail = await this.mailTemplateRenderer.render({
                 template: MailTemplateName.PASSWORD_RESET,
-                params: { code: merged.reset_hash!, url: resetUrl },
+                params: {
+                    code: merged.reset_hash!,
+                    url: resetUrl,
+                    expiresInMinutes: PASSWORD_RESET_EXPIRES_IN_MINUTES,
+                },
+                locale: context?.locale,
             });
 
             await this.mailClient.send({
