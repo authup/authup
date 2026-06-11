@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { Client } from '@authup/core-http-kit';
 import type { Pinia } from 'pinia';
 import type {
     AAttributeNamesPolicyForm,
@@ -103,6 +104,11 @@ export type CookieGetFn = (
 
 export type Options = {
     baseURL: string,
+    /**
+     * Pre-built HTTP client used instead of constructing one from baseURL.
+     * Covers the store, the authentication hook and the provided client.
+     */
+    httpClient?: Client,
 
     realtime?: boolean,
     realtimeURL?: string,

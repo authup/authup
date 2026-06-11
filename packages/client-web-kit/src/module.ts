@@ -55,6 +55,7 @@ export function install(app: App, options: Options): void {
     installStore(app, {
         pinia: options.pinia,
         baseURL: options.baseURL,
+        httpClient: options.httpClient,
         cookieSet: options.cookieSet,
         cookieGet: options.cookieGet,
         cookieUnset: options.cookieUnset,
@@ -63,12 +64,14 @@ export function install(app: App, options: Options): void {
     installHTTPClientAuthenticationHook(app, {
         pinia: options.pinia,
         baseURL: options.baseURL,
+        httpClient: options.httpClient,
         isServer: options.isServer,
     });
 
     installHTTPClient(app, {
         pinia: options.pinia,
         baseURL: options.baseURL,
+        httpClient: options.httpClient,
         isServer: options.isServer,
     });
 

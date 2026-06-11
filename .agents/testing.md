@@ -133,15 +133,32 @@ selfClient.setAuthorizationHeader({ type: 'Bearer', token: token.access_token })
 
 `suite.client.permission.getOne(name)` resolves the provisioned permission by name. See `test/unit/http/controllers/entities/client-self-manage.spec.ts` for a working example asserting both allowed-field updates and ATTRIBUTE_NAMES policy rejections.
 
-### Testing the SSR'd consent UI is not yet supported
+### Testing the SSR'd UI pages (fake HTTP client)
 
-`GET /authorize` returns SSR'd HTML built from the bundled Vue app under `apps/server-core/ui/`. The SSR fires several unawaited HTTP calls during render against `config.publicUrl` (`store.resolve()` for session hydration, `IdentityProviderAPI.getMany()`, `AuthorizeScopes.vue`'s scope fetch). In a test environment where `publicUrl` doesn't reach a live server, those fetches `ECONNREFUSE` and leak unhandled rejections that fail vitest.
+The five SSR auth pages (`GET /authorize`, `/register`, `/activate`, `/password-forgot`, `/password-reset`) render the bundled Vue app under `apps/server-core/ui/`, which fires HTTP calls during render (session hydration via `store.resolve()`, identity-provider and scope fetches). Tests stub those by injecting a fake HTTP client into the SSR — never let the rendered app reach a real server:
 
-Workarounds that don't work:
-- Suppressing `unhandledRejection` — vitest catches them through its own infrastructure.
-- Pinning `config.port` to match `publicUrl` — breaks parallel runs.
+```typescript
+import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/testing';
+import { HTTPInjectionKey } from '../../src/app';
 
-The right fix is an injectable HTTP client so tests can stub the SSR's outbound calls. Until that lands, `GET /authorize` is covered indirectly: the assets middleware unit tests assert path resolution, and `apps/server-core` ships a self-contained tarball whose SSR `render()` is verified manually via `npm pack` smoke testing.
+const suite = createTestApplication();
+suite.container.register(HTTPInjectionKey.UIHttpClient, {
+    useValue: createFakeHTTPClient({
+        handlers: { 'GET /identity-providers': () => ({ data: [], meta: { total: 0 } }) },
+    }),
+});
+await suite.setup();
+
+const response = await httpRequest(suite, 'GET', '/register');
+```
+
+Wiring: the HTTP module mounts a per-request middleware (only when `HTTPInjectionKey.UIHttpClient` is registered — production registers nothing) that stamps the client onto `event.store`; `renderUIPage` forwards it into the SSR `render()`, and `@authup/client-web-kit`'s `install({ httpClient })` uses it for the provided client, the session store, and the authentication hook alike. See `test/unit/http/controllers/workflows/ui-pages.spec.ts` for hydration-payload assertions (XSS escaping, redirect sanitizing, feature flags).
+
+Caveats:
+- Register the fake **before** `suite.setup()` — the middleware mount is decided at boot.
+- The SSR renders from the **dist** bundle (`dist/ui/server/server.js`) — rebuild `apps/server-core` after changing the UI app or `client-web-kit`, or the tests exercise a stale bundle.
+- The default unmatched-route fallback returns a collection shape (`{ data: [], meta: { total: 0 } }`); session endpoints need explicit handlers for logged-in renders, and handlers on fire-and-forget fetch paths must not throw (an unawaited rejection fails vitest).
+- Alias the import (`createFakeHTTPClient`) — `test/utils` already exports a `createFakeClient` entity factory.
 
 ## Code Coverage
 

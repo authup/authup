@@ -16,7 +16,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         return;
     }
 
-    const client = new Client({ baseURL: options.baseURL });
+    const client = options.httpClient ?? new Client({ baseURL: options.baseURL });
 
     const authenticationHook = injectHTTPClientAuthenticationHook(app);
     authenticationHook.attach(client);

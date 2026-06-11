@@ -59,7 +59,7 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
 
 export function createStore(context: StoreCreateContext) {
-    const client = new Client({ baseURL: context.baseURL });
+    const client = context.httpClient ?? new Client({ baseURL: context.baseURL });
 
     const cookiesRead = ref<boolean>(false);
     const setCookiesRead = (value: boolean) => {

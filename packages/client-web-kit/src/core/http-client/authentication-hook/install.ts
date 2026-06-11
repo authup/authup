@@ -32,7 +32,7 @@ export function installHTTPClientAuthenticationHook(
                 throw new Error('No refresh token available.');
             }
 
-            const client = new Client({ baseURL: options.baseURL });
+            const client = options.httpClient ?? new Client({ baseURL: options.baseURL });
             return client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
         },
         timer: !options.isServer,

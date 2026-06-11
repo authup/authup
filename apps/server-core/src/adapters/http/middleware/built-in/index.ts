@@ -17,3 +17,4 @@ export * from './logger.ts';
 export * from './prometheus.ts';
 export * from './rate-limit.ts';
 export * from './swagger.ts';
+export * from './ui-http-client.ts';

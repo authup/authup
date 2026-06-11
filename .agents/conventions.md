@@ -33,7 +33,7 @@
 
 - **Service-level tests** isolate domain logic with in-memory fakes. Generic fakes (`FakeEntityRepository`, `FakePermissionEvaluator`, `createAllowAllActor()` etc.) come from `@authup/server-test-kit`; domain fakes (`FakeRealmRepository`, `FakeRoleRepository`, `FakeUserRepository`, ...) live alongside their entity at `test/unit/core/entities/<entity>/fake-repository.ts`. No HTTP, no Docker.
 - **HTTP-level tests** spin up the real server on a random port. Use `suite.client` (typed `@authup/core-http-kit` Client) for API calls; `suite.baseURL` for raw `fetch()` (e.g., asserting HTML response bodies).
-- **UI/SSR tests** are not yet supported. The bundled SSR Vue app fires unawaited HTTP calls during render against `config.publicUrl`, which leak unhandled rejections in any test environment where that URL doesn't reach a live server. Adding HTTP-level tests for `/authorize` requires an injectable HTTP client; design work is tracked outside this file.
+- **UI/SSR tests** stub the rendered Vue app's outbound HTTP via a fake client: register `createFakeClient(handlers)` from `@authup/core-http-kit/testing` under `HTTPInjectionKey.UIHttpClient` before `suite.setup()` (see `.agents/testing.md`). Production code never imports from `@authup/core-http-kit/testing`.
 
 ## File Organization
 

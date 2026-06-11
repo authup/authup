@@ -11,6 +11,7 @@ import {
     install,
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
+import type { Client } from '@authup/core-http-kit';
 import { matchLocale } from '@authup/i18n';
 import { getURLBasePath, omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
@@ -46,7 +47,11 @@ import type { HydrationPayload } from './types';
 addCollection(faSolid);
 addCollection(faBrands);
 
-export function createApp(payload: HydrationPayload) : {
+export type CreateAppOptions = {
+    httpClient?: Client
+};
+
+export function createApp(payload: HydrationPayload, options: CreateAppOptions = {}) : {
     app: App,
     router: Router
 } {
@@ -142,6 +147,7 @@ export function createApp(payload: HydrationPayload) : {
     // afterwards is still in time for the first render.
     install(app, {
         baseURL: payload?.config?.baseURL,
+        httpClient: options.httpClient,
         pinia,
         translatorLocale: matchLocale(localeHandles.resolved.value),
     });

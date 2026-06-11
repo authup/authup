@@ -33,6 +33,7 @@ export function installStore(app: App, options: StoreInstallOptions = {}) {
         STORE_ID,
         () => createStore({
             baseURL: options.baseURL,
+            httpClient: options.httpClient,
             dispatcher: storeDispatcher,
         }),
     );
