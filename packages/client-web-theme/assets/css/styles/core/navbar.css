@@ -56,18 +56,10 @@
 }
 
 /*
- * Center every gadget control on the row's cross axis. The gadgets
- * <ul> is a flex row; its default `align-items: stretch` makes each
- * <li> grow to the tallest sibling, but the `.vc-nav-link` inside is
- * not full-height — it sits at the TOP of its stretched <li> and
- * centers its icon within its OWN box. A <button> nav-link (color-mode
- * toggle, language dropdown-toggle) and an <a> nav-link (settings,
- * logout) differ by a fraction of a pixel in intrinsic height (residual
- * UA button metrics that survive Tailwind preflight), so their icon
- * centers land at slightly different Y — the items read as off-axis.
- * Switching the row to `align-items: center` collapses every <li> to
- * its natural height and centers it, so each control's center coincides
- * with the row center regardless of the button/anchor height delta.
+ * `align-items: center` centers each gadget <li> on the row's cross
+ * axis (the default `stretch` would grow each <li> to the tallest
+ * sibling while its link stays top-anchored). Box-height EQUALITY is
+ * handled on the links themselves — see the `inline-flex` note below.
  */
 .page-navbar .navbar-content .navbar-gadgets {
     margin-left: auto;
@@ -78,7 +70,33 @@
     padding-right: 0.25rem;
 }
 
+/*
+ * `inline-flex` normalizes the three gadget control types onto ONE box
+ * model. They are different element types, so without it the same
+ * padding/line-height rules yield three different heights:
+ *
+ *   - <a> (settings, logout) is `display: inline` — vertical padding
+ *     paints but does NOT expand the line box, so the box collapses to
+ *     bare font-metric height (~20.8px) and the icon sits on the text
+ *     baseline.
+ *   - <button> with text (language dropdown-toggle) is inline-block —
+ *     padding counts: 16px line + 8px padding = 24px.
+ *   - <button> with an svg icon (color-mode toggle) is inline-block,
+ *     but the icon's `vertical-align: -0.125em` baseline shift extends
+ *     the line box ~2px past the text strut → 26px.
+ *
+ * As a flex container, padding counts on all of them, `vertical-align`
+ * no longer applies (flex items aren't inline-level), and
+ * `align-items: center` puts every glyph on the same axis: a uniform
+ * 24px box (16px content + 2×4px padding) for anchors and buttons,
+ * icon and text alike. The VCNavItems-rendered links in the top nav
+ * already get `flex items-center` utilities from theme-tailwind's
+ * element class map; this gives the hand-written gadget links the
+ * same treatment.
+ */
 .page-navbar .navbar-content .vc-nav-link {
+    display: inline-flex;
+    align-items: center;
     padding: 0.25rem 0.5rem;
     font-weight: 500;
     letter-spacing: 1px;
