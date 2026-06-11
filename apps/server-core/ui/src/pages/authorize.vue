@@ -10,6 +10,7 @@ import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { LinkProperties } from '@vuecs/link';
 import { computed, defineComponent } from 'vue';
+import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
 export default defineComponent({
@@ -24,6 +25,8 @@ export default defineComponent({
             requestPath: string | undefined
         }>();
 
+        const withBasePath = useBasePath();
+
         const buildWorkflowLink = (path: string) : LinkProperties => {
             const params = new URLSearchParams();
             if (app.data.codeRequest && app.data.codeRequest.realm_id) {
@@ -34,7 +37,7 @@ export default defineComponent({
             }
 
             const qs = params.toString();
-            return { href: `${path}${qs ? `?${qs}` : ''}` };
+            return { href: withBasePath(`${path}${qs ? `?${qs}` : ''}`) };
         };
 
         const registerLink = computed(() => (

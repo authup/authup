@@ -7,7 +7,7 @@
 
 export type HydrationPayload<T extends Record<string, any> = Record<string, any>> = {
     config: {
-        publicURL: string,
+        baseURL?: string,
         [key: string]: any
     },
     data: T

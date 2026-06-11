@@ -34,6 +34,10 @@ export default {
     
     /**
      * API base URL.
+     * May include a path prefix (e.g. https://example.com/auth) when the
+     * server runs behind a reverse proxy that strips the prefix — asset
+     * URLs and links of the built-in auth pages are rebased onto it
+     * automatically.
      * default: http://localhost:3001
      */
     publicUrl: 'http://localhost:3001',

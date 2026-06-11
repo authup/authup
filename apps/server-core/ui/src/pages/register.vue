@@ -9,6 +9,7 @@ import { AAuthShell, ARegisterForm, useTranslations } from '@authup/client-web-k
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { defineComponent } from 'vue';
+import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
 export default defineComponent({
@@ -27,9 +28,12 @@ export default defineComponent({
             },
         ]);
 
+        const withBasePath = useBasePath();
+
         return {
             data: payload.data,
             translations,
+            withBasePath,
         };
     },
 });
@@ -39,7 +43,7 @@ export default defineComponent({
         <ARegisterForm
             v-if="data.features && data.features.registration"
             :realm-id="data.realmId"
-            :back-link="data.redirect ? { href: data.redirect } : undefined"
+            :back-link="data.redirect ? { href: withBasePath(data.redirect) } : undefined"
         />
         <div
             v-else

@@ -8,3 +8,23 @@
 export function makeURLPublicAccessible(url: string) {
     return url.replace('0.0.0.0', '127.0.0.1');
 }
+
+export function getURLBasePath(url?: string) : string {
+    if (!url) {
+        return '';
+    }
+
+    let pathname : string;
+    try {
+        pathname = new URL(url).pathname;
+    } catch {
+        return '';
+    }
+
+    const normalized = pathname.replace(/\/+$/, '');
+    if (normalized === '' || normalized === '/') {
+        return '';
+    }
+
+    return normalized;
+}

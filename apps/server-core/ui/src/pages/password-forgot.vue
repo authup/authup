@@ -9,6 +9,7 @@ import { AAuthShell, APasswordForgotForm, useTranslations } from '@authup/client
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { defineComponent } from 'vue';
+import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
 export default defineComponent({
@@ -31,6 +32,8 @@ export default defineComponent({
             },
         ]);
 
+        const withBasePath = useBasePath();
+
         const resetPath = (() => {
             const params = new URLSearchParams();
             if (payload.data.realmId) {
@@ -40,13 +43,14 @@ export default defineComponent({
                 params.set('redirect', payload.data.redirect);
             }
             const qs = params.toString();
-            return `/password-reset${qs ? `?${qs}` : ''}`;
+            return withBasePath(`/password-reset${qs ? `?${qs}` : ''}`);
         })();
 
         return {
             data: payload.data,
             translations,
             resetPath,
+            withBasePath,
         };
     },
 });
@@ -56,7 +60,7 @@ export default defineComponent({
         <template v-if="data.features && data.features.passwordRecovery">
             <APasswordForgotForm
                 :realm-id="data.realmId"
-                :back-link="data.redirect ? { href: data.redirect } : undefined"
+                :back-link="data.redirect ? { href: withBasePath(data.redirect) } : undefined"
             />
 
             <div class="text-center">

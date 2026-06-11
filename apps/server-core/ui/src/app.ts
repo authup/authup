@@ -12,7 +12,7 @@ import {
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
 import { matchLocale } from '@authup/i18n';
-import { omitRecord } from '@authup/kit';
+import { getURLBasePath, omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
 import type { App } from 'vue';
 import { createSSRApp, ref } from 'vue';
@@ -57,10 +57,15 @@ export function createApp(payload: HydrationPayload) : {
 
     const isClient = typeof window !== 'undefined';
 
+    // When authup is publicly served under a sub-path (baseURL carries a
+    // pathname), the browser location includes the prefix — the router base
+    // strips it so route matching keeps working on hydration.
+    const basePath = getURLBasePath(payload?.config?.baseURL);
+
     const router = createRouter({
         history: isClient ?
-            createWebHistory() :
-            createMemoryHistory(),
+            createWebHistory(basePath) :
+            createMemoryHistory(basePath),
         routes: [
             {
                 component: Authorize,
