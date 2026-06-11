@@ -19,6 +19,12 @@ describe('getURLBasePath', () => {
         expect(getURLBasePath('https://example.com/auth///')).toBe('/auth');
     });
 
+    it('collapses duplicated leading slashes', () => {
+        expect(getURLBasePath('https://example.com//auth')).toBe('/auth');
+        expect(getURLBasePath('https://example.com///auth/')).toBe('/auth');
+        expect(getURLBasePath('https://example.com//')).toBe('');
+    });
+
     it('returns an empty string for root-level URLs', () => {
         expect(getURLBasePath('https://example.com')).toBe('');
         expect(getURLBasePath('https://example.com/')).toBe('');

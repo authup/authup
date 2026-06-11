@@ -21,7 +21,9 @@ export function getURLBasePath(url?: string) : string {
         return '';
     }
 
-    const normalized = pathname.replace(/\/+$/, '');
+    const normalized = pathname
+        .replace(/\/+$/, '')
+        .replace(/^\/{2,}/, '/');
     if (normalized === '' || normalized === '/') {
         return '';
     }
