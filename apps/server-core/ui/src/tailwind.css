@@ -19,14 +19,7 @@
 @import "@fontsource/asap/400.css";
 @import "@fontsource/asap/700.css";
 
-/*
- * Relative workspace import (a published consumer would write
- * `@import "@authup/client-web-theme";` and resolve via the `style`
- * exports condition): this app aliases `@authup/*` package ids to
- * their `src/` dirs for unbuilt TS consumption, which would hijack
- * the bare CSS specifier.
- */
-@import "../../../../packages/client-web-theme/assets/css/index.css";
+@import "@authup/client-web-theme";
 
 /* Scan this SSR app's templates. */
 @source "..";

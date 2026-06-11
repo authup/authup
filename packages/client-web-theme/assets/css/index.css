@@ -15,18 +15,12 @@
  */
 
 /*
- * Layout-agnostic relative import of the kit theme's CSS entry
- * (instead of the bare `@authup/client-web-kit-theme` specifier):
- * from `packages/client-web-theme/assets/css` it hits the sibling
- * workspace package, from `node_modules/@authup/client-web-theme/assets/css`
- * it hits the sibling installed package (pnpm's virtual store keeps
- * the same shape — the kit theme is a real dependency). A bare
- * specifier would additionally depend on the consumer's resolver
- * honoring the `style` exports condition, and in workspace dev the
- * apps alias the package id to `src/` (for unbuilt TS consumption),
- * which would hijack the CSS import.
+ * Resolved via the kit theme's `exports.style` condition
+ * (`./assets/css/index.css`) — works in workspace dev (symlinked
+ * package), flat consumer node_modules, and pnpm's virtual store
+ * (the kit theme is a real dependency).
  */
-@import "../../../client-web-kit-theme/assets/css/index.css";
+@import "@authup/client-web-kit-theme";
 
 /*
  * Scan this package's sources so class strings declared inside
