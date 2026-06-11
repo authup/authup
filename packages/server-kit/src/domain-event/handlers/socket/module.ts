@@ -7,12 +7,12 @@
 
 import { buildEventFullName } from '@authup/core-realtime-kit';
 import { Emitter } from '@socket.io/redis-emitter';
-import type { RedisClientCreateInput } from '../../services';
-import { createRedisClient } from '../../services';
-import type { DomainEventPublishContext, IDomainEventPublisher } from '../type';
-import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
+import type { RedisClientCreateInput } from '../../../redis';
+import { createRedisClient } from '../../../redis';
+import type { DomainEventPublishContext, IDomainEventHandler } from '../../types';
+import { buildDomainEventChannelName, transformDomainEventData } from '../../utils';
 
-export class DomainEventSocketPublisher implements IDomainEventPublisher {
+export class DomainEventSocketHandler implements IDomainEventHandler {
     protected driver : Emitter;
 
     constructor(input: RedisClientCreateInput) {
@@ -20,7 +20,7 @@ export class DomainEventSocketPublisher implements IDomainEventPublisher {
         this.driver = new Emitter(client);
     }
 
-    async publish(ctx: DomainEventPublishContext) : Promise<void> {
+    async handle(ctx: DomainEventPublishContext) : Promise<void> {
         ctx.content = transformDomainEventData(ctx.content);
 
         for (let i = 0; i < ctx.destinations.length; i++) {

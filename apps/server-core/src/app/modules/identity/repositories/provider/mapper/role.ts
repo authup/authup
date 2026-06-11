@@ -6,14 +6,19 @@
  */
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
-import { useDataSource } from 'typeorm-extension';
+import type { DataSource } from 'typeorm';
 import type { IIdentityProviderRoleMappingFinder } from '../../../../../../core/index.ts';
 import { IdentityProviderRoleMappingEntity } from '../../../../../../adapters/database/domains/index.ts';
 
 export class IdentityProviderRoleMappingRepository implements IIdentityProviderRoleMappingFinder {
+    protected dataSource : DataSource;
+
+    constructor(dataSource: DataSource) {
+        this.dataSource = dataSource;
+    }
+
     async findByProviderId(providerId: string): Promise<IdentityProviderRoleMapping[]> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(IdentityProviderRoleMappingEntity);
+        const repository = this.dataSource.getRepository(IdentityProviderRoleMappingEntity);
 
         return repository.findBy({ provider_id: providerId });
     }

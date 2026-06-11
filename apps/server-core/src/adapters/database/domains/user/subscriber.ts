@@ -1,95 +1,33 @@
 /*
- * Copyright (c) 2022-2025.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type { User } from '@authup/core-kit';
-import {
-    EntityDefaultEventName, 
-    EntityType,
-    buildEntityChannelName,
-    buildEntityNamespaceName,
-} from '@authup/core-kit';
+import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type {
-    EntitySubscriberInterface,
-    InsertEvent,
-    RemoveEvent,
-    UpdateEvent,
-} from 'typeorm';
 import { EventSubscriber } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { UserEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
 
-async function publishEvent(
-    event: `${EntityDefaultEventName}`,
-    data: User,
-) {
-    await publishDomainEvent({
-        content: {
-            type: EntityType.USER,
-            event,
-            data,
-        },
-        destinations: [
-            {
-                channel: (id) => buildEntityChannelName(EntityType.USER, id),
-                namespace: buildEntityNamespaceName(data.realm_id),
-            },
-            { channel: (id) => buildEntityChannelName(EntityType.USER, id) },
-        ],
-    });
-}
-
 @EventSubscriber()
-export class UserSubscriber implements EntitySubscriberInterface<User> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    listenTo(): Function | string {
-        return UserEntity;
-    }
-
-    async afterInsert(event: InsertEvent<User>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-    }
-
-    async afterUpdate(event: UpdateEvent<User>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as User);
-    }
-
-    async afterRemove(event: RemoveEvent<User>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.USER,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
+export class UserSubscriber extends EntitySubscriber<User> {
+    constructor() {
+        super({
+            type: EntityType.USER,
+            target: UserEntity,
+            destinations: buildEntityDestinations(EntityType.USER, (data) => [data.realm_id]),
+            cache: {
+                keys: (data) => [
+                    buildRedisKeyPath({
+                        prefix: CachePrefix.USER,
+                        key: data.id,
+                    }),
+                ],
+            },
+        });
     }
 }

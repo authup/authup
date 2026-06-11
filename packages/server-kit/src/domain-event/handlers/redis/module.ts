@@ -6,19 +6,19 @@
  */
 
 import type { Client } from 'redis-extension';
-import type { RedisClientCreateInput } from '../../services';
-import { createRedisClient } from '../../services';
-import type { DomainEventPublishContext, IDomainEventPublisher } from '../type';
-import { buildDomainEventChannelName, transformDomainEventData } from '../utils';
+import type { RedisClientCreateInput } from '../../../redis';
+import { createRedisClient } from '../../../redis';
+import type { DomainEventPublishContext, IDomainEventHandler } from '../../types';
+import { buildDomainEventChannelName, transformDomainEventData } from '../../utils';
 
-export class DomainEventRedisPublisher implements IDomainEventPublisher {
+export class DomainEventRedisHandler implements IDomainEventHandler {
     protected driver : Client;
 
     constructor(input: RedisClientCreateInput) {
         this.driver = createRedisClient(input);
     }
 
-    async publish(ctx: DomainEventPublishContext) : Promise<void> {
+    async handle(ctx: DomainEventPublishContext) : Promise<void> {
         const data = JSON.stringify(transformDomainEventData(ctx.content));
 
         const pipeline = this.driver.pipeline();

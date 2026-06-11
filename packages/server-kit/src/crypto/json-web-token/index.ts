@@ -7,5 +7,5 @@
 
 export * from './extract';
 export * from './sign';
-export * from './type';
+export * from './types';
 export * from './verify';

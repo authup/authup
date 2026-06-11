@@ -6,15 +6,19 @@
  */
 
 import type { IdentityProviderAccount } from '@authup/core-kit';
-import type { DeepPartial } from 'typeorm';
-import { useDataSource } from 'typeorm-extension';
+import type { DataSource, DeepPartial } from 'typeorm';
 import type { IIdentityProviderAccountRepository, IdentityProviderIdentity } from '../../../../../../core/index.ts';
 import { IdentityProviderAccountEntity } from '../../../../../../adapters/database/domains/index.ts';
 
 export class IdentityProviderAccountRepository implements IIdentityProviderAccountRepository {
+    protected dataSource : DataSource;
+
+    constructor(dataSource: DataSource) {
+        this.dataSource = dataSource;
+    }
+
     async findOneByProviderIdentity(identity: IdentityProviderIdentity): Promise<IdentityProviderAccount | null> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(IdentityProviderAccountEntity);
+        const repository = this.dataSource.getRepository(IdentityProviderAccountEntity);
 
         return repository.findOne({
             where: {
@@ -26,8 +30,7 @@ export class IdentityProviderAccountRepository implements IIdentityProviderAccou
     }
 
     async save(entity: DeepPartial<IdentityProviderAccount>): Promise<IdentityProviderAccount> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(IdentityProviderAccountEntity);
+        const repository = this.dataSource.getRepository(IdentityProviderAccountEntity);
 
         return repository.save(entity);
     }

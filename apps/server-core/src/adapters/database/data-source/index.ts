@@ -6,4 +6,3 @@
  */
 
 export * from './options/index.ts';
-export * from './singleton.ts';

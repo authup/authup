@@ -8,11 +8,17 @@
 import type { Key } from '@authup/core-kit';
 import { AsymmetricKey, CryptoAsymmetricAlgorithm, createAsymmetricKeyPair } from '@authup/server-kit';
 import { JWKType, JWTAlgorithm } from '@authup/specs';
-import { useDataSource } from 'typeorm-extension';
+import type { DataSource } from 'typeorm';
 import { KeyEntity } from '../../../../../adapters/database/index.ts';
 import type { IOAuth2KeyRepository } from '../../../../../core/index.ts';
 
 export class OAuth2KeyRepository implements IOAuth2KeyRepository {
+    protected dataSource : DataSource;
+
+    constructor(dataSource: DataSource) {
+        this.dataSource = dataSource;
+    }
+
     async findByRealmId(realmId: string): Promise<Key | null> {
         return this.createOrGet({ realm_id: realmId });
     }
@@ -25,8 +31,7 @@ export class OAuth2KeyRepository implements IOAuth2KeyRepository {
         realm_id?: string,
         id?: string
     }) : Promise<Key | null> {
-        const dataSource = await useDataSource();
-        const repository = dataSource.getRepository(KeyEntity);
+        const repository = this.dataSource.getRepository(KeyEntity);
 
         let entity = await repository.findOne({
             select: {

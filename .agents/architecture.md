@@ -472,7 +472,8 @@ Controller conventions:
 
 Exceptions where controllers retain some logic:
 - **Self-access resolution** (client, robot, user): Resolve `@me`/`@self` tokens to actual IDs before delegating
-- **Infrastructure concerns** (robot): Robot synchronization after save/delete uses infrastructure-level singletons
+
+No controller (or service) reaches for global singletons — cross-cutting services (logger, domain-event publisher) are constructor-injected from the DI container by the factories in `app/modules/http/modules/controller.ts`.
 
 ### Wiring (Module Layer)
 
@@ -486,6 +487,45 @@ createRoleController(container: IDIContainer) {
     return new RoleController({ service });
 }
 ```
+
+### Cross-Cutting Services via DIP (no singletons)
+
+Mirrors PrivateAIM/hub. There is no `useLogger()` / `useXxx()` service-locator
+anywhere — `@authup/server-kit` ships factories only, and `apps/server-core`
+threads instances through constructor/context args:
+
+- **Logger** — `LoggerModule` registers `LoggerInjectionKey` (eldin, singleton
+  lifetime). Anything that logs receives a `Logger` (winston-shaped structural
+  type from `@authup/server-kit`) explicitly: middlewares take it via options
+  (`createLoggerMiddleware({ env, logger })`, `registerErrorMiddleware(router,
+  { logger })`), core services via their context (`RealmService` /
+  `WebClientProvisioner` accept optional `logger`). A service without a logger
+  simply stays silent (`this.logger?.warn(...)` guard style).
+- **Domain events** — `DomainEventPublisher` (from `@authup/server-kit`,
+  optional `logger` ctx) aggregates `IDomainEventHandler`s
+  (`DomainEventRedisHandler`, `DomainEventSocketHandler`); `safePublish`
+  catches + logs so an event-bus failure never fails the originating DB
+  transaction. `DatabaseModule.registerEventPublisher` creates it, registers
+  it under `DatabaseInjectionKey.DomainEventPublisher`, and injects it into
+  every TypeORM subscriber instance via `setPublisher()` after
+  `dataSource.initialize()` (TypeORM instantiates the subscriber classes from
+  the data-source options itself, so setter injection is the handoff point —
+  same trick as hub's `BaseSubscriber`).
+- **Entity subscribers** — all 22+ subscribers in
+  `adapters/database/domains/*/subscriber.ts` extend `EntitySubscriber<T>`
+  (`adapters/database/subscriber/`), a declarative base class configured with
+  `{ type, target, destinations, cache? }`: `destinations` is built with
+  `buildEntityDestinations(type, (data) => [realmIds...])` (one global channel
+  destination + one namespaced destination per non-null realm id); `cache.keys`
+  returns the query-result-cache keys to drop on update/remove
+  (`cache.onInsert: true` adds insert — used by junction/attribute subscribers
+  whose cache is keyed by the owner id). A subscriber without an injected
+  publisher publishes nothing (tests / migration CLI runs).
+- **typeorm-extension's global registry is unused** — `setDataSource` /
+  `useDataSource` / `unsetDataSource` have no call sites; repositories that
+  need a `DataSource` (identity-provider mappers/account, `OAuth2KeyRepository`)
+  receive it via constructor from `DatabaseInjectionKey.DataSource`. Don't
+  reintroduce `useDataSource()` in new repositories.
 
 ### Extra Attributes (EA) Entities
 
@@ -587,6 +627,13 @@ app/modules/database/repositories/
   {entity}/repository.ts            — {Entity}RepositoryAdapter implements I{Entity}Repository
   {entity}/index.ts                 — barrel export
   index.ts                          — barrel re-exports all adapters
+
+adapters/database/subscriber/
+  module.ts                         — EntitySubscriber<T> base class + buildEntityDestinations helper
+  types.ts                          — EntitySubscriberContext, EntitySubscriberCacheContext
+
+adapters/database/domains/{entity}/
+  subscriber.ts                     — declarative subscriber: extends EntitySubscriber with { type, target, destinations, cache? }
 
 adapters/http/controllers/entities/
   {entity}/module.ts                — Thin controller class (HTTP adapter only)

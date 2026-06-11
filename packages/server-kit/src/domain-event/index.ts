@@ -5,7 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './handlers';
 export * from './module';
-export * from './redis';
-export * from './socket';
-export * from './type';
+export * from './types';

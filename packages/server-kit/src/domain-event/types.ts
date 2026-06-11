@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
@@ -22,6 +22,12 @@ export type DomainEventPublishContext<
     destinations: DomainEventDestinations
 };
 
+export interface IDomainEventHandler {
+    handle(ctx: DomainEventPublishContext) : Promise<void>;
+}
+
 export interface IDomainEventPublisher {
     publish(ctx: DomainEventPublishContext) : Promise<void>;
+
+    safePublish(ctx: DomainEventPublishContext) : Promise<void>;
 }

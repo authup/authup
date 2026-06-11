@@ -6,7 +6,7 @@
  */
 
 import type { JWKType } from '@authup/specs';
-import type { TokenECAlgorithm, TokenOCTAlgorithm, TokenRSAAlgorithm } from '../type';
+import type { TokenECAlgorithm, TokenOCTAlgorithm, TokenRSAAlgorithm } from '../types';
 
 export type TokenSignBaseOptions = {
     keyId?: string,

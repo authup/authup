@@ -1,108 +1,36 @@
 /*
- * Copyright (c) 2022-2025.
+ * Copyright (c) 2022-2026.
  * Author Peter Placzek (tada5hi)
  * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import type { IdentityProviderRoleMapping } from '@authup/core-kit';
-import {
-    EntityDefaultEventName,
-    EntityType,
-    buildEntityChannelName,
-    buildEntityNamespaceName,
-} from '@authup/core-kit';
-import type { DomainEventDestination } from '@authup/server-kit';
+import { EntityType } from '@authup/core-kit';
 import { buildRedisKeyPath } from '@authup/server-kit';
-import type {
-    EntitySubscriberInterface, 
-    InsertEvent,
-    RemoveEvent,
-    UpdateEvent,
-} from 'typeorm';
 import { EventSubscriber } from 'typeorm';
-import { publishDomainEvent } from '../../event-publisher/index.ts';
+import { EntitySubscriber, buildEntityDestinations } from '../../subscriber/index.ts';
 import { IdentityProviderRoleMappingEntity } from './entity.ts';
 import { CachePrefix } from '../constants.ts';
 
-async function publishEvent(
-    event: `${EntityDefaultEventName}`,
-    data: IdentityProviderRoleMapping,
-) {
-    const destinations : DomainEventDestination[] = [
-        { channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, id) },
-    ];
-
-    if (data.provider_realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
-            namespace: buildEntityNamespaceName(data.provider_realm_id),
-        });
-    }
-
-    if (data.role_realm_id) {
-        destinations.push({
-            channel: (id) => buildEntityChannelName(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, id),
-            namespace: buildEntityNamespaceName(data.role_realm_id),
-        });
-    }
-
-    await publishDomainEvent({
-        content: {
-            type: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING,
-            event,
-            data,
-        },
-        destinations,
-    });
-}
-
 @EventSubscriber()
-export class IdentityProviderRoleSubscriber implements EntitySubscriberInterface<IdentityProviderRoleMapping> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    listenTo(): Function | string {
-        return IdentityProviderRoleMappingEntity;
-    }
-
-    async afterInsert(event: InsertEvent<IdentityProviderRoleMapping>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        await publishEvent(EntityDefaultEventName.CREATED, event.entity);
-    }
-
-    async afterUpdate(event: UpdateEvent<IdentityProviderRoleMapping>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.IDENTITY_PROVIDER_ROLE,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.UPDATED, event.entity as IdentityProviderRoleMapping);
-    }
-
-    async afterRemove(event: RemoveEvent<IdentityProviderRoleMapping>): Promise<any> {
-        if (!event.entity) {
-            return;
-        }
-
-        if (event.connection.queryResultCache) {
-            await event.connection.queryResultCache.remove([
-                buildRedisKeyPath({
-                    prefix: CachePrefix.IDENTITY_PROVIDER_ROLE,
-                    key: event.entity.id,
-                }),
-            ]);
-        }
-
-        await publishEvent(EntityDefaultEventName.DELETED, event.entity);
+export class IdentityProviderRoleSubscriber extends EntitySubscriber<IdentityProviderRoleMapping> {
+    constructor() {
+        super({
+            type: EntityType.IDENTITY_PROVIDER_ROLE_MAPPING,
+            target: IdentityProviderRoleMappingEntity,
+            destinations: buildEntityDestinations(EntityType.IDENTITY_PROVIDER_ROLE_MAPPING, (data) => [
+                data.provider_realm_id,
+                data.role_realm_id,
+            ]),
+            cache: {
+                keys: (data) => [
+                    buildRedisKeyPath({
+                        prefix: CachePrefix.IDENTITY_PROVIDER_ROLE,
+                        key: data.id,
+                    }),
+                ],
+            },
+        });
     }
 }
