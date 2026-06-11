@@ -26,6 +26,6 @@
     .a-login-provider-box {
         min-width: var(--authup-login-provider-min-width);
         max-width: 100%;
-        word-break: break-word;
+        overflow-wrap: break-word;
     }
 }

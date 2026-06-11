@@ -121,13 +121,13 @@
 
     .a-realm-grid-item-name {
         font-weight: 600;
-        word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     .a-realm-grid-item-slug {
         color: var(--authup-auth-surface-color-muted);
         font-size: 0.8em;
-        word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     .a-realm-grid-item--skeleton {

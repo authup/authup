@@ -352,7 +352,7 @@ not by client-web:
   pages (it replaced the legacy hardcoded `#E8E8E8` card in
   `AAuthorize`). The auth-chrome CSS (shell, gadgets, back-link, realm
   grid) lives in `@authup/client-web-kit-theme`
-  (`src/styles/{auth,realm}.css`, behind `--authup-auth-*` /
+  (`assets/css/styles/{auth,realm}.css`, behind `--authup-auth-*` /
   `--authup-realm-*` tokens) — kit components ship no `<style>` blocks.
 
 ### Thin Controller Pattern (HTTP Adapter)
