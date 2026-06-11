@@ -14,14 +14,22 @@
  *                                <VCAlert> / etc.
  */
 
+/*
+ * Resolved via the kit theme's `exports.style` condition
+ * (`./assets/css/index.css`) — works in workspace dev (symlinked
+ * package), flat consumer node_modules, and pnpm's virtual store
+ * (the kit theme is a real dependency).
+ */
 @import "@authup/client-web-kit-theme";
 
 /*
- * Scan this package's own src so class strings declared inside
+ * Scan this package's sources so class strings declared inside
  * `clientWebTheme()` (none today, but a hook for future overrides)
- * land in the JIT corpus.
+ * land in the JIT corpus — `../../src` in workspace dev, `../../dist`
+ * in the published package (missing paths are skipped silently).
  */
-@source ".";
+@source "../../src";
+@source "../../dist";
 
 /* ------------------------------------------------------------------
    Authup design tokens
@@ -57,6 +65,19 @@
         --authup-rose:                      #cc8181;  /* sub-titles, footprints, secondary accent */
         --authup-salmon:                    #ff5b5b;  /* dropdown hover text */
         --authup-green:                     #4f9d6b;  /* brand green — the 💚 in the footer credit */
+
+        /*
+         * Rebind the kit theme's auth-chrome tokens (declared in
+         * `@layer authup` by @authup/client-web-kit-theme with neutral
+         * `--vc-*`/literal defaults) onto the brand vars. This is the
+         * designed override seam: `base` comes after `authup` in the
+         * layer order, so these win. The kit theme itself never
+         * references brand vars — a third-party consumer gets their own
+         * primary palette unless they rebind like this.
+         */
+        --authup-auth-accent:               var(--authup-periwinkle);
+        --authup-auth-accent-alt:           var(--authup-rose);
+        --authup-auth-logo-background:      var(--authup-slate-800);
 
         /* Chrome slate ramp — constant across themes (brand signature) */
         --authup-slate-900:                 #30373e;  /* body text, pagination active */
@@ -137,7 +158,7 @@
      *
      * Works from inside `@layer base` because `@vuecs/design` 1.0.1+ wraps
      * its `.dark` token defaults in `@layer vuecs`, positioned earlier than
-     * `base` — see `@authup/client-web-kit-theme/src/index.css` for the
+     * `base` — see `@authup/client-web-kit-theme/assets/css/index.css` for the
      * `@layer theme, vuecs, base, components, utilities;` declaration.
      */
     .dark {

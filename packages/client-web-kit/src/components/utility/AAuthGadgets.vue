@@ -25,43 +25,12 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="auth-gadgets">
+    <div class="a-auth-gadgets">
         <AColorModeSwitcher
             :dark="dark"
-            class="auth-gadget"
+            class="a-auth-gadget"
             @update:dark="$emit('update:dark', $event)"
         />
-        <ALanguageSwitcherDropdown link-class-extra="auth-gadget" />
+        <ALanguageSwitcherDropdown link-class-extra="a-auth-gadget" />
     </div>
 </template>
-<style scoped>
-.auth-gadgets {
-    position: fixed;
-    top: 1rem;
-    right: 1.25rem;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.auth-gadget {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2.25rem;
-    height: 2.25rem;
-    padding: 0 0.6rem;
-    border: 1px solid var(--vc-color-border);
-    border-radius: 0.6rem;
-    background: var(--vc-color-bg-elevated);
-    color: var(--vc-color-fg-muted);
-    cursor: pointer;
-    transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.auth-gadget:hover {
-    color: var(--vc-color-fg);
-    border-color: var(--authup-periwinkle, var(--vc-color-primary-500));
-}
-</style>

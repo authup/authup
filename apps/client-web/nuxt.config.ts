@@ -40,7 +40,6 @@ export default defineNuxtConfig({
         // app's own template tree + per-app nested vuecs deps. With the
         // theme split, the app no longer holds any project CSS directly.
         '@/assets/css/tailwind.css',
-        '@authup/client-web-kit/../dist/style.css',
     ],
 
     alias: {

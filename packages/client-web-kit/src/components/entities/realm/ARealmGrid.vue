@@ -149,71 +149,71 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="realm-select">
+    <div class="a-realm-select">
         <div
             v-if="error"
-            class="alert alert-danger realm-select-alert"
+            class="alert alert-danger a-realm-select-alert"
         >
             {{ error }}
         </div>
 
         <div
             v-if="!loaded || busy || redirecting"
-            class="realm-grid"
+            class="a-realm-grid"
             aria-hidden="true"
         >
             <div
                 v-for="n in 6"
                 :key="n"
-                class="realm-grid-item realm-grid-item--skeleton"
+                class="a-realm-grid-item a-realm-grid-item--skeleton"
             />
         </div>
 
         <template v-else>
             <div
                 v-if="showSearch"
-                class="realm-search"
+                class="a-realm-search"
             >
                 <VCIcon
                     name="fa6-solid:magnifying-glass"
-                    class="realm-search-icon"
+                    class="a-realm-search-icon"
                 />
                 <input
                     v-model="search"
                     type="text"
-                    class="realm-search-input"
+                    class="a-realm-search-input"
                     :placeholder="translations.search"
                 >
             </div>
 
             <div
                 v-if="filtered.length === 0"
-                class="realm-empty"
+                class="a-realm-empty"
             >
                 <VCIcon
                     name="fa6-solid:folder-open"
-                    class="realm-empty-icon"
+                    class="a-realm-empty-icon"
                 />
                 <span>{{ translations.noResults }}</span>
             </div>
 
             <div
                 v-else
-                class="realm-grid"
+                class="a-realm-grid"
             >
                 <button
                     v-for="realm in filtered"
                     :key="realm.id"
                     type="button"
-                    class="realm-grid-item"
+                    class="a-realm-grid-item"
                     @click.prevent="handleSelect(realm)"
                 >
-                    <span class="realm-grid-item-name">
+                    <span class="a-realm-grid-item-name">
                         {{ labelFor(realm) }}
                     </span>
                     <span
                         v-if="slugFor(realm)"
-                        class="realm-grid-item-slug"
+                        class="a-realm-grid-item-slug"
                     >
                         {{ slugFor(realm) }}
                     </span>
@@ -222,172 +222,3 @@ export default defineComponent({
         </template>
     </div>
 </template>
-<style scoped>
-.realm-select-alert {
-    margin-bottom: 1rem;
-}
-
-.realm-search {
-    position: relative;
-    margin-bottom: 1.25rem;
-}
-
-.realm-search-icon {
-    position: absolute;
-    top: 50%;
-    left: 0.9rem;
-    transform: translateY(-50%);
-    color: var(--vc-color-fg-muted);
-    pointer-events: none;
-}
-
-.realm-search-input {
-    width: 100%;
-    padding: 0.65rem 1rem 0.65rem 2.4rem;
-    border: 1px solid var(--vc-color-border);
-    border-radius: 0.65rem;
-    background: var(--vc-color-bg-elevated);
-    color: var(--vc-color-fg);
-    outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.realm-search-input:focus {
-    border-color: var(--authup-periwinkle, var(--vc-color-primary-500));
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--authup-periwinkle, var(--vc-color-primary-500)) 25%, transparent);
-}
-
-.realm-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
-}
-
-.realm-grid-item {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.3rem;
-    min-height: 6.25rem;
-    padding: 1.25rem 1rem;
-    border: 1px solid var(--vc-color-border);
-    border-radius: 0.85rem;
-    background: var(--vc-color-bg-elevated);
-    color: var(--vc-color-fg);
-    cursor: pointer;
-    overflow: hidden;
-    text-align: center;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-/* Animated gradient border, revealed on hover via the mask-composite
-   ring trick (paints only the 1px padding band, leaving the fill clear). */
-.realm-grid-item::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(
-        120deg,
-        var(--authup-periwinkle, #6d7fcc),
-        var(--authup-rose, #cc8181),
-        var(--authup-periwinkle, #6d7fcc)
-    );
-    background-size: 200% 200%;
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    mask-composite: exclude;
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    pointer-events: none;
-}
-
-.realm-grid-item:hover {
-    transform: translateY(-3px);
-    border-color: transparent;
-    box-shadow: 0 10px 30px -12px color-mix(in oklab, var(--authup-periwinkle, #6d7fcc) 70%, transparent);
-}
-
-.realm-grid-item:hover::before {
-    opacity: 1;
-    animation: realm-border-pan 3s linear infinite;
-}
-
-.realm-grid-item:focus-visible {
-    outline: none;
-    border-color: transparent;
-}
-
-.realm-grid-item:focus-visible::before {
-    opacity: 1;
-}
-
-.realm-grid-item-name {
-    font-weight: 600;
-    word-break: break-word;
-}
-
-.realm-grid-item-slug {
-    color: var(--vc-color-fg-muted);
-    font-size: 0.8em;
-    word-break: break-word;
-}
-
-.realm-grid-item--skeleton {
-    cursor: default;
-    pointer-events: none;
-    border-color: var(--vc-color-border);
-    background: linear-gradient(
-        90deg,
-        var(--vc-color-bg-muted) 25%,
-        var(--vc-color-bg-elevated) 37%,
-        var(--vc-color-bg-muted) 63%
-    );
-    background-size: 400% 100%;
-    animation: realm-skeleton 1.4s ease infinite;
-}
-
-.realm-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 2.5rem 1rem;
-    color: var(--vc-color-fg-muted);
-    text-align: center;
-}
-
-.realm-empty-icon {
-    font-size: 1.75rem;
-    opacity: 0.6;
-}
-
-@keyframes realm-border-pan {
-    to {
-        background-position: 200% 0;
-    }
-}
-
-@keyframes realm-skeleton {
-    0% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0 50%;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .realm-grid-item,
-    .realm-grid-item::before,
-    .realm-grid-item--skeleton {
-        transition: none;
-        animation: none;
-    }
-}
-</style>

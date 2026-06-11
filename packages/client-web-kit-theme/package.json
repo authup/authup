@@ -8,17 +8,16 @@
     "./package.json": "./package.json",
     ".": {
       "types": "./dist/index.d.ts",
-      "style": "./src/index.css",
+      "style": "./assets/css/index.css",
       "import": "./dist/index.mjs"
     },
-    "./index.css": "./src/index.css",
-    "./src/index.css": "./src/index.css"
+    "./index.css": "./assets/css/index.css"
   },
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "src/index.css"
+    "assets",
+    "dist"
   ],
   "scripts": {
     "build:types": "tsc --emitDeclarationOnly -p tsconfig.build.json",
@@ -55,10 +54,16 @@
     "@vuecs/theme-tailwind": "^4.0.0"
   },
   "peerDependencies": {
+    "@authup/client-web-kit": "^1.0.0-beta.46",
     "@vuecs/core": "^3.x",
     "@vuecs/design": "^1.x",
     "@vuecs/theme-tailwind": "^4.x",
     "tailwindcss": "^4.x"
+  },
+  "peerDependenciesMeta": {
+    "@authup/client-web-kit": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

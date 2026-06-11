@@ -1,0 +1,31 @@
+/*
+ * Copyright (c) 2022-2026.
+ * Author Peter Placzek (tada5hi)
+ * For the full copyright and license information,
+ * view the LICENSE file that was distributed with this source code.
+ */
+
+/*
+ * Identity-provider tiles in @authup/client-web-kit's <ALoginForm>
+ * workflow. Constrained by the auth-shell card
+ * (--authup-auth-card-max-width): boxes wrap into rows and never grow
+ * past the card's inner width, so a long provider list or name can't
+ * spill over the card corner. Width comes from the
+ * --authup-login-provider-min-width token (see ./tokens.css).
+ *
+ * Rules live in `@layer components` (before `utilities` in the layer
+ * order, see ../index.css) so a consumer can override any single
+ * property with a plain Tailwind utility on the element.
+ */
+@layer components {
+    .a-login-provider-item {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .a-login-provider-box {
+        min-width: var(--authup-login-provider-min-width);
+        max-width: 100%;
+        overflow-wrap: break-word;
+    }
+}

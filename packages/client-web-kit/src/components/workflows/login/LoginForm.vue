@@ -325,11 +325,11 @@ export default defineComponent({
                         <div
                             v-for="(item, key) in props.data"
                             :key="key"
-                            class="identity-provider-item"
+                            class="a-login-provider-item"
                         >
                             <a
                                 :href="buildIdentityProviderURL(item.id)"
-                                class="btn btn-dark btn-xs p-2 identity-provider-box bg-fg"
+                                class="btn btn-dark btn-xs p-2 a-login-provider-box bg-fg"
                             >
                                 <div class="flex flex-col">
                                     <div class="text-center mb-1">
@@ -350,18 +350,3 @@ export default defineComponent({
         </form>
     </div>
 </template>
-<style scoped>
-/* Constrained by the auth-shell card (max-width 460px): boxes wrap into
-   rows and never grow past the card's inner width, so a long provider
-   list or name can't spill over the card corner. */
-.identity-provider-item {
-    min-width: 0;
-    max-width: 100%;
-}
-
-.identity-provider-box {
-    min-width: 120px;
-    max-width: 100%;
-    word-break: break-word;
-}
-</style>

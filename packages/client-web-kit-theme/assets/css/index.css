@@ -34,12 +34,31 @@
  *     layer), where they beat ANY layered consumer override.
  *   - `theme` first so it stays where Tailwind expects it (the
  *     palette catalog tokens vuecs/design references via `var(...)`).
+ *   - `authup` after `vuecs`, before `base`: the kit-component design
+ *     tokens (`./styles/tokens.css`, `--authup-*`) live here. Same
+ *     reasoning as vuecs — placing them before `base` lets consumer
+ *     apps override any `--authup-*` token from their own
+ *     `@layer base { :root { ... } }` (or an unlayered `:root`) and win.
  */
-@layer theme, vuecs, base, components, utilities;
+@layer theme, vuecs, authup, base, components, utilities;
 
 @import "tailwindcss";
 @import "@vuecs/design";
 @import "@vuecs/theme-tailwind";
+
+/* ------------------------------------------------------------------
+   Kit-component styles
+   Authup-owned styles for the components that live in
+   `@authup/client-web-kit`, behind overridable `--authup-*` tokens.
+
+   `tokens.css` first: it declares the overridable `--authup-*` design
+   tokens (in `@layer authup`) that every partial below consumes.
+   ------------------------------------------------------------------ */
+@import "./styles/tokens.css";
+@import "./styles/picker.css";
+@import "./styles/auth.css";
+@import "./styles/realm.css";
+@import "./styles/login.css";
 
 /*
  * Make Tailwind's `dark:` variant key off the `.dark` class on
@@ -80,30 +99,56 @@
  * Consumer apps add their own `@source` directives for their template
  * trees + any locally-nested vuecs deps in a per-app CSS entry
  * (e.g. `apps/client-web/assets/css/tailwind.css`).
- */
-@source ".";
-/*
- * Both @source entries below resolve via npm-workspace symlinks in
- * dev AND via real node_modules paths in published consumers.
  *
- * @authup/client-web-kit ships `dist/` only (`files: ["dist"]`), so
- * the dist path is the post-publish source of truth. In workspace
- * dev we also scan `src/` because the symlink resolves both — and
- * `dist/` only exists after `npm run build -w packages/client-web-kit`,
- * so without the src fallback a fresh checkout / un-built kit edit
- * would silently lose JIT coverage for its class strings.
- * Tailwind v4 silently skips missing paths, so the src branch is
- * a no-op for published consumers.
+ * Every path below must resolve relative to where this stylesheet
+ * lives in BOTH consumption contexts (Tailwind v4 resolves `@source`
+ * relative to the declaring file and silently skips missing paths):
+ *
+ *   workspace dev:  packages/client-web-kit-theme/assets/css/index.css
+ *   published:      node_modules/@authup/client-web-kit-theme/assets/css/index.css
+ *
+ * Both sit at the same depth inside the package, so most paths below
+ * resolve identically in both layouts.
+ *
+ * `../../src` covers the theme-factory `extend()` class strings in
+ * index.ts (workspace; src is not published); `../../dist` covers the
+ * same strings in the published dist/index.mjs.
  */
-@source "../../../node_modules/@authup/client-web-kit/dist";
-@source "../../../node_modules/@authup/client-web-kit/src";
-@source "../../../node_modules/@vuecs";
-
-/* ------------------------------------------------------------------
-   Kit-component styles
-   Authup-owned styles for the components that live in
-   `@authup/client-web-kit`. Imported here so the kit theme stays
-   self-contained — host apps don't need separate per-stylesheet
-   entries.
-   ------------------------------------------------------------------ */
-@import "./styles/list.css";
+@source "../../src";
+@source "../../dist";
+/*
+ * @authup/client-web-kit — the kit ships class strings on its SFCs
+ * that any consumer renders. `../../../client-web-kit` is deliberately
+ * layout-agnostic: from `packages/client-web-kit-theme/assets/css` it
+ * hits the sibling workspace package, from
+ * `node_modules/@authup/client-web-kit-theme/assets/css` it hits the
+ * sibling installed package. (A `node_modules/@authup/...` hop would
+ * only resolve inside this monorepo — published consumers would
+ * silently lose JIT coverage for every kit class string.)
+ *
+ * The kit ships `dist/` only (`files: ["dist"]`), so the dist path is
+ * the post-publish source of truth. In workspace dev we also scan
+ * `src/` because `dist/` only exists after
+ * `npm run build -w packages/client-web-kit` — without the src
+ * fallback a fresh checkout / un-built kit edit would silently lose
+ * JIT coverage.
+ *
+ * pnpm: the sibling hop only resolves if pnpm places the kit next to
+ * this package in its virtual store — that's why package.json declares
+ * `@authup/client-web-kit` as an optional peerDependency.
+ */
+@source "../../../client-web-kit/dist";
+@source "../../../client-web-kit/src";
+/*
+ * `@vuecs/*` — element class maps applied at runtime via the theme
+ * manager (e.g. `formInput.classes.root = "block w-full rounded-md ..."`).
+ * Without these scopes, every `<VCFormInput>` / `<VCButton>` /
+ * `<VCTable>` renders with `vc-*` defaults and no Tailwind styling.
+ * Two spellings, one per layout: `../../../../node_modules/@vuecs`
+ * from `packages/client-web-kit-theme/assets/css` (repo-root
+ * hoisting), `../../../../@vuecs` from
+ * `node_modules/@authup/client-web-kit-theme/assets/css` (flat
+ * consumer node_modules).
+ */
+@source "../../../../node_modules/@vuecs";
+@source "../../../../@vuecs";

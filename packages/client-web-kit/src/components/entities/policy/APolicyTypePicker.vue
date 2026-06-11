@@ -74,20 +74,3 @@ export default defineComponent({
         </div>
     </div>
 </template>
-<style scoped>
-.a-picker-item {
-    cursor: pointer;
-    border-radius: 4px;
-    min-width: 120px;
-    color: #5b646c;
-    background-color: #ececec;
-    padding: 0.5rem;
-}
-
-.a-picker-item.active,
-.a-picker-item:hover,
-.a-picker-item:active {
-    background-color: #6d7fcc;
-    color: #fff;
-}
-</style>

@@ -37,23 +37,10 @@ export default defineComponent({
     >
         <VCLink
             v-bind="link"
-            class="auth-back-link"
+            class="a-auth-back-link"
         >
             <VCIcon name="fa6-solid:chevron-left" />
             {{ translations.backToLogin }}
         </VCLink>
     </div>
 </template>
-<style scoped>
-.auth-back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.85em;
-    color: var(--vc-color-fg-muted);
-}
-
-.auth-back-link:hover {
-    color: var(--vc-color-fg);
-}
-</style>

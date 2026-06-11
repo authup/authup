@@ -350,7 +350,10 @@ not by client-web:
   is authoritative). `AAuthShell` (utility) provides the shared aurora
   backdrop + theme-token card + compact logo mark used by all SSR auth
   pages (it replaced the legacy hardcoded `#E8E8E8` card in
-  `AAuthorize`).
+  `AAuthorize`). The auth-chrome CSS (shell, gadgets, back-link, realm
+  grid) lives in `@authup/client-web-kit-theme`
+  (`assets/css/styles/{auth,realm}.css`, behind `--authup-auth-*` /
+  `--authup-realm-*` tokens) — kit components ship no `<style>` blocks.
 
 ### Thin Controller Pattern (HTTP Adapter)
 
@@ -981,7 +984,7 @@ new `@authup/client-web-theme` package.
   `apps/server-core/ui/vite.config.ts`. v3 is not supported because
   theme-tailwind uses `@theme` and `--color-*` rebinds.
 - **Bootstrap-compat layer** — the `@layer components` block in
-  `packages/client-web-theme/src/index.css` provides `.btn`,
+  `packages/client-web-theme/assets/css/index.css` provides `.btn`,
   `.row`/`.col-N`, `.alert`, `.badge`, `.nav`/`.navbar`,
   `.modal-*`, `.fade` and a few helpers, each `@apply`ing Tailwind
   utilities under the legacy Bootstrap class names. This keeps
@@ -1010,7 +1013,7 @@ new `@authup/client-web-theme` package.
   `info-*` (50–950). Note: `error`, not `danger`; theme-tailwind
   does not ship a `secondary` or `light`/`dark` palette (Bootstrap
   names map onto `bg-bg-elevated` / `bg-bg-muted` / `bg-fg`).
-- **Authup theme tokens** (`packages/client-web-theme/src/index.css`,
+- **Authup theme tokens** (`packages/client-web-theme/assets/css/index.css`,
   `@layer base`) — authup defines its identity in three token groups and
   bridges them onto the vuecs semantic layer so a single source drives
   both the `<VC*>` components and authup's hand-written chrome/content CSS:
