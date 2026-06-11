@@ -378,6 +378,21 @@ not by client-web:
   restores the authorize request. `sanitizeRelativeRedirect()` in
   `adapters/http/ui/render.ts` rejects absolute / protocol-relative URLs
   (open-redirect guard).
+- **Sub-path deployment**: the SSR UI works behind a prefix-stripping
+  reverse proxy (e.g. `https://example.com/auth/* → authup /*`) with no
+  extra config — the prefix is derived from `publicUrl`'s pathname
+  (`getURLBasePath` in `@authup/kit`). The vite build keeps its fixed
+  `base: '/public/'`; `renderUIPage` rebases emitted asset URLs onto the
+  prefix per request (`rebasePublicAssetURLs` in
+  `adapters/http/ui/base-path.ts`, so the prebuilt dist stays
+  deployment-agnostic). Inside the UI app the same prefix feeds the
+  vue-router history base (`ui/src/app.ts`) and the `useBasePath()`
+  composable (`ui/src/base-path.ts`) that pages use for inter-page hrefs
+  and rendered `redirect` values — `redirect`/`requestPath` params stay
+  server-local (prefix-free); the prefix is applied only when a path is
+  rendered as an href. Server-side `Location` redirects are unaffected
+  (built from full `publicUrl`). A true subdomain (no pathname) yields an
+  empty prefix and identical behavior to before.
 - **Kit form components** (`@authup/client-web-kit`,
   `src/components/workflows/`): `ALoginForm` (renamed from `ALogin`,
   deprecated alias kept; optional `registerLink` / `passwordForgotLink`
@@ -586,6 +601,7 @@ adapters/http/controllers/workflows/
 
 adapters/http/ui/
   render.ts                         — renderUIPage(event, {url, payload}) shared SSR plumbing + sanitizeRelativeRedirect()
+  base-path.ts                      — rebasePublicAssetURLs(html, basePath) sub-path asset rewrite (prefix from publicUrl pathname)
 
 adapters/http/request/helpers/
   actor.ts                          — buildActorContext(req) bridge function

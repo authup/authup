@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import { getURLBasePath } from '@authup/kit';
 import { useRequestCookie } from '@routup/basic/cookie';
 import { load } from 'locter';
 import fs from 'node:fs';
@@ -15,6 +16,7 @@ import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../path.ts';
 import { VITE_SERVER_STORE_KEY } from '../middleware/index.ts';
 import { LOCALE_COOKIE } from '../request/helpers/locale.ts';
+import { rebasePublicAssetURLs } from './base-path.ts';
 import type { UIRenderContext } from './types.ts';
 
 const COLOR_MODE_COOKIE = 'vc-color-mode';
@@ -88,6 +90,11 @@ export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Prom
     // so a reformatted tag / dev-mode transformIndexHtml rewrite still gets
     // the lang + color-mode attributes (no silent FOUC).
     body = body.replace(/<html\b[^>]*>/i, `<html ${htmlAttrs}>`);
+
+    // When authup is publicly served under a sub-path (publicUrl carries a
+    // pathname, e.g. https://example.com/auth), the fixed /public/ vite base
+    // would bypass the proxy mapping — rebase asset URLs onto the prefix.
+    body = rebasePublicAssetURLs(body, getURLBasePath(ctx.payload.config.baseURL));
 
     event.response.headers.set('content-type', 'text/html; charset=utf-8');
     return body;

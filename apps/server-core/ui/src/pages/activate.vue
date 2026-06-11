@@ -9,6 +9,7 @@ import { AActivateForm, AAuthShell, useTranslations } from '@authup/client-web-k
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { defineComponent } from 'vue';
+import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
 
 export default defineComponent({
@@ -31,9 +32,12 @@ export default defineComponent({
             },
         ]);
 
+        const withBasePath = useBasePath();
+
         return {
             data: payload.data,
             translations,
+            withBasePath,
         };
     },
 });
@@ -59,7 +63,7 @@ export default defineComponent({
             v-if="data.redirect"
             class="text-center"
         >
-            <a :href="data.redirect">{{ translations.backToLogin }}</a>
+            <a :href="withBasePath(data.redirect)">{{ translations.backToLogin }}</a>
         </div>
     </AAuthShell>
 </template>
