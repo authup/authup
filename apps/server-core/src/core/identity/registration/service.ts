@@ -19,8 +19,9 @@ import type {
     RegistrationServiceOptions,
 } from './types.ts';
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
-import { MailTemplateName } from '../../mail/types.ts';
+import { MailTemplateName } from '../../mail/index.ts';
 import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IdentityWorkflowContext } from '../types.ts';
 
 export class RegistrationService implements IRegistrationService {
     protected options: RegistrationServiceOptions;
@@ -41,7 +42,7 @@ export class RegistrationService implements IRegistrationService {
         this.realmRepository = ctx.realmRepository;
     }
 
-    async register(data: Record<string, any>): Promise<RegistrationResult> {
+    async register(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<RegistrationResult> {
         if (!this.options.registrationEnabled) {
             throw new RegistrationDisabledError();
         }
@@ -76,9 +77,10 @@ export class RegistrationService implements IRegistrationService {
                     `${this.options.publicUrl.replace(/\/+$/, '')}/activate?token=${entity.activate_hash}` :
                     undefined;
 
-                const mail = this.mailTemplateRenderer.render({
+                const mail = await this.mailTemplateRenderer.render({
                     template: MailTemplateName.REGISTRATION_ACTIVATION,
                     params: { code: entity.activate_hash!, url: activateUrl },
+                    locale: context?.locale,
                 });
 
                 await this.mailClient.send({

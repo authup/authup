@@ -7,6 +7,7 @@
 
 import type { IMailClient, IMailTemplateRenderer } from '../../mail/types.ts';
 import type { IRealmRepository, IUserRepository } from '../../entities/index.ts';
+import type { IdentityWorkflowContext } from '../types.ts';
 
 export type RegistrationServiceOptions = {
     registrationEnabled?: boolean,
@@ -27,6 +28,6 @@ export type RegistrationResult = {
 };
 
 export interface IRegistrationService {
-    register(data: Record<string, any>): Promise<RegistrationResult>;
+    register(data: Record<string, any>, context?: IdentityWorkflowContext): Promise<RegistrationResult>;
     activate(data: { token: string }): Promise<void>;
 }

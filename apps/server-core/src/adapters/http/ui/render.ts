@@ -14,10 +14,10 @@ import type { ViteDevServer } from 'vite';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
 import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../path.ts';
 import { VITE_SERVER_STORE_KEY } from '../middleware/index.ts';
+import { LOCALE_COOKIE } from '../request/helpers/locale.ts';
 import type { UIRenderContext } from './types.ts';
 
 const COLOR_MODE_COOKIE = 'vc-color-mode';
-const LOCALE_COOKIE = 'vc-locale';
 
 // Process-lifetime caches for the immutable production SSR assets. The dist
 // template, manifest and server bundle don't change after boot, so read them

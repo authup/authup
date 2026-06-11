@@ -17,6 +17,7 @@ import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationEntityKey,
     TranslatorTranslationFieldKey,
+    TranslatorTranslationMailKey,
     TranslatorTranslationNamespace,
     TranslatorTranslationVuecsKey,
 } from '../../src';
@@ -34,6 +35,7 @@ const EXPECTED_KEYS: Record<`${TranslatorTranslationNamespace}`, string[]> = {
     [TranslatorTranslationNamespace.APP]: Object.values(TranslatorTranslationAppKey),
     [TranslatorTranslationNamespace.VUECS]: Object.values(TranslatorTranslationVuecsKey),
     [TranslatorTranslationNamespace.ERROR]: Object.values(ErrorCode),
+    [TranslatorTranslationNamespace.MAIL]: Object.values(TranslatorTranslationMailKey),
 };
 
 /**

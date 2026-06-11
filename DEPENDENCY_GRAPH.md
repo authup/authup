@@ -35,7 +35,9 @@ graph TD
 
     subgraph Application Libraries
         client-web-kit
+        client-web-kit-theme
         client-web-nuxt
+        client-web-theme
     end
 
     subgraph Apps
@@ -98,24 +100,32 @@ graph TD
     client-web-kit --> i18n
     client-web-kit --> kit
     client-web-kit --> specs
+    client-web-kit-theme --> client-web-kit
     client-web-nuxt --> access
     client-web-nuxt --> client-web-kit
     client-web-nuxt --> kit
+    client-web-theme --> client-web-kit-theme
 
     %% Apps
     server-core --> access
     server-core --> client-web-kit
+    server-core --> client-web-kit-theme
+    server-core --> client-web-theme
     server-core --> core-http-kit
     server-core --> core-kit
     server-core --> errors
+    server-core --> i18n
     server-core --> kit
     server-core --> server-kit
     server-core --> server-test-kit
     server-core --> specs
     client-web --> client-web-kit
+    client-web --> client-web-kit-theme
     client-web --> client-web-nuxt
+    client-web --> client-web-theme
     client-web --> core-http-kit
     client-web --> core-kit
+    client-web --> i18n
     client-web --> kit
     authup --> client-web
     authup --> core-kit

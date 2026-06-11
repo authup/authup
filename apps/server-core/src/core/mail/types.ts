@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { MailTemplateName, MailTemplateParamsMap } from './template/types.ts';
+
 export type MailAddress = {
     name: string
     address: string
@@ -23,18 +25,8 @@ export interface IMailClient {
 }
 
 // ---------------------------------------------------------------------------
-// Mail templates
+// Mail rendering
 // ---------------------------------------------------------------------------
-
-export enum MailTemplateName {
-    REGISTRATION_ACTIVATION = 'registration-activation',
-    PASSWORD_RESET = 'password-reset',
-}
-
-export type MailTemplateParamsMap = {
-    [MailTemplateName.REGISTRATION_ACTIVATION]: { code: string, url?: string },
-    [MailTemplateName.PASSWORD_RESET]: { code: string, url?: string },
-};
 
 export type MailRenderInput<N extends MailTemplateName = MailTemplateName> = {
     template: N,
@@ -53,8 +45,10 @@ export type MailContent = {
 /**
  * Renders a localized, branded mail (subject + html + text) from a template
  * name and typed params. Decouples mail copy/markup from the workflow
- * services, which pass `{ template, params }` instead of building HTML.
+ * services, which pass `{ template, params, locale }` instead of building
+ * HTML. Async because copy resolution runs through ilingo's store contract
+ * (memory today; file- or remote-backed overrides tomorrow).
  */
 export interface IMailTemplateRenderer {
-    render<N extends MailTemplateName>(input: MailRenderInput<N>): MailContent;
+    render<N extends MailTemplateName>(input: MailRenderInput<N>): Promise<MailContent>;
 }

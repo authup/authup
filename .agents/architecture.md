@@ -297,14 +297,53 @@ Feature gates check these options before proceeding (e.g. `if (!this.options.reg
 
 **Mail templates:** workflow services do **not** build mail HTML inline —
 they depend on the `IMailTemplateRenderer` port (`core/mail/`) and pass
-`{ template: MailTemplateName.X, params: { code, url? }, locale? }`. The
-default `MailTemplateRenderer` resolves localized copy from
-`core/mail/templates.ts` (en/de/fr/es, BCP-47-narrowed, falling back to the
-default locale), html-escapes interpolated values, and wraps the body in a
-small branded inline-styled shell (subject + html + **text** for multipart).
-Mail copy lives in `core/mail` (not `@authup/i18n`) — it's a server-rendered
-concern with no frontend coupling. Pure + injectable, so mail content is
-assertable via `FakeMailClient` (see `test/unit/core/mail/renderer.spec.ts`).
+`{ template: MailTemplateName.X, params, locale? }` (async `render`). The
+mechanism has three layers:
+
+- **Copy** lives in `@authup/i18n` under the `authupMail` namespace
+  (`TranslatorTranslationMailKey`, `catalogs/{en,de,fr,es}/mail.ts`) —
+  the package's locale-parity test enforces per-locale key parity, and
+  values may carry ilingo `{{var}}` placeholders (e.g.
+  `passwordResetExpiry` → `{{minutes}}`). The renderer resolves it through
+  an `Ilingo` instance over `MemoryStore({ data: CATALOGS })`; the
+  requested BCP-47 tag is narrowed via `matchLocale()` → `DEFAULT_LOCALE`
+  fallback, and a missing key throws `InternalError` (fail loud, the
+  parity test makes it unreachable). `render` is async because copy
+  resolution runs through ilingo's store contract — a file-backed
+  (`FSStore`) or remote override store can slot in later without another
+  interface change.
+- **Structure** is a typed block model (`core/mail/format/`): templates
+  (`core/mail/template/templates/*.ts`, registered in
+  `MAIL_TEMPLATE_REGISTRY`) compose `paragraph` / `code` / `action` /
+  `note` blocks via `defineMailTemplate`; the html and **text** parts both
+  derive from the same block list so multipart content cannot drift. The
+  html formatter escapes every interpolated value, stamps
+  `<html lang="...">` from the resolved locale, and emits a hidden
+  preheader (`preview`) for mail-client preview lines.
+- **Hardening:** the renderer centrally drops any `action` block whose URL
+  is not http(s) (`isSafeActionURL` — defense in depth against
+  `javascript:` URLs), and `PASSWORD_RESET_EXPIRES_IN_MINUTES`
+  (`core/identity/password-recovery/constants.ts`) drives both the
+  persisted `reset_expires` and the expiry note in the mail.
+
+The recipient locale is threaded from the HTTP adapter:
+`useRequestLocale(event)` (`adapters/http/request/helpers/locale.ts`)
+returns the first **authored** locale that matches — the `vc-locale`
+cookie when `matchLocale()` accepts it (`auto` and unsupported values
+fall through), else the first supported language in routup's q-ordered
+`getRequestAcceptableLanguages(event)` (so `pt-BR, de;q=0.8` → `de`,
+not the default). The register / password-forgot controllers pass it via
+`IdentityWorkflowContext` (`core/identity/types.ts`) into
+`register(data, context?)` / `forgotPassword(data, context?)`.
+
+The renderer is wired through DI: `MailModule` registers
+`MailTemplateRendererInjectionKey` (singleton) alongside the
+`MailInjectionKey` client, and the controller factories resolve both —
+swapping in a custom renderer (file-based templates, different branding)
+is a registration change, not a code change. Pure + injectable, so mail
+content is assertable via `FakeMailClient` (see
+`test/unit/core/mail/renderer.spec.ts`; `templates.spec.ts` smoke-renders
+every template × locale).
 
 **Mail deep links:** when `publicUrl` is set, the renderer receives a `url`
 param — `<publicUrl>/activate?token=<hash>` for activation and

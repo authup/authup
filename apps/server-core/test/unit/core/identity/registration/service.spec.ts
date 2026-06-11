@@ -101,6 +101,24 @@ describe('core/identity/registration/service', () => {
             expect(mailClient.sent[0].subject).toContain('Activate');
         });
 
+        it('should localize the activation mail from the workflow context', async () => {
+            const service = new RegistrationService({
+                options: {
+                    registrationEnabled: true,
+                    emailVerificationEnabled: true,
+                },
+                mailClient,
+                mailTemplateRenderer,
+                repository,
+                realmRepository,
+            });
+
+            await service.register(createValidRegistrationData(), { locale: 'de-DE' });
+
+            expect(mailClient.sent).toHaveLength(1);
+            expect(mailClient.sent[0].subject).toEqual('Konto aktivieren');
+        });
+
         it('should hash the password before saving', async () => {
             const service = new RegistrationService({
                 options: { registrationEnabled: true },

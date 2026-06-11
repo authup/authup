@@ -15,6 +15,7 @@ import {
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
 import type { IPasswordRecoveryService } from '../../../../../core/index.ts';
+import { useRequestLocale } from '../../../request/index.ts';
 import { serveWorkflowPage } from '../../../ui/index.ts';
 
 export type PasswordForgotControllerOptions = {
@@ -53,7 +54,7 @@ export class PasswordForgotController {
         @DBody() data: PasswordForgotPayload,
         @DContext() event: IAppEvent,
     ): Promise<PasswordForgotResponse> {
-        const result = await this.service.forgotPassword(data);
+        const result = await this.service.forgotPassword(data, { locale: useRequestLocale(event) });
 
         event.response.status = 202;
 

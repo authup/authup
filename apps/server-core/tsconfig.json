@@ -9,6 +9,7 @@
             "@authup/server-test-kit": ["./packages/server-test-kit/src"],
             "@authup/kit": ["./packages/kit/src"],
             "@authup/errors": ["./packages/errors/src"],
+            "@authup/i18n": ["./packages/i18n/src"],
             "@authup/core-kit": ["./packages/core-kit/src"],
             "@authup/core-http-kit": ["./packages/core-http-kit/src"],
             "@authup/specs": ["./packages/specs/src"]

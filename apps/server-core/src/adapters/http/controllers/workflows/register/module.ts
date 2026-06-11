@@ -15,6 +15,7 @@ import {
 } from '@routup/decorators';
 import type { IAppEvent } from 'routup';
 import type { IRegistrationService } from '../../../../../core/index.ts';
+import { useRequestLocale } from '../../../request/index.ts';
 import { serveWorkflowPage } from '../../../ui/index.ts';
 
 export type RegisterControllerOptions = {
@@ -53,7 +54,7 @@ export class RegisterController {
         @DBody() data: RegisterPayload,
         @DContext() event: IAppEvent,
     ): Promise<RegisterResponse> {
-        const result = await this.service.register(data);
+        const result = await this.service.register(data, { locale: useRequestLocale(event) });
 
         event.response.status = 202;
 

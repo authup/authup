@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+export * from './format/types.ts';
 export * from './renderer.ts';
-export * from './templates.ts';
+export * from './template/index.ts';
 export * from './types.ts';

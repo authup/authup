@@ -120,7 +120,6 @@ import {
     ClientService,
     CredentialsAuthenticator,
     IdentityProviderRoleMappingService,
-    MailTemplateRenderer,
     OAuth2ClientAuthenticator,
     PasswordRecoveryService,
     PermissionCheckerService,
@@ -151,7 +150,7 @@ import { IdentityInjectionKey } from '../../identity/index.ts';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { Config } from '../../config/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
-import { MailInjectionKey } from '../../mail/index.ts';
+import { MailInjectionKey, MailTemplateRendererInjectionKey } from '../../mail/index.ts';
 
 export class HTTPControllerModule {
     async mount(router: App, container: IContainer): Promise<void> {
@@ -341,10 +340,11 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const mailClient = container.resolve(MailInjectionKey);
+        const mailTemplateRenderer = container.resolve(MailTemplateRendererInjectionKey);
 
         return new PasswordRecoveryService({
             mailClient,
-            mailTemplateRenderer: new MailTemplateRenderer(),
+            mailTemplateRenderer,
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             options: {
@@ -390,10 +390,11 @@ export class HTTPControllerModule {
             realmRepository,
         });
         const mailClient = container.resolve(MailInjectionKey);
+        const mailTemplateRenderer = container.resolve(MailTemplateRendererInjectionKey);
 
         return new RegistrationService({
             mailClient,
-            mailTemplateRenderer: new MailTemplateRenderer(),
+            mailTemplateRenderer,
             repository,
             realmRepository: new RealmRepositoryAdapter(realmRepository),
             options: {
