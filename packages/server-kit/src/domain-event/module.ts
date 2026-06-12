@@ -32,6 +32,16 @@ export class DomainEventPublisher implements IDomainEventPublisher {
         this.handlers.add(handler);
     }
 
+    async dispose() : Promise<void> {
+        for (const handler of this.handlers) {
+            if (handler.dispose) {
+                await handler.dispose();
+            }
+        }
+
+        this.handlers.clear();
+    }
+
     async safePublish<T extends EventPayload>(
         ctx: DomainEventPublishContext<T>,
     ) : Promise<void> {
