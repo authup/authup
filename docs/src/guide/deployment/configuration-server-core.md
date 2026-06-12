@@ -44,8 +44,8 @@ export default {
 
     /**
      * Additional trusted origins (bare origins, e.g. https://app.example.com).
-     * Each origin is added to the CORS allowlist and to the redirect-URI
-     * allowlist of the per-realm public `web` client (as `<origin>/**`).
+     * Each origin is added to the redirect-URI allowlist of the per-realm
+     * public `web` client (as `<origin>/**`).
      * The origin of `publicUrl` is always trusted implicitly.
      *
      * Security: the `web` client is built-in with global scope, so any

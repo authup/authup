@@ -38,7 +38,10 @@ attempting to create or rename a client to it returns a `400 Bad Request`.
 The `redirect_uri` allowlist is derived from the set of trusted app origins:
 the origin of `publicUrl` plus every entry in `additionalDomains`
 (`ADDITIONAL_DOMAINS`). Each origin contributes one `<origin>/**` redirect
-pattern and is added to the CORS allowlist.
+pattern. (CORS is independent of this list — the API reflects any origin by
+default, since OAuth2 clients are registered at runtime on domains unknown at
+startup; an explicit allowlist can be configured via the `middlewareCors`
+options.)
 
 ::: danger Security
 The `web` client is built-in with the `global` scope, so **any** allowlisted

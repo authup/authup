@@ -580,9 +580,11 @@ endpoint — the `/authorize` verifier already resolves clients via
 - **App origins** come from `getAppOrigins(config)` = `[publicUrl, ...additionalDomains]`
   reduced to bare origins. `ADDITIONAL_DOMAINS` (env, comma-separated) is
   **security-sensitive**: the `web` client is `built_in` (auto-consent) + `global`
-  scope, so any allowlisted origin can obtain a full-permission user token. The
-  same origin list also drives the CORS `origin` allowlist
-  (`mountCors` in `app/modules/http/modules/middleware.ts`). In non-production,
+  scope, so any allowlisted origin can obtain a full-permission user token.
+  The origin list does NOT drive CORS — CORS reflects any origin by default
+  (auth is header-based only, and OAuth2 clients are registered at runtime on
+  domains unknown at startup; an explicit allowlist can be set via the
+  `middlewareCors` config options). In non-production,
   `http://localhost:3000` is dev-seeded so client-web works on first run.
 - **Provisioning (`WebClientProvisioner.ensureForRealm`)** is the single upsert
   mechanism, run two ways and sharing the same factory so they can't drift:
