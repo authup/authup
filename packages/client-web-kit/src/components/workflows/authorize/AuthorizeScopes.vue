@@ -9,12 +9,12 @@ import type { Client, Scope } from '@authup/core-kit';
 import { deserializeOAuth2Scope } from '@authup/specs';
 import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
-import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { injectHTTPClient, useTranslationsForNamespace } from '../../../core';
+import { ITranslateT } from '@ilingo/vue';
+import { injectHTTPClient } from '../../../core';
 import AuthorizeScope from './AuthorizeScope.vue';
 
 export default defineComponent({
-    components: { AuthorizeScope },
+    components: { AuthorizeScope, ITranslateT },
     props: {
         client: {
             type: Object as PropType<Client>,
@@ -25,16 +25,6 @@ export default defineComponent({
     },
     setup(props) {
         const httpClient = injectHTTPClient();
-
-        const translationsClient = useTranslationsForNamespace(
-            TranslatorTranslationNamespace.CLIENT,
-            [
-                {
-                    key: TranslatorTranslationClientKey.SCOPE_GRANT_INTRO,
-                    data: { client: props.client.name },
-                },
-            ],
-        );
 
         const scopesRequestedNormalized = computed<string[]>(() => {
             if (!props.scopesRequested) {
@@ -70,7 +60,6 @@ export default defineComponent({
         return {
             scopesRequestedNormalized,
             scopesAvailableNormalized,
-            translationsClient,
         };
     },
 });
@@ -78,7 +67,11 @@ export default defineComponent({
 <template>
     <div v-if="scopesAvailableNormalized.length > 0">
         <div>
-            {{ translationsClient.scopeGrantIntro }}
+            <ITranslateT path="authupClient.scopeGrantIntro">
+                <template #client>
+                    <strong>{{ client.name }}</strong>
+                </template>
+            </ITranslateT>
         </div>
         <div class="flex-col">
             <template

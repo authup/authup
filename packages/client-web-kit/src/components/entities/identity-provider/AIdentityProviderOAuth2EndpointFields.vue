@@ -7,11 +7,16 @@
 
 <script lang="ts">
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import type { OpenIDProviderMetadata } from '@authup/specs';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties } from '../../../core';
+import { assignFormProperties, useTranslations } from '../../../core';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
@@ -63,8 +68,24 @@ export default defineComponent({
             form.token_url = data.token_endpoint;
         };
 
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.TOKEN,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.AUTHORIZE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.USER_INFO,
+            },
+        ]);
+
         return {
             v,
+            translations,
             handleDiscoveryLookup,
         };
     },
@@ -84,7 +105,7 @@ export default defineComponent({
             :validation="value"
         >
             <template #label>
-                Token
+                {{ translations.token }}
             </template>
             <VCFormInput
                 v-model="v.fields.token_url.$model.value"
@@ -101,7 +122,7 @@ export default defineComponent({
             :validation="value"
         >
             <template #label>
-                Authorize
+                {{ translations.authorize }}
             </template>
             <VCFormInput
                 v-model="v.fields.authorize_url.$model.value"
@@ -118,7 +139,7 @@ export default defineComponent({
             :validation="value"
         >
             <template #label>
-                UserInfo
+                {{ translations.userInfo }}
             </template>
             <VCFormInput
                 v-model="v.fields.user_info_url.$model.value"

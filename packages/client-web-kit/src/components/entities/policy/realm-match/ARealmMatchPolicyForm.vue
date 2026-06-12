@@ -2,7 +2,12 @@
 import { type PropType, defineComponent, reactive } from 'vue';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
-import { assignFormProperties } from '../../../../core';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { ITranslateT } from '@ilingo/vue';
+import { assignFormProperties, useTranslationsForNamespace } from '../../../../core';
 import type { Policy } from '@authup/core-kit';
 import { VCFormGroup, VCFormSwitch } from '@vuecs/forms';
 import type { RealmMatchPolicy } from '@authup/access';
@@ -12,11 +17,12 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 
 export default defineComponent({
     components: {
-        AFormInputList, 
-        VCFormGroup, 
+        AFormInputList,
+        VCFormGroup,
         VCFormSwitch,
 
         IFieldValidation,
+        ITranslateT,
     },
     props: { entity: { type: Object as PropType<Partial<Policy>> } },
     emits: ['updated'],
@@ -59,9 +65,17 @@ export default defineComponent({
             handleUpdated();
         };
 
+        const translations = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.REALM_MATCH_STRICT_HINT },
+            ],
+        );
+
         return {
             handleUpdated,
             handleAttributeNameChanged,
+            translations,
             v,
         };
     },
@@ -95,7 +109,7 @@ export default defineComponent({
                     >
                         <template #label="iProps">
                             <label :for="iProps.id">
-                                Only match if the attribute is strict equal to the name?
+                                {{ translations.realmMatchStrictHint }}
                             </label>
                         </template>
                     </VCFormSwitch>
@@ -113,8 +127,11 @@ export default defineComponent({
                     >
                         <template #label="iProps">
                             <label :for="iProps.id">
-                                Determines if resources with null realm-id/name value should match all identity realms.<br>
-                                If true, any identity realm can access resources with null realm-id/name values.
+                                <ITranslateT path="authupClient.realmMatchNullMatchAllHint">
+                                    <template #br>
+                                        <br>
+                                    </template>
+                                </ITranslateT>
                             </label>
                         </template>
                     </VCFormSwitch>
@@ -132,8 +149,11 @@ export default defineComponent({
                     >
                         <template #label="iProps">
                             <label :for="iProps.id">
-                                Specifies whether the master realm of an identity should match all realm-id/name attributes, including null.<br>
-                                If true, the master realm can access any resource regardless of its realm value.
+                                <ITranslateT path="authupClient.realmMatchMasterMatchAllHint">
+                                    <template #br>
+                                        <br>
+                                    </template>
+                                </ITranslateT>
                             </label>
                         </template>
                     </VCFormSwitch>

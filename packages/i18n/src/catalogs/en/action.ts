@@ -22,4 +22,9 @@ export const TranslatorTranslationActionEnglish : NamespaceTranslations<`${Trans
     [TranslatorTranslationActionKey.ACTIVATE]: 'Activate',
     [TranslatorTranslationActionKey.RESET]: 'Reset',
     [TranslatorTranslationActionKey.SEND]: 'Send',
+    [TranslatorTranslationActionKey.BACK]: 'Back',
+    [TranslatorTranslationActionKey.CLOSE]: 'Close',
+    [TranslatorTranslationActionKey.LOOKUP]: 'Lookup',
+    [TranslatorTranslationActionKey.SHOW]: 'Show',
+    [TranslatorTranslationActionKey.HIDE]: 'Hide',
 };

@@ -20,11 +20,12 @@ import {
     TranslatorTranslationCommonKey, 
     TranslatorTranslationNamespace, 
 } from '@authup/i18n';
+import { ITranslateT } from '@ilingo/vue';
 import { injectHTTPClient, useTranslations, useTranslationsForNamespace } from '../../../core';
 import AuthorizeScopes from './AuthorizeScopes.vue';
 
 export default defineComponent({
-    components: { AuthorizeScopes },
+    components: { AuthorizeScopes, ITranslateT },
     props: {
         client: {
             type: Object as PropType<Client>,
@@ -57,12 +58,9 @@ export default defineComponent({
         const translationsClient = useTranslationsForNamespace(
             TranslatorTranslationNamespace.CLIENT,
             [
-                { key: TranslatorTranslationClientKey.ONCE_AUTHORIZED_REDIRECT },
                 { key: TranslatorTranslationClientKey.ACTIVE_SINCE },
-                {
-                    key: TranslatorTranslationClientKey.GOVERNED_BY,
-                    data: { client: props.client.name },
-                },
+                { key: TranslatorTranslationClientKey.PRIVACY_POLICY },
+                { key: TranslatorTranslationClientKey.TERMS_OF_SERVICE },
             ],
         );
 
@@ -175,7 +173,11 @@ export default defineComponent({
                 </div>
                 <div class="ms-1">
                     <small>
-                        {{ translationsClient.onceAuthorizedRedirect }} <strong>{{ codeRequest.redirect_uri }}</strong>
+                        <ITranslateT path="authupClient.onceAuthorizedRedirect">
+                            <template #target>
+                                <strong>{{ codeRequest.redirect_uri }}</strong>
+                            </template>
+                        </ITranslateT>
                     </small>
                 </div>
             </div>
@@ -185,7 +187,17 @@ export default defineComponent({
                 </div>
                 <div class="ms-1">
                     <small>
-                        {{ translationsClient.governedBy }}
+                        <ITranslateT
+                            path="authupClient.governedBy"
+                            :data="{ client: client.name }"
+                        >
+                            <template #privacyPolicy>
+                                {{ translationsClient.privacyPolicy }}
+                            </template>
+                            <template #termsOfService>
+                                {{ translationsClient.termsOfService }}
+                            </template>
+                        </ITranslateT>
                     </small>
                 </div>
             </div>

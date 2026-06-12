@@ -6,7 +6,8 @@
   -->
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { assignFormProperties } from '../../../core';
+import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -47,7 +48,34 @@ export default defineComponent({
         onChange(updated, () => init());
         init();
 
-        return { v };
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.FILTER,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.BASE_DN,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.CLASS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.NAME_ATTRIBUTE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.MEMBER_ATTRIBUTE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.MEMBER_USER_ATTRIBUTE,
+            },
+        ]);
+
+        return { v, translations };
     },
 });
 
@@ -61,7 +89,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Filter
+                    {{ translations.filter }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.group_filter.$model.value"
@@ -75,7 +103,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Base DN
+                    {{ translations.baseDn }}
                 </template>
                 <VCFormInput v-model="v.fields.group_base_dn.$model.value" />
             </VCFormGroup>
@@ -86,7 +114,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Class
+                    {{ translations.class }}
                 </template>
                 <VCFormInput v-model="v.fields.group_class.$model.value" />
             </VCFormGroup>
@@ -97,7 +125,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Name Attribute
+                    {{ translations.nameAttribute }}
                 </template>
                 <VCFormInput v-model="v.fields.group_name_attribute.$model.value" />
             </VCFormGroup>
@@ -108,7 +136,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Member Attribute
+                    {{ translations.memberAttribute }}
                 </template>
                 <VCFormInput v-model="v.fields.group_member_attribute.$model.value" />
             </VCFormGroup>
@@ -119,7 +147,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Member User Attribute
+                    {{ translations.memberUserAttribute }}
                 </template>
                 <VCFormInput v-model="v.fields.group_member_user_attribute.$model.value" />
             </VCFormGroup>

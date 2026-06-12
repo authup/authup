@@ -13,7 +13,12 @@ import {
     ref,
 } from 'vue';
 import AFormInputListItem from './AFormInputListItem.vue';
-import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { useTranslations } from '../../../core';
 
 export default defineComponent({
@@ -36,8 +41,19 @@ export default defineComponent({
     setup(props, setup) {
         const translationsAction = useTranslations([
             {
-                namespace: TranslatorTranslationNamespace.ACTION, 
-                key: TranslatorTranslationActionKey.ADD, 
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.ADD,
+            },
+        ]);
+
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.NAMES,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.NO_ITEMS,
             },
         ]);
 
@@ -116,6 +132,7 @@ export default defineComponent({
             items,
 
             translationsAction,
+            translationsDefault,
         };
     },
 });
@@ -125,7 +142,7 @@ export default defineComponent({
         <div class="flex flex-row">
             <div class="self-end">
                 <slot name="label">
-                    Names
+                    {{ translationsDefault.names }}
                 </slot>
             </div>
             <div class="ms-auto">
@@ -143,7 +160,7 @@ export default defineComponent({
             <template v-if="items.length === 0">
                 <slot name="noItems">
                     <div class="alert alert-sm alert-info">
-                        The form list has no items yet
+                        {{ translationsDefault.noItems }}
                     </div>
                 </slot>
             </template>

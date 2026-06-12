@@ -9,10 +9,16 @@ import {
     watch,
 } from 'vue';
 import { useValidup } from '@validup/vue';
-import { 
-    assignFormProperties, 
-    injectStore, 
-    storeToRefs, 
+import {
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import {
+    assignFormProperties,
+    injectStore,
+    storeToRefs,
+    useTranslations,
 } from '../../../core';
 import { ValidatorGroup, generateName } from '@authup/kit';
 import type { Policy } from '@authup/core-kit';
@@ -127,10 +133,35 @@ export default defineComponent({
             });
         };
 
+        const translationsDefault = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.NAME,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DISPLAY_NAME,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DESCRIPTION,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.INVERT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.REALM,
+                count: 1,
+            },
+        ]);
+
         return {
             isEditing,
             realmId,
             handleUpdated,
+            translationsDefault,
             typeOptions,
             v,
         };
@@ -146,7 +177,7 @@ export default defineComponent({
             >
                 <VCFormGroup :validation="value">
                     <template #label>
-                        Name
+                        {{ translationsDefault.name }}
                     </template>
                     <ANameInput
                         :model-value="v.fields.name.$model.value"
@@ -160,7 +191,7 @@ export default defineComponent({
             >
                 <VCFormGroup :validation="value">
                     <template #label>
-                        Display Name
+                        {{ translationsDefault.displayName }}
                     </template>
                     <VCFormInput
                         :model-value="v.fields.display_name.$model.value ?? ''"
@@ -175,7 +206,7 @@ export default defineComponent({
             >
                 <VCFormGroup :validation="value">
                     <template #label>
-                        Description
+                        {{ translationsDefault.description }}
                     </template>
                     <VCFormTextarea
                         :model-value="v.fields.description.$model.value ?? ''"
@@ -197,7 +228,7 @@ export default defineComponent({
                     >
                         <template #label="iProps">
                             <label :for="iProps.id">
-                                Invert?
+                                {{ translationsDefault.invert }}
                             </label>
                         </template>
                     </VCFormSwitch>
@@ -214,7 +245,7 @@ export default defineComponent({
             >
                 <VCFormGroup :validation="value">
                     <template #label>
-                        Realm
+                        {{ translationsDefault.realm }}
                     </template>
                     <ARealmPicker
                         :value="v.fields.realm_id.$model.value"

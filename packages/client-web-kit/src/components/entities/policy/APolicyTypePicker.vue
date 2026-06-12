@@ -3,6 +3,11 @@ import type { PropType } from 'vue';
 import { computed, defineComponent, ref } from 'vue';
 import type { FormOption } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
+import {
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { useTranslationsForNamespace } from '../../../core';
 
 export default defineComponent({
     props: {
@@ -42,10 +47,18 @@ export default defineComponent({
             setup.emit('pick', val);
         };
 
+        const translations = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.FIELD,
+            [
+                { key: TranslatorTranslationFieldKey.TYPE },
+            ],
+        );
+
         return {
             option,
             options,
             pick,
+            translations,
         };
     },
 });
@@ -53,7 +66,7 @@ export default defineComponent({
 <template>
     <div class="flex flex-col gap-2">
         <div>
-            <h6>Type</h6>
+            <h6>{{ translations.type }}</h6>
 
             <div class="flex flex-row gap-2 flex-wrap">
                 <template

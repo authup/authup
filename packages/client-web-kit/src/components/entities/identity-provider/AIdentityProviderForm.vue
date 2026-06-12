@@ -6,6 +6,7 @@
   -->
 <script lang="ts">
 import {
+    computed,
     defineComponent,
     ref,
     toRef,
@@ -13,8 +14,10 @@ import {
 } from 'vue';
 import { IdentityProviderProtocol, getIdentityProviderProtocolForPreset } from '@authup/core-kit';
 import type { IdentityProvider, IdentityProviderPreset } from '@authup/core-kit';
+import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import type { PropType } from 'vue';
 import { onChange, useUpdatedAt } from '../../../composables';
+import { useTranslations } from '../../../core';
 import AIdentityProviderLdapForm from './AIdentityProviderLdapForm.vue';
 import AIdentityProviderPicker from './AIdentityProviderPicker.vue';
 import AIdentityProviderOAuth2Form from './AIdentityProviderOAuth2Form.vue';
@@ -88,7 +91,16 @@ export default defineComponent({
             p === IdentityProviderProtocol.OIDC;
         const isLdap = (p: string | null) => p === IdentityProviderProtocol.LDAP;
 
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED,
+                data: { name: computed(() => preset.value ?? protocol.value ?? '') },
+            },
+        ]);
+
         return {
+            translations,
             protocol,
             preset,
             localEntity,
@@ -140,7 +152,7 @@ export default defineComponent({
             v-else-if="protocol || preset"
             class="alert alert-warning alert-sm"
         >
-            {{ preset ?? protocol }} is not supported yet :/
+            {{ translations.protocolNotSupported }}
         </div>
     </div>
 </template>

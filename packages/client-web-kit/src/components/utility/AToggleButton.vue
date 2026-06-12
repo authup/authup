@@ -6,6 +6,8 @@
   -->
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
+import { TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslationsForNamespace } from '../../core';
 
 /**
  * Tri-state toggle button used in entity pickers' #itemActions slot
@@ -27,9 +29,18 @@ export default defineComponent({
     },
     emits: ['changed'],
     setup(props, { emit }) {
+        const translationsClient = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.SELECTION_UPDATING },
+                { key: TranslatorTranslationClientKey.SELECTION_REMOVE },
+                { key: TranslatorTranslationClientKey.SELECTION_ADD },
+            ],
+        );
+
         const ariaLabel = computed(() => {
-            if (props.isBusy) return 'Updating selection';
-            return props.value ? 'Remove from selection' : 'Add to selection';
+            if (props.isBusy) return translationsClient.selectionUpdating;
+            return props.value ? translationsClient.selectionRemove : translationsClient.selectionAdd;
         });
 
         return {

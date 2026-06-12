@@ -12,6 +12,12 @@ import type { Policy } from '@authup/core-kit';
 import { DecisionStrategy } from '@authup/kit';
 import type { FormOption } from '@vuecs/forms';
 import { VCFormGroup, VCFormSelect } from '@vuecs/forms';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { useTranslations } from '../../../../core';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import APolicyPicker from '../APolicyPicker.vue';
 import { IFieldValidation } from '@ilingo/validup-vue';
@@ -112,16 +118,47 @@ export default defineComponent({
             emitUpdated();
         };
 
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DECISION_STRATEGY,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.CHILDREN,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.OPTION_NONE_UNANIMOUS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_AFFIRMATIVE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_CONSENSUS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_UNANIMOUS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_DEFAULT,
+            },
+        ]);
+
         const decisionStrategyHint = computed(() => {
             switch (form.decision_strategy) {
                 case DecisionStrategy.AFFIRMATIVE:
-                    return 'At least one child policy must evaluate positively.';
+                    return translations.decisionStrategyHintAffirmative;
                 case DecisionStrategy.CONSENSUS:
-                    return 'More child policies must evaluate positively than negatively.';
+                    return translations.decisionStrategyHintConsensus;
                 case DecisionStrategy.UNANIMOUS:
-                    return 'All child policies must evaluate positively.';
+                    return translations.decisionStrategyHintUnanimous;
                 default:
-                    return 'No strategy selected. Defaults to unanimous (all child policies must evaluate positively).';
+                    return translations.decisionStrategyHintDefault;
             }
         });
 
@@ -135,6 +172,7 @@ export default defineComponent({
             handleDecisionStrategyUpdated,
             decisionStrategyHint,
             decisionStrategyOptions,
+            translations,
             v,
             query,
         };
@@ -149,12 +187,12 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Decision Strategy
+                    {{ translations.decisionStrategy }}
                 </template>
                 <VCFormSelect
                     v-model="v.fields.decision_strategy.$model.value"
                     :options="decisionStrategyOptions"
-                    placeholder="-- None (default: unanimous) --"
+                    :placeholder="translations.optionNoneUnanimous"
                     @update:model-value="handleDecisionStrategyUpdated"
                 />
                 <div class="alert alert-sm alert-info mt-1 mb-0">
@@ -168,7 +206,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Children
+                    {{ translations.children }}
                 </template>
                 <APolicyChildrenPicker
                     :parent-id="id"

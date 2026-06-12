@@ -6,6 +6,12 @@
   -->
 <script lang="ts">
 import { Client } from '@authup/core-http-kit';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { isOpenIDProviderMetadata } from '@authup/specs';
 import { createValidator } from '@validup/zod';
 import { Container } from 'validup';
@@ -19,6 +25,7 @@ import {
 } from 'vue';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import { IFieldValidation } from '@ilingo/validup-vue';
+import { useTranslations, useTranslator } from '../../../core';
 
 // Standalone form (not a registered child) — uses its own URL
 // validator since `@authup/core-kit` doesn't ship a "discovery URL"
@@ -52,6 +59,18 @@ export default defineComponent({
 
         const apiClient = new Client();
 
+        const translate = useTranslator();
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DISCOVERY,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.LOOKUP,
+            },
+        ]);
+
         const lookup = async () => {
             if (busy.value || v.fields.url.$invalid.value) {
                 return;
@@ -71,7 +90,11 @@ export default defineComponent({
                 lookupValid.value = false;
 
                 if (e instanceof Error) {
-                    message.value = `Lookup failed with: ${e.message}`;
+                    message.value = await translate({
+                        namespace: TranslatorTranslationNamespace.CLIENT,
+                        key: TranslatorTranslationClientKey.LOOKUP_FAILED,
+                        data: { message: e.message },
+                    });
                     setup.emit('failed', e);
                 }
             } finally {
@@ -86,6 +109,7 @@ export default defineComponent({
             message,
             lookupValid,
             isDisabled,
+            translations,
             lookup,
         };
     },
@@ -101,7 +125,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Discovery
+                    {{ translations.discovery }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.url.$model.value"
@@ -125,7 +149,7 @@ export default defineComponent({
             <VCIcon
                 name="fa6-solid:magnifying-glass"
                 class="pe-1"
-            /> Lookup
+            /> {{ translations.lookup }}
         </button>
     </div>
 </template>

@@ -6,7 +6,12 @@
   -->
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { assignFormProperties } from '../../../core';
+import {
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -42,7 +47,23 @@ export default defineComponent({
         onChange(updated, () => init());
         init();
 
-        return { v, passwordShow };
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.USER,
+                count: 1,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PASSWORD,
+            },
+        ]);
+
+        return {
+            v, 
+            passwordShow, 
+            translations, 
+        };
     },
 });
 
@@ -56,7 +77,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    User
+                    {{ translations.user }}
                 </template>
                 <VCFormInput v-model="v.fields.user.$model.value" />
             </VCFormGroup>
@@ -67,7 +88,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Password
+                    {{ translations.password }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.password.$model.value"

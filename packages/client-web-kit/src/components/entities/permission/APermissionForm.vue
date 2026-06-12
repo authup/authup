@@ -9,12 +9,18 @@ import type { Permission } from '@authup/core-kit';
 import { EntityType, PermissionValidator } from '@authup/core-kit';
 import { DecisionStrategy, ValidatorGroup, generateName } from '@authup/kit';
 import { useValidup } from '@validup/vue';
-import { TranslatorTranslationEntityKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { 
-    assignFormProperties, 
-    injectStore, 
-    storeToRefs, 
-    useTranslations, 
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import {
+    assignFormProperties,
+    injectStore,
+    storeToRefs,
+    useTranslations,
+    useTranslationsForNamespace,
 } from '../../../core';
 import type { PropType } from 'vue';
 import {
@@ -41,19 +47,6 @@ import {
 } from '../../utility';
 import { ARealmPicker } from '../realm';
 import { IFieldValidation } from '@ilingo/validup-vue';
-
-function decisionStrategyHint(value: string): string {
-    switch (value) {
-        case DecisionStrategy.AFFIRMATIVE:
-            return 'At least one policy must evaluate positively.';
-        case DecisionStrategy.CONSENSUS:
-            return 'More policies must evaluate positively than negatively.';
-        case DecisionStrategy.UNANIMOUS:
-            return 'All policies must evaluate positively.';
-        default:
-            return 'No strategy selected. Defaults to unanimous (all policies must evaluate positively).';
-    }
-}
 
 export default defineComponent({
     components: {
@@ -182,7 +175,29 @@ export default defineComponent({
             ],
         );
 
-        const decisionStrategyHintComputed = computed(() => decisionStrategyHint(form.decision_strategy));
+        const translationsClient = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.OPTION_NONE_UNANIMOUS },
+                { key: TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_AFFIRMATIVE },
+                { key: TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_CONSENSUS },
+                { key: TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_UNANIMOUS },
+                { key: TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_DEFAULT },
+            ],
+        );
+
+        const decisionStrategyHintComputed = computed(() => {
+            switch (form.decision_strategy) {
+                case DecisionStrategy.AFFIRMATIVE:
+                    return translationsClient.decisionStrategyHintAffirmative;
+                case DecisionStrategy.CONSENSUS:
+                    return translationsClient.decisionStrategyHintConsensus;
+                case DecisionStrategy.UNANIMOUS:
+                    return translationsClient.decisionStrategyHintUnanimous;
+                default:
+                    return translationsClient.decisionStrategyHintDefault;
+            }
+        });
 
         return {
             busy,
@@ -193,6 +208,7 @@ export default defineComponent({
             decisionStrategyOptions,
             decisionStrategyHint: decisionStrategyHintComputed,
             translationsDefault,
+            translationsClient,
             submit,
         };
     },
@@ -259,7 +275,7 @@ export default defineComponent({
                 <VCFormSelect
                     v-model="v.fields.decision_strategy.$model.value"
                     :options="decisionStrategyOptions"
-                    placeholder="-- None (default: unanimous) --"
+                    :placeholder="translationsClient.optionNoneUnanimous"
                 />
                 <div class="alert alert-sm alert-info mt-1 mb-0">
                     {{ decisionStrategyHint }}

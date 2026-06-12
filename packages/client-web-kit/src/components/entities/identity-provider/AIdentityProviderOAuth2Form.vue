@@ -20,10 +20,16 @@ import type {
     IdentityProviderPreset,
 } from '@authup/core-kit';
 import { EntityType, IdentityProviderProtocol } from '@authup/core-kit';
+import {
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { VCFormGroup, VCFormInput } from '@vuecs/forms';
 import {
     extractValidupResultsFromChild,
     injectHTTPClient,
+    useTranslations,
 } from '../../../core';
 import { onChange, useIsEditing } from '../../../composables';
 import {
@@ -157,7 +163,31 @@ export default defineComponent({
 
         const oidcEnabled = computed(() => protocolEff.value === IdentityProviderProtocol.OIDC);
 
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.DETAILS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.BASIC,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.SECURITY,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.ENDPOINTS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.REDIRECT_URL,
+            },
+        ]);
+
         return {
+            translations,
             data: manager.data,
             busy,
             isEditing,
@@ -213,11 +243,11 @@ export default defineComponent({
 
         <template v-if="isEditing">
             <h6>
-                <VCIcon name="fa6-solid:circle-info" /> Details
+                <VCIcon name="fa6-solid:circle-info" /> {{ translations.details }}
             </h6>
             <VCFormGroup>
                 <template #label>
-                    Redirect URL
+                    {{ translations.redirectUrl }}
                 </template>
                 <VCFormInput
                     :model-value="authorizeUri"
@@ -229,7 +259,7 @@ export default defineComponent({
         <div class="row">
             <div class="col">
                 <h6>
-                    <VCIcon name="fa6-solid:wrench" /> Basic
+                    <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
                 </h6>
                 <AIdentityProviderBasicFields
                     ref="basicFieldsRef"
@@ -238,7 +268,7 @@ export default defineComponent({
             </div>
             <div class="col">
                 <h6>
-                    <VCIcon name="fa6-solid:lock" /> Security
+                    <VCIcon name="fa6-solid:lock" /> {{ translations.security }}
                 </h6>
                 <AIdentityProviderOAuth2ClientFields :entity="data" />
             </div>
@@ -246,7 +276,7 @@ export default defineComponent({
 
         <template v-if="!presetEff">
             <h6>
-                <VCIcon name="fa6-solid:vihara" /> Endpoints
+                <VCIcon name="fa6-solid:vihara" /> {{ translations.endpoints }}
             </h6>
             <AIdentityProviderOAuth2EndpointFields
                 :entity="data"
