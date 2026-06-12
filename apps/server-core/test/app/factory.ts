@@ -32,7 +32,6 @@ async function buildTestConfig(): Promise<Config> {
     config.robotAdminEnabled = true;
 
     config.redis = false;
-    config.vault = false;
 
     config.registrationEnabled = true;
     config.emailVerificationEnabled = true;

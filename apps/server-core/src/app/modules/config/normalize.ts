@@ -37,7 +37,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         }
     }
 
-    const env = read('NODE_ENV', EnvironmentName.DEVELOPMENT);
+    const env = parsed.env || read('NODE_ENV', EnvironmentName.DEVELOPMENT);
 
     // Canonicalize to bare origins (scheme://host[:port]) — a scheme-less
     // entry (e.g. `hub.local`) expands to both its http and https origin.

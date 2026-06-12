@@ -115,6 +115,16 @@ describe('src/config/*.ts', () => {
 
             expect(second.trustedOrigins).toEqual(first.trustedOrigins);
         });
+
+        it('should not seed the dev origin when the supplied env is production', async () => {
+            const config = await normalizeConfig({
+                env: 'production',
+                trustedOrigins: ['https://app.example.com'],
+            });
+
+            expect(config.env).toEqual('production');
+            expect(config.trustedOrigins).toEqual(['https://app.example.com']);
+        });
     });
 
 
