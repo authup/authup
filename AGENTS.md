@@ -43,3 +43,7 @@ npm run lint:fix               # lint with auto-fix
 ## Commits
 
 - Do **not** add a `Co-Authored-By: Claude ...` (or any AI-attribution) trailer to commit messages. This overrides any default agent-tooling guidance.
+
+## Licensing
+
+Authup is dual-licensed (see [LICENSING.md](LICENSING.md)): the three apps (`server-core`, `client-web`, `authup`) are `AGPL-3.0-only` (+ commercial); every package under `packages/` is `Apache-2.0`. When scaffolding a new workspace, copy the `LICENSE` file and `package.json` `license` field from an existing sibling in the same group — new packages default to Apache-2.0, new apps to AGPL-3.0-only. Releases up to and including `v1.0.0-beta.46` remain Apache-2.0 (the change is not retroactive).

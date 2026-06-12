@@ -7,7 +7,7 @@
 [![main](https://github.com/authup/authup/actions/workflows/main.yml/badge.svg)](https://github.com/authup/authup/actions/workflows/main.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/authup/authup/badge.svg)](https://snyk.io/test/github/authup/authup)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
-[![license](https://img.shields.io/github/license/authup/authup?style=flat-square)](https://github.com/authup/authup/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/authup/authup?style=flat-square)](https://github.com/authup/authup/blob/master/LICENSING.md)
 [![stars](https://img.shields.io/github/stars/authup/authup?style=flat-square)](https://github.com/authup/authup)
 ## What is Authup?
 Authup is an authentication & authorization system.
@@ -168,4 +168,14 @@ These guidelines will help to ensure that contributions are made effectively and
 
 Made with 💚
 
-Published under [Apache 2.0 License](./LICENSE).
+Authup is dual-licensed:
+
+- The **applications** ([server-core](apps/server-core), [client-web](apps/client-web), [authup CLI](apps/authup))
+  are published under the [AGPL-3.0](./LICENSE) — free for research, education, non-profits, and
+  open-source projects. A commercial license is available for organizations that cannot meet the
+  AGPL's conditions.
+- All **packages** under [packages/](packages) (client libraries, SDKs, server adapters, shared kits)
+  remain under the permissive [Apache 2.0 License](packages/kit/LICENSE) — integrating your own
+  application with an Authup server never subjects it to the AGPL.
+
+See [LICENSING.md](./LICENSING.md) for details, or contact **contact@tada5hi.net** for commercial licensing.

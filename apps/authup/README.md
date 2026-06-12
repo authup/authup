@@ -40,4 +40,6 @@ To customize the settings follow the [documentation](#documentation).
 
 Made with 💚
 
-Published under [Apache 2.0 License](./LICENSE).
+Published under the [AGPL-3.0 License](./LICENSE).
+A commercial license is available for organizations that cannot meet the AGPL's conditions —
+see [LICENSING.md](../../LICENSING.md) or contact **contact@tada5hi.net**.
