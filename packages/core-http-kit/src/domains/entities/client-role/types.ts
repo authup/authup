@@ -5,7 +5,11 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntityAPISlim } from '../../types-base';
+
 import type { ClientRole } from '@authup/core-kit';
 
 // Mirrors `ClientRoleValidator` mounts in @authup/core-kit.
 export type ClientRoleCreatePayload = Pick<ClientRole, 'client_id' | 'role_id'>;
+
+export interface IClientRoleAPI extends IEntityAPISlim<ClientRole, ClientRoleCreatePayload> {}

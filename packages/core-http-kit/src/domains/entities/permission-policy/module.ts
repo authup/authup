@@ -9,10 +9,13 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { PermissionPolicy } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { PermissionPolicyCreatePayload } from './types';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    IPermissionPolicyAPI,
+    PermissionPolicyCreatePayload,
+} from './types';
 
-export class PermissionPolicyAPI extends BaseAPI implements EntityAPISlim<PermissionPolicy> {
+export class PermissionPolicyAPI extends BaseAPI implements IPermissionPolicyAPI {
     async getMany(data?: BuildInput<PermissionPolicy>) : Promise<EntityCollectionResponse<PermissionPolicy>> {
         const response = await this.client.get(`permission-policies${buildQuery(data)}`);
         return response.data;

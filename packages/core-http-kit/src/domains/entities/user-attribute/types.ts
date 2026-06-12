@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntityAPI } from '../../types-base';
+
 import type { UserAttribute } from '@authup/core-kit';
 
 // `UserAttribute` has no dedicated validator class — `UserAttributeService` validates
@@ -13,3 +15,5 @@ export type UserAttributeCreatePayload = Pick<UserAttribute, 'name'> &
     Partial<Pick<UserAttribute, 'value' | 'user_id'>>;
 export type UserAttributeUpdatePayload = Partial<UserAttributeCreatePayload>;
 export type UserAttributeSavePayload = UserAttributeCreatePayload;
+
+export interface IUserAttributeAPI extends IEntityAPI<UserAttribute, UserAttributeCreatePayload, UserAttributeUpdatePayload> {}

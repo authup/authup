@@ -10,14 +10,15 @@ import { buildQuery } from 'rapiq';
 import type { Robot } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
+    IRobotAPI,
     RobotCreatePayload,
     RobotSavePayload,
     RobotUpdatePayload,
 } from './types';
 
-export class RobotAPI extends BaseAPI implements EntityAPI<Robot> {
+export class RobotAPI extends BaseAPI implements IRobotAPI {
     async getMany(
         options?: BuildInput<Robot>,
     ): Promise<EntityCollectionResponse<Robot>> {

@@ -9,10 +9,13 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientScope } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { ClientScopeCreatePayload } from './types';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    ClientScopeCreatePayload,
+    IClientScopeAPI,
+} from './types';
 
-export class ClientScopeAPI extends BaseAPI implements EntityAPISlim<ClientScope> {
+export class ClientScopeAPI extends BaseAPI implements IClientScopeAPI {
     async getMany(data?: BuildInput<ClientScope>) : Promise<EntityCollectionResponse<ClientScope>> {
         const response = await this.client.get(`client-scopes${buildQuery(data)}`);
         return response.data;

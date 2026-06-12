@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
 import { TypedToken } from 'eldin';
 import type { serve } from 'routup/node';
 
@@ -21,5 +21,5 @@ export const HTTPInjectionKey = {
      * a single instance shared across concurrent renders would leak
      * tokens between sessions.
      */
-    UIHttpClientFactory: new TypedToken<() => Client>('UIHttpClientFactory'),
+    UIHttpClientFactory: new TypedToken<() => IClient>('UIHttpClientFactory'),
 } as const;

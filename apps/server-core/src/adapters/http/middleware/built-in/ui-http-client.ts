@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
 import type { App } from 'routup';
 import { defineCoreHandler } from 'routup';
 
@@ -20,7 +20,7 @@ import { defineCoreHandler } from 'routup';
  */
 export const UI_HTTP_CLIENT_FACTORY_STORE_KEY = Symbol('UIHttpClientFactory');
 
-export function registerUIHttpClientMiddleware(router: App, httpClientFactory: () => Client) {
+export function registerUIHttpClientMiddleware(router: App, httpClientFactory: () => IClient) {
     router.use(defineCoreHandler((event) => {
         event.store[UI_HTTP_CLIENT_FACTORY_STORE_KEY] = httpClientFactory;
         return event.next();

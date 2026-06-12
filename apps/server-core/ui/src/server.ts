@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { Client } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
 import type { SSRContext } from 'vue/server-renderer';
 import { renderToString } from 'vue/server-renderer';
 import { basename } from 'node:path';
@@ -21,7 +21,7 @@ export type RenderContext = {
      * Pre-built HTTP client handed to the Vue app instead of one
      * constructed from payload.config.baseURL (test injection).
      */
-    httpClient?: Client
+    httpClient?: IClient
 };
 
 export async function render(ctx: RenderContext) {

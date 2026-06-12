@@ -7,9 +7,9 @@
 
 import { isObject } from '@authup/kit';
 import { isJWKErrorCode, isJWTErrorCode } from '@authup/specs';
-import type { TokenGrantResponse } from '@hapic/oauth2';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { EventEmitter } from '@posva/event-emitter';
-import type { AuthorizationHeader, Client as BaseClient } from 'hapic';
+import type { AuthorizationHeader } from 'hapic';
 import {
     HeaderName,
     HookName, 
@@ -19,6 +19,7 @@ import {
     stringifyAuthorizationHeader, 
     unsetHeader,
 } from 'hapic';
+import type { ClientBase } from '../client';
 import { getClientErrorCode } from '../helpers';
 import type { TokenCreator } from '../token-creator';
 import { ClientAuthenticationHookEventName } from './constants';
@@ -34,7 +35,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
 
     protected authorizationHeader : AuthorizationHeader | undefined;
 
-    protected clients : BaseClient[];
+    protected clients : ClientBase[];
 
     protected creator: TokenCreator;
 
@@ -42,7 +43,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
 
     protected timer : ReturnType<typeof setTimeout> | undefined;
 
-    protected refreshPromise?: Promise<TokenGrantResponse>;
+    protected refreshPromise?: Promise<OAuth2TokenGrantResponse>;
 
     // ------------------------------------------------
 
@@ -94,11 +95,11 @@ export class ClientAuthenticationHook extends EventEmitter<{
 
     // ------------------------------------------------
 
-    isAttached(client: BaseClient) {
+    isAttached(client: ClientBase) {
         return HOOK_SYMBOL in client;
     }
 
-    attach(client: BaseClient) {
+    attach(client: ClientBase) {
         if (this.authorizationHeader) {
             client.setAuthorizationHeader(this.authorizationHeader);
         } else {
@@ -194,7 +195,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         }
     }
 
-    detach(client: BaseClient) {
+    detach(client: ClientBase) {
         client.unsetAuthorizationHeader();
 
         const index = this.clients.indexOf(client);
@@ -242,7 +243,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
      *
      * @throws ClientError
      */
-    async refresh() : Promise<TokenGrantResponse> {
+    async refresh() : Promise<OAuth2TokenGrantResponse> {
         if (this.refreshPromise) {
             return this.refreshPromise;
         }

@@ -10,14 +10,15 @@ import { buildQuery } from 'rapiq';
 import type { Client } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ClientCreatePayload,
     ClientSavePayload,
     ClientUpdatePayload,
+    IClientAPI,
 } from './types';
 
-export class ClientAPI extends BaseAPI implements EntityAPI<Client> {
+export class ClientAPI extends BaseAPI implements IClientAPI {
     async getMany(
         options?: BuildInput<Client>,
     ): Promise<EntityCollectionResponse<Client>> {

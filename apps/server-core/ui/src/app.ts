@@ -11,7 +11,7 @@ import {
     install,
     syncTranslatorLocaleFromManager,
 } from '@authup/client-web-kit';
-import type { Client } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
 import { matchLocale } from '@authup/i18n';
 import { getURLBasePath, omitRecord } from '@authup/kit';
 import { createPinia } from 'pinia';
@@ -48,7 +48,7 @@ addCollection(faSolid);
 addCollection(faBrands);
 
 export type CreateAppOptions = {
-    httpClient?: Client
+    httpClient?: IClient
 };
 
 export function createApp(payload: HydrationPayload, options: CreateAppOptions = {}) : {

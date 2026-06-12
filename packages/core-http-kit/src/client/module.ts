@@ -6,7 +6,6 @@
  */
 
 import { Client as BaseClient, HookName, isClientError } from 'hapic';
-import type { Options } from '@hapic/oauth2';
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
 import {
     ClientAPI,
@@ -35,9 +34,10 @@ import {
     UserPermissionAPI,
     UserRoleAPI,
 } from '../domains';
-import type { ClientOptions } from './type';
+import type { OAuth2APIOptions } from '../domains';
+import type { ClientOptions, IClient } from './type';
 
-export class Client extends BaseClient {
+export class Client extends BaseClient implements IClient {
     public readonly token : OAuth2TokenAPI;
 
     public readonly authorize : OAuth2AuthorizeAPI;
@@ -91,7 +91,7 @@ export class Client extends BaseClient {
     constructor(config: ClientOptions = {}) {
         super(config);
 
-        const options : Options = {
+        const options : OAuth2APIOptions = {
             authorizationEndpoint: 'authorize',
             introspectionEndpoint: 'token/introspect',
             tokenEndpoint: 'token',
@@ -101,11 +101,11 @@ export class Client extends BaseClient {
         const baseURL = this.getBaseURL();
 
         if (typeof baseURL === 'string') {
-            const keys = Object.keys(options);
-            for (const key_ of keys) {
-                const key = key_ as keyof Options;
-                if (typeof options[key] === 'string') {
-                    options[key] = new URL(options[key], baseURL).href;
+            const keys = Object.keys(options) as (keyof OAuth2APIOptions)[];
+            for (const key of keys) {
+                const value = options[key];
+                if (typeof value === 'string') {
+                    (options as Record<string, any>)[key] = new URL(value, baseURL).href;
                 }
             }
         }

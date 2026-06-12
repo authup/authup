@@ -9,13 +9,14 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { RobotPermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
+    IRobotPermissionAPI,
     RobotPermissionCreatePayload,
     RobotPermissionUpdatePayload,
 } from './types';
 
-export class RobotPermissionAPI extends BaseAPI implements EntityAPI<RobotPermission> {
+export class RobotPermissionAPI extends BaseAPI implements IRobotPermissionAPI {
     async getMany(data?: BuildInput<RobotPermission>) : Promise<EntityCollectionResponse<RobotPermission>> {
         const response = await this.client.get(`robot-permissions${buildQuery(data)}`);
         return response.data;

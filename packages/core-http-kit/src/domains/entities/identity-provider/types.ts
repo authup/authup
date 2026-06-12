@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+
 import type { IdentityProvider } from '@authup/core-kit';
 
 // Mirrors `IdentityProviderValidator` mounts in @authup/core-kit. IdPs carry per-protocol
@@ -20,3 +22,8 @@ export type IdentityProviderUpdatePayload = Pick<IdentityProvider, 'protocol'> &
     Partial<Pick<IdentityProvider, 'name' | 'enabled' | 'display_name' | 'realm_id' | 'preset'>> &
     Record<string, any>;
 export type IdentityProviderSavePayload = IdentityProviderCreatePayload;
+
+export interface IIdentityProviderAPI extends IEntityAPI<IdentityProvider, IdentityProviderCreatePayload, IdentityProviderUpdatePayload> {
+    getAuthorizeUri(id: IdentityProvider['id']) : string;
+    createOrUpdate(idOrName: string, data: IdentityProviderSavePayload) : Promise<EntityRecordResponse<IdentityProvider>>;
+}

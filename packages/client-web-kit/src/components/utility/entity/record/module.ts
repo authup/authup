@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { EntityAPI } from '@authup/core-http-kit';
+import type { IEntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
 import type { ObjectLiteral } from '@authup/kit';
 import { extendObject, hasOwnProperty } from '@authup/kit';
@@ -39,7 +39,7 @@ function create<
     ctx: EntityManagerCreateContext<TYPE, RECORD>,
 ) : EntityManager<RECORD> {
     const client = injectHTTPClient();
-    let domainAPI : EntityAPI<RECORD> | undefined;
+    let domainAPI : IEntityAPI<RECORD> | undefined;
     if (hasOwnProperty(client, ctx.type)) {
         domainAPI = client[ctx.type] as any;
     }

@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+
 import type { Scope } from '@authup/core-kit';
 
 // Mirrors `ScopeValidator` mounts in @authup/core-kit.
@@ -12,3 +14,7 @@ export type ScopeCreatePayload = Pick<Scope, 'name'> &
     Partial<Pick<Scope, 'display_name' | 'description' | 'realm_id'>>;
 export type ScopeUpdatePayload = Partial<ScopeCreatePayload>;
 export type ScopeSavePayload = ScopeCreatePayload;
+
+export interface IScopeAPI extends IEntityAPI<Scope, ScopeCreatePayload, ScopeUpdatePayload> {
+    createOrUpdate(idOrName: string, data: ScopeSavePayload) : Promise<EntityRecordResponse<Scope>>;
+}

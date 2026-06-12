@@ -6,7 +6,7 @@
  */
 
 import type { ObjectLiteral } from '@authup/kit';
-import type { Client, RequestBaseOptions } from 'hapic';
+import type { RequestBaseOptions, Response } from 'hapic';
 import type { BuildInput } from 'rapiq';
 
 export type EntityRecordResponse<R> = R;
@@ -27,17 +27,38 @@ export type DomainEntityID<T> = T extends DomainEntityWithID ?
     T['id'] :
     never;
 
-export interface EntityAPISlim<T extends ObjectLiteral> {
+export interface IEntityAPISlim<
+    T extends ObjectLiteral,
+    TCreate = Partial<T>,
+> {
     getMany(record?: BuildInput<T>) : Promise<EntityCollectionResponse<T>>;
     getOne(id: DomainEntityID<T>, record?: BuildInput<T>) : Promise<EntityRecordResponse<T>>;
     delete(id: DomainEntityID<T>) : Promise<EntityRecordResponse<T>>;
-    create(data: Partial<T>) : Promise<EntityRecordResponse<T>>;
+    create(data: TCreate) : Promise<EntityRecordResponse<T>>;
 }
 
-export interface EntityAPI<T extends ObjectLiteral> extends EntityAPISlim<T> {
-    update(id: DomainEntityID<T>, data: Partial<T>) : Promise<EntityRecordResponse<T>>;
+export interface IEntityAPI<
+    T extends ObjectLiteral,
+    TCreate = Partial<T>,
+    TUpdate = Partial<T>,
+> extends IEntityAPISlim<T, TCreate> {
+    update(id: DomainEntityID<T>, data: TUpdate) : Promise<EntityRecordResponse<T>>;
 }
+
+/**
+ * Minimal transport surface the domain layer depends on. hapic's
+ * Client satisfies it structurally — it is the default implementation,
+ * but any object with these methods (a fake, another http library
+ * adapter) can take its place.
+ */
+export type ApiTransport = {
+    getBaseURL() : string | undefined,
+    get<T = any>(url: string, config?: RequestBaseOptions) : Promise<Response<T>>,
+    post<T = any>(url: string, body?: any, config?: RequestBaseOptions) : Promise<Response<T>>,
+    put<T = any>(url: string, body?: any, config?: RequestBaseOptions) : Promise<Response<T>>,
+    delete<T = any>(url: string, config?: RequestBaseOptions) : Promise<Response<T>>,
+};
 
 export type BaseAPIContext = {
-    client?: Client | RequestBaseOptions
+    client?: ApiTransport | RequestBaseOptions
 };
