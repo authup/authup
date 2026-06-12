@@ -969,7 +969,7 @@ When adding a `name`-style column on a new entity (or extending an existing one)
 
 1. **Validator** — chain `.trim().toLowerCase()` after `z.string()` (Zod) or before the format check (validup) and before any length / pattern check.
 2. **Repository** — use `=` for name lookups, never `LIKE :name`.
-3. **Migration** — include the new column in the canonical-name data migration (see `.agents/plans/008-canonical-name-migration-ledger.md`) with an up-front collision pre-check.
+3. **Migration** — ship a data migration canonicalizing existing rows with an up-front collision pre-check, following the pattern of `apps/server-core/src/adapters/database/migrations/{mysql,postgres}/1779267068441-Default.ts`.
 
 ## UI Layer (`apps/client-web`, `apps/server-core/ui`, `packages/client-web-kit`)
 

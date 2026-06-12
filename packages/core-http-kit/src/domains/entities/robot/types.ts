@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+
 import type { Robot } from '@authup/core-kit';
 
 // Mirrors `RobotValidator` mounts in @authup/core-kit.
@@ -17,3 +19,8 @@ export type RobotCreatePayload = Pick<Robot, 'name'> &
         'realm_id'>>;
 export type RobotUpdatePayload = Partial<RobotCreatePayload>;
 export type RobotSavePayload = RobotCreatePayload;
+
+export interface IRobotAPI extends IEntityAPI<Robot, RobotCreatePayload, RobotUpdatePayload> {
+    createOrUpdate(idOrName: string, data: RobotSavePayload) : Promise<EntityRecordResponse<Robot>>;
+    integrity(id: Robot['id'] | Robot['name']) : Promise<EntityRecordResponse<Robot>>;
+}

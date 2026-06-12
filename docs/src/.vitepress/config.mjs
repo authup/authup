@@ -413,7 +413,11 @@ export default defineConfig({
                                 },
                                 {
                                     text: 'Client',
-                                    link: '/sdks/javascript/core-http-kit/client', 
+                                    link: '/sdks/javascript/core-http-kit/client',
+                                },
+                                {
+                                    text: 'Testing',
+                                    link: '/sdks/javascript/core-http-kit/testing',
                                 },
                             ],
                         },

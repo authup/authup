@@ -6,6 +6,7 @@
  */
 
 import { Client, ClientAuthenticationHook, ClientAuthenticationHookEventName } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
 import type { App } from 'vue';
 import { storeToRefs } from 'pinia';
 import { hasHTTPClientAuthenticationHook, provideHTTPClientAuthenticationHook } from './singleton';
@@ -32,7 +33,7 @@ export function installHTTPClientAuthenticationHook(
                 throw new Error('No refresh token available.');
             }
 
-            const client = new Client({ baseURL: options.baseURL });
+            const client : IClient = options.httpClient ?? new Client({ baseURL: options.baseURL });
             return client.token.createWithRefreshToken({ refresh_token: refreshToken.value });
         },
         timer: !options.isServer,

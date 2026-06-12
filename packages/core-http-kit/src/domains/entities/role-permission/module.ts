@@ -9,20 +9,21 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { RolePermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
+    IRolePermissionAPI,
     RolePermissionCreatePayload,
     RolePermissionUpdatePayload,
 } from './types';
 
-export class RolePermissionAPI extends BaseAPI implements EntityAPI<RolePermission> {
+export class RolePermissionAPI extends BaseAPI implements IRolePermissionAPI {
     async getMany(data?: BuildInput<RolePermission>) : Promise<EntityCollectionResponse<RolePermission>> {
         const response = await this.client.get(`role-permissions${buildQuery(data)}`);
         return response.data;
     }
 
-    async getOne(id: RolePermission['id']) : Promise<EntityRecordResponse<RolePermission>> {
-        const response = await this.client.get(`role-permissions/${id}`);
+    async getOne(id: RolePermission['id'], record?: BuildInput<RolePermission>) : Promise<EntityRecordResponse<RolePermission>> {
+        const response = await this.client.get(`role-permissions/${id}${buildQuery(record)}`);
 
         return response.data;
     }

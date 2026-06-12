@@ -21,7 +21,9 @@ import {
     registerErrorMiddleware,
     registerPrometheusMiddleware,
     registerRateLimitMiddleware,
+    registerUIHttpClientMiddleware,
 } from '../../../../adapters/http/index.ts';
+import { HTTPInjectionKey } from '../constants.ts';
 import { DIST_PATH } from '../../../../path.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
 import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
@@ -44,6 +46,7 @@ export class HTTPMiddlewareModule {
         await this.mountLogger(router, container);
         await this.mountCors(router, container);
         await this.mountAssets(router);
+        await this.mountUIHttpClient(router, container);
         await this.mountBasic(router);
         await this.mountRateLimit(router, container);
 
@@ -89,6 +92,14 @@ export class HTTPMiddlewareModule {
 
     async mountAssets(router: App): Promise<void> {
         await registerAssetsMiddleware(router);
+    }
+
+    async mountUIHttpClient(router: App, container: IContainer): Promise<void> {
+        if (!container.has(HTTPInjectionKey.UIHttpClient)) {
+            return;
+        }
+
+        registerUIHttpClientMiddleware(router, () => container.resolve(HTTPInjectionKey.UIHttpClient));
     }
 
     async mountBasic(router: App): Promise<void> {

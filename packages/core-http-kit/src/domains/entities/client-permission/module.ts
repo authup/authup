@@ -9,13 +9,14 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { ClientPermission } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ClientPermissionCreatePayload,
     ClientPermissionUpdatePayload,
+    IClientPermissionAPI,
 } from './types';
 
-export class ClientPermissionAPI extends BaseAPI implements EntityAPI<ClientPermission> {
+export class ClientPermissionAPI extends BaseAPI implements IClientPermissionAPI {
     async getMany(data?: BuildInput<ClientPermission>) : Promise<EntityCollectionResponse<ClientPermission>> {
         const response = await this.client.get(`client-permissions${buildQuery(data)}`);
         return response.data;

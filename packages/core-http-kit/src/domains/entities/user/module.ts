@@ -10,9 +10,10 @@ import { buildQuery } from 'rapiq';
 import type { User } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     ActivateResponse,
+    IUserAPI,
     PasswordForgotPayload,
     PasswordForgotResponse,
     PasswordResetPayload,
@@ -24,7 +25,7 @@ import type {
     UserUpdatePayload,
 } from './types';
 
-export class UserAPI extends BaseAPI implements EntityAPI<User> {
+export class UserAPI extends BaseAPI implements IUserAPI {
     async getMany(
         options?: BuildInput<User>,
     ): Promise<EntityCollectionResponse<User>> {

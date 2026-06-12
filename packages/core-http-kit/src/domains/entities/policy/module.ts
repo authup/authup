@@ -10,18 +10,19 @@ import { buildQuery } from 'rapiq';
 import type { Policy } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
     BuiltInPolicyCreatePayload,
     BuiltInPolicyResponse,
     BuiltInPolicyUpdatePayload,
+    IPolicyAPI,
     PolicyAPICheckResponse,
     PolicyCreatePayload,
     PolicyResponse,
     PolicyUpdatePayload,
 } from './types';
 
-export class PolicyAPI extends BaseAPI implements EntityAPI<Policy> {
+export class PolicyAPI extends BaseAPI implements IPolicyAPI {
     async getMany<
         OUTPUT extends PolicyResponse = PolicyResponse,
     >(data?: BuildInput<Policy & { parent_id?: string | null }>): Promise<EntityCollectionResponse<OUTPUT>> {

@@ -6,7 +6,7 @@
  */
 
 import { hasOwnProperty } from '@authup/kit';
-import type { EntityAPI } from '@authup/core-http-kit';
+import type { IEntityAPI } from '@authup/core-http-kit';
 import type { EntityTypeMap } from '@authup/core-kit';
 import {
     VCList,
@@ -84,7 +84,7 @@ function create<
 
     const client = injectHTTPClient();
 
-    let domainAPI : EntityAPI<Entity<RECORD>> | undefined;
+    let domainAPI : IEntityAPI<Entity<RECORD>> | undefined;
     if (hasOwnProperty(client, context.type)) {
         domainAPI = client[context.type] as any;
     }

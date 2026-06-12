@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+
 import type { Role } from '@authup/core-kit';
 
 // Mirrors `RoleValidator` mounts in @authup/core-kit.
@@ -12,3 +14,7 @@ export type RoleCreatePayload = Pick<Role, 'name'> &
     Partial<Pick<Role, 'display_name' | 'description' | 'client_id' | 'realm_id'>>;
 export type RoleUpdatePayload = Partial<RoleCreatePayload>;
 export type RoleSavePayload = RoleCreatePayload;
+
+export interface IRoleAPI extends IEntityAPI<Role, RoleCreatePayload, RoleUpdatePayload> {
+    createOrUpdate(idOrName: string, data: RoleSavePayload) : Promise<EntityRecordResponse<Role>>;
+}

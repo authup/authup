@@ -5,6 +5,6 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenGrantResponse } from '@hapic/oauth2';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 
-export type TokenCreator = () => Promise<TokenGrantResponse>;
+export type TokenCreator = () => Promise<OAuth2TokenGrantResponse>;

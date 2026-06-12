@@ -16,3 +16,7 @@ export type StatusResponse = {
     date: string,
     features: StatusResponseFeatures,
 };
+
+export interface IStatusAPI {
+    get() : Promise<StatusResponse>;
+}

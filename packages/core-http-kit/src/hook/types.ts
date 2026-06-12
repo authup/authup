@@ -5,7 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { TokenGrantResponse } from '@hapic/oauth2';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import type { ClientError } from 'hapic';
 import type { TokenCreator } from '../token-creator';
 import type { ClientAuthenticationHookEventName } from './constants';
@@ -30,7 +30,7 @@ export type ClientAuthenticationHookOptions = {
 };
 
 export type ClientAuthenticationHookEvents = {
-    [ClientAuthenticationHookEventName.REFRESH_FINISHED]: TokenGrantResponse,
+    [ClientAuthenticationHookEventName.REFRESH_FINISHED]: OAuth2TokenGrantResponse,
     [ClientAuthenticationHookEventName.REFRESH_FAILED]: ClientError | null,
 
     [ClientAuthenticationHookEventName.HEADER_SET]: []

@@ -13,6 +13,7 @@ import type {
     _ExtractGettersFromSetupStore, 
     _ExtractStateFromSetupStore,
 } from 'pinia';
+import type { IClient } from '@authup/core-http-kit';
 import type { CookieGetFn, CookieSetFn, CookieUnsetFn } from '../../types';
 import type { createStore } from './create';
 import type { StoreDispatcher } from './dispatcher';
@@ -34,6 +35,7 @@ export type StoreDefinition = BaseStoreDefinition<
 
 export type StoreCreateContext = {
     baseURL?: string,
+    httpClient?: IClient,
     dispatcher: StoreDispatcher
 };
 
@@ -45,6 +47,7 @@ export type StoreLoginContext = {
 
 export type StoreInstallOptions = {
     baseURL?: string,
+    httpClient?: IClient,
     cookieSet?: CookieSetFn,
     cookieUnset?: CookieUnsetFn,
     cookieGet?: CookieGetFn,

@@ -10,20 +10,21 @@ import { buildQuery } from 'rapiq';
 import type { UserPermission } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
+    IUserPermissionAPI,
     UserPermissionCreatePayload,
     UserPermissionUpdatePayload,
 } from './types';
 
-export class UserPermissionAPI extends BaseAPI implements EntityAPI<UserPermission> {
+export class UserPermissionAPI extends BaseAPI implements IUserPermissionAPI {
     async getMany(data?: BuildInput<UserPermission>) : Promise<EntityCollectionResponse<UserPermission>> {
         const response = await this.client.get(`user-permissions${buildQuery(data)}`);
         return response.data;
     }
 
-    async getOne(id: UserPermission['id']) : Promise<EntityRecordResponse<UserPermission>> {
-        const response = await this.client.get(`user-permissions/${id}`);
+    async getOne(id: UserPermission['id'], record?: BuildInput<UserPermission>) : Promise<EntityRecordResponse<UserPermission>> {
+        const response = await this.client.get(`user-permissions/${id}${buildQuery(record)}`);
 
         return response.data;
     }

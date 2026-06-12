@@ -13,8 +13,9 @@ import path from 'node:path';
 import type { IAppEvent } from 'routup';
 import type { ViteDevServer } from 'vite';
 import { CodeTransformation, isCodeTransformation } from 'typeorm-extension';
+import type { IClient } from '@authup/core-http-kit';
 import { UI_DIST_PATH, UI_SOURCE_PATH } from '../../../path.ts';
-import { VITE_SERVER_STORE_KEY } from '../middleware/index.ts';
+import { UI_HTTP_CLIENT_FACTORY_STORE_KEY, VITE_SERVER_STORE_KEY } from '../middleware/index.ts';
 import { LOCALE_COOKIE } from '../request/helpers/locale.ts';
 import { rebasePublicAssetURLs } from './base-path.ts';
 import type { UIRenderContext } from './types.ts';
@@ -69,10 +70,13 @@ export async function renderUIPage(event: IAppEvent, ctx: UIRenderContext): Prom
         )).render);
     }
 
+    const httpClientFactory = event.store[UI_HTTP_CLIENT_FACTORY_STORE_KEY] as (() => IClient) | undefined;
+
     const [appHtml, preloadLinks] = await render({
         url: ctx.url,
         manifest,
         payload: ctx.payload,
+        httpClient: httpClientFactory ? httpClientFactory() : undefined,
     });
 
     let body = html

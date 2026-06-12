@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IClient } from '@authup/core-http-kit';
 import type { Pinia } from 'pinia';
 import type {
     AAttributeNamesPolicyForm,
@@ -76,7 +77,7 @@ import type {
     AUsers,
 } from './components';
 
-export interface CookieOptions {
+export type CookieOptions = {
     path?: string;
     expires?: Date;
     maxAge?: number;
@@ -85,7 +86,7 @@ export interface CookieOptions {
     httpOnly?: boolean;
     sameSite?: boolean | 'none' | 'lax' | 'strict';
     partitioned?: boolean;
-}
+};
 export type CookieSetFn = (
     key: string,
     value: any,
@@ -103,6 +104,11 @@ export type CookieGetFn = (
 
 export type Options = {
     baseURL: string,
+    /**
+     * Pre-built HTTP client used instead of constructing one from baseURL.
+     * Covers the store, the authentication hook and the provided client.
+     */
+    httpClient?: IClient,
 
     realtime?: boolean,
     realtimeURL?: string,

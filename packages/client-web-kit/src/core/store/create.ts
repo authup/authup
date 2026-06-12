@@ -11,6 +11,7 @@ import {
     PolicyEngine,
 } from '@authup/access';
 import { OAuth2Error } from '@authup/specs';
+import type { IClient } from '@authup/core-http-kit';
 import { computed, ref } from 'vue';
 import type {
     OAuth2TokenGrantResponse,
@@ -59,7 +60,7 @@ function createPromiseShareWrapperFn<F extends InputFn>(
 type RealmMinimal = Pick<Realm, 'id' | 'name'>;
 
 export function createStore(context: StoreCreateContext) {
-    const client = new Client({ baseURL: context.baseURL });
+    const client : IClient = context.httpClient ?? new Client({ baseURL: context.baseURL });
 
     const cookiesRead = ref<boolean>(false);
     const setCookiesRead = (value: boolean) => {

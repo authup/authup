@@ -10,17 +10,18 @@ import { buildQuery } from 'rapiq';
 import type { IdentityProvider } from '@authup/core-kit';
 import { buildIdentityProviderAuthorizePath } from '@authup/core-kit';
 import { cleanDoubleSlashes, nullifyEmptyObjectProperties } from '../../../utils';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import { BaseAPI } from '../../base';
 import type {
+    IIdentityProviderAPI,
     IdentityProviderCreatePayload,
     IdentityProviderSavePayload,
     IdentityProviderUpdatePayload,
 } from './types';
 
-export class IdentityProviderAPI extends BaseAPI implements EntityAPI<IdentityProvider> {
+export class IdentityProviderAPI extends BaseAPI implements IIdentityProviderAPI {
     getAuthorizeUri(id: IdentityProvider['id']): string {
-        return cleanDoubleSlashes(`${this.client.defaults.baseURL}/${buildIdentityProviderAuthorizePath(id)}`);
+        return cleanDoubleSlashes(`${this.client.getBaseURL()}/${buildIdentityProviderAuthorizePath(id)}`);
     }
 
     async getMany(record?: BuildInput<IdentityProvider>): Promise<EntityCollectionResponse<IdentityProvider>> {

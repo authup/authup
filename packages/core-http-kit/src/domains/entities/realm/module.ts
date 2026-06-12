@@ -10,22 +10,23 @@ import { buildQuery } from 'rapiq';
 import type { Realm } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
+    IRealmAPI,
     RealmCreatePayload,
     RealmSavePayload,
     RealmUpdatePayload,
 } from './types';
 
-export class RealmAPI extends BaseAPI implements EntityAPI<Realm> {
+export class RealmAPI extends BaseAPI implements IRealmAPI {
     async getMany(data?: BuildInput<Realm>): Promise<EntityCollectionResponse<Realm>> {
         const response = await this.client.get(`realms${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: Realm['id']): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.get(`realms/${id}`);
+    async getOne(id: Realm['id'], record?: BuildInput<Realm>): Promise<EntityRecordResponse<Realm>> {
+        const response = await this.client.get(`realms/${id}${buildQuery(record)}`);
 
         return response.data;
     }

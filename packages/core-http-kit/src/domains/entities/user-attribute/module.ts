@@ -10,21 +10,22 @@ import { buildQuery } from 'rapiq';
 import type { UserAttribute } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
+    IUserAttributeAPI,
     UserAttributeCreatePayload,
     UserAttributeUpdatePayload,
 } from './types';
 
-export class UserAttributeAPI extends BaseAPI implements EntityAPI<UserAttribute> {
+export class UserAttributeAPI extends BaseAPI implements IUserAttributeAPI {
     async getMany(data?: BuildInput<UserAttribute>): Promise<EntityCollectionResponse<UserAttribute>> {
         const response = await this.client.get(`user-attributes${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttribute>> {
-        const response = await this.client.get(`user-attributes/${roleId}`);
+    async getOne(roleId: UserAttribute['id'], record?: BuildInput<UserAttribute>): Promise<EntityRecordResponse<UserAttribute>> {
+        const response = await this.client.get(`user-attributes/${roleId}${buildQuery(record)}`);
 
         return response.data;
     }

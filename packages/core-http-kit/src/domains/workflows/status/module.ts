@@ -6,9 +6,9 @@
  */
 
 import { BaseAPI } from '../../base';
-import type { StatusResponse } from './types';
+import type { IStatusAPI, StatusResponse } from './types';
 
-export class StatusAPI extends BaseAPI {
+export class StatusAPI extends BaseAPI implements IStatusAPI {
     async get(): Promise<StatusResponse> {
         const response = await this.client.get('');
 

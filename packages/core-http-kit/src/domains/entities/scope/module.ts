@@ -10,22 +10,23 @@ import { buildQuery } from 'rapiq';
 import type { Scope } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
+    IScopeAPI,
     ScopeCreatePayload,
     ScopeSavePayload,
     ScopeUpdatePayload,
 } from './types';
 
-export class ScopeAPI extends BaseAPI implements EntityAPI<Scope> {
+export class ScopeAPI extends BaseAPI implements IScopeAPI {
     async getMany(data?: BuildInput<Scope>): Promise<EntityCollectionResponse<Scope>> {
         const response = await this.client.get(`scopes${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: Scope['id']): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.get(`scopes/${id}`);
+    async getOne(id: Scope['id'], record?: BuildInput<Scope>): Promise<EntityRecordResponse<Scope>> {
+        const response = await this.client.get(`scopes/${id}${buildQuery(record)}`);
 
         return response.data;
     }

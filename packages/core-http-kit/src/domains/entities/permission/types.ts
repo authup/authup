@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+
 import type { Permission } from '@authup/core-kit';
 
 export type PermissionAPICheckResponse = {
@@ -17,3 +19,8 @@ export type PermissionCreatePayload = Pick<Permission, 'name'> &
     Partial<Pick<Permission, 'display_name' | 'description' | 'client_id' | 'realm_id' | 'decision_strategy'>>;
 export type PermissionUpdatePayload = Partial<PermissionCreatePayload>;
 export type PermissionSavePayload = PermissionCreatePayload;
+
+export interface IPermissionAPI extends IEntityAPI<Permission, PermissionCreatePayload, PermissionUpdatePayload> {
+    createOrUpdate(idOrName: string, data: PermissionSavePayload) : Promise<EntityRecordResponse<Permission>>;
+    check(idOrName: string, data?: Record<string, any>) : Promise<PermissionAPICheckResponse>;
+}

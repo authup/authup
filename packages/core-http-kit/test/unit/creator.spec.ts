@@ -11,28 +11,28 @@ import {
     it, 
     vi,
 } from 'vitest';
-import type { TokenGrantResponse } from '@hapic/oauth2';
-import { TokenAPI } from '@hapic/oauth2';
+import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import {
+    OAuth2TokenAPI,
     createClientTokenCreator,
     createRobotTokenCreator,
     createUserTokenCreator,
 } from '../../src';
 
-const tokenGrantResponse : TokenGrantResponse = {
+const tokenGrantResponse : OAuth2TokenGrantResponse = {
     token_type: 'bearer',
     access_token: 'foo',
     refresh_token: 'bar',
     expires_in: 3600,
 };
 
-vi.spyOn(TokenAPI.prototype, 'createWithClientCredentials')
+vi.spyOn(OAuth2TokenAPI.prototype, 'createWithClientCredentials')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
-vi.spyOn(TokenAPI.prototype, 'createWithRobotCredentials')
+vi.spyOn(OAuth2TokenAPI.prototype, 'createWithRobotCredentials')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
-vi.spyOn(TokenAPI.prototype, 'createWithPassword')
+vi.spyOn(OAuth2TokenAPI.prototype, 'createWithPassword')
     .mockImplementation(() => Promise.resolve(tokenGrantResponse));
 
 describe('src/creator', () => {

@@ -5,6 +5,7 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IClient } from '@authup/core-http-kit';
 import type { SSRContext } from 'vue/server-renderer';
 import { renderToString } from 'vue/server-renderer';
 import { basename } from 'node:path';
@@ -15,14 +16,19 @@ import type { HydrationPayload } from './types';
 export type RenderContext = {
     url: string,
     manifest: Record<string, string[]>,
-    payload: HydrationPayload
+    payload: HydrationPayload,
+    /**
+     * Pre-built HTTP client handed to the Vue app instead of one
+     * constructed from payload.config.baseURL (test injection).
+     */
+    httpClient?: IClient
 };
 
 export async function render(ctx: RenderContext) {
     const {
-        app, 
-        router, 
-    } = createApp(ctx.payload);
+        app,
+        router,
+    } = createApp(ctx.payload, { httpClient: ctx.httpClient });
 
     // set the router to the desired URL before rendering
     await router.push(ctx.url);

@@ -5,10 +5,10 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-export interface LoggerLevelFn<OUT = any> {
+export type LoggerLevelFn<OUT = any> = {
     (message: string, ...meta: any[]): OUT;
     (message: any): OUT;
-}
+};
 
 export type Logger = {
     error: LoggerLevelFn,

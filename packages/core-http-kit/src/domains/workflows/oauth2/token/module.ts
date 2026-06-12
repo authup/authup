@@ -6,7 +6,8 @@
  */
 
 import { TokenAPI } from '@hapic/oauth2';
+import type { IOAuth2TokenAPI } from '../types';
 
-export class OAuth2TokenAPI extends TokenAPI {
+export class OAuth2TokenAPI extends TokenAPI implements IOAuth2TokenAPI {
 
 }

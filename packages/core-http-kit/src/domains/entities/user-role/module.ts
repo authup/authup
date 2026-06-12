@@ -9,18 +9,21 @@ import type { BuildInput } from 'rapiq';
 import { buildQuery } from 'rapiq';
 import type { UserRole } from '@authup/core-kit';
 import { BaseAPI } from '../../base';
-import type { EntityAPISlim, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
-import type { UserRoleCreatePayload } from './types';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type {
+    IUserRoleAPI,
+    UserRoleCreatePayload,
+} from './types';
 
-export class UserRoleAPI extends BaseAPI implements EntityAPISlim<UserRole> {
+export class UserRoleAPI extends BaseAPI implements IUserRoleAPI {
     async getMany(data: BuildInput<UserRole> = {}): Promise<EntityCollectionResponse<UserRole>> {
         const response = await this.client.get(`user-roles${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(id: UserRole['id']): Promise<EntityRecordResponse<UserRole>> {
-        const response = await this.client.get(`user-roles/${id}`);
+    async getOne(id: UserRole['id'], record?: BuildInput<UserRole>): Promise<EntityRecordResponse<UserRole>> {
+        const response = await this.client.get(`user-roles/${id}${buildQuery(record)}`);
 
         return response.data;
     }

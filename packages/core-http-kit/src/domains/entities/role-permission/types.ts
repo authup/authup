@@ -5,9 +5,13 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { IEntityAPI } from '../../types-base';
+
 import type { RolePermission } from '@authup/core-kit';
 
 // Mirrors `RolePermissionValidator` mounts in @authup/core-kit.
 export type RolePermissionCreatePayload = Pick<RolePermission, 'role_id' | 'permission_id'> &
     Partial<Pick<RolePermission, 'policy_id'>>;
 export type RolePermissionUpdatePayload = Partial<RolePermissionCreatePayload>;
+
+export interface IRolePermissionAPI extends IEntityAPI<RolePermission, RolePermissionCreatePayload, RolePermissionUpdatePayload> {}

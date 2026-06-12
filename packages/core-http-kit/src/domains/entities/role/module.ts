@@ -10,22 +10,23 @@ import { buildQuery } from 'rapiq';
 import type { Role } from '@authup/core-kit';
 import { nullifyEmptyObjectProperties } from '../../../utils';
 import { BaseAPI } from '../../base';
-import type { EntityAPI, EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
+import type { EntityCollectionResponse, EntityRecordResponse } from '../../types-base';
 import type {
+    IRoleAPI,
     RoleCreatePayload,
     RoleSavePayload,
     RoleUpdatePayload,
 } from './types';
 
-export class RoleAPI extends BaseAPI implements EntityAPI<Role> {
+export class RoleAPI extends BaseAPI implements IRoleAPI {
     async getMany(data?: BuildInput<Role>): Promise<EntityCollectionResponse<Role>> {
         const response = await this.client.get(`roles${buildQuery(data)}`);
 
         return response.data;
     }
 
-    async getOne(roleId: Role['id']): Promise<EntityRecordResponse<Role>> {
-        const response = await this.client.get(`roles/${roleId}`);
+    async getOne(roleId: Role['id'], record?: BuildInput<Role>): Promise<EntityRecordResponse<Role>> {
+        const response = await this.client.get(`roles/${roleId}${buildQuery(record)}`);
 
         return response.data;
     }

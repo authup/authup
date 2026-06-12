@@ -5,6 +5,8 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
+import type { EntityRecordResponse, IEntityAPI } from '../../types-base';
+
 import type { User } from '@authup/core-kit';
 
 // Mirrors `UserValidator` mounts in @authup/core-kit.
@@ -48,3 +50,11 @@ export type PasswordResetPayload = Partial<Pick<User, 'email' | 'name' | 'realm_
 export type PasswordResetResponse = {
     reset_at: string,
 };
+
+export interface IUserAPI extends IEntityAPI<User, UserCreatePayload, UserUpdatePayload> {
+    createOrUpdate(idOrName: string, data: UserSavePayload) : Promise<EntityRecordResponse<User>>;
+    activate(token: string) : Promise<ActivateResponse>;
+    register(data: RegisterPayload) : Promise<RegisterResponse>;
+    passwordForgot(data: PasswordForgotPayload) : Promise<PasswordForgotResponse>;
+    passwordReset(data: PasswordResetPayload) : Promise<PasswordResetResponse>;
+}
