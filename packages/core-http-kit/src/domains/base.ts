@@ -10,9 +10,17 @@ import { isObject } from '@authup/kit';
 import type { ApiTransport, BaseAPIContext } from './types-base';
 
 function isApiTransport(input: unknown) : input is ApiTransport {
-    return isObject(input) &&
-        typeof (input as Record<string, any>).get === 'function' &&
-        typeof (input as Record<string, any>).post === 'function';
+    if (!isObject(input)) {
+        return false;
+    }
+
+    const record = input as Record<string, any>;
+
+    return typeof record.getBaseURL === 'function' &&
+        typeof record.get === 'function' &&
+        typeof record.post === 'function' &&
+        typeof record.put === 'function' &&
+        typeof record.delete === 'function';
 }
 
 export class BaseAPI {
