@@ -91,10 +91,6 @@ export default defineComponent({
             },
             {
                 namespace: TranslatorTranslationNamespace.FIELD,
-                key: TranslatorTranslationFieldKey.DESCRIPTION,
-            },
-            {
-                namespace: TranslatorTranslationNamespace.FIELD,
                 key: TranslatorTranslationFieldKey.ENABLED,
             },
         ]);
