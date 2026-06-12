@@ -10,107 +10,46 @@ import type {
     OAuth2TokenGrantResponse,
     OAuth2TokenIntrospectionResponse,
 } from '@authup/specs';
+import type {
+    AuthorizeParameters,
+    ClientAuthenticationParameters,
+    Options,
+    TokenAuthorizationCodeGrantParameters,
+    TokenBaseOptions,
+    TokenClientCredentialsGrantParameters,
+    TokenGrantParameters,
+    TokenIntrospectParameters,
+    TokenPasswordGrantParameters,
+    TokenRefreshTokenGrantParameters,
+    TokenRevokeParameters,
+    TokenRobotCredentialsGrantParameters,
+} from '@hapic/oauth2';
 import type { AuthorizationHeader, Response } from 'hapic';
 
-export type OAuth2APIOptions = {
-    authorizationEndpoint?: string,
-    tokenEndpoint?: string,
-    introspectionEndpoint?: string,
-    revocationEndpoint?: string,
-    userinfoEndpoint?: string,
+/**
+ * The OAuth2 protocol mechanics (and their parameter shapes) are owned
+ * by @hapic/oauth2 — authup only re-exposes them under its naming
+ * convention so the contracts below stay expressible without consumers
+ * depending on @hapic/oauth2 directly.
+ */
+export type OAuth2APIOptions = Options;
 
-    clientId?: string,
-    clientSecret?: string,
-    redirectUri?: string,
-    scope?: string | string[],
-    realmId?: string,
-};
+export type OAuth2ClientAuthenticationParameters = ClientAuthenticationParameters;
+
+export type OAuth2TokenClientCredentialsGrantParameters = TokenClientCredentialsGrantParameters;
+export type OAuth2TokenPasswordGrantParameters = TokenPasswordGrantParameters;
+export type OAuth2TokenAuthorizationCodeGrantParameters = TokenAuthorizationCodeGrantParameters;
+export type OAuth2TokenRefreshTokenGrantParameters = TokenRefreshTokenGrantParameters;
+export type OAuth2TokenRobotCredentialsGrantParameters = TokenRobotCredentialsGrantParameters;
+export type OAuth2TokenGrantParameters = TokenGrantParameters;
+
+export type OAuth2TokenRevokeParameters = TokenRevokeParameters;
+export type OAuth2TokenIntrospectParameters = TokenIntrospectParameters;
+export type OAuth2TokenRequestOptions = TokenBaseOptions;
+
+export type OAuth2AuthorizeParameters = Partial<AuthorizeParameters>;
 
 // ------------------------------------------------------------------
-
-export type OAuth2ClientAuthenticationParameters = {
-    client_id?: string,
-    client_secret?: string,
-    realm_id?: string,
-};
-
-export type OAuth2TokenClientCredentialsGrantParameters = {
-    grant_type: 'client_credentials',
-    scope?: string | string[],
-    realm_name?: string,
-} & OAuth2ClientAuthenticationParameters;
-
-export type OAuth2TokenPasswordGrantParameters = {
-    grant_type: 'password',
-    username: string,
-    password: string,
-    scope?: string | string[],
-    realm_name?: string,
-} & OAuth2ClientAuthenticationParameters;
-
-export type OAuth2TokenAuthorizationCodeGrantParameters = {
-    grant_type: 'authorization_code',
-    code: string,
-    code_verifier?: string,
-    redirect_uri?: string,
-} & OAuth2ClientAuthenticationParameters;
-
-export type OAuth2TokenRefreshTokenGrantParameters = {
-    grant_type: 'refresh_token',
-    refresh_token: string,
-    scope?: string | string[],
-} & OAuth2ClientAuthenticationParameters;
-
-export type OAuth2TokenRobotCredentialsGrantParameters = {
-    grant_type: 'robot_credentials',
-    id: string,
-    secret: string,
-} & OAuth2ClientAuthenticationParameters;
-
-export type OAuth2TokenGrantParameters = OAuth2TokenClientCredentialsGrantParameters |
-OAuth2TokenPasswordGrantParameters |
-OAuth2TokenAuthorizationCodeGrantParameters |
-OAuth2TokenRefreshTokenGrantParameters |
-OAuth2TokenRobotCredentialsGrantParameters;
-
-export type OAuth2TokenRevokeParameters = {
-    token?: string,
-    token_type_hint?: string,
-} & OAuth2ClientAuthenticationParameters;
-
-export type OAuth2TokenIntrospectParameters = {
-    token?: string,
-    token_type_hint?: string,
-} & OAuth2ClientAuthenticationParameters;
-
-export type OAuth2TokenRequestOptions = {
-    /**
-     * Inherit an existing authorization header of the underlying
-     * transport for the current request.
-     *
-     * default: false
-     */
-    authorizationHeaderInherit?: boolean,
-
-    /**
-     * Set a custom authorization header for the current request.
-     *
-     * default: undefined
-     */
-    authorizationHeader?: string | AuthorizationHeader,
-
-    clientId?: string,
-    clientSecret?: string,
-    realmId?: string,
-
-    /**
-     * Strip the client credentials from the request parameters and
-     * send them as a Basic authorization header instead.
-     *
-     * default: false
-     */
-    clientCredentialsAsHeader?: boolean,
-};
 
 export interface IOAuth2TokenAPI {
     createWithRefreshToken(
@@ -153,19 +92,6 @@ export interface IOAuth2TokenAPI {
         options?: OAuth2TokenRequestOptions,
     ) : Promise<T>;
 }
-
-// ------------------------------------------------------------------
-
-export type OAuth2AuthorizeParameters = {
-    response_type?: string | string[],
-    response_mode?: string,
-    client_id?: string,
-    redirect_uri?: string,
-    scope?: string | string[],
-    state?: string,
-    code_challenge?: string,
-    code_challenge_method?: string,
-};
 
 export interface IOAuth2AuthorizeAPI {
     buildURL(parameters?: OAuth2AuthorizeParameters) : string;
