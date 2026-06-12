@@ -24,6 +24,8 @@ export type DomainEventPublishContext<
 
 export interface IDomainEventHandler {
     handle(ctx: DomainEventPublishContext) : Promise<void>;
+
+    dispose?() : Promise<void>;
 }
 
 export interface IDomainEventPublisher {
