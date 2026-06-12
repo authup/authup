@@ -10,16 +10,19 @@ import type { App } from 'routup';
 import { defineCoreHandler } from 'routup';
 
 /**
- * Per-request handoff of an HTTP-client override into renderUIPage —
+ * Per-request handoff of an HTTP-client factory into renderUIPage —
  * same mechanism as VITE_SERVER_STORE_KEY. Registered only when a
- * client is bound in the DI container (test injection); production
- * mounts nothing.
+ * factory is bound in the DI container (test injection); production
+ * mounts nothing. renderUIPage invokes the factory per render so every
+ * SSR pass gets a fresh client — never share one client instance
+ * across renders (the authentication hook writes per-user state onto
+ * it).
  */
-export const UI_HTTP_CLIENT_STORE_KEY = Symbol('UIHttpClient');
+export const UI_HTTP_CLIENT_FACTORY_STORE_KEY = Symbol('UIHttpClientFactory');
 
-export function registerUIHttpClientMiddleware(router: App, httpClient: Client) {
+export function registerUIHttpClientMiddleware(router: App, httpClientFactory: () => Client) {
     router.use(defineCoreHandler((event) => {
-        event.store[UI_HTTP_CLIENT_STORE_KEY] = httpClient;
+        event.store[UI_HTTP_CLIENT_FACTORY_STORE_KEY] = httpClientFactory;
         return event.next();
     }));
 }

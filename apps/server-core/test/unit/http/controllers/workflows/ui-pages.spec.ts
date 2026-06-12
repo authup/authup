@@ -30,7 +30,7 @@ describe('src/http/controllers/workflows (SSR pages)', () => {
     const httpClient = createFakeHTTPClient();
 
     beforeAll(async () => {
-        suite.container.register(HTTPInjectionKey.UIHttpClient, { useValue: httpClient });
+        suite.container.register(HTTPInjectionKey.UIHttpClientFactory, { useValue: () => httpClient });
 
         await suite.setup();
     });

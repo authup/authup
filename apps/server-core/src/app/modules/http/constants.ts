@@ -14,8 +14,12 @@ export type HTTPServer = ReturnType<typeof serve>;
 export const HTTPInjectionKey = {
     Server: new TypedToken<HTTPServer>('Server'),
     /**
-     * Optional HTTP-client override for the SSR'd UI pages
-     * (test injection — production registers nothing).
+     * Optional per-request HTTP-client factory override for the SSR'd UI
+     * pages (test injection — production registers nothing). A factory —
+     * not an instance — because client-web-kit's authentication hook
+     * writes per-user Authorization state onto the client it attaches to;
+     * a single instance shared across concurrent renders would leak
+     * tokens between sessions.
      */
-    UIHttpClient: new TypedToken<Client>('UIHttpClient'),
+    UIHttpClientFactory: new TypedToken<() => Client>('UIHttpClientFactory'),
 } as const;

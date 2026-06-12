@@ -95,11 +95,11 @@ export class HTTPMiddlewareModule {
     }
 
     async mountUIHttpClient(router: App, container: IContainer): Promise<void> {
-        if (!container.has(HTTPInjectionKey.UIHttpClient)) {
+        if (!container.has(HTTPInjectionKey.UIHttpClientFactory)) {
             return;
         }
 
-        registerUIHttpClientMiddleware(router, container.resolve(HTTPInjectionKey.UIHttpClient));
+        registerUIHttpClientMiddleware(router, container.resolve(HTTPInjectionKey.UIHttpClientFactory));
     }
 
     async mountBasic(router: App): Promise<void> {
