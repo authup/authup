@@ -24,8 +24,8 @@ export class RoleAttributeAPI extends BaseAPI implements IRoleAttributeAPI {
         return response.data;
     }
 
-    async getOne(roleId: RoleAttribute['id']): Promise<EntityRecordResponse<RoleAttribute>> {
-        const response = await this.client.get(`role-attributes/${roleId}`);
+    async getOne(roleId: RoleAttribute['id'], record?: BuildInput<RoleAttribute>): Promise<EntityRecordResponse<RoleAttribute>> {
+        const response = await this.client.get(`role-attributes/${roleId}${buildQuery(record)}`);
 
         return response.data;
     }

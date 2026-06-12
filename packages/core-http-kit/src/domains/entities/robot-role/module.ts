@@ -22,8 +22,8 @@ export class RobotRoleAPI extends BaseAPI implements IRobotRoleAPI {
         return response.data;
     }
 
-    async getOne(id: RobotRole['id']): Promise<EntityRecordResponse<RobotRole>> {
-        const response = await this.client.get(`robot-roles/${id}`);
+    async getOne(id: RobotRole['id'], record?: BuildInput<RobotRole>): Promise<EntityRecordResponse<RobotRole>> {
+        const response = await this.client.get(`robot-roles/${id}${buildQuery(record)}`);
 
         return response.data;
     }

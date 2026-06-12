@@ -23,8 +23,8 @@ export class UserPermissionAPI extends BaseAPI implements IUserPermissionAPI {
         return response.data;
     }
 
-    async getOne(id: UserPermission['id']) : Promise<EntityRecordResponse<UserPermission>> {
-        const response = await this.client.get(`user-permissions/${id}`);
+    async getOne(id: UserPermission['id'], record?: BuildInput<UserPermission>) : Promise<EntityRecordResponse<UserPermission>> {
+        const response = await this.client.get(`user-permissions/${id}${buildQuery(record)}`);
 
         return response.data;
     }

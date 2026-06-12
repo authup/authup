@@ -25,8 +25,8 @@ export class RealmAPI extends BaseAPI implements IRealmAPI {
         return response.data;
     }
 
-    async getOne(id: Realm['id']): Promise<EntityRecordResponse<Realm>> {
-        const response = await this.client.get(`realms/${id}`);
+    async getOne(id: Realm['id'], record?: BuildInput<Realm>): Promise<EntityRecordResponse<Realm>> {
+        const response = await this.client.get(`realms/${id}${buildQuery(record)}`);
 
         return response.data;
     }

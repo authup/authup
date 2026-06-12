@@ -24,8 +24,8 @@ export class UserAttributeAPI extends BaseAPI implements IUserAttributeAPI {
         return response.data;
     }
 
-    async getOne(roleId: UserAttribute['id']): Promise<EntityRecordResponse<UserAttribute>> {
-        const response = await this.client.get(`user-attributes/${roleId}`);
+    async getOne(roleId: UserAttribute['id'], record?: BuildInput<UserAttribute>): Promise<EntityRecordResponse<UserAttribute>> {
+        const response = await this.client.get(`user-attributes/${roleId}${buildQuery(record)}`);
 
         return response.data;
     }

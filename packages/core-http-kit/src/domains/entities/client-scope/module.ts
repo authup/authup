@@ -21,8 +21,8 @@ export class ClientScopeAPI extends BaseAPI implements IClientScopeAPI {
         return response.data;
     }
 
-    async getOne(id: ClientScope['id']) : Promise<EntityRecordResponse<ClientScope>> {
-        const response = await this.client.get(`client-scopes/${id}`);
+    async getOne(id: ClientScope['id'], record?: BuildInput<ClientScope>) : Promise<EntityRecordResponse<ClientScope>> {
+        const response = await this.client.get(`client-scopes/${id}${buildQuery(record)}`);
 
         return response.data;
     }

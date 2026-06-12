@@ -22,8 +22,8 @@ export class ClientRoleAPI extends BaseAPI implements IClientRoleAPI {
         return response.data;
     }
 
-    async getOne(id: ClientRole['id']): Promise<EntityRecordResponse<ClientRole>> {
-        const response = await this.client.get(`client-roles/${id}`);
+    async getOne(id: ClientRole['id'], record?: BuildInput<ClientRole>): Promise<EntityRecordResponse<ClientRole>> {
+        const response = await this.client.get(`client-roles/${id}${buildQuery(record)}`);
 
         return response.data;
     }

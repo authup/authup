@@ -21,8 +21,8 @@ export class PermissionPolicyAPI extends BaseAPI implements IPermissionPolicyAPI
         return response.data;
     }
 
-    async getOne(id: PermissionPolicy['id']) : Promise<EntityRecordResponse<PermissionPolicy>> {
-        const response = await this.client.get(`permission-policies/${id}`);
+    async getOne(id: PermissionPolicy['id'], record?: BuildInput<PermissionPolicy>) : Promise<EntityRecordResponse<PermissionPolicy>> {
+        const response = await this.client.get(`permission-policies/${id}${buildQuery(record)}`);
 
         return response.data;
     }

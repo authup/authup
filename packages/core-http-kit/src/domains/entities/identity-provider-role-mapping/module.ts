@@ -24,8 +24,8 @@ export class IdentityProviderRoleMappingAPI extends BaseAPI implements IIdentity
         return response.data;
     }
 
-    async getOne(id: IdentityProviderRoleMapping['id']): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
-        const response = await this.client.get(`identity-provider-role-mappings/${id}`);
+    async getOne(id: IdentityProviderRoleMapping['id'], record?: BuildInput<IdentityProviderRoleMapping>): Promise<EntityRecordResponse<IdentityProviderRoleMapping>> {
+        const response = await this.client.get(`identity-provider-role-mappings/${id}${buildQuery(record)}`);
 
         return response.data;
     }

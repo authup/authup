@@ -25,8 +25,8 @@ export class ScopeAPI extends BaseAPI implements IScopeAPI {
         return response.data;
     }
 
-    async getOne(id: Scope['id']): Promise<EntityRecordResponse<Scope>> {
-        const response = await this.client.get(`scopes/${id}`);
+    async getOne(id: Scope['id'], record?: BuildInput<Scope>): Promise<EntityRecordResponse<Scope>> {
+        const response = await this.client.get(`scopes/${id}${buildQuery(record)}`);
 
         return response.data;
     }

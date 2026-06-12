@@ -60,7 +60,11 @@ export class FakeClient extends Client {
         const request : FakeRequest = {
             method,
             url,
-            body: config.body,
+            // token-endpoint style requests carry urlencoded bodies —
+            // normalize so handler assertions see a plain object.
+            body: config.body instanceof URLSearchParams ?
+                Object.fromEntries(config.body) :
+                config.body,
             params: match ? match.params : {},
         };
         this.requests.push(request);

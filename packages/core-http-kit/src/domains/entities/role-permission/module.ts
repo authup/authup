@@ -22,8 +22,8 @@ export class RolePermissionAPI extends BaseAPI implements IRolePermissionAPI {
         return response.data;
     }
 
-    async getOne(id: RolePermission['id']) : Promise<EntityRecordResponse<RolePermission>> {
-        const response = await this.client.get(`role-permissions/${id}`);
+    async getOne(id: RolePermission['id'], record?: BuildInput<RolePermission>) : Promise<EntityRecordResponse<RolePermission>> {
+        const response = await this.client.get(`role-permissions/${id}${buildQuery(record)}`);
 
         return response.data;
     }
