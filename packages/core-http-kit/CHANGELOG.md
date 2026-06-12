@@ -1,5 +1,34 @@
 # Change Log
 
+## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* @authup/core-http-kit no longer re-exports @hapic/oauth2 types; EntityAPI/EntityAPISlim are renamed to IEntityAPI/IEntityAPISlim; BaseAPI.setClient removed; OAuth2 parameter types are now authup-owned (OAuth2Token*GrantParameters, OAuth2TokenRequestOptions, OAuth2AuthorizeParameters).
+
+### Features
+
+* injectable HTTP client, contract-first IClient & authup-owned oauth2 layer ([#3114](https://github.com/authup/authup/issues/3114)) ([ab06f38](https://github.com/authup/authup/commit/ab06f389e69c2d2938cfc12ae961136e731d046d))
+* per-realm web client login, realm chooser & backend-served auth workflow UI ([#3104](https://github.com/authup/authup/issues/3104)) ([80a1cce](https://github.com/authup/authup/commit/80a1cce4f137c4e94e70fd0c27404e6b5637a200))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/errors bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/specs bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/errors bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/specs bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+
 ## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
 
 

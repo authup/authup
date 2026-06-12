@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
+
+
+### Features
+
+* sub-path deployment support for backend-served auth workflow UI ([#3111](https://github.com/authup/authup/issues/3111)) ([7fa7a68](https://github.com/authup/authup/commit/7fa7a6846600fe9cddae2c404b0dde11245c7aa3))
+
 ## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
 
 

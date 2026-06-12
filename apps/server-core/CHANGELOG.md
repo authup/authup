@@ -1,5 +1,54 @@
 # Change Log
 
+## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* apps/server-core, apps/client-web and apps/authup are now licensed under AGPL-3.0-only (previously Apache-2.0). Releases up to and including v1.0.0-beta.46 remain Apache-2.0.
+* @authup/core-http-kit no longer re-exports @hapic/oauth2 types; EntityAPI/EntityAPISlim are renamed to IEntityAPI/IEntityAPISlim; BaseAPI.setClient removed; OAuth2 parameter types are now authup-owned (OAuth2Token*GrantParameters, OAuth2TokenRequestOptions, OAuth2AuthorizeParameters).
+* **server-kit:** @authup/server-kit no longer exports VaultClient / createVaultClient.
+* @authup/server-kit no longer exports useLogger / setLogger / setLoggerFactory / isLoggerUsable / vault singleton accessors; DomainEventRedisPublisher/DomainEventSocketPublisher are renamed to DomainEventRedisHandler/DomainEventSocketHandler (mount -> register); Logger is a structural type instead of winston's Logger.
+* @authup/client-web-kit no longer exports ./dist/style.css. Its component styles are now delivered through @authup/client-web-kit-theme (via the @authup/client-web-theme @import chain). Consumers importing '@authup/client-web-kit/dist/style.css' must remove that import.
+
+### Features
+
+* injectable HTTP client, contract-first IClient & authup-owned oauth2 layer ([#3114](https://github.com/authup/authup/issues/3114)) ([ab06f38](https://github.com/authup/authup/commit/ab06f389e69c2d2938cfc12ae961136e731d046d))
+* localized block-based mail templating via ilingo & @authup/i18n ([#3109](https://github.com/authup/authup/issues/3109)) ([69c776e](https://github.com/authup/authup/commit/69c776ef12b6a9746af1492f031392a4ba4644ed))
+* per-realm web client login, realm chooser & backend-served auth workflow UI ([#3104](https://github.com/authup/authup/issues/3104)) ([80a1cce](https://github.com/authup/authup/commit/80a1cce4f137c4e94e70fd0c27404e6b5637a200))
+* sub-path deployment support for backend-served auth workflow UI ([#3111](https://github.com/authup/authup/issues/3111)) ([7fa7a68](https://github.com/authup/authup/commit/7fa7a6846600fe9cddae2c404b0dde11245c7aa3))
+
+
+### Miscellaneous Chores
+
+* dual-license server, web client & CLI under AGPL-3.0 ([885742f](https://github.com/authup/authup/commit/885742f3a181b1aef6d985a7128aadf1e2b36da5))
+
+
+### Code Refactoring
+
+* move client-web-kit component styles into client-web-kit-theme ([#3103](https://github.com/authup/authup/issues/3103)) ([f186a59](https://github.com/authup/authup/commit/f186a592a88d6a9dd460109be62818095593d8eb))
+* restructure server-kit hub-style & replace singletons with DI ([#3112](https://github.com/authup/authup/issues/3112)) ([2654d03](https://github.com/authup/authup/commit/2654d035ec797ecccbe571a0563e98a8c9802cc1))
+* **server-kit:** drop vault re-export, add domain-event handler dispose contract ([#3113](https://github.com/authup/authup/issues/3113)) ([1773875](https://github.com/authup/authup/commit/17738754c45f63aeee4742256e454916b30baee0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-http-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/errors bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/i18n bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/server-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/specs bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/client-web-theme bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/server-test-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+
 ## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
 
 

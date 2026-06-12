@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
+
+
+### Features
+
+* per-realm web client login, realm chooser & backend-served auth workflow UI ([#3104](https://github.com/authup/authup/issues/3104)) ([80a1cce](https://github.com/authup/authup/commit/80a1cce4f137c4e94e70fd0c27404e6b5637a200))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/errors bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/specs bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+
 ## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
 
 

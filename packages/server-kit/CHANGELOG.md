@@ -1,5 +1,43 @@
 # Change Log
 
+## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* @authup/core-http-kit no longer re-exports @hapic/oauth2 types; EntityAPI/EntityAPISlim are renamed to IEntityAPI/IEntityAPISlim; BaseAPI.setClient removed; OAuth2 parameter types are now authup-owned (OAuth2Token*GrantParameters, OAuth2TokenRequestOptions, OAuth2AuthorizeParameters).
+* **server-kit:** @authup/server-kit no longer exports VaultClient / createVaultClient.
+* @authup/server-kit no longer exports useLogger / setLogger / setLoggerFactory / isLoggerUsable / vault singleton accessors; DomainEventRedisPublisher/DomainEventSocketPublisher are renamed to DomainEventRedisHandler/DomainEventSocketHandler (mount -> register); Logger is a structural type instead of winston's Logger.
+
+### Features
+
+* injectable HTTP client, contract-first IClient & authup-owned oauth2 layer ([#3114](https://github.com/authup/authup/issues/3114)) ([ab06f38](https://github.com/authup/authup/commit/ab06f389e69c2d2938cfc12ae961136e731d046d))
+
+
+### Code Refactoring
+
+* restructure server-kit hub-style & replace singletons with DI ([#3112](https://github.com/authup/authup/issues/3112)) ([2654d03](https://github.com/authup/authup/commit/2654d035ec797ecccbe571a0563e98a8c9802cc1))
+* **server-kit:** drop vault re-export, add domain-event handler dispose contract ([#3113](https://github.com/authup/authup/issues/3113)) ([1773875](https://github.com/authup/authup/commit/17738754c45f63aeee4742256e454916b30baee0))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/access bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/errors bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/specs bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+  * peerDependencies
+    * @authup/access bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-realtime-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/errors bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/specs bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+
 ## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
 
 
