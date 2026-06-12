@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-test-kit",
     "type": "module",
-    "version": "1.0.0-beta.46",
+    "version": "1.0.0-beta.47",
     "description": "Shared test fakes for server-side packages and apps.",
     "license": "Apache-2.0",
     "exports": {
@@ -49,17 +49,17 @@
     },
     "homepage": "https://github.com/authup/authup#readme",
     "devDependencies": {
-        "@authup/access": "^1.0.0-beta.46",
-        "@authup/core-kit": "^1.0.0-beta.46",
-        "@authup/kit": "^1.0.0-beta.46",
-        "@authup/server-kit": "^1.0.0-beta.46",
+        "@authup/access": "^1.0.0-beta.47",
+        "@authup/core-kit": "^1.0.0-beta.47",
+        "@authup/kit": "^1.0.0-beta.47",
+        "@authup/server-kit": "^1.0.0-beta.47",
         "vitest": "^4.0.14"
     },
     "peerDependencies": {
-        "@authup/access": "^1.0.0-beta.46",
-        "@authup/core-kit": "^1.0.0-beta.46",
-        "@authup/kit": "^1.0.0-beta.46",
-        "@authup/server-kit": "^1.0.0-beta.46"
+        "@authup/access": "^1.0.0-beta.47",
+        "@authup/core-kit": "^1.0.0-beta.47",
+        "@authup/kit": "^1.0.0-beta.47",
+        "@authup/server-kit": "^1.0.0-beta.47"
     },
     "publishConfig": {
         "access": "public"

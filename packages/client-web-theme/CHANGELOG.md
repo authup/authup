@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* @authup/client-web-kit no longer exports ./dist/style.css. Its component styles are now delivered through @authup/client-web-kit-theme (via the @authup/client-web-theme @import chain). Consumers importing '@authup/client-web-kit/dist/style.css' must remove that import.
+
+### Features
+
+* **client-web-theme:** mode-aware chrome for header, sidebar & footer ([#3108](https://github.com/authup/authup/issues/3108)) ([a34530a](https://github.com/authup/authup/commit/a34530ade29d796a0240657d79192c084b7bb8ad))
+
+
+### Code Refactoring
+
+* move client-web-kit component styles into client-web-kit-theme ([#3103](https://github.com/authup/authup/issues/3103)) ([f186a59](https://github.com/authup/authup/commit/f186a592a88d6a9dd460109be62818095593d8eb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+
 ## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
 
 

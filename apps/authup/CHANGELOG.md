@@ -1,5 +1,31 @@
 # Change Log
 
+## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* apps/server-core, apps/client-web and apps/authup are now licensed under AGPL-3.0-only (previously Apache-2.0). Releases up to and including v1.0.0-beta.46 remain Apache-2.0.
+
+### Bug Fixes
+
+* ensure consistent version for release ([15b08e3](https://github.com/authup/authup/commit/15b08e33c6475c68f3c950da537b14eab7ddaae4))
+
+
+### Miscellaneous Chores
+
+* dual-license server, web client & CLI under AGPL-3.0 ([885742f](https://github.com/authup/authup/commit/885742f3a181b1aef6d985a7128aadf1e2b36da5))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/client-web bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/server-core bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+
 ## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
 
 

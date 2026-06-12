@@ -1,5 +1,41 @@
 # Change Log
 
+## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* apps/server-core, apps/client-web and apps/authup are now licensed under AGPL-3.0-only (previously Apache-2.0). Releases up to and including v1.0.0-beta.46 remain Apache-2.0.
+* @authup/client-web-kit no longer exports ./dist/style.css. Its component styles are now delivered through @authup/client-web-kit-theme (via the @authup/client-web-theme @import chain). Consumers importing '@authup/client-web-kit/dist/style.css' must remove that import.
+
+### Features
+
+* per-realm web client login, realm chooser & backend-served auth workflow UI ([#3104](https://github.com/authup/authup/issues/3104)) ([80a1cce](https://github.com/authup/authup/commit/80a1cce4f137c4e94e70fd0c27404e6b5637a200))
+
+
+### Miscellaneous Chores
+
+* dual-license server, web client & CLI under AGPL-3.0 ([885742f](https://github.com/authup/authup/commit/885742f3a181b1aef6d985a7128aadf1e2b36da5))
+
+
+### Code Refactoring
+
+* move client-web-kit component styles into client-web-kit-theme ([#3103](https://github.com/authup/authup/issues/3103)) ([f186a59](https://github.com/authup/authup/commit/f186a592a88d6a9dd460109be62818095593d8eb))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/client-web-nuxt bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/client-web-theme bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-http-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/core-kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/i18n bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+    * @authup/kit bumped from ^1.0.0-beta.46 to ^1.0.0-beta.47
+
 ## [1.0.0-beta.46](https://github.com/authup/authup/compare/v1.0.0-beta.45...v1.0.0-beta.46) (2026-06-09)
 
 
