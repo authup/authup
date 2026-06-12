@@ -7,4 +7,3 @@
 
 export * from './bearer-token';
 export * from './verifier';
-
