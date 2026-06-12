@@ -1,92 +1,16 @@
 /*
  * Copyright (c) 2023.
  * Author Peter Placzek (tada5hi)
- * For the full copyright and license information.optional(),
+ * For the full copyright and license information,
  * view the LICENSE file that was distributed with this source code.
  */
 
 import { isObject } from '@authup/kit';
-import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions.js';
-import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
-import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
-import zod from 'zod';
-import type { Config, ConfigInput } from './types.ts';
+import type { ConfigInput } from './types.ts';
+import { ConfigValidator } from './validator.ts';
 
-export function parseConfig(input: unknown = {}): ConfigInput {
-    const schema = zod.object({
-        env: zod.string().optional(),
-        rootPath: zod.string().optional(),
-        writableDirectoryPath: zod.string().optional(),
+export async function parseConfig(input: unknown = {}): Promise<ConfigInput> {
+    const validator = new ConfigValidator();
 
-        logger: zod.boolean().optional(),
-        db: zod.custom<MysqlConnectionOptions | PostgresConnectionOptions | BetterSqlite3ConnectionOptions>(
-            (value) => isObject(value),
-        ).optional(),
-        redis: zod.lazy(() => zod.union([
-            zod.string().optional(),
-            zod.boolean().optional(),
-            zod.any().optional(),
-        ])).optional(),
-        smtp: zod.lazy(() => zod.union([
-            zod.string().optional(),
-            zod.boolean().optional(),
-            zod.any().optional(),
-        ])).optional(),
-        port: zod.number()
-            .nonnegative().optional(),
-        host: zod.string().optional(),
-        publicUrl: zod.string()
-            .url().optional(),
-        additionalDomains: zod.array(zod.string().url()).optional(),
-        middlewareBody: zod.boolean()
-            .or(zod.record(zod.string(), zod.any())).optional(),
-        middlewareCors: zod.boolean()
-            .or(zod.record(zod.string(), zod.any())).optional(),
-        middlewareCookie: zod.boolean()
-            .or(zod.record(zod.string(), zod.any())).optional(),
-        middlewareQuery: zod.boolean()
-            .or(zod.record(zod.string(), zod.any())).optional(),
-        middlewarePrometheus: zod.boolean()
-            .or(zod.record(zod.string(), zod.any())).optional(),
-        middlewareRateLimit: zod.boolean()
-            .or(zod.record(zod.string(), zod.any())).optional(),
-        middlewareSwagger: zod.boolean().optional(),
-
-        tokenAccessMaxAge: zod.number()
-            .nonnegative().optional(),
-        tokenRefreshMaxAge: zod.number()
-            .nonnegative().optional(),
-        registrationEnabled: zod.boolean().optional(),
-        emailVerificationEnabled: zod.boolean().optional(),
-        passwordRecoveryEnabled: zod.boolean().optional(),
-
-        clientAuthBasic: zod.boolean().optional(),
-        clientSystemEnabled: zod.boolean().optional(),
-        clientSystemSecret: zod.string()
-            .min(3)
-            .max(256).optional(),
-        clientSystemSecretReset: zod.boolean().optional(),
-
-        userAuthBasic: zod.boolean().optional(),
-        userAdminEnabled: zod.boolean().optional(),
-        userAdminPassword: zod.string()
-            .min(3)
-            .max(256).optional(),
-        userAdminPasswordReset: zod.boolean().optional(),
-
-        robotAuthBasic: zod.boolean().optional(),
-        robotAdminEnabled: zod.boolean().optional(),
-        robotAdminSecret: zod.string()
-            .min(3)
-            .max(256).optional(),
-        robotAdminSecretReset: zod.boolean().optional(),
-
-        permissions: zod.string()
-            .or(zod.array(zod.string()))
-            .optional(),
-
-        permissionsDefaultPolicyAssignment: zod.boolean().optional(),
-    } satisfies Record<keyof Config, any>);
-
-    return schema.parse(input);
+    return validator.run(isObject(input) ? input : {});
 }

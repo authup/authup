@@ -75,9 +75,9 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.publicUrl = publicURL;
     }
 
-    const additionalDomains = readArray(ConfigEnvironmentVariableName.ADDITIONAL_DOMAINS);
-    if (additionalDomains && additionalDomains.length > 0) {
-        options.additionalDomains = additionalDomains;
+    const additionalOrigins = readArray(ConfigEnvironmentVariableName.ADDITIONAL_ORIGINS);
+    if (additionalOrigins && additionalOrigins.length > 0) {
+        options.additionalOrigins = additionalOrigins;
     }
 
     const tokenAccessMaxAge = readInt(ConfigEnvironmentVariableName.TOKEN_ACCESS_MAX_AGE);

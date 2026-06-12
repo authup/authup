@@ -12,16 +12,16 @@ import type { IContainer } from 'eldin';
 import { normalizeConfig } from './normalize.ts';
 import type { ConfigRawReadOptions } from './read/index.ts';
 import { readConfigRaw } from './read/index.ts';
-import type { Config } from './types.ts';
+import type { Config, ConfigFactory } from './types.ts';
 
 export class ConfigModule implements IModule {
     readonly name: string;
 
-    protected instance : Config | undefined;
+    protected instance : Config | ConfigFactory | undefined;
 
     // ----------------------------------------------------
 
-    constructor(config?: Config) {
+    constructor(config?: Config | ConfigFactory) {
         this.name = ModuleName.CONFIG;
         this.instance = config;
     }
@@ -30,7 +30,9 @@ export class ConfigModule implements IModule {
 
     async setup(container: IContainer): Promise<void> {
         let instance : Config;
-        if (this.instance) {
+        if (typeof this.instance === 'function') {
+            instance = await this.instance();
+        } else if (this.instance) {
             instance = this.instance;
         } else {
             instance = await this.read();
