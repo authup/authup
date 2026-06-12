@@ -7,23 +7,12 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
-import { BuiltInPolicyType } from '@authup/access';
 import {
     TranslatorTranslationClientKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { useTranslationsForNamespace } from '../../../core';
-
-const typeKeys = {
-    [BuiltInPolicyType.COMPOSITE]: TranslatorTranslationClientKey.POLICY_TYPE_COMPOSITE,
-    [BuiltInPolicyType.DATE]: TranslatorTranslationClientKey.POLICY_TYPE_DATE,
-    [BuiltInPolicyType.TIME]: TranslatorTranslationClientKey.POLICY_TYPE_TIME,
-    [BuiltInPolicyType.ATTRIBUTE_NAMES]: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES,
-    [BuiltInPolicyType.ATTRIBUTES]: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES,
-    [BuiltInPolicyType.REALM_MATCH]: TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH,
-    [BuiltInPolicyType.IDENTITY]: TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY,
-    [BuiltInPolicyType.PERMISSION_BINDING]: TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING,
-} as const;
+import { POLICY_TYPE_TRANSLATION_KEYS } from './policy-type';
 
 export default defineComponent({
     props: {
@@ -48,7 +37,7 @@ export default defineComponent({
         );
 
         const label = computed(() => {
-            const key = typeKeys[props.type as keyof typeof typeKeys];
+            const key = POLICY_TYPE_TRANSLATION_KEYS[props.type as keyof typeof POLICY_TYPE_TRANSLATION_KEYS];
             if (key) {
                 return translations[key];
             }

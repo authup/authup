@@ -7,6 +7,12 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { useTranslations } from '../../../core';
 
 export default defineComponent({
     props: {
@@ -21,19 +27,34 @@ export default defineComponent({
     },
     emits: ['changed'],
     setup(props, { emit }) {
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.PROCESSING,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.REMOVE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.ADD,
+            },
+        ]);
+
         const handleClick = (e: Event) => {
             e.preventDefault();
             emit('changed', !props.value);
         };
 
-        return { handleClick };
+        return { handleClick, translations };
     },
 });
 </script>
 <template>
     <button
         type="button"
-        :aria-label="isBusy ? 'Processing' : (value ? 'Remove' : 'Add')"
+        :aria-label="isBusy ? translations.processing : (value ? translations.remove : translations.add)"
         :class="['btn btn-xs', {
             'btn-dark': isBusy,
             'btn-success': !isBusy && !value,

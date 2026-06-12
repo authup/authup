@@ -33,4 +33,5 @@ export const TranslatorTranslationCommonSpanish : NamespaceTranslations<`${Trans
     [TranslatorTranslationCommonKey.DETAILS]: 'Detalles',
     [TranslatorTranslationCommonKey.GROUP]: 'Grupo',
     [TranslatorTranslationCommonKey.NO_ITEMS]: 'La lista aún no contiene elementos.',
+    [TranslatorTranslationCommonKey.PROCESSING]: 'Procesando',
 };

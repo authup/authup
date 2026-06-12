@@ -260,6 +260,7 @@ export enum TranslatorTranslationActionKey {
     LOOKUP = 'lookup',
     SHOW = 'show',
     HIDE = 'hide',
+    REMOVE = 'remove',
 }
 
 /**
@@ -292,4 +293,5 @@ export enum TranslatorTranslationCommonKey {
     DETAILS = 'details',
     GROUP = 'group',
     NO_ITEMS = 'noItems',
+    PROCESSING = 'processing',
 }

@@ -4,10 +4,12 @@ import { computed, defineComponent, ref } from 'vue';
 import type { FormOption } from '@vuecs/forms';
 import { BuiltInPolicyType } from '@authup/access';
 import {
+    TranslatorTranslationClientKey,
     TranslatorTranslationFieldKey,
     TranslatorTranslationNamespace,
 } from '@authup/i18n';
 import { useTranslationsForNamespace } from '../../../core';
+import { POLICY_TYPE_TRANSLATION_KEYS } from './policy-type';
 
 export default defineComponent({
     props: {
@@ -16,13 +18,36 @@ export default defineComponent({
     },
     emits: ['pick'],
     setup(props, setup) {
+        const translationsClient = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_COMPOSITE },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_DATE },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_TIME },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING },
+            ],
+        );
+
+        const buildLabel = (type: string) => {
+            const key = POLICY_TYPE_TRANSLATION_KEYS[type as keyof typeof POLICY_TYPE_TRANSLATION_KEYS];
+            if (key) {
+                return translationsClient[key];
+            }
+
+            return type;
+        };
+
         const option = ref<string | null>(null);
         const options = computed<FormOption[]>(() => {
             if (props.types) {
                 return props.types.map((type) => {
                     if (typeof type === 'string') {
                         return {
-                            label: type,
+                            label: buildLabel(type),
                             value: type,
                         } satisfies FormOption;
                     }
@@ -33,7 +58,7 @@ export default defineComponent({
 
             return Object.values(BuiltInPolicyType)
                 .map((type: string) => ({
-                    label: type,
+                    label: buildLabel(type),
                     value: type,
                 } satisfies FormOption));
         });
@@ -79,7 +104,7 @@ export default defineComponent({
                         @click.prevent="pick(`${item.value}`)"
                     >
                         <div>
-                            {{ item.value }}
+                            {{ item.label }}
                         </div>
                     </div>
                 </template>
