@@ -26,7 +26,7 @@ import {
 import { HTTPInjectionKey } from '../constants.ts';
 import { DIST_PATH } from '../../../../path.ts';
 import { AuthenticationInjectionKey } from '../../authentication/index.ts';
-import { ConfigInjectionKey, getAppOrigins } from '../../config/index.ts';
+import { ConfigInjectionKey } from '../../config/index.ts';
 import { LoggerInjectionKey } from '../../logger/index.ts';
 import { IdentityInjectionKey } from '../../identity/index.ts';
 import { OAuth2InjectionToken } from '../../oauth2/index.ts';
@@ -69,13 +69,6 @@ export class HTTPMiddlewareModule {
         }
 
         const options = this.transformBoolToEmptyObject(config.middlewareCors) ?? {};
-
-        // Restrict CORS to the trusted application origins (publicUrl +
-        // additionalDomains) unless the operator explicitly configured an
-        // origin via the middlewareCors options object.
-        if (typeof options.origin === 'undefined') {
-            options.origin = getAppOrigins(config);
-        }
 
         registerCorsMiddleware(router, options);
     }

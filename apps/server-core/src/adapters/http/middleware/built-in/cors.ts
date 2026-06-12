@@ -11,9 +11,13 @@ import type { App } from 'routup';
 
 export function registerCorsMiddleware(router: App, input?: CorsOptions) {
     router.use(cors({
-        // @routup/cors reflects the matched origin when given an array (and
-        // still honours credentials: true). Callers pass the trusted
-        // appOrigins allowlist; falls back to reflect-all only if unset.
+        // Reflect any origin by default: OAuth2 clients (and their UIs) are
+        // registered at runtime on arbitrary domains, so a startup-time
+        // allowlist cannot know them. All authentication is header-based
+        // (Bearer/Basic) — no cookie-authenticated endpoint exists — so an
+        // origin allowlist would add no security, only break dynamically
+        // registered browser clients. Operators can still pass an explicit
+        // `origin` via the middlewareCors config options.
         origin: true,
         credentials: true,
         // `credentials: true` is incompatible with the `*` wildcard for
