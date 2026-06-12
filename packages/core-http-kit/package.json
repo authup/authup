@@ -68,6 +68,7 @@
         "@authup/kit": "^1.0.0-beta.46",
         "@authup/core-kit": "^1.0.0-beta.46",
         "@authup/specs": "^1.0.0-beta.46",
+        "@hapic/oauth2": "^3.2.0",
         "vitest": "^4.0.14"
     },
     "peerDependencies": {

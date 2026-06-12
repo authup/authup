@@ -6,7 +6,6 @@
  */
 
 export * from './authorize';
-export * from './base';
 export * from './token';
 export * from './user-info';
 export * from './types';

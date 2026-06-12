@@ -5,36 +5,9 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { AuthorizationHeader } from 'hapic';
-import { HeaderName, stringifyAuthorizationHeader } from 'hapic';
-import { OAuth2BaseAPI } from '../base';
+import { UserInfoAPI } from '@hapic/oauth2';
 import type { IOAuth2UserInfoAPI } from '../types';
 
-export class OAuth2UserInfoAPI extends OAuth2BaseAPI implements IOAuth2UserInfoAPI {
-    /**
-     * @throws Error
-     * @param header
-     */
-    async get<T extends Record<string, any> = Record<string, any>>(
-        header?: string | AuthorizationHeader,
-    ) : Promise<T> {
-        const headers : Record<string, string> = { [HeaderName.ACCEPT]: 'application/json' };
+export class OAuth2UserInfoAPI extends UserInfoAPI implements IOAuth2UserInfoAPI {
 
-        if (header) {
-            if (typeof header === 'string') {
-                headers.Authorization = !header.includes(' ') ?
-                    `Bearer ${header}` :
-                    header;
-            } else {
-                headers.Authorization = stringifyAuthorizationHeader(header);
-            }
-        }
-
-        const response = await this.client.get(
-            this.options.userinfoEndpoint || '/userinfo',
-            { headers },
-        );
-
-        return response.data;
-    }
 }

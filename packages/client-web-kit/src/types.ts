@@ -77,7 +77,7 @@ import type {
     AUsers,
 } from './components';
 
-export interface CookieOptions {
+export type CookieOptions = {
     path?: string;
     expires?: Date;
     maxAge?: number;
@@ -86,7 +86,7 @@ export interface CookieOptions {
     httpOnly?: boolean;
     sameSite?: boolean | 'none' | 'lax' | 'strict';
     partitioned?: boolean;
-}
+};
 export type CookieSetFn = (
     key: string,
     value: any,

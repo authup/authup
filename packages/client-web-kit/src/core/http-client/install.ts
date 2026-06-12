@@ -6,6 +6,7 @@
  */
 
 import { Client } from '@authup/core-http-kit';
+import type { IClient } from '@authup/core-http-kit';
 import type { App } from 'vue';
 import { hasHTTPClient, provideHTTPClient } from './singleton';
 import type { HTTPClientInstallOptions } from './types';
@@ -16,7 +17,7 @@ export function installHTTPClient(app: App, options: HTTPClientInstallOptions = 
         return;
     }
 
-    const client = options.httpClient ?? new Client({ baseURL: options.baseURL });
+    const client : IClient = options.httpClient ?? new Client({ baseURL: options.baseURL });
 
     const authenticationHook = injectHTTPClientAuthenticationHook(app);
     authenticationHook.attach(client);
