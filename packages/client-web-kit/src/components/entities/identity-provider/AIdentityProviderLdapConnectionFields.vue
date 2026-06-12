@@ -6,7 +6,12 @@
   -->
 <script lang="ts">
 import type { IdentityProvider, LdapIdentityProvider } from '@authup/core-kit';
-import { assignFormProperties } from '../../../core';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -60,8 +65,32 @@ export default defineComponent({
             v.fields.timeout.$model.value = Number.isNaN(intValue) ? 0 : intValue;
         };
 
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.URL,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.TIMEOUT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.START_TLS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.ENABLE_STARTTLS_HINT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.BASE_DN,
+            },
+        ]);
+
         return {
             v,
+            translations,
             onTimeoutChange,
         };
     },
@@ -77,7 +106,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    URL
+                    {{ translations.url }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.url.$model.value"
@@ -92,7 +121,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Timeout
+                    {{ translations.timeout }}
                 </template>
                 <VCFormInput
                     :model-value="String(v.fields.timeout.$model.value)"
@@ -108,12 +137,12 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    StartTLS
+                    {{ translations.startTls }}
                 </template>
                 <VCFormSwitch
                     v-model="v.fields.start_tls.$model.value"
                     :label="true"
-                    label-content="Enable StartTLS process?"
+                    :label-content="translations.enableStartTlsHint"
                 />
             </VCFormGroup>
         </IFieldValidation>
@@ -124,7 +153,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Base DN
+                    {{ translations.baseDn }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.base_dn.$model.value"

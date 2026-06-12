@@ -22,4 +22,10 @@ export const TranslatorTranslationActionFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationActionKey.ACTIVATE]: 'Activer',
     [TranslatorTranslationActionKey.RESET]: 'Réinitialiser',
     [TranslatorTranslationActionKey.SEND]: 'Envoyer',
+    [TranslatorTranslationActionKey.BACK]: 'Retour',
+    [TranslatorTranslationActionKey.CLOSE]: 'Fermer',
+    [TranslatorTranslationActionKey.LOOKUP]: 'Rechercher',
+    [TranslatorTranslationActionKey.SHOW]: 'Afficher',
+    [TranslatorTranslationActionKey.HIDE]: 'Masquer',
+    [TranslatorTranslationActionKey.REMOVE]: 'Retirer',
 };

@@ -9,6 +9,11 @@
 import type { Policy } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
+import {
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { useTranslationsForNamespace } from '../../../core';
 import APolicyTypeBadge from './APolicyTypeBadge.vue';
 import APolicyDetailNav from './APolicyDetailNav.vue';
 
@@ -26,7 +31,14 @@ export default defineComponent({
             emit('detail', props.entity);
         };
 
-        return { handleDetail };
+        const translations = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.COMMON,
+            [
+                { key: TranslatorTranslationCommonKey.INVERTED },
+            ],
+        );
+
+        return { handleDetail, translations };
     },
 });
 </script>
@@ -35,7 +47,7 @@ export default defineComponent({
     <span
         v-if="entity.invert"
         class="badge bg-warning-500"
-    >Inverted</span>
+    >{{ translations.inverted }}</span>
     <APolicyDetailNav
         :policy-id="entity.id"
         @click="handleDetail"

@@ -2,6 +2,7 @@
 
 import type { Role } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
+import { TranslatorTranslationCommonKey, TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import {
     AEntityDelete,
     APagination,
@@ -10,11 +11,12 @@ import {
     ATitle,
     injectStore,
     usePermissionCheck,
+    useTranslations,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import type { BuildInput } from 'rapiq';
 import type { TableColumn } from '@vuecs/table';
-import { defineComponent } from 'vue';
+import { computed, defineComponent } from 'vue';
 
 export default defineComponent({
     components: {
@@ -38,34 +40,57 @@ export default defineComponent({
         const hasEditPermission = usePermissionCheck({ name: PermissionName.ROLE_UPDATE });
         const hasDropPermission = usePermissionCheck({ name: PermissionName.ROLE_DELETE });
 
-        const columns: TableColumn[] = [
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.NAME,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.BUILT_IN,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.GLOBAL,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.CREATED_AT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.UPDATED_AT,
+            },
+        ]);
+
+        const columns = computed<TableColumn[]>(() => [
             {
                 key: 'name',
-                label: 'Name',
+                label: translations.name,
                 headerClass: 'text-left',
                 cellClass: 'text-left',
             },
             {
                 key: 'built_in',
-                label: 'Built in?',
+                label: translations.builtIn,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'global',
-                label: 'Global',
+                label: translations.global,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'created_at',
-                label: 'Created at',
+                label: translations.createdAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
             {
                 key: 'updated_at',
-                label: 'Updated at',
+                label: translations.updatedAt,
                 headerClass: 'text-center',
                 cellClass: 'text-center',
             },
@@ -74,7 +99,7 @@ export default defineComponent({
                 label: '',
                 cellClass: 'text-center',
             },
-        ];
+        ]);
 
         return {
             columns,

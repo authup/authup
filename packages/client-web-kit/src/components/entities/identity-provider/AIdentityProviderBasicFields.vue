@@ -90,8 +90,8 @@ export default defineComponent({
                 key: TranslatorTranslationFieldKey.NAME, 
             },
             {
-                namespace: TranslatorTranslationNamespace.FIELD, 
-                key: TranslatorTranslationFieldKey.DESCRIPTION, 
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.ENABLED,
             },
         ]);
 
@@ -152,7 +152,7 @@ export default defineComponent({
             <VCFormSwitch
                 :model-value="v.fields.enabled.$model.value"
                 :label="true"
-                label-content="Enabled?"
+                :label-content="translationsDefault.enabled"
                 @update:model-value="onEnabledChange"
             />
         </div>

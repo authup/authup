@@ -13,7 +13,13 @@ import {
 import type { PropType } from 'vue';
 import { VCFormGroup, VCFormInput, VCFormSwitch } from '@vuecs/forms';
 import { useValidup } from '@validup/vue';
-import { injectHTTPClient, wrapFnWithBusyState  } from '../../../core';
+import {
+    TranslatorTranslationActionKey,
+    TranslatorTranslationClientKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { injectHTTPClient, useTranslations, wrapFnWithBusyState } from '../../../core';
 import { createValidator } from '@validup/zod';
 import {
     Container,
@@ -28,7 +34,7 @@ import { IFieldValidation } from '@ilingo/validup-vue';
 // Cross-field equality between `password` and `password_repeat` — runs
 // as a second mount on `password_repeat` so the first mount's length
 // validator surfaces its own message independently.
-const sameAsPassword: Validator = (ctx) => {
+const createSameAsPassword = (message: () => string): Validator => (ctx) => {
     const { value } = ctx;
     // If the value isn't a string at this point, the prior length
     // validator already failed — defer to its issue rather than adding
@@ -49,7 +55,7 @@ const sameAsPassword: Validator = (ctx) => {
         const path: PropertyKey[] = [];
         throw new ValidupError([defineIssueItem({
             path,
-            message: 'Must match the password.',
+            message: message(),
         })]);
     }
     return value;
@@ -59,17 +65,22 @@ const sameAsPassword: Validator = (ctx) => {
 // `UserValidator` covers `password` for the entity-edit path. This
 // password-only form has its own length + match contract.
 class UserPasswordValidator extends Container<{ password: string; password_repeat: string }> {
+    constructor(sameAsPassword: Validator) {
+        super();
+
+        // Two mounts on `password_repeat` — length first (from
+        // `initialize`), equality second. Container runs mounts in order;
+        // a failure in the first short-circuits the key, so consumers
+        // only see one issue at a time.
+        this.mount('password_repeat', sameAsPassword);
+    }
+
     protected override initialize() {
         super.initialize();
 
         const passwordValidator = createValidator(z.string().min(5).max(100));
         this.mount('password', passwordValidator);
-
-        // Two mounts on `password_repeat` — length first, equality second.
-        // Container runs mounts in order; a failure in the first short-
-        // circuits the key, so consumers only see one issue at a time.
         this.mount('password_repeat', passwordValidator);
-        this.mount('password_repeat', sameAsPassword);
     }
 }
 
@@ -99,7 +110,36 @@ export default defineComponent({
 
         const passwordShow = ref(false);
 
-        const v = useValidup(new UserPasswordValidator(), form);
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PASSWORD,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PASSWORD_REPEAT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.CLIENT,
+                key: TranslatorTranslationClientKey.PASSWORD_MUST_MATCH,
+            },
+        ]);
+
+        const actionTranslations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.SHOW,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.HIDE,
+            },
+        ]);
+
+        const v = useValidup(
+            new UserPasswordValidator(createSameAsPassword(() => translations.passwordMustMatch)),
+            form,
+        );
 
         const submit = wrapFnWithBusyState(busy, async () => {
             // `v.$invalid` already covers length + password-repeat match
@@ -124,6 +164,8 @@ export default defineComponent({
         return {
             busy,
             passwordShow,
+            translations,
+            actionTranslations,
             v,
             submit,
         };
@@ -143,7 +185,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Password
+                    {{ translations.password }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.password.$model.value"
@@ -159,7 +201,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Password repeat
+                    {{ translations.passwordRepeat }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.password_repeat.$model.value"
@@ -183,7 +225,7 @@ export default defineComponent({
                         :for="id"
                         :class="labelClass"
                     >
-                        Password {{ passwordShow ? 'hide' : 'show' }}
+                        {{ translations.password }} {{ passwordShow ? actionTranslations.hide : actionTranslations.show }}
                     </label>
                 </template>
             </VCFormSwitch>

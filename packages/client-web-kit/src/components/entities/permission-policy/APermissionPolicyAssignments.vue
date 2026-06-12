@@ -15,6 +15,8 @@ import {
     onUnmounted,
     ref,
 } from 'vue';
+import { TranslatorTranslationActionKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { useTranslations } from '../../../core';
 import APermissionPolicyAssignment from './APermissionPolicyAssignment.vue';
 import { APolicies } from '../policy';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
@@ -34,6 +36,13 @@ export default defineComponent({
         },
     },
     setup(props, { slots }) {
+        const translationsAction = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.ACTION,
+                key: TranslatorTranslationActionKey.CLOSE,
+            },
+        ]);
+
         const detailPolicy = ref<Policy | null>(null);
 
         const handleKeydown = (e: KeyboardEvent) => {
@@ -52,7 +61,11 @@ export default defineComponent({
 
         const forwardedSlots = computed(() => Object.fromEntries(Object.entries(slots).filter(([name]) => name !== 'item')));
 
-        return { detailPolicy, forwardedSlots };
+        return {
+            detailPolicy, 
+            forwardedSlots, 
+            translationsAction, 
+        };
     },
 });
 </script>
@@ -116,7 +129,7 @@ export default defineComponent({
                             <button
                                 type="button"
                                 class="btn-close"
-                                aria-label="Close"
+                                :aria-label="translationsAction.close"
                                 @click="detailPolicy = null"
                             />
                         </div>
@@ -129,7 +142,7 @@ export default defineComponent({
                                 class="btn btn-secondary btn-xs"
                                 @click="detailPolicy = null"
                             >
-                                Close
+                                {{ translationsAction.close }}
                             </button>
                         </div>
                     </div>

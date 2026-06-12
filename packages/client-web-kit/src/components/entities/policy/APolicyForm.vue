@@ -10,8 +10,12 @@ import { useValidup } from '@validup/vue';
 import type { Policy } from '@authup/core-kit';
 import { EntityType } from '@authup/core-kit';
 import { BuiltInPolicyType } from '@authup/access';
+import {
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { useIsEditing } from '../../../composables';
-import { extractValidupResultsFromChild, injectHTTPClient } from '../../../core';
+import { extractValidupResultsFromChild, injectHTTPClient, useTranslationsForNamespace } from '../../../core';
 import { AFormSubmit, defineEntityManager } from '../../utility';
 import APolicyBasicForm from './APolicyBasicForm.vue';
 import APolicyTypePicker from './APolicyTypePicker.vue';
@@ -111,6 +115,13 @@ export default defineComponent({
             }
         };
 
+        const translations = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.COMMON,
+            [
+                { key: TranslatorTranslationCommonKey.GENERAL },
+            ],
+        );
+
         return {
             typeComputed,
             typeComponents,
@@ -119,13 +130,14 @@ export default defineComponent({
             isEditing,
             isInvalid: isInvalidComputed,
             submit,
+            translations,
         };
     },
 });
 </script>
 <template>
     <div class="flex flex-col">
-        <h6>General</h6>
+        <h6>{{ translations.general }}</h6>
         <APolicyBasicForm
             :entity="data"
             :type="typeComputed"

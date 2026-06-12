@@ -6,19 +6,13 @@
 -->
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { BuiltInPolicyType } from '@authup/access';
-
-const typeLabels: Record<string, string> = {
-    [BuiltInPolicyType.COMPOSITE]: 'Composite',
-    [BuiltInPolicyType.DATE]: 'Date',
-    [BuiltInPolicyType.TIME]: 'Time',
-    [BuiltInPolicyType.ATTRIBUTE_NAMES]: 'Attr Names',
-    [BuiltInPolicyType.ATTRIBUTES]: 'Attributes',
-    [BuiltInPolicyType.REALM_MATCH]: 'Realm Match',
-    [BuiltInPolicyType.IDENTITY]: 'Identity',
-    [BuiltInPolicyType.PERMISSION_BINDING]: 'Perm Binding',
-};
+import { computed, defineComponent } from 'vue';
+import {
+    TranslatorTranslationClientKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { useTranslationsForNamespace } from '../../../core';
+import { POLICY_TYPE_TRANSLATION_KEYS } from './policy-type';
 
 export default defineComponent({
     props: {
@@ -27,11 +21,34 @@ export default defineComponent({
             required: true,
         },
     },
-    setup() {
-        return { typeLabels };
+    setup(props) {
+        const translations = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.CLIENT,
+            [
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_COMPOSITE },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_DATE },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_TIME },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY },
+                { key: TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING },
+            ],
+        );
+
+        const label = computed(() => {
+            const key = POLICY_TYPE_TRANSLATION_KEYS[props.type as keyof typeof POLICY_TYPE_TRANSLATION_KEYS];
+            if (key) {
+                return translations[key];
+            }
+
+            return props.type;
+        });
+
+        return { label };
     },
 });
 </script>
 <template>
-    <span class="badge bg-info-500">{{ typeLabels[type] || type }}</span>
+    <span class="badge bg-info-500">{{ label }}</span>
 </template>

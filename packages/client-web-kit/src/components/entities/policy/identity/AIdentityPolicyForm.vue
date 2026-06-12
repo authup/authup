@@ -5,6 +5,11 @@ import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
 import { defineComponent, reactive } from 'vue';
+import {
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { useTranslationsForNamespace } from '../../../../core';
 import { onChange, useUpdatedAt } from '../../../../composables';
 import AFormInputList from '../../../utility/form-input-list/AFormInputList.vue';
 
@@ -36,8 +41,16 @@ export default defineComponent({
             setup.emit('updated', data);
         };
 
+        const translations = useTranslationsForNamespace(
+            TranslatorTranslationNamespace.FIELD,
+            [
+                { key: TranslatorTranslationFieldKey.TYPES },
+            ],
+        );
+
         return {
             handleUpdated,
+            translations,
             v,
         };
     },
@@ -50,7 +63,7 @@ export default defineComponent({
         @changed="handleUpdated"
     >
         <template #label>
-            Types
+            {{ translations.types }}
         </template>
     </AFormInputList>
 </template>

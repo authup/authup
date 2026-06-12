@@ -33,7 +33,7 @@ export const TranslatorTranslationAppGerman : NamespaceTranslations<`${Translato
 
     [TranslatorTranslationAppKey.TOGGLE_NAVIGATION]: 'Navigation umschalten',
 
-    [TranslatorTranslationAppKey.SESSION_RENEW]: 'Die Sitzung wird erneuert in',
+    [TranslatorTranslationAppKey.SESSION_RENEW]: 'Die Sitzung wird erneuert in {countdown}.',
     [TranslatorTranslationAppKey.MINUTES]: 'Minute(n)',
     [TranslatorTranslationAppKey.SECONDS]: 'Sekunde(n)',
 

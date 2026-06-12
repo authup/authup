@@ -7,18 +7,20 @@
 <script lang="ts">
 
 import { TranslatorTranslationAppKey, TranslatorTranslationNamespace } from '@authup/i18n';
-import { 
-    injectHTTPClient, 
-    injectStore, 
-    injectTranslatorLocale, 
-    useTranslationsForNamespace, 
-    useTranslator, 
+import { ITranslateT } from '@ilingo/vue';
+import {
+    injectHTTPClient,
+    injectStore,
+    injectTranslatorLocale,
+    useTranslationsForNamespace,
+    useTranslator,
 } from '@authup/client-web-kit';
 import { storeToRefs } from 'pinia';
 import { computed, defineNuxtComponent } from '#imports';
 import { Navigation } from '../config/layout';
 
 export default defineNuxtComponent({
+    components: { ITranslateT },
     setup() {
         const store = injectStore();
         const {
@@ -59,7 +61,6 @@ export default defineNuxtComponent({
         const translationsApp = useTranslationsForNamespace(
             TranslatorTranslationNamespace.APP,
             [
-                { key: TranslatorTranslationAppKey.SESSION_RENEW },
                 { key: TranslatorTranslationAppKey.MINUTES },
                 { key: TranslatorTranslationAppKey.SECONDS },
                 { key: TranslatorTranslationAppKey.API_DOCS },
@@ -118,11 +119,14 @@ export default defineNuxtComponent({
                                 <VCIcon
                                     name="fa6-solid:clock"
                                     class="pe-1"
-                                /> {{ translationsApp.sessionRenew }}
-                                <span class="text-success-600">
-                                    {{ props.minutes }} {{ translationsApp.minutes }},
-                                    {{ props.seconds }} {{ translationsApp.seconds }}
-                                </span>.
+                                /> <ITranslateT path="authupApp.sessionRenew">
+                                    <template #countdown>
+                                        <span class="text-success-600">
+                                            {{ props.minutes }} {{ translationsApp.minutes }},
+                                            {{ props.seconds }} {{ translationsApp.seconds }}
+                                        </span>
+                                    </template>
+                                </ITranslateT>
                             </template>
                         </VCCountdown>
                     </small>

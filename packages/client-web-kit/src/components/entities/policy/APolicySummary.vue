@@ -9,6 +9,12 @@
 import type { Policy } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
+import {
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationFieldKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
+import { useTranslations } from '../../../core';
 import APolicyTypeBadge from './APolicyTypeBadge.vue';
 
 export default defineComponent({
@@ -19,16 +25,50 @@ export default defineComponent({
             required: true,
         },
     },
+    setup() {
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.NAME,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.TYPE,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DISPLAY_NAME,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.DESCRIPTION,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.INVERT,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.BUILT_IN,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.YES,
+            },
+        ]);
+
+        return { translations };
+    },
 });
 </script>
 <template>
     <div>
         <div class="flex flex-row gap-2 mb-2">
-            <strong style="min-width: 120px">Name</strong>
+            <strong style="min-width: 120px">{{ translations.name }}</strong>
             <div>{{ entity.name }}</div>
         </div>
         <div class="flex flex-row gap-2 mb-2">
-            <strong style="min-width: 120px">Type</strong>
+            <strong style="min-width: 120px">{{ translations.type }}</strong>
             <div>
                 <APolicyTypeBadge :type="entity.type" />
             </div>
@@ -37,32 +77,32 @@ export default defineComponent({
             v-if="entity.display_name"
             class="flex flex-row gap-2 mb-2"
         >
-            <strong style="min-width: 120px">Display Name</strong>
+            <strong style="min-width: 120px">{{ translations.displayName }}</strong>
             <div>{{ entity.display_name }}</div>
         </div>
         <div
             v-if="entity.description"
             class="flex flex-row gap-2 mb-2"
         >
-            <strong style="min-width: 120px">Description</strong>
+            <strong style="min-width: 120px">{{ translations.description }}</strong>
             <div>{{ entity.description }}</div>
         </div>
         <div
             v-if="entity.invert"
             class="flex flex-row gap-2 mb-2"
         >
-            <strong style="min-width: 120px">Invert</strong>
+            <strong style="min-width: 120px">{{ translations.invert }}</strong>
             <div>
-                <span class="badge bg-warning-500">Yes</span>
+                <span class="badge bg-warning-500">{{ translations.yes }}</span>
             </div>
         </div>
         <div
             v-if="entity.built_in"
             class="flex flex-row gap-2 mb-2"
         >
-            <strong style="min-width: 120px">Built-in</strong>
+            <strong style="min-width: 120px">{{ translations.builtIn }}</strong>
             <div>
-                <span class="badge bg-bg-elevated">Yes</span>
+                <span class="badge bg-bg-elevated">{{ translations.yes }}</span>
             </div>
         </div>
     </div>

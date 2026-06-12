@@ -18,7 +18,8 @@ import {
     toRef,
     watch,
 } from 'vue';
-import { SlotName, injectHTTPClient  } from '../../../core';
+import { TranslatorTranslationActionKey, TranslatorTranslationClientKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { SlotName, injectHTTPClient, useTranslation } from '../../../core';
 import { hasOwnProperty } from '@authup/kit';
 import { APolicies } from '../policy/APolicies';
 import APolicyInlineInfo from '../policy/APolicyInlineInfo.vue';
@@ -94,6 +95,26 @@ export const APermissionPolicyBindingButton = defineComponent({
 
         const modalTitleId = `policy-modal-title-${props.entity.id}`;
 
+        const translationJunctionPolicy = useTranslation({
+            namespace: TranslatorTranslationNamespace.CLIENT,
+            key: TranslatorTranslationClientKey.JUNCTION_POLICY,
+        });
+
+        const translationBack = useTranslation({
+            namespace: TranslatorTranslationNamespace.ACTION,
+            key: TranslatorTranslationActionKey.BACK,
+        });
+
+        const translationReset = useTranslation({
+            namespace: TranslatorTranslationNamespace.ACTION,
+            key: TranslatorTranslationActionKey.RESET,
+        });
+
+        const translationClose = useTranslation({
+            namespace: TranslatorTranslationNamespace.ACTION,
+            key: TranslatorTranslationActionKey.CLOSE,
+        });
+
         const VCIcon = resolveComponent('VCIcon');
 
         return () => {
@@ -143,11 +164,11 @@ export const APermissionPolicyBindingButton = defineComponent({
                             },
                         }, [
                             h(VCIcon, { name: 'fa6-solid:arrow-left', class: 'me-1' }),
-                            'Back',
+                            translationBack.value,
                         ]),
                     ];
                 } else {
-                    modalTitle = 'Junction Policy';
+                    modalTitle = translationJunctionPolicy.value;
                     modalBody = h(APolicies, { query: { filters: { parent_id: null } } }, {
                         [SlotName.ITEM]: (slotProps: { data: Policy }) => {
                             const isSelected = currentPolicyId.value === slotProps.data.id;
@@ -192,7 +213,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                                 onClick() {
                                     handlePolicySelect(null);
                                 },
-                            }, 'Reset') :
+                            }, translationReset.value) :
                             undefined,
                         h('button', {
                             type: 'button',
@@ -200,7 +221,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                             onClick() {
                                 modalOpen.value = false;
                             },
-                        }, 'Close'),
+                        }, translationClose.value),
                     ];
                 }
 
@@ -224,7 +245,7 @@ export const APermissionPolicyBindingButton = defineComponent({
                                 h('button', {
                                     type: 'button',
                                     class: 'btn-close',
-                                    'aria-label': 'Close',
+                                    'aria-label': translationClose.value,
                                     onClick() {
                                         if (detailPolicy.value) {
                                             detailPolicy.value = null;

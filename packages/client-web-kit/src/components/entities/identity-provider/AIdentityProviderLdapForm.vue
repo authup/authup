@@ -7,6 +7,11 @@
 <script lang="ts">
 import type { IdentityProvider } from '@authup/core-kit';
 import { EntityType, IdentityProviderProtocol } from '@authup/core-kit';
+import {
+    TranslatorTranslationCommonKey,
+    TranslatorTranslationEntityKey,
+    TranslatorTranslationNamespace,
+} from '@authup/i18n';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -17,7 +22,7 @@ import {
     ref,
 } from 'vue';
 import { useIsEditing } from '../../../composables';
-import { extractValidupResultsFromChild } from '../../../core';
+import { extractValidupResultsFromChild, useTranslations } from '../../../core';
 import {
     AFormSubmit,
     defineEntityManager,
@@ -91,12 +96,37 @@ export default defineComponent({
             }
         };
 
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.BASIC,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.SECURITY,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.CONNECTION,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.ENTITY,
+                key: TranslatorTranslationEntityKey.USER,
+                count: 1,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.COMMON,
+                key: TranslatorTranslationCommonKey.GROUP,
+            },
+        ]);
+
         return {
             data: manager.data,
             busy,
             isEditing,
             isInvalid,
             ldapProtocol: IdentityProviderProtocol.LDAP,
+            translations,
             submit,
         };
     },
@@ -126,33 +156,33 @@ export default defineComponent({
         <div class="row">
             <div class="col">
                 <h6>
-                    <VCIcon name="fa6-solid:wrench" /> Basic
+                    <VCIcon name="fa6-solid:wrench" /> {{ translations.basic }}
                 </h6>
                 <AIdentityProviderBasicFields :entity="data" />
             </div>
             <div class="col">
                 <h6>
-                    <VCIcon name="fa6-solid:lock" /> Security
+                    <VCIcon name="fa6-solid:lock" /> {{ translations.security }}
                 </h6>
                 <AIdentityProviderLdapCredentialsFields :entity="data" />
             </div>
         </div>
 
         <h6>
-            <VCIcon name="fa6-solid:vihara" /> Connection
+            <VCIcon name="fa6-solid:vihara" /> {{ translations.connection }}
         </h6>
         <AIdentityProviderLdapConnectionFields :entity="data" />
 
         <div class="row">
             <div class="col">
                 <h6>
-                    <VCIcon name="fa6-solid:user" /> User
+                    <VCIcon name="fa6-solid:user" /> {{ translations.user }}
                 </h6>
                 <AIdentityProviderLdapUserFields :entity="data" />
             </div>
             <div class="col">
                 <h6>
-                    <VCIcon name="fa6-solid:masks-theater" /> Group
+                    <VCIcon name="fa6-solid:masks-theater" /> {{ translations.group }}
                 </h6>
                 <AIdentityProviderLdapGroupFields :entity="data" />
             </div>

@@ -17,9 +17,9 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.HASH_SECRET]: 'Hacher le secret ?',
 
     [TranslatorTranslationClientKey.LOGIN_FAILED]: 'L\'opération de connexion a échoué',
-    [TranslatorTranslationClientKey.SCOPE_GRANT_INTRO]: 'Cela permettra à l\'application {{client}} de',
-    [TranslatorTranslationClientKey.ONCE_AUTHORIZED_REDIRECT]: 'Une fois autorisé, vous serez redirigé vers :',
-    [TranslatorTranslationClientKey.GOVERNED_BY]: 'Cette application est régie par la politique de confidentialité et les conditions d\'utilisation de l\'application {{client}}.',
+    [TranslatorTranslationClientKey.SCOPE_GRANT_INTRO]: 'Cela permettra à l\'application {client} de',
+    [TranslatorTranslationClientKey.ONCE_AUTHORIZED_REDIRECT]: 'Une fois autorisé, vous serez redirigé vers {target}.',
+    [TranslatorTranslationClientKey.GOVERNED_BY]: 'Cette application est régie par la {privacyPolicy} et les {termsOfService} de l\'application {{client}}.',
     [TranslatorTranslationClientKey.ACTIVE_SINCE]: 'Actif depuis',
     [TranslatorTranslationClientKey.VIEW_POLICY_DETAILS]: 'Voir les détails de la politique',
 
@@ -34,4 +34,35 @@ export const TranslatorTranslationClientFrench : NamespaceTranslations<`${Transl
     [TranslatorTranslationClientKey.ACCOUNT_ACTIVATED]: 'Le compte a été activé avec succès.',
     [TranslatorTranslationClientKey.PASSWORD_RESET_DONE]: 'Le mot de passe a été réinitialisé avec succès.',
     [TranslatorTranslationClientKey.WORKFLOW_DISABLED]: 'Cette fonctionnalité n\'est pas activée.',
+    [TranslatorTranslationClientKey.PRIVACY_POLICY]: 'politique de confidentialité',
+    [TranslatorTranslationClientKey.TERMS_OF_SERVICE]: 'conditions d\'utilisation',
+
+    [TranslatorTranslationClientKey.POLICY_TYPE_COMPOSITE]: 'Composite',
+    [TranslatorTranslationClientKey.POLICY_TYPE_DATE]: 'Date',
+    [TranslatorTranslationClientKey.POLICY_TYPE_TIME]: 'Heure',
+    [TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTE_NAMES]: 'Noms d\'attributs',
+    [TranslatorTranslationClientKey.POLICY_TYPE_ATTRIBUTES]: 'Attributs',
+    [TranslatorTranslationClientKey.POLICY_TYPE_REALM_MATCH]: 'Correspondance de realm',
+    [TranslatorTranslationClientKey.POLICY_TYPE_IDENTITY]: 'Identité',
+    [TranslatorTranslationClientKey.POLICY_TYPE_PERMISSION_BINDING]: 'Liaison de permission',
+
+    [TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_UNANIMOUS]: 'Toutes les politiques doivent être évaluées positivement.',
+    [TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_AFFIRMATIVE]: 'Au moins une politique doit être évaluée positivement.',
+    [TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_CONSENSUS]: 'Plus de politiques doivent être évaluées positivement que négativement.',
+    [TranslatorTranslationClientKey.DECISION_STRATEGY_HINT_DEFAULT]: 'Aucune stratégie sélectionnée. Par défaut : unanime (toutes les politiques doivent être évaluées positivement).',
+    [TranslatorTranslationClientKey.OPTION_NONE_UNANIMOUS]: '-- Aucune (défaut : unanime) --',
+
+    [TranslatorTranslationClientKey.REALM_MATCH_STRICT_HINT]: 'Ne correspondre que si l\'attribut est strictement égal au nom ?',
+    [TranslatorTranslationClientKey.REALM_MATCH_NULL_MATCH_ALL_HINT]: 'Détermine si les ressources dont la valeur realm-id/nom est nulle correspondent à tous les realms d\'identité.{br}Si activé, tout realm d\'identité peut accéder aux ressources dont les valeurs realm-id/nom sont nulles.',
+    [TranslatorTranslationClientKey.REALM_MATCH_MASTER_MATCH_ALL_HINT]: 'Indique si le realm maître d\'une identité correspond à tous les attributs realm-id/nom, y compris nuls.{br}Si activé, le realm maître peut accéder à toute ressource quelle que soit la valeur de son realm.',
+
+    [TranslatorTranslationClientKey.ENABLE_STARTTLS_HINT]: 'Activer le processus StartTLS ?',
+    [TranslatorTranslationClientKey.PASSWORD_MUST_MATCH]: 'Doit correspondre au mot de passe.',
+    [TranslatorTranslationClientKey.LOOKUP_FAILED]: 'La recherche a échoué avec : {{message}}',
+    [TranslatorTranslationClientKey.PROTOCOL_NOT_SUPPORTED]: '{{name}} n\'est pas encore pris en charge.',
+
+    [TranslatorTranslationClientKey.JUNCTION_POLICY]: 'Politique de liaison',
+    [TranslatorTranslationClientKey.SELECTION_UPDATING]: 'Mise à jour de la sélection',
+    [TranslatorTranslationClientKey.SELECTION_REMOVE]: 'Retirer de la sélection',
+    [TranslatorTranslationClientKey.SELECTION_ADD]: 'Ajouter à la sélection',
 };

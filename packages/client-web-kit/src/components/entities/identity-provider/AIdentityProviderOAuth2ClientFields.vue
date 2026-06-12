@@ -6,7 +6,8 @@
   -->
 <script lang="ts">
 import type { IdentityProvider, OAuth2IdentityProvider } from '@authup/core-kit';
-import { assignFormProperties } from '../../../core';
+import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
+import { assignFormProperties, useTranslations } from '../../../core';
 import { Container } from 'validup';
 import { useValidup } from '@validup/vue';
 import type { PropType } from 'vue';
@@ -38,7 +39,22 @@ export default defineComponent({
         onChange(updatedAt, () => assign());
         assign();
 
-        return { v, secretShow };
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.CLIENT_ID,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.CLIENT_SECRET,
+            },
+        ]);
+
+        return {
+            v, 
+            secretShow, 
+            translations, 
+        };
     },
 });
 
@@ -52,7 +68,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Client ID
+                    {{ translations.clientId }}
                 </template>
                 <VCFormInput v-model="v.fields.client_id.$model.value" />
             </VCFormGroup>
@@ -63,7 +79,7 @@ export default defineComponent({
         >
             <VCFormGroup :validation="value">
                 <template #label>
-                    Client Secret
+                    {{ translations.clientSecret }}
                 </template>
                 <VCFormInput
                     v-model="v.fields.client_secret.$model.value"

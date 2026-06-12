@@ -1,6 +1,8 @@
 <script lang="ts">
 import { IdentityProviderPreset, IdentityProviderProtocol } from '@authup/core-kit';
+import { TranslatorTranslationFieldKey, TranslatorTranslationNamespace } from '@authup/i18n';
 import { defineComponent } from 'vue';
+import { useTranslations } from '../../../core';
 import { AIdentityProviderPreset } from './AIdentityProviderPreset';
 import { AIdentityProviderProtocol } from './AIdentityProviderProtocol';
 
@@ -26,9 +28,21 @@ export default defineComponent({
             setup.emit('pick', 'preset', preset);
         };
 
+        const translations = useTranslations([
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PROTOCOLS,
+            },
+            {
+                namespace: TranslatorTranslationNamespace.FIELD,
+                key: TranslatorTranslationFieldKey.PRESETS,
+            },
+        ]);
+
         return {
             protocols,
             presets,
+            translations,
             pickProtocol,
             pickPreset,
         };
@@ -38,7 +52,7 @@ export default defineComponent({
 <template>
     <div class="flex flex-col gap-2">
         <div>
-            <h6>Protocols</h6>
+            <h6>{{ translations.protocols }}</h6>
 
             <div class="flex flex-row gap-2 flex-wrap">
                 <template
@@ -68,7 +82,7 @@ export default defineComponent({
             </div>
         </div>
         <div>
-            <h6>Presets</h6>
+            <h6>{{ translations.presets }}</h6>
 
             <div class="flex flex-row gap-2 flex-wrap">
                 <template
