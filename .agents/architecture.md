@@ -577,15 +577,15 @@ endpoint — the `/authorize` verifier already resolves clients via
   `grant_types: 'authorization_code refresh_token'` (metadata only),
   `scope: 'global openid'`, `redirect_uri` = one `<origin>/**` wildcard per
   trusted app origin (matched by `isSimpleMatch`).
-- **App origins** come from `getAppOrigins(config)` = `[publicUrl, ...additionalOrigins]`
-  reduced to bare origins. An `additionalOrigins` entry may carry a scheme
+- **App origins** come from `getAppOrigins(config)` = `[publicUrl, ...trustedOrigins]`
+  reduced to bare origins. An `trustedOrigins` entry may carry a scheme
   (contributes exactly that origin) or be a bare host[:port] — expanded to
   BOTH the http and https origin by `expandToOrigins`
   (`app/modules/config/origins.ts`). `normalizeConfig` canonicalizes the
-  list (expansion + dedupe) at config time, so `Config['additionalOrigins']`
+  list (expansion + dedupe) at config time, so `Config['trustedOrigins']`
   always holds bare origins; config validation runs through `ConfigValidator`
   (validup + zod, `app/modules/config/validator.ts`), making
-  `parseConfig`/`normalizeConfig` async. `ADDITIONAL_ORIGINS` (env, comma-separated) is
+  `parseConfig`/`normalizeConfig` async. `TRUSTED_ORIGINS` (env, comma-separated) is
   **security-sensitive**: the `web` client is `built_in` (auto-consent) + `global`
   scope, so any allowlisted origin can obtain a full-permission user token.
   The origin list does NOT drive CORS — CORS reflects any origin by default

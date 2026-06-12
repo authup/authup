@@ -57,7 +57,7 @@ export default {
      * client-web dev origin (http://localhost:3000) is seeded automatically.
      * default: []
      */
-    additionalOrigins: ['https://app.example.com'],
+    trustedOrigins: ['https://app.example.com'],
 
     // ----------------------------------------------------
 
@@ -149,7 +149,7 @@ export default {
 ```dotenv [authup.server.core.conf]
 port=3001
 publicUrl=http://localhost:3001
-additionalOrigins=https://app.example.com
+trustedOrigins=https://app.example.com
 registrationEnabled=false
 emailVerificationEnabled=false
 passwordRecoveryEnabled=false
@@ -165,7 +165,7 @@ permissionsDefaultPolicyAssignment=true
 ```dotenv [.env]
 PORT=3001
 PUBLIC_URL=http://localhost:3001
-ADDITIONAL_ORIGINS=https://app.example.com
+TRUSTED_ORIGINS=https://app.example.com
 REGISTRATION_ENABLED=false
 EMAIL_VERIFICATION_ENABLED=false
 PASSWORD_RECOVERY_ENABLED=false

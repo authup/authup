@@ -45,7 +45,7 @@ export class ConfigValidator extends Container<Config> {
         this.mount('port', optional, nonNegativeNumberValidator);
         this.mount('host', optional, stringValidator);
         this.mount('publicUrl', optional, createValidator(z.url()));
-        this.mount('additionalOrigins', optional, createValidator(
+        this.mount('trustedOrigins', optional, createValidator(
             z.array(z.string().refine((value) => {
                 try {
                     expandToOrigins(value);

@@ -16,16 +16,16 @@ describe('src/config/*.ts', () => {
         it('should derive the origin from publicUrl, stripping any path', () => {
             const origins = getAppOrigins({
                 publicUrl: 'https://auth.example.com/sub/path',
-                additionalOrigins: [],
+                trustedOrigins: [],
             } as any);
 
             expect(origins).toEqual(['https://auth.example.com']);
         });
 
-        it('should merge publicUrl with additionalOrigins and dedupe by origin', () => {
+        it('should merge publicUrl with trustedOrigins and dedupe by origin', () => {
             const origins = getAppOrigins({
                 publicUrl: 'https://auth.example.com',
-                additionalOrigins: [
+                trustedOrigins: [
                     'https://auth.example.com/ignored-path',
                     'http://localhost:3000',
                 ],
@@ -40,7 +40,7 @@ describe('src/config/*.ts', () => {
         it('should expand a scheme-less host to both http and https origins', () => {
             const origins = getAppOrigins({
                 publicUrl: 'https://auth.example.com',
-                additionalOrigins: ['hub.local'],
+                trustedOrigins: ['hub.local'],
             } as any);
 
             expect(origins).toEqual([
@@ -68,18 +68,18 @@ describe('src/config/*.ts', () => {
     });
 
     describe('parseConfig', () => {
-        it('should accept additionalOrigins with and without protocol', async () => {
-            const config = await parseConfig({ additionalOrigins: ['https://app.example.com', 'hub.local', 'hub.local:8080'] });
+        it('should accept trustedOrigins with and without protocol', async () => {
+            const config = await parseConfig({ trustedOrigins: ['https://app.example.com', 'hub.local', 'hub.local:8080'] });
 
-            expect(config.additionalOrigins).toEqual([
+            expect(config.trustedOrigins).toEqual([
                 'https://app.example.com',
                 'hub.local',
                 'hub.local:8080',
             ]);
         });
 
-        it('should reject invalid additionalOrigins entries', async () => {
-            await expect(parseConfig({ additionalOrigins: [''] })).rejects.toThrow();
+        it('should reject invalid trustedOrigins entries', async () => {
+            await expect(parseConfig({ trustedOrigins: [''] })).rejects.toThrow();
         });
 
         it('should strip unknown keys', async () => {
@@ -91,15 +91,15 @@ describe('src/config/*.ts', () => {
     });
 
     describe('normalizeConfig', () => {
-        it('should canonicalize additionalOrigins to bare origins', async () => {
+        it('should canonicalize trustedOrigins to bare origins', async () => {
             const config = await normalizeConfig({
-                additionalOrigins: [
+                trustedOrigins: [
                     'https://app.example.com/some/path',
                     'hub.local',
                 ],
             });
 
-            expect(config.additionalOrigins).toEqual([
+            expect(config.trustedOrigins).toEqual([
                 'https://app.example.com',
                 'http://hub.local',
                 'https://hub.local',
@@ -108,12 +108,12 @@ describe('src/config/*.ts', () => {
         });
 
         it('should not accumulate the dev origin on repeated normalization', async () => {
-            const input = { additionalOrigins: ['hub.local'] };
+            const input = { trustedOrigins: ['hub.local'] };
 
             const first = await normalizeConfig(input);
-            const second = await normalizeConfig({ ...input, additionalOrigins: first.additionalOrigins });
+            const second = await normalizeConfig({ ...input, trustedOrigins: first.trustedOrigins });
 
-            expect(second.additionalOrigins).toEqual(first.additionalOrigins);
+            expect(second.trustedOrigins).toEqual(first.trustedOrigins);
         });
     });
 

@@ -45,11 +45,11 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     // every entry being a full origin. Building a fresh array also keeps a
     // repeated normalizeConfig() on the same input from accumulating the
     // dev origin into a security-sensitive allowlist.
-    const additionalOrigins: string[] = [];
-    for (const value of parsed.additionalOrigins ?? []) {
+    const trustedOrigins: string[] = [];
+    for (const value of parsed.trustedOrigins ?? []) {
         for (const origin of expandToOrigins(value)) {
-            if (!additionalOrigins.includes(origin)) {
-                additionalOrigins.push(origin);
+            if (!trustedOrigins.includes(origin)) {
+                trustedOrigins.push(origin);
             }
         }
     }
@@ -61,8 +61,8 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     // first run.
     if (env !== EnvironmentName.PRODUCTION) {
         const devOrigin = 'http://localhost:3000';
-        if (!additionalOrigins.includes(devOrigin)) {
-            additionalOrigins.push(devOrigin);
+        if (!trustedOrigins.includes(devOrigin)) {
+            trustedOrigins.push(devOrigin);
         }
     }
 
@@ -112,7 +112,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
         ...parsed,
 
         // After the spread so the canonicalized + dev-seeded list wins over
-        // the raw parsed list (parsed.additionalOrigins is merged in above).
-        additionalOrigins,
+        // the raw parsed list (parsed.trustedOrigins is merged in above).
+        trustedOrigins,
     };
 }

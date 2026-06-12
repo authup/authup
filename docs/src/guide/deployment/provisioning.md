@@ -36,8 +36,8 @@ attempting to create or rename a client to it returns a `400 Bad Request`.
 ### Trusted app origins
 
 The `redirect_uri` allowlist is derived from the set of trusted app origins:
-the origin of `publicUrl` plus every entry in `additionalOrigins`
-(`ADDITIONAL_ORIGINS`). An entry may be a full origin
+the origin of `publicUrl` plus every entry in `trustedOrigins`
+(`TRUSTED_ORIGINS`). An entry may be a full origin
 (`https://app.example.com`) or a bare host (`hub.local`, `hub.local:8080`) —
 a bare host expands to both its http and https origin; pass a full origin to
 restrict to one scheme. Each origin contributes one `<origin>/**` redirect
@@ -49,10 +49,10 @@ options.)
 ::: danger Security
 The `web` client is built-in with the `global` scope, so **any** allowlisted
 origin can complete a login and obtain a full-permission token. Only add
-origins you fully control to `additionalOrigins`. In non-production, the
+origins you fully control to `trustedOrigins`. In non-production, the
 client-web dev origin (`http://localhost:3000`) is seeded automatically so
 the realm-selection login works out of the box; in production nothing is
-seeded — set `additionalOrigins` explicitly for any UI origin other than
+seeded — set `trustedOrigins` explicitly for any UI origin other than
 `publicUrl`.
 :::
 

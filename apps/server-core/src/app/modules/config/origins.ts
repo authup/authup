@@ -35,15 +35,15 @@ export function expandToOrigins(value: string): string[] {
  *
  * publicUrl may carry a path; both the OAuth2 redirect allowlist and the
  * CORS origin allowlist need bare origins, so extract the origin from each
- * configured URL and de-duplicate. additionalOrigins entries are already
+ * configured URL and de-duplicate. trustedOrigins entries are already
  * canonicalized by normalizeConfig, but raw values (scheme-less hosts)
  * are tolerated and expanded the same way.
  */
-export function getAppOrigins(config: Pick<Config, 'publicUrl' | 'additionalOrigins'>): string[] {
+export function getAppOrigins(config: Pick<Config, 'publicUrl' | 'trustedOrigins'>): string[] {
     const origins = new Set<string>();
     origins.add(new URL(config.publicUrl).origin);
 
-    for (const value of config.additionalOrigins ?? []) {
+    for (const value of config.trustedOrigins ?? []) {
         for (const origin of expandToOrigins(value)) {
             origins.add(origin);
         }
