@@ -9,6 +9,7 @@ import { AAuthorize } from '@authup/client-web-kit';
 import type { Client, OAuth2AuthorizationCodeRequest, Scope } from '@authup/core-kit';
 import type { StatusResponseFeatures } from '@authup/core-http-kit';
 import type { LinkProperties } from '@vuecs/link';
+import { useToast } from '@vuecs/overlays';
 import { computed, defineComponent } from 'vue';
 import { useBasePath } from '../base-path';
 import { injectPayload } from '../di';
@@ -52,10 +53,19 @@ export default defineComponent({
                 undefined
         ));
 
+        const toast = useToast();
+        const handleFailed = (message: string) => {
+            toast.add({
+                description: message,
+                color: 'error',
+            });
+        };
+
         return {
             data: app.data,
             registerLink,
             passwordForgotLink,
+            handleFailed,
         };
     },
 });
@@ -68,5 +78,6 @@ export default defineComponent({
         :error="data.error"
         :register-link="registerLink"
         :password-forgot-link="passwordForgotLink"
+        @failed="handleFailed"
     />
 </template>

@@ -43,8 +43,8 @@ export default defineComponent({
         registerLink: { type: Object as PropType<LinkProperties> },
         passwordForgotLink: { type: Object as PropType<LinkProperties> },
     },
-    emits: ['redirect'],
-    setup(props) {
+    emits: ['redirect', 'failed'],
+    setup(props, { emit }) {
         const httpClient = injectHTTPClient();
         const store = injectStore();
         const { loggedIn } = storeToRefs(store);
@@ -99,6 +99,7 @@ export default defineComponent({
                         codeRequest: props.codeRequest,
                         registerLink: props.registerLink,
                         passwordForgotLink: props.passwordForgotLink,
+                        onFailed: (message: string) => emit('failed', message),
                     }),
                     fallback: () => h(AuthorizeText, { message: loadingText.value }),
                 }));

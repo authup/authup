@@ -7,7 +7,7 @@
 <script lang="ts">
 import { AAuthGadgets } from '@authup/client-web-kit';
 import { defineComponent } from 'vue';
-import { VCToastProvider } from '@vuecs/overlays';
+import { VCToastProvider, VCToaster } from '@vuecs/overlays';
 import { createColorMode } from './color-mode';
 import { injectPayload } from './di';
 
@@ -15,6 +15,7 @@ export default defineComponent({
     components: {
         AAuthGadgets,
         VCToastProvider,
+        VCToaster,
     },
     setup() {
         const payload = injectPayload();
@@ -29,11 +30,9 @@ export default defineComponent({
     <!--
         Wrap the app root in <VCToastProvider> so any descendant <VCToaster>
         (or component that renders Reka toast primitives) has the required
-        ToastProviderContext injection. The consent UI doesn't mount a toaster
-        today, but kit components may render toast primitives — keeping the
-        provider here matches the client-web app and avoids surprise injection
-        errors when new entry points get added. <VCToastProvider> renders its
-        default slot transparently when no toaster is mounted.
+        ToastProviderContext injection — matching client-web's auth layout.
+        The <VCToaster> viewport renders the queue fed by useToast() (e.g.
+        the authorize page surfacing login failures).
 
         The gadget cluster mirrors client-web's auth layout: the two controls
         a visitor on any auth page still needs — color mode and language.
@@ -42,5 +41,7 @@ export default defineComponent({
         <AAuthGadgets v-model:dark="isDark" />
 
         <RouterView />
+
+        <VCToaster position="top-center" />
     </VCToastProvider>
 </template>
