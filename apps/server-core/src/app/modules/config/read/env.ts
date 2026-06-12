@@ -66,8 +66,8 @@ export function readConfigRawFromEnv() : ConfigInput {
     }
 
     const port = readInt(ConfigEnvironmentVariableName.PORT);
-    if (port) {
-        options.port = Number.parseInt(`${port}`, 10);
+    if (typeof port !== 'undefined') {
+        options.port = port;
     }
 
     const publicURL = read(ConfigEnvironmentVariableName.PUBLIC_URL);

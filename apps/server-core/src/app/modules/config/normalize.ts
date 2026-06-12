@@ -20,7 +20,7 @@ export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> 
     const writableDirectoryPath = parsed.writableDirectoryPath ||
         path.join(process.cwd(), 'writable');
 
-    const port = parsed.port || 3001;
+    const port = parsed.port ?? 3001;
     let host = parsed.host || '0.0.0.0';
 
     let publicUrl : string;

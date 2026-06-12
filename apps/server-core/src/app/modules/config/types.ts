@@ -83,11 +83,12 @@ export type Config = {
      * drive CORS (the API reflects any origin by default; an explicit
      * CORS allowlist goes through middlewareCors), and does not affect
      * UIs using their own registered OAuth2 client. Input entries may be
-     * full origins (scheme://host[:port]) or bare hosts (host[:port]) —
-     * a bare host expands to both its http and https origin during
-     * normalization, so the normalized config always holds full origins
-     * (scheme://host[:port], no path); each is stored as `<origin>/**`
-     * in the web client's redirect_uri set.
+     * full http(s) origins (scheme://host[:port]; other protocols are
+     * rejected) or bare hosts (host[:port]) — a bare host expands to
+     * both its http and https origin during normalization, so the
+     * normalized config always holds full origins (scheme://host[:port],
+     * no path); each is stored as `<origin>/**` in the web client's
+     * redirect_uri set.
      *
      * SECURITY: the `web` client is built_in (auto-consent + `global`
      * scope), so any origin listed here can obtain a full-permission user

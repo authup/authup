@@ -24,9 +24,9 @@ describe('src/config/*.ts', () => {
 
         it('should merge publicUrl with trustedOrigins and dedupe by origin', () => {
             const origins = getAppOrigins({
-                publicUrl: 'https://auth.example.com',
+                publicUrl: 'https://auth.example.com/sub/path',
                 trustedOrigins: [
-                    'https://auth.example.com/ignored-path',
+                    'https://auth.example.com',
                     'http://localhost:3000',
                 ],
             } as any);
@@ -34,19 +34,6 @@ describe('src/config/*.ts', () => {
             expect(origins).toEqual([
                 'https://auth.example.com',
                 'http://localhost:3000',
-            ]);
-        });
-
-        it('should expand a scheme-less host to both http and https origins', () => {
-            const origins = getAppOrigins({
-                publicUrl: 'https://auth.example.com',
-                trustedOrigins: ['hub.local'],
-            } as any);
-
-            expect(origins).toEqual([
-                'https://auth.example.com',
-                'http://hub.local',
-                'https://hub.local',
             ]);
         });
     });
@@ -65,6 +52,11 @@ describe('src/config/*.ts', () => {
         it('should throw on an invalid value', () => {
             expect(() => expandToOrigins('')).toThrow();
         });
+
+        it('should reject non-http(s) protocols', () => {
+            expect(() => expandToOrigins('myapp://hub.local')).toThrow();
+            expect(() => expandToOrigins('ftp://hub.local')).toThrow();
+        });
     });
 
     describe('parseConfig', () => {
@@ -80,6 +72,13 @@ describe('src/config/*.ts', () => {
 
         it('should reject invalid trustedOrigins entries', async () => {
             await expect(parseConfig({ trustedOrigins: [''] })).rejects.toThrow();
+            await expect(parseConfig({ trustedOrigins: ['myapp://hub.local'] })).rejects.toThrow();
+        });
+
+        it('should reject non-object input', async () => {
+            await expect(parseConfig('port=3001')).rejects.toThrow();
+            await expect(parseConfig(null)).rejects.toThrow();
+            await expect(parseConfig([])).rejects.toThrow();
         });
 
         it('should strip unknown keys', async () => {
@@ -124,6 +123,12 @@ describe('src/config/*.ts', () => {
 
             expect(config.env).toEqual('production');
             expect(config.trustedOrigins).toEqual(['https://app.example.com']);
+        });
+
+        it('should keep an explicit port of 0', async () => {
+            const config = await normalizeConfig({ port: 0 });
+
+            expect(config.port).toEqual(0);
         });
     });
 

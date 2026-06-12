@@ -10,6 +10,7 @@ import { createValidator } from '@validup/zod';
 import type { BetterSqlite3ConnectionOptions } from 'typeorm/driver/better-sqlite3/BetterSqlite3ConnectionOptions.js';
 import type { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions.js';
 import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions.js';
+import type { ValidatorDescriptor } from 'validup';
 import { Container } from 'validup';
 import { z } from 'zod';
 import { expandToOrigins } from './origins.ts';
@@ -19,8 +20,6 @@ export class ConfigValidator extends Container<Config> {
     protected override initialize() {
         super.initialize();
 
-        const optional = { optional: true };
-
         const stringValidator = createValidator(z.string());
         const booleanValidator = createValidator(z.boolean());
         const nonNegativeNumberValidator = createValidator(z.number().nonnegative());
@@ -28,66 +27,81 @@ export class ConfigValidator extends Container<Config> {
         const middlewareValidator = createValidator(
             z.boolean().or(z.record(z.string(), z.any())),
         );
+        const serviceValidator = createValidator(
+            z.string()
+                .or(z.boolean())
+                .or(z.custom<Record<string, any>>((value) => isObject(value))),
+        );
 
-        this.mount('env', optional, stringValidator);
-        this.mount('rootPath', optional, stringValidator);
-        this.mount('writableDirectoryPath', optional, stringValidator);
+        // Record<keyof Config, ...> is the compile-time exhaustiveness
+        // guard: a Config key without a validator here fails the build
+        // instead of being silently stripped by run().
+        const validators: Record<keyof Config, ValidatorDescriptor> = {
+            env: stringValidator,
+            rootPath: stringValidator,
+            writableDirectoryPath: stringValidator,
 
-        this.mount('logger', optional, booleanValidator);
-        this.mount('db', optional, createValidator(
-            z.custom<MysqlConnectionOptions | PostgresConnectionOptions | BetterSqlite3ConnectionOptions>(
-                (value) => isObject(value),
+            logger: booleanValidator,
+            db: createValidator(
+                z.custom<MysqlConnectionOptions | PostgresConnectionOptions | BetterSqlite3ConnectionOptions>(
+                    (value) => isObject(value),
+                ),
             ),
-        ));
-        this.mount('redis', optional, createValidator(z.any()));
-        this.mount('smtp', optional, createValidator(z.any()));
+            redis: serviceValidator,
+            smtp: serviceValidator,
 
-        this.mount('port', optional, nonNegativeNumberValidator);
-        this.mount('host', optional, stringValidator);
-        this.mount('publicUrl', optional, createValidator(z.url()));
-        this.mount('trustedOrigins', optional, createValidator(
-            z.array(z.string().refine((value) => {
-                try {
-                    expandToOrigins(value);
-                    return true;
-                } catch {
-                    return false;
-                }
-            }, 'must be an origin (incl. protocol) or a bare host[:port]')),
-        ));
+            port: nonNegativeNumberValidator,
+            host: stringValidator,
+            publicUrl: createValidator(z.url()),
+            trustedOrigins: createValidator(
+                z.array(z.string().refine((value) => {
+                    try {
+                        expandToOrigins(value);
+                        return true;
+                    } catch {
+                        return false;
+                    }
+                }, 'must be a http(s) origin or a bare host[:port]')),
+            ),
 
-        this.mount('middlewareBody', optional, middlewareValidator);
-        this.mount('middlewareCors', optional, middlewareValidator);
-        this.mount('middlewareCookie', optional, middlewareValidator);
-        this.mount('middlewareQuery', optional, middlewareValidator);
-        this.mount('middlewarePrometheus', optional, middlewareValidator);
-        this.mount('middlewareRateLimit', optional, middlewareValidator);
-        this.mount('middlewareSwagger', optional, booleanValidator);
+            middlewareBody: middlewareValidator,
+            middlewareCors: middlewareValidator,
+            middlewareCookie: middlewareValidator,
+            middlewareQuery: middlewareValidator,
+            middlewarePrometheus: middlewareValidator,
+            middlewareRateLimit: middlewareValidator,
+            middlewareSwagger: booleanValidator,
 
-        this.mount('tokenAccessMaxAge', optional, nonNegativeNumberValidator);
-        this.mount('tokenRefreshMaxAge', optional, nonNegativeNumberValidator);
-        this.mount('registrationEnabled', optional, booleanValidator);
-        this.mount('emailVerificationEnabled', optional, booleanValidator);
-        this.mount('passwordRecoveryEnabled', optional, booleanValidator);
+            tokenAccessMaxAge: nonNegativeNumberValidator,
+            tokenRefreshMaxAge: nonNegativeNumberValidator,
+            registrationEnabled: booleanValidator,
+            emailVerificationEnabled: booleanValidator,
+            passwordRecoveryEnabled: booleanValidator,
 
-        this.mount('clientAuthBasic', optional, booleanValidator);
-        this.mount('clientSystemEnabled', optional, booleanValidator);
-        this.mount('clientSystemSecret', optional, secretValidator);
-        this.mount('clientSystemSecretReset', optional, booleanValidator);
+            clientAuthBasic: booleanValidator,
+            clientSystemEnabled: booleanValidator,
+            clientSystemSecret: secretValidator,
+            clientSystemSecretReset: booleanValidator,
 
-        this.mount('userAuthBasic', optional, booleanValidator);
-        this.mount('userAdminEnabled', optional, booleanValidator);
-        this.mount('userAdminPassword', optional, secretValidator);
-        this.mount('userAdminPasswordReset', optional, booleanValidator);
+            userAuthBasic: booleanValidator,
+            userAdminEnabled: booleanValidator,
+            userAdminPassword: secretValidator,
+            userAdminPasswordReset: booleanValidator,
 
-        this.mount('robotAuthBasic', optional, booleanValidator);
-        this.mount('robotAdminEnabled', optional, booleanValidator);
-        this.mount('robotAdminSecret', optional, secretValidator);
-        this.mount('robotAdminSecretReset', optional, booleanValidator);
+            robotAuthBasic: booleanValidator,
+            robotAdminEnabled: booleanValidator,
+            robotAdminSecret: secretValidator,
+            robotAdminSecretReset: booleanValidator,
 
-        this.mount('permissions', optional, createValidator(
-            z.string().or(z.array(z.string())),
-        ));
-        this.mount('permissionsDefaultPolicyAssignment', optional, booleanValidator);
+            permissions: createValidator(
+                z.string().or(z.array(z.string())),
+            ),
+            permissionsDefaultPolicyAssignment: booleanValidator,
+        };
+
+        const keys = Object.keys(validators) as (keyof Config)[];
+        for (const key of keys) {
+            this.mount(key, { optional: true }, validators[key]);
+        }
     }
 }

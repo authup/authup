@@ -37,10 +37,10 @@ attempting to create or rename a client to it returns a `400 Bad Request`.
 
 The `redirect_uri` allowlist is derived from the set of trusted app origins:
 the origin of `publicUrl` plus every entry in `trustedOrigins`
-(`TRUSTED_ORIGINS`). An entry may be a full origin
-(`https://app.example.com`) or a bare host (`hub.local`, `hub.local:8080`) —
-a bare host expands to both its http and https origin; pass a full origin to
-restrict to one scheme. Each origin contributes one `<origin>/**` redirect
+(`TRUSTED_ORIGINS`). An entry may be a full http(s) origin
+(`https://app.example.com`; other protocols are rejected) or a bare host
+(`hub.local`, `hub.local:8080`) — a bare host expands to both its http and
+https origin; pass a full origin to restrict to one scheme. Each origin contributes one `<origin>/**` redirect
 pattern. (CORS is independent of this list — the API reflects any origin by
 default, since OAuth2 clients are registered at runtime on domains unknown at
 startup; an explicit allowlist can be configured via the `middlewareCors`

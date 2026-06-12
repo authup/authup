@@ -43,10 +43,11 @@ export default {
     publicUrl: 'http://localhost:3001',
 
     /**
-     * Additional trusted origins. Entries are origins
-     * (e.g. https://app.example.com) or bare hosts (e.g. hub.local,
-     * hub.local:8080); a bare host expands to both its http and https
-     * origin — pass a full origin to restrict to one scheme.
+     * Additional trusted origins. Entries are http(s) origins
+     * (e.g. https://app.example.com; other protocols are rejected) or
+     * bare hosts (e.g. hub.local, hub.local:8080); a bare host expands
+     * to both its http and https origin — pass a full origin to
+     * restrict to one scheme.
      * Each origin is added to the redirect-URI allowlist of the per-realm
      * public `web` client (as `<origin>/**`).
      * The origin of `publicUrl` is always trusted implicitly.

@@ -10,7 +10,11 @@ import type { ConfigInput } from './types.ts';
 import { ConfigValidator } from './validator.ts';
 
 export async function parseConfig(input: unknown = {}): Promise<ConfigInput> {
+    if (!isObject(input)) {
+        throw new Error('The configuration input must be an object.');
+    }
+
     const validator = new ConfigValidator();
 
-    return validator.run(isObject(input) ? input : {});
+    return validator.run(input);
 }
