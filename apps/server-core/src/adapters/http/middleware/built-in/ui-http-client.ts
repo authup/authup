@@ -11,12 +11,13 @@ import { defineCoreHandler } from 'routup';
 
 /**
  * Per-request handoff of an HTTP-client factory into renderUIPage —
- * same mechanism as VITE_SERVER_STORE_KEY. Registered only when a
- * factory is bound in the DI container (test injection); production
- * mounts nothing. renderUIPage invokes the factory per render so every
- * SSR pass gets a fresh client — never share one client instance
+ * same mechanism as VITE_SERVER_STORE_KEY. The wiring passes a thunk
+ * over the DI container (`() => container.resolve(UIHttpClient)`)
+ * whose registration carries `lifetime: 'transient'`, so every SSR
+ * render resolves a fresh client — never share one client instance
  * across renders (the authentication hook writes per-user state onto
- * it).
+ * it). Mounted only when the token is bound (test injection);
+ * production mounts nothing.
  */
 export const UI_HTTP_CLIENT_FACTORY_STORE_KEY = Symbol('UIHttpClientFactory');
 

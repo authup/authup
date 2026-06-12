@@ -142,17 +142,17 @@ import { createFakeClient as createFakeHTTPClient } from '@authup/core-http-kit/
 import { HTTPInjectionKey } from '../../src/app';
 
 const suite = createTestApplication();
-suite.container.register(HTTPInjectionKey.UIHttpClientFactory, {
-    useValue: () => createFakeHTTPClient({
+suite.container.register(HTTPInjectionKey.UIHttpClient, {
+    useFactory: () => createFakeHTTPClient({
         handlers: { 'GET /identity-providers': () => ({ data: [], meta: { total: 0 } }) },
     }),
-});
+}, { lifetime: 'transient' });
 await suite.setup();
 
 const response = await httpRequest(suite, 'GET', '/register');
 ```
 
-Wiring: the HTTP module mounts a per-request middleware (only when `HTTPInjectionKey.UIHttpClientFactory` is registered — production registers nothing) that stamps the factory onto `event.store`; `renderUIPage` invokes it per render (a factory, never a shared instance — the client carries per-user Authorization state) and forwards the client into the SSR `render()`, and `@authup/client-web-kit`'s `install({ httpClient })` uses it for the provided client, the session store, and the authentication hook alike. See `test/unit/http/controllers/workflows/ui-pages.spec.ts` for hydration-payload assertions (XSS escaping, redirect sanitizing, feature flags).
+Wiring: the HTTP module mounts a per-request middleware (only when `HTTPInjectionKey.UIHttpClient` is registered — production registers nothing) that stamps a resolve-thunk onto `event.store`; `renderUIPage` resolves per render. Register with `useFactory` + `lifetime: 'transient'` (eldin) — never a singleton-lifetime instance, the client carries per-user Authorization state — and the client is forwarded into the SSR `render()`, and `@authup/client-web-kit`'s `install({ httpClient })` uses it for the provided client, the session store, and the authentication hook alike. See `test/unit/http/controllers/workflows/ui-pages.spec.ts` for hydration-payload assertions (XSS escaping, redirect sanitizing, feature flags).
 
 Caveats:
 - Register the fake **before** `suite.setup()` — the middleware mount is decided at boot.

@@ -14,12 +14,13 @@ export type HTTPServer = ReturnType<typeof serve>;
 export const HTTPInjectionKey = {
     Server: new TypedToken<HTTPServer>('Server'),
     /**
-     * Optional per-request HTTP-client factory override for the SSR'd UI
-     * pages (test injection — production registers nothing). A factory —
-     * not an instance — because client-web-kit's authentication hook
-     * writes per-user Authorization state onto the client it attaches to;
-     * a single instance shared across concurrent renders would leak
-     * tokens between sessions.
+     * Optional HTTP-client override for the SSR'd UI pages (test
+     * injection — production registers nothing). Register it with a
+     * `useFactory` provider and `lifetime: 'transient'` so every
+     * resolve yields a FRESH client: client-web-kit's authentication
+     * hook writes per-user Authorization state onto the client it
+     * attaches to, so a singleton-lifetime instance shared across
+     * concurrent renders would leak tokens between sessions.
      */
-    UIHttpClientFactory: new TypedToken<() => IClient>('UIHttpClientFactory'),
+    UIHttpClient: new TypedToken<IClient>('UIHttpClient'),
 } as const;

@@ -33,7 +33,7 @@
 
 - **Service-level tests** isolate domain logic with in-memory fakes. Generic fakes (`FakeEntityRepository`, `FakePermissionEvaluator`, `createAllowAllActor()` etc.) come from `@authup/server-test-kit`; domain fakes (`FakeRealmRepository`, `FakeRoleRepository`, `FakeUserRepository`, ...) live alongside their entity at `test/unit/core/entities/<entity>/fake-repository.ts`. No HTTP, no Docker.
 - **HTTP-level tests** spin up the real server on a random port. Use `suite.client` (typed `@authup/core-http-kit` Client) for API calls; `suite.baseURL` for raw `fetch()` (e.g., asserting HTML response bodies).
-- **UI/SSR tests** stub the rendered Vue app's outbound HTTP via a fake client: register a per-request factory (`{ useValue: () => createFakeClient(handlers) }` from `@authup/core-http-kit/testing`) under `HTTPInjectionKey.UIHttpClientFactory` before `suite.setup()` (see `.agents/testing.md`). A factory — never a shared instance — because the client carries per-user Authorization state. Production code never imports from `@authup/core-http-kit/testing`.
+- **UI/SSR tests** stub the rendered Vue app's outbound HTTP via a fake client: register `{ useFactory: () => createFakeClient(handlers) }` (from `@authup/core-http-kit/testing`) with `{ lifetime: 'transient' }` under `HTTPInjectionKey.UIHttpClient` before `suite.setup()` (see `.agents/testing.md`). Transient lifetime — never a singleton instance — because the client carries per-user Authorization state. Production code never imports from `@authup/core-http-kit/testing`.
 
 ## File Organization
 
