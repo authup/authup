@@ -17,9 +17,9 @@ import { TestApplication } from './module.ts';
 import { TestHTTPApplication } from './http.ts';
 import { createTestDatabaseModuleForSuite } from './database.ts';
 
-function buildTestConfig(): Config {
+async function buildTestConfig(): Promise<Config> {
     const raw = readConfigRawFromEnv();
-    const config = normalizeConfig(raw);
+    const config = await normalizeConfig(raw);
 
     config.port = 0;
     config.middlewareRateLimit = false;
@@ -32,7 +32,6 @@ function buildTestConfig(): Config {
     config.robotAdminEnabled = true;
 
     config.redis = false;
-    config.vault = false;
 
     config.registrationEnabled = true;
     config.emailVerificationEnabled = true;
@@ -43,7 +42,7 @@ function buildTestConfig(): Config {
 
 export function createTestApplication() : TestHTTPApplication {
     const modules = new ApplicationBuilder()
-        .withConfig(new ConfigModule(buildTestConfig()))
+        .withConfig(new ConfigModule(buildTestConfig))
         .withLogger()
         .withCache()
         .withLdap()
@@ -60,7 +59,7 @@ export function createTestApplication() : TestHTTPApplication {
 
 export function createTestDatabaseApplication() : TestApplication {
     const modules = new ApplicationBuilder()
-        .withConfig(new ConfigModule(buildTestConfig()))
+        .withConfig(new ConfigModule(buildTestConfig))
         .withLogger()
         .withDatabase(createTestDatabaseModuleForSuite())
         .buildModules();

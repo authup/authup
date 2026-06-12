@@ -66,8 +66,8 @@ export function readConfigRawFromEnv() : ConfigInput {
     }
 
     const port = readInt(ConfigEnvironmentVariableName.PORT);
-    if (port) {
-        options.port = Number.parseInt(`${port}`, 10);
+    if (typeof port !== 'undefined') {
+        options.port = port;
     }
 
     const publicURL = read(ConfigEnvironmentVariableName.PUBLIC_URL);
@@ -75,9 +75,9 @@ export function readConfigRawFromEnv() : ConfigInput {
         options.publicUrl = publicURL;
     }
 
-    const additionalDomains = readArray(ConfigEnvironmentVariableName.ADDITIONAL_DOMAINS);
-    if (additionalDomains && additionalDomains.length > 0) {
-        options.additionalDomains = additionalDomains;
+    const trustedOrigins = readArray(ConfigEnvironmentVariableName.TRUSTED_ORIGINS);
+    if (trustedOrigins && trustedOrigins.length > 0) {
+        options.trustedOrigins = trustedOrigins;
     }
 
     const tokenAccessMaxAge = readInt(ConfigEnvironmentVariableName.TOKEN_ACCESS_MAX_AGE);

@@ -10,16 +10,17 @@ import path from 'node:path';
 import process from 'node:process';
 import { EnvironmentName } from '@authup/kit';
 import { toPublicHost } from '../../../utils/host.ts';
+import { expandToOrigins } from './origins.ts';
 import { parseConfig } from './parse.ts';
 import type { Config, ConfigInput } from './types.ts';
 
-export function normalizeConfig(input: ConfigInput = {}): Config {
-    const parsed = parseConfig(input);
+export async function normalizeConfig(input: ConfigInput = {}): Promise<Config> {
+    const parsed = await parseConfig(input);
 
     const writableDirectoryPath = parsed.writableDirectoryPath ||
         path.join(process.cwd(), 'writable');
 
-    const port = parsed.port || 3001;
+    const port = parsed.port ?? 3001;
     let host = parsed.host || '0.0.0.0';
 
     let publicUrl : string;
@@ -36,21 +37,32 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         }
     }
 
-    const env = read('NODE_ENV', EnvironmentName.DEVELOPMENT);
+    const env = parsed.env || read('NODE_ENV', EnvironmentName.DEVELOPMENT);
+
+    // Canonicalize to bare origins (scheme://host[:port]) — a scheme-less
+    // entry (e.g. `hub.local`) expands to both its http and https origin.
+    // Downstream consumers (redirect allowlist, getAppOrigins) can rely on
+    // every entry being a full origin. Building a fresh array also keeps a
+    // repeated normalizeConfig() on the same input from accumulating the
+    // dev origin into a security-sensitive allowlist.
+    const trustedOrigins: string[] = [];
+    for (const value of parsed.trustedOrigins ?? []) {
+        for (const origin of expandToOrigins(value)) {
+            if (!trustedOrigins.includes(origin)) {
+                trustedOrigins.push(origin);
+            }
+        }
+    }
 
     // In non-production (development & test) client-web runs on :3000 while
     // the API (publicUrl) runs on :3001. Seed :3000 into the trusted origins
     // so the redirect allowlist (<origin>/**) and CORS accept logins from the
     // dev UI out of the box; otherwise the realm-selection login is dead on
     // first run.
-    // Copy — never mutate the caller-supplied parsed array in place, or a
-    // repeated normalizeConfig() on the same input accumulates the dev origin
-    // into a security-sensitive allowlist.
-    const additionalDomains = [...(parsed.additionalDomains ?? [])];
     if (env !== EnvironmentName.PRODUCTION) {
         const devOrigin = 'http://localhost:3000';
-        if (!additionalDomains.includes(devOrigin)) {
-            additionalDomains.push(devOrigin);
+        if (!trustedOrigins.includes(devOrigin)) {
+            trustedOrigins.push(devOrigin);
         }
     }
 
@@ -99,8 +111,8 @@ export function normalizeConfig(input: ConfigInput = {}): Config {
         permissionsDefaultPolicyAssignment: true,
         ...parsed,
 
-        // After the spread so the dev-seeded value wins over the raw
-        // parsed list (parsed.additionalDomains is already merged in above).
-        additionalDomains,
+        // After the spread so the canonicalized + dev-seeded list wins over
+        // the raw parsed list (parsed.trustedOrigins is merged in above).
+        trustedOrigins,
     };
 }

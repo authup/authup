@@ -78,19 +78,26 @@ export type Config = {
     publicUrl: string,
 
     /**
-     * Additional origins (besides publicUrl) that are trusted as
-     * redirect targets for the per-realm public `web` client and as
-     * allowed CORS origins. Bare origins (scheme://host[:port]); each is
-     * stored as `<origin>/**` in the web client's redirect_uri set.
+     * Trusted first-party app origins (besides publicUrl) — used as
+     * redirect targets for the per-realm public `web` client. Does NOT
+     * drive CORS (the API reflects any origin by default; an explicit
+     * CORS allowlist goes through middlewareCors), and does not affect
+     * UIs using their own registered OAuth2 client. Input entries may be
+     * full http(s) origins (scheme://host[:port]; other protocols are
+     * rejected) or bare hosts (host[:port]) — a bare host expands to
+     * both its http and https origin during normalization, so the
+     * normalized config always holds full origins (scheme://host[:port],
+     * no path); each is stored as `<origin>/**` in the web client's
+     * redirect_uri set.
      *
      * SECURITY: the `web` client is built_in (auto-consent + `global`
      * scope), so any origin listed here can obtain a full-permission user
-     * token once a user logs in. Adding a domain grants it full login
+     * token once a user logs in. Adding an origin grants it full login
      * capability for every realm.
      *
      * default: []
      */
-    additionalDomains: string[],
+    trustedOrigins: string[],
 
     // ----------------------------------------------------
 
@@ -263,3 +270,5 @@ export type Config = {
 };
 
 export type ConfigInput = Partial<Config>;
+
+export type ConfigFactory = () => Promise<Config> | Config;

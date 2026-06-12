@@ -58,7 +58,7 @@ export async function createCLIEntryPointCommand() {
                 },
             });
 
-            normalizeConfig(raw);
+            await normalizeConfig(raw);
         },
     });
 }
