@@ -1,7 +1,7 @@
 {
     "name": "@authup/server-kit",
     "type": "module",
-    "version": "1.0.0-beta.47",
+    "version": "1.0.0-beta.48",
     "description": "A toolkit for server-side services.",
     "license": "Apache-2.0",
     "exports": {
@@ -68,22 +68,22 @@
         "winston": "^3.19.0"
     },
     "devDependencies": {
-        "@authup/access": "^1.0.0-beta.47",
-        "@authup/core-kit": "^1.0.0-beta.47",
-        "@authup/core-realtime-kit": "^1.0.0-beta.47",
-        "@authup/kit": "^1.0.0-beta.47",
-        "@authup/errors": "^1.0.0-beta.47",
-        "@authup/specs": "^1.0.0-beta.47",
+        "@authup/access": "^1.0.0-beta.48",
+        "@authup/core-kit": "^1.0.0-beta.48",
+        "@authup/core-realtime-kit": "^1.0.0-beta.48",
+        "@authup/kit": "^1.0.0-beta.48",
+        "@authup/errors": "^1.0.0-beta.48",
+        "@authup/specs": "^1.0.0-beta.48",
         "rapiq": "^0.9.0",
         "vitest": "^4.0.14"
     },
     "peerDependencies": {
-        "@authup/access": "^1.0.0-beta.47",
-        "@authup/core-kit": "^1.0.0-beta.47",
-        "@authup/core-realtime-kit": "^1.0.0-beta.47",
-        "@authup/kit": "^1.0.0-beta.47",
-        "@authup/errors": "^1.0.0-beta.47",
-        "@authup/specs": "^1.0.0-beta.47",
+        "@authup/access": "^1.0.0-beta.48",
+        "@authup/core-kit": "^1.0.0-beta.48",
+        "@authup/core-realtime-kit": "^1.0.0-beta.48",
+        "@authup/kit": "^1.0.0-beta.48",
+        "@authup/errors": "^1.0.0-beta.48",
+        "@authup/specs": "^1.0.0-beta.48",
         "rapiq": ">=0.8.0 <1.0.0"
     },
     "publishConfig": {

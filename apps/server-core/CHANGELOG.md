@@ -1,5 +1,31 @@
 # Change Log
 
+## [1.0.0-beta.48](https://github.com/authup/authup/compare/v1.0.0-beta.47...v1.0.0-beta.48) (2026-06-12)
+
+
+### Bug Fixes
+
+* **server-core:** decouple CORS from app-origin allowlist ([#3117](https://github.com/authup/authup/issues/3117)) ([66ba0e4](https://github.com/authup/authup/commit/66ba0e43e153c7528a0ee3108be6cc590cf8b6e2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/core-http-kit bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/core-kit bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/errors bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/i18n bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/kit bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/server-kit bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/specs bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/client-web-theme bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+    * @authup/server-test-kit bumped from ^1.0.0-beta.47 to ^1.0.0-beta.48
+
 ## [1.0.0-beta.47](https://github.com/authup/authup/compare/v1.0.0-beta.46...v1.0.0-beta.47) (2026-06-12)
 
 
