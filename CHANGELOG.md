@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.0.0-beta.49](https://github.com/authup/authup/compare/v1.0.0-beta.48...v1.0.0-beta.49) (2026-06-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** the config key additionalDomains and the environment variable ADDITIONAL_DOMAINS were renamed to additionalOrigins / ADDITIONAL_ORIGINS.
+
+### Features
+
+* complete i18n UI coverage sweep (plan 021) ([#3121](https://github.com/authup/authup/issues/3121)) ([2a50bbe](https://github.com/authup/authup/commit/2a50bbe15feaa03320bb986b555f65036682dc05))
+* **server-core:** rename additionalDomains to trustedOrigins & accept scheme-less hosts ([#3120](https://github.com/authup/authup/issues/3120)) ([3123430](https://github.com/authup/authup/commit/31234305d28fcd767abe69829d2dc8819f62c06d))
+
+
+### Bug Fixes
+
+* ensure consistent version for release ([eb1cfcf](https://github.com/authup/authup/commit/eb1cfcfd676322fd6abb48f0a2f5ebfca5e146ad))
+* show toast on authorize login failure ([754811e](https://github.com/authup/authup/commit/754811efa3afc300cb4a2a804d68e2b145e1b156))
+
 ## [1.0.0-beta.48](https://github.com/authup/authup/compare/v1.0.0-beta.47...v1.0.0-beta.48) (2026-06-12)
 
 

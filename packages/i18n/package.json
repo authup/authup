@@ -1,7 +1,7 @@
 {
     "name": "@authup/i18n",
     "type": "module",
-    "version": "1.0.0-beta.48",
+    "version": "1.0.0-beta.49",
     "description": "Framework-agnostic translation catalogs and locale registry.",
     "license": "Apache-2.0",
     "exports": {
@@ -52,12 +52,12 @@
         "ilingo": "^6.0.0"
     },
     "devDependencies": {
-        "@authup/errors": "^1.0.0-beta.48",
+        "@authup/errors": "^1.0.0-beta.49",
         "validup": "^0.5.1",
         "vitest": "^4.0.14"
     },
     "peerDependencies": {
-        "@authup/errors": "^1.0.0-beta.48",
+        "@authup/errors": "^1.0.0-beta.49",
         "validup": "^0.5.1"
     },
     "publishConfig": {
