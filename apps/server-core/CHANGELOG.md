@@ -1,5 +1,40 @@
 # Change Log
 
+## [1.0.0-beta.49](https://github.com/authup/authup/compare/v1.0.0-beta.48...v1.0.0-beta.49) (2026-06-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* **server-core:** the config key additionalDomains and the environment variable ADDITIONAL_DOMAINS were renamed to additionalOrigins / ADDITIONAL_ORIGINS.
+
+### Features
+
+* **server-core:** rename additionalDomains to trustedOrigins & accept scheme-less hosts ([#3120](https://github.com/authup/authup/issues/3120)) ([3123430](https://github.com/authup/authup/commit/31234305d28fcd767abe69829d2dc8819f62c06d))
+
+
+### Bug Fixes
+
+* show toast on authorize login failure ([754811e](https://github.com/authup/authup/commit/754811efa3afc300cb4a2a804d68e2b145e1b156))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @authup/access bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/core-http-kit bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/core-kit bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/errors bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/i18n bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/kit bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/server-kit bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/specs bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+  * devDependencies
+    * @authup/client-web-kit bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/client-web-kit-theme bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/client-web-theme bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+    * @authup/server-test-kit bumped from ^1.0.0-beta.48 to ^1.0.0-beta.49
+
 ## [1.0.0-beta.48](https://github.com/authup/authup/compare/v1.0.0-beta.47...v1.0.0-beta.48) (2026-06-12)
 
 
