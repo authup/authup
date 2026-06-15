@@ -24,6 +24,7 @@ With Authup, developers can quickly and easily add authentication & authorizatio
 - [Applications](#applications)
 - [Packages](#packages)
 - [Contributing](#contributing)
+- [Citation](#citation)
 - [License](#license)
 
 ## Features
@@ -163,6 +164,17 @@ These guidelines will help to ensure that contributions are made effectively and
 | LDAP Protocol                                   |   ✓    |    ✗     |     ✓     |    ✓     |
 
 
+
+## Citation
+
+If you use Authup in academic work, please cite it. Citation metadata is maintained in
+[`CITATION.cff`](./CITATION.cff) — GitHub renders a **"Cite this repository"** button from it.
+
+<!--
+Once the repository is connected to Zenodo (https://zenodo.org/account/settings/github/)
+and a release is published, a DOI is minted. Add the concept-DOI badge here, e.g.:
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXXX)
+-->
 
 ## License
 

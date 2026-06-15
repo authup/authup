@@ -1,0 +1,22 @@
+{
+    "title": "Authup",
+    "description": "Authup is a flexible authentication and authorization system. It provides identity- and access-management with support for multiple authentication strategies and standard protocols — OAuth2.0, OpenID Connect and LDAP — alongside claim-, subject- and attribute-based authorization. The monorepo bundles the core server service, a Nuxt web client, a command-line interface and a set of shared TypeScript client libraries and server adapters.",
+    "upload_type": "software",
+    "access_right": "open",
+    "license": "AGPL-3.0-only",
+    "creators": [
+        {
+            "name": "Placzek, Peter",
+            "orcid": "0009-0004-1237-105X"
+        }
+    ],
+    "keywords": [
+        "authentication",
+        "authorization",
+        "identity and access management",
+        "oauth2",
+        "openid-connect",
+        "ldap",
+        "single-sign-on"
+    ]
+}
