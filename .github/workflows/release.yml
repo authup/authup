@@ -55,7 +55,7 @@ jobs:
 
             -   name: Checkout
                 if: steps.flags.outputs.should_publish == 'true'
-                uses: actions/checkout@v6
+                uses: actions/checkout@v7
                 with:
                     fetch-depth: 0
 
