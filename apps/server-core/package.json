@@ -99,7 +99,7 @@
         "locter": "^2.2.1",
         "mysql2": "^3.22.3",
         "node-cron": "^4.2.1",
-        "nodemailer": "^8.0.7",
+        "nodemailer": "^9.0.1",
         "orkos": "^1.1.1",
         "pg": "^8.20.0",
         "rapiq": "^0.9.0",
