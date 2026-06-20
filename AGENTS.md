@@ -21,7 +21,7 @@ npm run lint                   # lint all packages and apps
 npm run lint:fix               # lint with auto-fix
 ```
 
-- **Node.js**: `^20.19.0 || ^22.13.0 || ^23.5.0 || >=24.0.0`
+- **Node.js**: `^22.13.0 || ^23.5.0 || >=24.0.0` (Node 20 is no longer supported)
 - **Package manager**: npm with corepack
 - Apps are runnable applications, packages are libraries or utility modules.
 
