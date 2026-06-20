@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import type { Client as BaseClient, RequestBaseOptions } from 'hapic';
+import type { IClient as IHapicClient, RequestBaseOptions } from 'hapic';
 import type {
     IClientAPI,
     IClientPermissionAPI,
@@ -38,14 +38,13 @@ import type {
 export type ClientOptions = RequestBaseOptions;
 
 /**
- * Third-party boundary: hapic's Client class cannot implement an
- * authup interface, so its public surface is mirrored structurally
- * (keyof only yields public members). This is the only sanctioned
- * implementation-derived type in the package.
+ * The base transport contract authup builds on, sourced from hapic's
+ * published `IClient` interface (hapic >= 3 ships it as the primary
+ * client type, which `hapic`'s own `Client` class `implements`). authup
+ * extends it below rather than mirroring the concrete class structurally
+ * — contract-first, no implementation-derived type.
  */
-export type ClientBase = {
-    [K in keyof BaseClient]: BaseClient[K]
-};
+export type ClientBase = IHapicClient;
 
 /**
  * Replaceable contract of the authup HTTP client: the base transport
