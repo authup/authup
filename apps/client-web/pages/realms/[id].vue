@@ -15,10 +15,7 @@ import type { Realm } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { computed, defineComponent, ref } from 'vue';
-import {
-    definePageMeta,
-    useToast,
-} from '#imports';
+import { definePageMeta, useErrorToast, useToast } from '#imports';
 import { createError, navigateTo, useRoute } from '#app';
 import { LayoutKey } from '../../config/layout';
 
@@ -32,6 +29,8 @@ export default defineComponent({
         });
 
         const toast = useToast();
+        const errorToast = useErrorToast();
+        const handleFailed = (e: Error) => errorToast.show(e);
         const route = useRoute();
 
         const entity = ref<Realm>(null!);
@@ -96,14 +95,6 @@ export default defineComponent({
             extendObject(entity.value, e);
         };
 
-        const handleFailed = (e: Error) => {
-            if (toast) {
-                toast.show({
-                    variant: 'warning',
-                    body: e.message, 
-                });
-            }
-        };
 
         return {
             entity,

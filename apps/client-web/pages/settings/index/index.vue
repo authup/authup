@@ -9,7 +9,7 @@ import {
 } from '@authup/client-web-kit';
 import type { User } from '@authup/core-kit';
 import { storeToRefs } from 'pinia';
-import { definePageMeta, useToast } from '#imports';
+import { definePageMeta, useErrorToast, useToast } from '#imports';
 import { defineComponent } from 'vue';
 import { LayoutKey } from '../../../config/layout';
 
@@ -19,6 +19,8 @@ export default defineComponent({
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
         const toast = useToast();
+        const errorToast = useErrorToast();
+        const handleFailed = (e: Error) => errorToast.show(e);
 
         const store = injectStore();
 
@@ -48,12 +50,6 @@ export default defineComponent({
             store.setUser(entity);
         };
 
-        const handleFailed = (e: Error) => {
-            toast.show({
-                variant: 'warning',
-                body: e.message,
-            });
-        };
 
         return {
             user,

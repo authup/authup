@@ -7,7 +7,7 @@ import {
     useTranslations, 
     useTranslator, 
 } from '@authup/client-web-kit';
-import { definePageMeta, useToast } from '#imports';
+import { definePageMeta, useErrorToast, useToast } from '#imports';
 import { defineComponent } from 'vue';
 import { LayoutKey } from '~/config/layout';
 
@@ -17,6 +17,8 @@ export default defineComponent({
         definePageMeta({ [LayoutKey.REQUIRED_LOGGED_IN]: true });
 
         const toast = useToast();
+        const errorToast = useErrorToast();
+        const handleFailed = (e: Error) => errorToast.show(e);
 
         const store = injectStore();
         const { userId } = storeToRefs(store);
@@ -42,14 +44,6 @@ export default defineComponent({
             }
         };
 
-        const handleFailed = (e: Error) => {
-            if (toast) {
-                toast.show({
-                    variant: 'warning',
-                    body: e.message,
-                });
-            }
-        };
 
         return {
             id: userId,

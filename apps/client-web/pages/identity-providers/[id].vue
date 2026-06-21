@@ -16,12 +16,13 @@ import type { IdentityProvider } from '@authup/core-kit';
 import { PermissionName } from '@authup/core-kit';
 import { extendObject } from '@authup/kit';
 import { computed, defineComponent, ref } from 'vue';
-import {
-    createError,
-    definePageMeta,
-    navigateTo,
-    useRoute,
-    useToast,
+import { 
+    createError, 
+    definePageMeta, 
+    navigateTo, 
+    useErrorToast, 
+    useRoute, 
+    useToast, 
 } from '#imports';
 import { LayoutKey } from '../../config/layout';
 
@@ -35,6 +36,8 @@ export default defineComponent({
         });
 
         const toast = useToast();
+        const errorToast = useErrorToast();
+        const handleFailed = (e: Error) => errorToast.show(e);
         const route = useRoute();
 
         const entity = ref<IdentityProvider>(null!);
@@ -107,12 +110,6 @@ export default defineComponent({
             extendObject(entity.value, e);
         };
 
-        const handleFailed = (e: Error) => {
-            toast.show({
-                variant: 'warning',
-                body: e.message,
-            });
-        };
 
         return {
             entity,

@@ -14,16 +14,15 @@
  * (`TranslatorTranslationNamespace.ERROR`, value `authupError`) — a
  * *sibling* of validup's own `validup` namespace rather than merged into
  * it, so `@ilingo/validup-vue`'s install can't overwrite authup codes
- * (and vice versa). `translateError()` (in `@authup/client-web-kit`,
- * wired in a later phase) resolves a server error's `code` + `data`
- * against this namespace.
+ * (and vice versa). `useErrorTranslator()` (in `@authup/client-web-kit`)
+ * resolves a server error's `code` + `data` against this namespace.
  *
  * The catalog is keyed by `@authup/errors`' `ErrorCode` values. The
  * `AuthupErrorData` map below is the typed *producer* contract — the
  * structured data each code may carry on the wire — and the
  * `declare module 'validup'` block augments validup's `IssueDataByCode`
  * wherever this package is imported. Today that is the client only
- * (`@authup/client-web-kit` re-exports this module, so `translateError()`
+ * (`@authup/client-web-kit` re-exports this module, so `useErrorTranslator()`
  * and any client-side issue construction get the typed `data`). It does
  * **not** reach server-side producers: `apps/server-core` does not depend
  * on `@authup/i18n`. If typed `defineIssueItem` / `createValidupError`
@@ -36,11 +35,12 @@
  * `{{param}}`), not because the data is unavailable but because ilingo's
  * `template()` leaves an unknown data key in place verbatim — a message
  * like `'The {{entity}} ...'` would render the literal `{{entity}}`
- * whenever a producer omits it. Interpolating these params is therefore
- * deferred to the (later-phase) `translateError()` resolver, which will
- * merge per-code defaults before calling `get()` so a missing param can
- * never leak. Until then the data rides along untranslated, ready for
- * logging / richer UI, while the human-readable string stays safe.
+ * whenever a producer omits it. `useErrorTranslator()` passes the whole
+ * serialized error body to `get()` as `data`, so a parameterized message
+ * would interpolate from it — but since every shipped message is currently
+ * param-free, interpolation is a no-op and the data just rides along
+ * (ready for logging / richer UI). If a `{{param}}` message is added later,
+ * merge per-code defaults before `get()` so a missing param can't leak.
  */
 
 /**

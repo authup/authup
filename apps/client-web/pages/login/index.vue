@@ -17,7 +17,7 @@ import {
 import { ref } from 'vue';
 import {
     definePageMeta,
-    useToast,
+    useErrorToast,
 } from '#imports';
 import {
     defineNuxtComponent,
@@ -38,7 +38,7 @@ export default defineNuxtComponent({
             layout: 'auth',
         });
 
-        const toast = useToast();
+        const errorToast = useErrorToast();
         const runtimeConfig = useRuntimeConfig();
         const route = useRoute();
 
@@ -106,10 +106,7 @@ export default defineNuxtComponent({
                 // Drop the grid's auto-select skeleton so the user isn't
                 // stranded when the redirect glue fails.
                 realmGrid.value?.reset();
-                toast.show({
-                    variant: 'warning',
-                    body: e instanceof Error ? e.message : 'The login could not be initiated.',
-                });
+                await errorToast.show(e);
             }
         };
 
@@ -124,7 +121,7 @@ export default defineNuxtComponent({
 <template>
     <div class="login-entry">
         <div
-            class="login-aurora"
+            class="a-auth-shell-aurora login-aurora"
             aria-hidden="true"
         />
 
@@ -157,28 +154,11 @@ export default defineNuxtComponent({
     padding: 4rem 1rem;
 }
 
+/* Gradients / blur / positioning come from the shared `.a-auth-shell-aurora`
+   rule (`@authup/client-web-kit-theme`), the single source for the brand
+   backdrop so a palette change can't drift this page from the SSR auth pages.
+   Login keeps only its slightly stronger opacity + the drift flourish. */
 .login-aurora {
-    position: absolute;
-    inset: -20%;
-    z-index: 0;
-    pointer-events: none;
-    background:
-        radial-gradient(
-            38% 48% at 22% 22%,
-            color-mix(in oklab, var(--authup-periwinkle, #6d7fcc) 50%, transparent),
-            transparent 70%
-        ),
-        radial-gradient(
-            42% 52% at 80% 28%,
-            color-mix(in oklab, var(--authup-rose, #cc8181) 38%, transparent),
-            transparent 70%
-        ),
-        radial-gradient(
-            52% 60% at 50% 92%,
-            color-mix(in oklab, var(--authup-periwinkle, #6d7fcc) 32%, transparent),
-            transparent 70%
-        );
-    filter: blur(70px);
     opacity: 0.65;
     animation: login-aurora-drift 18s ease-in-out infinite alternate;
 }
