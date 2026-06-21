@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import type { Client as BaseClient, RequestBaseOptions } from 'hapic';
+import type { IClient as IBaseClient, RequestBaseOptions } from 'hapic';
 import type {
     IClientAPI,
     IClientPermissionAPI,
@@ -38,21 +38,11 @@ import type {
 export type ClientOptions = RequestBaseOptions;
 
 /**
- * Third-party boundary: hapic's Client class cannot implement an
- * authup interface, so its public surface is mirrored structurally
- * (keyof only yields public members). This is the only sanctioned
- * implementation-derived type in the package.
- */
-export type ClientBase = {
-    [K in keyof BaseClient]: BaseClient[K]
-};
-
-/**
  * Replaceable contract of the authup HTTP client: the base transport
  * surface plus every sub-API behind its interface. Implemented by
  * `Client`; any test double satisfying it can substitute.
  */
-export interface IClient extends ClientBase {
+export interface IClient extends IBaseClient {
     readonly authorize : IOAuth2AuthorizeAPI;
 
     readonly client : IClientAPI;
