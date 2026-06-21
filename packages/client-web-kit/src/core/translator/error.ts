@@ -7,21 +7,25 @@
 
 import { isObject } from '@authup/kit';
 import { TranslatorTranslationNamespace } from '@authup/i18n';
-import { useTranslator } from './singleton.ts';
+import { injectIlingo, injectLocale } from '@ilingo/vue';
+import { translateIssues } from '@ilingo/validup';
+import type { Issue } from 'validup';
 
 export type ErrorContext = {
     code?: string;
     data?: Record<string, any>;
     message?: string;
+    issues?: Issue[];
 };
 
 /**
- * Pull the structured `{ code, data, message }` out of whatever the caller
- * caught. An authup server error arrives as a hapic `ClientError` whose
- * `response.data` is the serialized error body (`AuthupError.toJSON`
- * flattens `code` + `data` onto the top level); a directly-thrown
- * `AuthupError` or plain `Error` exposes the same fields on itself.
- * Duck-typed on purpose — no hapic import, works for both transports.
+ * Pull the structured `{ code, data, message, issues }` out of whatever the
+ * caller caught. An authup server error arrives as a hapic `ClientError`
+ * whose `response.data` is the serialized error body (`AuthupError.toJSON`
+ * flattens `code` + `data` onto the top level and carries the validup
+ * `issues`); a directly-thrown `AuthupError` or plain `Error` exposes the
+ * same fields on itself. Duck-typed on purpose — no hapic import, works for
+ * both transports.
  */
 export function extractErrorContext(error: unknown): ErrorContext {
     if (!isObject(error)) {
@@ -48,35 +52,53 @@ export function extractErrorContext(error: unknown): ErrorContext {
         code: typeof body.code === 'string' ? body.code : undefined,
         data: body,
         message,
+        // Only validation (`BAD_REQUEST`) errors carry issues; a coded
+        // business error serializes an empty array.
+        issues: Array.isArray(body.issues) && body.issues.length > 0 ? body.issues : undefined,
     };
 }
 
 /**
  * Resolve a caught error to a localized, user-facing message.
  *
- * Capture the active translator at call site (run this in `setup()`), then
- * use the returned async resolver: it maps the error's `code` against the
- * `authupError` namespace (passing the serialized body as `data`, so any
- * `{{param}}` placeholder resolves), and falls back to the raw server
- * message when the code is unknown or absent.
+ * Capture the active translator at call site (run this in `setup()`, before
+ * any `await`), then use the returned async resolver. Lookup order:
+ *
+ * 1. **Field-level validup `issues`** (a validation failure) — translated
+ *    via `@ilingo/validup`'s `translateIssues` (the same machinery that
+ *    renders inline form-field errors), so the toast is both localized and
+ *    field-specific instead of a generic "bad request" line.
+ * 2. **Top-level `code`** — resolved against the `authupError` namespace
+ *    (e.g. `permission_denied`, `entity_conflict`).
+ * 3. **Raw server message** — last resort for non-HTTP / uncoded errors.
  */
 export function useErrorTranslator(): (error: unknown) => Promise<string> {
-    const translate = useTranslator();
+    const ilingo = injectIlingo();
+    const locale = injectLocale();
 
     return async (error) => {
         const ctx = extractErrorContext(error);
 
+        if (ctx.issues) {
+            const translated = await translateIssues(ctx.issues, ilingo, { locale: locale.value });
+            const joined = translated
+                .map((entry) => entry.message)
+                .filter(Boolean)
+                .join('\n');
+            if (joined) {
+                return joined;
+            }
+        }
+
         if (ctx.code) {
-            const translated = await translate({
+            const message = await ilingo.get({
                 namespace: TranslatorTranslationNamespace.ERROR,
                 key: ctx.code,
                 data: ctx.data,
+                locale: locale.value,
             });
-
-            // `useTranslator` returns the bare key on a miss — treat that as
-            // "no catalog entry" and fall through to the raw message.
-            if (translated && translated !== ctx.code) {
-                return translated;
+            if (message) {
+                return message;
             }
         }
 
