@@ -10,7 +10,12 @@ import {
 } from '@authup/i18n';
 import { useTranslations, useTranslationsForNamespace, useTranslator } from '@authup/client-web-kit';
 import { defineNuxtComponent } from '#app';
-import { computed, definePageMeta, useToast } from '#imports';
+import { 
+    computed, 
+    definePageMeta, 
+    useErrorToast, 
+    useToast, 
+} from '#imports';
 import { LayoutKey } from '../../config/layout';
 
 export default defineNuxtComponent({
@@ -26,6 +31,8 @@ export default defineNuxtComponent({
         });
 
         const toast = useToast();
+        const errorToast = useErrorToast();
+        const handleFailed = (e: Error) => errorToast.show(e);
 
         const translationsDefault = useTranslations([
             {
@@ -85,14 +92,6 @@ export default defineNuxtComponent({
             }
         };
 
-        const handleFailed = (e: Error) => {
-            if (toast) {
-                toast.show({
-                    variant: 'warning',
-                    body: e.message,
-                });
-            }
-        };
 
         return {
             items,

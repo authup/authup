@@ -5,12 +5,14 @@
  * view the LICENSE file that was distributed with this source code.
  */
 
-import type { OpenIDProviderMetadata } from '@authup/specs';
-import { OAuth2AuthorizationResponseType } from '@authup/specs';
+import { REALM_MASTER_NAME } from '@authup/core-kit';
 import {
+    DContext,
     DController,
     DGet,
 } from '@routup/decorators';
+import type { IAppEvent } from 'routup';
+import { sendRedirect } from 'routup';
 import { resolveURL } from '../../../../../utils/index.ts';
 
 export type OpenIDControllerOptions = {
@@ -26,46 +28,16 @@ export class OpenIDController {
     }
 
     @DGet('/.well-known/openid-configuration', [])
-    async getOpenIdConfiguration(): Promise<OpenIDProviderMetadata> {
-        const { baseURL } = this.options;
-        return {
-            issuer: baseURL,
-
-            authorization_endpoint: resolveURL(baseURL, 'authorize'),
-
-            jwks_uri: resolveURL(baseURL, 'jwks'),
-
-            response_types_supported: [
-                OAuth2AuthorizationResponseType.CODE,
-                OAuth2AuthorizationResponseType.TOKEN,
-                OAuth2AuthorizationResponseType.NONE,
-            ],
-
-            subject_types_supported: [
-                'public',
-            ],
-
-            id_token_signing_alg_values_supported: [
-                'HS256',
-                'HS384',
-                'HS512',
-                'RS256',
-                'RS384',
-                'RS512',
-                'none',
-            ],
-
-            token_endpoint: resolveURL(baseURL, 'token'),
-
-            introspection_endpoint: resolveURL(baseURL, 'token/introspect'),
-
-            revocation_endpoint: resolveURL(baseURL, 'token'),
-
-            // -----------------------------------------------------------
-
-            service_documentation: 'https://authup.org/',
-
-            userinfo_endpoint: resolveURL(baseURL, 'users/@me'),
-        };
+    getOpenIdConfiguration(@DContext() event: IAppEvent) {
+        // A single global discovery doc can't satisfy OIDC Discovery §4.3 /
+        // RFC 8414 §3.3: tokens are issued per realm (iss=<baseURL>/realms/<name>),
+        // so a global `issuer` would never match the `iss` of any token.
+        // Redirect to the master realm's realm-scoped, conformant doc.
+        // ponytail: master is the default realm; swap REALM_MASTER_NAME for a
+        // config key if a deployment ever needs a different default.
+        return sendRedirect(
+            event,
+            resolveURL(this.options.baseURL, `realms/${REALM_MASTER_NAME}/.well-known/openid-configuration`),
+        );
     }
 }
