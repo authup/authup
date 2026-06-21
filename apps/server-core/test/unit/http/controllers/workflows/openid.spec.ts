@@ -6,13 +6,12 @@
  */
 
 import {
-    afterAll, 
-    beforeAll, 
-    describe, 
-    expect, 
+    afterAll,
+    beforeAll,
+    describe,
+    expect,
     it,
 } from 'vitest';
-import { OAuth2AuthorizationResponseType } from '@authup/specs';
 import type { Config } from '../../../../../src';
 import { createTestApplication } from '../../../../app';
 import { ConfigInjectionKey } from '../../../../../src';
@@ -28,22 +27,17 @@ describe('src/http/controllers/auth/openid/*.ts', () => {
         await suite.teardown();
     });
 
-    it('should return openid configuration', async () => {
+    it('should redirect global discovery to the master realm (OIDC §4.3 / RFC 8414 §3.3 issuer match)', async () => {
         const config = suite.container.resolve<Config>(ConfigInjectionKey);
 
-        const response = await suite.client.getWellKnownOpenIDConfiguration();
-        expect(response).toBeDefined();
+        const response = await fetch(
+            new URL('.well-known/openid-configuration', suite.baseURL),
+            { redirect: 'manual' },
+        );
 
-        expect(response.issuer).toEqual(config.publicUrl);
-        expect(response.authorization_endpoint).toEqual(new URL('authorize', config.publicUrl).href);
-        expect(response.jwks_uri).toEqual(new URL('jwks', config.publicUrl).href);
-        expect(response.response_types_supported).toEqual([
-            OAuth2AuthorizationResponseType.CODE,
-            OAuth2AuthorizationResponseType.TOKEN,
-            OAuth2AuthorizationResponseType.NONE,
-        ]);
-        expect(response.token_endpoint).toEqual(new URL('token', config.publicUrl).href);
-        expect(response.introspection_endpoint).toEqual(new URL('token/introspect', config.publicUrl).href);
-        expect(response.userinfo_endpoint).toEqual(new URL('users/@me', config.publicUrl).href);
+        expect(response.status).toEqual(302);
+        expect(response.headers.get('location')).toEqual(
+            new URL('realms/master/.well-known/openid-configuration', config.publicUrl).href,
+        );
     });
 });
