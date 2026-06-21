@@ -9,17 +9,16 @@ import { isObject } from '@authup/kit';
 import { isJWKErrorCode, isJWTErrorCode } from '@authup/specs';
 import type { OAuth2TokenGrantResponse } from '@authup/specs';
 import { EventEmitter } from '@posva/event-emitter';
-import type { AuthorizationHeader } from 'hapic';
+import type { AuthorizationHeader, IClient as IBaseClient } from 'hapic';
 import {
     HeaderName,
-    HookName, 
-    getHeader, 
-    isClientError, 
-    setHeader, 
-    stringifyAuthorizationHeader, 
+    HookName,
+    getHeader,
+    isClientError,
+    setHeader,
+    stringifyAuthorizationHeader,
     unsetHeader,
 } from 'hapic';
-import type { ClientBase } from '../client';
 import { getClientErrorCode } from '../helpers';
 import type { TokenCreator } from '../token-creator';
 import { ClientAuthenticationHookEventName } from './constants';
@@ -35,7 +34,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
 
     protected authorizationHeader : AuthorizationHeader | undefined;
 
-    protected clients : ClientBase[];
+    protected clients : IBaseClient[];
 
     protected creator: TokenCreator;
 
@@ -95,11 +94,11 @@ export class ClientAuthenticationHook extends EventEmitter<{
 
     // ------------------------------------------------
 
-    isAttached(client: ClientBase) {
+    isAttached(client: IBaseClient) {
         return HOOK_SYMBOL in client;
     }
 
-    attach(client: ClientBase) {
+    attach(client: IBaseClient) {
         if (this.authorizationHeader) {
             client.setAuthorizationHeader(this.authorizationHeader);
         } else {
@@ -195,7 +194,7 @@ export class ClientAuthenticationHook extends EventEmitter<{
         }
     }
 
-    detach(client: ClientBase) {
+    detach(client: IBaseClient) {
         client.unsetAuthorizationHeader();
 
         const index = this.clients.indexOf(client);

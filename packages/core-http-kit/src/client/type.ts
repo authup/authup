@@ -6,7 +6,7 @@
  */
 
 import type { OAuth2JsonWebKey, OpenIDProviderMetadata } from '@authup/specs';
-import type { IClient as IHapicClient, RequestBaseOptions } from 'hapic';
+import type { IClient as IBaseClient, RequestBaseOptions } from 'hapic';
 import type {
     IClientAPI,
     IClientPermissionAPI,
@@ -38,20 +38,11 @@ import type {
 export type ClientOptions = RequestBaseOptions;
 
 /**
- * The base transport contract authup builds on, sourced from hapic's
- * published `IClient` interface (hapic >= 3 ships it as the primary
- * client type, which `hapic`'s own `Client` class `implements`). authup
- * extends it below rather than mirroring the concrete class structurally
- * — contract-first, no implementation-derived type.
- */
-export type ClientBase = IHapicClient;
-
-/**
  * Replaceable contract of the authup HTTP client: the base transport
  * surface plus every sub-API behind its interface. Implemented by
  * `Client`; any test double satisfying it can substitute.
  */
-export interface IClient extends ClientBase {
+export interface IClient extends IBaseClient {
     readonly authorize : IOAuth2AuthorizeAPI;
 
     readonly client : IClientAPI;
