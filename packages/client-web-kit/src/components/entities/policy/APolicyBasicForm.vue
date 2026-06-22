@@ -169,8 +169,8 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="row">
-        <div class="col">
+    <div class="flex flex-wrap -mx-2">
+        <div class="flex-1 basis-0 px-2">
             <IFieldValidation
                 v-slot="{ value }"
                 :field="v.fields.name"
@@ -237,7 +237,7 @@ export default defineComponent({
         </div>
         <div
             v-if="!realmId && !isEditing"
-            class="col"
+            class="flex-1 basis-0 px-2"
         >
             <IFieldValidation
                 v-slot="{ value }"

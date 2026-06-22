@@ -135,8 +135,8 @@ export default defineComponent({
 </script>
 <template>
     <div>
-        <div class="row">
-            <div class="col">
+        <div class="flex flex-wrap -mx-2">
+            <div class="flex-1 basis-0 px-2">
                 <IFieldValidation
                     v-slot="{ value }"
                     :field="v.fields.start"
@@ -153,7 +153,7 @@ export default defineComponent({
                     </VCFormGroup>
                 </IFieldValidation>
             </div>
-            <div class="col">
+            <div class="flex-1 basis-0 px-2">
                 <IFieldValidation
                     v-slot="{ value }"
                     :field="v.fields.end"
@@ -171,8 +171,8 @@ export default defineComponent({
                 </IFieldValidation>
             </div>
         </div>
-        <div class="row">
-            <div class="col">
+        <div class="flex flex-wrap -mx-2">
+            <div class="flex-1 basis-0 px-2">
                 <IFieldValidation
                     v-slot="{ value }"
                     :field="v.fields.interval"
@@ -192,7 +192,7 @@ export default defineComponent({
             </div>
             <div
                 v-if="displayIntervalForDayOfWeek"
-                class="col"
+                class="flex-1 basis-0 px-2"
             >
                 <IFieldValidation
                     v-slot="{ value }"
@@ -213,7 +213,7 @@ export default defineComponent({
             </div>
             <div
                 v-if="displayIntervalForDayOfMonth"
-                class="col"
+                class="flex-1 basis-0 px-2"
             >
                 <IFieldValidation
                     v-slot="{ value }"
@@ -234,7 +234,7 @@ export default defineComponent({
             </div>
             <div
                 v-if="displayIntervalForDayOfYear"
-                class="col"
+                class="flex-1 basis-0 px-2"
             >
                 <IFieldValidation
                     v-slot="{ value }"

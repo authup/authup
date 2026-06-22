@@ -82,8 +82,8 @@ export default defineComponent({
 });
 </script>
 <template>
-    <div class="row">
-        <div class="col-7">
+    <div class="flex flex-wrap -mx-2">
+        <div class="w-7/12 px-2">
             <IFieldValidation
                 v-slot="{ value }"
                 :field="v.fields.attribute_name"
@@ -96,7 +96,7 @@ export default defineComponent({
                 </VCFormGroup>
             </IFieldValidation>
         </div>
-        <div class="col-5">
+        <div class="w-5/12 px-2">
             <IFieldValidation
                 v-slot="{ value }"
                 :field="v.fields.attribute_name_strict"

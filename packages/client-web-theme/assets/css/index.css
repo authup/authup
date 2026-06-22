@@ -310,36 +310,6 @@
     .btn-outline-light     { @apply border-border-muted text-fg-muted    hover:bg-bg-muted; }
     .btn-outline-dark      { @apply border-fg           text-fg          hover:bg-fg          hover:text-bg; }
 
-    /* Grid — Bootstrap-style 12-col layout via flex (not CSS grid). The
-       earlier grid-based shim broke layouts that relied on `.row` being
-       a flex container (e.g. `.row > .ms-auto`).
-
-       Gutters via negative row margin + per-col px-2 — same shape as
-       Bootstrap 5's `--bs-gutter-x` trick but tighter (16px combined
-       gap between adjacent cols rather than Bootstrap's default 24px;
-       authup's two-up forms looked too far apart at the wider value).
-       A plain `gap-N` would push col-7 + col-5 + gap past 100% width
-       and wrap onto two lines; this layout keeps col widths exact
-       (w-N/12 with `box-sizing: border-box`) while the px-2 carves
-       the gutter out of each col's interior. */
-    .row     { @apply flex flex-wrap; margin-left: -0.5rem; margin-right: -0.5rem; }
-    .col     { @apply flex-1 basis-0 px-2; }
-    .col-1   { @apply w-1/12 px-2; }
-    .col-2   { @apply w-2/12 px-2; }
-    .col-3   { @apply w-3/12 px-2; }
-    .col-4   { @apply w-4/12 px-2; }
-    .col-5   { @apply w-5/12 px-2; }
-    .col-6   { @apply w-6/12 px-2; }
-    .col-7   { @apply w-7/12 px-2; }
-    .col-8   { @apply w-8/12 px-2; }
-    .col-9   { @apply w-9/12 px-2; }
-    .col-10  { @apply w-10/12 px-2; }
-    .col-11  { @apply w-11/12 px-2; }
-    .col-12  { @apply w-full px-2; }
-
-    .container       { @apply mx-auto w-full max-w-screen-lg px-4; }
-    .container-fluid { @apply w-full px-4; }
-
     /* Pagination — override theme-tailwind's per-button rounded-md to a
        joined-tab look (only first / last buttons get rounded outer
        corners). vuecs's default is each button independently rounded

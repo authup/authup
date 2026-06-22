@@ -218,8 +218,8 @@ export default defineComponent({
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-6">
+        <div class="flex flex-wrap -mx-2">
+            <div class="w-6/12 px-2">
                 <VCButton
                     type="button"
                     color="neutral"
@@ -230,7 +230,7 @@ export default defineComponent({
                     {{ translationsDefault.abort }}
                 </VCButton>
             </div>
-            <div class="col-6">
+            <div class="w-6/12 px-2">
                 <VCButton
                     type="button"
                     color="primary"

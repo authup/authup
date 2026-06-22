@@ -177,8 +177,8 @@ export default defineComponent({
 
 <template>
     <form @submit.prevent="submit">
-        <div :class="!isRealmLocked ? 'row' : ''">
-            <div :class="!isRealmLocked ? 'col' : ''">
+        <div :class="!isRealmLocked ? 'flex flex-wrap -mx-2' : ''">
+            <div :class="!isRealmLocked ? 'flex-1 basis-0 px-2' : ''">
                 <template v-if="data">
                     <VCFormGroup>
                         <template #label>
@@ -255,7 +255,7 @@ export default defineComponent({
 
             <div
                 v-if="!isRealmLocked"
-                class="col"
+                class="flex-1 basis-0 px-2"
             >
                 <ARealms>
                     <template #itemActions="pickerProps">
