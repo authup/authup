@@ -62,7 +62,7 @@
         "@vuecs/pagination": "^2.1.3",
         "@vuecs/placeholder": "^1.0.4",
         "@vuecs/table": "^1.2.1",
-        "@vuecs/theme-tailwind": "^4.0.0",
+        "@vuecs/theme-tailwind": "^5.0.0",
         "@vuecs/timeago": "^2.1.0",
         "date-fns": "^4.1.0",
         "ilingo": "^6.0.0",
