@@ -11,15 +11,12 @@
 }
 
 /*
- * Bump the sidebar's nav-link vertical padding. The sidebar's
- * VCNavItems renders `.vc-nav-link` (vuecs prefix), so target that;
- * the legacy "API Docs" anchor at the bottom of the sidebar still
- * uses plain `.nav-link`, so cover both. Replaces the pre-Tailwind
- * `--bs-nav-link-padding-y` CSS-variable bump that lived inside the
- * Bootstrap `.nav` scope.
+ * Bump the sidebar's nav-link vertical padding. Both the VCNavItems
+ * links and the hand-rolled "API Docs" anchor carry `.vc-nav-link`.
+ * Replaces the pre-Tailwind `--bs-nav-link-padding-y` CSS-variable
+ * bump that lived inside the Bootstrap `.nav` scope.
  */
-.page-sidebar .vc-nav-link,
-.page-sidebar .nav-link {
+.page-sidebar .vc-nav-link {
     padding-top: 1rem;
     padding-bottom: 1rem;
 }

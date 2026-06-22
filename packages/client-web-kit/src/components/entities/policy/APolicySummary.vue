@@ -9,6 +9,7 @@
 import type { Policy } from '@authup/core-kit';
 import type { PropType } from 'vue';
 import { defineComponent } from 'vue';
+import { VCBadge } from '@vuecs/elements';
 import {
     TranslatorTranslationCommonKey,
     TranslatorTranslationFieldKey,
@@ -18,7 +19,7 @@ import { useTranslations } from '../../../core';
 import APolicyTypeBadge from './APolicyTypeBadge.vue';
 
 export default defineComponent({
-    components: { APolicyTypeBadge },
+    components: { APolicyTypeBadge, VCBadge },
     props: {
         entity: {
             type: Object as PropType<Policy>,
@@ -93,7 +94,12 @@ export default defineComponent({
         >
             <strong style="min-width: 120px">{{ translations.invert }}</strong>
             <div>
-                <span class="badge bg-warning-500">{{ translations.yes }}</span>
+                <VCBadge
+                    color="warning"
+                    variant="solid"
+                >
+                    {{ translations.yes }}
+                </VCBadge>
             </div>
         </div>
         <div
@@ -102,7 +108,12 @@ export default defineComponent({
         >
             <strong style="min-width: 120px">{{ translations.builtIn }}</strong>
             <div>
-                <span class="badge bg-bg-elevated">{{ translations.yes }}</span>
+                <VCBadge
+                    color="neutral"
+                    variant="soft"
+                >
+                    {{ translations.yes }}
+                </VCBadge>
             </div>
         </div>
     </div>

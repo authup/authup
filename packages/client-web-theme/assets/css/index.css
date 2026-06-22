@@ -349,17 +349,7 @@
     .alert-danger  { @apply border-error-200   bg-error-50   text-error-700; }
     .alert-info    { @apply border-info-200    bg-info-50    text-info-700; }
 
-    /* Badges --------------------------------------------------------- */
-    .badge {
-        @apply inline-flex items-center rounded-full px-2 py-0.5
-               text-xs font-medium;
-    }
-
-    /* Nav / navbar — bootstrap's nav components ---------------------- */
-    .nav             { @apply flex flex-wrap; }
-    .nav-item        { @apply list-none; }
-    .nav-link        { @apply block px-3 py-2 text-fg hover:text-primary-600 no-underline; }
-    .nav-link.active { @apply text-primary-600; }
+    /* Navbar — bootstrap's navbar components ------------------------- */
     .navbar          { @apply flex flex-wrap items-center justify-between; }
     .navbar-nav      { @apply flex flex-col list-none; }
     .navbar-brand    { @apply mr-4 inline-block py-2 text-lg whitespace-nowrap; }
@@ -391,10 +381,6 @@
     .navbar-expand-md .navbar-collapse { @apply md:flex!; }
     .navbar-expand-md .navbar-nav      { @apply md:flex-row!; }
     .navbar-expand-md                  { @apply md:flex-nowrap md:justify-start; }
-
-    /* Forms — minimal shims (vuecs SFCs own the real form styles) ---- */
-    .form-group   { @apply mb-3; }
-    .form-switch  { @apply inline-flex items-center gap-2; }
 
     /* Pagination — override theme-tailwind's per-button rounded-md to a
        joined-tab look (only first / last buttons get rounded outer

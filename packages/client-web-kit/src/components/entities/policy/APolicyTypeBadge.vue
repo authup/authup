@@ -7,6 +7,7 @@
 
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
+import { VCBadge } from '@vuecs/elements';
 import {
     TranslatorTranslationClientKey,
     TranslatorTranslationNamespace,
@@ -15,6 +16,7 @@ import { useTranslationsForNamespace } from '../../../core';
 import { POLICY_TYPE_TRANSLATION_KEYS } from './policy-type';
 
 export default defineComponent({
+    components: { VCBadge },
     props: {
         type: {
             type: String,
@@ -50,5 +52,10 @@ export default defineComponent({
 });
 </script>
 <template>
-    <span class="badge bg-info-500">{{ label }}</span>
+    <VCBadge
+        color="info"
+        variant="solid"
+    >
+        {{ label }}
+    </VCBadge>
 </template>
