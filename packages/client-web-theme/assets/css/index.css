@@ -340,39 +340,6 @@
     .container       { @apply mx-auto w-full max-w-screen-lg px-4; }
     .container-fluid { @apply w-full px-4; }
 
-    /* Navbar — bootstrap's navbar components ------------------------- */
-    .navbar          { @apply flex flex-wrap items-center justify-between; }
-    .navbar-nav      { @apply flex flex-col list-none; }
-    .navbar-brand    { @apply mr-4 inline-block py-2 text-lg whitespace-nowrap; }
-    .navbar-toggler  { @apply rounded border border-border px-2 py-1; }
-    .navbar-collapse { @apply grow basis-full items-center; }
-
-    /* Bootstrap-style collapse-on-mobile: content is hidden unless
-       `.show` is toggled. `.navbar-expand-md` (used on the `<nav>` itself)
-       flips the navbar contents back to visible + horizontal at md+ so
-       the desktop header is single-row, mobile is a toggleable column.
-
-       The hide rule is scoped to `.navbar-collapse` (not the bare
-       `.collapse` class) because Tailwind v4 ships its own `.collapse`
-       utility that sets `visibility: collapse`. Tailwind utilities sit
-       in a later cascade layer than our `components` rules, so the
-       `visibility: collapse` would leak through our `display: flex !important`
-       override and render the entire navbar subtree invisible at md+
-       (display flips back, visibility stays collapsed). Scoping to
-       `.navbar-collapse` sidesteps the collision entirely.
-
-       `!` is required on the flex-direction override: @vuecs/navigation
-       applies `flex-col` to the navigation root via theme-tailwind's
-       element class map. That class lives in Tailwind's `utilities`
-       layer; our compat rules live in `components`. Without `!`, the
-       utility layer (flex-col) wins regardless of selector specificity,
-       and the desktop header stacks vertically — ~250px instead of
-       ~56px. */
-    .navbar-collapse:not(.show)        { @apply hidden; }
-    .navbar-expand-md .navbar-collapse { @apply md:flex!; }
-    .navbar-expand-md .navbar-nav      { @apply md:flex-row!; }
-    .navbar-expand-md                  { @apply md:flex-nowrap md:justify-start; }
-
     /* Pagination — override theme-tailwind's per-button rounded-md to a
        joined-tab look (only first / last buttons get rounded outer
        corners). vuecs's default is each button independently rounded
